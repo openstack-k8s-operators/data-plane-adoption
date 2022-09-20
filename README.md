@@ -8,6 +8,8 @@ order:
 
 * [Ceph cluster migration](ceph.md)
 
+* [External MariaDB service creation](external_mariadb_service.md)
+
 * [Keystone adoption](keystone.md)
 
 * [MariaDB adoption](mariadb.md)
