@@ -8,7 +8,7 @@ order:
 
 * [Ceph cluster migration](ceph.md)
 
-* [External MariaDB service creation](external_mariadb_service.md)
+* [OpenStackControlPlane deployment](openstack_control_plane_deployment.md)
 
 * [Keystone adoption](keystone.md)
 
