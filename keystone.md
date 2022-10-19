@@ -13,17 +13,6 @@ Prerequisites
   ADMIN_PASSWORD=SomePassword
   ```
 
-### Temporary hacks
-
-To make the adoption procedure possible currently, hacks need to be
-applied - custom Keystone operator and MariaDB operator need to be
-deployed with the following patches that are not intened to be merged
-upstream:
-
-* Disabling of DB sync. This can be removed once Podified Control
-  Plane starts using Zed content.
-  [https://github.com/jistr/openstack-k8s-keystone-operator/commit/abb0a9f169405cbfd0d1cf5b8343aa55429e5e3f](https://github.com/jistr/openstack-k8s-keystone-operator/commit/abb0a9f169405cbfd0d1cf5b8343aa55429e5e3f)
-
 Pre-checks
 ----------
 
