@@ -13,6 +13,11 @@ in particular this document used the
 [Libvirt](https://gitlab.cee.redhat.com/rhos-upgrades/data-plane-adoption-dev/-/blob/main/libvirt_podified_standalone.md)
 approach.
 
+Also, make sure the 
+[podified controlplane services](https://gitlab.cee.redhat.com/rhos-upgrades/data-plane-adoption/-/blob/main/openstack_control_plane_deployment.md)
+are deployed correctly in the OpenShift cluster once these steps are working there should be one or more instances of
+MariaDB running where we will import the databases from the TripleO deployment.
+
 ## Adoption
 
 Let's start by creating the backup of the MariaDB server in the Standalone TripleO instance.
@@ -128,11 +133,14 @@ tar xvf ~/tripleo_databases.tar.gz -C ~/dbdumps
 In the previous step if needed we can copy the backup directly between the
 TripleO instance and the service node skipping the Hypervisor.
 
-### Deploy MariaDB
+### Deploy MariaDB (optional, required iff we will like to test the MariaDB adoption)
 
-The next step involves deploying the OpenStack MariaDB operator to have
+> **_NOTE:_**  Make sure the deployment steps for the podified controlplane ended successfully from the 
+[Pre-checks section](https://gitlab.cee.redhat.com/rhos-upgrades/data-plane-adoption/-/blob/main/mariadb.md#pre-checks),
+the following steps are not mandatory and are only needed if we would like to test only the
+MariaDB adoption (exporting and importing the databases).
+The next code snippet involves deploying the OpenStack MariaDB operator to have
 a database instance where we can restore this backup.
-
 ```
 # Install the MariaDB operator
 # From the service node
