@@ -1,10 +1,13 @@
 OpenStackControlPlane deployment
 ================================
 
-First we create OpenStackControlPlane CR with
+The following instructions create OpenStackControlPlane CR with
+MariaDB and RabbitMQ with adoption redirects in place. This will be
+the foundation of the adopted podified control plane to which we will
+be gradually adding services in later steps.
 
-Here we create a Service resource inside OpenShift that will direct
-MariaDB connections to the external MariaDB running on controllers.
+> Note: Currently MariaDB with redirection is implemented. Service
+> subset deployment and RabbitMQ redirection are TBD.
 
 Prerequisites
 -------------
@@ -21,6 +24,12 @@ Prerequisites
   ADMIN_PASSWORD=SomePassword
   KEYSTONE_DATABASE_PASSWORD=SomePassword
   ```
+
+* The `openstack-operator` deployed, but `OpenStackControlPlane`
+  **not** deployed. The openstack operator can be deployed by running
+  `make openstack` inside
+  [install_yamls](https://github.com/openstack-k8s-operators/install_yamls)
+  repo.
 
 Pre-checks
 ----------
