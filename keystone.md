@@ -7,10 +7,12 @@ Prerequisites
 * Service and Endpoints resources that will direct MariaDB connections
   to the external MariaDB running on original controllers exist.
 
-* Define shell variables:
+* Define shell variables. The following values are just illustrative,
+  use values which are correct for your environment:
 
   ```
   ADMIN_PASSWORD=SomePassword
+  KEYSTONE_DATABASE_PASSWORD=SomePassword
   ```
 
 Pre-checks
@@ -19,14 +21,34 @@ Pre-checks
 Adoption
 --------
 
-Currently the adoption is being performed by deploying
-OpenStackControlPlane. This may change going forward, to make
-OpenstackControlPlane creation a less invasive/risky step.
+* Set Kestone password to match the original deployment:
+
+  ```
+  oc set data secret/osp-secret "KeystoneDatabasePassword=$KEYSTONE_DATABASE_PASSWORD"
+  ```
+
+* Patch OpenStackControlPlane to deploy Keystone:
+
+  ```
+  oc patch openstackcontrolplane openstack --type=merge --patch '
+  spec:
+    keystone:
+      enabled: true
+      template:
+        containerImage: quay.io/tripleowallabycentos9/openstack-keystone:current-tripleo
+        databaseInstance: openstack
+  '
+  ```
 
 Post-checks
 -----------
 
 * Test that `openstack user list` works.
+
+  > Note: This used to work, but after recent changes to endpoint
+  > management mechanism in the Keystone operator, the operator
+  > actually removes all existing endpoints. This needs to be
+  > addressed further.
 
   ```
   cat > clouds-adopted.yaml <<EOF

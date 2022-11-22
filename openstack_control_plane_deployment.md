@@ -12,7 +12,8 @@ be gradually adding services in later steps.
 Prerequisites
 -------------
 
-* Define shell variables:
+* Define shell variables. The following values are just illustrative,
+  use values which are correct for your environment:
 
   ```
   # The IP of MariaDB running on controller machines. Must be reachable
@@ -55,6 +56,10 @@ Adoption
 * Deploy OpenStackControlPlane. Note the following configuration specifics:
 
   * MariaDB template contains an `adoptionRedirect` definition.
+    (RabbitMQ templateshould contain a similar definition when it is
+    implemented.)
+
+  * All services except MariaDB and RabbitMQ have `enabled: false`.
 
   ```
   oc apply -f - <<EOF
@@ -65,25 +70,27 @@ Adoption
   spec:
     secret: osp-secret
     storageClass: local-storage
-    keystoneTemplate:
-      containerImage: quay.io/tripleotraincentos8/centos-binary-keystone:current-tripleo
-      databaseInstance: openstack
-    mariadbTemplate:
-      adoptionRedirect:
-        host: $EXTERNAL_MARIADB_IP
-      containerImage: quay.io/tripleotraincentos8/centos-binary-mariadb:current-tripleo
-      storageRequest: 500M
-    rabbitmqTemplate:
-      replicas: 1
-    placementTemplate:
-      containerImage: quay.io/tripleotraincentos8/centos-binary-placement-api:current-tripleo
+    mariadb:
+      template:
+        adoptionRedirect:
+          host: $EXTERNAL_MARIADB_IP
+        containerImage: quay.io/tripleowallabycentos9/openstack-mariadb:current-tripleo
+        storageRequest: 500M
+    rabbitmq:
+      template:
+        replicas: 1
+
+    keystone:
+      enabled: false
+    cinder:
+      enabled: false
+    glance:
+      enabled: false
+    placement:
+      enabled: false
+
   EOF
   ```
-
-  > Currently this step attempts to do DB syncs and deploy all OpenStack
-  > services. This may change going forward, to make OpenstackControlPlane
-  > creation a less invasive/risky step.
-
 
 Post-checks
 -----------
