@@ -26,3 +26,7 @@ following order:
 * [Keystone adoption](keystone.md)
 
 * [MariaDB adoption](mariadb.md)
+
+If you face issues during adoption, check the
+[Troubleshooting](troubleshooting.md) document for common problems and
+solutions.

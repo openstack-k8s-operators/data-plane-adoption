@@ -6,17 +6,15 @@ cluster (tested on a Standalone TripleO scenario) to the MariaDB instances in th
 
 ## Pre-checks
 
-Make sure the environment is configured correctly,
-we assume that the user followed the steps from one of the
-[development scenarios](https://gitlab.cee.redhat.com/rhos-upgrades/data-plane-adoption-dev)
-in particular this document used the
-[Libvirt](https://gitlab.cee.redhat.com/rhos-upgrades/data-plane-adoption-dev/-/blob/main/libvirt_podified_standalone.md)
-approach.
+* Make sure the previous Adoption steps have been performed successfully.
 
-Also, make sure the 
-[podified controlplane services](https://gitlab.cee.redhat.com/rhos-upgrades/data-plane-adoption/-/blob/main/openstack_control_plane_deployment.md)
-are deployed correctly in the OpenShift cluster once these steps are working there should be one or more instances of
-MariaDB running where we will import the databases from the TripleO deployment.
+  * The OpenStackControlPlane resource must be already created at this point.
+
+  * All the OpenStack services that should have been adopted were
+    already adopted. Only MariaDB and RabbitMQ remain at this point.
+
+  * There must be one or more instances of MariaDB running where we
+    will import the databases from the TripleO deployment.
 
 ## Adoption
 
@@ -132,109 +130,6 @@ tar xvf ~/tripleo_databases.tar.gz -C ~/dbdumps
 
 In the previous step if needed we can copy the backup directly between the
 TripleO instance and the service node skipping the Hypervisor.
-
-### Deploying the OpenStack controlplane services
-
-For the MariaDB adoption there are two different ways
-of testing the data migration between the OpenStack
-deployment and the service hosting the MariaDB instance
-in the OpenSHift data plane, choose one of the following options exclusively.
-
-#### - Deploying only MariaDB (optional, required iff we will like to test the MariaDB adoption)
-
-> **_NOTE:_**  Make sure the deployment steps for the podified controlplane ended successfully from the 
-[Pre-checks section](https://gitlab.cee.redhat.com/rhos-upgrades/data-plane-adoption/-/blob/main/mariadb.md#pre-checks),
-the following steps are not mandatory and are only needed if we would like to test only the
-MariaDB adoption (exporting and importing the databases).
-The next code snippet involves deploying the OpenStack MariaDB operator to have
-a database instance where we can restore this backup.
-
-```
-# Install the MariaDB operator
-# From the service node
-
-# from install_yamls
-# git clone https://github.com/openstack-k8s-operators/install_yamls.git
-cd install_yamls
-make crc_storage
-make mariadb MARIADB_IMG=quay.io/openstack-k8s-operators/mariadb-operator-index:latest
-make mariadb_deploy
-
-# Make sure the pods are running correctly
-# [root@service ~]# kubectl get pods -n openstack
-# NAME        READY                                                  STATUS         RESTARTS   AGE
-# openstack   mariadb-openstack                                      1/1  Running   0          71s
-# openstack   mariadb-operator-controller-manager-79c65cf79c-gjmm9   2/2  Running   0          9h
-# openstack   mariadb-operator-index-q7t74                           1/1  Running   0          9h
-# openstack   mysql-client                                           1/1  Running   0          49m
-
-# No restarts or problems should be reported so far
-```
-
-#### - Deploying all the OpenStack services using the openstack-operator
-
-```
-# Install all the services using the openstack-operator
-# From the service node
-
-# from install_yamls
-# git clone https://github.com/openstack-k8s-operators/install_yamls.git
-cd install_yamls
-make crc_storage
-make openstack
-
-# Make sure the pods are running correctly
-# [root@service ~]# oc get pods
-# NAME                                                              READY   STATUS      RESTARTS        AGE
-# a5d66980a2e4f0433baebf9e75676bc94fa31e8c12bee4c0155b0a24d7wq77p   0/1     Completed   0               22h
-# cinder-operator-controller-manager-b478b7b88-bqhhm                2/2     Running     10 (120m ago)   22h
-# controller-manager-5f67cc94d7-vbg8w                               1/1     Running     10 (120m ago)   22h
-# glance-operator-controller-manager-b4d46c578-jgr6g                2/2     Running     10 (120m ago)   22h
-# keystone-operator-controller-manager-85f4d8df7b-tw4zl             2/2     Running     10 (120m ago)   22h
-# mariadb-openstack                                                 1/1     Running     0               22h
-# mariadb-operator-controller-manager-85d4d9f9d8-97nq7              2/2     Running     10 (120m ago)   22h
-# openstack-operator-controller-manager-8584fd4d74-zrtnv            2/2     Running     10 (120m ago)   22h
-# openstack-operator-index-vq4wl                                    1/1     Running     0               22h
-# placement-operator-controller-manager-77f8647454-n7b89            2/2     Running     10 (120m ago)   22h
-# rabbitmq-server-0                                                 1/1     Running     0               21h
-```
-
-> **_NOTE:_**  The OpenStack operator deploys a set of services required for the
-correct functioning of the next-gen cluster, there are cases where the deployed containers
-pull the images from private containers registries that can potentially return
-authentication errors like:
-`Failed to pull image "registry.redhat.io/rhosp-rhel9/openstack-rabbitmq:17.0": rpc error: code = Unknown desc = unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials.`
-
-An example of a failed pod:
-
-```
-  Normal   Scheduled       3m40s                  default-scheduler  Successfully assigned openstack/rabbitmq-server-0 to worker0
-  Normal   AddedInterface  3m38s                  multus             Add eth0 [10.101.0.41/23] from ovn-kubernetes
-  Warning  Failed          2m16s (x6 over 3m38s)  kubelet            Error: ImagePullBackOff
-  Normal   Pulling         2m5s (x4 over 3m38s)   kubelet            Pulling image "registry.redhat.io/rhosp-rhel9/openstack-rabbitmq:17.0"
-  Warning  Failed          2m5s (x4 over 3m38s)   kubelet            Failed to pull image "registry.redhat.io/rhosp-rhel9/openstack-rabbitmq:17.0": rpc error: code  ... can be found here: https://access.redhat.com/RegistryAuthentication
-  Warning  Failed          2m5s (x4 over 3m38s)   kubelet            Error: ErrImagePull
-  Normal   BackOff         110s (x7 over 3m38s)   kubelet            Back-off pulling image "registry.redhat.io/rhosp-rhel9/openstack-rabbitmq:17.0"
-
-```
-
-In order to solve this issue we need to get a valid pull-secret from the official [Red Hat console site](https://console.redhat.com/openshift/install/pull-secret),
-store this pull secret locally in a machine with access to the Kubernetes API (service node), and then run:
-
-```
-oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=<pull_secret_location.json>
-```
-
-The previous commmand will make available the authentication information in all the cluster's compute nodes,
-then trigger a new pod deployment to pull the container image with:
-
-```
-kubectl delete pod rabbitmq-server-0 -n openstack
-```
-
-And the pod should be able to pull the image successfully.
-For more inforation about what container registries requires what
-type of authentication, check the [official docs](https://access.redhat.com/RegistryAuthentication).
 
 ### Restore the databases
 

@@ -27,10 +27,15 @@ Prerequisites
   ```
 
 * The `openstack-operator` deployed, but `OpenStackControlPlane`
-  **not** deployed. The openstack operator can be deployed by running
-  `make openstack` inside
+  **not** deployed.
+
+  For developer/CI environments, the openstack operator can be deployed
+  by running `make openstack` inside
   [install_yamls](https://github.com/openstack-k8s-operators/install_yamls)
   repo.
+
+  For production environments, the deployment method will likely be
+  different.
 
 Pre-checks
 ----------
