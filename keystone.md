@@ -21,11 +21,17 @@ Pre-checks
 Adoption
 --------
 
-* Set Kestone password to match the original deployment:
+* Set Keystone password and database user creation password to match
+  the original deployment:
 
   ```
+  oc set data secret/osp-secret "DatabasePassword=$KEYSTONE_DATABASE_PASSWORD"
   oc set data secret/osp-secret "KeystoneDatabasePassword=$KEYSTONE_DATABASE_PASSWORD"
   ```
+
+  > Note: The `DatabasePassword` is currently common, affects creation
+  > of all database users. This should be fixed in podified control
+  > plane after the MariaDB Operator is replaced with Galera Operator.
 
 * Patch OpenStackControlPlane to deploy Keystone:
 
