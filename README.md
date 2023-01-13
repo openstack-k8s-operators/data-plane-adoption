@@ -16,16 +16,15 @@ OpenStack adoption. Follow this documentation:
 
 ## OpenStack adoption
 
-First deploy a minimal podified control plane:
+This is a procedure for adopting an OpenStack cloud.
 
-* [OpenStackControlPlane deployment](openstack_control_plane_deployment.md)
+Perform the actions from the sub-documents in the following order:
 
-Then perform the individual services adoption procedures in the
-following order:
+* [Deploy podified backend services](backend_services_deployment.md)
 
-* [Keystone adoption](keystone.md)
+* [Copy MariaDB data](mariadb_copy.md)
 
-* [MariaDB adoption](mariadb.md)
+* [Deploy OpenStack control plane services](openstack_control_plane_deployment.md)
 
 If you face issues during adoption, check the
 [Troubleshooting](troubleshooting.md) document for common problems and

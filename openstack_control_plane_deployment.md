@@ -1,101 +1,79 @@
-OpenStackControlPlane deployment
-================================
+# OpenStack control plane services deployment
 
-The following instructions create OpenStackControlPlane CR with
-MariaDB and RabbitMQ with adoption redirects in place. This will be
-the foundation of the adopted podified control plane to which we will
-be gradually adding services in later steps.
+## Prerequisites
 
-> Note: Currently MariaDB with redirection is implemented. Service
-> subset deployment and RabbitMQ redirection are TBD.
+* Previous Adoption steps completed. Notably, the service databases
+  must already be imported into the podified MariaDB.
 
-Prerequisites
--------------
+## Variables
 
-* Define shell variables. The following values are just illustrative,
-  use values which are correct for your environment:
+Define the shell variables used in the steps below. The values are
+just illustrative, use values which are correct for your environment:
 
-  ```
-  # The IP of MariaDB running on controller machines. Must be reachable
-  # and connectable on port 3306 from OpenShift pods.
-  EXTERNAL_MARIADB_IP=192.168.24.3
+```
+ADMIN_PASSWORD=SomePassword
+KEYSTONE_DATABASE_PASSWORD=SomePassword
+```
 
-  # MariaDB root password on the original deployment.
-  DB_ROOT_PASSWORD=SomePassword
-  ADMIN_PASSWORD=SomePassword
-  KEYSTONE_DATABASE_PASSWORD=SomePassword
-  ```
+## Pre-checks
 
-* The `openstack-operator` deployed, but `OpenStackControlPlane`
-  **not** deployed.
+## Procedure - OpenStack control plane services deployment
 
-  For developer/CI environments, the openstack operator can be deployed
-  by running `make openstack` inside
-  [install_yamls](https://github.com/openstack-k8s-operators/install_yamls)
-  repo.
-
-  For production environments, the deployment method will likely be
-  different.
-
-Pre-checks
-----------
-
-Adoption
---------
-
-* Create OSP secret.
+* Set Keystone password and database user creation password to match
+  the original deployment:
 
   ```
-  # in install_yamls
-  make input
-  ```
-
-* Set passwords to match the original deployment:
-
-  ```
-  oc set data secret/osp-secret "DbRootPassword=$DB_ROOT_PASSWORD"
   oc set data secret/osp-secret "AdminPassword=$ADMIN_PASSWORD"
+  oc set data secret/osp-secret "DatabasePassword=$KEYSTONE_DATABASE_PASSWORD"
   oc set data secret/osp-secret "KeystoneDatabasePassword=$KEYSTONE_DATABASE_PASSWORD"
   ```
 
-* Deploy OpenStackControlPlane. Note the following configuration specifics:
+  > Note: The `DatabasePassword` is currently common, affects creation
+  > of all database users. This should be fixed in podified control
+  > plane after the MariaDB Operator is replaced with Galera Operator.
 
-  * MariaDB template contains an `adoptionRedirect` definition.
-    (RabbitMQ templateshould contain a similar definition when it is
-    implemented.)
-
-  * All services except MariaDB and RabbitMQ have `enabled: false`.
+* Patch OpenStackControlPlane to deploy Keystone:
 
   ```
-  oc apply -f - <<EOF
-  apiVersion: core.openstack.org/v1beta1
-  kind: OpenStackControlPlane
-  metadata:
-    name: openstack
+  oc patch openstackcontrolplane openstack --type=merge --patch '
   spec:
-    secret: osp-secret
-    storageClass: local-storage
-    mariadb:
-      template:
-        adoptionRedirect:
-          host: $EXTERNAL_MARIADB_IP
-        containerImage: quay.io/tripleowallabycentos9/openstack-mariadb:current-tripleo
-        storageRequest: 500M
-    rabbitmq:
-      template:
-        replicas: 1
-
     keystone:
-      enabled: false
-    cinder:
-      enabled: false
-    glance:
-      enabled: false
-    placement:
-      enabled: false
-
-  EOF
+      enabled: true
+      template:
+        secret: osp-secret
+        containerImage: quay.io/tripleozedcentos9/openstack-keystone:current-tripleo
+        databaseInstance: openstack
+  '
   ```
 
-Post-checks
------------
+## Post-checks
+
+* Test that `openstack user list` works.
+
+  > Note: This used to work, but after recent changes to endpoint
+  > management mechanism in the Keystone operator, the operator
+  > actually removes all existing endpoints. This needs to be
+  > addressed further.
+
+  ```
+  cat > clouds-adopted.yaml <<EOF
+  clouds:
+    adopted:
+      auth:
+        auth_url: http://keystone-public-openstack.apps-crc.testing
+        password: $ADMIN_PASSWORD
+        project_domain_name: Default
+        project_name: admin
+        user_domain_name: Default
+        username: admin
+      cacert: ''
+      identity_api_version: '3'
+      region_name: regionOne
+      volume_api_version: '3'
+  EOF
+
+  export OS_CLIENT_CONFIG_FILE=clouds-adopted.yaml
+  export OS_CLOUD=adopted
+
+  openstack user list
+  ```
