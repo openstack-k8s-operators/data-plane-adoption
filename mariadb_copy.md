@@ -58,6 +58,48 @@ DB_ROOT_PASSWORD=SomePassword
       mysql -h "$PODIFIED_MARIADB_IP" -uroot "-p$DB_ROOT_PASSWORD" -e 'SHOW databases;'
   ```
 
+## Procedure - stopping control plane services
+
+From each controller node it is necessary to stop the
+control-plane services to avoid inconsistencies in the
+data migrated for the data-plane adoption procedure.
+
+1- Connect to all the controller nodes and stop the control
+plane services.
+
+2- Stop the services.
+
+```bash
+
+# Configure SSH variables to stop the services
+# in each controller node. For example:
+
+CONTROLLER1_SSH="ssh -F $ENV_DIR/director_standalone/vagrant_ssh_config vagrant@standalone"
+CONTROLLER2_SSH=":"
+CONTROLLER3_SSH=":"
+
+# Update the services list to be stoped
+
+ServicesToStop=("tripleo_horizon.service"
+                "tripleo_keystone.service"
+                "tripleo_cinder_api.service"
+                "tripleo_glance_api.service"
+                "tripleo_neutron_api.service"
+                "tripleo_nova_api.service"
+                "tripleo_placement_api.service")
+
+echo "Stopping the OpenStack services"
+
+for service in ${ServicesToStop[*]}; do
+    echo "Stopping the service: $service in each controller node"
+    $CONTROLLER1_SSH sudo systemctl stop $service
+    $CONTROLLER2_SSH sudo systemctl stop $service
+    $CONTROLLER3_SSH sudo systemctl stop $service
+done
+```
+
+3- Make sure all the services are stopped
+
 ## Procedure - data copy
 
 * Create a temporary folder to store DB dumps and make sure it's the
