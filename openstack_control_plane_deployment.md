@@ -7,30 +7,24 @@
 
 ## Variables
 
-Define the shell variables used in the steps below. The values are
-just illustrative, use values which are correct for your environment:
+* Set the desired admin password for the podified deployment. This can
+  be the original deployment's admin password or something else.
 
-```
-ADMIN_PASSWORD=SomePassword
-KEYSTONE_DATABASE_PASSWORD=SomePassword
-```
+  ```
+  ADMIN_PASSWORD=SomePassword
+  ```
 
 ## Pre-checks
 
 ## Procedure - OpenStack control plane services deployment
 
-* Set Keystone password and database user creation password to match
-  the original deployment:
+* If the `$ADMIN_PASSWORD` is different than the already set password
+  in `osp-secret`, amend the `AdminPassword` key in the `osp-secret`
+  correspondingly:
 
   ```
   oc set data secret/osp-secret "AdminPassword=$ADMIN_PASSWORD"
-  oc set data secret/osp-secret "DatabasePassword=$KEYSTONE_DATABASE_PASSWORD"
-  oc set data secret/osp-secret "KeystoneDatabasePassword=$KEYSTONE_DATABASE_PASSWORD"
   ```
-
-  > Note: The `DatabasePassword` is currently common, affects creation
-  > of all database users. This should be fixed in podified control
-  > plane after the MariaDB Operator is replaced with Galera Operator.
 
 * Patch OpenStackControlPlane to deploy Keystone:
 
@@ -49,11 +43,6 @@ KEYSTONE_DATABASE_PASSWORD=SomePassword
 ## Post-checks
 
 * Test that `openstack user list` works.
-
-  > Note: This used to work, but after recent changes to endpoint
-  > management mechanism in the Keystone operator, the operator
-  > actually removes all existing endpoints. This needs to be
-  > addressed further.
 
   ```
   cat > clouds-adopted.yaml <<EOF
