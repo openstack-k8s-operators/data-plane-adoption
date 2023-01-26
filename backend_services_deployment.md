@@ -22,13 +22,7 @@ podified OpenStack control plane services.
 
 ## Variables
 
-Define the shell variables used in the steps below. The values are
-just illustrative, use values which are correct for your environment:
-
-```
-# MariaDB root password on the original deployment.
-DB_ROOT_PASSWORD=SomePassword
-```
+(There are no shell variables necessary currently.)
 
 ## Pre-checks
 
@@ -39,12 +33,6 @@ DB_ROOT_PASSWORD=SomePassword
   ```
   # in install_yamls
   make input
-  ```
-
-* Set passwords to match the original deployment:
-
-  ```
-  oc set data secret/osp-secret "DbRootPassword=$DB_ROOT_PASSWORD"
   ```
 
 * Deploy OpenStackControlPlane. **Make sure to only enable MariaDB and
