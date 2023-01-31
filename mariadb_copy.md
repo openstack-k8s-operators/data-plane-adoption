@@ -29,7 +29,7 @@ Define the shell variables used in the steps below. The values are
 just illustrative, use values which are correct for your environment:
 
 ```
-PODIFIED_MARIADB_IP=$(oc get -o yaml pod mariadb-openstack | grep podIP: | awk '{ print $2; }')
+PODIFIED_MARIADB_IP=$(oc get -o yaml pod -l app.kubernetes.io/name=mariadb-operator | grep podIP: | awk '{ print $2; }')
 MARIADB_IMAGE=quay.io/tripleozedcentos9/openstack-mariadb:current-tripleo
 
 # Use your environment's values for these:
