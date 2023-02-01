@@ -12,6 +12,8 @@ podified OpenStack control plane services.
 * The `openstack-operator` deployed, but `OpenStackControlPlane`
   **not** deployed.
 
+* The MariaDB PVC is bound.
+
   For developer/CI environments, the openstack operator can be deployed
   by running `make openstack` inside
   [install_yamls](https://github.com/openstack-k8s-operators/install_yamls)
@@ -75,3 +77,16 @@ podified OpenStack control plane services.
   ```
 
 ## Post-checks
+
+* Check if MariaDB PVC is bound:
+
+  ```
+  oc get pvc mariadb-openstack -o jsonpath='{.status.phase}{"\n"}'
+  ```
+
+  if not, run:
+
+  ```
+  # in install_yamls
+  make crc_storage
+  ```
