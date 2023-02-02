@@ -1,4 +1,4 @@
-# Glance Adoption
+# Glance adoption
 
 Adopting Glance means that an existing `OpenStackControlPlane` CR, where Glance
 is supposed to be disabled, should be patched to start the service with the
@@ -16,16 +16,14 @@ This guide also assumes that:
 3. (optional) an internal/external `Ceph` cluster is reacheable by both `crc` and
 `TripleO`
 
-In order to keep things simple, this scenario assumes that both `MariaDB` and
-`Keystone` are already adopted; the procedure is described by the following
-documentation:
 
-1. [Create an OpenStackControlPlane](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/backend_services_deployment.md)
-2. [Adopt MariaDB](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/mariadb_copy.md)
-3. [Adopt Keystone](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md)
+## Prerequisites
+
+* Previous Adoption steps completed. Notably, MariaDB and Keystone
+  should be already adopted.
 
 
-## Enable glance:
+## Procedure - Glance adoption
 
 As already done for [Keystone](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md), the Glance Adoption follows the same pattern.
 
@@ -129,7 +127,9 @@ spec:
 '
 ```
 
-## Test the glance service from the OpenStack cli
+## Post-checks
+
+### Test the glance service from the OpenStack cli
 
 Inspect the resulting glance pods:
 
@@ -163,7 +163,7 @@ cli and check the service is active and the endpoints are properly updated.
 | 709859219bc24ab9ac548eab74ad4dd5 | regionOne | glance       | image        | True    | admin     | http://glance-admin-openstack.apps-crc.testing      |
 ```
 
-## Image upload
+### Image upload
 
 We can test that an image can be created on from the adopted service.
 
