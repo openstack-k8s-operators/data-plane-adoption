@@ -1,9 +1,14 @@
-# OpenStack control plane services deployment
+# Adoption of other services
+
+This part of the guide adopts the remaining services that don't have a
+specific guide of their own. It is likely that as adoption gets
+developed further, services will be removed from here and put into
+their own guides (e.g. like
+[Glance](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/glance_adoption.md)).
 
 ## Prerequisites
 
-* Previous Adoption steps completed. Notably, the service databases
-  must already be imported into the podified MariaDB.
+* Previous Adoption steps completed.
 
 ## Variables
 
@@ -11,56 +16,8 @@
 
 ## Pre-checks
 
-## Procedure - OpenStack control plane services deployment
+## Procedure - Adoption of other services
 
-* Patch OpenStackControlPlane to deploy Keystone:
-
-  ```
-  oc patch openstackcontrolplane openstack --type=merge --patch '
-  spec:
-    keystone:
-      enabled: true
-      template:
-        secret: osp-secret
-        containerImage: quay.io/tripleozedcentos9/openstack-keystone:current-tripleo
-        databaseInstance: openstack
-  '
-  ```
-
-* Create a clouds.yaml file to talk to adopted Keystone:
-
-  ```
-  cat > clouds-adopted.yaml <<EOF
-  clouds:
-    adopted:
-      auth:
-        auth_url: http://keystone-public-openstack.apps-crc.testing
-        password: $ADMIN_PASSWORD
-        project_domain_name: Default
-        project_name: admin
-        user_domain_name: Default
-        username: admin
-      cacert: ''
-      identity_api_version: '3'
-      region_name: regionOne
-      volume_api_version: '3'
-  EOF
-  ```
-
-* Clean up old endpoints that still point to old control plane
-  (everything except Keystone endpoints):
-
-  ```
-  export OS_CLIENT_CONFIG_FILE=clouds-adopted.yaml
-  export OS_CLOUD=adopted
-
-  openstack endpoint list | grep ' cinderv3 ' | awk '{ print $2; }' | xargs openstack endpoint delete
-  openstack endpoint list | grep ' glance ' | awk '{ print $2; }' | xargs openstack endpoint delete
-  openstack endpoint list | grep ' neutron ' | awk '{ print $2; }' | xargs openstack endpoint delete
-  openstack endpoint list | grep ' nova ' | awk '{ print $2; }' | xargs openstack endpoint delete
-  openstack endpoint list | grep ' placement ' | awk '{ print $2; }' | xargs openstack endpoint delete
-  openstack endpoint list | grep ' swift ' | awk '{ print $2; }' | xargs openstack endpoint delete
-  ```
 
 * Deploy the rest of control plane services:
 
@@ -83,18 +40,6 @@
     #       volume1:
     #         containerImage: quay.io/tripleozedcentos9/openstack-cinder-volume:current-tripleo
     #         replicas: 1
-
-    glance:
-      enabled: true
-      template:
-        databaseInstance: openstack
-        containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
-        storageClass: ""
-        storageRequest: 10G
-        glanceAPIInternal:
-          containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
-        glanceAPIExternal:
-          containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
 
     placement:
       enabled: true
@@ -148,7 +93,7 @@
 
 ## Post-checks
 
-* See that endpoints are defined:
+* See that service endpoints are defined:
 
   ```
   export OS_CLIENT_CONFIG_FILE=clouds-adopted.yaml

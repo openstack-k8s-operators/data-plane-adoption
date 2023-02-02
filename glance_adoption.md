@@ -21,13 +21,13 @@ In order to keep things simple, this scenario assumes that both `MariaDB` and
 documentation:
 
 1. [Create an OpenStackControlPlane](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/backend_services_deployment.md)
-2. [Adopt MariaDB](https://github.com/fmount/data-plane-adoption/blob/main/mariadb_copy.md)
-3. [Adopt Keystone](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/openstack_control_plane_deployment.md)
+2. [Adopt MariaDB](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/mariadb_copy.md)
+3. [Adopt Keystone](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md)
 
 
 ## Enable glance:
 
-As already done for [Keystone](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/openstack_control_plane_deployment.md), the Glance Adoption follows the same pattern.
+As already done for [Keystone](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md), the Glance Adoption follows the same pattern.
 
 Patch OpenStackControlPlane to deploy Glance:
 
