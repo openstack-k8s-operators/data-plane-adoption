@@ -84,16 +84,6 @@ stringData:
 
 This secret will be used in the `extraVolumes` parameters to propagate the files
 to the `GlanceAPI` pods (both internal and external).
-Edit the `osp-secret` and change the `GlancePassword` to make sure the service
-will be able to interact with keystone, which points to the credentials of the
-source Cloud.
-
-```
-$ cat tripleo-standalone-passwords.yaml  | awk '/Glance/ { print $2 }'
-Ok1gAcO2IsHBsUUW6bAyC5gcA
-```
-
-The `base64` value of this secret should be used to patch the `osp-secret`.
 
 Patch OpenStackControlPlane to deploy Glance:
 

@@ -28,7 +28,29 @@ podified OpenStack control plane services.
 
 ## Variables
 
-(There are no shell variables necessary currently.)
+* Set the desired admin password for the podified deployment. This can
+  be the original deployment's admin password or something else.
+
+  ```
+  ADMIN_PASSWORD=SomePassword
+  ```
+
+* Set service password variables to match the original deployment.
+  Database passwords can differ in podified environment, but
+  synchronizing the service account passwords is a required step.
+
+  E.g. in developer environments with TripleO Standalone, the
+  passwords can be extracted like this:
+
+  ```
+  CINDER_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CinderPassword:' | awk -F ': ' '{ print $2; }')
+  GLANCE_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' GlancePassword:' | awk -F ': ' '{ print $2; }')
+  IRONIC_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' IronicPassword:' | awk -F ': ' '{ print $2; }')
+  NEUTRON_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NeutronPassword:' | awk -F ': ' '{ print $2; }')
+  NOVA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NovaPassword:' | awk -F ': ' '{ print $2; }')
+  OCTAVIA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' OctaviaPassword:' | awk -F ': ' '{ print $2; }')
+  PLACEMENT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' PlacementPassword:' | awk -F ': ' '{ print $2; }')
+  ```
 
 ## Pre-checks
 
@@ -36,9 +58,33 @@ podified OpenStack control plane services.
 
 * Create OSP secret.
 
+  The procedure for this will vary, but in developer/CI environments
+  we use install_yamls:
+
   ```
   # in install_yamls
   make input
+  ```
+
+* If the `$ADMIN_PASSWORD` is different than the already set password
+  in `osp-secret`, amend the `AdminPassword` key in the `osp-secret`
+  correspondingly:
+
+  ```
+  oc set data secret/osp-secret "AdminPassword=$ADMIN_PASSWORD"
+  ```
+
+* Set service account passwords in `osp-secret` to match the service
+  account passwords from original deployment:
+
+  ```
+  oc set data secret/osp-secret "CinderPassword=$CINDER_PASSWORD"
+  oc set data secret/osp-secret "GlancePassword=$GLANCE_PASSWORD"
+  oc set data secret/osp-secret "IronicPassword=$IRONIC_PASSWORD"
+  oc set data secret/osp-secret "NeutronPassword=$NEUTRON_PASSWORD"
+  oc set data secret/osp-secret "NovaPassword=$NOVA_PASSWORD"
+  oc set data secret/osp-secret "OctaviaPassword=$OCTAVIA_PASSWORD"
+  oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
   ```
 
 * Deploy OpenStackControlPlane. **Make sure to only enable MariaDB and

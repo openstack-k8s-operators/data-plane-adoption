@@ -7,24 +7,11 @@
 
 ## Variables
 
-* Set the desired admin password for the podified deployment. This can
-  be the original deployment's admin password or something else.
-
-  ```
-  ADMIN_PASSWORD=SomePassword
-  ```
+(There are no shell variables necessary currently.)
 
 ## Pre-checks
 
 ## Procedure - OpenStack control plane services deployment
-
-* If the `$ADMIN_PASSWORD` is different than the already set password
-  in `osp-secret`, amend the `AdminPassword` key in the `osp-secret`
-  correspondingly:
-
-  ```
-  oc set data secret/osp-secret "AdminPassword=$ADMIN_PASSWORD"
-  ```
 
 * Patch OpenStackControlPlane to deploy Keystone:
 
