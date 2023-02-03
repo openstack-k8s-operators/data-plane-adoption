@@ -9,7 +9,10 @@ podified OpenStack control plane services.
 
 ## Prerequisites
 
-* The `openstack-operator` deployed, but `OpenStackControlPlane`
+* The cloud which we want to adopt is up and running. It's on
+  OpenStack Wallaby release.
+
+* The `openstack-operator` is deployed, but `OpenStackControlPlane` is
   **not** deployed.
 
   For developer/CI environments, the openstack operator can be deployed
