@@ -23,6 +23,21 @@ This guide also assumes that:
   should be already adopted.
 
 
+## Pre-check
+
+On the source Cloud, check that the service is active and works as expected,
+and list the existing images:
+
+
+```
+(openstack)$ image list
++--------------------------------------+--------+--------+
+| ID                                   | Name   | Status |
++--------------------------------------+--------+--------+
+| c3158cad-d50b-452f-bec1-f250562f5c1f | cirros | active |
++--------------------------------------+--------+--------+
+```
+
 ## Procedure - Glance adoption
 
 As already done for [Keystone](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md), the Glance Adoption follows the same pattern.
@@ -137,7 +152,6 @@ Inspect the resulting glance pods:
 sh-5.1# cat /etc/glance/glance.conf.d/01-custom.conf
 
 [DEFAULT]
-enabled_backends=default_backend:rbd,ceph1:rbd
 enabled_backends=default_backend:rbd
 [glance_store]
 default_backend=default_backend
@@ -156,11 +170,27 @@ cli and check the service is active and the endpoints are properly updated.
 
 
 ```
+(openstack)$ service list | grep image
+
+| fc52dbffef36434d906eeb99adfc6186 | glance    | image        |
+
 (openstack)$ endpoint list | grep image
 
 | 569ed81064f84d4a91e0d2d807e4c1f1 | regionOne | glance       | image        | True    | internal  | http://glance-internal-openstack.apps-crc.testing   |
 | 5843fae70cba4e73b29d4aff3e8b616c | regionOne | glance       | image        | True    | public    | http://glance-public-openstack.apps-crc.testing     |
 | 709859219bc24ab9ac548eab74ad4dd5 | regionOne | glance       | image        | True    | admin     | http://glance-admin-openstack.apps-crc.testing      |
+```
+
+Check the images that we previously listed in the source Cloud are available
+in the adopted service:
+
+```
+(openstack)$ image list
++--------------------------------------+--------+--------+
+| ID                                   | Name   | Status |
++--------------------------------------+--------+--------+
+| c3158cad-d50b-452f-bec1-f250562f5c1f | cirros | active |
++--------------------------------------+--------+--------+
 ```
 
 ### Image upload
@@ -172,7 +202,7 @@ We can test that an image can be created on from the adopted service.
 (openstack)$ export OS_CLOUD=adopted
 (openstack)$ curl -L -o /tmp/cirros-0.5.2-x86_64-disk.img http://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
     qemu-img convert -O raw /tmp/cirros-0.5.2-x86_64-disk.img /tmp/cirros-0.5.2-x86_64-disk.img.raw
-    openstack image create --container-format bare --disk-format raw --file /tmp/cirros-0.5.2-x86_64-disk.img.raw cirros
+    openstack image create --container-format bare --disk-format raw --file /tmp/cirros-0.5.2-x86_64-disk.img.raw cirros2
     openstack image list
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
@@ -204,7 +234,8 @@ We can test that an image can be created on from the adopted service.
 +--------------------------------------+--------+--------+
 | ID                                   | Name   | Status |
 +--------------------------------------+--------+--------+
-| 46a3eac1-7224-40bc-9083-f2f0cd122ba4 | cirros | active |
+| 46a3eac1-7224-40bc-9083-f2f0cd122ba4 | cirros2| active |
+| c3158cad-d50b-452f-bec1-f250562f5c1f | cirros | active |
 +--------------------------------------+--------+--------+
 
 
@@ -227,4 +258,5 @@ r  cluster:
 
 sh-4.4$ rbd -p images ls
 46a3eac1-7224-40bc-9083-f2f0cd122ba4
+c3158cad-d50b-452f-bec1-f250562f5c1f
 ```
