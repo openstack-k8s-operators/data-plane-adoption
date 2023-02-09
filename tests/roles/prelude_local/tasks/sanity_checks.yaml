@@ -1,0 +1,41 @@
+- name: undefined oc_login_command
+  ansible.builtin.fail:
+    msg: >-
+      Variable oc_login_command must be defined.
+  when:
+    - oc_login_command is not defined
+
+- name: test for oc CLI presence
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    /usr/bin/command -v oc
+  failed_when: false
+  register: oc_cli_present_result
+
+- name: oc CLI not found
+  ansible.builtin.fail:
+    msg: >-
+      The 'oc' command was not found. As an alternative to making sure
+      oc is on $PATH before executing Ansible, it is also possible to
+      define a bash snippet in 'oc_header' variable that puts oc onto
+      $PATH. This snippet is included in every script that makes use
+      of oc.
+  when:
+    - oc_cli_present_result.rc != 0
+
+- name: test for install_yamls presence
+  ansible.builtin.stat:
+    path: "{{ install_yamls_path }}/Makefile"
+  register: install_yamls_makefile_stat
+
+- name: missing install_yamls
+  ansible.builtin.fail:
+    msg: >-
+      The install_yamls repo wasn't found. Either set
+      install_yamls_path to a valid install_yamls location, or set
+      clone_install_yamls to true to allow the test suite to clone
+      install_yamls into the default path (directory which contains
+      the Ansible inventory file).
+  when:
+    - not install_yamls_makefile_stat.stat.exists
+    - not clone_install_yamls|bool

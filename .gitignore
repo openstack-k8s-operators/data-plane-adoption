@@ -1,3 +1,5 @@
 /local
-# docs
-site/
+/tests/inventory.yaml
+
+# rendered docs
+/site

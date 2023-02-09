@@ -1,0 +1,4 @@
+clone_install_yamls: false
+install_yamls_path: "{{ inventory_dir }}/install_yamls"
+
+reset_crc_storage: false

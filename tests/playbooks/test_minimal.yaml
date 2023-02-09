@@ -1,0 +1,14 @@
+- hosts: local
+  gather_facts: no
+  roles:
+    - prelude_local
+
+- hosts: controllers
+  gather_facts: no
+  roles:
+    - prelude_controller
+
+- hosts: local
+  gather_facts: no
+  roles:
+    - pcp_cleanup

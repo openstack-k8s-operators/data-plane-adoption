@@ -1,0 +1,2 @@
+shell_header: |
+  set -euxo pipefail
