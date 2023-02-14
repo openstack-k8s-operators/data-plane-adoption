@@ -12,3 +12,11 @@
   gather_facts: no
   roles:
     - pcp_cleanup
+
+
+### BACKEND SERVICES ###
+
+- hosts: local
+  gather_facts: no
+  roles:
+    - backend_services

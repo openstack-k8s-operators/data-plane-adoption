@@ -15,8 +15,9 @@
     while oc get pod | grep mariadb-openstack; do
         sleep 2
     done
-  when: pcp_cleanup_enabled|bool
 
+    oc delete secret osp-secret
+  when: pcp_cleanup_enabled|bool
 
 - name: reset CRC storage
   ansible.builtin.shell: |

@@ -1,0 +1,80 @@
+- name: create osp-secret
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    cd {{ install_yamls_path }}
+    make input
+
+- name: set service passwords
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {% if cinder_password %}
+        oc set data secret/osp-secret "CinderPassword={{ cinder_password }}"
+    {% endif %}
+    {% if glance_password %}
+        oc set data secret/osp-secret "GlancePassword={{ glance_password }}"
+    {% endif %}
+    {% if ironic_password %}
+        oc set data secret/osp-secret "IronicPassword={{ ironic_password }}"
+    {% endif %}
+    {% if neutron_password %}
+        oc set data secret/osp-secret "NeutronPassword={{ neutron_password }}"
+    {% endif %}
+    {% if nova_password %}
+        oc set data secret/osp-secret "NovaPassword={{ nova_password }}"
+    {% endif %}
+    {% if octavia_password %}
+        oc set data secret/osp-secret "OctaviaPassword={{ octavia_password }}"
+    {% endif %}
+    {% if placement_password %}
+        oc set data secret/osp-secret "PlacementPassword={{ placement_password }}"
+    {% endif %}
+
+- name: deploy backend services
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc apply -f - <<EOF
+    apiVersion: core.openstack.org/v1beta1
+    kind: OpenStackControlPlane
+    metadata:
+      name: openstack
+    spec:
+      secret: osp-secret
+      storageClass: local-storage
+      mariadb:
+        template:
+          containerImage: quay.io/tripleozedcentos9/openstack-mariadb:current-tripleo
+          storageRequest: 500M
+      rabbitmq:
+        template:
+          replicas: 1
+
+      keystone:
+        enabled: false
+      cinder:
+        enabled: false
+      glance:
+        enabled: false
+      placement:
+        enabled: false
+      ovn:
+        enabled: false
+      ovs:
+        enabled: false
+      neutron:
+        enabled: false
+      nova:
+        enabled: false
+    EOF
+
+- name: wait for mariadb to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod mariadb-openstack -o jsonpath='{.status.phase}{"\n"}' | grep Running
+  register: mariadb_running_result
+  until: mariadb_running_result is success
+  retries: 60
+  delay: 2

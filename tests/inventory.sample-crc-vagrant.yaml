@@ -1,11 +1,33 @@
-adopter:
+all:
+  vars:
+      install_yamls_path: /CUSTOMIZE_THIS
+      reset_crc_storage: true
+
+      oc_header: |
+        source CUSTOMIZE_THIS.sh
+      oc_login_command: |
+        oc login -u kubeadmin -p crcadmin
+
+      cinder_password: CUSTOMIZE_THIS
+      glance_password: CUSTOMIZE_THIS
+      ironic_password: CUSTOMIZE_THIS
+      neutron_password: CUSTOMIZE_THIS
+      nova_password: CUSTOMIZE_THIS
+      octavia_password: CUSTOMIZE_THIS
+      placement_password: CUSTOMIZE_THIS
+
   hosts:
     localhost:
       ansible_connection: local
-
-controllers:
-  hosts:
     standalone:
-      ansible_ssh_host: standalone_hostname_or_ip
       ansible_ssh_user: vagrant
-      ansible_ssh_private_key_file: ~/director_standalone/vagrant_private_key
+      ansible_ssh_host: CUSTOMIZE_THIS
+      ansible_ssh_private_key_file: CUSTOMIZE_THIS
+
+  children:
+    local:
+      hosts:
+        localhost:
+    controllers:
+      hosts:
+        standalone:

@@ -1,0 +1,7 @@
+cinder_password: ''
+glance_password: ''
+ironic_password: ''
+neutron_password: ''
+nova_password: ''
+octavia_password: ''
+placement_password: ''
