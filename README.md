@@ -1,35 +1,23 @@
 Data Plane Adoption procedure
 =============================
 
-Work-in-progress documentation.
+Work-in-progress [documentation](https://openstack-k8s-operators.github.io/data-plane-adoption).
 
 
-## OpenStack adoption
+Docs Testing
+------------
 
-This is a procedure for adopting an OpenStack cloud.
+Cross-platform:
 
-Perform the actions from the sub-documents in the following order:
+```
+pip install -r docs/doc_requirements.txt
+```
 
-* [Deploy podified backend services](backend_services_deployment.md)
+Then:
 
-* [Copy MariaDB data](mariadb_copy.md)
+```
+mkdocs serve
+```
 
-* [Keystone adoption](keystone_adoption.md)
-
-* [Glance adoption](glance_adoption.md)
-
-* [Adoption of other services](other_services_adoption.md)
-
-If you face issues during adoption, check the
-[Troubleshooting](troubleshooting.md) document for common problems and
-solutions.
-
-
-## Post-OpenStack Ceph adoption
-
-If the environment includes Ceph and some of its services are
-collocated on the Controller hosts ("internal Ceph"), then Ceph
-services need to be moved out of Controller hosts as the last step of
-the OpenStack adoption. Follow this documentation:
-
-* [Ceph cluster migration (RBD)](ceph.md)
+Click the link it outputs. As you save changes to files modified in your editor,
+the browser will automatically show the new content.
