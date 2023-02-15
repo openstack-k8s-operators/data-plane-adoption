@@ -1,0 +1,5 @@
+install_yamls_path: /CUSTOMIZE_THIS
+reset_crc_storage: true
+
+oc_header: |
+  source CUSTOMIZE_THIS.sh

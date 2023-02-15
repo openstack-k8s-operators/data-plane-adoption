@@ -1,21 +1,4 @@
 all:
-  vars:
-      install_yamls_path: /CUSTOMIZE_THIS
-      reset_crc_storage: true
-
-      oc_header: |
-        source CUSTOMIZE_THIS.sh
-      oc_login_command: |
-        oc login -u kubeadmin -p crcadmin
-
-      cinder_password: CUSTOMIZE_THIS
-      glance_password: CUSTOMIZE_THIS
-      ironic_password: CUSTOMIZE_THIS
-      neutron_password: CUSTOMIZE_THIS
-      nova_password: CUSTOMIZE_THIS
-      octavia_password: CUSTOMIZE_THIS
-      placement_password: CUSTOMIZE_THIS
-
   hosts:
     localhost:
       ansible_connection: local

@@ -45,4 +45,7 @@ execute the tests, follow this procedure.
   included samples (e.g. `tests/inventory.sample-crc-vagrant.yaml`) to
   provide values valid in your environment.
 
+* Create `tests/vars.yaml` and `tests/secrets.yaml`, likewise by
+  copying and editing the included samples.
+
 * Run `make test-minimal`.

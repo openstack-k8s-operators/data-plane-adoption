@@ -1,5 +1,7 @@
 /local
 /tests/inventory.yaml
+/tests/secrets.yaml
+/tests/vars.yaml
 
 # rendered docs
 /site
