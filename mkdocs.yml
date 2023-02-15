@@ -1,0 +1,51 @@
+site_name: OpenStack Data Plane Adoption
+site_description: OpenStack Data Plane Adoption
+site_author: OpenStack Team
+site_url: https://openstack-k8s-operators.github.io/data-plane-adoption
+repo_name: openstack-k8s-operators/data-plane-adoption
+repo_url: https://github.com/openstack-k8s-operators/data-plane-adoption
+theme:
+  features:
+    - search.suggest
+    - search.highlight
+    - search.share
+  name: material
+  logo: images/openstack-logo.png
+  palette:
+    - scheme: default
+      media: "(prefers-color-scheme: light)"
+      primary: teal
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    - scheme: slate
+      media: "(prefers-color-scheme: dark)"
+      primary: teal
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+nav:
+  - README.md
+  - OpenStack:
+    - backend_services_deployment.md
+    - mariadb_copy.md
+    - keystone_adoption.md
+    - glance_adoption.md
+    - other_services_adoption.md
+  - Ceph:
+    - ceph.md
+  - troubleshooting.md
+markdown_extensions:
+  - toc:
+      permalink: "#"
+  - pymdownx.superfences
+  - admonition
+extra:
+  version:
+    provider: mike
+    default: latest
+plugins:
+  - git-revision-date
+  - search:
+      lang: en
+      prebuild_index: true
