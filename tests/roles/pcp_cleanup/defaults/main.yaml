@@ -1,1 +1,2 @@
+# Whether the cleanup should be run or not.
 pcp_cleanup_enabled: true

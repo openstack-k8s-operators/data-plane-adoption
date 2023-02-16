@@ -1,2 +1,6 @@
+# Header to apply in 'shell' module invocations. If overriding, at
+# least 'set -e' should be kept to ensure that scripts that fail
+# somewhere in the middle will also fail the whole Ansible run as
+# expected.
 shell_header: |
   set -euxo pipefail
