@@ -1,0 +1,9 @@
+# Service account passwords (not service DB passwords) from the
+# original deployment.
+cinder_password: ''
+glance_password: ''
+ironic_password: ''
+neutron_password: ''
+nova_password: ''
+octavia_password: ''
+placement_password: ''

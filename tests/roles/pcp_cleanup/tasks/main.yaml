@@ -1,0 +1,29 @@
+- name: clean up any remains of podified deployment
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc delete --wait=false openstackcontrolplane/openstack || true
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    metadata:
+      finalizers: []
+    ' || true
+
+    while oc get pod | grep rabbitmq-server-0; do
+        sleep 2
+    done
+    while oc get pod | grep mariadb-openstack; do
+        sleep 2
+    done
+
+    oc delete secret osp-secret
+  when: pcp_cleanup_enabled|bool
+
+- name: reset CRC storage
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    cd {{ install_yamls_path }}
+    make crc_storage_cleanup || true
+    make crc_storage
+  when: reset_crc_storage|bool

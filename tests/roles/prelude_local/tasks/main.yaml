@@ -1,0 +1,22 @@
+- import_tasks: sanity_checks.yaml
+
+- name: clone install_yamls
+  ansible.builtin.git:
+    repo: https://github.com/openstack-k8s-operators/install_yamls
+    dest: "{{ install_yamls_path }}"
+  when:
+    - not install_yamls_makefile_stat.stat.exists
+    - clone_install_yamls|bool
+
+- name: perform oc login
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ oc_login_command }}
+
+- name: set up and use openstack namespace
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    cd {{ install_yamls_path }}
+    make namespace

@@ -1,0 +1,16 @@
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+    standalone:
+      ansible_ssh_user: vagrant
+      ansible_ssh_host: CUSTOMIZE_THIS
+      ansible_ssh_private_key_file: CUSTOMIZE_THIS
+
+  children:
+    local:
+      hosts:
+        localhost:
+    controllers:
+      hosts:
+        standalone:
