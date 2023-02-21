@@ -36,6 +36,8 @@ nav:
     - ceph_rbd.md
     - ceph_rgw.md
   - troubleshooting.md
+  - Contributing:
+    - contributing/documentation.md
 markdown_extensions:
   - toc:
       permalink: "#"
