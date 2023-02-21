@@ -33,7 +33,8 @@ nav:
     - glance_adoption.md
     - other_services_adoption.md
   - Ceph:
-    - ceph.md
+    - ceph_rbd.md
+    - ceph_rgw.md
   - troubleshooting.md
 markdown_extensions:
   - toc:
