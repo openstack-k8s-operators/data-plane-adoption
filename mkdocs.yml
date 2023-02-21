@@ -38,6 +38,7 @@ nav:
   - troubleshooting.md
   - Contributing:
     - contributing/documentation.md
+    - contributing/tests.md
 markdown_extensions:
   - toc:
       permalink: "#"
