@@ -1,4 +1,4 @@
-# Data Plane adoption - Ceph Migration
+# Data Plane adoption - Ceph RBD Migration
 
 
 In this scenario, assuming Ceph is already >= 5, either for HCI or dedicated
