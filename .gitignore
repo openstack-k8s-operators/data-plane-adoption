@@ -1,6 +1,7 @@
 /local
 /tests/inventory.yaml
 /tests/secrets.yaml
+/tests/playbooks/tmp
 /tests/vars.yaml
 
 # rendered docs

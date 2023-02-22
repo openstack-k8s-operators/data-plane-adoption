@@ -1,5 +1,11 @@
+# Path to install_yamls repo
 install_yamls_path: /CUSTOMIZE_THIS
+# Whether to use 'make crc_storage_cleanup; make crc_storage' before the test
 reset_crc_storage: true
 
+# Snippet to get the desired 'oc' command onto $PATH.
 oc_header: |
   source CUSTOMIZE_THIS.sh
+
+# External MariaDB IP for DB exports.
+external_mariadb_ip: CUSTOMIZE_THIS

@@ -3,11 +3,6 @@
   roles:
     - prelude_local
 
-- hosts: controllers
-  gather_facts: no
-  roles:
-    - prelude_controller
-
 - hosts: local
   gather_facts: no
   roles:
@@ -20,3 +15,4 @@
   gather_facts: no
   roles:
     - backend_services
+    - mariadb_copy

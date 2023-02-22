@@ -1,0 +1,100 @@
+- name: get podified MariaDB IP
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get -o yaml pod mariadb-openstack | grep podIP: | awk '{ print $2; }'
+  register: podified_mariadb_ip_result
+
+- name: set MariaDB copy shell vars
+  ansible.builtin.set_fact:
+    mariadb_copy_shell_vars: |
+      PODIFIED_MARIADB_IP={{ podified_mariadb_ip_result.stdout }}
+      MARIADB_IMAGE=quay.io/tripleozedcentos9/openstack-mariadb:current-tripleo
+
+      EXTERNAL_MARIADB_IP={{ external_mariadb_ip }}
+      EXTERNAL_DB_ROOT_PASSWORD="{{ external_db_root_password }}"
+      PODIFIED_DB_ROOT_PASSWORD="{{ podified_db_root_password }}"
+
+      CONTROLLER1_SSH="{{ controller1_ssh }}"
+      CONTROLLER2_SSH="{{ controller2_ssh }}"
+      CONTROLLER3_SSH="{{ controller3_ssh }}"
+
+- name: MariaDB copy pre checks
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ mariadb_copy_shell_vars }}
+
+    podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE \
+        mysql -h "$EXTERNAL_MARIADB_IP" -uroot "-p$EXTERNAL_DB_ROOT_PASSWORD" -e 'SHOW databases;'
+    podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE \
+        mysqlcheck --all-databases -h $EXTERNAL_MARIADB_IP -u root "-p$EXTERNAL_DB_ROOT_PASSWORD"
+    oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
+        mysql -h "$PODIFIED_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
+
+- name: stop control plane services
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ mariadb_copy_shell_vars }}
+
+    ServicesToStop=("tripleo_horizon.service"
+                    "tripleo_keystone.service"
+                    "tripleo_cinder_api.service"
+                    "tripleo_glance_api.service"
+                    "tripleo_neutron_api.service"
+                    "tripleo_nova_api.service"
+                    "tripleo_placement_api.service")
+
+    echo "Stopping the OpenStack services"
+
+    for service in ${ServicesToStop[*]}; do
+        echo "Stopping the service: $service in each controller node"
+        $CONTROLLER1_SSH sudo systemctl stop $service
+        $CONTROLLER2_SSH sudo systemctl stop $service
+        $CONTROLLER3_SSH sudo systemctl stop $service
+    done
+
+- name: dump databases
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ mariadb_copy_shell_vars }}
+
+    mkdir -p {{ mariadb_copy_tmp_dir }}
+    cd {{ mariadb_copy_tmp_dir }}
+
+    podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE bash <<EOF
+
+    mysql -h $EXTERNAL_MARIADB_IP -u root "-p$EXTERNAL_DB_ROOT_PASSWORD" -N -e 'show databases' | while read dbname; do
+        echo "Dumping \$dbname"
+        mysqldump -h $EXTERNAL_MARIADB_IP -uroot "-p$EXTERNAL_DB_ROOT_PASSWORD" \
+            --single-transaction --complete-insert --skip-lock-tables --lock-tables=0 \
+            --databases "\$dbname" \
+            > "\$dbname".sql
+    done
+
+    EOF
+
+- name: restore databases
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ mariadb_copy_shell_vars }}
+    cd {{ mariadb_copy_tmp_dir }}
+
+    for dbname in cinder glance keystone nova_api nova_cell0 nova ovs_neutron placement; do
+        echo "Restoring $dbname"
+        oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
+           mysql -h "$PODIFIED_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" < "$dbname.sql"
+    done
+
+- name: MariaDB post-checks
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ mariadb_copy_shell_vars }}
+
+    oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
+        mysql -h "$PODIFIED_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;' \
+        | grep keystone

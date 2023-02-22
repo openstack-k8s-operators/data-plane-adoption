@@ -36,6 +36,11 @@ MARIADB_IMAGE=quay.io/tripleozedcentos9/openstack-mariadb:current-tripleo
 EXTERNAL_MARIADB_IP=192.168.24.3
 EXTERNAL_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 PODIFIED_DB_ROOT_PASSWORD=12345678
+
+# ssh commands to reach controller machines
+CONTROLLER1_SSH="ssh -F ~/director_standalone/vagrant_ssh_config vagrant@standalone"
+CONTROLLER2_SSH=":"
+CONTROLLER3_SSH=":"
 ```
 
 ## Pre-checks
@@ -73,13 +78,6 @@ plane services.
 2- Stop the services.
 
 ```bash
-
-# Configure SSH variables to stop the services
-# in each controller node. For example:
-
-CONTROLLER1_SSH="ssh -F $ENV_DIR/director_standalone/vagrant_ssh_config vagrant@standalone"
-CONTROLLER2_SSH=":"
-CONTROLLER3_SSH=":"
 
 # Update the services list to be stoped
 

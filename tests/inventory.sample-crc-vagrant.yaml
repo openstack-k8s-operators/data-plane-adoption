@@ -11,6 +11,3 @@ all:
     local:
       hosts:
         localhost:
-    controllers:
-      hosts:
-        standalone:
