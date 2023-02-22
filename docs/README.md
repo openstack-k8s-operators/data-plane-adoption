@@ -28,4 +28,5 @@ collocated on the Controller hosts ("internal Ceph"), then Ceph
 services need to be moved out of Controller hosts as the last step of
 the OpenStack adoption. Follow this documentation:
 
-* [Ceph cluster migration (RBD)](ceph.md)
+* [Ceph RBD migration](ceph_rbd.md)
+* [Ceph RGW migration](ceph_rgw.md)
