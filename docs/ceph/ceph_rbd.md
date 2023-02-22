@@ -399,6 +399,7 @@ The same approach and the same steps can be applied to migrate oc0-controller-2 
 ### Screen Recording:
 
 - [Externalize a TripleO deployed Ceph cluster](https://asciinema.org/a/508174)
+<script id="asciicast-508174" src="https://asciinema.org/a/508174.js" async data-autoplay="true" data-speed="2"></script>
 
 ## What’s next
 

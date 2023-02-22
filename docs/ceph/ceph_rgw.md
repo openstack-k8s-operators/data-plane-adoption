@@ -677,6 +677,7 @@ Worker Balance
 ## Additional Resources
 
 A screen recording is available [here](https://asciinema.org/a/560091).
+<script id="asciicast-560091" src="https://asciinema.org/a/560091.js" async data-autoplay="true" data-speed="2"></script>
 
 [0]: https://access.redhat.com/articles/1548993
 [1]: https://docs.ceph.com/en/latest/cephadm/services/rgw/#high-availability-service-for-rgw
