@@ -25,17 +25,20 @@ theme:
         icon: material/toggle-switch
         name: Switch to light mode
 nav:
-  - README.md
+  - Overview: README.md
   - OpenStack:
-    - backend_services_deployment.md
-    - mariadb_copy.md
-    - keystone_adoption.md
-    - glance_adoption.md
-    - other_services_adoption.md
+    - openstack/backend_services_deployment.md
+    - openstack/mariadb_copy.md
+    - openstack/keystone_adoption.md
+    - openstack/glance_adoption.md
+    - openstack/other_services_adoption.md
+    - openstack/troubleshooting.md
   - Ceph:
-    - ceph_rbd.md
-    - ceph_rgw.md
-  - troubleshooting.md
+    - Ceph RBD migration: ceph/ceph_rbd.md
+    - Ceph RGW migration: ceph/ceph_rgw.md
+  - Contributing:
+    - contributing/documentation.md
+    - contributing/tests.md
 markdown_extensions:
   - toc:
       permalink: "#"
