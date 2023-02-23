@@ -9,9 +9,9 @@ use cases).
 
 ## Requirements
 
-- Ceph is >= 5 and managed by cephadm/orchestrator
-- Ceph NFS (ganesha) migrated from a [TripleO based deployment to cephadm](https://bugzilla.redhat.com/show_bug.cgi?id=2044910)
-- Both the Ceph public and cluster networks are propagated, via TripleO, to the target nodes
+- Ceph is >= 5 and managed by cephadm/orchestrator.
+- Ceph NFS (ganesha) migrated from a [TripleO based deployment to cephadm](https://bugzilla.redhat.com/show_bug.cgi?id=2044910).
+- Both the Ceph public and cluster networks are propagated, via TripleO, to the target nodes.
 - Ceph Mons need to keep their IPs (to avoid cold migration).
 
 
@@ -25,12 +25,12 @@ mon and mgr daemons. For the purposes of this POC, we'll deploy a ceph cluster
 with only mon, mgrs, and osds to simulate the environment a customer will be in
 before starting the migration.
 The goal of the first POC is to ensure that:
-- We can keep the mon IP addresses moving them to the CephStorage nodes
-- We can drain the existing controller nodes and shutting them down
+- We can keep the mon IP addresses moving them to the CephStorage nodes.
+- We can drain the existing controller nodes and shut them down.
 - We can deploy additional monitors to the existing nodes, promoting them as
   \_admin nodes that can be used by administrators to manage the ceph cluster
-  and perform day2 operations against it
-- We can keep the cluster operational during the migration
+  and perform day2 operations against it.
+- We can keep the cluster operational during the migration.
 
 
 ### Prerequisites
@@ -40,7 +40,7 @@ network to make sure we can use both Ceph public and cluster networks.
 
 This step is the only one where the interaction with TripleO is required. From
 17+ we don’t have to run any stack update, however, we have commands that
-should be performed to run os-net-config on the baremetal node and configure
+should be performed to run os-net-config on the bare-metal node and configure
 additional networks.
 
 Make sure the network is defined in metalsmith.yaml for the CephStorageNodes:
@@ -110,12 +110,12 @@ Deploy the Ceph cluster
 
 **Note**:
 
-The ceph\_spec.yaml, which is the OSP generated description of the ceph cluster,
+The ceph\_spec.yaml, which is the OSP-generated description of the ceph cluster,
 will be used, later in the process, as the basic template required by cephadm
-to update the status/info of the daemons
+to update the status/info of the daemons.
 
 
-Check the status of the cluster
+Check the status of the cluster:
 
 
 ```
@@ -231,10 +231,10 @@ CONTAINER ID  IMAGE       COMMAND     CREATED     STATUS      PORTS       NAMES
 ```
 
 **Note:**
-cephadm rm-cluster on a node which is not part of the cluster anymore has the
+cephadm rm-cluster on a node that is not part of the cluster anymore has the
 effect of removing all the containers and doing some cleanup on the filesystem.
 
-Before shutting the oc0-controller-1 down, move the ip address (on the same
+Before shutting the oc0-controller-1 down, move the IP address (on the same
 network) to the oc0-ceph-0 node:
 
 ```
@@ -274,7 +274,7 @@ On the oc0-ceph-0:
 
 Poweroff oc0-controller-1.
 
-Add the new mon on oc0-ceph-0 using the old ip address:
+Add the new mon on oc0-ceph-0 using the old IP address:
 
 ```
 [ceph: root@oc0-controller-0 /]# ceph orch daemon add mon oc0-ceph-0:172.16.11.121
@@ -288,7 +288,7 @@ b581dc8bbb78  quay.io/ceph/daemon@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401
 ```
 
 On the cephadm shell, backup the existing ceph_spec.yaml, edit the spec
-removing any oc0-controller-1 entry, and replace it with oc0-ceph-0:
+removing any oc0-controller-1 entry, and replacing it with oc0-ceph-0:
 
 
 ```

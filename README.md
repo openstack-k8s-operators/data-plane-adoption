@@ -15,4 +15,4 @@ links:
   how to build docs locally, docs patterns and tips.
 
 * [Tests](https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/tests.md) -
-  information about the test suite and how to run it.
+  information about the test suite, and how to run it.

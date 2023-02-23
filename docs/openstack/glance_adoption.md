@@ -13,7 +13,7 @@ This guide also assumes that:
 
 1. A `TripleO` environment (the source Cloud) is running on one side;
 2. A `SNO` / `CodeReadyContainers` is running on the other side;
-3. (optional) an internal/external `Ceph` cluster is reacheable by both `crc` and
+3. (optional) an internal/external `Ceph` cluster is reachable by both `crc` and
 `TripleO`
 
 
@@ -64,7 +64,7 @@ spec:
 However, if a Ceph backend is used, the `customServiceConfig` parameter should
 be used to inject the right configuration to the `GlanceAPI` instance.
 
-Make sure the Ceph related secret exists in the `openstack` namespace:
+Make sure the Ceph-related secret exists in the `openstack` namespace:
 
 ```
 $ oc get secrets | grep ceph
@@ -144,7 +144,7 @@ spec:
 
 ## Post-checks
 
-### Test the glance service from the OpenStack cli
+### Test the glance service from the OpenStack CLI
 
 Inspect the resulting glance pods:
 
@@ -165,8 +165,8 @@ sh-5.1# ls /etc/ceph/ceph*
 /etc/ceph/ceph.client.openstack.keyring  /etc/ceph/ceph.conf
 ```
 
-Ceph secrets are properly mounted, at this point let's move to the openstack
-cli and check the service is active and the endpoints are properly updated.
+Ceph secrets are properly mounted, at this point let's move to the OpenStack
+CLI and check the service is active and the endpoints are properly updated.
 
 
 ```

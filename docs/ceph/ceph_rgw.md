@@ -120,7 +120,7 @@ In this example:
 
 * vlan30 represents the Storage Network, where the new RGW instances should be
   started on the CephStorage nodes
-* br-ex represents the External Network, which is where, in the current
+* br-ex represents the External Network, which is where in the current
   environment, haproxy has the frontend VIP assigned
 
 
@@ -128,7 +128,7 @@ In this example:
 
 Identify the network that we previously had in haproxy and propagate it (via
 TripleO) to the CephStorage nodes. This network is used to reserve a new VIP
-that will be owned by Ceph and used as the entrypoint for the RGW service.
+that will be owned by Ceph and used as the entry point for the RGW service.
 
 
 ssh into `controller-0` and check the current HaProxy configuration until we
@@ -170,7 +170,7 @@ Double check the network used as HaProxy frontend:
 
 As described in the previous section, the check on controller-0 shows that we
 are exposing the services using the external network, which is not present in
-the CephStorage nodes, and we  need to propagate it via TripleO.
+the CephStorage nodes, and we need to propagate it via TripleO.
 
 
 ## Propagate the `HaProxy` frontend network to `CephStorage` nodes
@@ -318,7 +318,7 @@ During the overcloud deployment, RGW is applied at step2
 (external_deployment_steps), and a cephadm compatible spec is generated in
 `/home/ceph-admin/specs/rgw` from the [ceph_mkspec][3] ansible module.
 Find and patch the RGW spec, specifying the right placement using the labels
-approach and change the the rgw backend port to **8090** to avoid conflicts
+approach, and change the rgw backend port to **8090** to avoid conflicts
 with the [Ceph Ingress Daemon][2] (*)
 
 
@@ -446,9 +446,9 @@ Query 172.17.3.81
 ### NOTE
 
 In case RGW backends are migrated in the CephStorage nodes, there’s no
-“internalAPI” network(this is not true in case of HCI). Reconfig the RGW
+“internalAPI” network(this is not true in the case of HCI). Reconfig the RGW
 keystone endpoint, pointing to the external Network that has been propagated
-(see previous section)
+(see the previous section)
 
 ```
 [ceph: root@controller-0 /]# ceph config dump | grep keystone
@@ -464,7 +464,7 @@ global   basic rgw_keystone_url  http://172.16.1.111:5000
 this point will point to the old RGW backends, resulting in a wrong, not
 working configuration.
 Since we’re going to deploy the [Ceph Ingress Daemon][3], the first thing to do
-is remove the existing `ceph_rgw` config, cleanup the config created by TripleO
+is remove the existing `ceph_rgw` config, clean up the config created by TripleO
 and restart the service to make sure other services are not affected by this
 change.
 
@@ -512,7 +512,7 @@ Double check no process is bound to 8080 anymore”
 [root@controller-0 ~]#
 ```
 
-And the swift cli should fail at this point:
+And the swift CLI should fail at this point:
 
 ```
 (overcloud) [root@cephstorage-0 ~]# swift list

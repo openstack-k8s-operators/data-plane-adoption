@@ -22,14 +22,14 @@ An example of a failed pod:
 
 ```
 
-In order to solve this issue we need to get a valid pull-secret from the official [Red Hat console site](https://console.redhat.com/openshift/install/pull-secret),
+To solve this issue we need to get a valid pull-secret from the official [Red Hat console site](https://console.redhat.com/openshift/install/pull-secret),
 store this pull secret locally in a machine with access to the Kubernetes API (service node), and then run:
 
 ```
 oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=<pull_secret_location.json>
 ```
 
-The previous commmand will make available the authentication information in all the cluster's compute nodes,
+The previous command will make available the authentication information in all the cluster's compute nodes,
 then trigger a new pod deployment to pull the container image with:
 
 ```
@@ -37,5 +37,5 @@ kubectl delete pod rabbitmq-server-0 -n openstack
 ```
 
 And the pod should be able to pull the image successfully.
-For more inforation about what container registries requires what
+For more information about what container registries requires what
 type of authentication, check the [official docs](https://access.redhat.com/RegistryAuthentication).

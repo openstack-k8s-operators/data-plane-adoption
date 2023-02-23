@@ -47,7 +47,7 @@
   EOF
   ```
 
-* Clean up old endpoints that still point to old control plane
+* Clean up old endpoints that still point to the old control plane
   (everything except Keystone endpoints):
 
   ```
