@@ -16,7 +16,7 @@
         sleep 2
     done
 
-    oc delete secret osp-secret
+    oc delete secret osp-secret || true
   when: pcp_cleanup_enabled|bool
 
 - name: reset CRC storage
