@@ -35,7 +35,7 @@ the browser will automatically show the new content.
   something that wouldn't translate well from dev envs to production.
 
     * This includes not assuming that the source environment is
-      Standalone, and destination is CRC. We can provide examples for
+      Standalone, and the destination is CRC. We can provide examples for
       Standalone/CRC, but it should be possible to use the procedure
       with fuller environments in a way that is obvious from the docs.
 

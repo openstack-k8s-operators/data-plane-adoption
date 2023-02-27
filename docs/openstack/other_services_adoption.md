@@ -19,7 +19,7 @@ their own guides (e.g. like
 ## Procedure - Adoption of other services
 
 
-* Deploy the rest of control plane services:
+* Deploy the rest of the control plane services:
 
   ```
   oc patch openstackcontrolplane openstack --type=merge --patch '

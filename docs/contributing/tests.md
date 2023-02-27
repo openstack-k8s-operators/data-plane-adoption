@@ -4,7 +4,7 @@ Tests
 ## Test suite information
 
 The adoption docs repository also includes a test suite for Adoption.
-Currently only one test target is defined:
+Currently, only one test target is defined:
 
 * `minimal` - a minimal test scenario, the eventual set of services in
   this scenario should be the "core" services needed to launch a VM

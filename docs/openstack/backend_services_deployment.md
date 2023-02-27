@@ -1,10 +1,10 @@
 # Backend services deployment
 
 The following instructions create OpenStackControlPlane CR with
-MariaDB and RabbitMQ deployed, and other services disabled. This will
+MariaDB and RabbitMQ deployed, and all the other services disabled. This will
 be the foundation of the podified control plane.
 
-In subsequent steps we'll import the original databases and then add
+In subsequent steps, we'll import the original databases and then add
 podified OpenStack control plane services.
 
 ## Prerequisites
@@ -78,7 +78,7 @@ podified OpenStack control plane services.
   ```
 
 * Set service account passwords in `osp-secret` to match the service
-  account passwords from original deployment:
+  account passwords from the original deployment:
 
   ```
   oc set data secret/osp-secret "CinderPassword=$CINDER_PASSWORD"

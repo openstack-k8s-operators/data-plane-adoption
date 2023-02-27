@@ -20,13 +20,13 @@ cluster.
     * The adoption host and the podified MariaDB.
 
     * *Note that this routability requirement may change in the
-      future, e.g. we may require routability from original MariaDB to
+      future, e.g. we may require routability from the original MariaDB to
       podified MariaDB*.
 
 ## Variables
 
 Define the shell variables used in the steps below. The values are
-just illustrative, use values which are correct for your environment:
+just illustrative, use values that are correct for your environment:
 
 ```
 PODIFIED_MARIADB_IP=$(oc get -o yaml pod mariadb-openstack | grep podIP: | awk '{ print $2; }')
@@ -63,7 +63,7 @@ PODIFIED_DB_ROOT_PASSWORD=12345678
 
 ## Procedure - stopping control plane services
 
-From each controller node it is necessary to stop the
+From each controller node, it is necessary to stop the
 control-plane services to avoid inconsistencies in the
 data migrated for the data-plane adoption procedure.
 
