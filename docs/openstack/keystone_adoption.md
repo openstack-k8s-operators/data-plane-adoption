@@ -47,19 +47,26 @@
   EOF
   ```
 
-* Clean up old endpoints that still point to the old control plane
-  (everything except Keystone endpoints):
+* Clean up old services and endpoints that still point to the old
+  control plane (everything except Keystone service and endpoints):
 
   ```
   export OS_CLIENT_CONFIG_FILE=clouds-adopted.yaml
   export OS_CLOUD=adopted
 
-  openstack endpoint list | grep ' cinderv3 ' | awk '{ print $2; }' | xargs openstack endpoint delete
-  openstack endpoint list | grep ' glance ' | awk '{ print $2; }' | xargs openstack endpoint delete
-  openstack endpoint list | grep ' neutron ' | awk '{ print $2; }' | xargs openstack endpoint delete
-  openstack endpoint list | grep ' nova ' | awk '{ print $2; }' | xargs openstack endpoint delete
-  openstack endpoint list | grep ' placement ' | awk '{ print $2; }' | xargs openstack endpoint delete
-  openstack endpoint list | grep ' swift ' | awk '{ print $2; }' | xargs openstack endpoint delete
+  openstack service list | grep ' cinderv3 ' | awk '{ print $2; }' | xargs openstack service delete || true
+  openstack service list | grep ' glance ' | awk '{ print $2; }' | xargs openstack service delete || true
+  openstack service list | grep ' neutron ' | awk '{ print $2; }' | xargs openstack service delete || true
+  openstack service list | grep ' nova ' | awk '{ print $2; }' | xargs openstack service delete || true
+  openstack service list | grep ' placement ' | awk '{ print $2; }' | xargs openstack service delete || true
+  openstack service list | grep ' swift ' | awk '{ print $2; }' | xargs openstack service delete || true
+
+  openstack endpoint list | grep ' cinderv3 ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
+  openstack endpoint list | grep ' glance ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
+  openstack endpoint list | grep ' neutron ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
+  openstack endpoint list | grep ' nova ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
+  openstack endpoint list | grep ' placement ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
+  openstack endpoint list | grep ' swift ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
   ```
 
 ## Post-checks
