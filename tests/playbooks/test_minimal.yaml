@@ -17,3 +17,4 @@
     - backend_services
     - mariadb_copy
     - keystone_adoption
+    - glance_adoption

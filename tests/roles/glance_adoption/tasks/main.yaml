@@ -1,0 +1,43 @@
+- name: deploy podified Glance
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      glance:
+        enabled: true
+        template:
+          databaseInstance: openstack
+          containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
+          storageClass: "local-storage"
+          storageRequest: 10G
+          glanceAPIInternal:
+            containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
+          glanceAPIExternal:
+            containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
+    '
+
+- name: wait for Glance to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=service=glance-external -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc get pod --selector=service=glance-internal -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: glance_running_result
+  until: glance_running_result is success
+  retries: 60
+  delay: 2
+
+- name: check that Glance is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    export OS_CLIENT_CONFIG_FILE={{ adopted_clouds_yaml_path }}
+    export OS_CLOUD=adopted
+
+    openstack endpoint list | grep glance
+    openstack image list
+  register: glance_responding_result
+  until: glance_responding_result is success
+  retries: 15
+  delay: 2
