@@ -3,6 +3,7 @@
 /tests/secrets.yaml
 /tests/playbooks/tmp
 /tests/vars.yaml
+/tests/logs
 
 # rendered docs
 /site
