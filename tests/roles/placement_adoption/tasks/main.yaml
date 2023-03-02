@@ -1,0 +1,43 @@
+- name: deploy podified Placement
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      placement:
+        enabled: true
+        template:
+          containerImage: quay.io/tripleozedcentos9/openstack-placement-api:current-tripleo
+          databaseInstance: openstack
+          secret: osp-secret
+    '
+
+- name: wait for Placement to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=service=placement -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: placement_running_result
+  until: placement_running_result is success
+  retries: 60
+  delay: 2
+
+- name: check that Placement is reachable and its endpoints are defined
+  # There is no placement CLI packaged in Fedora, we could do a CLI
+  # check if we agree on installing it from RDO/OSP packages before
+  # running the test suite. For now let's just curl the API.
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    export OS_CLIENT_CONFIG_FILE={{ adopted_clouds_yaml_path }}
+    export OS_CLOUD=adopted
+
+    openstack endpoint list | grep placement
+
+    openstack endpoint list | grep placement | grep public
+    PLACEMENT_PUBLIC_URL=$(openstack endpoint list -c 'Service Name' -c 'Service Type' -c URL | grep placement | grep public | awk '{ print $6; }')
+    curl "$PLACEMENT_PUBLIC_URL" | grep '"versions"'
+  register: placement_responding_result
+  until: placement_responding_result is success
+  retries: 15
+  delay: 2

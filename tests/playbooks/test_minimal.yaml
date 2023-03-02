@@ -18,3 +18,4 @@
     - mariadb_copy
     - keystone_adoption
     - glance_adoption
+    - placement_adoption
