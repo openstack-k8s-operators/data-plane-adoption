@@ -6,6 +6,7 @@
     make input
 
 - name: set service passwords
+  no_log: true
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}

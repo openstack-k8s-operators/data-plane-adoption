@@ -6,6 +6,7 @@
   register: podified_mariadb_ip_result
 
 - name: set MariaDB copy shell vars
+  no_log: true
   ansible.builtin.set_fact:
     mariadb_copy_shell_vars: |
       PODIFIED_MARIADB_IP={{ podified_mariadb_ip_result.stdout }}
@@ -20,6 +21,7 @@
       CONTROLLER3_SSH="{{ controller3_ssh }}"
 
 - name: MariaDB copy pre checks
+  no_log: true
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -33,6 +35,7 @@
         mysql -h "$PODIFIED_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
 
 - name: stop control plane services
+  no_log: true
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -56,6 +59,7 @@
     done
 
 - name: dump databases
+  no_log: true
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -77,6 +81,7 @@
     EOF
 
 - name: restore databases
+  no_log: true
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -90,6 +95,7 @@
     done
 
 - name: MariaDB post-checks
+  no_log: true
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
