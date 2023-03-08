@@ -3,7 +3,3 @@
 clone_install_yamls: false
 # Path where install_yamls repo should be found.
 install_yamls_path: "{{ inventory_dir }}/install_yamls"
-
-# Whether 'make crc_storage_cleanup' + 'make crc_storage' should be
-# run before running the test suite.
-reset_crc_storage: false
