@@ -1,17 +1,17 @@
-- hosts: local
+- name: Prelude
+  hosts: local
   gather_facts: no
   roles:
     - prelude_local
 
-- hosts: local
+- name: Cleanup
+  hosts: local
   gather_facts: no
   roles:
     - pcp_cleanup
 
-
-### BACKEND SERVICES ###
-
-- hosts: local
+- name: Adoption
+  hosts: local
   gather_facts: no
   roles:
     - backend_services
