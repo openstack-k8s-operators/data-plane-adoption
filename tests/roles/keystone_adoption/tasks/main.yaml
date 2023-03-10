@@ -1,0 +1,77 @@
+- name: deploy podified Keystone
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      keystone:
+        enabled: true
+        template:
+          secret: osp-secret
+          containerImage: quay.io/tripleozedcentos9/openstack-keystone:current-tripleo
+          databaseInstance: openstack
+    '
+
+- name: create clouds-adopted.yaml
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    cat > {{ adopted_clouds_yaml_path }} <<EOF
+    clouds:
+      adopted:
+        auth:
+          auth_url: '{{ auth_url }}'
+          password: '{{ admin_password }}'
+          project_domain_name: Default
+          project_name: admin
+          user_domain_name: Default
+          username: admin
+        cacert: ''
+        identity_api_version: '3'
+        region_name: regionOne
+        volume_api_version: '3'
+    EOF
+
+- name: wait for Keystone to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=service=keystone -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: keystone_running_result
+  until: keystone_running_result is success
+  retries: 60
+  delay: 2
+
+- name: check that Keystone is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    export OS_CLIENT_CONFIG_FILE={{ adopted_clouds_yaml_path }}
+    export OS_CLOUD=adopted
+
+    openstack endpoint list | grep keystone
+  register: keystone_responding_result
+  until: keystone_responding_result is success
+  retries: 15
+  delay: 2
+
+- name: clean up services and endpoints
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    export OS_CLIENT_CONFIG_FILE={{ adopted_clouds_yaml_path }}
+    export OS_CLOUD=adopted
+
+    openstack service list | grep ' cinderv3 ' | awk '{ print $2; }' | xargs openstack service delete || true
+    openstack service list | grep ' glance ' | awk '{ print $2; }' | xargs openstack service delete || true
+    openstack service list | grep ' neutron ' | awk '{ print $2; }' | xargs openstack service delete || true
+    openstack service list | grep ' nova ' | awk '{ print $2; }' | xargs openstack service delete || true
+    openstack service list | grep ' placement ' | awk '{ print $2; }' | xargs openstack service delete || true
+    openstack service list | grep ' swift ' | awk '{ print $2; }' | xargs openstack service delete || true
+
+    openstack endpoint list | grep ' cinderv3 ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
+    openstack endpoint list | grep ' glance ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
+    openstack endpoint list | grep ' neutron ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
+    openstack endpoint list | grep ' nova ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
+    openstack endpoint list | grep ' placement ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
+    openstack endpoint list | grep ' swift ' | awk '{ print $2; }' | xargs openstack endpoint delete || true

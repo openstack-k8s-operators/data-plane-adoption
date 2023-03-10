@@ -9,3 +9,6 @@ oc_header: |
 
 # External MariaDB IP for DB exports.
 external_mariadb_ip: CUSTOMIZE_THIS
+
+# Auth URL to use for adopted Keystone.
+auth_url: http://keystone-public-openstack.apps-crc.testing

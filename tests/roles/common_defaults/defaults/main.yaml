@@ -4,3 +4,7 @@
 # expected.
 shell_header: |
   set -euxo pipefail
+
+# Path to the clouds-adopted.yaml file for talking to the adopted
+# cloud.
+adopted_clouds_yaml_path: tmp/clouds-adopted.yaml
