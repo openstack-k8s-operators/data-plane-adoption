@@ -15,6 +15,8 @@ Perform the actions from the sub-documents in the following order:
 
 * [Glance adoption](openstack/glance_adoption.md)
 
+* [Placement adoption](openstack/placement_adoption.md)
+
 * [Adoption of other services](openstack/other_services_adoption.md)
 
 If you face issues during adoption, check the

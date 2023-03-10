@@ -9,6 +9,7 @@
     - clone_install_yamls|bool
 
 - name: perform oc login
+  no_log: true
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}

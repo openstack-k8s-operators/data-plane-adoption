@@ -13,6 +13,7 @@
     '
 
 - name: create clouds-adopted.yaml
+  no_log: true
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}

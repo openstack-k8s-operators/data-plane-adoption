@@ -41,13 +41,6 @@ their own guides (e.g. like
     #         containerImage: quay.io/tripleozedcentos9/openstack-cinder-volume:current-tripleo
     #         replicas: 1
 
-    placement:
-      enabled: true
-      template:
-        containerImage: quay.io/tripleozedcentos9/openstack-placement-api:current-tripleo
-        databaseInstance: openstack
-        secret: osp-secret
-
     ovn:
       enabled: true
       template:
