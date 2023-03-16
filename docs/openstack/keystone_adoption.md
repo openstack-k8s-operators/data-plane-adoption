@@ -24,6 +24,9 @@
         secret: osp-secret
         containerImage: quay.io/tripleozedcentos9/openstack-keystone:current-tripleo
         databaseInstance: openstack
+        databaseUser: keystone
+        region: regionOne
+        replicas: 1
   '
   ```
 
