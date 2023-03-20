@@ -94,70 +94,70 @@ podified OpenStack control plane services.
   RabbitMQ services. All other services must be disabled.**
 
   ```
-oc apply -f - <<EOF
-apiVersion: core.openstack.org/v1beta1
-kind: OpenStackControlPlane
-metadata:
-  name: openstack
-spec:
-  secret: osp-secret
-  storageClass: local-storage
-  keystone:
-    enabled: false
-  mariadb:
-    templates:
-      openstack:
-        containerImage: quay.io/tripleozedcentos9/openstack-mariadb:current-tripleo
-        storageRequest: 500M
-  rabbitmq:
-    templates:
-      rabbitmq:
-        replicas: 1
-  placement:
-    enabled: false
-  glance:
-    enabled: false
-  cinder:
-    enabled: false
-    template:
-      cinderAPI:
-        replicas: 1
-        containerImage: quay.io/tripleozedcentos9/openstack-cinder-api:current-tripleo
-      cinderScheduler:
-        replicas: 1
-        containerImage: quay.io/tripleozedcentos9/openstack-cinder-scheduler:current-tripleo
-      cinderBackup:
-        replicas: 1
-        containerImage: quay.io/tripleozedcentos9/openstack-cinder-backup:current-tripleo
-      cinderVolumes:
-        volume1:
-          containerImage: quay.io/tripleozedcentos9/openstack-cinder-volume:current-tripleo
+  oc apply -f - <<EOF
+  apiVersion: core.openstack.org/v1beta1
+  kind: OpenStackControlPlane
+  metadata:
+    name: openstack
+  spec:
+    secret: osp-secret
+    storageClass: local-storage
+    keystone:
+      enabled: false
+    mariadb:
+      templates:
+        openstack:
+          containerImage: quay.io/tripleozedcentos9/openstack-mariadb:current-tripleo
+          storageRequest: 500M
+    rabbitmq:
+      templates:
+        rabbitmq:
           replicas: 1
-  ovn:
-    enabled: false
-  ovs:
-    enabled: false
-  neutron:
-    enabled: false
-  nova:
-    enabled: false
-  ironic:
-    enabled: false
-    template:
-      databaseInstance: openstack
-      ironicAPI:
-        replicas: 1
-        containerImage: quay.io/tripleozedcentos9/openstack-ironic-api:current-tripleo
-      ironicConductors:
-      - replicas: 1
-        containerImage: quay.io/tripleozedcentos9/openstack-ironic-conductor:current-tripleo
-        pxeContainerImage: quay.io/tripleozedcentos9/openstack-ironic-pxe:current-tripleo
-        storageRequest: 10G
-      ironicInspector:
-        replicas: 1
-        containerImage: quay.io/tripleozedcentos9/openstack-ironic-inspector:current-tripleo
-        pxeContainerImage: quay.io/tripleozedcentos9/openstack-ironic-pxe:current-tripleo
-EOF
+    placement:
+      enabled: false
+    glance:
+      enabled: false
+    cinder:
+      enabled: false
+      template:
+        cinderAPI:
+          replicas: 1
+          containerImage: quay.io/tripleozedcentos9/openstack-cinder-api:current-tripleo
+        cinderScheduler:
+          replicas: 1
+          containerImage: quay.io/tripleozedcentos9/openstack-cinder-scheduler:current-tripleo
+        cinderBackup:
+          replicas: 1
+          containerImage: quay.io/tripleozedcentos9/openstack-cinder-backup:current-tripleo
+        cinderVolumes:
+          volume1:
+            containerImage: quay.io/tripleozedcentos9/openstack-cinder-volume:current-tripleo
+            replicas: 1
+    ovn:
+      enabled: false
+    ovs:
+      enabled: false
+    neutron:
+      enabled: false
+    nova:
+      enabled: false
+    ironic:
+      enabled: false
+      template:
+        databaseInstance: openstack
+        ironicAPI:
+          replicas: 1
+          containerImage: quay.io/tripleozedcentos9/openstack-ironic-api:current-tripleo
+        ironicConductors:
+        - replicas: 1
+          containerImage: quay.io/tripleozedcentos9/openstack-ironic-conductor:current-tripleo
+          pxeContainerImage: quay.io/tripleozedcentos9/openstack-ironic-pxe:current-tripleo
+          storageRequest: 10G
+        ironicInspector:
+          replicas: 1
+          containerImage: quay.io/tripleozedcentos9/openstack-ironic-inspector:current-tripleo
+          pxeContainerImage: quay.io/tripleozedcentos9/openstack-ironic-pxe:current-tripleo
+  EOF
   ```
 
 ## Post-checks
