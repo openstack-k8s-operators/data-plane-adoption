@@ -29,6 +29,7 @@ nav:
   - OpenStack:
     - openstack/backend_services_deployment.md
     - openstack/mariadb_copy.md
+    - openstack/ovn_adoption.md
     - openstack/keystone_adoption.md
     - openstack/glance_adoption.md
     - openstack/placement_adoption.md

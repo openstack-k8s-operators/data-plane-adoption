@@ -79,7 +79,7 @@ plane services.
 
 ```bash
 
-# Update the services list to be stoped
+# Update the services list to be stopped
 
 ServicesToStop=("tripleo_horizon.service"
                 "tripleo_keystone.service"

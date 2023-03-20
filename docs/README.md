@@ -11,6 +11,8 @@ Perform the actions from the sub-documents in the following order:
 
 * [Copy MariaDB data](openstack/mariadb_copy.md)
 
+* [OVN adoption](openstack/ovn_adoption.md)
+
 * [Keystone adoption](openstack/keystone_adoption.md)
 
 * [Glance adoption](openstack/glance_adoption.md)

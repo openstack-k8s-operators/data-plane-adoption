@@ -93,7 +93,7 @@ podified OpenStack control plane services.
 * Deploy OpenStackControlPlane. **Make sure to only enable MariaDB and
   RabbitMQ services. All other services must be disabled.**
 
-  ```
+  ```yaml
   oc apply -f - <<EOF
   apiVersion: core.openstack.org/v1beta1
   kind: OpenStackControlPlane
