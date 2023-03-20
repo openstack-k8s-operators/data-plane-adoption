@@ -126,7 +126,9 @@ podified OpenStack control plane services.
 
     glance:
       enabled: false
-      template: {}
+      template:
+        glanceAPIInternal: {}
+        glanceAPIExternal: {}
 
     cinder:
       enabled: false

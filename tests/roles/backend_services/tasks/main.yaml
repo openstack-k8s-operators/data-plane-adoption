@@ -44,6 +44,7 @@
     spec:
       secret: osp-secret
       storageClass: local-storage
+
       keystone:
         enabled: false
         template: {}
@@ -64,13 +65,18 @@
       placement:
         enabled: false
         template: {}
+
       glance:
         enabled: false
-        template: {}
+        template:
+          glanceAPIInternal: {}
+          glanceAPIExternal: {}
+
       cinder:
         enabled: false
         template:
           cinderVolumes: {}
+
       ovn:
         enabled: false
         template: {}
