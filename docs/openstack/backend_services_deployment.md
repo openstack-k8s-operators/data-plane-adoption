@@ -102,61 +102,56 @@ podified OpenStack control plane services.
   spec:
     secret: osp-secret
     storageClass: local-storage
+
     keystone:
       enabled: false
+      template: {}
+
     mariadb:
       templates:
         openstack:
           containerImage: quay.io/tripleozedcentos9/openstack-mariadb:current-tripleo
           storageRequest: 500M
+
     rabbitmq:
       templates:
         rabbitmq:
           replicas: 1
+        rabbitmq-cell1:
+          replicas: 1
+
     placement:
       enabled: false
+      template: {}
+
     glance:
       enabled: false
+      template: {}
+
     cinder:
       enabled: false
       template:
-        cinderAPI:
-          replicas: 1
-          containerImage: quay.io/tripleozedcentos9/openstack-cinder-api:current-tripleo
-        cinderScheduler:
-          replicas: 1
-          containerImage: quay.io/tripleozedcentos9/openstack-cinder-scheduler:current-tripleo
-        cinderBackup:
-          replicas: 1
-          containerImage: quay.io/tripleozedcentos9/openstack-cinder-backup:current-tripleo
-        cinderVolumes:
-          volume1:
-            containerImage: quay.io/tripleozedcentos9/openstack-cinder-volume:current-tripleo
-            replicas: 1
+        cinderVolumes: {}
     ovn:
       enabled: false
+      template: {}
+
     ovs:
       enabled: false
+      template: {}
+
     neutron:
       enabled: false
+      template: {}
+
     nova:
       enabled: false
+      template: {}
+
     ironic:
       enabled: false
       template:
-        databaseInstance: openstack
-        ironicAPI:
-          replicas: 1
-          containerImage: quay.io/tripleozedcentos9/openstack-ironic-api:current-tripleo
-        ironicConductors:
-        - replicas: 1
-          containerImage: quay.io/tripleozedcentos9/openstack-ironic-conductor:current-tripleo
-          pxeContainerImage: quay.io/tripleozedcentos9/openstack-ironic-pxe:current-tripleo
-          storageRequest: 10G
-        ironicInspector:
-          replicas: 1
-          containerImage: quay.io/tripleozedcentos9/openstack-ironic-inspector:current-tripleo
-          pxeContainerImage: quay.io/tripleozedcentos9/openstack-ironic-pxe:current-tripleo
+        ironicConductors: []
   EOF
   ```
 
