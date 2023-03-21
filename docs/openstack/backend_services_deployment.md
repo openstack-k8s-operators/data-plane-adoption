@@ -93,73 +93,69 @@ podified OpenStack control plane services.
 * Deploy OpenStackControlPlane. **Make sure to only enable MariaDB and
   RabbitMQ services. All other services must be disabled.**
 
+  ```yaml
+  oc apply -f - <<EOF
+  apiVersion: core.openstack.org/v1beta1
+  kind: OpenStackControlPlane
+  metadata:
+    name: openstack
+  spec:
+    secret: osp-secret
+    storageClass: local-storage
 
-```yaml
-oc apply -f - <<EOF
-apiVersion: core.openstack.org/v1beta1
-kind: OpenStackControlPlane
-metadata:
-  name: openstack
-spec:
-  secret: osp-secret
-  storageClass: local-storage
-  keystone:
-    enabled: false
-  mariadb:
-    templates:
-      openstack:
-        containerImage: quay.io/tripleozedcentos9/openstack-mariadb:current-tripleo
-        storageRequest: 500M
-  rabbitmq:
-    templates:
-      rabbitmq:
-        replicas: 1
-  placement:
-    enabled: false
-  glance:
-    enabled: false
-  cinder:
-    enabled: false
-    template:
-      cinderAPI:
-        replicas: 1
-        containerImage: quay.io/tripleozedcentos9/openstack-cinder-api:current-tripleo
-      cinderScheduler:
-        replicas: 1
-        containerImage: quay.io/tripleozedcentos9/openstack-cinder-scheduler:current-tripleo
-      cinderBackup:
-        replicas: 1
-        containerImage: quay.io/tripleozedcentos9/openstack-cinder-backup:current-tripleo
-      cinderVolumes:
-        volume1:
-          containerImage: quay.io/tripleozedcentos9/openstack-cinder-volume:current-tripleo
+    keystone:
+      enabled: false
+      template: {}
+
+    mariadb:
+      templates:
+        openstack:
+          containerImage: quay.io/tripleozedcentos9/openstack-mariadb:current-tripleo
+          storageRequest: 500M
+
+    rabbitmq:
+      templates:
+        rabbitmq:
           replicas: 1
-  ovn:
-    enabled: false
-  ovs:
-    enabled: false
-  neutron:
-    enabled: false
-  nova:
-    enabled: false
-  ironic:
-    enabled: false
-    template:
-      databaseInstance: openstack
-      ironicAPI:
-        replicas: 1
-        containerImage: quay.io/tripleozedcentos9/openstack-ironic-api:current-tripleo
-      ironicConductors:
-      - replicas: 1
-        containerImage: quay.io/tripleozedcentos9/openstack-ironic-conductor:current-tripleo
-        pxeContainerImage: quay.io/tripleozedcentos9/openstack-ironic-pxe:current-tripleo
-        storageRequest: 10G
-      ironicInspector:
-        replicas: 1
-        containerImage: quay.io/tripleozedcentos9/openstack-ironic-inspector:current-tripleo
-        pxeContainerImage: quay.io/tripleozedcentos9/openstack-ironic-pxe:current-tripleo
-EOF
-```
+        rabbitmq-cell1:
+          replicas: 1
+
+    placement:
+      enabled: false
+      template: {}
+
+    glance:
+      enabled: false
+      template:
+        glanceAPIInternal: {}
+        glanceAPIExternal: {}
+
+    cinder:
+      enabled: false
+      template:
+        cinderVolumes: {}
+    ovn:
+      enabled: false
+      template: {}
+
+    ovs:
+      enabled: false
+      template: {}
+
+    neutron:
+      enabled: false
+      template: {}
+
+    nova:
+      enabled: false
+      template: {}
+
+    ironic:
+      enabled: false
+      template:
+        ironicConductors: []
+  EOF
+  ```
 
 ## Post-checks
 
