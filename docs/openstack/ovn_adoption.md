@@ -62,11 +62,23 @@ ${client} backup tcp:$EXTERNAL_OVSDB_IP:6642 > ovs-sb.db
 ```bash
 oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
-  ovn:
-    enabled: true
+  ovn:
+    enabled: true
     template:
       ovnDBCluster:
-      - networkAttachment: internalapi
+        ovndbcluster-nb:
+          containerImage: quay.io/tripleozedcentos9/openstack-ovn-nb-db-server:current-tripleo
+          dbType: NB
+          storageRequest: 10G
+          networkAttachment: internalapi
+        ovndbcluster-sb:
+          containerImage: quay.io/tripleozedcentos9/openstack-ovn-nb-db-server:current-tripleo
+          dbType: SB
+          storageRequest: 10G
+          networkAttachment: internalapi
+      ovnNorthd:
+        containerImage: quay.io/tripleozedcentos9/openstack-ovn-northd:current-tripleo
+        networkAttachment: internalapi
 '
 ```
 
