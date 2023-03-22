@@ -5,9 +5,15 @@ and how to solve them.
 
 ## ErrImagePull due to missing authentication
 
-The deployed containers pull the images from private containers
-registries that can potentially return authentication errors like:
-`Failed to pull image "registry.redhat.io/rhosp-rhel9/openstack-rabbitmq:17.0": rpc error: code = Unknown desc = unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials.`
+The deployed containers pull the images from private containers registries that
+can potentially return authentication errors like:
+
+```
+Failed to pull image "registry.redhat.io/rhosp-rhel9/openstack-rabbitmq:17.0":
+rpc error: code = Unknown desc = unable to retrieve auth token: invalid
+username/password: unauthorized: Please login to the Red Hat Registry using
+your Customer Portal credentials.
+```
 
 An example of a failed pod:
 
@@ -19,23 +25,26 @@ An example of a failed pod:
   Warning  Failed          2m5s (x4 over 3m38s)   kubelet            Failed to pull image "registry.redhat.io/rhosp-rhel9/openstack-rabbitmq:17.0": rpc error: code  ... can be found here: https://access.redhat.com/RegistryAuthentication
   Warning  Failed          2m5s (x4 over 3m38s)   kubelet            Error: ErrImagePull
   Normal   BackOff         110s (x7 over 3m38s)   kubelet            Back-off pulling image "registry.redhat.io/rhosp-rhel9/openstack-rabbitmq:17.0"
-
 ```
 
-To solve this issue we need to get a valid pull-secret from the official [Red Hat console site](https://console.redhat.com/openshift/install/pull-secret),
-store this pull secret locally in a machine with access to the Kubernetes API (service node), and then run:
+To solve this issue we need to get a valid pull-secret from the official [Red
+Hat console site](https://console.redhat.com/openshift/install/pull-secret),
+store this pull secret locally in a machine with access to the Kubernetes API
+(service node), and then run:
 
 ```
 oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=<pull_secret_location.json>
 ```
 
-The previous command will make available the authentication information in all the cluster's compute nodes,
-then trigger a new pod deployment to pull the container image with:
+The previous command will make available the authentication information in all
+the cluster's compute nodes, then trigger a new pod deployment to pull the
+container image with:
 
 ```
 kubectl delete pod rabbitmq-server-0 -n openstack
 ```
 
-And the pod should be able to pull the image successfully.
-For more information about what container registries requires what
-type of authentication, check the [official docs](https://access.redhat.com/RegistryAuthentication).
+And the pod should be able to pull the image successfully.  For more
+information about what container registries requires what type of
+authentication, check the [official
+docs](https://access.redhat.com/RegistryAuthentication).
