@@ -48,3 +48,47 @@ And the pod should be able to pull the image successfully.  For more
 information about what container registries requires what type of
 authentication, check the [official
 docs](https://access.redhat.com/RegistryAuthentication).
+
+## Database schema version mismatch when restoring OVN databases
+
+You may see the following errors when trying to restore OVN databases:
+
+```
+ovsdb-client: backup schema has version "7.0.0" but database schema has version "6.3.0" (use --force to override differences, or "ovsdb-client convert" to change the schema)
+ovsdb-client: backup schema has version "20.27.0" but database schema has version "20.23.0" (use --force to override differences, or "ovsdb-client convert" to change the schema)
+```
+
+This happens because your podified cluster is running OVN version that is older
+than the version running in the original cluster. You may work this issue
+around by pulling OVN images from the original cluster registry into podified
+cluster.
+
+You may have to first enable insecure registries in your podified cluster:
+
+```bash
+oc patch image.config.openshift.io/cluster --type=merge --patch '
+spec:
+  registrySources:
+    insecureRegistries:
+    - 192.168.130.1
+'
+```
+
+Then update OVN services to pull images from the original registry:
+
+```bash
+oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  ovn:
+    template:
+      ovnDBCluster:
+        ovndbcluster-nb:
+          containerImage: 192.168.130.1:8787/rh-osbs/rhosp17-openstack-ovn-nb-db-server:17.1_20230130.1
+        ovndbcluster-sb:
+          containerImage: 192.168.130.1:8787/rh-osbs/rhosp17-openstack-ovn-sb-db-server:17.1_20230130.1
+      ovnNorthd:
+        containerImage: 192.168.130.1:8787/rh-osbs/rhosp17-openstack-ovn-nb-db-server:17.1_20230130.1
+'
+```
+
+Now repeat database `ovsdb-client restore` commands. They should succeed.
