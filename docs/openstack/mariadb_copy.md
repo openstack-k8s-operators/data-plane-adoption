@@ -92,7 +92,7 @@ ServicesToStop=("tripleo_horizon.service"
 echo "Stopping the OpenStack services"
 
 for service in ${ServicesToStop[*]}; do
-    echo "Stopping the service: $service in each controller node"
+    echo "Stopping the $service in each controller node"
     $CONTROLLER1_SSH sudo systemctl stop $service
     $CONTROLLER2_SSH sudo systemctl stop $service
     $CONTROLLER3_SSH sudo systemctl stop $service
@@ -117,7 +117,7 @@ done
   podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE bash <<EOF
 
   mysql -h $EXTERNAL_MARIADB_IP -u root "-p$EXTERNAL_DB_ROOT_PASSWORD" -N -e 'show databases' | while read dbname; do
-      echo "Dumping \$dbname"
+      echo "Exporting \$dbname"
       mysqldump -h $EXTERNAL_MARIADB_IP -uroot "-p$EXTERNAL_DB_ROOT_PASSWORD" \
           --single-transaction --complete-insert --skip-lock-tables --lock-tables=0 \
           --databases "\$dbname" \
@@ -131,7 +131,7 @@ done
 
   ```
   for dbname in cinder glance keystone nova_api nova_cell0 nova ovs_neutron placement; do
-      echo "Restoring $dbname"
+      echo "Importing $dbname"
       oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
          mysql -h "$PODIFIED_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" < "$dbname.sql"
   done
