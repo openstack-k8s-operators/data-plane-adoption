@@ -109,10 +109,23 @@ oc exec -it ovsdbserver-sb-0 -- ovn-sbctl list Chassis
 ${COMPUTE_SSH} sudo podman exec -it ovn_controller ovs-vsctl set open . external_ids:ovn-remote=tcp:$PODIFIED_OVSDB_SB_IP:6642
 ```
 
+You should now see the following warning in the `ovn_controller` container logs:
+
+```
+2023-03-16T21:40:35Z|03095|ovsdb_cs|WARN|tcp:172.17.1.50:6642: clustered database server has stale data; trying another server
+```
+
 - Reset RAFT state for all compute ovn-controller instances.
 
 ```bash
 ${COMPUTE_SSH} sudo podman exec -it ovn_controller ovn-appctl -t ovn-controller sb-cluster-state-reset
+```
+
+This should complete connection of the controller process to the new remote. See in logs:
+
+```
+2023-03-16T21:42:31Z|03134|main|INFO|Resetting southbound database cluster state
+2023-03-16T21:42:33Z|03135|reconnect|INFO|tcp:172.17.1.50:6642: connected
 ```
 
 - Alternatively, just restart ovn-controller on original compute nodes.
