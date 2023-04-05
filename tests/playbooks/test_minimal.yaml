@@ -19,3 +19,4 @@
     - keystone_adoption
     - glance_adoption
     - placement_adoption
+    # - dataplane_adoption  WIP
