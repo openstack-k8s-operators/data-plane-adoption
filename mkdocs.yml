@@ -41,6 +41,7 @@ nav:
     - Ceph RGW migration: ceph/ceph_rgw.md
   - Contributing:
     - contributing/documentation.md
+    - contributing/development_environment.md
     - contributing/tests.md
 markdown_extensions:
   - toc:
