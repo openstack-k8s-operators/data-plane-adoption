@@ -54,19 +54,14 @@
   export OS_CLIENT_CONFIG_FILE=clouds-adopted.yaml
   export OS_CLOUD=adopted
 
+  openstack endpoint list | grep keystone | awk '/admin/{ print $2; }' | xargs openstack endpoint delete || true
+
   openstack service list | grep ' cinderv3 ' | awk '{ print $2; }' | xargs openstack service delete || true
   openstack service list | grep ' glance ' | awk '{ print $2; }' | xargs openstack service delete || true
   openstack service list | grep ' neutron ' | awk '{ print $2; }' | xargs openstack service delete || true
   openstack service list | grep ' nova ' | awk '{ print $2; }' | xargs openstack service delete || true
   openstack service list | grep ' placement ' | awk '{ print $2; }' | xargs openstack service delete || true
   openstack service list | grep ' swift ' | awk '{ print $2; }' | xargs openstack service delete || true
-
-  openstack endpoint list | grep ' cinderv3 ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
-  openstack endpoint list | grep ' glance ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
-  openstack endpoint list | grep ' neutron ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
-  openstack endpoint list | grep ' nova ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
-  openstack endpoint list | grep ' placement ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
-  openstack endpoint list | grep ' swift ' | awk '{ print $2; }' | xargs openstack endpoint delete || true
   ```
 
 ## Post-checks
