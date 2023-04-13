@@ -154,6 +154,13 @@ podified OpenStack control plane services.
       enabled: false
       template:
         ironicConductors: []
+
+    manila:
+      enabled: false
+      template:
+        manilaAPI: {}
+        manilaScheduler: {}
+        manilaShares: {}
   EOF
   ```
 

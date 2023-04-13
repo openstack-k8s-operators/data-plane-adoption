@@ -97,6 +97,13 @@
         enabled: false
         template:
           ironicConductors: []
+
+      manila:
+        enabled: false
+        template:
+            manilaAPI: {}
+            manilaScheduler: {}
+            manilaShares: {}
     EOF
 
 - name: wait for mariadb to start up
