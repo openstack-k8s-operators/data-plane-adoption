@@ -83,7 +83,8 @@
 
       ovs:
         enabled: false
-        template: {}
+        template:
+          external-ids: {}
 
       neutron:
         enabled: false

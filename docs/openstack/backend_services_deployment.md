@@ -140,7 +140,8 @@ podified OpenStack control plane services.
 
     ovs:
       enabled: false
-      template: {}
+      template:
+        external-ids: {}
 
     neutron:
       enabled: false
