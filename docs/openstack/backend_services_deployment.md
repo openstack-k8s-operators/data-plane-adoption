@@ -133,7 +133,11 @@ podified OpenStack control plane services.
     cinder:
       enabled: false
       template:
+        cinderAPI: {}
+        cinderScheduler: {}
+        cinderBackup: {}
         cinderVolumes: {}
+
     ovn:
       enabled: false
       template: {}
