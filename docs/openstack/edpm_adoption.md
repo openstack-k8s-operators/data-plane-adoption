@@ -27,6 +27,38 @@
     EOF
   ```
 
+* Stop the nova services.
+
+```bash
+
+# Update the services list to be stopped
+
+ServicesToStop=("tripleo_nova_api_cron.service"
+                "tripleo_nova_api.service"
+                "tripleo_nova_compute.service"
+                "tripleo_nova_conductor.service"
+                "tripleo_nova_libvirt.target"
+                "tripleo_nova_metadata.service"
+                "tripleo_nova_migration_target.service"
+                "tripleo_nova_scheduler.service"
+                "tripleo_nova_virtlogd_wrapper.service"
+                "tripleo_nova_virtnodedevd.service"
+                "tripleo_nova_virtproxyd.service"
+                "tripleo_nova_virtqemud.service"
+                "tripleo_nova_virtsecretd.service"
+                "tripleo_nova_virtstoraged.service"
+                "tripleo_nova_vnc_proxy.service")
+
+echo "Stopping nova services"
+
+for service in ${ServicesToStop[*]}; do
+    echo "Stopping the $service in each controller node"
+    $CONTROLLER1_SSH sudo systemctl stop $service
+    $CONTROLLER2_SSH sudo systemctl stop $service
+    $CONTROLLER3_SSH sudo systemctl stop $service
+done
+```
+
 * Deploy OpenStackDataPlane:
 
   ```
