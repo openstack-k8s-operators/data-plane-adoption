@@ -49,5 +49,5 @@
   export OS_CLOUD=adopted
 
   openstack endpoint list | grep cinder
-  openstack volume list
+  openstack volume type list
   ```

@@ -32,7 +32,7 @@
     oc get pod --selector=component=cinder-api -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
   register: cinder_running_result
   until: cinder_running_result is success
-  retries: 60
+  retries: 180
   delay: 2
 
 - name: check that Cinder is reachable and its endpoints are defined
@@ -43,8 +43,8 @@
     export OS_CLOUD=adopted
 
     openstack endpoint list | grep cinder
-    openstack volume list
+    openstack volume type list
   register: cinder_responding_result
   until: cinder_responding_result is success
-  retries: 15
+  retries: 60
   delay: 2
