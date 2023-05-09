@@ -19,7 +19,7 @@
     placement:
       enabled: true
       template:
-        containerImage: quay.io/tripleozedcentos9/openstack-placement-api:current-tripleo
+        containerImage: quay.io/podified-antelope-centos9/openstack-placement-api:current-podified
         databaseInstance: openstack
         secret: osp-secret
   '

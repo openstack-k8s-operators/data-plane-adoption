@@ -29,16 +29,16 @@ their own guides (e.g. like
     #   template:
     #     cinderAPI:
     #       replicas: 1
-    #       containerImage: quay.io/tripleozedcentos9/openstack-cinder-api:current-tripleo
+    #       containerImage: quay.io/podified-antelope-centos9/openstack-cinder-api:current-podified
     #     cinderScheduler:
     #       replicas: 1
-    #       containerImage: quay.io/tripleozedcentos9/openstack-cinder-scheduler:current-tripleo
+    #       containerImage: quay.io/podified-antelope-centos9/openstack-cinder-scheduler:current-podified
     #     cinderBackup:
     #       replicas: 1
-    #       containerImage: quay.io/tripleozedcentos9/openstack-cinder-backup:current-tripleo
+    #       containerImage: quay.io/podified-antelope-centos9/openstack-cinder-backup:current-podified
     #     cinderVolumes:
     #       volume1:
-    #         containerImage: quay.io/tripleozedcentos9/openstack-cinder-volume:current-tripleo
+    #         containerImage: quay.io/podified-antelope-centos9/openstack-cinder-volume:current-podified
     #         replicas: 1
 
     ovn:
@@ -47,23 +47,23 @@ their own guides (e.g. like
         ovnDBCluster:
           ovndbcluster-nb:
             replicas: 1
-            containerImage: quay.io/tripleozedcentos9/openstack-ovn-nb-db-server:current-tripleo
+            containerImage: quay.io/podified-antelope-centos9/openstack-ovn-nb-db-server:current-podified
             dbType: NB
             storageRequest: 10G
           ovndbcluster-sb:
             replicas: 1
-            containerImage: quay.io/tripleozedcentos9/openstack-ovn-sb-db-server:current-tripleo
+            containerImage: quay.io/podified-antelope-centos9/openstack-ovn-sb-db-server:current-podified
             dbType: SB
             storageRequest: 10G
         ovnNorthd:
           replicas: 1
-          containerImage: quay.io/tripleozedcentos9/openstack-ovn-northd:current-tripleo
+          containerImage: quay.io/podified-antelope-centos9/openstack-ovn-northd:current-podified
 
     ovs:
       enabled: true
       template:
         ovsContainerImage: "quay.io/skaplons/ovs:latest"
-        ovnContainerImage: "quay.io/tripleozedcentos9/openstack-ovn-controller:current-tripleo"
+        ovnContainerImage: "quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified"
         external-ids:
           system-id: "random"
           ovn-bridge: "br-int"
@@ -73,7 +73,7 @@ their own guides (e.g. like
       enabled: true
       template:
         databaseInstance: openstack
-        containerImage: quay.io/tripleozedcentos9/openstack-neutron-server:current-tripleo
+        containerImage: quay.io/podified-antelope-centos9/openstack-neutron-server:current-podified
         secret: osp-secret
 
     # nova:

@@ -31,7 +31,7 @@ Define the shell variables used in the steps below. The values are
 just illustrative, use values that are correct for your environment:
 
 ```bash
-OVSDB_IMAGE=quay.io/tripleozedcentos9/openstack-ovn-base:current-tripleo
+OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
 EXTERNAL_OVSDB_IP=172.17.1.49
 
 # ssh commands to reach the original controller machines
@@ -67,17 +67,17 @@ spec:
     template:
       ovnDBCluster:
         ovndbcluster-nb:
-          containerImage: quay.io/tripleozedcentos9/openstack-ovn-nb-db-server:current-tripleo
+          containerImage: quay.io/podified-antelope-centos9/openstack-ovn-nb-db-server:current-podified
           dbType: NB
           storageRequest: 10G
           networkAttachment: internalapi
         ovndbcluster-sb:
-          containerImage: quay.io/tripleozedcentos9/openstack-ovn-sb-db-server:current-tripleo
+          containerImage: quay.io/podified-antelope-centos9/openstack-ovn-sb-db-server:current-podified
           dbType: SB
           storageRequest: 10G
           networkAttachment: internalapi
       ovnNorthd:
-        containerImage: quay.io/tripleozedcentos9/openstack-ovn-northd:current-tripleo
+        containerImage: quay.io/podified-antelope-centos9/openstack-ovn-northd:current-podified
         networkAttachment: internalapi
 '
 ```
