@@ -59,6 +59,73 @@ for service in ${ServicesToStop[*]}; do
 done
 ```
 
+* Deploy OpenStackDataPlaneService(s):
+
+  ```
+  oc apply -f - <<EOF
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      labels:
+        app.kubernetes.io/name: openstackdataplaneservice
+        app.kubernetes.io/instance: openstackdataplaneservice-sample
+        app.kubernetes.io/part-of: dataplane-operator
+        app.kubernetes.io/managed-by: kustomize
+        app.kubernetes.io/created-by: dataplane-operator
+      name: configure-network
+    spec:
+      label: dataplane-deployment-configure-network
+      role:
+
+        name: "Deploy EDPM Network"
+        hosts: "all"
+        strategy: "linear"
+        tasks:
+          - name: "Install edpm_bootstrap"
+            import_role:
+              name: "osp.edpm.edpm_bootstrap"
+              tasks_from: "bootstrap.yml"
+            tags:
+              - "edpm_bootstrap"
+          - name: "Grow volumes"
+            import_role:
+              name: "osp.edpm.edpm_growvols"
+              tasks_from: "main.yml"
+            tags:
+              - "edpm_growvols"
+          - name: "Install edpm_kernel"
+            import_role:
+              name: "osp.edpm.edpm_kernel"
+              tasks_from: "main.yml"
+            tags:
+              - "edpm_kernel"
+          - name: "Import edpm_tuned"
+            import_role:
+              name: "osp.edpm.edpm_tuned"
+              tasks_from: "main.yml"
+            tags:
+              - "edpm_tuned"
+          - name: "Configure Kernel Args"
+            import_role:
+              name: "osp.edpm.edpm_kernel"
+              tasks_from: "kernelargs.yml"
+            tags:
+              - "edpm_kernel"
+          - name: "Configure Hosts Entries"
+            import_role:
+              name: "osp.edpm.edpm_hosts_entries"
+              tasks_from: "main.yml"
+            tags:
+              - "edpm_hosts_entries"
+          - name: "import edpm_network_config"
+            import_role:
+              name: "osp.edpm.edpm_network_config"
+              tasks_from: "main.yml"
+            tags:
+              - "edpm_network_config"
+    EOF
+  ```
+
 * Deploy OpenStackDataPlane:
 
   ```
@@ -96,6 +163,8 @@ done
             - internalapi
             - storage
             - tenant
+          services:
+            - configure-network
           env:
             - name: ANSIBLE_FORCE_COLOR
               value: "True"
