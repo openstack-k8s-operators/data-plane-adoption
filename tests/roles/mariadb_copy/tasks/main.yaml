@@ -10,7 +10,7 @@
   ansible.builtin.set_fact:
     mariadb_copy_shell_vars: |
       PODIFIED_MARIADB_IP={{ podified_mariadb_ip_result.stdout }}
-      MARIADB_IMAGE=quay.io/tripleozedcentos9/openstack-mariadb:current-tripleo
+      MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 
       EXTERNAL_MARIADB_IP={{ external_mariadb_ip }}
       EXTERNAL_DB_ROOT_PASSWORD="{{ external_db_root_password }}"

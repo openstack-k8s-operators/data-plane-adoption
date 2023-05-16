@@ -8,13 +8,13 @@
         enabled: true
         template:
           databaseInstance: openstack
-          containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
+          containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
           storageClass: "local-storage"
           storageRequest: 10G
           glanceAPIInternal:
-            containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
+            containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
           glanceAPIExternal:
-            containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
+            containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
     '
 
 - name: wait for Glance to start up

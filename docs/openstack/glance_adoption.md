@@ -51,13 +51,13 @@ spec:
     enabled: true
     template:
       databaseInstance: openstack
-      containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
+      containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
       storageClass: "local-storage"
       storageRequest: 10G
       glanceAPIInternal:
-        containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
+        containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
       glanceAPIExternal:
-        containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
+        containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
 '
 ```
 
@@ -107,7 +107,7 @@ spec:
     enabled: true
     template:
       databaseInstance: openstack
-      containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
+      containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
       customServiceConfig: |
         [DEFAULT]
         enabled_backends=default_backend:rbd
@@ -121,9 +121,9 @@ spec:
       storageClass: "local-storage"
       storageRequest: 10G
       glanceAPIInternal:
-        containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
+        containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
       glanceAPIExternal:
-        containerImage: quay.io/tripleozedcentos9/openstack-glance-api:current-tripleo
+        containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
   extraMounts:
     - extraVol:
       - propagation:

@@ -110,7 +110,7 @@ podified OpenStack control plane services.
     mariadb:
       templates:
         openstack:
-          containerImage: quay.io/tripleozedcentos9/openstack-mariadb:current-tripleo
+          containerImage: quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
           storageRequest: 500M
 
     rabbitmq:

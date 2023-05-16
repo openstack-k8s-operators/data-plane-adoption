@@ -30,7 +30,7 @@ just illustrative, use values that are correct for your environment:
 
 ```
 PODIFIED_MARIADB_IP=$(oc get -o yaml pod mariadb-openstack | grep podIP: | awk '{ print $2; }')
-MARIADB_IMAGE=quay.io/tripleozedcentos9/openstack-mariadb:current-tripleo
+MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 
 # Use your environment's values for these:
 EXTERNAL_MARIADB_IP=192.168.24.3
