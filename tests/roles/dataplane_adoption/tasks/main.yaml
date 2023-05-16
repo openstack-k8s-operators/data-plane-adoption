@@ -152,7 +152,7 @@
       roles:
         edpmadoption:
           deployStrategy: {{ deployStrategy }}
-          networkAttachments: {{ networkAttachments }}
+          networkAttachments: $(oc get network-attachment-definitions -o json | jq -r "[.items[].metadata.name]")
           services:
             - configure-network
           env:
@@ -170,11 +170,13 @@
               service_net_map:
                 nova_api_network: internal_api
                 nova_libvirt_network: internal_api
+
               # edpm_network_config
               # Default nic config template for a EDPM compute node
               # These vars are edpm_network_config role vars
               edpm_network_config_template: templates/single_nic_vlans/single_nic_vlans.j2
               edpm_network_config_hide_sensitive_logs: false
+              #
               # These vars are for the network config templates themselves and are
               # considered EDPM network defaults.
               neutron_physical_bridge_name: br-ctlplane
@@ -210,23 +212,24 @@
                 InternalApi: internal_api
                 Storage: storage
                 Tenant: tenant
+
               # edpm_nodes_validation
               edpm_nodes_validation_validate_controllers_icmp: false
               edpm_nodes_validation_validate_gateway_icmp: false
 
-              edpm_ovn_metadata_agent_DEFAULT_transport_url: rabbit://default_user_-secret@rabbitmq.openstack.svc:5672
-              edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: tcp:172.17.0.31:6642
-              edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: 127.0.0.1
-              edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: 12345678
+              edpm_ovn_metadata_agent_DEFAULT_transport_url: $(oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
+              edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
+              edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: $(oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
+              edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: 1234567842
               edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
               edpm_chrony_ntp_servers:
-              - clock.corp.redhat.com
+              - pool.ntp.org
 
               ctlplane_dns_nameservers:
               - 192.168.121.1
               dns_search_domains: []
               edpm_ovn_dbs:
-              - 172.17.0.31
+              - $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"[0]')
 
               edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
               edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"
@@ -237,7 +240,6 @@
 
               gather_facts: false
               enable_debug: false
-              verbosity: 4
               # edpm firewall, change the allowed CIDR if needed
               edpm_sshd_configure_firewall: true
               edpm_sshd_allowed_ranges: ['192.168.122.0/24']
