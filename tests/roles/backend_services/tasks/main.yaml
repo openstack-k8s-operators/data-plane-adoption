@@ -116,3 +116,18 @@
   until: mariadb_running_result is success
   retries: 60
   delay: 2
+
+- name: Patch rabbitmq resources for lower resource consumption
+  changed_when: false
+  ansible.builtin.shell: |
+    crname=$(oc get openstackcontrolplane -o name)
+    oc patch ${crname} --type json \
+      -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq/resources/requests/cpu", "value": 500m}]'
+    oc patch ${crname} --type json \
+      -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq/resources/requests/memory", "value": 500Mi}]'
+    oc patch ${crname} --type json \
+      -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq-cell1/resources/requests/cpu", "value": 500m}]'
+    oc patch ${crname} --type json \
+      -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq-cell1/resources/requests/memory", "value": 500Mi}]'
+  tags:
+    - skip_ansible_lint
