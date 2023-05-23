@@ -1,0 +1,50 @@
+- name: deploy podified Cinder scheduler and API
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      cinder:
+        enabled: true
+        template:
+          databaseInstance: openstack
+          secret: osp-secret
+          cinderAPI:
+            replicas: 1
+            containerImage: quay.io/tripleozedcentos9/openstack-cinder-api:current-tripleo
+          cinderScheduler:
+            replicas: 1
+            containerImage: quay.io/tripleozedcentos9/openstack-cinder-scheduler:current-tripleo
+          cinderBackup:
+            replicas: 0 # backend needs to be configured
+            containerImage: quay.io/tripleozedcentos9/openstack-cinder-backup:current-tripleo
+          cinderVolumes:
+            volume1:
+              containerImage: quay.io/tripleozedcentos9/openstack-cinder-volume:current-tripleo
+              replicas: 0 # backend needs to be configured
+    '
+
+- name: wait for Cinder to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=component=cinder-scheduler -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc get pod --selector=component=cinder-api -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: cinder_running_result
+  until: cinder_running_result is success
+  retries: 180
+  delay: 2
+
+- name: check that Cinder is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    export OS_CLIENT_CONFIG_FILE={{ adopted_clouds_yaml_path }}
+    export OS_CLOUD=adopted
+
+    openstack endpoint list | grep cinder
+    openstack volume type list
+  register: cinder_responding_result
+  until: cinder_responding_result is success
+  retries: 60
+  delay: 2
