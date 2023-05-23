@@ -132,5 +132,3 @@
       -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq-cell1/resources/requests/cpu", "value": 500m}]'
     oc patch ${crname} --type json \
       -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq-cell1/resources/requests/memory", "value": 500Mi}]'
-  tags:
-    - skip_ansible_lint
