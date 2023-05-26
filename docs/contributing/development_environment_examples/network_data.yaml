@@ -43,18 +43,18 @@
   service_net_map_replace: tenant
   subnets:
     tenant_subnet:
-      ip_subnet: '172.10.0.0/24'
-      allocation_pools: [{'start': '172.10.0.4', 'end': '172.10.0.250'}]
+      ip_subnet: '172.19.0.0/24'
+      allocation_pools: [{'start': '172.19.0.4', 'end': '172.19.0.250'}]
 
 - name: External
   mtu: 1500
   vip: true
   vlan: 44
-  gateway_ip: '172.19.0.1'
+  gateway_ip: '172.21.0.1'
   name_lower: external
   dns_domain: external.mydomain.tld.
   service_net_map_replace: external
   subnets:
     external_subnet:
-      ip_subnet: '172.19.0.0/24'
-      allocation_pools: [{'start': '172.19.0.4', 'end': '172.19.0.250'}]
+      ip_subnet: '172.21.0.0/24'
+      allocation_pools: [{'start': '172.21.0.4', 'end': '172.21.0.250'}]

@@ -27,13 +27,13 @@ parameter_defaults:
         ip_subnet: 172.17.0.1/24
         ip_address_uri: 172.17.0.100
       tenant:
-        ip_address: 172.10.0.100
-        ip_subnet: 172.10.0.1/24
-        ip_address_uri: 172.10.0.100
-      external:
         ip_address: 172.19.0.100
         ip_subnet: 172.19.0.1/24
         ip_address_uri: 172.19.0.100
+      external:
+        ip_address: 172.21.0.100
+        ip_subnet: 172.21.0.1/24
+        ip_address_uri: 172.21.0.100
   ControlPlaneVipData:
     fixed_ips:
     - ip_address: 192.168.122.99
@@ -57,13 +57,13 @@ parameter_defaults:
       ip_address_uri: 172.17.0.2
       ip_subnet: 172.17.0.2/24
     # tenant:
-    #   ip_address: 172.10.0.2
-    #   ip_address_uri: 172.10.0.2
-    #   ip_subnet: 172.10.0.2/24
+    #   ip_address: 172.19.0.2
+    #   ip_address_uri: 172.19.0.2
+    #   ip_subnet: 172.19.0.2/24
     external:
-      ip_address: 172.19.0.2
-      ip_address_uri: 172.19.0.2
-      ip_subnet: 172.19.0.2/24
+      ip_address: 172.21.0.2
+      ip_address_uri: 172.21.0.2
+      ip_subnet: 172.21.0.2/24
   DeployedNetworkEnvironment:
     net_cidr_map:
       storage:
@@ -73,9 +73,9 @@ parameter_defaults:
       internal_api:
       - 172.17.0.0/24
       tenant:
-      - 172.10.0.0/24
-      external:
       - 172.19.0.0/24
+      external:
+      - 172.21.0.0/24
     net_ip_version_map:
       storage: 4
       storage_mgmt: 4
@@ -149,7 +149,7 @@ parameter_defaults:
           - tripleo_vip=false
         subnets:
           tenant_subnet:
-            cidr: 172.10.0.0/24
+            cidr: 172.19.0.0/24
             dns_nameservers: []
             gateway_ip: null
             host_routes: []
@@ -167,7 +167,7 @@ parameter_defaults:
           - tripleo_vip=true
         subnets:
           external_subnet:
-            cidr: 172.19.0.0/24
+            cidr: 172.21.0.0/24
             dns_nameservers: []
             gateway_ip: null
             host_routes: []
