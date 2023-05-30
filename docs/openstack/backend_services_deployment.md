@@ -103,33 +103,6 @@ podified OpenStack control plane services.
     secret: osp-secret
     storageClass: local-storage
 
-    keystone:
-      enabled: false
-      template: {}
-
-    mariadb:
-      templates:
-        openstack:
-          containerImage: quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
-          storageRequest: 500M
-
-    rabbitmq:
-      templates:
-        rabbitmq:
-          replicas: 1
-        rabbitmq-cell1:
-          replicas: 1
-
-    placement:
-      enabled: false
-      template: {}
-
-    glance:
-      enabled: false
-      template:
-        glanceAPIInternal: {}
-        glanceAPIExternal: {}
-
     cinder:
       enabled: false
       template:
@@ -137,6 +110,42 @@ podified OpenStack control plane services.
         cinderScheduler: {}
         cinderBackup: {}
         cinderVolumes: {}
+
+    glance:
+      enabled: false
+      template:
+        glanceAPIInternal: {}
+        glanceAPIExternal: {}
+
+    ironic:
+      enabled: false
+      template:
+        ironicConductors: []
+
+    keystone:
+      enabled: false
+      template: {}
+
+    manila:
+      enabled: false
+      template:
+        manilaAPI: {}
+        manilaScheduler: {}
+        manilaShares: {}
+
+    mariadb:
+      templates:
+        openstack:
+          containerImage: quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
+          storageRequest: 500M
+
+    neutron:
+      enabled: false
+      template: {}
+
+    nova:
+      enabled: false
+      template: {}
 
     ovn:
       enabled: false
@@ -152,25 +161,16 @@ podified OpenStack control plane services.
       template:
         external-ids: {}
 
-    neutron:
+    placement:
       enabled: false
       template: {}
 
-    nova:
-      enabled: false
-      template: {}
-
-    ironic:
-      enabled: false
-      template:
-        ironicConductors: []
-
-    manila:
-      enabled: false
-      template:
-        manilaAPI: {}
-        manilaScheduler: {}
-        manilaShares: {}
+    rabbitmq:
+      templates:
+        rabbitmq:
+          replicas: 1
+        rabbitmq-cell1:
+          replicas: 1
   EOF
   ```
 
