@@ -116,8 +116,8 @@ export CTLPLANE_IP=192.168.122.100
 export INTERNAL_IP=$(sed -e 's/192.168.122/172.17.0/' <<<"$CTLPLANE_IP")
 export STORAGE_IP=$(sed -e 's/192.168.122/172.18.0/' <<<"$CTLPLANE_IP")
 export STORAGE_MGMT_IP=$(sed -e 's/192.168.122/172.20.0/' <<<"$CTLPLANE_IP")
-export TENANT_IP=$(sed -e 's/192.168.122/172.10.0/' <<<"$CTLPLANE_IP")
-export EXTERNAL_IP=$(sed -e 's/192.168.122/172.19.0/' <<<"$CTLPLANE_IP")
+export TENANT_IP=$(sed -e 's/192.168.122/172.19.0/' <<<"$CTLPLANE_IP")
+export EXTERNAL_IP=$(sed -e 's/192.168.122/172.21.0/' <<<"$CTLPLANE_IP")
 
 sudo mkdir -p /etc/os-net-config
 cat << EOF | sudo tee /etc/os-net-config/config.yaml
@@ -206,8 +206,8 @@ The tenant network on vlan22 does not require a VIP.
 ```
 sudo ip addr add 172.17.0.2/32 dev vlan20
 sudo ip addr add 172.18.0.2/32 dev vlan21
-sudo ip addr add 172.19.0.2/32 dev vlan44
 sudo ip addr add 172.20.0.2/32 dev vlan23
+sudo ip addr add 172.21.0.2/32 dev vlan44
 ```
 
 ### Ceph
