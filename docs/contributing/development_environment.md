@@ -360,6 +360,30 @@ sudo openstack tripleo deploy \
   --output-dir $HOME
 ```
 
+### Snapshot/revert
+
+When the deployment of the Standalone OpenStack is finished, it's a
+good time to snapshot the machine, so that multiple Adoption attempts
+can be done without having to deploy from scratch.
+
+```
+# Virtiofs share prevents snapshotting, detach it first.
+sudo virsh detach-device-alias edpm-compute-0 fs0 --live
+
+sudo virsh snapshot-create-as --atomic --domain edpm-compute-0 --name clean
+```
+
+And when you wish to revert the Standalone deployment to the
+snapshotted state:
+
+```
+sudo virsh snapshot-revert --domain edpm-compute-0 --name clean
+```
+
+Similar snapshot could be done for the CRC virtual machine, but the
+developer environment reset on CRC side can be done sufficiently via
+the install_yamls `*_cleanup` targets.
+
 ### Create a workload to adopt
 
 For this example we'll upload a Glance image and confirm it's using
