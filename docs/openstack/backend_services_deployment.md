@@ -1,8 +1,8 @@
 # Backend services deployment
 
-The following instructions create OpenStackControlPlane CR with
-MariaDB and RabbitMQ deployed, and all the other services disabled. This will
-be the foundation of the podified control plane.
+The following instructions create OpenStackControlPlane CR with basic
+backend services deployed, and all the OpenStack services disabled.
+This will be the foundation of the podified control plane.
 
 In subsequent steps, we'll import the original databases and then add
 podified OpenStack control plane services.
@@ -90,8 +90,9 @@ podified OpenStack control plane services.
   oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
   ```
 
-* Deploy OpenStackControlPlane. **Make sure to only enable MariaDB and
-  RabbitMQ services. All other services must be disabled.**
+* Deploy OpenStackControlPlane. **Make sure to only enable DNS,
+  MariaDB, Memcached, and RabbitMQ services. All other services must
+  be disabled.**
 
   ```yaml
   oc apply -f - <<EOF
@@ -111,11 +112,18 @@ podified OpenStack control plane services.
         cinderBackup: {}
         cinderVolumes: {}
 
+    dns:
+      enabled: true
+
     glance:
       enabled: false
       template:
         glanceAPIInternal: {}
         glanceAPIExternal: {}
+
+    horizon:
+      enabled: false
+      template: {}
 
     ironic:
       enabled: false
@@ -138,6 +146,9 @@ podified OpenStack control plane services.
         openstack:
           containerImage: quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
           storageRequest: 500M
+
+    memcached:
+      enabled: true
 
     neutron:
       enabled: false
@@ -171,6 +182,10 @@ podified OpenStack control plane services.
           replicas: 1
         rabbitmq-cell1:
           replicas: 1
+
+    telemetry:
+      enabled: false
+      template: {}
   EOF
   ```
 

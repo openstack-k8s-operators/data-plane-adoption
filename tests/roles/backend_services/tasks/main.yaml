@@ -53,11 +53,18 @@
           cinderBackup: {}
           cinderVolumes: {}
 
+      dns:
+        enabled: true
+
       glance:
         enabled: false
         template:
           glanceAPIInternal: {}
           glanceAPIExternal: {}
+
+      horizon:
+        enabled: false
+        template: {}
 
       ironic:
         enabled: false
@@ -80,6 +87,9 @@
           openstack:
             containerImage: quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
             storageRequest: 500M
+
+      memcached:
+        enabled: true
 
       neutron:
         enabled: false
@@ -113,6 +123,10 @@
             replicas: 1
           rabbitmq-cell1:
             replicas: 1
+
+      telemetry:
+        enabled: false
+        template: {}
     EOF
 
 - name: wait for mariadb to start up
