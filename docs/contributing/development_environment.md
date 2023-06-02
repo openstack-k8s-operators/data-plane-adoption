@@ -408,7 +408,23 @@ Confirm the image UUID can be seen in Ceph's images pool.
 sudo cephadm shell -- rbd -p images ls -l
 ```
 
-## Complete the NG Deployment
+## Performing the Data Plane Adoption
+
+The development environment is now set up, you can go to the [Adoption
+documentation](https://openstack-k8s-operators.github.io/data-plane-adoption/)
+and perform adoption manually, or run the [test
+suite](https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/tests/)
+against your environment.
+
+----
+
+----
+
+## Experimenting with an additional compute node
+
+The following is not on the critical path of preparing the development
+environment for Adoption, but it shows how to make the environment
+work with an additional compute node VM.
 
 The remaining steps should be completed on the hypervisor hosting crc
 and edpm-compute-0.
