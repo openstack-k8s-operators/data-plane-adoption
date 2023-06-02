@@ -114,6 +114,16 @@ podified OpenStack control plane services.
 
     dns:
       enabled: true
+      template:
+        externalEndpoints:
+        - ipAddressPool: ctlplane
+          loadBalancerIPs:
+          - 192.168.122.80
+        options:
+        - key: server
+          values:
+          - 192.168.122.1
+        replicas: 1
 
     glance:
       enabled: false
@@ -144,7 +154,6 @@ podified OpenStack control plane services.
     mariadb:
       templates:
         openstack:
-          containerImage: quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
           storageRequest: 500M
 
     memcached:
@@ -179,8 +188,18 @@ podified OpenStack control plane services.
     rabbitmq:
       templates:
         rabbitmq:
+          externalEndpoint:
+            loadBalancerIPs:
+            - 172.17.0.85
+            ipAddressPool: internalapi
+            sharedIP: false
           replicas: 1
         rabbitmq-cell1:
+          externalEndpoint:
+            loadBalancerIPs:
+            - 172.17.0.86
+            ipAddressPool: internalapi
+            sharedIP: false
           replicas: 1
 
     telemetry:
