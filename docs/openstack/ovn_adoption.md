@@ -57,6 +57,13 @@ ${client} backup tcp:$EXTERNAL_OVSDB_IP:6641 > ovs-nb.db
 ${client} backup tcp:$EXTERNAL_OVSDB_IP:6642 > ovs-sb.db
 ```
 
+- Upgrade database schema for the backup files.
+
+```
+podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB_IP:6641 > ./ovs-nb.ovsschema && ovsdb-tool convert ovs-nb.db ./ovs-nb.ovsschema"
+podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6641 > ./ovs-sb.ovsschema && ovsdb-tool convert ovs-sb.db ./ovs-sb.ovsschema"
+```
+
 - Start podified OVN services prior to database import.
 
 ```yaml
