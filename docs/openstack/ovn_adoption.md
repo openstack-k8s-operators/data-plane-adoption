@@ -64,7 +64,7 @@ podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IM
 podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6641 > ./ovs-sb.ovsschema && ovsdb-tool convert ovs-sb.db ./ovs-sb.ovsschema"
 ```
 
-- Start podified OVN services prior to database import.
+- Start podified OVN database services prior to import.
 
 ```yaml
 oc patch openstackcontrolplane openstack --type=merge --patch '
@@ -83,9 +83,6 @@ spec:
           dbType: SB
           storageRequest: 10G
           networkAttachment: internalapi
-      ovnNorthd:
-        containerImage: quay.io/podified-antelope-centos9/openstack-ovn-northd:current-podified
-        networkAttachment: internalapi
 '
 ```
 
@@ -139,4 +136,18 @@ This should complete connection of the controller process to the new remote. See
 
 ```bash
 $ ${COMPUTE_SSH} sudo systemctl restart tripleo_ovn_controller.service
+```
+
+- Finally, you can start `ovn-northd` service that will keep OVN northbound and southbound databases in sync.
+
+```yaml
+oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  ovn:
+    enabled: true
+    template:
+      ovnNorthd:
+        containerImage: quay.io/podified-antelope-centos9/openstack-ovn-northd:current-podified
+        networkAttachment: internalapi
+'
 ```
