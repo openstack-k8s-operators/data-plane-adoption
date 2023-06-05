@@ -21,9 +21,13 @@
     keystone:
       enabled: true
       template:
-        secret: osp-secret
-        containerImage: quay.io/podified-antelope-centos9/openstack-keystone:current-podified
         databaseInstance: openstack
+        secret: osp-secret
+        externalEndpoints:
+        - endpoint: internal
+          ipAddressPool: internalapi
+          loadBalancerIPs:
+          - 172.17.0.80
   '
   ```
 
