@@ -33,12 +33,12 @@ PODIFIED_MARIADB_IP=$(oc get -o yaml pod mariadb-openstack | grep podIP: | awk '
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 
 # Use your environment's values for these:
-EXTERNAL_MARIADB_IP=192.168.24.3
+EXTERNAL_MARIADB_IP=192.168.122.100
 EXTERNAL_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 PODIFIED_DB_ROOT_PASSWORD=12345678
 
 # ssh commands to reach controller machines
-CONTROLLER1_SSH="ssh -F ~/director_standalone/vagrant_ssh_config vagrant@standalone"
+CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 CONTROLLER2_SSH=":"
 CONTROLLER3_SSH=":"
 ```
