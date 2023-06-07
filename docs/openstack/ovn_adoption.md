@@ -57,7 +57,7 @@ ${client} backup tcp:$EXTERNAL_OVSDB_IP:6641 > ovs-nb.db
 ${client} backup tcp:$EXTERNAL_OVSDB_IP:6642 > ovs-sb.db
 ```
 
-- Start podified OVN services prior to database import.
+- Start podified OVN database services prior to import.
 
 ```yaml
 oc patch openstackcontrolplane openstack --type=merge --patch '
@@ -76,9 +76,6 @@ spec:
           dbType: SB
           storageRequest: 10G
           networkAttachment: internalapi
-      ovnNorthd:
-        containerImage: quay.io/podified-antelope-centos9/openstack-ovn-northd:current-podified
-        networkAttachment: internalapi
 '
 ```
 
@@ -87,6 +84,13 @@ spec:
 ```bash
 PODIFIED_OVSDB_NB_IP=$(kubectl get po ovsdbserver-nb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/networks-status}' | jq 'map(. | select(.name=="openstack/internalapi"))[0].ips[0]' | tr -d '"')
 PODIFIED_OVSDB_SB_IP=$(kubectl get po ovsdbserver-sb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/networks-status}' | jq 'map(. | select(.name=="openstack/internalapi"))[0].ips[0]' | tr -d '"')
+```
+
+- Upgrade database schema for the backup files.
+
+```
+podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB_IP:6641 > ./ovs-nb.ovsschema && ovsdb-tool convert ovs-nb.db ./ovs-nb.ovsschema"
+podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6641 > ./ovs-sb.ovsschema && ovsdb-tool convert ovs-sb.db ./ovs-sb.ovsschema"
 ```
 
 - Restore database backup to podified OVN database servers.
@@ -132,4 +136,18 @@ This should complete connection of the controller process to the new remote. See
 
 ```bash
 $ ${COMPUTE_SSH} sudo systemctl restart tripleo_ovn_controller.service
+```
+
+- Finally, you can start `ovn-northd` service that will keep OVN northbound and southbound databases in sync.
+
+```yaml
+oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  ovn:
+    enabled: true
+    template:
+      ovnNorthd:
+        containerImage: quay.io/podified-antelope-centos9/openstack-ovn-northd:current-podified
+        networkAttachment: internalapi
+'
 ```
