@@ -140,7 +140,12 @@ podified OpenStack control plane services.
 
     ovn:
       enabled: false
-      template: {}
+      template:
+        ovnController:
+          external-ids:
+            system-id: "random"
+            ovn-bridge: "br-int"
+            ovn-encap-type: "geneve"
 
     ovs:
       enabled: false
