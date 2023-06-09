@@ -1,8 +1,8 @@
 # Backend services deployment
 
-The following instructions create OpenStackControlPlane CR with
-MariaDB and RabbitMQ deployed, and all the other services disabled. This will
-be the foundation of the podified control plane.
+The following instructions create OpenStackControlPlane CR with basic
+backend services deployed, and all the OpenStack services disabled.
+This will be the foundation of the podified control plane.
 
 In subsequent steps, we'll import the original databases and then add
 podified OpenStack control plane services.
@@ -90,8 +90,9 @@ podified OpenStack control plane services.
   oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
   ```
 
-* Deploy OpenStackControlPlane. **Make sure to only enable MariaDB and
-  RabbitMQ services. All other services must be disabled.**
+* Deploy OpenStackControlPlane. **Make sure to only enable DNS,
+  MariaDB, Memcached, and RabbitMQ services. All other services must
+  be disabled.**
 
   ```yaml
   oc apply -f - <<EOF
@@ -103,33 +104,6 @@ podified OpenStack control plane services.
     secret: osp-secret
     storageClass: local-storage
 
-    keystone:
-      enabled: false
-      template: {}
-
-    mariadb:
-      templates:
-        openstack:
-          containerImage: quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
-          storageRequest: 500M
-
-    rabbitmq:
-      templates:
-        rabbitmq:
-          replicas: 1
-        rabbitmq-cell1:
-          replicas: 1
-
-    placement:
-      enabled: false
-      template: {}
-
-    glance:
-      enabled: false
-      template:
-        glanceAPIInternal: {}
-        glanceAPIExternal: {}
-
     cinder:
       enabled: false
       template:
@@ -137,6 +111,61 @@ podified OpenStack control plane services.
         cinderScheduler: {}
         cinderBackup: {}
         cinderVolumes: {}
+
+    dns:
+      enabled: true
+      template:
+        externalEndpoints:
+        - ipAddressPool: ctlplane
+          loadBalancerIPs:
+          - 192.168.122.80
+        options:
+        - key: server
+          values:
+          - 192.168.122.1
+        replicas: 1
+
+    glance:
+      enabled: false
+      template:
+        glanceAPIInternal: {}
+        glanceAPIExternal: {}
+
+    horizon:
+      enabled: false
+      template: {}
+
+    ironic:
+      enabled: false
+      template:
+        ironicConductors: []
+
+    keystone:
+      enabled: false
+      template: {}
+
+    manila:
+      enabled: false
+      template:
+        manilaAPI: {}
+        manilaScheduler: {}
+        manilaShares: {}
+
+    mariadb:
+      templates:
+        openstack:
+          storageRequest: 500M
+
+    memcached:
+      enabled: true
+
+    neutron:
+      enabled: false
+      template: {}
+
+    nova:
+      enabled: false
+      template: {}
 
     ovn:
       enabled: false
@@ -152,25 +181,30 @@ podified OpenStack control plane services.
       template:
         external-ids: {}
 
-    neutron:
+    placement:
       enabled: false
       template: {}
 
-    nova:
+    rabbitmq:
+      templates:
+        rabbitmq:
+          externalEndpoint:
+            loadBalancerIPs:
+            - 172.17.0.85
+            ipAddressPool: internalapi
+            sharedIP: false
+          replicas: 1
+        rabbitmq-cell1:
+          externalEndpoint:
+            loadBalancerIPs:
+            - 172.17.0.86
+            ipAddressPool: internalapi
+            sharedIP: false
+          replicas: 1
+
+    telemetry:
       enabled: false
       template: {}
-
-    ironic:
-      enabled: false
-      template:
-        ironicConductors: []
-
-    manila:
-      enabled: false
-      template:
-        manilaAPI: {}
-        manilaScheduler: {}
-        manilaShares: {}
   EOF
   ```
 

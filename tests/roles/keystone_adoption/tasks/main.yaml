@@ -6,10 +6,13 @@
     spec:
       keystone:
         enabled: true
-        template:
-          secret: osp-secret
-          containerImage: quay.io/podified-antelope-centos9/openstack-keystone:current-podified
-          databaseInstance: openstack
+        databaseInstance: openstack
+        secret: osp-secret
+        externalEndpoints:
+        - endpoint: internal
+          ipAddressPool: internalapi
+          loadBalancerIPs:
+          - 172.17.0.80
     '
 
 - name: create clouds-adopted.yaml
