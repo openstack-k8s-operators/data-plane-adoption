@@ -10,17 +10,19 @@
           databaseInstance: openstack
           secret: osp-secret
           cinderAPI:
-            replicas: 1
-            containerImage: quay.io/tripleozedcentos9/openstack-cinder-api:current-tripleo
-          cinderScheduler:
-            replicas: 1
-            containerImage: quay.io/tripleozedcentos9/openstack-cinder-scheduler:current-tripleo
+            externalEndpoints:
+            - endpoint: internal
+              ipAddressPool: internalapi
+              loadBalancerIPs:
+              - 172.17.0.80
           cinderBackup:
+            networkAttachments:
+            - storage
             replicas: 0 # backend needs to be configured
-            containerImage: quay.io/tripleozedcentos9/openstack-cinder-backup:current-tripleo
           cinderVolumes:
             volume1:
-              containerImage: quay.io/tripleozedcentos9/openstack-cinder-volume:current-tripleo
+              networkAttachments:
+              - storage
               replicas: 0 # backend needs to be configured
     '
 

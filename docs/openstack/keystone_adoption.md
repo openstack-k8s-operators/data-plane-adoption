@@ -60,12 +60,12 @@
 
   openstack endpoint list | grep keystone | awk '/admin/{ print $2; }' | xargs openstack endpoint delete || true
 
-  openstack endpoint list | awk '/ cinderv3 /{ print $2; }' | xargs openstack endpoint delete || true
-  openstack endpoint list | awk '/ glance /{ print $2; }' | xargs openstack endpoint delete || true
-  openstack endpoint list | awk '/ neutron /{ print $2; }' | xargs openstack endpoint delete || true
-  openstack endpoint list | awk '/ nova /{ print $2; }' | xargs openstack endpoint delete || true
-  openstack endpoint list | awk '/ placement /{ print $2; }' | xargs openstack endpoint delete || true
-  openstack endpoint list | awk '/ swift /{ print $2; }' | xargs openstack endpoint delete || true
+  openstack service list | awk '/ cinderv3 /{ print $2; }' | xargs openstack service delete || true
+  openstack service list | awk '/ glance /{ print $2; }' | xargs openstack service delete || true
+  openstack service list | awk '/ neutron /{ print $2; }' | xargs openstack service delete || true
+  openstack service list | awk '/ nova /{ print $2; }' | xargs openstack service delete || true
+  openstack service list | awk '/ placement /{ print $2; }' | xargs openstack service delete || true
+  openstack service list | awk '/ swift /{ print $2; }' | xargs openstack service delete || true
   ```
 
 ## Post-checks

@@ -7,9 +7,13 @@
       placement:
         enabled: true
         template:
-          containerImage: quay.io/podified-antelope-centos9/openstack-placement-api:current-podified
           databaseInstance: openstack
           secret: osp-secret
+          externalEndpoints:
+          - endpoint: internal
+            ipAddressPool: internalapi
+            loadBalancerIPs:
+            - 172.17.0.80
     '
 
 - name: wait for Placement to start up

@@ -19,6 +19,8 @@ Perform the actions from the sub-documents in the following order:
 
 * [Placement adoption](openstack/placement_adoption.md)
 
+* [Cinder adoption](openstack/cinder_adoption.md)
+
 * [Adoption of other services](openstack/other_services_adoption.md)
 
 If you face issues during adoption, check the

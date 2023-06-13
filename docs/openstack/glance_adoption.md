@@ -51,13 +51,19 @@ spec:
     enabled: true
     template:
       databaseInstance: openstack
-      containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
       storageClass: "local-storage"
       storageRequest: 10G
       glanceAPIInternal:
-        containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
+        externalEndpoints:
+        - endpoint: internal
+          ipAddressPool: internalapi
+          loadBalancerIPs:
+          - 172.17.0.80
+        networkAttachments:
+        - storage
       glanceAPIExternal:
-        containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
+        networkAttachments:
+        - storage
 '
 ```
 
@@ -121,9 +127,16 @@ spec:
       storageClass: "local-storage"
       storageRequest: 10G
       glanceAPIInternal:
-        containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
+        externalEndpoints:
+        - endpoint: internal
+          ipAddressPool: internalapi
+          loadBalancerIPs:
+          - 172.17.0.80
+        networkAttachments:
+        - storage
       glanceAPIExternal:
-        containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
+        networkAttachments:
+        - storage
   extraMounts:
     - extraVol:
       - propagation:
