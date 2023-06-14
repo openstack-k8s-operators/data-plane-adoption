@@ -1,0 +1,138 @@
+- name: deploy podified OVN ovsdb-servers
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      ovn:
+        enabled: true
+        template:
+          ovnDBCluster:
+            ovndbcluster-nb:
+              containerImage: quay.io/podified-antelope-centos9/openstack-ovn-nb-db-server:current-podified
+              dbType: NB
+              storageRequest: 10G
+              networkAttachment: internalapi
+            ovndbcluster-sb:
+              containerImage: quay.io/podified-antelope-centos9/openstack-ovn-sb-db-server:current-podified
+              dbType: SB
+              storageRequest: 10G
+              networkAttachment: internalapi
+    '
+
+- name: wait for OVN ovsdb-servers to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=service=ovsdbserver-nb -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc get pod --selector=service=ovsdbserver-sb -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: ovn_ovsdb_servers_running_result
+  until: ovn_ovsdb_servers_running_result is success
+  retries: 60
+  delay: 2
+
+- name: get podified OVN NB ovsdb-server IP
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod ovsdbserver-nb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/networks-status}' | \
+    jq 'map(. | select(.name=="openstack/internalapi"))[0].ips[0]' | \
+    tr -d '"'
+  register: podified_ovn_nb_ip_result
+
+- name: get podified OVN SB ovsdb-server IP
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod ovsdbserver-sb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/networks-status}' | \
+    jq 'map(. | select(.name=="openstack/internalapi"))[0].ips[0]' | \
+    tr -d '"'
+  register: podified_ovn_sb_ip_result
+
+- name: set OVN copy shell vars
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.set_fact:
+    ovn_copy_shell_vars: |
+      PODIFIED_OVSDB_NB_IP={{ podified_ovn_nb_ip_result.stdout }}
+      PODIFIED_OVSDB_SB_IP={{ podified_ovn_sb_ip_result.stdout }}
+      OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
+
+      EXTERNAL_OVSDB_IP={{ external_ovndb_ip }}
+
+      CONTROLLER1_SSH="{{ controller1_ssh }}"
+      CONTROLLER2_SSH="{{ controller2_ssh }}"
+      CONTROLLER3_SSH="{{ controller3_ssh }}"
+
+- name: stop northd service
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    $CONTROLLER1_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
+    $CONTROLLER2_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
+    $CONTROLLER3_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
+
+- name: dump OVN databases
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    mkdir -p {{ ovn_copy_tmp_dir }}
+    cd {{ ovn_copy_tmp_dir }}
+
+    client="podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE ovsdb-client"
+    ${client} backup tcp:$EXTERNAL_OVSDB_IP:6641 > ovs-nb.db
+    ${client} backup tcp:$EXTERNAL_OVSDB_IP:6642 > ovs-sb.db
+
+- name: upgrade OVN databases to the latest schema from podified ovsdb-servers
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    cd {{ ovn_copy_tmp_dir }}
+
+    podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB_IP:6641 > ./ovs-nb.ovsschema && ovsdb-tool convert ovs-nb.db ./ovs-nb.ovsschema"
+    podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6642 > ./ovs-sb.ovsschema && ovsdb-tool convert ovs-sb.db ./ovs-sb.ovsschema"
+
+- name: restore OVN database backups to podified ovsdb-servers
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    cd {{ ovn_copy_tmp_dir }}
+
+    podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < ovs-nb.db"
+    podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < ovs-sb.db"
+
+- name: deploy podified OVN northd service to keep databases in sync
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      ovn:
+        enabled: true
+        template:
+          ovnNorthd:
+            containerImage: quay.io/podified-antelope-centos9/openstack-ovn-northd:current-podified
+            networkAttachment: internalapi
+            replicas: 1
+    '
+
+- name: list briefs from OVN NB and SB databases
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc exec ovsdbserver-nb-0 ovn-nbctl show
+    oc exec ovsdbserver-sb-0 ovn-sbctl show
+
+  register: ovn_show_responding_result
