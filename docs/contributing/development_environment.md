@@ -409,6 +409,17 @@ we can create a simple alias:
 alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=standalone openstack"
 ```
 
+### Route networks
+
+Route VLAN20 to have access to the MariaDB cluster:
+
+```
+EDPM_BRIDGE=$(sudo virsh dumpxml edpm-compute-0 | grep -oP "(?<=bridge=').*(?=')")
+sudo ip link add link $EDPM_BRIDGE name vlan20 type vlan id 20
+sudo ip addr add dev vlan20 172.17.0.222/24
+sudo ip link set up dev vlan20
+```
+
 ### Snapshot/revert
 
 When the deployment of the Standalone OpenStack is finished, it's a
