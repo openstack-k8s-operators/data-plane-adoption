@@ -41,34 +41,6 @@ their own guides (e.g. like
     #         containerImage: quay.io/podified-antelope-centos9/openstack-cinder-volume:current-podified
     #         replicas: 1
 
-    ovn:
-      enabled: true
-      template:
-        ovnDBCluster:
-          ovndbcluster-nb:
-            replicas: 1
-            containerImage: quay.io/podified-antelope-centos9/openstack-ovn-nb-db-server:current-podified
-            dbType: NB
-            storageRequest: 10G
-          ovndbcluster-sb:
-            replicas: 1
-            containerImage: quay.io/podified-antelope-centos9/openstack-ovn-sb-db-server:current-podified
-            dbType: SB
-            storageRequest: 10G
-        ovnNorthd:
-          replicas: 1
-          containerImage: quay.io/podified-antelope-centos9/openstack-ovn-northd:current-podified
-
-    ovs:
-      enabled: true
-      template:
-        ovsContainerImage: "quay.io/skaplons/ovs:latest"
-        ovnContainerImage: "quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified"
-        external-ids:
-          system-id: "random"
-          ovn-bridge: "br-int"
-          ovn-encap-type: "geneve"
-
     neutron:
       enabled: true
       template:

@@ -181,11 +181,6 @@ podified OpenStack control plane services.
             ovn-bridge: "br-int"
             ovn-encap-type: "geneve"
 
-    ovs:
-      enabled: false
-      template:
-        external-ids: {}
-
     placement:
       enabled: false
       template: {}
