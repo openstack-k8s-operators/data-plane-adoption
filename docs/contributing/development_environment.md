@@ -391,6 +391,24 @@ sudo openstack tripleo deploy \
   --output-dir $HOME
 ```
 
+### Convenience steps
+
+To make our life easier we can copy the deployment passwords we'll be using
+in the [backend services deployment phase of the data plane adoption](
+https://openstack-k8s-operators.github.io/data-plane-adoption/openstack/backend_services_deployment/).
+
+```
+scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100:/root/tripleo-standalone-passwords.yaml ~/
+```
+
+If we want to be able to easily run `openstack` commands from the host without
+actually installing the package and copying the configuration file from the VM
+we can create a simple alias:
+
+```
+alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=standalone openstack"
+```
+
 ### Snapshot/revert
 
 When the deployment of the Standalone OpenStack is finished, it's a
