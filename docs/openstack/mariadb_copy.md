@@ -90,6 +90,8 @@ defined `CONTROLLER#_SSH` environmental variables:
 ServicesToStop=("tripleo_horizon.service"
                 "tripleo_keystone.service"
                 "tripleo_cinder_api.service"
+                "tripleo_cinder_api_cron.service"
+                "tripleo_cinder_scheduler.service"
                 "tripleo_glance_api.service"
                 "tripleo_neutron_api.service"
                 "tripleo_nova_api.service"
