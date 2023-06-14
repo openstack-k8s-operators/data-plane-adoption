@@ -210,6 +210,29 @@ sudo ip addr add 172.20.0.2/32 dev vlan23
 sudo ip addr add 172.21.0.2/32 dev vlan44
 ```
 
+### NTP Server
+
+Clock synchronization is important for both Ceph and OpenStack services, so
+both `ceph deploy` and `tripleo deploy` commands will make use of chrony to
+ensure the clock is properly in sync.
+
+We'll use the `NTP_SERVER` environmental variable to define the NTP server to
+use.
+
+If we are running alls these commands in a system inside the Red Hat network we
+should use the `clock.corp.redhat.com ` server:
+
+```
+export NTP_SERVER=clock.corp.redhat.com
+```
+
+And when running it from our own systems outside of the Red Hat network we can
+use any available server:
+
+```
+export NTP_SERVER=pool.ntp.org
+```
+
 ### Ceph
 
 These steps are based on [TripleO Standalone](https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/deployment/standalone.html)
@@ -284,7 +307,7 @@ sudo openstack overcloud ceph deploy \
      --skip-container-registry-config \
      --skip-user-create \
      --network-data network_data.yaml \
-     --ntp-server clock.corp.redhat.com \
+     --ntp-server $NTP_SERVER \
      --output $HOME/deployed_ceph.yaml
 ```
 Ceph should now be installed. Use `sudo cephadm shell -- ceph -s`
@@ -302,13 +325,15 @@ from the Networking section.
 Create standalone_parameters.yaml file and deploy standalone OpenStack
 using the following commands.
 
+Remember that should have exported the `NTP_SERVER` environmental variable
+earlier in the process.
+
 ```
 export NEUTRON_INTERFACE=eth0
 export CTLPLANE_IP=192.168.122.100
 export CTLPLANE_VIP=192.168.122.99
 export CIDR=24
 export DNS_SERVERS=192.168.122.1
-export NTP_SERVER=clock.corp.redhat.com
 export GATEWAY=192.168.122.1
 export BRIDGE="br-ctlplane"
 
