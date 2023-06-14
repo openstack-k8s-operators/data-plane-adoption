@@ -23,6 +23,8 @@ cluster.
       future, e.g. we may require routability from the original MariaDB to
       podified MariaDB*.
 
+* Podman package is installed
+
 ## Variables
 
 Define the shell variables used in the steps below. The values are
@@ -32,15 +34,14 @@ just illustrative, use values that are correct for your environment:
 PODIFIED_MARIADB_IP=$(oc get -o yaml pod mariadb-openstack | grep podIP: | awk '{ print $2; }')
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 
-# Use your environment's values for these:
-EXTERNAL_MARIADB_IP=192.168.122.100
-EXTERNAL_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
-PODIFIED_DB_ROOT_PASSWORD=12345678
+SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
+PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
 
-# ssh commands to reach controller machines
+# Replace with your environment's MariaDB IP and SSH commands to reach controller machines:
+SOURCE_MARIADB_IP=192.168.122.100
 CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
-CONTROLLER2_SSH=":"
-CONTROLLER3_SSH=":"
+CONTROLLER2_SSH=""
+CONTROLLER3_SSH=""
 ```
 
 ## Pre-checks
@@ -49,14 +50,14 @@ CONTROLLER3_SSH=":"
 
   ```
   podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE \
-      mysql -h "$EXTERNAL_MARIADB_IP" -uroot "-p$EXTERNAL_DB_ROOT_PASSWORD" -e 'SHOW databases;'
+      mysql -h "$SOURCE_MARIADB_IP" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" -e 'SHOW databases;'
   ```
 
-* Run mysqlcheck on the original DB:
+* Run mysqlcheck on the original DB to look for things that are not OK:
 
   ```
   podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE \
-      mysqlcheck --all-databases -h $EXTERNAL_MARIADB_IP -u root "-p$EXTERNAL_DB_ROOT_PASSWORD"
+      mysqlcheck --all-databases -h $SOURCE_MARIADB_IP -u root "-p$SOURCE_DB_ROOT_PASSWORD" | grep -v OK
   ```
 
 * Test connection to podified DB (show databases):
@@ -77,6 +78,11 @@ plane services.
 
 2- Stop the services.
 
+3- Make sure all the services are stopped
+
+These steps can be automated with a simple script that relies on the previously
+defined `CONTROLLER#_SSH` environmental variables:
+
 ```bash
 
 # Update the services list to be stopped
@@ -89,17 +95,31 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_nova_api.service"
                 "tripleo_placement_api.service")
 
-echo "Stopping the OpenStack services"
-
+echo "Stopping systemd OpenStack services"
 for service in ${ServicesToStop[*]}; do
-    echo "Stopping the $service in each controller node"
-    $CONTROLLER1_SSH sudo systemctl stop $service
-    $CONTROLLER2_SSH sudo systemctl stop $service
-    $CONTROLLER3_SSH sudo systemctl stop $service
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+        if [ ! -z "${!SSH_CMD}" ]; then
+            echo "Stopping the $service in controller $i"
+            ${!SSH_CMD} sudo systemctl stop $service
+        fi
+    done
+done
+
+echo "Checking systemd OpenStack services"
+for service in ${ServicesToStop[*]}; do
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+        if [ ! -z "${!SSH_CMD}" ]; then
+            echo "Checking status of $service in controller $i"
+            if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
+               echo "ERROR: Service $service still running on controller $i"
+            fi
+        fi
+    done
 done
 ```
 
-3- Make sure all the services are stopped
 
 ## Procedure - data copy
 
@@ -116,9 +136,9 @@ done
   ```
   podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE bash <<EOF
 
-  mysql -h $EXTERNAL_MARIADB_IP -u root "-p$EXTERNAL_DB_ROOT_PASSWORD" -N -e 'show databases' | while read dbname; do
+  mysql -h $SOURCE_MARIADB_IP -u root "-p$SOURCE_DB_ROOT_PASSWORD" -N -e 'show databases' | while read dbname; do
       echo "Exporting \$dbname"
-      mysqldump -h $EXTERNAL_MARIADB_IP -uroot "-p$EXTERNAL_DB_ROOT_PASSWORD" \
+      mysqldump -h $SOURCE_MARIADB_IP -uroot "-p$SOURCE_DB_ROOT_PASSWORD" \
           --single-transaction --complete-insert --skip-lock-tables --lock-tables=0 \
           --databases "\$dbname" \
           > "\$dbname".sql
