@@ -198,6 +198,8 @@ To prevent this, copy
 [this standalone.j2 template file](development_environment_examples/standalone.j2)
 (which retains the VLANs above) into tripleo-ansible's `tripleo_network_config` role.
 ```
+wget https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/development_environment_examples/standalone.j2
+
 sudo cp standalone.j2 /usr/share/ansible/roles/tripleo_network_config/templates/standalone.j2
 ```
 
@@ -297,6 +299,8 @@ Use the files created in the previous steps to install Ceph. Use
 so that Ceph uses the isolated networks for storage and storage management.
 
 ```
+wget https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/development_environment_examples/network_data.yaml
+
 sudo openstack overcloud ceph deploy \
      --mon-ip $CEPH_IP \
      --ceph-spec $HOME/ceph_spec.yaml \
@@ -329,6 +333,8 @@ Remember that should have exported the `NTP_SERVER` environmental variable
 earlier in the process.
 
 ```
+wget https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/development_environment_examples/deployed_network.yaml
+
 export NEUTRON_INTERFACE=eth0
 export CTLPLANE_IP=192.168.122.100
 export CTLPLANE_VIP=192.168.122.99
