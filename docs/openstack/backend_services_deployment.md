@@ -38,6 +38,11 @@ podified OpenStack control plane services.
   ADMIN_PASSWORD=SomePassword
   ```
 
+  To use the existing OpenStack deployment password:
+  ```
+  ADMIN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
+  ```
+
 * Set service password variables to match the original deployment.
   Database passwords can differ in podified environment, but
   synchronizing the service account passwords is a required step.
