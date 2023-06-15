@@ -80,6 +80,8 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_nova_api.service"
                 "tripleo_placement_api.service")
 
+PacemakerResourcesToStop=("haproxy-bundle")
+
 echo "Stopping systemd OpenStack services"
 for service in ${ServicesToStop[*]}; do
     for i in {1..3}; do
@@ -102,5 +104,17 @@ for service in ${ServicesToStop[*]}; do
             fi
         fi
     done
+done
+
+echo "Stopping pacemaker OpenStack services"
+for i in {1..3}; do
+    SSH_CMD=CONTROLLER${i}_SSH
+    if [ ! -z "${!SSH_CMD}" ]; then
+        echo "Using controller $i to run pacemaker commands"
+        for resource in ${PacemakerResourcesToStop[*]}; do
+            ${!SSH_CMD} sudo pcs resource disable $resource
+        done
+        break
+    fi
 done
 ```
