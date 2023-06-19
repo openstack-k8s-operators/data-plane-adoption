@@ -198,6 +198,8 @@ To prevent this, copy
 [this standalone.j2 template file](development_environment_examples/standalone.j2)
 (which retains the VLANs above) into tripleo-ansible's `tripleo_network_config` role.
 ```
+wget https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/development_environment_examples/standalone.j2
+
 sudo cp standalone.j2 /usr/share/ansible/roles/tripleo_network_config/templates/standalone.j2
 ```
 
@@ -208,6 +210,29 @@ sudo ip addr add 172.17.0.2/32 dev vlan20
 sudo ip addr add 172.18.0.2/32 dev vlan21
 sudo ip addr add 172.20.0.2/32 dev vlan23
 sudo ip addr add 172.21.0.2/32 dev vlan44
+```
+
+### NTP Server
+
+Clock synchronization is important for both Ceph and OpenStack services, so
+both `ceph deploy` and `tripleo deploy` commands will make use of chrony to
+ensure the clock is properly in sync.
+
+We'll use the `NTP_SERVER` environmental variable to define the NTP server to
+use.
+
+If we are running alls these commands in a system inside the Red Hat network we
+should use the `clock.corp.redhat.com ` server:
+
+```
+export NTP_SERVER=clock.corp.redhat.com
+```
+
+And when running it from our own systems outside of the Red Hat network we can
+use any available server:
+
+```
+export NTP_SERVER=pool.ntp.org
 ```
 
 ### Ceph
@@ -274,6 +299,8 @@ Use the files created in the previous steps to install Ceph. Use
 so that Ceph uses the isolated networks for storage and storage management.
 
 ```
+wget https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/development_environment_examples/network_data.yaml
+
 sudo openstack overcloud ceph deploy \
      --mon-ip $CEPH_IP \
      --ceph-spec $HOME/ceph_spec.yaml \
@@ -284,7 +311,7 @@ sudo openstack overcloud ceph deploy \
      --skip-container-registry-config \
      --skip-user-create \
      --network-data network_data.yaml \
-     --ntp-server clock.corp.redhat.com \
+     --ntp-server $NTP_SERVER \
      --output $HOME/deployed_ceph.yaml
 ```
 Ceph should now be installed. Use `sudo cephadm shell -- ceph -s`
@@ -302,13 +329,17 @@ from the Networking section.
 Create standalone_parameters.yaml file and deploy standalone OpenStack
 using the following commands.
 
+Remember that should have exported the `NTP_SERVER` environmental variable
+earlier in the process.
+
 ```
+wget https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/development_environment_examples/deployed_network.yaml
+
 export NEUTRON_INTERFACE=eth0
 export CTLPLANE_IP=192.168.122.100
 export CTLPLANE_VIP=192.168.122.99
 export CIDR=24
 export DNS_SERVERS=192.168.122.1
-export NTP_SERVER=clock.corp.redhat.com
 export GATEWAY=192.168.122.1
 export BRIDGE="br-ctlplane"
 
@@ -358,6 +389,35 @@ sudo openstack tripleo deploy \
   --local-ip=$CTLPLANE_IP/$CIDR \
   --control-virtual-ip=$CTLPLANE_VIP \
   --output-dir $HOME
+```
+
+### Convenience steps
+
+To make our life easier we can copy the deployment passwords we'll be using
+in the [backend services deployment phase of the data plane adoption](
+https://openstack-k8s-operators.github.io/data-plane-adoption/openstack/backend_services_deployment/).
+
+```
+scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100:/root/tripleo-standalone-passwords.yaml ~/
+```
+
+If we want to be able to easily run `openstack` commands from the host without
+actually installing the package and copying the configuration file from the VM
+we can create a simple alias:
+
+```
+alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=standalone openstack"
+```
+
+### Route networks
+
+Route VLAN20 to have access to the MariaDB cluster:
+
+```
+EDPM_BRIDGE=$(sudo virsh dumpxml edpm-compute-0 | grep -oP "(?<=bridge=').*(?=')")
+sudo ip link add link $EDPM_BRIDGE name vlan20 type vlan id 20
+sudo ip addr add dev vlan20 172.17.0.222/24
+sudo ip link set up dev vlan20
 ```
 
 ### Snapshot/revert
