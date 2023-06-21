@@ -437,7 +437,7 @@ And when you wish to revert the Standalone deployment to the
 snapshotted state:
 
 ```
-sudo virsh snapshot-revert --domain edpm-compute-0 --name clean
+sudo virsh snapshot-revert --domain edpm-compute-0 --snapshotname clean
 ```
 
 Similar snapshot could be done for the CRC virtual machine, but the
