@@ -5,5 +5,7 @@
 /tests/vars.yaml
 /tests/logs
 
+.vscode
+
 # rendered docs
 /site
