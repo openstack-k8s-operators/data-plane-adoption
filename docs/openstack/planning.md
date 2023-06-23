@@ -190,3 +190,8 @@ Once we know all the transport protocols we are using, we can proceed to make
 sure we are taking them into consideration when placing the Cinder services
 (as mentioned above in the Node Roles section) and the right storage transport
 related binaries are running on the OpenShift nodes.
+
+Detailed information about the specifics for each storage transport protocol can
+be found in the [Cinder Adoption section](cinder_adoption.md).  Please take a
+good look at that document before proceeding to be able to plan the adoption
+better.
