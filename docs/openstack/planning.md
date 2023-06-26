@@ -6,6 +6,91 @@ upgrade/migration to the podified OpenStack requires planning various aspects
 of the environment such as node roles, planning your network topology, and
 storage.
 
+In this document we cover some of this planning, but it is recommended to read
+the whole adoption guide before actually starting the process to be sure that
+there is a global understanding of the whole process.
+
+## Configurations
+
+There is a fundamental difference between the Director and Operator deployments
+regarding the configuration of the services.
+
+In Director deployments many of the service configurations are abstracted by
+Director specific configuration options. A single Director option may trigger
+changes for multiple services and support for drivers (for example Cinder's)
+required patches to the Director code base.
+
+In Operator deployments this has changed to what we believe is a simpler
+approach: reduce the installer specific knowledge and leverage OpenShift and
+OpenStack service specific knowledge whenever possible.
+
+To this effect OpenStack services will have sensible defaults for OpenShift
+deployments and human operators will provide configuration snippets to provide
+necessary configuration, such as cinder backend configuration, or to override
+the defaults.
+
+This shortens the distance between a service specific configuration file (such
+as `cinder.conf`) and what the human operator provides in the manifests.
+
+These configuration snippets are passed to the operators in the different
+`customServiceConfig` sections available in the manifests, and then they are
+layered in the services available in the following levels. To illustrate this,
+if we were to set a configuration at the top Cinder level (`spec: cinder:
+template:`) then it would be applied to all the cinder services; for example to
+enable debug in all the cinder services we would do:
+
+```yaml
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+spec:
+  cinder:
+    template:
+      customServiceConfig: |
+        [DEFAULT]
+        debug = True
+< . . . >
+```
+
+If we only wanted to set it for one of the cinder services, for example the
+scheduler, then we would use the `cinderScheduler` section instead:
+
+```yaml
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+spec:
+  cinder:
+    template:
+      cinderScheduler:
+        customServiceConfig: |
+          [DEFAULT]
+          debug = True
+< . . . >
+```
+
+In openshift it is not recommended to store sensitive information like the
+credentials to the cinder storage array in the CRs, so most OpenStack operators
+have a mechanism to use OpenShift's `Secrets` for sensitive configuration
+parameters of the services and then use then by reference in the
+`customServiceConfigSecrets` section which is analogous to the
+`customServiceConfig`.
+
+The contents of the `Secret` references passed in the
+`customServiceConfigSecrets` will have the same format as `customServiceConfig`:
+a snippet with the section/s and configuration options.
+
+When there are sensitive information in the service configuration then it
+becomes a matter of personal preference whether to store all the configuration
+in the `Secret` or only the sensitive parts, but remember that if we split the
+configuration between `Secret` and `customServiceConfig` we still need the
+section header (eg: `[DEFAULT]`) to be present in both places.
+
+Attention should be paid to each service's adoption process as they may have
+some particularities regarding their configuration.
+
 ## Node Roles
 
 In Director deployments we had 4 different standard roles for the nodes:
