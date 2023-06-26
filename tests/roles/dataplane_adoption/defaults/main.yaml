@@ -2,6 +2,5 @@ registry_name: "quay.io"
 registry_namespace: "podified-antelope-centos9"
 image_tag: "current-podified"
 ansibleSSHPrivateKeySecret: dataplane-adoption-secret
-openStackAnsibleEERunnerImage: quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
 deployStrategy:
   deploy: false
