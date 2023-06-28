@@ -156,8 +156,9 @@ spec:
 
 Inspect the resulting glance pods:
 
-```
-sh-5.1# cat /etc/glance/glance.conf.d/01-custom.conf
+```bash
+GLANCE_POD=`oc get pod |grep glance-external-api | cut -f 1 -d' '`
+oc exec -t $GLANCE_POD -c glance-api -- cat /etc/glance/glance.conf.d/02-global.conf
 
 [DEFAULT]
 enabled_backends=default_backend:rbd
@@ -169,8 +170,9 @@ rbd_store_user=openstack
 rbd_store_pool=images
 store_description=Ceph glance store backend.
 
-sh-5.1# ls /etc/ceph/ceph*
-/etc/ceph/ceph.client.openstack.keyring  /etc/ceph/ceph.conf
+oc exec -t $GLANCE_POD -c glance-api -- ls /etc/ceph
+ceph.client.openstack.keyring
+ceph.conf
 ```
 
 Ceph secrets are properly mounted, at this point let's move to the OpenStack
