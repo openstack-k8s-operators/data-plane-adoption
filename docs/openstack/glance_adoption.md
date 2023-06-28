@@ -22,22 +22,6 @@ This guide also assumes that:
 * Previous Adoption steps completed. Notably, MariaDB and Keystone
   should be already adopted.
 
-
-## Pre-check
-
-On the source Cloud, check that the service is active and works as expected,
-and list the existing images:
-
-
-```
-(openstack)$ image list
-+--------------------------------------+--------+--------+
-| ID                                   | Name   | Status |
-+--------------------------------------+--------+--------+
-| c3158cad-d50b-452f-bec1-f250562f5c1f | cirros | active |
-+--------------------------------------+--------+--------+
-```
-
 ## Procedure - Glance adoption
 
 As already done for [Keystone](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md), the Glance Adoption follows the same pattern.
