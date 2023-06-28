@@ -70,7 +70,7 @@ those files in `/etc/ceph`.
 apiVersion: v1
 kind: Secret
 metadata:
-  name: ceph-client-conf
+  name: ceph-conf-files
   namespace: openstack
 stringData:
   ceph.client.openstack.keyring: |
@@ -83,6 +83,17 @@ stringData:
     [global]
     fsid = 7a1719e8-9c59-49e2-ae2b-d7eb08c695d4
     mon_host = 10.1.1.2,10.1.1.3,10.1.1.4
+```
+
+If your Ceph files are accessible using the `$CONTROLLER1_SSH` command you can
+automate the creation of the `Secret`:
+
+```bash
+$CONTROLLER1_SSH cat /etc/ceph/ceph.conf > ceph.conf
+$CONTROLLER1_SSH cat /etc/ceph/ceph.client.openstack.keyring > ceph.client.openstack.keyring
+oc --namespace openstack create secret generic ceph-conf-files \
+  --from-file=ceph.conf=ceph.conf \
+  --from-file=ceph.client.openstack.keyring=ceph.client.openstack.keyring
 ```
 
 This secret will be used in the `extraVolumes` parameters to propagate the files
