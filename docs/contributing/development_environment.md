@@ -469,6 +469,20 @@ Confirm the image UUID can be seen in Ceph's images pool.
 sudo cephadm shell -- rbd -p images ls -l
 ```
 
+Create a Cinder volume, a backup from it, and snapshot it.
+```
+openstack volume create --image cirros --bootable --size 1 disk
+openstack volume backup create --name backup disk
+openstack volume snapshot create --volume disk snapshot
+```
+
+Boot a VM
+```
+openstack flavor create tiny --id auto --ram 256 --disk 0 --vcpus 1
+openstack --os-compute-api-version 2.37 server create --flavor tiny --image cirros --nic none --wait vm
+openstack server add volume vm disk
+```
+
 ## Performing the Data Plane Adoption
 
 The development environment is now set up, you can go to the [Adoption
