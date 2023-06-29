@@ -22,22 +22,6 @@ This guide also assumes that:
 * Previous Adoption steps completed. Notably, MariaDB and Keystone
   should be already adopted.
 
-
-## Pre-check
-
-On the source Cloud, check that the service is active and works as expected,
-and list the existing images:
-
-
-```
-(openstack)$ image list
-+--------------------------------------+--------+--------+
-| ID                                   | Name   | Status |
-+--------------------------------------+--------+--------+
-| c3158cad-d50b-452f-bec1-f250562f5c1f | cirros | active |
-+--------------------------------------+--------+--------+
-```
-
 ## Procedure - Glance adoption
 
 As already done for [Keystone](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md), the Glance Adoption follows the same pattern.
@@ -86,7 +70,7 @@ those files in `/etc/ceph`.
 apiVersion: v1
 kind: Secret
 metadata:
-  name: ceph-client-conf
+  name: ceph-conf-files
   namespace: openstack
 stringData:
   ceph.client.openstack.keyring: |
@@ -99,6 +83,17 @@ stringData:
     [global]
     fsid = 7a1719e8-9c59-49e2-ae2b-d7eb08c695d4
     mon_host = 10.1.1.2,10.1.1.3,10.1.1.4
+```
+
+If your Ceph files are accessible using the `$CONTROLLER1_SSH` command you can
+automate the creation of the `Secret`:
+
+```bash
+$CONTROLLER1_SSH cat /etc/ceph/ceph.conf > ceph.conf
+$CONTROLLER1_SSH cat /etc/ceph/ceph.client.openstack.keyring > ceph.client.openstack.keyring
+oc --namespace openstack create secret generic ceph-conf-files \
+  --from-file=ceph.conf=ceph.conf \
+  --from-file=ceph.client.openstack.keyring=ceph.client.openstack.keyring
 ```
 
 This secret will be used in the `extraVolumes` parameters to propagate the files
@@ -161,8 +156,9 @@ spec:
 
 Inspect the resulting glance pods:
 
-```
-sh-5.1# cat /etc/glance/glance.conf.d/01-custom.conf
+```bash
+GLANCE_POD=`oc get pod |grep glance-external-api | cut -f 1 -d' '`
+oc exec -t $GLANCE_POD -c glance-api -- cat /etc/glance/glance.conf.d/02-global.conf
 
 [DEFAULT]
 enabled_backends=default_backend:rbd
@@ -174,8 +170,9 @@ rbd_store_user=openstack
 rbd_store_pool=images
 store_description=Ceph glance store backend.
 
-sh-5.1# ls /etc/ceph/ceph*
-/etc/ceph/ceph.client.openstack.keyring  /etc/ceph/ceph.conf
+oc exec -t $GLANCE_POD -c glance-api -- ls /etc/ceph
+ceph.client.openstack.keyring
+ceph.conf
 ```
 
 Ceph secrets are properly mounted, at this point let's move to the OpenStack
