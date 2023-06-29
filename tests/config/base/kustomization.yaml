@@ -1,0 +1,2 @@
+resources:
+- openstack_control_plane.yaml

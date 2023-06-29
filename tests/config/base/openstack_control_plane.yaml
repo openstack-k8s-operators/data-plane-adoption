@@ -1,0 +1,118 @@
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+spec:
+  secret: osp-secret
+  storageClass: local-storage
+
+  cinder:
+    enabled: false
+    template:
+      cinderAPI: {}
+      cinderScheduler: {}
+      cinderBackup: {}
+      cinderVolumes: {}
+
+  dns:
+    enabled: true
+    template:
+      externalEndpoints:
+      - ipAddressPool: ctlplane
+        loadBalancerIPs:
+        - 192.168.122.80
+      options:
+      - key: server
+        values:
+        - 192.168.122.1
+      replicas: 1
+
+  glance:
+    enabled: false
+    template:
+      glanceAPIInternal: {}
+      glanceAPIExternal: {}
+
+  horizon:
+    enabled: false
+    template: {}
+
+  ironic:
+    enabled: false
+    template:
+      ironicConductors: []
+
+  keystone:
+    enabled: false
+    template: {}
+
+  manila:
+    enabled: false
+    template:
+      manilaAPI: {}
+      manilaScheduler: {}
+      manilaShares: {}
+
+  mariadb:
+    enabled: true
+    templates:
+      openstack:
+        storageRequest: 500M
+
+  memcached:
+    enabled: true
+    templates:
+      memcached:
+        replicas: 1
+
+  neutron:
+    enabled: false
+    template: {}
+
+  nova:
+    enabled: false
+    template: {}
+
+  ovn:
+    enabled: false
+    template:
+      ovnController:
+        external-ids:
+          system-id: "random"
+          ovn-bridge: "br-int"
+          ovn-encap-type: "geneve"
+      ovnDBCluster:
+        ovndbcluster-nb:
+          containerImage: quay.io/podified-antelope-centos9/openstack-ovn-nb-db-server:current-podified
+        ovndbcluster-sb:
+          containerImage: quay.io/podified-antelope-centos9/openstack-ovn-sb-db-server:current-podified
+
+  ovs:
+    enabled: false
+    template:
+      external-ids: {}
+
+  placement:
+    enabled: false
+    template: {}
+
+  rabbitmq:
+    templates:
+      rabbitmq:
+        externalEndpoint:
+          loadBalancerIPs:
+          - 172.17.0.85
+          ipAddressPool: internalapi
+          sharedIP: false
+        replicas: 1
+      rabbitmq-cell1:
+        externalEndpoint:
+          loadBalancerIPs:
+          - 172.17.0.86
+          ipAddressPool: internalapi
+          sharedIP: false
+        replicas: 1
+
+  telemetry:
+    enabled: false
+    template: {}
