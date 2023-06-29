@@ -142,8 +142,8 @@
               #
               # These vars are for the network config templates themselves and are
               # considered EDPM network defaults.
-              neutron_physical_bridge_name: br-ctlplane
-              neutron_public_interface_name: eth1
+              edpm_network_config_bridge_name: br-ctlplane
+              edpm_network_config_interface_name: eth1
               ctlplane_mtu: 1500
               ctlplane_subnet_cidr: 24
               ctlplane_gateway_ip: 192.168.122.1

@@ -205,7 +205,7 @@ network_config:
   - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
   routes: {{ storage_host_routes }}
 - type: ovs_bridge
-  name: {{ neutron_physical_bridge_name }}
+  name: {{ edpm_network_config_bridge_name }}
   dns_servers: {{ ctlplane_dns_nameservers }}
   domain: {{ dns_search_domains }}
   use_dhcp: false
