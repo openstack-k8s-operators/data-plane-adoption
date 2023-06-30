@@ -16,6 +16,7 @@
   roles:
     - backend_services
     - mariadb_copy
+    - ovn_adoption
     - keystone_adoption
     - glance_adoption
     - placement_adoption

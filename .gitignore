@@ -9,3 +9,8 @@
 
 # rendered docs
 /site
+
+# editor and IDE paraphernalia
+.idea
+*.swp
+*.swo
