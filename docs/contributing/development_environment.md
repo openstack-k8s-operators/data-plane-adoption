@@ -378,11 +378,12 @@ sudo openstack tripleo deploy \
   --standalone-role Standalone \
   -e /usr/share/openstack-tripleo-heat-templates/environments/standalone/standalone-tripleo.yaml \
   -e /usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml \
+  -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml \
+  -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-network-environment.yaml \
+  -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup-active-active.yaml \
   -e ~/containers-prepare-parameters.yaml \
   -e standalone_parameters.yaml \
-  -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml \
   -e ~/deployed_ceph.yaml \
-  -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-network-environment.yaml \
   -e deployed_network.yaml \
   -r /usr/share/openstack-tripleo-heat-templates/roles/Standalone.yaml \
   -n network_data.yaml \
@@ -466,6 +467,20 @@ openstack image create cirros --disk-format=raw --container-format=bare < $RAW
 Confirm the image UUID can be seen in Ceph's images pool.
 ```
 sudo cephadm shell -- rbd -p images ls -l
+```
+
+Create a Cinder volume, a backup from it, and snapshot it.
+```
+openstack volume create --image cirros --bootable --size 1 disk
+openstack volume backup create --name backup disk
+openstack volume snapshot create --volume disk snapshot
+```
+
+Boot a VM
+```
+openstack flavor create tiny --id auto --ram 256 --disk 0 --vcpus 1
+openstack --os-compute-api-version 2.37 server create --flavor tiny --image cirros --nic none --wait vm
+openstack server add volume vm disk
 ```
 
 ## Performing the Data Plane Adoption

@@ -7,6 +7,8 @@ This is a procedure for adopting an OpenStack cloud.
 
 Perform the actions from the sub-documents in the following order:
 
+* [Planning the new deployment](openstack/planning.md)
+
 * [Deploy podified backend services](openstack/backend_services_deployment.md)
 
 * [Stop OpenStack services](openstack/stop_services.md)
