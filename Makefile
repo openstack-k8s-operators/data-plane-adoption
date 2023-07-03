@@ -1,3 +1,4 @@
+# Sanity check run
 TEST_INVENTORY ?= tests/inventory.yaml
 TEST_VARS ?= tests/vars.yaml
 TEST_SECRETS ?= tests/secrets.yaml
