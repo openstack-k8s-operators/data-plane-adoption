@@ -19,7 +19,8 @@ recommendations on how to check some things in the services.
 ## Variables
 
 Define the shell variables used in the steps below. The values are
-just illustrative, use values that are correct for your environment:
+just illustrative and refer to a single node standalone director deployment,
+use values that are correct for your environment:
 
 ```
 CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
@@ -64,6 +65,10 @@ there are no ongoing  operations.
 2- Stop the services.
 3- Make sure all the services are stopped.
 
+The cinder-backup service on OSP 17.1 could be running as Active-Passive under
+pacemaker or as Active-Active, so we'll have to check how it's running and
+stop it.
+
 These steps can be automated with a simple script that relies on the previously
 defined environmental variables and function:
 
@@ -75,12 +80,15 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_cinder_api.service"
                 "tripleo_cinder_api_cron.service"
                 "tripleo_cinder_scheduler.service"
+                "tripleo_cinder_backup.service"
                 "tripleo_glance_api.service"
                 "tripleo_neutron_api.service"
                 "tripleo_nova_api.service"
                 "tripleo_placement_api.service")
 
-PacemakerResourcesToStop=("haproxy-bundle")
+PacemakerResourcesToStop=("haproxy-bundle"
+                          "openstack-cinder-volume"
+                          "openstack-cinder-backup")
 
 echo "Stopping systemd OpenStack services"
 for service in ${ServicesToStop[*]}; do

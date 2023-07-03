@@ -1,5 +1,3 @@
-# Keystone adoption
-
 ## Prerequisites
 
 * Previous Adoption steps completed. Notably, the service databases
@@ -31,41 +29,21 @@
   '
   ```
 
-* Create a clouds.yaml file to talk to adopted Keystone:
+* Create alias to use `openstack` command in the adopted deployment:
 
-  ```
-  cat > clouds-adopted.yaml <<EOF
-  clouds:
-    adopted:
-      auth:
-        auth_url: http://keystone-public-openstack.apps-crc.testing
-        password: $ADMIN_PASSWORD
-        project_domain_name: Default
-        project_name: admin
-        user_domain_name: Default
-        username: admin
-      cacert: ''
-      identity_api_version: '3'
-      region_name: regionOne
-      volume_api_version: '3'
-  EOF
+  ```bash
+  alias openstack="oc exec -t openstackclient -- openstack"
   ```
 
 * Clean up old services and endpoints that still point to the old
   control plane (everything except Keystone service and endpoints):
 
-  ```
-  export OS_CLIENT_CONFIG_FILE=clouds-adopted.yaml
-  export OS_CLOUD=adopted
+  ```bash
+  openstack endpoint list | grep keystone | awk '/admin/{ print $2; }' | xargs ${BASH_ALIASES[openstack]} endpoint delete || true
 
-  openstack endpoint list | grep keystone | awk '/admin/{ print $2; }' | xargs openstack endpoint delete || true
-
-  openstack service list | awk '/ cinderv3 /{ print $2; }' | xargs openstack service delete || true
-  openstack service list | awk '/ glance /{ print $2; }' | xargs openstack service delete || true
-  openstack service list | awk '/ neutron /{ print $2; }' | xargs openstack service delete || true
-  openstack service list | awk '/ nova /{ print $2; }' | xargs openstack service delete || true
-  openstack service list | awk '/ placement /{ print $2; }' | xargs openstack service delete || true
-  openstack service list | awk '/ swift /{ print $2; }' | xargs openstack service delete || true
+  for service in cinderv3 glance neutron nova placement swift; do
+    openstack service list | awk "/ $service /{ print \$2; }" | xargs ${BASH_ALIASES[openstack]} service delete || true
+  done
   ```
 
 ## Post-checks
@@ -73,9 +51,6 @@
 * See that Keystone endpoints are defined and pointing to the podified
   FQDNs:
 
-  ```
-  export OS_CLIENT_CONFIG_FILE=clouds-adopted.yaml
-  export OS_CLOUD=adopted
-
+  ```bash
   openstack endpoint list | grep keystone
   ```
