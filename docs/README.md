@@ -27,6 +27,8 @@ Perform the actions from the sub-documents in the following order:
 
 * [Adoption of other services](openstack/other_services_adoption.md)
 
+* [Dataplane adoption](openstack/edpm_adoption.md)
+
 If you face issues during adoption, check the
 [Troubleshooting](openstack/troubleshooting.md) document for common
 problems and solutions.
