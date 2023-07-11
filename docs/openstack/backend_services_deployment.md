@@ -163,6 +163,9 @@ podified OpenStack control plane services.
 
     memcached:
       enabled: true
+      templates:
+        memcached:
+          replicas: 1
 
     neutron:
       enabled: false
