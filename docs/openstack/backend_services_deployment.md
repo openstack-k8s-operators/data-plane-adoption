@@ -64,6 +64,13 @@ podified OpenStack control plane services.
 
 ## Procedure - backend services deployment
 
+* Make sure you are using the OpenShift namespace where you want the
+  podified control plane deployed:
+
+  ```
+  oc project openstack
+  ```
+
 * Create OSP secret.
 
   The procedure for this will vary, but in developer/CI environments
