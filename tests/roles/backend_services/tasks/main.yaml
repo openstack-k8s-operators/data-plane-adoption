@@ -1,3 +1,9 @@
+- name: use openstack project
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc project openstack
+
 - name: create osp-secret
   ansible.builtin.shell: |
     {{ shell_header }}
