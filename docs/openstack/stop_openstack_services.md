@@ -96,7 +96,9 @@ for service in ${ServicesToStop[*]}; do
         SSH_CMD=CONTROLLER${i}_SSH
         if [ ! -z "${!SSH_CMD}" ]; then
             echo "Stopping the $service in controller $i"
-            ${!SSH_CMD} sudo systemctl stop $service
+            if ${!SSH_CMD} sudo systemctl is-active $service; then
+                ${!SSH_CMD} sudo systemctl stop $service
+            fi
         fi
     done
 done
@@ -120,7 +122,9 @@ for i in {1..3}; do
     if [ ! -z "${!SSH_CMD}" ]; then
         echo "Using controller $i to run pacemaker commands"
         for resource in ${PacemakerResourcesToStop[*]}; do
-            ${!SSH_CMD} sudo pcs resource disable $resource
+            if ${!SSH_CMD} sudo pcs resource config $resource; then
+                ${!SSH_CMD} sudo pcs resource disable $resource
+            fi
         done
         break
     fi
