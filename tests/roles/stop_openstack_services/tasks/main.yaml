@@ -18,12 +18,15 @@
                     "tripleo_cinder_api.service"
                     "tripleo_cinder_api_cron.service"
                     "tripleo_cinder_scheduler.service"
+                    "tripleo_cinder_backup.service"
                     "tripleo_glance_api.service"
                     "tripleo_neutron_api.service"
                     "tripleo_nova_api.service"
                     "tripleo_placement_api.service")
 
-    PacemakerResourcesToStop=("haproxy-bundle")
+    PacemakerResourcesToStop=("haproxy-bundle"
+                              "openstack-cinder-volume"
+                              "openstack-cinder-backup")
 
     echo "Stopping systemd OpenStack services"
     for service in ${ServicesToStop[*]}; do
