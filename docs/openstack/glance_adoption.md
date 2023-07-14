@@ -208,8 +208,7 @@ in the adopted service:
 We can test that an image can be created on from the adopted service.
 
 ```
-(openstack)$ export OS_CLIENT_CONFIG_FILE=clouds-adopted.yaml
-(openstack)$ export OS_CLOUD=adopted
+(openstack)$ alias openstack="oc exec -t openstackclient -- openstack"
 (openstack)$ curl -L -o /tmp/cirros-0.5.2-x86_64-disk.img http://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
     qemu-img convert -O raw /tmp/cirros-0.5.2-x86_64-disk.img /tmp/cirros-0.5.2-x86_64-disk.img.raw
     openstack image create --container-format bare --disk-format raw --file /tmp/cirros-0.5.2-x86_64-disk.img.raw cirros2

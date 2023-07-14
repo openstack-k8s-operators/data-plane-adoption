@@ -33,8 +33,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    export OS_CLIENT_CONFIG_FILE={{ adopted_clouds_yaml_path }}
-    export OS_CLOUD=adopted
+    alias openstack="oc exec -t openstackclient -- openstack"
 
     openstack endpoint list | grep placement
 
