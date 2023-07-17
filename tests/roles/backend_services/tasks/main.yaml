@@ -44,7 +44,7 @@
     {{ shell_header }}
     {{ oc_header }}
     mkdir -p tmp
-    kustomize build base > tmp/test_deployment.yaml
+    oc kustomize base > tmp/test_deployment.yaml
     oc apply -f tmp/test_deployment.yaml
   args:
     chdir: "../config"
@@ -67,7 +67,7 @@
         {{ shell_header }}
         {{ oc_header }}
         mkdir -p tmp
-        kustomize build periodic_ci > tmp/test_deployment.yaml
+        oc kustomize periodic_ci > tmp/test_deployment.yaml
         oc apply -f tmp/test_deployment.yaml
       args:
         chdir: "../config"
