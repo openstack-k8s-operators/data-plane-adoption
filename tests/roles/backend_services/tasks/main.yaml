@@ -38,119 +38,39 @@
         oc set data secret/osp-secret "PlacementPassword={{ placement_password }}"
     {% endif %}
 
-- name: deploy backend services
+- name: when not a periodic CI job use the base deployment
+  when: not periodic|default(false)
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc apply -f - <<EOF
-    apiVersion: core.openstack.org/v1beta1
-    kind: OpenStackControlPlane
-    metadata:
-      name: openstack
-    spec:
-      secret: osp-secret
-      storageClass: local-storage
+    mkdir -p tmp
+    kustomize build base > tmp/test_deployment.yaml
+    oc apply -f tmp/test_deployment.yaml
+  args:
+    chdir: "../config"
 
-      cinder:
-        enabled: false
-        template:
-          cinderAPI: {}
-          cinderScheduler: {}
-          cinderBackup: {}
-          cinderVolumes: {}
+- name: when periodic, create kustomize container_images_overrides.yaml
+  when:
+    - periodic|default(false)
+    - container_registry is defined
+    - container_tag is defined
+    - container_namespace is defined
+  block:
+    - name: template out the override deployment
+      ansible.builtin.template:
+        src: container_overrides.j2
+        dest: "../config/periodic_ci/container_image_overrides.yaml"
+        force: true
 
-      dns:
-        enabled: true
-        template:
-          externalEndpoints:
-          - ipAddressPool: ctlplane
-            loadBalancerIPs:
-            - 192.168.122.80
-          options:
-          - key: server
-            values:
-            - 192.168.122.1
-          replicas: 1
-
-      glance:
-        enabled: false
-        template:
-          glanceAPIInternal: {}
-          glanceAPIExternal: {}
-
-      horizon:
-        enabled: false
-        template: {}
-
-      ironic:
-        enabled: false
-        template:
-          ironicConductors: []
-
-      keystone:
-        enabled: false
-        template: {}
-
-      manila:
-        enabled: false
-        template:
-          manilaAPI: {}
-          manilaScheduler: {}
-          manilaShares: {}
-
-      mariadb:
-        templates:
-          openstack:
-            storageRequest: 500M
-
-      memcached:
-        enabled: true
-        templates:
-          memcached:
-            replicas: 1
-
-      neutron:
-        enabled: false
-        template: {}
-
-      nova:
-        enabled: false
-        template: {}
-
-      ovn:
-        enabled: false
-        template:
-          ovnController:
-            external-ids:
-              system-id: "random"
-              ovn-bridge: "br-int"
-              ovn-encap-type: "geneve"
-
-      placement:
-        enabled: false
-        template: {}
-
-      rabbitmq:
-        templates:
-          rabbitmq:
-            externalEndpoint:
-              loadBalancerIPs:
-              - 172.17.0.85
-              ipAddressPool: internalapi
-              sharedIP: false
-            replicas: 1
-          rabbitmq-cell1:
-            externalEndpoint:
-              loadBalancerIPs:
-              - 172.17.0.86
-              ipAddressPool: internalapi
-              sharedIP: false
-            replicas: 1
-
-      telemetry:
-        enabled: false
-        template: {}
-    EOF
+    - name: run kustomize and create controlplane with container overrides
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        mkdir -p tmp
+        kustomize build periodic_ci > tmp/test_deployment.yaml
+        oc apply -f tmp/test_deployment.yaml
+      args:
+        chdir: "../config"
 
 - name: wait for mariadb to start up
   ansible.builtin.shell: |

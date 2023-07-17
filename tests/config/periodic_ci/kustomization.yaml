@@ -1,0 +1,4 @@
+bases:
+- ../base
+patchesStrategicMerge:
+- container_image_overrides.yaml
