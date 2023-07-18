@@ -7,11 +7,11 @@ reset_crc_storage: true
 oc_header: |
   source CUSTOMIZE_THIS.sh
 
-# External MariaDB IP for DB exports.
-external_mariadb_ip: CUSTOMIZE_THIS
+# Source MariaDB IP for DB exports.
+source_mariadb_ip: CUSTOMIZE_THIS
 
-# External OVN DB IP for DB exports.
-external_ovndb_ip: CUSTOMIZE_THIS
+# Source OVN DB IP for DB exports.
+source_ovndb_ip: CUSTOMIZE_THIS
 
 edpm_node_ip: CUSTOMIZE_THIS
 

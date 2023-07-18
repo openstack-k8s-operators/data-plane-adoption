@@ -35,8 +35,7 @@
   podified FQDNs and that Placement API responds.
 
   ```
-  export OS_CLIENT_CONFIG_FILE=clouds-adopted.yaml
-  export OS_CLOUD=adopted
+  alias openstack="oc exec -t openstackclient -- openstack"
 
   openstack endpoint list | grep placement
 

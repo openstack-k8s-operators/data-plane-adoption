@@ -32,7 +32,7 @@ just illustrative, use values that are correct for your environment:
 
 ```bash
 OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
-EXTERNAL_OVSDB_IP=172.17.1.49
+SOURCE_OVSDB_IP=172.17.1.49
 
 # ssh commands to reach the original controller machines
 CONTROLLER_SSH="ssh -F ~/director_standalone/vagrant_ssh_config vagrant@standalone"
@@ -53,8 +53,8 @@ ${CONTROLLER_SSH} sudo systemctl stop tripleo_ovn_cluster_northd.service
 
 ```bash
 client="podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE ovsdb-client"
-${client} backup tcp:$EXTERNAL_OVSDB_IP:6641 > ovs-nb.db
-${client} backup tcp:$EXTERNAL_OVSDB_IP:6642 > ovs-sb.db
+${client} backup tcp:$SOURCE_OVSDB_IP:6641 > ovs-nb.db
+${client} backup tcp:$SOURCE_OVSDB_IP:6642 > ovs-sb.db
 ```
 
 - Start podified OVN database services prior to import.

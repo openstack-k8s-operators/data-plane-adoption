@@ -15,6 +15,7 @@
   gather_facts: no
   roles:
     - backend_services
+    - stop_openstack_services
     - mariadb_copy
     - ovn_adoption
     - keystone_adoption
