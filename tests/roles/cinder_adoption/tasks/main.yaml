@@ -41,7 +41,8 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    alias openstack="oc exec -t openstackclient -- openstack"
+    export OS_CLIENT_CONFIG_FILE={{ adopted_clouds_yaml_path }}
+    export OS_CLOUD=adopted
 
     openstack endpoint list | grep cinder
     openstack volume type list
