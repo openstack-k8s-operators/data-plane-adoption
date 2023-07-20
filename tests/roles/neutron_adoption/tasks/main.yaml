@@ -1,0 +1,35 @@
+- name: deploy podified Neutron
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      neutron:
+        enabled: true
+        template:
+          databaseInstance: openstack
+          secret: osp-secret
+    '
+
+- name: wait for Neutron to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=service=neutron -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: neutron_running_result
+  until: neutron_running_result is success
+  retries: 60
+  delay: 2
+
+- name: check that Neutron is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    openstack endpoint list | grep network
+    openstack network list
+  register: neutron_responding_result
+  until: neutron_responding_result is success
+  retries: 15
+  delay: 2

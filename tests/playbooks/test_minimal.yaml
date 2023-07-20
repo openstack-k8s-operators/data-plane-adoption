@@ -19,6 +19,7 @@
     - mariadb_copy
     - ovn_adoption
     - keystone_adoption
+    - neutron_adoption
     - glance_adoption
     - placement_adoption
     - cinder_adoption
