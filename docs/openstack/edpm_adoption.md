@@ -22,7 +22,7 @@
         name: dataplane-adoption-secret
         namespace: openstack
     data:
-        ssh-privatekey: "{{ edpm_privatekey|b64encode }}"
+        ssh-privatekey: "{{ edpm_encoded_privatekey }}"
     EOF
   ```
 
