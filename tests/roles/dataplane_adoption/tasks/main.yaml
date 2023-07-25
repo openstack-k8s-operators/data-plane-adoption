@@ -9,7 +9,7 @@
     metadata:
         name: dataplane-adoption-secret
     data:
-        ssh-privatekey: "{{ edpm_privatekey|b64encode }}"
+        ssh-privatekey: "{{ edpm_encoded_privatekey }}"
     EOF
 
 - name: set Nova copy shell vars

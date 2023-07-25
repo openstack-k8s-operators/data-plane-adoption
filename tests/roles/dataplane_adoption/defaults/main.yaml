@@ -4,3 +4,4 @@ image_tag: "current-podified"
 ansibleSSHPrivateKeySecret: dataplane-adoption-secret
 deployStrategy:
   deploy: false
+edpm_encoded_privatekey: "{{ edpm_privatekey|b64encode }}"
