@@ -95,33 +95,6 @@
             - name: ANSIBLE_ENABLE_TASK_DEBUGGER
               value: "True"
           nodeTemplate:
-            # Defining the novaTemplate here means the nodes in this role are
-            # computes and they will have Ceph RBD config overrides
-            nova:
-              cellName: cell1
-              customServiceConfig: |
-                [libvirt]
-                images_type=rbd
-                images_rbd_pool=vms
-                images_rbd_ceph_conf=/etc/ceph/ceph.conf
-                images_rbd_glance_store_name=default_backend
-                images_rbd_glance_copy_poll_interval=15
-                images_rbd_glance_copy_timeout=600
-                rbd_user=openstack
-                rbd_secret_uuid=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //')
-              deploy: true
-              novaInstance: nova
-            # The Ansible Pod will mount these files and copy them to nodes in role
-            extraMounts:
-            - extraVolType: Ceph
-              mounts:
-              - mountPath: /etc/ceph
-                name: ceph
-                readOnly: true
-              volumes:
-              - name: ceph
-                secret:
-                  secretName: ceph-conf-files
             managementNetwork: ctlplane
             ansiblePort: 22
             ansibleSSHPrivateKeySecret: {{ ansibleSSHPrivateKeySecret }}
@@ -183,8 +156,7 @@
               edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: 1234567842
               edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
               edpm_chrony_ntp_servers:
-              - clock.redhat.com
-              - clock2.redhat.com
+              - pool.ntp.org
 
               ctlplane_dns_nameservers:
               - $(oc get svc -l service=dnsmasq -o json | jq -r '.items[0].status.loadBalancer.ingress[0].ip')
@@ -216,3 +188,9 @@
               hosts_entries: []
               hosts_entry: []
     EOF
+
+- name: wait for dataplane to be ready
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait --for condition=Ready osdp/openstack --timeout=30m

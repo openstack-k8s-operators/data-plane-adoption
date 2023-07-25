@@ -107,33 +107,6 @@ done
             - name: ANSIBLE_ENABLE_TASK_DEBUGGER
               value: "True"
           nodeTemplate:
-            # Defining the novaTemplate here means the nodes in this role are
-            # computes and they will have Ceph RBD config overrides
-            nova:
-              cellName: cell1
-              customServiceConfig: |
-                [libvirt]
-                images_type=rbd
-                images_rbd_pool=vms
-                images_rbd_ceph_conf=/etc/ceph/ceph.conf
-                images_rbd_glance_store_name=default_backend
-                images_rbd_glance_copy_poll_interval=15
-                images_rbd_glance_copy_timeout=600
-                rbd_user=openstack
-                rbd_secret_uuid=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //')
-              deploy: true
-              novaInstance: nova
-            # The Ansible Pod will mount these files and copy them to nodes in role
-            extraMounts:
-            - extraVolType: Ceph
-              mounts:
-              - mountPath: /etc/ceph
-                name: ceph
-                readOnly: true
-              volumes:
-              - name: ceph
-                secret:
-                  secretName: ceph-conf-files
             managementNetwork: ctlplane
             ansiblePort: 22
             ansibleSSHPrivateKeySecret: dataplane-adoption-secret
