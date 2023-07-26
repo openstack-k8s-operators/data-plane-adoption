@@ -574,6 +574,97 @@ Example of what the quick and dirty configuration patch would look like:
                - cinder-conf
    ```
 
+### Configuration generation helper tool
+
+Creating the right Cinder configuration files to deploy using Operators may
+sometimes be a complicated experience, especially the first times, so we have a
+helper tool that can create a draft of the files from a `cinder.conf` file.
+
+This tool is not meant to be a automation tool, it's mostly to help us get the
+gist of it, maybe point out some potential pitfalls and reminders.
+
+**Attention:** The tools requires `PyYAML` Python package to be installed (`pip
+install PyYAML`).
+
+This [cinder-cfg.py script](helpers/cinder-cfg.py) defaults to reading the
+`cinder.conf` file from the current directory (unless `--config` option is used)
+and outputs files to the current directory (unless `--out-dir` option is used).
+
+In the output directory we'll always get a `cinder.patch` file with the Cinder
+specific configuration patch to apply to the `OpenStackControlPlane` CR but we
+may also get an additional file called `cinder-prereq.yaml` file with some
+`Secrets` and `MachineConfigs`.
+
+Example of an invocation setting input and output explicitly to the defaults for
+a Ceph backend:
+
+```bash
+$ python cinder-cfg.py --config cinder.conf --out-dir ./
+WARNING:root:Cinder is configured to use ['/etc/cinder/policy.yaml'] as policy file, please ensure this file is available for the podified cinder services using "extraMounts" or remove the option.
+
+WARNING:root:Deployment uses Ceph, so make sure the Ceph credentials and configuration are present in OpenShift as a asecret and then use the extra volumes to make them available in all the services that would need them.
+
+WARNING:root:You were using user ['nova'] to talk to Nova, but in podified we prefer using the service keystone username, in this case ['cinder']. Dropping that configuration.
+
+WARNING:root:ALWAYS REVIEW RESULTS, OUTPUT IS JUST A ROUGH DRAFT!!
+
+Output written at ./: cinder.patch
+```
+
+The script outputs some warnings to let us know things we may need to do
+manually -adding the custom policy, provide the ceph configuration files- and
+also let us know a change in how the `service_user` has been removed.
+
+A different example when using multiple backends, one of them being a 3PAR FC
+could be:
+
+```
+$ python cinder-cfg.py --config cinder.conf --out-dir ./
+WARNING:root:Cinder is configured to use ['/etc/cinder/policy.yaml'] as policy file, please ensure this file is available for the podified cinder services using "extraMounts" or remove the option.
+
+ERROR:root:Backend hpe_fc requires a vendor container image, but there is no certified image available yet. Patch will use the last known image for reference, but IT WILL NOT WORK
+
+WARNING:root:Deployment uses Ceph, so make sure the Ceph credentials and configuration are present in OpenShift as a asecret and then use the extra volumes to make them available in all the services that would need them.
+
+WARNING:root:You were using user ['nova'] to talk to Nova, but in podified we prefer using the service keystone username, in this case ['cinder']. Dropping that configuration.
+
+WARNING:root:Configuration is using FC, please ensure all your OpenShift nodes have HBAs or use labels to ensure that Volume and Backup services are scheduled on nodes with HBAs.
+
+WARNING:root:ALWAYS REVIEW RESULTS, OUTPUT IS JUST A ROUGH DRAFT!!
+
+Output written at ./: cinder.patch, cinder-prereq.yaml
+```
+
+In this case we can see that there are additional messages, so let's quickly go over them:
+
+- There's one message mentioning how this backend driver needs external vendor
+dependencies so the standard container image will not work. Unfortunately this
+image is still not available, so an older image is used in the output patch file
+for reference. We can then replace this image with one we build ourselves or
+with a Red Hat official one once the image is available. In this case we can see
+in our `cinder.patch` file:
+  ```
+        cinderVolumes:
+        hpe-fc:
+          containerImage: registry.connect.redhat.com/hpe3parcinder/openstack-cinder-volume-hpe3parcinder17-0
+  ```
+- The FC message reminds us that this transport protocol requires specific HBA
+cards to be present on the nodes where cinder services are running.
+
+- In this case we also see that it has created the `cinder-prereq.yaml` file and
+if we look into it we'll see there is one `MachineConfig` and one `Secret`. The
+`MachineConfig` is called `99-master-cinder-enable-multipathd` and like the name
+suggests enables multipathing on all the OCP worker nodes. The `Secret` is
+called `openstackcinder-volumes-hpe_fc` and contains the 3PAR backend
+configuration because it has sensitive information (credentials), and in the
+`cinder.patch` file we'll see that it uses this configuration:
+  ```
+     cinderVolumes:
+        hpe-fc:
+          customServiceConfigSecrets:
+          - openstackcinder-volumes-hpe_fc
+  ```
+
 ## Procedure - Cinder adoption
 
 Assuming we have already stopped cinder services, prepared the OpenShift nodes,
