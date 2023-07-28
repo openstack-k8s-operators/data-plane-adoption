@@ -49,3 +49,9 @@
   until: cinder_responding_result is success
   retries: 60
   delay: 2
+
+- name: Cinder online data migrations
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -it cinder-scheduler-0 -- cinder-manage db online_data_migrations
