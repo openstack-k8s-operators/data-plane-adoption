@@ -777,6 +777,19 @@ we have taken the opportunity to change its configuration to support
 Active-Active, even though we are not doing so right now because we have 1
 replica.
 
+Now that we have the Cinder services running we know that the DB schema
+migration has been completed and we can proceed to apply the DB data migrations.
+While it is not necessary to run these data migrations at this precise moment,
+because we can just run them right before the next upgrade, we consider that for
+adoption it's best to run them now to make sure there are no issues before
+running production workloads on the deployment.
+
+The command to run the DB data migrations is:
+
+```bash
+oc exec -it cinder-scheduler-0 -- cinder-manage db online_data_migrations
+```
+
 ## Post-checks
 
 Before we can run any checks we need to set the right cloud configuration for
