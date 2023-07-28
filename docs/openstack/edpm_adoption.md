@@ -10,6 +10,75 @@
 
 ## Pre-checks
 
+* Make sure the IPAM is configured
+
+```
+oc apply -f - <<EOF
+  apiVersion: network.openstack.org/v1beta1
+  kind: NetConfig
+  metadata:
+    name: netconfig
+  spec:
+    networks:
+    - name: CtlPlane
+      dnsDomain: ctlplane.example.com
+      subnets:
+      - name: subnet1
+        allocationRanges:
+        - end: 192.168.122.120
+          start: 192.168.122.100
+        - end: 192.168.122.200
+          start: 192.168.122.150
+        cidr: 192.168.122.0/24
+        gateway: 192.168.122.1
+    - name: InternalApi
+      dnsDomain: internalapi.example.com
+      subnets:
+      - name: subnet1
+        allocationRanges:
+        - end: 172.17.0.250
+          start: 172.17.0.100
+        cidr: 172.17.0.0/24
+        vlan: 20
+    - name: External
+      dnsDomain: external.example.com
+      subnets:
+      - name: subnet1
+        allocationRanges:
+        - end: 10.0.0.250
+          start: 10.0.0.100
+        cidr: 10.0.0.0/24
+        gateway: 10.0.0.1
+    - name: Storage
+      dnsDomain: storage.example.com
+      subnets:
+      - name: subnet1
+        allocationRanges:
+        - end: 172.18.0.250
+          start: 172.18.0.100
+        cidr: 172.18.0.0/24
+        vlan: 21
+    - name: StorageMgmt
+      dnsDomain: storagemgmt.example.com
+      subnets:
+      - name: subnet1
+        allocationRanges:
+        - end: 172.20.0.250
+          start: 172.20.0.100
+        cidr: 172.20.0.0/24
+        vlan: 23
+    - name: Tenant
+      dnsDomain: tenant.example.com
+      subnets:
+      - name: subnet1
+        allocationRanges:
+        - end: 172.19.0.250
+          start: 172.19.0.100
+        cidr: 172.19.0.0/24
+        vlan: 22
+EOF
+```
+
 ## Procedure - EDPM adoption
 
 * Create a [ssh authentication secret](https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets) for the EDPM nodes:
@@ -66,7 +135,6 @@ done
     kind: OpenStackDataPlane
     metadata:
       name: openstack
-      namespace: openstack
     spec:
       deployStrategy:
         deploy: true
@@ -77,13 +145,19 @@ done
             deploy: false
           hostName: standalone
           node:
-            ansibleSSHPrivateKeySecret: dataplane-adoption-secret
             ansibleVars: |
               ctlplane_ip: {{ edpm_node_ip }}
-              internal_api_ip: 172.17.0.100
-              storage_ip: 172.18.0.100
-              tenant_ip: 172.19.0.100
-              fqdn_internal_api: '{{'{{ ansible_fqdn }}'}}'
+            networks:
+            - defaultRoute: true
+              fixedIP: {{ edpm_node_ip }}
+              name: CtlPlane
+              subnetName: subnet1
+            - name: InternalApi
+              subnetName: subnet1
+            - name: Storage
+              subnetName: subnet1
+            - name: Tenant
+              subnetName: subnet1
           role: edpmadoption
       roles:
         edpmadoption:
@@ -125,29 +199,7 @@ done
               # These vars are for the network config templates themselves and are
               # considered EDPM network defaults.
               neutron_physical_bridge_name: br-ctlplane
-              neutron_public_interface_name: eth1
-              ctlplane_mtu: 1500
-              ctlplane_subnet_cidr: 24
-              ctlplane_gateway_ip: 192.168.122.1
-              ctlplane_host_routes:
-              - ip_netmask: 0.0.0.0/0
-                next_hop: 192.168.122.1
-              external_mtu: 1500
-              external_vlan_id: 44
-              external_cidr: '24'
-              external_host_routes: []
-              internal_api_mtu: 1500
-              internal_api_vlan_id: 20
-              internal_api_cidr: '24'
-              internal_api_host_routes: []
-              storage_mtu: 1500
-              storage_vlan_id: 21
-              storage_cidr: '24'
-              storage_host_routes: []
-              tenant_mtu: 1500
-              tenant_vlan_id: 22
-              tenant_cidr: '24'
-              tenant_host_routes: []
+              neutron_public_interface_name: eth0
               role_networks:
               - InternalApi
               - Storage
@@ -190,16 +242,8 @@ done
               edpm_sshd_configure_firewall: true
               edpm_sshd_allowed_ranges: ['192.168.122.0/24']
               # SELinux module
-              edpm_selinux_mode: permissive
-              edpm_hosts_entries_undercloud_hosts_entries: []
-              # edpm_hosts_entries role
-              edpm_hosts_entries_extra_hosts_entries:
-              - 172.17.0.80 glance-internal.openstack.svc neutron-internal.openstack.svc cinder-internal.openstack.svc nova-internal.openstack.svc placement-internal.openstack.svc keystone-internal.openstack.svc
-              - 172.17.0.85 rabbitmq.openstack.svc
-              - 172.17.0.86 rabbitmq-cell1.openstack.svc
-              edpm_hosts_entries_vip_hosts_entries: []
-              hosts_entries: []
-              hosts_entry: []
+              edpm_selinux_mode: enforcing
+              plan: overcloud
     EOF
   ```
 Note: Role vars will be inherited by nodes, more details [here](https://openstack-k8s-operators.github.io/dataplane-operator/inheritance/)
