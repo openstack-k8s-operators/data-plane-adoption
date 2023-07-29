@@ -45,6 +45,8 @@
     {{ oc_header }}
     mkdir -p tmp
     oc kustomize base > tmp/test_deployment.yaml
+    GATEWAY={{ edpm_node_ip.split(".")[0:3] |join(".") }}.1
+    sed -i s/192.168.122.1/$GATEWAY/g tmp/test_deployment.yaml
     oc apply -f tmp/test_deployment.yaml
   args:
     chdir: "../config"
@@ -68,6 +70,8 @@
         {{ oc_header }}
         mkdir -p tmp
         oc kustomize periodic_ci > tmp/test_deployment.yaml
+        GATEWAY={{ edpm_node_ip.split(".")[0:3] |join(".") }}.1
+        sed -i s/192.168.122.1/$GATEWAY/g tmp/test_deployment.yaml
         oc apply -f tmp/test_deployment.yaml
       args:
         chdir: "../config"
