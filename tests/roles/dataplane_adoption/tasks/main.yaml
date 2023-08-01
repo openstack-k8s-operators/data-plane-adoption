@@ -140,7 +140,7 @@
           deployStrategy: {{ deployStrategy }}
           hostName: standalone
           node:
-            ansibleVars: |
+            ansibleVars:
               ctlplane_ip: {{ edpm_node_ip }}
             networks:
             - defaultRoute: true
@@ -175,7 +175,7 @@
             ansiblePort: 22
             ansibleSSHPrivateKeySecret: {{ ansibleSSHPrivateKeySecret }}
             ansibleUser: root
-            ansibleVars: |
+            ansibleVars:
               service_net_map:
                 nova_api_network: internal_api
                 nova_libvirt_network: internal_api

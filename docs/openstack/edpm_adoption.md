@@ -145,7 +145,7 @@ done
             deploy: false
           hostName: standalone
           node:
-            ansibleVars: |
+            ansibleVars:
               ctlplane_ip: {{ edpm_node_ip }}
             networks:
             - defaultRoute: true
@@ -185,7 +185,7 @@ done
             ansiblePort: 22
             ansibleSSHPrivateKeySecret: dataplane-adoption-secret
             ansibleUser: root
-            ansibleVars: |
+            ansibleVars:
               service_net_map:
                 nova_api_network: internal_api
                 nova_libvirt_network: internal_api
