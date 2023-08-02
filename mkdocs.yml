@@ -31,10 +31,10 @@ nav:
     - openstack/mariadb_copy.md
     - openstack/ovn_adoption.md
     - openstack/keystone_adoption.md
+    - openstack/neutron_adoption.md
     - openstack/glance_adoption.md
     - openstack/placement_adoption.md
     - openstack/cinder_adoption.md
-    - openstack/other_services_adoption.md
     - openstack/edpm_adoption.md
     - openstack/troubleshooting.md
   - Ceph:
