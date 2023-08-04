@@ -228,8 +228,7 @@ done
               ctlplane_dns_nameservers:
               - $(oc get svc -l service=dnsmasq -o json | jq -r '.items[0].status.loadBalancer.ingress[0].ip')
               dns_search_domains: []
-              edpm_ovn_dbs:
-              - $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"[0]')
+              edpm_ovn_dbs: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
 
               edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
               edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
