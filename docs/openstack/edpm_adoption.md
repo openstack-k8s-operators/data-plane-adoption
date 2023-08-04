@@ -176,6 +176,8 @@ done
             - configure-os
             - run-os
           env:
+            - name: ANSIBLE_CALLBACKS_ENABLED
+              value: "profile_tasks"
             - name: ANSIBLE_FORCE_COLOR
               value: "True"
             - name: ANSIBLE_ENABLE_TASK_DEBUGGER
