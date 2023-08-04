@@ -33,7 +33,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod ovsdbserver-nb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/networks-status}' | \
+    oc get pod ovsdbserver-nb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | \
     jq 'map(. | select(.name=="openstack/internalapi"))[0].ips[0]' | \
     tr -d '"'
   register: podified_ovn_nb_ip_result
@@ -42,7 +42,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod ovsdbserver-sb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/networks-status}' | \
+    oc get pod ovsdbserver-sb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | \
     jq 'map(. | select(.name=="openstack/internalapi"))[0].ips[0]' | \
     tr -d '"'
   register: podified_ovn_sb_ip_result
