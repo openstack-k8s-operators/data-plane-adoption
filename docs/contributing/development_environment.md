@@ -63,6 +63,7 @@ cd ..  # back to install_yamls
 make crc_storage
 make input
 make openstack
+make dns_deploy
 ```
 Use the [install_yamls devsetup](https://github.com/openstack-k8s-operators/install_yamls/tree/main/devsetup)
 to create a virtual machine connected to the isolated networks.
