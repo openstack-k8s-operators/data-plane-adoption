@@ -216,19 +216,13 @@ done
               edpm_nodes_validation_validate_controllers_icmp: false
               edpm_nodes_validation_validate_gateway_icmp: false
 
-              edpm_ovn_metadata_agent_DEFAULT_transport_url: $(oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
-              edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
-              edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: $(oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
-              edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: 1234567842
+              edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: $(oc get secret osp-secret -o json | jq -r .data.MetadataSecret  | base64 -d)
               edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
               edpm_chrony_ntp_servers:
               - clock.redhat.com
               - clock2.redhat.com
 
-              ctlplane_dns_nameservers:
-              - $(oc get svc -l service=dnsmasq -o json | jq -r '.items[0].status.loadBalancer.ingress[0].ip')
               dns_search_domains: []
-              edpm_ovn_dbs: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
 
               edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
               edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
