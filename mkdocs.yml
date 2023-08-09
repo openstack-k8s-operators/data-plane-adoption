@@ -28,6 +28,7 @@ nav:
   - Overview: README.md
   - OpenStack:
     - openstack/backend_services_deployment.md
+    - openstack/stop_openstack_services.md
     - openstack/mariadb_copy.md
     - openstack/ovn_adoption.md
     - openstack/keystone_adoption.md
