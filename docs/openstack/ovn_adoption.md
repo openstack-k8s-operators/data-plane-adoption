@@ -14,16 +14,16 @@ incomplete OpenFlow table contents.
 
 ## Prerequisites
 
-* Make sure the previous Adoption steps have been performed successfully.
-  * The OpenStackControlPlane resource must be already created at this point.
-  * NetworkAttachmentDefinition CRDs for the original cluster are already
-    defined. Specifically, *openstack/internalapi* network is defined.
-  * Podified MariaDB and RabbitMQ may already run. Neutron and OVN are not
+- Make sure the previous Adoption steps have been performed successfully.
+  - The OpenStackControlPlane resource must be already created at this point.
+  - NetworkAttachmentDefinition CRDs for the original cluster are already
+    defined. Specifically, _openstack/internalapi_ network is defined.
+  - Podified MariaDB and RabbitMQ may already run. Neutron and OVN are not
     running yet.
-  * Original OVN is older or equal to the podified version.
-  * There must be network routability between:
-    * The adoption host and the original OVN.
-    * The adoption host and the podified OVN.
+  - Original OVN is older or equal to the podified version.
+  - There must be network routability between:
+    - The adoption host and the original OVN.
+    - The adoption host and the podified OVN.
 
 ## Variables
 
@@ -90,7 +90,7 @@ PODIFIED_OVSDB_SB_IP=$(kubectl get po ovsdbserver-sb-0 -o jsonpath='{.metadata.a
 
 ```
 podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB_IP:6641 > ./ovs-nb.ovsschema && ovsdb-tool convert ovs-nb.db ./ovs-nb.ovsschema"
-podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6641 > ./ovs-sb.ovsschema && ovsdb-tool convert ovs-sb.db ./ovs-sb.ovsschema"
+podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6642 > ./ovs-sb.ovsschema && ovsdb-tool convert ovs-sb.db ./ovs-sb.ovsschema"
 ```
 
 - Restore database backup to podified OVN database servers.
