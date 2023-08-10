@@ -58,6 +58,8 @@ spec:
     templates:
       openstack:
         storageRequest: 500M
+      openstack-cell1:
+        storageRequest: 500M
 
   memcached:
     enabled: true
