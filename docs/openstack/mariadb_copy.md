@@ -40,9 +40,6 @@ MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podifi
 
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
-
-# Replace with your environment's MariaDB IP:
-SOURCE_MARIADB_IP=127.17.0.100
 ```
 
 ## Pre-checks
