@@ -1,0 +1,27 @@
+- name: Prelude
+  hosts: local
+  gather_facts: no
+  roles:
+    - prelude_local
+
+- name: Cleanup
+  hosts: local
+  gather_facts: no
+  roles:
+    - pcp_cleanup
+
+- name: Adoption
+  hosts: local
+  gather_facts: no
+  roles:
+    - backend_services
+    - stop_openstack_services
+    - mariadb_copy
+    - ovn_adoption
+    - keystone_adoption
+    - neutron_adoption
+    - ceph_backend_configuration
+    - glance_adoption
+    - placement_adoption
+    - cinder_adoption
+    - dataplane_adoption
