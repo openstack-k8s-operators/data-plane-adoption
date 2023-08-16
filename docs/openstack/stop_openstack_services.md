@@ -86,8 +86,7 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_nova_api.service"
                 "tripleo_placement_api.service")
 
-PacemakerResourcesToStop=("haproxy-bundle"
-                          "openstack-cinder-volume"
+PacemakerResourcesToStop=("openstack-cinder-volume"
                           "openstack-cinder-backup")
 
 echo "Stopping systemd OpenStack services"
