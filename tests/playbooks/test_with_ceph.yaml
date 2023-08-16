@@ -13,6 +13,8 @@
 - name: Adoption
   hosts: local
   gather_facts: no
+  vars:
+    glance_backend: ceph
   roles:
     - backend_services
     - stop_openstack_services

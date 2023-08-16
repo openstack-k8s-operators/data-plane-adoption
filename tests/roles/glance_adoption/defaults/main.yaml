@@ -1,0 +1,2 @@
+# glance_backend can be 'local' or 'ceph'
+glance_backend: local
