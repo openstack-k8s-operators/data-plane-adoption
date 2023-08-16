@@ -33,6 +33,7 @@ nav:
     - openstack/ovn_adoption.md
     - openstack/keystone_adoption.md
     - openstack/neutron_adoption.md
+    - openstack/ceph_backend_configuration.md
     - openstack/glance_adoption.md
     - openstack/placement_adoption.md
     - openstack/cinder_adoption.md
