@@ -76,6 +76,13 @@
           vlan: 22
     EOF
 
+- name: Slurp the private key
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.slurp:
+    path: "{{ edpm_privatekey_path }}"
+  register: edpm_privatekey
+  when: edpm_encoded_privatekey is undefined
+
 - name: create dataplane-adoption-secret.yaml
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -87,7 +94,7 @@
     metadata:
         name: dataplane-adoption-secret
     data:
-        ssh-privatekey: "{{ edpm_encoded_privatekey }}"
+        ssh-privatekey: "{{ edpm_encoded_privatekey|default(edpm_privatekey.content) }}"
     EOF
 
 - name: set Nova copy shell vars
@@ -148,6 +155,7 @@
           deployStrategy: {{ deployStrategy }}
           hostName: standalone
           node:
+            ansibleSSHPrivateKeySecret: {{ ansibleSSHPrivateKeySecret }}
             ansibleVars:
               ctlplane_ip: {{ edpm_node_ip }}
             networks:
