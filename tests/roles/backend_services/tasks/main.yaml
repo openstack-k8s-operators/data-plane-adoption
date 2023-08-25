@@ -85,6 +85,8 @@
 - name: Patch rabbitmq resources for lower resource consumption
   changed_when: false
   ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
     crname=$(oc get openstackcontrolplane -o name)
     oc patch ${crname} --type json \
       -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq/resources/requests/cpu", "value": 500m}]'
