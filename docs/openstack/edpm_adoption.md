@@ -146,6 +146,7 @@ done
           deploy: false
         hostName: standalone
         node:
+          ansibleSSHPrivateKeySecret: dataplane-adoption-secret
           ansibleVars:
             ctlplane_ip: 192.168.122.100
           networks:
