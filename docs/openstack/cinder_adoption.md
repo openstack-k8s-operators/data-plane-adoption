@@ -678,7 +678,7 @@ Our recommendation is to write the patch manifest into a file, for example
 
 ```bash
 oc patch openstackcontrolplane openstack --type=merge --patch-file=cinder.patch
- ```
+```
 
 For example, for the RBD deployment from the Development Guide the
 `cinder.patch` would look like this:
