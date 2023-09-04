@@ -708,13 +708,12 @@ spec:
       databaseInstance: openstack
       secret: osp-secret
       cinderAPI:
+        replicas: 1
         externalEndpoints:
         - endpoint: internal
           ipAddressPool: internalapi
           loadBalancerIPs:
           - 172.17.0.80
-      cinderAPI:
-        replicas: 1
         customServiceConfig: |
           [DEFAULT]
           default_volume_type=tripleo
