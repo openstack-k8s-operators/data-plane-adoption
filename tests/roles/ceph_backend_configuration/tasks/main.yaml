@@ -1,0 +1,54 @@
+- name: set shell vars for stopping openstack services
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.set_fact:
+    ceph_backend_configuration_shell_vars: |
+      CEPH_SSH="{{ controller1_ssh }}"
+      CEPH_KEY=$($CEPH_SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0")
+      CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
+
+- name: create ceph-conf-files secret
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ceph_backend_configuration_shell_vars }}
+
+    oc apply -f - <<EOF
+    apiVersion: v1
+    data:
+      ceph.client.openstack.keyring: $CEPH_KEY
+      ceph.conf: $CEPH_CONF
+    kind: Secret
+    metadata:
+      name: ceph-conf-files
+      namespace: openstack
+    type: Opaque
+    EOF
+
+- name: configure control plane extraMounts
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      extraMounts:
+        - name: v1
+          region: r1
+          extraVol:
+            - propagation:
+              - CinderVolume
+              - CinderBackup
+              - GlanceAPI
+              extraVolType: Ceph
+              volumes:
+              - name: ceph
+                projected:
+                  sources:
+                  - secret:
+                      name: ceph-conf-files
+              mounts:
+              - name: ceph
+                mountPath: "/etc/ceph"
+                readOnly: true
+    '

@@ -26,7 +26,10 @@ This guide also assumes that:
 
 As already done for [Keystone](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md), the Glance Adoption follows the same pattern.
 
-Patch OpenStackControlPlane to deploy Glance:
+### Using local storage backend
+
+When Glance should be deployed with local storage backend (not Ceph),
+patch OpenStackControlPlane to deploy Glance:
 
 ```
 oc patch openstackcontrolplane openstack --type=merge --patch '
@@ -51,55 +54,18 @@ spec:
 '
 ```
 
-However, if a Ceph backend is used, the `customServiceConfig` parameter should
+### Using Ceph storage backend
+
+If a Ceph backend is used, the `customServiceConfig` parameter should
 be used to inject the right configuration to the `GlanceAPI` instance.
 
-Make sure the Ceph-related secret exists in the `openstack` namespace:
+Make sure the Ceph-related secret (`ceph-conf-files`) was created in
+the `openstack` namespace and that the `extraMounts` property of the
+`OpenStackControlPlane` CR has been configured properly. These tasks
+are described in an earlier Adoption step [Ceph storage backend
+configuration](../ceph_backend_configuration/).
 
-```
-$ oc get secrets | grep ceph
-ceph-conf-files
-```
-
-If it doesn't exist, create a `Secret` which contains the `Cephx` key and Ceph
-configuration file so that the Glance pod created by the operator can mount
-those files in `/etc/ceph`.
-
-```
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ceph-conf-files
-  namespace: openstack
-stringData:
-  ceph.client.openstack.keyring: |
-    [client.openstack]
-        key = <secret key>
-        caps mgr = "allow *"
-        caps mon = "profile rbd"
-        caps osd = "profile rbd pool=images"
-  ceph.conf: |
-    [global]
-    fsid = 7a1719e8-9c59-49e2-ae2b-d7eb08c695d4
-    mon_host = 10.1.1.2,10.1.1.3,10.1.1.4
-```
-
-If your Ceph files are accessible using the `$CONTROLLER1_SSH` command you can
-automate the creation of the `Secret`:
-
-```bash
-$CONTROLLER1_SSH cat /etc/ceph/ceph.conf > ceph.conf
-$CONTROLLER1_SSH cat /etc/ceph/ceph.client.openstack.keyring > ceph.client.openstack.keyring
-oc --namespace openstack create secret generic ceph-conf-files \
-  --from-file=ceph.conf=ceph.conf \
-  --from-file=ceph.client.openstack.keyring=ceph.client.openstack.keyring
-```
-
-This secret will be used in the `extraVolumes` parameters to propagate the files
-to the `GlanceAPI` pods (both internal and external).
-
-Patch OpenStackControlPlane to deploy Glance:
+Patch OpenStackControlPlane to deploy Glance with Ceph backend:
 
 ```
 oc patch openstackcontrolplane openstack --type=merge --patch '
@@ -132,21 +98,6 @@ spec:
       glanceAPIExternal:
         networkAttachments:
         - storage
-  extraMounts:
-    - extraVol:
-      - propagation:
-        - Glance
-        extraVolType: Ceph
-        volumes:
-        - name: ceph
-          projected:
-            sources:
-            - secret:
-                name: ceph-conf-files
-        mounts:
-        - name: ceph
-          mountPath: "/etc/ceph"
-          readOnly: true
 '
 ```
 

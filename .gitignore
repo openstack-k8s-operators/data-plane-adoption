@@ -1,4 +1,5 @@
 /local
+/tests/config/tmp
 /tests/inventory.yaml
 /tests/secrets.yaml
 /tests/playbooks/tmp

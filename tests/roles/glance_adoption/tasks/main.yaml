@@ -1,4 +1,4 @@
-- name: deploy podified Glance
+- name: deploy podified Glance with local backend
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -22,6 +22,44 @@
             networkAttachments:
             - storage
     '
+  when: glance_backend == 'local'
+
+- name: deploy podified Glance with Ceph backend
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      glance:
+        enabled: true
+        template:
+          databaseInstance: openstack
+          containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_backends=default_backend:rbd
+            [glance_store]
+            default_backend=default_backend
+            [default_backend]
+            rbd_store_ceph_conf=/etc/ceph/ceph.conf
+            rbd_store_user=openstack
+            rbd_store_pool=images
+            store_description=Ceph glance store backend.
+          storageClass: "local-storage"
+          storageRequest: 10G
+          glanceAPIInternal:
+            externalEndpoints:
+            - endpoint: internal
+              ipAddressPool: internalapi
+              loadBalancerIPs:
+              - 172.17.0.80
+            networkAttachments:
+            - storage
+          glanceAPIExternal:
+            networkAttachments:
+            - storage
+    '
+  when: glance_backend == 'ceph'
 
 - name: wait for Glance to start up
   ansible.builtin.shell: |
