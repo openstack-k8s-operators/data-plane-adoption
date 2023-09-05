@@ -1,12 +1,18 @@
 - name: Prelude
   hosts: local
   gather_facts: no
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
   roles:
     - prelude_local
 
 - name: Cleanup
   hosts: local
   gather_facts: no
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
   roles:
     - pcp_cleanup
 
@@ -15,6 +21,9 @@
   gather_facts: no
   vars:
     glance_backend: ceph
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
   roles:
     - backend_services
     - stop_openstack_services

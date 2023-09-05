@@ -25,6 +25,16 @@
   retries: 60
   delay: 2
 
+- name: wait for openstackclient pod to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=app=openstackclient -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: osc_running_result
+  until: osc_running_result is success
+  retries: 60
+  delay: 2
+
 - name: check that Keystone is reachable and its endpoints are defined
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -32,10 +42,10 @@
 
     alias openstack="oc exec -t openstackclient -- openstack"
 
-    openstack endpoint list | grep keystone
+    ${BASH_ALIASES[openstack]} endpoint list | grep keystone
   register: keystone_responding_result
   until: keystone_responding_result is success
-  retries: 15
+  retries: 60
   delay: 2
 
 - name: clean up services and endpoints
@@ -45,8 +55,8 @@
 
     alias openstack="oc exec -t openstackclient -- openstack"
 
-    openstack endpoint list | grep keystone | awk '/admin/{ print $2; }' | xargs ${BASH_ALIASES[openstack]} endpoint delete || true
+    ${BASH_ALIASES[openstack]} endpoint list | grep keystone | awk '/admin/{ print $2; }' | xargs ${BASH_ALIASES[openstack]} endpoint delete || true
 
     for service in cinderv3 glance neutron nova placement swift; do
-      openstack service list | awk "/ $service /{ print \$2; }" | xargs ${BASH_ALIASES[openstack]} service delete || true
+      ${BASH_ALIASES[openstack]} service list | awk "/ $service /{ print \$2; }" | xargs ${BASH_ALIASES[openstack]} service delete || true
     done
