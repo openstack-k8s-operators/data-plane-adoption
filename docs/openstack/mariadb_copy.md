@@ -94,6 +94,13 @@ SOURCE_MARIADB_IP=127.17.0.100
   EOF
   ```
 
+* Before restoring the databases from .sql files, we need to ensure that the neutron
+database name is "neutron" and not "ovs_neutron" by running the command:
+
+  ```
+  sed -i '/^CREATE DATABASE/s/ovs_neutron/neutron/g;/^USE/s/ovs_neutron/neutron/g' ovs_neutron.sql
+  ```
+
 * Restore the databases from .sql files into the podified MariaDB:
 
   ```

@@ -57,6 +57,29 @@
 
     EOF
 
+- name:  Replace neutron database name
+  ansible.builtin.shell: |
+    cd {{ mariadb_copy_tmp_dir }}
+    sed -i '/^CREATE DATABASE/s/ovs_neutron/neutron/g;/^USE/s/ovs_neutron/neutron/g' ovs_neutron.sql
+
+- name: Check name on creation
+  ansible.builtin.lineinfile:
+    path: "{{ mariadb_copy_tmp_dir }}/ovs_neutron.sql"
+    regexp: (^CREATE DATABASE.*`)(neutron)(`.*)
+    state: absent
+  check_mode: yes
+  register: create_database
+  failed_when: create_database.found == 0
+
+- name: Check name on usage
+  ansible.builtin.lineinfile:
+    path: "{{ mariadb_copy_tmp_dir }}/ovs_neutron.sql"
+    regexp: (^USE.*`)(neutron)(`.*)
+    state: absent
+  check_mode: yes
+  register: use_database
+  failed_when: use_database.found == 0
+
 - name: restore databases
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
