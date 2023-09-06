@@ -481,7 +481,7 @@ class CinderTransformer(object):
         template = res['spec']['cinder']['template']
 
         if self.username:
-            template['serviceUser'] = self.username
+            template['serviceUser'] = self.username[0]
 
         self.svc_cfg(template, 'global_defaults')
         self.svc_cfg(template['cinderAPI'], 'api')
