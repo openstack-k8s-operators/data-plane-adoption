@@ -42,4 +42,3 @@
   until: horizon_http_status_code is success
   retries: 15
   delay: 2
-
