@@ -33,6 +33,13 @@ spec:
     template:
       databaseInstance: openstack
       secret: osp-secret
+      externalEndpoints:
+      - endpoint: internal
+        ipAddressPool: internalapi
+        loadBalancerIPs:
+        - 172.17.0.80
+      networkAttachments:
+      - internalapi
 '
 ```
 
