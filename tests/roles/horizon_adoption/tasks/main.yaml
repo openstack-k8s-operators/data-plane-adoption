@@ -1,0 +1,45 @@
+- name: deploy podified Horizon
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      horizon:
+        enabled: true
+        template:
+          memcachedInstance: memcached
+          secret: osp-secret
+    '
+- name: wait for Horizon to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=service=horizon -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: horizon_running_result
+  until: horizon_running_result is success
+  retries: 60
+  delay: 2
+
+- name: check that horizon instance is deployed successfully
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc get horizon -o jsonpath={'.items[0].status.conditions[0].status'} | grep True
+  register: horizon_setup_result
+  until: horizon_setup_result is success
+  retries: 60
+  delay: 3
+
+- name: check horizon dashboard is reachable
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    PUBLIC_URL=$(oc get horizon horizon -o jsonpath='{.status.endpoint}')
+    (curl --silent --output /dev/stderr --head --write-out "%{http_code}" "$PUBLIC_URL/dashboard/auth/login/?next=/dashboard/") | grep 200
+  register: horizon_http_status_code
+  until: horizon_http_status_code is success
+  retries: 15
+  delay: 2
+
