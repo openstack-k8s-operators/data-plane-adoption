@@ -40,9 +40,6 @@ spec:
         networkAttachments:
         - storage
         replicas: 0
-      cinderVolumes:
-        networkAttachments:
-        - storage
 """
 
 EXTRAMOUNTS_CEPH = """
@@ -490,7 +487,7 @@ class CinderTransformer(object):
             self.svc_cfg(template['cinderBackup'], 'backup')
             template['cinderBackup']['replicas'] = 3
 
-        vols = template['cinderVolumes']
+        vols = template.setdefault('cinderVolumes', {})
         # TODO: Uncomment once cinder-operator supports config for all volumes
         # self.svc_cfg(vols, 'volume_global')
         volumes = self.processed_data['volumes']
@@ -502,7 +499,9 @@ class CinderTransformer(object):
         for backend, config in volumes.items():
             # Names cannot use _ in the operator
             manifest_backend_name = backend.replace('_', '-')
-            backend_data = vols[manifest_backend_name] = {}
+            backend_data = vols[manifest_backend_name] = {
+                'networkAttachments': ['storage'],
+            }
 
             # TODO:Remove once cinder-operator supports config for all volumes
             config.update(self.processed_data['volume_global'])
