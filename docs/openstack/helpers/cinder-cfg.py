@@ -389,7 +389,7 @@ class CinderTransformer(object):
     def get_driver(self, input):
         if isinstance(input, str):
             input = self.get(input)
-        driver = input.get('volume_driver', 'lvm.LVMVolumeDriver')
+        driver = input.get('volume_driver', ['lvm.LVMVolumeDriver'])
         class_name = driver[-1].rsplit('.')[-1]
         return class_name
 
