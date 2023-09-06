@@ -30,23 +30,6 @@ cd install_yamls/devsetup
 make download_tools
 ```
 
-If you want a less intrusive alternative (Go from RPM rather than
-upstream etc.) that allows for basic testing, make sure to at least do
-the following:
-
-```
-sudo dnf -y install \
-    git \
-    golang \
-    guestfs-tools \
-    dbus-x11 \
-    libvirt \
-    make
-
-go env -w GOPROXY="https://proxy.golang.org,direct"
-GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v5@latest
-```
-
 ## Deployment of CRC with network isolation
 
 
