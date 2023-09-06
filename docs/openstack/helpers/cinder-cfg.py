@@ -337,9 +337,10 @@ class CinderTransformer(object):
         if any('RBDDriver' == self.get_driver(b) for b in self.backends):
             LOG.warning('Deployment uses Ceph, so make sure the Ceph '
                         'credentials and configuration are present in '
-                        'OpenShift as a asecret and then use the extra '
+                        'OpenShift as a secret and then use the extra '
                         'volumes to make them available in all the services '
-                        'that would need them.\n')
+                        'that would need them. A reference is included in '
+                        'the .path file\n')
 
         if not self.do_only_backends:
             username = self.username
@@ -492,7 +493,8 @@ class CinderTransformer(object):
         # self.svc_cfg(vols, 'volume_global')
         volumes = self.processed_data['volumes']
 
-        if any('RBDDriver' == self.get_driver(v) for v in volumes.values()):
+        if any('RBDDriver' == self.get_driver(v[k])
+               for k, v in volumes.items()):
             res['spec'].update(yaml.load(EXTRAMOUNTS_CEPH,
                                          Loader=yaml.SafeLoader))
 
