@@ -128,27 +128,46 @@ for service in ${ServicesToStop[*]}; do
 done
 ```
 
-* Deploy OpenStackDataPlane:
+* Deploy OpenStackDataPlaneNodeSet:
 
   ```
   oc apply -f - <<EOF
   apiVersion: dataplane.openstack.org/v1beta1
-  kind: OpenStackDataPlane
+  kind: OpenStackDataPlaneNodeSet
   metadata:
     name: openstack
   spec:
     deployStrategy:
       deploy: true
-    nodes:
-      standalone:
-        ansibleHost: 192.168.122.100
-        deployStrategy:
-          deploy: false
-        hostName: standalone
-        node:
-          ansibleSSHPrivateKeySecret: dataplane-adoption-secret
-          ansibleVars:
-            ctlplane_ip: 192.168.122.100
+    networkAttachments:
+        - ctlplane
+    preProvisioned: true
+    services:
+      - configure-network
+      - validate-network
+      - install-os
+      - configure-os
+      - run-os
+      - ovn
+    env:
+      - name: ANSIBLE_CALLBACKS_ENABLED
+        value: "profile_tasks"
+      - name: ANSIBLE_FORCE_COLOR
+        value: "True"
+      - name: ANSIBLE_ENABLE_TASK_DEBUGGER
+        value: "True"
+    nodeTemplate:
+      ansibleSSHPrivateKeySecret: dataplane-adoption-secret
+      nodes:
+        standalone:
+          hostName: standalone
+          ansible:
+            ansibleHost: 192.168.122.100
+            ansibleVars:
+              ctlplane_ip: 192.168.122.100
+              internal_api_ip: 172.17.0.100
+              storage_ip: 172.18.0.100
+              tenant_ip: 172.19.0.100
           networks:
           - defaultRoute: true
             fixedIP: 192.168.122.100
@@ -160,90 +179,92 @@ done
             subnetName: subnet1
           - name: Tenant
             subnetName: subnet1
-        role: edpmadoption
-    roles:
-      edpmadoption:
-        deployStrategy:
-          deploy: false
-        networkAttachments:
-          - ctlplane
-        preProvisioned: true
-        services:
-          - configure-network
-          - validate-network
-          - install-os
-          - configure-os
-          - run-os
-        env:
-          - name: ANSIBLE_CALLBACKS_ENABLED
-            value: "profile_tasks"
-          - name: ANSIBLE_FORCE_COLOR
-            value: "True"
-          - name: ANSIBLE_ENABLE_TASK_DEBUGGER
-            value: "True"
-        nodeTemplate:
-          managementNetwork: ctlplane
-          ansiblePort: 22
-          ansibleSSHPrivateKeySecret: dataplane-adoption-secret
-          ansibleUser: root
-          ansibleVars:
-            service_net_map:
-              nova_api_network: internal_api
-              nova_libvirt_network: internal_api
+      managementNetwork: ctlplane
+      ansible:
+        ansibleUser: root
+        ansiblePort: 22
+        ansibleVars:
+          service_net_map:
+            nova_api_network: internal_api
+            nova_libvirt_network: internal_api
 
-            # edpm_network_config
-            # Default nic config template for a EDPM compute node
-            # These vars are edpm_network_config role vars
-            edpm_network_config_template: templates/single_nic_vlans/single_nic_vlans.j2
-            edpm_network_config_hide_sensitive_logs: false
-            #
-            # These vars are for the network config templates themselves and are
-            # considered EDPM network defaults.
-            neutron_physical_bridge_name: br-ctlplane
-            neutron_public_interface_name: eth0
-            role_networks:
-            - InternalApi
-            - Storage
-            - Tenant
-            networks_lower:
-              External: external
-              InternalApi: internal_api
-              Storage: storage
-              Tenant: tenant
+          # edpm_network_config
+          # Default nic config template for a EDPM compute node
+          # These vars are edpm_network_config role vars
+          edpm_network_config_template: templates/single_nic_vlans/single_nic_vlans.j2
+          edpm_network_config_hide_sensitive_logs: false
+          #
+          # These vars are for the network config templates themselves and are
+          # considered EDPM network defaults.
+          neutron_physical_bridge_name: br-ctlplane
+          neutron_public_interface_name: eth0
+          ctlplane_mtu: 1500
+          ctlplane_subnet_cidr: 24
+          ctlplane_gateway_ip: 192.168.122.1
+          ctlplane_host_routes:
+          - ip_netmask: 0.0.0.0/0
+            next_hop: 192.168.122.1
+          external_mtu: 1500
+          external_vlan_id: 44
+          external_cidr: '24'
+          external_host_routes: []
+          internal_api_mtu: 1500
+          internal_api_vlan_id: 20
+          internal_api_cidr: '24'
+          internal_api_host_routes: []
+          storage_mtu: 1500
+          storage_vlan_id: 21
+          storage_cidr: '24'
+          storage_host_routes: []
+          tenant_mtu: 1500
+          tenant_vlan_id: 22
+          tenant_cidr: '24'
+          tenant_host_routes: []
+          role_networks:
+          - InternalApi
+          - Storage
+          - Tenant
+          networks_lower:
+            External: external
+            InternalApi: internal_api
+            Storage: storage
+            Tenant: tenant
 
-            # edpm_nodes_validation
-            edpm_nodes_validation_validate_controllers_icmp: false
-            edpm_nodes_validation_validate_gateway_icmp: false
+          # edpm_nodes_validation
+          edpm_nodes_validation_validate_controllers_icmp: false
+          edpm_nodes_validation_validate_gateway_icmp: false
 
-            edpm_ovn_metadata_agent_DEFAULT_transport_url: $(oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
-            edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
-            edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: $(oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
-            edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: $(oc get secret osp-secret -o json | jq -r .data.MetadataSecret  | base64 -d)
-            edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
-            edpm_chrony_ntp_servers:
-            - clock.redhat.com
-            - clock2.redhat.com
+          edpm_ovn_metadata_agent_DEFAULT_transport_url: $(oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
+          edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
+          edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: $(oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
+          edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: $(oc get secret osp-secret -o json | jq -r .data.MetadataSecret  | base64 -d)
+          edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
+          ctlplane_dns_nameservers:
+          - 192.168.122.1
+          dns_search_domains: []
+          edpm_chrony_ntp_servers:
+          - clock.redhat.com
+          - clock2.redhat.com
 
-            edpm_ovn_dbs: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
+          edpm_ovn_dbs: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
 
-            edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
-            edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
-            edpm_logrotate_crond_image: quay.io/podified-antelope-centos9/openstack-cron:current-podified
-            edpm_nova_compute_container_image: quay.io/podified-antelope-centos9/openstack-nova-compute:current-podified
-            edpm_nova_libvirt_container_image: quay.io/podified-antelope-centos9/openstack-nova-libvirt:current-podified
-            edpm_ovn_metadata_agent_image: quay.io/podified-antelope-centos9/openstack-neutron-metadata-agent-ovn:current-podified
+          edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
+          edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
+          edpm_logrotate_crond_image: quay.io/podified-antelope-centos9/openstack-cron:current-podified
+          edpm_nova_compute_container_image: quay.io/podified-antelope-centos9/openstack-nova-compute:current-podified
+          edpm_nova_libvirt_container_image: quay.io/podified-antelope-centos9/openstack-nova-libvirt:current-podified
+          edpm_ovn_metadata_agent_image: quay.io/podified-antelope-centos9/openstack-neutron-metadata-agent-ovn:current-podified
 
-            gather_facts: false
-            enable_debug: false
-            # edpm firewall, change the allowed CIDR if needed
-            edpm_sshd_configure_firewall: true
-            edpm_sshd_allowed_ranges: ['192.168.122.0/24']
-            # SELinux module
-            edpm_selinux_mode: enforcing
-            plan: overcloud
+          gather_facts: false
+          enable_debug: false
+          # edpm firewall, change the allowed CIDR if needed
+          edpm_sshd_configure_firewall: true
+          edpm_sshd_allowed_ranges: ['192.168.122.0/24']
+          # SELinux module
+          edpm_selinux_mode: enforcing
+          plan: overcloud
   EOF
   ```
-Note: Role vars will be inherited by nodes, more details [here](https://openstack-k8s-operators.github.io/dataplane-operator/inheritance/)
 
 ## Post-checks
 
@@ -258,7 +279,7 @@ Note: Role vars will be inherited by nodes, more details [here](https://openstac
     oc logs -l app=openstackansibleee -f --max-log-requests 10
     ```
 
-* Wait for the dataplane to reach the Ready status:
+* Wait for the dataplane node set to reach the Ready status:
     ```
-    oc wait --for condition=Ready osdp/openstack --timeout=30m
+    oc wait --for condition=Ready osdpns/openstack --timeout=30m
     ```
