@@ -43,8 +43,8 @@
     {{ oc_header }}
     alias openstack="oc exec -t openstackclient -- openstack"
 
-    openstack endpoint list | grep cinder
-    openstack volume type list
+    ${BASH_ALIASES[openstack]} endpoint list | grep cinder
+    ${BASH_ALIASES[openstack]} volume type list
   register: cinder_responding_result
   until: cinder_responding_result is success
   retries: 60

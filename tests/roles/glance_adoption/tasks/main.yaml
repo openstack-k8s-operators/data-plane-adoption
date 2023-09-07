@@ -78,8 +78,8 @@
     {{ oc_header }}
     alias openstack="oc exec -t openstackclient -- openstack"
 
-    openstack endpoint list | grep glance
-    openstack image list
+    ${BASH_ALIASES[openstack]} endpoint list | grep glance
+    ${BASH_ALIASES[openstack]} image list
   register: glance_responding_result
   until: glance_responding_result is success
   retries: 15

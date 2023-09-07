@@ -52,3 +52,19 @@ the browser will automatically show the new content.
   try to be concise in writing to keep the docs consumable (but not to
   a point of making things difficult to understand or omitting
   important things).
+
+* A bash alias can be created for long command however when implementing
+  them in the test roles you should transform them to avoid command not
+  found errors.
+  From:
+  ```
+  alias openstack="oc exec -t openstackclient -- openstack"
+
+  openstack endpoint list | grep network
+  ```
+  TO:
+  ```
+  alias openstack="oc exec -t openstackclient -- openstack"
+
+  ${BASH_ALIASES[openstack]} endpoint list | grep network
+  ```

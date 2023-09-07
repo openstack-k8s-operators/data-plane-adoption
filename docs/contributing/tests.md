@@ -29,3 +29,25 @@ samples are provided. To run the tests, follow this procedure:
   `tests/secrets.sample.yaml`).
 
 * Run `make test-minimal`.
+
+
+## Running tests on systems where /bin/sh is not /bin/bash
+
+ansible.builtin.command and ansible.builtin.shell use /bin/sh by default.
+for portability reason when using either command or shell modules you should
+not assume /bin/sh is bash and assume it is simply a posix compliant shell
+
+In this repo that requirement is relax for the ansible.builtin.shell
+module as we configure module_defaults
+
+```
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+```
+
+module_defaults are configure per playbook play so if you are adding a new
+play or playbook you will need to copy this to ensure compatibility
+
+note the command module always uses /bin/sh so we should avoid bash specific
+syntax when using command or just use the shell module instead.

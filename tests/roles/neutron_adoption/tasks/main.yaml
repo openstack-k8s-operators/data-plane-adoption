@@ -34,8 +34,8 @@
     {{ oc_header }}
     alias openstack="oc exec -t openstackclient -- openstack"
 
-    openstack endpoint list | grep network
-    openstack network list
+    ${BASH_ALIASES[openstack]} endpoint list | grep network
+    ${BASH_ALIASES[openstack]} network list
   register: neutron_responding_result
   until: neutron_responding_result is success
   retries: 15

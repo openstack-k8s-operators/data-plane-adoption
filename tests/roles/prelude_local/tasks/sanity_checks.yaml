@@ -5,10 +5,12 @@
   when:
     - oc_login_command is not defined
 
+# command is a built in bash so dont use an absolute path as it will not
+# exist depending on the bash version used.
 - name: test for oc CLI presence
   ansible.builtin.shell: |
     {{ oc_header }}
-    /usr/bin/command -v oc
+    command -v oc
   failed_when: false
   register: oc_cli_present_result
 
