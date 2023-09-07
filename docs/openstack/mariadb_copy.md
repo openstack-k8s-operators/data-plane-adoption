@@ -119,3 +119,9 @@ database name is "neutron" and not "ovs_neutron" by running the command:
   oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
      mysql -h "$PODIFIED_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
   ```
+
+* During the pre/post checks the pod `mariadb-client` might have returned a pod security warning
+  related to the `restricted:latest` security context constraint. This is due to default security
+  context constraints and will not prevent pod creation by the admission controller. You'll see a
+  warning for the short-lived pod but it will not interfere with functionality.
+  For more info [visit here](https://learn.redhat.com/t5/DO280-Red-Hat-OpenShift/About-pod-security-standards-and-warnings/m-p/32502)
