@@ -27,6 +27,8 @@ Perform the actions from the sub-documents in the following order:
 
 * [Cinder adoption](openstack/cinder_adoption.md)
 
+* [Horizon adoption](openstack/horizon_adoption.md)
+
 * [Dataplane adoption](openstack/edpm_adoption.md)
 
 If you face issues during adoption, check the

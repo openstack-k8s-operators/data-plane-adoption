@@ -37,6 +37,7 @@ nav:
     - openstack/glance_adoption.md
     - openstack/placement_adoption.md
     - openstack/cinder_adoption.md
+    - openstack/horizon_adoption.md
     - openstack/edpm_adoption.md
     - openstack/troubleshooting.md
   - Ceph:

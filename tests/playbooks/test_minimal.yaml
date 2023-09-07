@@ -32,4 +32,5 @@
     - glance_adoption
     - placement_adoption
     - cinder_adoption
+    - horizon_adoption
     - dataplane_adoption
