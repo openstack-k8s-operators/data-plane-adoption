@@ -143,21 +143,41 @@
     {{ oc_header }}
     oc apply -f - <<EOF
     apiVersion: dataplane.openstack.org/v1beta1
-    kind: OpenStackDataPlane
+    kind: OpenStackDataPlaneNodeSet
     metadata:
       name: openstack
     spec:
       deployStrategy:
         deploy: true
-      nodes:
-        standalone:
-          ansibleHost: {{ edpm_node_ip }}
-          deployStrategy: {{ deployStrategy }}
-          hostName: standalone
-          node:
-            ansibleSSHPrivateKeySecret: {{ ansibleSSHPrivateKeySecret }}
-            ansibleVars:
-              ctlplane_ip: {{ edpm_node_ip }}
+      networkAttachments:
+        - ctlplane
+      preProvisioned: true
+      services:
+        - configure-network
+        - validate-network
+        - install-os
+        - configure-os
+        - run-os
+        - ovn
+      env:
+        - name: ANSIBLE_CALLBACKS_ENABLED
+          value: "profile_tasks"
+        - name: ANSIBLE_FORCE_COLOR
+          value: "True"
+        - name: ANSIBLE_ENABLE_TASK_DEBUGGER
+          value: "True"
+      nodeTemplate:
+        ansibleSSHPrivateKeySecret: {{ ansibleSSHPrivateKeySecret }}
+        nodes:
+          standalone:
+            hostName: standalone
+            ansible:
+              ansibleHost: {{ edpm_node_ip }}
+              ansibleVars:
+                ctlplane_ip: {{ edpm_node_ip }}
+                internal_api_ip: 172.17.0.100
+                storage_ip: 172.18.0.100
+                tenant_ip: 172.19.0.100
             networks:
             - defaultRoute: true
               fixedIP: {{ edpm_node_ip }}
@@ -169,90 +189,94 @@
               subnetName: subnet1
             - name: Tenant
               subnetName: subnet1
-          role: edpmadoption
-      roles:
-        edpmadoption:
-          deployStrategy: {{ deployStrategy }}
-          networkAttachments:
-            - ctlplane
-          preProvisioned: true
-          services:
-            - configure-network
-            - validate-network
-            - install-os
-            - configure-os
-            - run-os
-          env:
-            - name: ANSIBLE_CALLBACKS_ENABLED
-              value: "profile_tasks"
-            - name: ANSIBLE_FORCE_COLOR
-              value: "True"
-            - name: ANSIBLE_ENABLE_TASK_DEBUGGER
-              value: "True"
-          nodeTemplate:
-            managementNetwork: ctlplane
-            ansiblePort: 22
-            ansibleSSHPrivateKeySecret: {{ ansibleSSHPrivateKeySecret }}
-            ansibleUser: root
-            ansibleVars:
-              service_net_map:
-                nova_api_network: internal_api
-                nova_libvirt_network: internal_api
+        managementNetwork: ctlplane
+        ansible:
+          ansiblePort: 22
+          ansibleUser: root
+          ansibleVars:
+            service_net_map:
+              nova_api_network: internal_api
+              nova_libvirt_network: internal_api
 
-              # edpm_network_config
-              # Default nic config template for a EDPM compute node
-              # These vars are edpm_network_config role vars
-              edpm_network_config_template: templates/single_nic_vlans/single_nic_vlans.j2
-              edpm_network_config_hide_sensitive_logs: false
-              #
-              # These vars are for the network config templates themselves and are
-              # considered EDPM network defaults.
-              neutron_physical_bridge_name: br-ctlplane
-              neutron_public_interface_name: eth0
-              role_networks:
-              - InternalApi
-              - Storage
-              - Tenant
-              networks_lower:
-                External: external
-                InternalApi: internal_api
-                Storage: storage
-                Tenant: tenant
+            # edpm_network_config
+            # Default nic config template for a EDPM compute node
+            # These vars are edpm_network_config role vars
+            edpm_network_config_template: templates/single_nic_vlans/single_nic_vlans.j2
+            edpm_network_config_hide_sensitive_logs: false
+            #
+            # These vars are for the network config templates themselves and are
+            # considered EDPM network defaults.
+            neutron_physical_bridge_name: br-ctlplane
+            neutron_public_interface_name: eth0
+            ctlplane_mtu: 1500
+            ctlplane_subnet_cidr: 24
+            ctlplane_gateway_ip: 192.168.122.1
+            ctlplane_host_routes:
+            - ip_netmask: 0.0.0.0/0
+              next_hop: 192.168.122.1
+            external_mtu: 1500
+            external_vlan_id: 44
+            external_cidr: '24'
+            external_host_routes: []
+            internal_api_mtu: 1500
+            internal_api_vlan_id: 20
+            internal_api_cidr: '24'
+            internal_api_host_routes: []
+            storage_mtu: 1500
+            storage_vlan_id: 21
+            storage_cidr: '24'
+            storage_host_routes: []
+            tenant_mtu: 1500
+            tenant_vlan_id: 22
+            tenant_cidr: '24'
+            tenant_host_routes: []
+            role_networks:
+            - InternalApi
+            - Storage
+            - Tenant
+            networks_lower:
+              External: external
+              InternalApi: internal_api
+              Storage: storage
+              Tenant: tenant
 
-              # edpm_nodes_validation
-              edpm_nodes_validation_validate_controllers_icmp: false
-              edpm_nodes_validation_validate_gateway_icmp: false
+            # edpm_nodes_validation
+            edpm_nodes_validation_validate_controllers_icmp: false
+            edpm_nodes_validation_validate_gateway_icmp: false
 
-              edpm_ovn_metadata_agent_DEFAULT_transport_url: $(oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
-              edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
-              edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: $(oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
-              edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: $(oc get secret osp-secret -o json | jq -r .data.MetadataSecret  | base64 -d)
-              edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
-              edpm_chrony_ntp_servers: {{ edpm_chrony_ntp_servers|default(default_edpm_chrony_ntp_servers) }}
+            edpm_ovn_metadata_agent_DEFAULT_transport_url: $(oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
+            edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
+            edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: $(oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
+            edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: $(oc get secret osp-secret -o json | jq -r .data.MetadataSecret  | base64 -d)
+            edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
+            ctlplane_dns_nameservers:
+            - 192.168.122.1
+            dns_search_domains: []
+            edpm_chrony_ntp_servers: {{ edpm_chrony_ntp_servers|default(default_edpm_chrony_ntp_servers) }}
 
-              edpm_ovn_dbs: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
+            edpm_ovn_dbs: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
 
-              edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
-              edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"
-              edpm_logrotate_crond_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-cron:{{ image_tag }}"
-              edpm_nova_compute_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-compute:{{ image_tag }}"
-              edpm_nova_libvirt_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-libvirt:{{ image_tag }}"
-              edpm_ovn_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
+            edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
+            edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"
+            edpm_logrotate_crond_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-cron:{{ image_tag }}"
+            edpm_nova_compute_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-compute:{{ image_tag }}"
+            edpm_nova_libvirt_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-libvirt:{{ image_tag }}"
+            edpm_ovn_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
 
-              gather_facts: false
-              enable_debug: false
-              # edpm firewall, change the allowed CIDR if needed
-              edpm_sshd_configure_firewall: true
-              edpm_sshd_allowed_ranges: ['192.168.122.0/24']
-              # SELinux module
-              edpm_selinux_mode: enforcing
-              plan: overcloud
+            gather_facts: false
+            enable_debug: false
+            # edpm firewall, change the allowed CIDR if needed
+            edpm_sshd_configure_firewall: true
+            edpm_sshd_allowed_ranges: ['192.168.122.0/24']
+            # SELinux module
+            edpm_selinux_mode: enforcing
+            plan: overcloud
     EOF
 
-- name: wait for dataplane to be ready
+- name: wait for dataplane node set to be ready
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait --for condition=Ready osdp/openstack --timeout=30m
+    oc wait --for condition=Ready osdpns/openstack --timeout=30m
   # TODO: work on network configuration for making possible to run this task on other IP ranges
   when: "edpm_node_ip.startswith('192.168.122')"

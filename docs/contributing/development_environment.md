@@ -106,8 +106,8 @@ make standalone_revert
 
 Similar snapshot could be done for the CRC virtual machine, but the
 developer environment reset on CRC side can be done sufficiently via
-the install_yamls `*_cleanup` targets. This is further detailed in 
-the section: 
+the install_yamls `*_cleanup` targets. This is further detailed in
+the section:
 [Reset the environment to pre-adoption state](https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/development_environment/#reset-the-environment-to-pre-adoption-state)
 
 ### Create a workload to adopt
@@ -158,7 +158,7 @@ against your environment.
 
 ## Reset the environment to pre-adoption state
 
-The development environment must be rolled back in case we want to execute another Adoption run. 
+The development environment must be rolled back in case we want to execute another Adoption run.
 
 Delete the data-plane and control-plane resources from the CRC vm
 ```
@@ -172,7 +172,7 @@ Revert the standalone vm to the snapshotted state
 cd install_yamls/devsetup
 make standalone_revert
 ```
-Clean up and initialize the storage PVs in CRC vm 
+Clean up and initialize the storage PVs in CRC vm
 ```
 cd ..
 make crc_storage_cleanup
@@ -301,7 +301,7 @@ Do not set `EDPM_COMPUTE_SUFFIX` to `0` or you could delete
 the Wallaby system created in the previous section.
 
 When deploying EDPM nodes add an `extraMounts` like the following in
-the `OpenStackDataPlane` CR `nodeTemplate` so that they will be
+the `OpenStackDataPlaneNodeSet` CR `nodeTemplate` so that they will be
 configured to use the same Ceph cluster.
 
 ```
