@@ -163,11 +163,6 @@ done
           hostName: standalone
           ansible:
             ansibleHost: 192.168.122.100
-            ansibleVars:
-              ctlplane_ip: 192.168.122.100
-              internal_api_ip: 172.17.0.100
-              storage_ip: 172.18.0.100
-              tenant_ip: 172.19.0.100
           networks:
           - defaultRoute: true
             fixedIP: 192.168.122.100
@@ -198,28 +193,6 @@ done
           # considered EDPM network defaults.
           neutron_physical_bridge_name: br-ctlplane
           neutron_public_interface_name: eth0
-          ctlplane_mtu: 1500
-          ctlplane_subnet_cidr: 24
-          ctlplane_gateway_ip: 192.168.122.1
-          ctlplane_host_routes:
-          - ip_netmask: 0.0.0.0/0
-            next_hop: 192.168.122.1
-          external_mtu: 1500
-          external_vlan_id: 44
-          external_cidr: '24'
-          external_host_routes: []
-          internal_api_mtu: 1500
-          internal_api_vlan_id: 20
-          internal_api_cidr: '24'
-          internal_api_host_routes: []
-          storage_mtu: 1500
-          storage_vlan_id: 21
-          storage_cidr: '24'
-          storage_host_routes: []
-          tenant_mtu: 1500
-          tenant_vlan_id: 22
-          tenant_cidr: '24'
-          tenant_host_routes: []
           role_networks:
           - InternalApi
           - Storage
@@ -239,9 +212,6 @@ done
           edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: $(oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
           edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: $(oc get secret osp-secret -o json | jq -r .data.MetadataSecret  | base64 -d)
           edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
-          ctlplane_dns_nameservers:
-          - 192.168.122.1
-          dns_search_domains: []
           edpm_chrony_ntp_servers:
           - clock.redhat.com
           - clock2.redhat.com
