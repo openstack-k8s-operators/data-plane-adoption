@@ -104,7 +104,7 @@ COLLATION=utf8_general_ci
   EOF
   ```
 
-* Restore the databases from .sql files into the podified MariaDB:
+* Restore the databases from .sql files into the podified MariaDBs:
 
   ```
   # db schemas to rename on import

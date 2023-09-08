@@ -1,0 +1,41 @@
+sudo virsh start edpm-compute-0
+crc start
+eval $(crc oc-env)
+oc login -u kubeadmin -p 12345678 https://api.crc.testing:6443
+
+export EDPM_COMPUTE_DISK_SIZE=40
+export EDPM_COMPUTE_CEPH_ENABLED=false
+export EDPM_COMPUTE_VCPUS=4
+export EDPM_COMPUTE_RAM=8
+
+export ADMIN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
+export CINDER_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CinderPassword:' | awk -F ': ' '{ print $2; }')
+export GLANCE_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' GlancePassword:' | awk -F ': ' '{ print $2; }')
+export IRONIC_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' IronicPassword:' | awk -F ': ' '{ print $2; }')
+export NEUTRON_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NeutronPassword:' | awk -F ': ' '{ print $2; }')
+export NOVA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NovaPassword:' | awk -F ': ' '{ print $2; }')
+export OCTAVIA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' OctaviaPassword:' | awk -F ': ' '{ print $2; }')
+export PLACEMENT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' PlacementPassword:' | awk -F ': ' '{ print $2; }')
+export CONTROLLER_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
+export COMPUTE_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
+export CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
+export CONTROLLER2_SSH=""
+export CONTROLLER3_SSH=""
+export PODIFIED_MARIADB_IP=$(oc get svc --selector "cr=mariadb-openstack" -ojsonpath='{.items[0].spec.clusterIP}')
+export MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
+export PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+export PODIFIED_CELL1_MARIADB_IP=$(oc get svc --selector "cr=mariadb-openstack-cell1" -ojsonpath='{.items[0].spec.clusterIP}')
+export SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
+export SOURCE_MARIADB_IP=${SOURCE_MARIADB_IP:?"Enter source mariadb IP"}
+export SOURCE_MARIADB_IP=${SOURCE_MARIADB_IP:-192.168.122.100}
+export CHARACTER_SET=utf8
+export COLLATION=utf8_general_ci
+
+export OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
+export SOURCE_OVSDB_IP=${SOURCE_OVSDB_IP:?"Enter source OVN south DB IP"}
+export SOURCE_OVSDB_IP=${SOURCE_OVSDB_IP:-192.168.122.100}
+export PODIFIED_OVSDB_NB_IP=$(kubectl get po ovsdbserver-nb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | jq 'map(. | select(.name=="openstack/internalapi"))[0].ips[0]' | tr -d '"')
+export PODIFIED_OVSDB_SB_IP=$(kubectl get po ovsdbserver-sb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | jq 'map(. | select(.name=="openstack/internalapi"))[0].ips[0]' | tr -d '"')
+
+alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=standalone openstack"
+alias openstackng="oc exec -t openstackclient -- openstack"

@@ -63,7 +63,7 @@ ${client} backup tcp:$SOURCE_OVSDB_IP:6642 > ovs-sb.db
 oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   ovn:
-    enabled: true
+    enabled: true
     template:
       ovnDBCluster:
         ovndbcluster-nb:
@@ -142,7 +142,7 @@ $ ${COMPUTE_SSH} sudo systemctl restart tripleo_ovn_controller.service
 oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   ovn:
-    enabled: true
+    enabled: true
     template:
       ovnNorthd:
         networkAttachment: internalapi

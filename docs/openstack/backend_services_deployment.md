@@ -230,8 +230,9 @@ podified OpenStack control plane services.
 
 ## Post-checks
 
-* Check that MariaDB is running.
+* Check that MariaDBs running.
 
   ```
   oc get pod mariadb-openstack -o jsonpath='{.status.phase}{"\n"}'
+  oc get pod mariadb-openstack-cell1 -o jsonpath='{.status.phase}{"\n"}'
   ```
