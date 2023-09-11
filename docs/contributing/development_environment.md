@@ -112,22 +112,9 @@ the section:
 
 ### Create a workload to adopt
 
-For this example we'll upload a Glance image and confirm it's using
-the Ceph cluster. Later you can adopt the Glance image in the NG
-deployment.
-
-Download a cirros image and convert it to raw format for Ceph.
-```
-IMG=cirros-0.5.2-x86_64-disk.img
-URL=http://download.cirros-cloud.net/0.5.2/$IMG
-RAW=$(echo $IMG | sed s/img/raw/g)
-curl -L -# $URL > $IMG
-qemu-img convert -f qcow2 -O raw $IMG $RAW
-```
-Upload the image to Glance.
 ```
 export OS_CLOUD=standalone
-openstack image create cirros --disk-format=raw --container-format=bare < $RAW
+source ~/install_yamls/devsetup/scripts/edpm-deploy-instance.sh
 ```
 Confirm the image UUID can be seen in Ceph's images pool.
 ```
@@ -141,11 +128,9 @@ openstack volume backup create --name backup disk
 openstack volume snapshot create --volume disk snapshot
 ```
 
-Boot a VM
+Add volume to the test VM
 ```
-openstack flavor create tiny --id auto --ram 256 --disk 0 --vcpus 1
-openstack --os-compute-api-version 2.37 server create --flavor tiny --image cirros --nic none --wait vm
-openstack server add volume vm disk
+openstack server add volume test disk
 ```
 
 ## Performing the Data Plane Adoption
