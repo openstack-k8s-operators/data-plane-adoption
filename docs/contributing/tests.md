@@ -28,6 +28,15 @@ samples are provided. To run the tests, follow this procedure:
   copying and editing the included samples (`tests/vars.sample.yaml`,
   `tests/secrets.sample.yaml`).
 
+* Install dependencies and create a venv:
+  ```
+  sudo dnf install python-devel
+  python3 -m venv venv
+  source venv/bin/activate
+  pip install openstackclient osc_placement jmespath
+  ansible-galaxy collection install community.general
+  ```
+
 * Run `make test-minimal`.
 
 
