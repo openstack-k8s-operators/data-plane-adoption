@@ -37,8 +37,8 @@ just illustrative, use values that are correct for your environment:
 ```
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 
-PODIFIED_MARIADB_IP=$(oc get -o yaml pod mariadb-openstack | grep podIP: | awk '{ print $2; }')
-PODIFIED_CELL1_MARIADB_IP=$(oc get -o yaml pod  mariadb-openstack-cell1  | grep podIP: | awk '{ print $2; }')
+PODIFIED_MARIADB_IP=$(oc get svc --selector "cr=mariadb-openstack" -ojsonpath='{.items[0].spec.clusterIP}')
+PODIFIED_CELL1_MARIADB_IP=$(oc get svc --selector "cr=mariadb-openstack-cell1" -ojsonpath='{.items[0].spec.clusterIP}')
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
 
 # Replace with your environment's MariaDB IP:
