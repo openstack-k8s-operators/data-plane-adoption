@@ -82,6 +82,17 @@
   retries: 60
   delay: 2
 
+- name: wait for cell1 mariadb to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod mariadb-openstack-cell1 -o jsonpath='{.status.phase}{"\n"}' | grep Running
+  register: mariadb_running_result
+  until: mariadb_running_result is success
+  retries: 60
+  delay: 2
+
+
 - name: Patch rabbitmq resources for lower resource consumption
   changed_when: false
   ansible.builtin.shell: |

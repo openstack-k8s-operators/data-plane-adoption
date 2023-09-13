@@ -167,6 +167,8 @@ podified OpenStack control plane services.
       templates:
         openstack:
           storageRequest: 500M
+        openstack-cell1:
+          storageRequest: 500M
 
     memcached:
       enabled: true

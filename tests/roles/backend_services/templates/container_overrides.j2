@@ -48,6 +48,8 @@ spec:
     templates:
       openstack:
         containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-mariadb:{{ container_tag }}
+      openstack-cell1:
+        containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-mariadb:{{ container_tag }}
 
   memcached:
     templates:
