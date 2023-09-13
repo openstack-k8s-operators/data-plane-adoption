@@ -166,24 +166,24 @@
           value: "True"
         - name: ANSIBLE_ENABLE_TASK_DEBUGGER
           value: "True"
+      nodes:
+        standalone:
+          hostName: standalone
+          ansible:
+            ansibleHost: {{ edpm_node_ip }}
+          networks:
+          - defaultRoute: true
+            fixedIP: {{ edpm_node_ip }}
+            name: CtlPlane
+            subnetName: subnet1
+          - name: InternalApi
+            subnetName: subnet1
+          - name: Storage
+            subnetName: subnet1
+          - name: Tenant
+            subnetName: subnet1
       nodeTemplate:
         ansibleSSHPrivateKeySecret: {{ ansibleSSHPrivateKeySecret }}
-        nodes:
-          standalone:
-            hostName: standalone
-            ansible:
-              ansibleHost: {{ edpm_node_ip }}
-            networks:
-            - defaultRoute: true
-              fixedIP: {{ edpm_node_ip }}
-              name: CtlPlane
-              subnetName: subnet1
-            - name: InternalApi
-              subnetName: subnet1
-            - name: Storage
-              subnetName: subnet1
-            - name: Tenant
-              subnetName: subnet1
         managementNetwork: ctlplane
         ansible:
           ansiblePort: 22
