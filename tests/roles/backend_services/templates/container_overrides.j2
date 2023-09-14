@@ -79,3 +79,9 @@ spec:
     template:
       containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-placement-api:{{ container_tag }}
 
+  rabbitmq:
+    templates:
+      rabbitmq:
+        image: {{ container_registry }}/{{ container_namespace }}/openstack-rabbitmq:{{ container_tag }}
+      rabbitmq-cell1:
+        image: {{ container_registry }}/{{ container_namespace }}/openstack-rabbitmq:{{ container_tag }}
