@@ -57,11 +57,19 @@ spec:
       manilaShares: {}
 
   mariadb:
+    enabled: false
+    templates: {}
+
+  galera:
     enabled: true
     templates:
       openstack:
+        secret: osp-secret
+        replicas: 1
         storageRequest: 500M
       openstack-cell1:
+        secret: osp-secret
+        replicas: 1
         storageRequest: 500M
 
   memcached:

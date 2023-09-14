@@ -13,7 +13,7 @@
     while oc get pod | grep rabbitmq-server-0; do
         sleep 2
     done
-    while oc get pod | grep mariadb-openstack; do
+    while oc get pod | grep openstack-galera-0; do
         sleep 2
     done
 

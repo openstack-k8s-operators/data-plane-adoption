@@ -332,7 +332,7 @@ later on.
 * Wait for cell1 Nova compute EDPM services version updated (it may take some time):
 
     ```bash
-    oc exec -it mariadb-openstack-cell1 -- mysql --user=root --password=${PODIFIED_DB_ROOT_PASSWORD} \
+    oc exec -it openstack-cell1-galera-0 -- mysql --user=root --password=${PODIFIED_DB_ROOT_PASSWORD} \
       -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
     ```
   The above query should return an empty result as a completion criterion.

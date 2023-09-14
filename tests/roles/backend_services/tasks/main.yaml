@@ -97,7 +97,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod mariadb-openstack -o jsonpath='{.status.phase}{"\n"}' | grep Running
+    oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
   register: mariadb_running_result
   until: mariadb_running_result is success
   retries: 60
@@ -107,7 +107,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod mariadb-openstack-cell1 -o jsonpath='{.status.phase}{"\n"}' | grep Running
+    oc get pod openstack-cell1-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
   register: mariadb_running_result
   until: mariadb_running_result is success
   retries: 60
