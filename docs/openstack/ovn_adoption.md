@@ -31,6 +31,7 @@ Define the shell variables used in the steps below. The values are
 just illustrative, use values that are correct for your environment:
 
 ```bash
+STORAGE_CLASS_NAME=crc-csi-hostpath-provisioner
 OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
 SOURCE_OVSDB_IP=172.17.1.49
 
@@ -54,13 +55,64 @@ grep -rI 'ovn_[ns]b_conn' /var/lib/config-data/puppet-generated/
 ```bash
 ${CONTROLLER_SSH} sudo systemctl stop tripleo_ovn_cluster_northd.service
 ```
+- Prepare the OVN DBs copy dir and the adoption helper pod (pick the storage requests to fit the OVN databases sizes)
+
+```yaml
+oc apply -f - <<EOF
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ovn-data
+spec:
+  storageClassName: $STORAGE_CLASS_NAME
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ovn-copy-data
+  annotations:
+    openshift.io/scc: anyuid
+  labels:
+    app: adoption
+spec:
+  containers:
+  - image: $OVSDB_IMAGE
+    command: [ "sh", "-c", "sleep infinity"]
+    name: adoption
+    volumeMounts:
+    - mountPath: /backup
+      name: ovn-data
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ALL
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  volumes:
+  - name: ovn-data
+    persistentVolumeClaim:
+      claimName: ovn-data
+EOF
+```
+
+- Wait for the pod to come up
+
+```bash
+oc wait --for=condition=Ready pod/ovn-copy-data --timeout=30s
+```
 
 - Backup OVN databases.
 
 ```bash
-client="podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE ovsdb-client"
-${client} backup tcp:$SOURCE_OVSDB_IP:6641 > ovs-nb.db
-${client} backup tcp:$SOURCE_OVSDB_IP:6642 > ovs-sb.db
+oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
+oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
 ```
 
 - Start podified OVN database services prior to import.
@@ -82,26 +134,32 @@ spec:
           networkAttachment: internalapi
 '
 ```
-
-- Fetch podified OVN IP addresses.
+- Wait for the OVN DB pods reaching the running phase.
 
 ```bash
-PODIFIED_OVSDB_NB_IP=$(kubectl get po ovsdbserver-nb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | jq 'map(. | select(.name=="openstack/internalapi"))[0].ips[0]' | tr -d '"')
-PODIFIED_OVSDB_SB_IP=$(kubectl get po ovsdbserver-sb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | jq 'map(. | select(.name=="openstack/internalapi"))[0].ips[0]' | tr -d '"')
+oc wait --for=jsonpath='{.status.phase}'=Running pod --selector=service=ovsdbserver-nb
+oc wait --for=jsonpath='{.status.phase}'=Running pod --selector=service=ovsdbserver-sb
+```
+
+- Fetch podified OVN IP addresses on the clusterIP service network.
+
+```bash
+PODIFIED_OVSDB_NB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-nb-0" -ojsonpath='{.items[0].spec.clusterIP}')
+PODIFIED_OVSDB_SB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-sb-0" -ojsonpath='{.items[0].spec.clusterIP}')
 ```
 
 - Upgrade database schema for the backup files.
 
-```
-podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB_IP:6641 > ./ovs-nb.ovsschema && ovsdb-tool convert ovs-nb.db ./ovs-nb.ovsschema"
-podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6642 > ./ovs-sb.ovsschema && ovsdb-tool convert ovs-sb.db ./ovs-sb.ovsschema"
+```bash
+oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB_IP:6641 > /backup/ovs-nb.ovsschema && ovsdb-tool convert /backup/ovs-nb.db /backup/ovs-nb.ovsschema"
+oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6642 > /backup/ovs-sb.ovsschema && ovsdb-tool convert /backup/ovs-sb.db /backup/ovs-sb.ovsschema"
 ```
 
 - Restore database backup to podified OVN database servers.
 
 ```bash
-podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < ovs-nb.db"
-podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < ovs-sb.db"
+oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
+oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
 ```
 
 - Check that podified OVN databases contain objects from backup, e.g.:
@@ -153,4 +211,11 @@ spec:
       ovnNorthd:
         networkAttachment: internalapi
 '
+```
+
+- Delete the ovn-data pod and persistent volume claim with OVN databases backup (consider making a snapshot of it, before deleting)
+
+```bash
+oc delete pod ovn-copy-data
+oc delete pvc ovn-data
 ```
