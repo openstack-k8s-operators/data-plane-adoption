@@ -95,6 +95,19 @@ EOF
   $(cat ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa | base64 | sed 's/^/        /')
   EOF
   ```
+* Create the Nova Metadata secret (Workaround while nova isn't adopted yet):
+
+  ```bash
+  oc apply -f - <<EOF
+  apiVersion: v1
+  kind: Secret
+  metadata:
+      name: nova-metadata-neutron-config
+  data:
+      05-nova-metadata.conf: |
+  $(echo "[DEFAULT]\nnova_metadata_host = 1.2.3.4\nnova_metadata_port = 8775\nnova_metadata_protocol = http\nmetadata_proxy_shared_secret = 1234567842\n" | base64 | sed 's/^/        /')
+  EOF
+  ```
 
 * Stop the nova services.
 
@@ -143,6 +156,7 @@ done
         - ctlplane
     preProvisioned: true
     services:
+      - download-cache
       - configure-network
       - validate-network
       - install-os
@@ -207,16 +221,9 @@ done
           edpm_nodes_validation_validate_controllers_icmp: false
           edpm_nodes_validation_validate_gateway_icmp: false
 
-          edpm_ovn_metadata_agent_DEFAULT_transport_url: $(oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
-          edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
-          edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: $(oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
-          edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: $(oc get secret osp-secret -o json | jq -r .data.MetadataSecret  | base64 -d)
-          edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
           edpm_chrony_ntp_servers:
           - clock.redhat.com
           - clock2.redhat.com
-
-          edpm_ovn_dbs: $(oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
 
           edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
           edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
