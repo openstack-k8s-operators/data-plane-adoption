@@ -162,8 +162,6 @@
     metadata:
       name: openstack
     spec:
-      deployStrategy:
-        deploy: true
       networkAttachments:
         - ctlplane
       preProvisioned: true
@@ -250,6 +248,21 @@
             # SELinux module
             edpm_selinux_mode: enforcing
             plan: overcloud
+    EOF
+
+- name: deploy the dataplane deployment
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc apply -f - <<EOF
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneDeployment
+    metadata:
+      name: openstack
+    spec:
+      nodeSets:
+      - openstack
     EOF
 
 - name: wait for dataplane node set to be ready
