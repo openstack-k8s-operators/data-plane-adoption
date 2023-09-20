@@ -7,4 +7,4 @@ shell_header: |
 
 # Whether to use no_log on tasks which may output potentially
 # sensitive data.
-use_no_log: true
+use_no_log: false
