@@ -250,7 +250,7 @@ wallaby.
 ```
 Both Glance images are stored in the same Ceph pool.
 ```
-[stack@standalone standalone]$ sudo cephadm shell -- rbd -p images ls -l
+ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 sudo cephadm shell -- rbd -p images ls -l
 Inferring fsid 7133115f-7751-5c2f-88bd-fbff2f140791
 Using recent ceph image quay.rdoproject.org/tripleowallabycentos9/daemon@sha256:aa259dd2439dfaa60b27c9ebb4fb310cdf1e8e62aa7467df350baf22c5d992d8
 NAME                                       SIZE     PARENT  FMT  PROT  LOCK
@@ -258,7 +258,6 @@ NAME                                       SIZE     PARENT  FMT  PROT  LOCK
 33a43519-a960-4cd0-a593-eca56ee553aa@snap    273 B            2  yes
 4ebccb29-193b-4d52-9ffd-034d440e073c       112 MiB            2
 4ebccb29-193b-4d52-9ffd-034d440e073c@snap  112 MiB            2  yes
-[stack@standalone standalone]$
 ```
 However, as far as each Glance service is concerned each has one
 image. Thus, in order to avoid confusion during adoption the test
