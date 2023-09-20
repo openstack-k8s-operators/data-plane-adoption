@@ -61,3 +61,18 @@ samples are provided. To run the tests, follow this procedure:
 
   If you are using Ceph-less environment, you should run `make
   test-minimal`.
+
+
+## Making patches to the test suite
+
+Please be aware of the following when changing the test suite:
+
+* The test suite should follow the docs as much as possible.
+
+  The purpose of the test suite is to verify what the user would run
+  if they were following the docs. We don't want to loosely rewrite
+  the docs into Ansible code following Ansible best practices. We want
+  to test the exact same bash commands/snippets that are written in
+  the docs. This often means that we should be using the `shell`
+  module and do a verbatim copy/paste from docs, instead of using the
+  best Ansible module for the task at hand.
