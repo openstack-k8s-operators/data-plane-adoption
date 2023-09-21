@@ -1,0 +1,18 @@
+profile: production
+exclude_paths:
+    - mkdocs.yml
+    - docs/
+    - tests/config/
+    - tests/secrets.sample.yaml
+    - tests/vars.sample.yaml
+skip_list:
+    - var-naming[no-role-prefix]
+    - yaml[line-length]
+    - risky-shell-pipe # we have pipefail set in common_defaults shell_header:
+    - name[casing] # do we want that one for consistency? maybe?
+    - no-changed-when # any point adding changed_when: false in all our shell?
+    - command-instead-of-shell
+strict: false
+quiet: false
+verbosity: 2
+parseable: true

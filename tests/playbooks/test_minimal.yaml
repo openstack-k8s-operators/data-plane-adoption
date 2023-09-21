@@ -1,6 +1,6 @@
 - name: Prelude
   hosts: local
-  gather_facts: no
+  gather_facts: false
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash
@@ -9,7 +9,7 @@
 
 - name: Cleanup
   hosts: local
-  gather_facts: no
+  gather_facts: false
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash
@@ -18,7 +18,7 @@
 
 - name: Adoption
   hosts: local
-  gather_facts: no
+  gather_facts: false
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash

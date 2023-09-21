@@ -46,9 +46,8 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell:
     cmd: "{{ lookup('ansible.builtin.template', 'restore_dbs.bash') }}"
-    
+
 - name: MariaDB post-checks
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell:
     cmd: "{{ lookup('ansible.builtin.template', 'post_checks.bash') }}"
-     
