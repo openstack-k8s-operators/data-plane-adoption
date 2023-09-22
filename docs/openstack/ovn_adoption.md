@@ -67,12 +67,12 @@ spec:
     template:
       ovnDBCluster:
         ovndbcluster-nb:
-          containerImage: quay.io/podified-antelope-centos9/openstack-ovn-nb-db-server:current-podified
+          containerImage: {{ container_registry }}/{{ container_namespace|default("podified-antelope-centos9") }}/openstack-ovn-nb-db-server:{{ container_tag | default("current-podified") }}
           dbType: NB
           storageRequest: 10G
           networkAttachment: internalapi
         ovndbcluster-sb:
-          containerImage: quay.io/podified-antelope-centos9/openstack-ovn-sb-db-server:current-podified
+          containerImage: {{ container_registry }}/{{ container_namespace|default("podified-antelope-centos9") }}/openstack-ovn-sb-db-server:{{ container_tag | default("current-podified") }}
           dbType: SB
           storageRequest: 10G
           networkAttachment: internalapi
