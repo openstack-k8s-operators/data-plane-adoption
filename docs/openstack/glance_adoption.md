@@ -80,7 +80,7 @@ spec:
     enabled: true
     template:
       databaseInstance: openstack
-      containerImage: quay.io/podified-antelope-centos9/openstack-glance-api:current-podified
+      containerImage: {{ container_registry|default("quay.io") }}/{{ container_namespace|default("podified-antelope-centos9") }}/openstack-glance-api:{{ container_tag | default("current-podified") }}
       customServiceConfig: |
         [DEFAULT]
         enabled_backends=default_backend:rbd

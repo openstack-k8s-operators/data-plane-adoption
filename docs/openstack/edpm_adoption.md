@@ -256,12 +256,12 @@ done
           - clock.redhat.com
           - clock2.redhat.com
 
-          edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
-          edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
-          edpm_logrotate_crond_image: quay.io/podified-antelope-centos9/openstack-cron:current-podified
-          edpm_nova_compute_container_image: quay.io/podified-antelope-centos9/openstack-nova-compute:current-podified
-          edpm_nova_libvirt_container_image: quay.io/podified-antelope-centos9/openstack-nova-libvirt:current-podified
-          edpm_ovn_metadata_agent_image: quay.io/podified-antelope-centos9/openstack-neutron-metadata-agent-ovn:current-podified
+          edpm_ovn_controller_agent_image: {{ container_registry|default("quay.io") }}/{{ container_namespace|default("podified-antelope-centos9") }}/openstack-ovn-controller:{{ container_tag | default("current-podified") }}
+          edpm_iscsid_image: {{ container_registry|default("quay.io") }}/{{ container_namespace|default("podified-antelope-centos9") }}/openstack-iscsid:{{ container_tag | default("current-podified") }}
+          edpm_logrotate_crond_image: {{ container_registry|default("quay.io") }}/{{ container_namespace|default("podified-antelope-centos9") }}/openstack-cron:{{ container_tag | default("current-podified") }}
+          edpm_nova_compute_container_image: {{ container_registry|default("quay.io") }}/{{ container_namespace|default("podified-antelope-centos9") }}/openstack-nova-compute:{{ container_tag | default("current-podified") }}
+          edpm_nova_libvirt_container_image: {{ container_registry|default("quay.io") }}/{{ container_namespace|default("podified-antelope-centos9") }}/openstack-nova-libvirt:{{ container_tag | default("current-podified") }}
+          edpm_ovn_metadata_agent_image: {{ container_registry|default("quay.io") }}/{{ container_namespace|default("podified-antelope-centos9") }}/openstack-neutron-metadata-agent-ovn:{{ container_tag | default("current-podified") }}
 
           gather_facts: false
           enable_debug: false

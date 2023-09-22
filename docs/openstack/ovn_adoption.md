@@ -147,7 +147,7 @@ spec:
     enabled: true
     template:
       ovnNorthd:
-        containerImage: quay.io/podified-antelope-centos9/openstack-ovn-northd:current-podified
+        containerImage: {{ container_registry|default("quay.io") }}/{{ container_namespace|default("podified-antelope-centos9") }}/ openstack-ovn-northd:{{ container_tag | default("current-podified") }}
         networkAttachment: internalapi
 '
 ```
