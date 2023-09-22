@@ -446,7 +446,7 @@ configuration would go in `customServiceConfig` (or a `Secret` and then used in
 
 6. Check if any of the cinder volume drivers being used requires a custom vendor
 image. If they do, find the location of the image in the vendor's instruction
-available in the wOpenStack Cinder ecosystem
+available in the w [OpenStack Cinder ecosystem
 page](https://catalog.redhat.com/software/search?target_platforms=Red%20Hat%20OpenStack%20Platform&p=1&functionalCategories=Data%20storage)
 and add it under the specific's driver section using the `containerImage` key.
 For example, if we had a Pure Storage array and the driver was already certified
