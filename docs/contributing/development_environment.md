@@ -111,11 +111,11 @@ the section:
 [Reset the environment to pre-adoption state](https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/development_environment/#reset-the-environment-to-pre-adoption-state)
 
 ### Create a workload to adopt
-
 ```
 export OS_CLOUD=standalone
 source ~/install_yamls/devsetup/scripts/edpm-deploy-instance.sh
 ```
+
 Confirm the image UUID can be seen in Ceph's images pool.
 ```
 ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 sudo cephadm shell -- rbd -p images ls -l

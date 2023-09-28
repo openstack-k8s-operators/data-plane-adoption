@@ -154,9 +154,9 @@ done
         - ctlplane
     preProvisioned: true
     services:
-      - download-cache
       - configure-network
       - validate-network
+      - download-cache
       - install-os
       - configure-os
       - run-os
@@ -198,7 +198,40 @@ done
           # edpm_network_config
           # Default nic config template for a EDPM compute node
           # These vars are edpm_network_config role vars
-          edpm_network_config_template: templates/single_nic_vlans/single_nic_vlans.j2
+          edpm_network_config_override: ""
+          edpm_network_config_template: |
+             ---
+             {% set mtu_list = [ctlplane_mtu] %}
+             {% for network in role_networks %}
+             {{ mtu_list.append(lookup('vars', networks_lower[network] ~ '_mtu')) }}
+             {%- endfor %}
+             {% set min_viable_mtu = mtu_list | max %}
+             network_config:
+             - type: ovs_bridge
+               name: {{ neutron_physical_bridge_name }}
+               mtu: {{ min_viable_mtu }}
+               use_dhcp: false
+               dns_servers: {{ ctlplane_dns_nameservers }}
+               domain: {{ dns_search_domains }}
+               addresses:
+               - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
+               routes: {{ ctlplane_host_routes }}
+               members:
+               - type: interface
+                 name: nic1
+                 mtu: {{ min_viable_mtu }}
+                 # force the MAC address of the bridge to this interface
+                 primary: true
+             {% for network in role_networks %}
+               - type: vlan
+                 mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
+                 vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
+                 addresses:
+                 - ip_netmask:
+                     {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
+                 routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
+             {% endfor %}
+
           edpm_network_config_hide_sensitive_logs: false
           #
           # These vars are for the network config templates themselves and are

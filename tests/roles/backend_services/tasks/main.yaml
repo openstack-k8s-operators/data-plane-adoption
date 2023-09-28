@@ -60,6 +60,7 @@
       ansible.builtin.template:
         src: container_overrides.j2
         dest: "../config/periodic_ci/container_image_overrides.yaml"
+        mode: '644'
         force: true
 
     - name: run kustomize and create controlplane with container overrides
