@@ -95,55 +95,57 @@ EOF
   $(cat ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa | base64 | sed 's/^/        /')
   EOF
   ```
-* Create the Nova Metadata secret (Workaround while nova isn't adopted yet):
+
+* Generate an ssh key-pair `nova-migration-ssh-key` secret
 
   ```bash
-  oc apply -f - <<EOF
-  apiVersion: v1
-  kind: Secret
-  metadata:
-      name: nova-metadata-neutron-config
-  data:
-      05-nova-metadata.conf: |
-  $(echo "[DEFAULT]\nnova_metadata_host = 1.2.3.4\nnova_metadata_port = 8775\nnova_metadata_protocol = http\nmetadata_proxy_shared_secret = 1234567842\n" | base64 | sed 's/^/        /')
-  EOF
+  cd "$(mktemp -d)"
+  ssh-keygen -f ./id -t ed25519 -N ''
+  oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
+    -n openstack \
+    --from-file=ssh-privatekey=id \
+    --from-file=ssh-publickey=id.pub \
+    --type kubernetes.io/ssh-auth
+  rm -f id*
+  cd -
   ```
 
-* Stop the nova services.
+* Create a Nova Compute Extra Config service
+    ```yaml
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nova-compute-extraconfig
+      namespace: openstack
+    data:
+      19-nova-compute-cell1-workarounds.conf: |
+        [workarounds]
+        disable_compute_service_check_for_ffu=true
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: nova-compute-extraconfig
+      namespace: openstack
+    spec:
+      label: nova.compute.extraconfig
+      configMaps:
+        - nova-compute-extraconfig
+      secrets:
+        - nova-cell1-compute-config
+        - nova-migration-ssh-key
+      playbook: osp.edpm.nova
+    EOF
+    ```
 
-```bash
-
-# Update the services list to be stopped
-
-ServicesToStop=("tripleo_nova_api_cron.service"
-                "tripleo_nova_api.service"
-                "tripleo_nova_compute.service"
-                "tripleo_nova_conductor.service"
-                "tripleo_nova_libvirt.target"
-                "tripleo_nova_metadata.service"
-                "tripleo_nova_migration_target.service"
-                "tripleo_nova_scheduler.service"
-                "tripleo_nova_virtlogd_wrapper.service"
-                "tripleo_nova_virtnodedevd.service"
-                "tripleo_nova_virtproxyd.service"
-                "tripleo_nova_virtqemud.service"
-                "tripleo_nova_virtsecretd.service"
-                "tripleo_nova_virtstoraged.service"
-                "tripleo_nova_vnc_proxy.service")
-
-echo "Stopping nova services"
-
-for service in ${ServicesToStop[*]}; do
-    echo "Stopping the $service in each controller node"
-    $CONTROLLER1_SSH sudo systemctl stop $service
-    $CONTROLLER2_SSH sudo systemctl stop $service
-    $CONTROLLER3_SSH sudo systemctl stop $service
-done
-```
+  The secret ``nova-cell<X>-compute-config`` is auto-generated for each
+  ``cell<X>``. That secret, alongside ``nova-migration-ssh-key``, should
+  always be specified for each custom `OpenStackDataPlaneService` related to Nova.
 
 * Deploy OpenStackDataPlaneNodeSet:
 
-  ```
+  ```yaml
   oc apply -f - <<EOF
   apiVersion: dataplane.openstack.org/v1beta1
   kind: OpenStackDataPlaneNodeSet
@@ -160,6 +162,8 @@ done
       - install-os
       - configure-os
       - run-os
+      - libvirt
+      - nova-compute-extraconfig
       - ovn
     env:
       - name: ANSIBLE_CALLBACKS_ENABLED
@@ -276,7 +280,7 @@ done
 
 * Deploy OpenStackDataPlaneDeployment:
 
-  ```
+  ```yaml
   oc apply -f - <<EOF
   apiVersion: dataplane.openstack.org/v1beta1
   kind: OpenStackDataPlaneDeployment
@@ -302,6 +306,7 @@ done
     ```
 
 * Wait for the dataplane node set to reach the Ready status:
+
     ```
     oc wait --for condition=Ready osdpns/openstack --timeout=30m
     ```

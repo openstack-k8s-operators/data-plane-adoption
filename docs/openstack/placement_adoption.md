@@ -2,8 +2,12 @@
 
 ## Prerequisites
 
-* Previous Adoption steps completed. Notably, the service databases
-  must already be imported into the podified MariaDB.
+* Previous Adoption steps completed. Notably,
+  * the [service databases](mariadb_copy.md)
+    must already be imported into the podified MariaDB.
+  * the [Keystone service](keystone_adoption.md) needs to be imported.
+  * the Memcached operator needs to be deployed (nothing to import for it from
+    the source environment).
 
 ## Variables
 
