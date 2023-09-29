@@ -108,61 +108,6 @@
         ssh-privatekey: "{{ edpm_encoded_privatekey | default(edpm_privatekey.content) }}"
     EOF
 
-- name: "[hack] create nova-metadata-neutron-config-secret.yaml"
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc apply -f - <<EOF
-    apiVersion: v1
-    kind: Secret
-    metadata:
-        name: nova-metadata-neutron-config
-    data:
-        05-nova-metadata.conf: |
-    $(echo "[DEFAULT]\nnova_metadata_host = 1.2.3.4\nnova_metadata_port = 8775\nnova_metadata_protocol = http\nmetadata_proxy_shared_secret = 1234567842\n" | base64 | sed 's/^/        /')
-    EOF
-
-- name: set Nova copy shell vars
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.set_fact:
-    nova_shell_vars: |
-      CONTROLLER1_SSH="{{ controller1_ssh }}"
-      CONTROLLER2_SSH="{{ controller2_ssh }}"
-      CONTROLLER3_SSH="{{ controller3_ssh }}"
-
-- name: stop nova services
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    {{ nova_shell_vars }}
-
-    ServicesToStop=("tripleo_nova_api_cron.service"
-                    "tripleo_nova_api.service"
-                    "tripleo_nova_compute.service"
-                    "tripleo_nova_conductor.service"
-                    "tripleo_nova_libvirt.target"
-                    "tripleo_nova_metadata.service"
-                    "tripleo_nova_migration_target.service"
-                    "tripleo_nova_scheduler.service"
-                    "tripleo_nova_virtlogd_wrapper.service"
-                    "tripleo_nova_virtnodedevd.service"
-                    "tripleo_nova_virtproxyd.service"
-                    "tripleo_nova_virtqemud.service"
-                    "tripleo_nova_virtsecretd.service"
-                    "tripleo_nova_virtstoraged.service"
-                    "tripleo_nova_vnc_proxy.service")
-
-    echo "Stopping nova services"
-
-    for service in ${ServicesToStop[*]}; do
-        echo "Stopping the service: $service in each controller node"
-        $CONTROLLER1_SSH sudo systemctl stop $service
-        $CONTROLLER2_SSH sudo systemctl stop $service
-        $CONTROLLER3_SSH sudo systemctl stop $service
-    done
-
 - name: deploy dataplane
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -183,6 +128,8 @@
         - install-os
         - configure-os
         - run-os
+        - libvirt
+        - nova
         - ovn
       env:
         - name: ANSIBLE_CALLBACKS_ENABLED
@@ -317,3 +264,7 @@
     oc wait --for condition=Ready osdpns/openstack --timeout=40m
   # TODO: work on network configuration for making possible to run this task on other IP ranges
   when: "edpm_node_ip.startswith('192.168.122')"
+
+- name: Complete Nova services Wallaby->Antelope FFU
+  ansible.builtin.include_tasks:
+    file: nova_ffu.yaml

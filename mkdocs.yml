@@ -38,6 +38,7 @@ nav:
     - openstack/ceph_backend_configuration.md
     - openstack/glance_adoption.md
     - openstack/placement_adoption.md
+    - openstack/nova_adoption.md
     - openstack/cinder_adoption.md
     - openstack/horizon_adoption.md
     - openstack/edpm_adoption.md

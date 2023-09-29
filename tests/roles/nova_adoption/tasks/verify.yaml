@@ -1,0 +1,37 @@
+- name: set Nova services shell vars
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.set_fact:
+    nova_header: |
+      alias openstack="oc exec -t openstackclient -- openstack"
+      CONTROLLER_SSH="{{ controller1_ssh }}"
+
+# TODO(bogdando): provide automated checks for 'The expected changes to happen'
+- name: query the superconductor for cell1 existance
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 |'
+
+- name: verify no Nova compute dataplane disruptions during the adoption/upgrade process
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ nova_header }}
+    $CONTROLLER_SSH sudo podman exec -it libvirt_virtqemud virsh list --all | grep 'instance-00000001   running'
+
+- name: verify if Nova services control the existing VM instance
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ nova_header }}
+    ${BASH_ALIASES[openstack]} server list | grep -qF '| test | ACTIVE |' && ${BASH_ALIASES[openstack]} server stop test
+    ${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |'
+    $CONTROLLER_SSH sudo podman exec -it libvirt_virtqemud virsh list --all | grep 'instance-00000001   shut off'
+
+    ${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' && ${BASH_ALIASES[openstack]} server start test
+    ${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |'
+    $CONTROLLER_SSH sudo podman exec -it libvirt_virtqemud virsh list --all | grep 'instance-00000001   running'
+  register: nova_verify_result
+  until: nova_verify_result is success
+  retries: 10
+  delay: 6

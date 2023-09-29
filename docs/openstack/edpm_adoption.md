@@ -6,7 +6,15 @@
 
 ## Variables
 
-(There are no shell variables necessary currently.)
+Define the shell variables used in the Fast-forward upgrade steps below.
+The values are just illustrative, use values that are correct for your environment:
+
+```bash
+PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+CONTROLLER_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
+
+alias openstack="oc exec -t openstackclient -- openstack"
+```
 
 ## Pre-checks
 
@@ -95,55 +103,10 @@ EOF
   $(cat ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa | base64 | sed 's/^/        /')
   EOF
   ```
-* Create the Nova Metadata secret (Workaround while nova isn't adopted yet):
-
-  ```bash
-  oc apply -f - <<EOF
-  apiVersion: v1
-  kind: Secret
-  metadata:
-      name: nova-metadata-neutron-config
-  data:
-      05-nova-metadata.conf: |
-  $(echo "[DEFAULT]\nnova_metadata_host = 1.2.3.4\nnova_metadata_port = 8775\nnova_metadata_protocol = http\nmetadata_proxy_shared_secret = 1234567842\n" | base64 | sed 's/^/        /')
-  EOF
-  ```
-
-* Stop the nova services.
-
-```bash
-
-# Update the services list to be stopped
-
-ServicesToStop=("tripleo_nova_api_cron.service"
-                "tripleo_nova_api.service"
-                "tripleo_nova_compute.service"
-                "tripleo_nova_conductor.service"
-                "tripleo_nova_libvirt.target"
-                "tripleo_nova_metadata.service"
-                "tripleo_nova_migration_target.service"
-                "tripleo_nova_scheduler.service"
-                "tripleo_nova_virtlogd_wrapper.service"
-                "tripleo_nova_virtnodedevd.service"
-                "tripleo_nova_virtproxyd.service"
-                "tripleo_nova_virtqemud.service"
-                "tripleo_nova_virtsecretd.service"
-                "tripleo_nova_virtstoraged.service"
-                "tripleo_nova_vnc_proxy.service")
-
-echo "Stopping nova services"
-
-for service in ${ServicesToStop[*]}; do
-    echo "Stopping the $service in each controller node"
-    $CONTROLLER1_SSH sudo systemctl stop $service
-    $CONTROLLER2_SSH sudo systemctl stop $service
-    $CONTROLLER3_SSH sudo systemctl stop $service
-done
-```
 
 * Deploy OpenStackDataPlaneNodeSet:
 
-  ```
+  ```yaml
   oc apply -f - <<EOF
   apiVersion: dataplane.openstack.org/v1beta1
   kind: OpenStackDataPlaneNodeSet
@@ -160,6 +123,8 @@ done
       - install-os
       - configure-os
       - run-os
+      - libvirt
+      - nova
       - ovn
     env:
       - name: ANSIBLE_CALLBACKS_ENABLED
@@ -276,7 +241,7 @@ done
 
 * Deploy OpenStackDataPlaneDeployment:
 
-  ```
+  ```yaml
   oc apply -f - <<EOF
   apiVersion: dataplane.openstack.org/v1beta1
   kind: OpenStackDataPlaneDeployment
@@ -302,6 +267,202 @@ done
     ```
 
 * Wait for the dataplane node set to reach the Ready status:
+
     ```
     oc wait --for condition=Ready osdpns/openstack --timeout=30m
     ```
+
+## Nova compute services fast-forward upgrade from Wallaby to Antelope
+
+Nova services rolling upgrade cannot be done during adoption,
+there is in a lock-step with Nova control plane services, because those
+are managed independently by EDPM ansible, and Kubernetes operators.
+Nova service operator and OpenStack Dataplane operator ensure upgrading
+is done independently of each other, by configuring
+`[upgrade_levels]compute=auto` for Nova services. Nova control plane
+services apply the change right after CR is patched. Nova compute EDPM
+services will catch up the same config change with ansible deployment
+later on.
+
+> **NOTE**: Additional orchestration happening around the FFU workarounds
+> configuration for Nova compute EDPM service is a subject of future changes.
+
+* Configure pre-FFU workarounds for Nova compute EDPM services to update its version records:
+
+    ```yaml
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nova-compute-workarounds
+      namespace: openstack
+    data:
+      19-nova-compute-cell1-workarounds.conf: |
+        [workarounds]
+        disable_compute_service_check_for_ffu=true
+    EOF
+
+    oc apply -f - <<EOF
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: nova-compute-workarounds
+      namespace: openstack
+    spec:
+      label: nova.compute.workarounds
+      configMaps:
+        - nova-compute-workarounds
+      playbook: osp.edpm.nova
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneDeployment
+    metadata:
+      name: openstack-nova-compute-workarounds
+      namespace: openstack
+    spec:
+      nodeSets:
+        - openstack
+      servicesOverride:
+        - nova-compute-workarounds
+    EOF
+    ```
+
+* Wait for cell1 Nova compute EDPM services version updated (it may take some time):
+
+    ```bash
+    oc exec -it mariadb-openstack-cell1 -- mysql --user=root --password=${PODIFIED_DB_ROOT_PASSWORD} \
+      -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
+    ```
+  The above query should return an empty result as a completion criterion.
+
+* Remove pre-FFU workarounds for Nova control plane services:
+
+    ```yaml
+    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+    spec:
+      nova:
+        template:
+          cellTemplates:
+            cell0:
+              conductorServiceTemplate:
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=false
+            cell1:
+              metadataServiceTemplate:
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=false
+              conductorServiceTemplate:
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=false
+          apiServiceTemplate:
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=false
+          metadataServiceTemplate:
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=false
+          schedulerServiceTemplate:
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=false
+    '
+    ```
+
+* Wait for Nova control plane services' CRs to become ready:
+
+    ```bash
+    oc get nova --field-selector metadata.name=nova-api -o jsonpath='{.items[0].status.conditions}' \
+    | jq -e '.[]|select(.type=="Ready" and .status=="True")'
+    oc get novaapis --field-selector metadata.name=nova-api -o jsonpath='{.items[0].status.conditions}' \
+    | jq -e '.[]|select(.type=="Ready" and .status=="True")'
+    oc get novacells --field-selector metadata.name=nova-cell0 -o jsonpath='{.items[0].status.conditions}' \
+    | jq -e '.[]|select(.type=="Ready" and .status=="True")'
+    oc get novacells --field-selector metadata.name=nova-cell1 -o jsonpath='{.items[0].status.conditions}' \
+    | jq -e '.[]|select(.type=="Ready" and .status=="True")'
+    oc get novaconductors --field-selector metadata.name=nova-cell0-conductor -o jsonpath='{.items[0].status.conditions}' \
+    | jq -e '.[]|select(.type=="Ready" and .status=="True")'
+    oc get novaconductors --field-selector metadata.name=nova-cell1-conductor -o jsonpath='{.items[0].status.conditions}' \
+    | jq -e '.[]|select(.type=="Ready" and .status=="True")'
+    oc get novametadata --field-selector metadata.name=nova-metadata -o jsonpath='{.items[0].status.conditions}' \
+    | jq -e '.[]|select(.type=="Ready" and .status=="True")'
+    oc get novanovncproxies --field-selector metadata.name=nova-cell1-novncproxy -o jsonpath='{.items[0].status.conditions}' \
+    | jq -e '.[]|select(.type=="Ready" and .status=="True")'
+    oc get novaschedulers --field-selector metadata.name=nova-scheduler -o jsonpath='{.items[0].status.conditions}' \
+    | jq -e '.[]|select(.type=="Ready" and .status=="True")'
+    ```
+
+* Remove pre-FFU workarounds for Nova compute EDPM services:
+
+    ```yaml
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nova-compute-ffu
+      namespace: openstack
+    data:
+      20-nova-compute-cell1-ffu-cleanup.conf: |
+        [workarounds]
+        disable_compute_service_check_for_ffu=false
+    EOF
+
+    oc apply -f - <<EOF
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: nova-compute-ffu
+      namespace: openstack
+    spec:
+      label: nova.compute.ffu
+      configMaps:
+        - nova-compute-ffu
+      playbook: osp.edpm.nova
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneDeployment
+    metadata:
+      name: openstack-nova-compute-ffu
+      namespace: openstack
+    spec:
+      nodeSets:
+        - openstack
+      servicesOverride:
+        - nova-compute-ffu
+    EOF
+    ```
+
+* Wait for Nova compute EDPM service to become ready:
+
+    ```bash
+    oc wait --for condition=Ready osdpd/openstack-nova-compute-ffu --timeout=5m
+    ```
+
+* Run Nova DB online migrations to complete FFU:
+
+    ```bash
+    oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
+    oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
+    ```
+
+* Verify no Nova compute dataplane disruptions during the adoption/upgrade process:
+
+  ```bash
+  $CONTROLLER_SSH sudo podman exec -it libvirt_virtqemud virsh list --all | grep 'instance-00000001   running'
+  ```
+
+* Verify if Nova services control the existing VM instance:
+
+  ```bash
+  openstack server list | grep -qF '| test | ACTIVE |' && openstack server stop test
+  openstack server list | grep -qF '| test | SHUTOFF |'
+  $CONTROLLER_SSH sudo podman exec -it libvirt_virtqemud virsh list --all | grep 'instance-00000001   shut off'
+
+  openstack server list | grep -qF '| test | SHUTOFF |' && openstack server start test
+  openstack server list | grep -F '| test | ACTIVE |'
+  $CONTROLLER_SSH sudo podman exec -it libvirt_virtqemud virsh list --all | grep 'instance-00000001   running'
+  ```
+  Note that in this guide, the same host acts as a controller, and also as a compute.

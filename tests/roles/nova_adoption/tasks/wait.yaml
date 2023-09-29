@@ -1,0 +1,36 @@
+# NOTE(bogdando): Status phase 'Running' doesn't necessarily mean it IS running in fact.
+# Instead, check for CRs status, then attempt exec'ing on the conductors pods to run live migrations,
+# with retries as guardrails for real running statuses of pods
+- name: wait for Nova control plane services' CRs to become ready
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get {{ service.cr }} --field-selector metadata.name={{ service.name }} -o jsonpath='{.items[0].status.conditions}' \
+    | jq -e '.[]|select(.type=="Ready" and .status=="True")'
+  register: nova_crs_ready_result
+  until: nova_crs_ready_result is success
+  retries: 30
+  delay: 5
+  loop_control:
+    loop_var: service
+  loop:
+    - cr: nova
+      name: nova
+    - cr: novaapis
+      name: nova-api
+    - cr: novacells
+      name: nova-cell0
+    - cr: novacells
+      name: nova-cell1
+    - cr: novaconductors
+      name: nova-cell0-conductor
+      cond: DeploymentReady
+    - cr: novaconductors
+      name: nova-cell1-conductor
+    - cr: novametadata
+      name: nova-metadata
+    - cr: novanovncproxies
+      name: nova-cell1-novncproxy
+    - cr: novaschedulers
+      name: nova-scheduler
+

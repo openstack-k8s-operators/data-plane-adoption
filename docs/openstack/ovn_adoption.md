@@ -41,6 +41,12 @@ CONTROLLER_SSH="ssh -F ~/director_standalone/vagrant_ssh_config vagrant@standalo
 COMPUTE_SSH="ssh -F ~/director_standalone/vagrant_ssh_config vagrant@standalone"
 ```
 
+The real value of the `SOURCE_OVSDB_IP` can be get from the puppet generated configs:
+
+```bash
+grep -rI 'ovn_[ns]b_conn' /var/lib/config-data/puppet-generated/
+```
+
 ## Procedure
 
 - Stop OVN northd on all original cluster controllers.
