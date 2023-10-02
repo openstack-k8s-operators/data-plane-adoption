@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-* Previous Adoption steps completed. Notably, Memcached and 
+* Previous Adoption steps completed. Notably, Memcached and
   keystone should be already adopted.
 
 ## Variables
@@ -18,6 +18,8 @@
   spec:
     horizon:
       enabled: true
+      apiOverride:
+        route: {}
       template:
         memcachedInstance: memcached
         secret: osp-secret

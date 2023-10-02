@@ -704,16 +704,23 @@ spec:
               name: ceph-conf-files
   cinder:
     enabled: true
+    apiOverride:
+      route: {}
     template:
       databaseInstance: openstack
       secret: osp-secret
       cinderAPI:
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
         replicas: 1
-        externalEndpoints:
-        - endpoint: internal
-          ipAddressPool: internalapi
-          loadBalancerIPs:
-          - 172.17.0.80
         customServiceConfig: |
           [DEFAULT]
           default_volume_type=tripleo
