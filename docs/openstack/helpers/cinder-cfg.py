@@ -24,16 +24,23 @@ CINDER_TEMPLATE = """
 spec:
   cinder:
     enabled: true
+    apiOverride:
+      route: {}
     template:
       databaseInstance: openstack
       secret: osp-secret
       cinderAPI:
         replicas: 3
-        externalEndpoints:
-        - endpoint: internal
-          ipAddressPool: internalapi
-          loadBalancerIPs:
-          - 172.17.0.80
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
       cinderScheduler:
         replicas: 1
       cinderBackup:

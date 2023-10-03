@@ -36,16 +36,22 @@ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   glance:
     enabled: true
+    apiOverride:
+      route: {}
     template:
       databaseInstance: openstack
       storageClass: "local-storage"
       storageRequest: 10G
       glanceAPIInternal:
-        externalEndpoints:
-        - endpoint: internal
-          ipAddressPool: internalapi
-          loadBalancerIPs:
-          - 172.17.0.80
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/allow-shared-ip: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+            spec:
+              type: LoadBalancer
         networkAttachments:
         - storage
       glanceAPIExternal:
@@ -88,11 +94,15 @@ spec:
       storageClass: "local-storage"
       storageRequest: 10G
       glanceAPIInternal:
-        externalEndpoints:
-        - endpoint: internal
-          ipAddressPool: internalapi
-          loadBalancerIPs:
-          - 172.17.0.80
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/allow-shared-ip: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+            spec:
+              type: LoadBalancer
         networkAttachments:
         - storage
       glanceAPIExternal:

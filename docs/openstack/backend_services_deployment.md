@@ -125,12 +125,16 @@ podified OpenStack control plane services.
         cinderVolumes: {}
 
     dns:
-      enabled: true
       template:
-        externalEndpoints:
-        - ipAddressPool: ctlplane
-          loadBalancerIPs:
-          - 192.168.122.80
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: ctlplane
+                metallb.universe.tf/allow-shared-ip: ctlplane
+                metallb.universe.tf/loadBalancerIPs: 192.168.122.80
+            spec:
+              type: LoadBalancer
         options:
         - key: server
           values:
@@ -200,19 +204,23 @@ podified OpenStack control plane services.
     rabbitmq:
       templates:
         rabbitmq:
-          externalEndpoint:
-            loadBalancerIPs:
-            - 172.17.0.85
-            ipAddressPool: internalapi
-            sharedIP: false
-          replicas: 1
+          override:
+            service:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.85
+              spec:
+                type: LoadBalancer
         rabbitmq-cell1:
-          externalEndpoint:
-            loadBalancerIPs:
-            - 172.17.0.86
-            ipAddressPool: internalapi
-            sharedIP: false
-          replicas: 1
+          override:
+            service:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.86
+              spec:
+                type: LoadBalancer
 
     telemetry:
       enabled: false
