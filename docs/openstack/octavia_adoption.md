@@ -1,7 +1,7 @@
 # Octavia adoption
 
 Migrating from a Director based to an OpenShift Octavia deployment
-presents some special challenges. These require that some of the
+presents some special challenges. These require that some
 original components continue to run until all processes that reference
 them are no longer running or have been altered to reference the new
 Octavia services running in OpenShift.
@@ -34,69 +34,32 @@ spec:
 '
 ```
 
-## Shutdown Director Deployed Octavia Services
+## About Director Deployed Octavia Services
 
-In addition to the Octavia API service, the Worker, Health Manager and
-Housekeeping Octavia components should also be shutdown gracefully. A modified
-form of the general OpenStack service shutdown script can be used
+Octavia API service, the Worker, Health Manager and
+Housekeeping Octavia components should have been shutdown gracefully as part of
+the common *Stop OpenStack services* step.
 
-```bash
+> TODO: Verify whether OVN provider loadbalancers really require
+> *tripleo_octavia_driver_agent.service* to be still running during adoption.
+> Possible reasons why it might need to keep running:
+> . the report status to the Octavia API from the ovn-provider
+> . to still receive any update from OVN NB/SB as event where we need
+>   to do some actions
 
-# Update the services list to be stopped
-ServicesToStop=("tripleo_octavia_api.service"
-                "tripleo_octavia_worker.service"
-                "tripleo_octavia_healthmanager.service"
-                "tripleo_octavia_housekeeping.service"
- )
-
-echo "Stopping systemd OpenStack services"
-for service in ${ServicesToStop[*]}; do
-    for i in {1..3}; do
-        SSH_CMD=CONTROLLER${i}_SSH
-        if [ ! -z "${!SSH_CMD}" ]; then
-            echo "Stopping the $service in controller $i"
-            if ${!SSH_CMD} sudo systemctl is-active $service; then
-                ${!SSH_CMD} sudo systemctl stop $service
-            fi
-        fi
-    done
-done
-
-echo "Checking systemd OpenStack services"
-for service in ${ServicesToStop[*]}; do
-    for i in {1..3}; do
-        SSH_CMD=CONTROLLER${i}_SSH
-        if [ ! -z "${!SSH_CMD}" ]; then
-            echo "Checking status of $service in controller $i"
-            if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
-               echo "ERROR: Service $service still running on controller $i"
-            fi
-        fi
-    done
-done
-
-echo "Stopping Redis"
-for i in {1..3}; do
-    SSH_CMD=CONTROLLER${i}_SSH
-    if [ ! -z "${!SSH_CMD}" ]; then
-        echo "Using controller $i to run pacemaker commands"
-		if ${!SSH_CMD} sudo pcs resource config redis; then
-           ${!SSH_CMD} sudo pcs resource disable redis
-        fi
-		break
-    fi
-done
-```
+> Amphora RSyslog logs from the old data plane will not get copied to the new
+> control plane as part of the adoption process and remain on the old
+> environment.
 
 > Note that running loadbalancers are active elements and at this time, the
   amphorae load balancers are effectively *wild* and may be in an unexpected
   state at the end of the adoption process and extra steps may be necessary to
-  reconcile the state of a given loadblancer resource.
+  reconcile the state of a given loadbalancer resource.
 
 ## Start Octavia in OpenShift
 
 Starting the Octavia services is the next step in the adoption process. While
-adoption isn't completed, we need the API process running so we can update the
+adoption isn't completed, we need the API process running, so we can update the
 load balancers with the new IPs for the health manager service.
 
 
@@ -111,6 +74,22 @@ spec:
 
 ## Update the Load Balancers with the new Health Manager IPs
 
+ Depending on timeout settings and the duration of the data plane adoption 
+ process it can happen that masses of failovers get triggered when the new
+ control plane gets activated. In order to prevent this the following 
+ tactics may be possible:
+
+ 1. Temporarily set very high timeouts for heartbeat intervals
+ 2. Use the failover circuit breaker feature in order to stop mass failovers 
+    when they occur.
+ 3. Shut down the health managers until data plane adoption is finished. 
+    After the was started again the Amphorae have 
+    `CONF.health_manager.heartbeat_timeout` s to send a first heartbeat to the
+    new health manager in order to prevent accidental failovers from getting 
+    triggered.
+
+Option 3 is probably the best approach.
+
 ### Get the IPs for the load balancer management network
 
 *TODO: We will need the details of how the OpenShift OpenStack control
@@ -119,4 +98,9 @@ octaviaHealthManagerS  -o json | jq -r '.status.healthManager.managementEndpoint
 
 ### Modify the running load balancer's management network information.
 
- *TODO: Allegedly there's an API for that *
+```
+alias ocopenstack="oc exec -t openstackclient -- openstack"
+for ampid in $(ocopenstack loadbalancer amphora list -c id -f value); do
+    ocopenstack loadbalancer amphora configure ${ampid}
+done
+```
