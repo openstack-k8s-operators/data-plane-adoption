@@ -32,6 +32,5 @@
     - glance_adoption
     - placement_adoption
     - cinder_adoption
+    - horizon_adoption
     - dataplane_adoption
-    # TODO(marios) enable after https://issues.redhat.com/browse/OSPCIX-82
-    # - horizon_adoption
