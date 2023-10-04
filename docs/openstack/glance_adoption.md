@@ -119,7 +119,7 @@ Inspect the resulting glance pods:
 
 ```bash
 GLANCE_POD=`oc get pod |grep glance-external-api | cut -f 1 -d' '`
-oc exec -t $GLANCE_POD -c glance-api -- cat /etc/glance/glance.conf.d/02-global.conf
+oc exec -t $GLANCE_POD -c glance-api -- cat /etc/glance/glance.conf.d/02-config.conf
 
 [DEFAULT]
 enabled_backends=default_backend:rbd
