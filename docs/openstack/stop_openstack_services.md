@@ -84,6 +84,12 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_glance_api.service"
                 "tripleo_neutron_api.service"
                 "tripleo_nova_api.service"
+                "tripleo_octavia_api.service"
+                "tripleo_octavia_driver_agent.service"
+                "tripleo_octavia_health_manager.service"
+                "tripleo_octavia_housekeeping.service"
+                "tripleo_octavia_rsyslog.service"
+                "tripleo_octavia_worker.service"
                 "tripleo_placement_api.service")
 
 PacemakerResourcesToStop=("openstack-cinder-volume"
