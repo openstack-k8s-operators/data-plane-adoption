@@ -13,7 +13,7 @@ spec:
         containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-cinder-backup:{{ container_tag }}
       cinderVolumes:
         volume1:
-            containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-cinder-volume:{{ container_tag }}
+          containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-cinder-volume:{{ container_tag }}
 
   glance:
     template:
@@ -42,7 +42,7 @@ spec:
         containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-manila-scheduler:{{ container_tag }}
       manilaShares:
         volume1:
-            containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-manila-share:{{ container_tag }}
+          containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-manila-share:{{ container_tag }}
 
   mariadb:
     templates:
@@ -71,9 +71,11 @@ spec:
         ovsContainerImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-base:{{ container_tag }}
       ovnDBCluster:
         ovndbcluster-nb:
-            containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-nb-db-server:{{ container_tag }}
+          containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-nb-db-server:{{ container_tag }}
         ovndbcluster-sb:
-            containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-sb-db-server:{{ container_tag }}
+          containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-sb-db-server:{{ container_tag }}
+      ovnNorthd:
+        containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-northd:{{ container_tag }}
 
   placement:
     template:
