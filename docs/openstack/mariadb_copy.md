@@ -42,7 +42,7 @@ PODIFIED_CELL1_MARIADB_IP=$(oc get svc --selector "cr=mariadb-openstack-cell1" -
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
 
 # Replace with your environment's MariaDB IP:
-SOURCE_MARIADB_IP=127.17.0.100
+SOURCE_MARIADB_IP=192.168.122.100
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 
 # The CHARACTER_SET and collation should match the source DB
@@ -58,14 +58,14 @@ COLLATION=utf8_general_ci
 * Test connection to the original DB (show databases):
 
   ```
-  podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE \
+  podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
       mysql -h "$SOURCE_MARIADB_IP" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" -e 'SHOW databases;'
   ```
 
 * Run mysqlcheck on the original DB to look for things that are not OK:
 
   ```
-  podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE \
+  podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
       mysqlcheck --all-databases -h $SOURCE_MARIADB_IP -u root "-p$SOURCE_DB_ROOT_PASSWORD" | grep -v OK
   ```
 
@@ -93,7 +93,7 @@ COLLATION=utf8_general_ci
   ```
   podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE bash <<EOF
 
- # Note we do not want to dump the information and performance schema tables so we filter them
+  # Note we do not want to dump the information and performance schema tables so we filter them
   mysql -h ${SOURCE_MARIADB_IP} -u root "-p${SOURCE_DB_ROOT_PASSWORD}" -N -e 'show databases' | grep -E -v 'schema|mysql' | while read dbname; do
       echo "Dumping \${dbname}"
       mysqldump -h $SOURCE_MARIADB_IP -uroot "-p$SOURCE_DB_ROOT_PASSWORD" \

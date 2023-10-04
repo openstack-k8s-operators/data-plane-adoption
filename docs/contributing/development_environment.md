@@ -26,7 +26,7 @@ git clone https://github.com/openstack-k8s-operators/install_yamls.git
 Install tools for operator development:
 
 ```
-cd install_yamls/devsetup
+cd ~/install_yamls/devsetup
 make download_tools
 ```
 
@@ -34,7 +34,7 @@ make download_tools
 
 
 ```
-cd install_yamls/devsetup
+cd ~/install_yamls/devsetup
 PULL_SECRET=$HOME/pull-secret.txt CPUS=12 MEMORY=40000 DISK=100 make crc
 
 eval $(crc oc-env)
@@ -52,7 +52,7 @@ to create a virtual machine connected to the isolated networks.
 
 Create the edpm-compute-0 virtual machine.
 ```
-cd install_yamls/devsetup
+cd ~/install_yamls/devsetup
 make standalone
 ```
 
@@ -92,7 +92,7 @@ good time to snapshot the machine, so that multiple Adoption attempts
 can be done without having to deploy from scratch.
 
 ```
-cd install_yamls/devsetup
+cd ~/install_yamls/devsetup
 make standalone_snapshot
 ```
 
@@ -100,7 +100,7 @@ And when you wish to revert the Standalone deployment to the
 snapshotted state:
 
 ```
-cd install_yamls/devsetup
+cd ~/install_yamls/devsetup
 make standalone_revert
 ```
 
@@ -154,7 +154,7 @@ oc delete oscp openstack
 Revert the standalone vm to the snapshotted state
 
 ```
-cd install_yamls/devsetup
+cd ~/install_yamls/devsetup
 make standalone_revert
 ```
 Clean up and initialize the storage PVs in CRC vm
