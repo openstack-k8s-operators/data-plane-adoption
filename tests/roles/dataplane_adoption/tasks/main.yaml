@@ -1,3 +1,11 @@
+- name: force latest ansible-runner image
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ oc_login_command }}
+    oc get csv openstack-ansibleee-operator.v0.0.1 -o yaml -n openstack-operators | sed "s/RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT/AEE_IMAGE/" | oc apply -f -
+
 - name: ensure oc login
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -166,9 +174,13 @@
         - ctlplane
       preProvisioned: true
       services:
+        - download-cache
         - configure-network
         - validate-network
         - install-os
+        - configure-os
+        - run-os
+        - ovn
       env:
         - name: ANSIBLE_CALLBACKS_ENABLED
           value: "profile_tasks"
@@ -300,6 +312,6 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait --for condition=Ready osdpns/openstack --timeout=30m
+    oc wait --for condition=Ready osdpns/openstack --timeout=40m
   # TODO: work on network configuration for making possible to run this task on other IP ranges
   when: "edpm_node_ip.startswith('192.168.122')"

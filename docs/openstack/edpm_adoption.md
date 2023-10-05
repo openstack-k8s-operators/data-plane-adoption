@@ -154,9 +154,9 @@ done
         - ctlplane
     preProvisioned: true
     services:
+      - download-cache
       - configure-network
       - validate-network
-      - download-cache
       - install-os
       - configure-os
       - run-os
