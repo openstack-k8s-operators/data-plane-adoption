@@ -32,7 +32,6 @@ make download_tools
 
 ## Deployment of CRC with network isolation
 
-
 ```
 cd ~/install_yamls/devsetup
 PULL_SECRET=$HOME/pull-secret.txt CPUS=12 MEMORY=40000 DISK=100 make crc
@@ -41,19 +40,87 @@ eval $(crc oc-env)
 oc login -u kubeadmin -p 12345678 https://api.crc.testing:6443
 
 make crc_attach_default_interface
-
-cd ..  # back to install_yamls
-make crc_storage
-make input
-make openstack
 ```
+
+-----
+### Development environment with Openstack ironic
+
+Create the BMaaS network (``crc-bmaas``) and virtual baremetal nodes controlled by
+a RedFish BMC emulator.
+
+```bash
+cd ..  # back to install_yamls
+make nmstate
+make namespace
+cd devsetup  # back to install_yamls/devsetup
+make bmaas BMAAS_INSTANCE_DISK_SIZE=2
+```
+
+A node definition YAML file to use with the ``openstack baremetal create
+<file>.yaml`` command can be generated for the virtual baremetal nodes by
+running the ``bmaas_generate_nodes_yaml`` make target. Store it in a temp
+file for later.
+
+```bash
+make bmaas_generate_nodes_yaml | tail -n +2 | tee /tmp/ironic_nodes.yaml
+```
+
+Set variables to deploy edpm Standalone with additional network
+(``baremetal``) and compute driver ``ironic``.
+
+```bash
+cat << EOF > /tmp/addtional_nets.json
+[
+  {
+    "type": "network",
+    "name": "crc-bmaas",
+    "standalone_config": {
+      "type": "ovs_bridge",
+      "name": "baremetal",
+      "mtu": 1500,
+      "vip": true,
+      "ip_subnet": "172.20.1.0/24",
+      "allocation_pools": [
+        {
+          "start": "172.20.1.100",
+          "end": "172.20.1.150"
+        }
+      ],
+      "host_routes": [
+        {
+          "destination": "192.168.130.0/24",
+          "nexthop": "172.20.1.1"
+        }
+      ]
+    }
+  }
+]
+EOF
+export EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(jq -c . /tmp/addtional_nets.json)
+export STANDALONE_COMPUTE_DRIVER=ironic
+export NTP_SERVER=pool.ntp.org  # Only neccecary if not on the RedHat network ...
+export EDPM_COMPUTE_CEPH_ENABLED=false  # Optional
+```
+
+-----
+
 Use the [install_yamls devsetup](https://github.com/openstack-k8s-operators/install_yamls/tree/main/devsetup)
 to create a virtual machine connected to the isolated networks.
 
 Create the edpm-compute-0 virtual machine.
-```
-cd ~/install_yamls/devsetup
+
+```bash
+cd install_yamls/devsetup
 make standalone
+```
+
+## Install the openstack-k8s-operators (openstack-operator)
+
+```bash
+cd ..  # back to install_yamls
+make crc_storage
+make input
+make openstack
 ```
 
 ### Convenience steps

@@ -33,6 +33,8 @@ Perform the actions from the sub-documents in the following order:
 
 * [Dataplane adoption](openstack/edpm_adoption.md)
 
+* [Ironic adoption](openstack/ironic_adoption.md)
+
 If you face issues during adoption, check the
 [Troubleshooting](openstack/troubleshooting.md) document for common
 problems and solutions.
