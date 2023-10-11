@@ -36,4 +36,5 @@
     - placement_adoption
     - cinder_adoption
     - horizon_adoption
+    - heat_adoption
     - dataplane_adoption

@@ -42,6 +42,7 @@ nav:
     - openstack/horizon_adoption.md
     - openstack/edpm_adoption.md
     - openstack/ironic_adoption.md
+    - openstack/heat_adoption.md
     - openstack/troubleshooting.md
   - Ceph:
     - Ceph RBD migration: ceph/ceph_rbd.md

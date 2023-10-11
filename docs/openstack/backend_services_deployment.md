@@ -58,6 +58,8 @@ podified OpenStack control plane services.
   NOVA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NovaPassword:' | awk -F ': ' '{ print $2; }')
   OCTAVIA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' OctaviaPassword:' | awk -F ': ' '{ print $2; }')
   PLACEMENT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' PlacementPassword:' | awk -F ': ' '{ print $2; }')
+  HEAT_AUTH_ENCRYPTION_KEY=$(cat ~/tripleo-standalone-passwords.yaml | grep ' HeatAuthEncryptionKey:' | awk -F ': ' '{ print $2; }')
+  HEAT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' HeatPassword:' | awk -F ': ' '{ print $2; }')
   ```
 
 ## Pre-checks
@@ -100,6 +102,8 @@ podified OpenStack control plane services.
   oc set data secret/osp-secret "NovaPassword=$NOVA_PASSWORD"
   oc set data secret/osp-secret "OctaviaPassword=$OCTAVIA_PASSWORD"
   oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
+  oc set data secret/osp-secret "HeatPassword=$HEAT_PASSWORD"
+  oc set data secret/osp-secret "HeatAuthEncryptionKey=$HEAT_AUTH_ENCRYPTION_KEY"
   ```
 
 * Deploy OpenStackControlPlane. **Make sure to only enable DNS,

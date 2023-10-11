@@ -37,6 +37,10 @@
     {% if placement_password %}
         oc set data secret/osp-secret "PlacementPassword={{ placement_password }}"
     {% endif %}
+    {% if heat_password %}
+        oc set data secret/osp-secret "HeatPassword={{ heat_password }}"
+        oc set data secret/osp-secret "HeatAuthEncryptionKey={{ heat_auth_encryption_key }}"
+    {% endif %}
 
 - name: when not a periodic CI job use the base deployment
   when: not periodic|default(false)
