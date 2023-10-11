@@ -3,7 +3,7 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc delete --wait=false openstackdataplane/openstack || true
+    oc delete --wait=false openstackdataplanedeployment/openstack || true
     oc delete --wait=false openstackcontrolplane/openstack || true
     oc patch openstackcontrolplane openstack --type=merge --patch '
     metadata:
