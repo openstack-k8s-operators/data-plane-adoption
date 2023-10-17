@@ -4,14 +4,17 @@
     {{ shell_header }}
     {{ oc_header }}
     {{ oc_login_command }}
-    oc get csv openstack-ansibleee-operator.v0.0.1 -o yaml -n openstack-operators | sed "s/RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT/AEE_IMAGE/" | oc apply -f -
+    # openstack-operator catalog pins the sha256, which might differ from latest with time
+    oc patch csv -n openstack-operators openstack-ansibleee-operator.v0.0.1 \
+      --type='json' -p='[{
+      "op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0",
+      "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest"}}]'
 
 - name: ensure oc login
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    {{ oc_login_command }}
     oc project openstack
 
 - name: ensure IPAM is configured
