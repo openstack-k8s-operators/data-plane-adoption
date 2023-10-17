@@ -53,7 +53,7 @@ cd ..  # back to install_yamls
 make nmstate
 make namespace
 cd devsetup  # back to install_yamls/devsetup
-make bmaas BMAAS_INSTANCE_DISK_SIZE=2
+make bmaas
 ```
 
 A node definition YAML file to use with the ``openstack baremetal create
@@ -178,6 +178,79 @@ the section:
 [Reset the environment to pre-adoption state](https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/development_environment/#reset-the-environment-to-pre-adoption-state)
 
 ### Create a workload to adopt
+
+-----
+#### Ironic Steps
+
+```bash
+# Enroll baremetal nodes
+make bmaas_generate_nodes_yaml | tail -n +2 | tee /tmp/ironic_nodes.yaml
+scp -i $HOME/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa /tmp/ironic_nodes.yaml root@192.168.122.100:
+ssh -i $HOME/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100
+
+export OS_CLOUD=standalone
+openstack baremetal create /root/ironic_nodes.yaml
+export IRONIC_PYTHON_AGENT_RAMDISK_ID=$(openstack image show deploy-ramdisk -c id -f value)
+export IRONIC_PYTHON_AGENT_KERNEL_ID=$(openstack image show deploy-kernel -c id -f value)
+for node in $(openstack baremetal node list -c UUID -f value); do
+  openstack baremetal node set $node \
+    --driver-info deploy_ramdisk=${IRONIC_PYTHON_AGENT_RAMDISK_ID} \
+    --driver-info deploy_kernel=${IRONIC_PYTHON_AGENT_KERNEL_ID} \
+    --resource-class baremetal \
+    --property capabilities='boot_mode:uefi'
+done
+
+# Create a baremetal flavor
+openstack flavor create baremetal --ram 1024 --vcpus 1 --disk 15 \
+  --property resources:VCPU=0 \
+  --property resources:MEMORY_MB=0 \
+  --property resources:DISK_GB=0 \
+  --property resources:CUSTOM_BAREMETAL=1 \
+  --property capabilities:boot_mode="uefi"
+
+# Create image
+IMG=Fedora-Cloud-Base-38-1.6.x86_64.qcow2
+URL=https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/$IMG
+curl -o /tmp/${IMG} -L $URL
+DISK_FORMAT=$(qemu-img info /tmp/${IMG} | grep "file format:" | awk '{print $NF}')
+openstack image create --container-format bare --disk-format ${DISK_FORMAT} Fedora-Cloud-Base-38 < /tmp/${IMG}
+
+export BAREMETAL_NODES=$(openstack baremetal node list -c UUID -f value)
+# Manage nodes
+for node in $BAREMETAL_NODES; do
+  openstack baremetal node manage $node
+done
+
+# Wait for nodes to reach "manageable" state
+watch openstack baremetal node list
+
+# Inspect baremetal nodes
+for node in $BAREMETAL_NODES; do
+  openstack baremetal introspection start $node
+done
+
+# Wait for inspection to complete
+watch openstack baremetal introspection list
+
+# Provide nodes
+for node in $BAREMETAL_NODES; do
+  openstack baremetal node provide $node
+done
+
+# Wait for nodes to reach "available" state
+watch openstack baremetal node list
+
+# Create an instance on baremetal
+openstack server show baremetal-test || {
+    openstack server create baremetal-test --flavor baremetal --image Fedora-Cloud-Base-38 --nic net-id=provisioning --wait
+}
+
+# Check instance status and network connectivity
+openstack server show baremetal-test
+ping -c 4 $(openstack server show baremetal-test -f json -c addresses | jq -r .addresses.provisioning[0])
+```
+-----
+
 ```
 export OS_CLOUD=standalone
 source ~/install_yamls/devsetup/scripts/edpm-deploy-instance.sh
