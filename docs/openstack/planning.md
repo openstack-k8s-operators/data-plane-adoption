@@ -91,6 +91,55 @@ section header (eg: `[DEFAULT]`) to be present in both places.
 Attention should be paid to each service's adoption process as they may have
 some particularities regarding their configuration.
 
+## Configuration tooling
+
+In order to help users to handle the configuration for the TripleO and Openstack
+services the tool: https://github.com/openstack-k8s-operators/os-diff has been
+develop to compare the configuration files between the TripleO deployment and
+the next gen cloud.
+Make sure Golang is installed and configured on your env:
+
+```bash
+git clone https://github.com/openstack-k8s-operators/os-diff
+pushd os-diff
+make build
+```
+
+Then configure ansible.cfg and ssh-config file according to your environment:
+
+```yaml
+Host *
+    IdentitiesOnly yes
+
+Host virthost
+    Hostname virthost
+    IdentityFile ~/.ssh/id_rsa
+    User root
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+
+
+Host standalone
+    Hostname standalone
+    IdentityFile ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa
+    User root
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+
+Host crc
+    Hostname crc
+    IdentityFile ~/.ssh/id_rsa
+    User stack
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+```
+
+And test your connection:
+
+```bash
+ssh -F ssh.config standalone
+```
+
 ## Node Roles
 
 In Director deployments we had 4 different standard roles for the nodes:

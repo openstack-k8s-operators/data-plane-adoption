@@ -71,10 +71,8 @@ the `openstack` namespace and that the `extraMounts` property of the
 are described in an earlier Adoption step [Ceph storage backend
 configuration](../ceph_backend_configuration/).
 
-Patch OpenStackControlPlane to deploy Glance with Ceph backend:
-
-```
-oc patch openstackcontrolplane openstack --type=merge --patch '
+```bash
+cat << EOF > glance_patch.yaml
 spec:
   glance:
     enabled: true
@@ -107,12 +105,37 @@ spec:
       glanceAPIExternal:
         networkAttachments:
         - storage
-'
+EOF
+```
+
+> If you have previously backup your Openstack services configuration file from the old environment:
+[pull openstack configuration os-diff](pull_openstack_configuration.md) you can use os-diff to compare
+and make sure the configuration is correct.
+
+```bash
+pushd os-diff
+./os-diff service --service glance -c /tmp/collect_tripleo_configs/glance/etc/glance/glance-api.conf -o glance_patch.yaml
+```
+
+> This will producre the difference between both ini configuration files.
+
+Patch OpenStackControlPlane to deploy Glance with Ceph backend:
+
+```
+oc patch openstackcontrolplane openstack --type=merge --patch-file glance_patch.yaml
 ```
 
 ## Post-checks
 
 ### Test the glance service from the OpenStack CLI
+
+> You can compare and make sure the configuration has been correctly applied to the glance pods by running
+
+```bash
+./os-diff service --service glance -c /etc/glance/glance.conf.d/02-config.conf  -o glance_patch.yaml --frompod -p glance-api
+```
+
+> If no line appear, then the configuration is correctly done.
 
 Inspect the resulting glance pods:
 

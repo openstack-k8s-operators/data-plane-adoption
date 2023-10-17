@@ -11,6 +11,8 @@ Perform the actions from the sub-documents in the following order:
 
 * [Deploy podified backend services](openstack/backend_services_deployment.md)
 
+* [Pull Openstack configuration](openstack/pull_openstack_configuration.md)
+
 * [Stop OpenStack services](openstack/stop_openstack_services.md)
 
 * [Copy MariaDB data](openstack/mariadb_copy.md)
