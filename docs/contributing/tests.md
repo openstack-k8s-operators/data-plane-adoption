@@ -50,10 +50,21 @@ samples are provided. To run the tests, follow this procedure:
 
   ```
   sudo dnf -y install python-devel
-  python3 -m venv venv
-  source venv/bin/activate
-  pip install openstackclient osc_placement jmespath
+  pip install --user openstackclient osc_placement jmespath
   ansible-galaxy collection install community.general
+  ```
+
+* (on Centos9 Stream) Apply `jmespath` workarounds for ansible-core 2.15 and ansible 8.5:
+  ```
+  pip install --user ansible yq
+  sudo su
+  pip3.11 # answer yes to all to get python3.11 and pip3.11
+  pip3.11 install --user jmespath
+  yq '.' tests/vars.yaml |\
+    jq '.ansible_python_interpreter="/bin/python3.11"' |\
+    python -c "import json, yaml, sys; print(yaml.dump(json.load(sys.stdin)))" \
+    > tests/vars_.yaml
+	cp tests/vars_.yaml tests/vars.yaml
   ```
 
 * Run `make test-with-ceph` (the documented development environment
@@ -61,7 +72,6 @@ samples are provided. To run the tests, follow this procedure:
 
   If you are using Ceph-less environment, you should run `make
   test-minimal`.
-
 
 ## Making patches to the test suite
 
