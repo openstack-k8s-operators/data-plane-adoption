@@ -84,10 +84,15 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_glance_api.service"
                 "tripleo_neutron_api.service"
                 "tripleo_nova_api.service"
+                "tripleo_octavia_api.service"
+                "tripleo_octavia_health_manager.service"
+                "tripleo_octavia_housekeeping.service"
+                "tripleo_octavia_worker.service"
                 "tripleo_placement_api.service")
 
 PacemakerResourcesToStop=("openstack-cinder-volume"
-                          "openstack-cinder-backup")
+                          "openstack-cinder-backup"
+                          "redis")
 
 echo "Stopping systemd OpenStack services"
 for service in ${ServicesToStop[*]}; do
