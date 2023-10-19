@@ -114,7 +114,7 @@ and make sure the configuration is correct.
 
 ```bash
 pushd os-diff
-./os-diff service --service glance -c /tmp/collect_tripleo_configs/glance/etc/glance/glance-api.conf -o glance_patch.yaml
+./os-diff cdiff --service glance -c /tmp/collect_tripleo_configs/glance/etc/glance/glance-api.conf -o glance_patch.yaml
 ```
 
 > This will producre the difference between both ini configuration files.
@@ -132,7 +132,7 @@ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_patch.
 > You can compare and make sure the configuration has been correctly applied to the glance pods by running
 
 ```bash
-./os-diff service --service glance -c /etc/glance/glance.conf.d/02-config.conf  -o glance_patch.yaml --frompod -p glance-api
+./os-diff cdiff --service glance -c /etc/glance/glance.conf.d/02-config.conf  -o glance_patch.yaml --frompod -p glance-api
 ```
 
 > If no line appear, then the configuration is correctly done.
