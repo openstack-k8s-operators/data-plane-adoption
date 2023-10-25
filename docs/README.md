@@ -61,5 +61,9 @@ see:
 * [Contributing to documentation](contributing/documentation.md) -
   how to build docs locally, docs patterns and tips.
 
+* [Development environment](contributing/development_environment.md) -
+  how set up a local development environment where Adoption can be
+  executed (either manually or via the test suite).
+
 * [Tests](contributing/tests.md) -
   information about the test suite and how to run it.

@@ -27,6 +27,7 @@ theme:
 nav:
   - Overview: README.md
   - OpenStack:
+    - openstack/planning.md
     - openstack/backend_services_deployment.md
     - oepsntack/pull_openstack_configuration.md
     - openstack/stop_openstack_services.md
@@ -40,8 +41,8 @@ nav:
     - openstack/cinder_adoption.md
     - openstack/horizon_adoption.md
     - openstack/edpm_adoption.md
-    - openstack/troubleshooting.md
     - openstack/ironic_adoption.md
+    - openstack/troubleshooting.md
   - Ceph:
     - Ceph RBD migration: ceph/ceph_rbd.md
     - Ceph RGW migration: ceph/ceph_rgw.md
