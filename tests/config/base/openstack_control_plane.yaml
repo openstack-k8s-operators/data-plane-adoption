@@ -34,8 +34,7 @@ spec:
   glance:
     enabled: false
     template:
-      glanceAPIInternal: {}
-      glanceAPIExternal: {}
+      glanceAPI: {}
 
   horizon:
     enabled: false

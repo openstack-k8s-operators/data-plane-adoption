@@ -17,9 +17,7 @@ spec:
 
   glance:
     template:
-      glanceAPIInternal:
-        containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-glance-api:{{ container_tag }}
-      glanceAPIExternal:
+      glanceAPI:
         containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-glance-api:{{ container_tag }}
 
   horizon:
