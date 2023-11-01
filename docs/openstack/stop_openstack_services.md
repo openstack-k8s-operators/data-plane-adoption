@@ -109,7 +109,16 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_nova_virtproxyd.service"
                 "tripleo_nova_virtqemud.service"
                 "tripleo_nova_virtsecretd.service"
-                "tripleo_nova_virtstoraged.service")
+                "tripleo_nova_virtstoraged.service"
+                "tripleo_aodh_api.service"
+                "tripleo_aodh_api_cron.service"
+                "tripleo_aodh_evaluator.service"
+                "tripleo_aodh_listener.service"
+                "tripleo_aodh_notifier.service"
+                "tripleo_ceilometer_agent_central.service"
+                "tripleo_ceilometer_agent_compute.service"
+                "tripleo_ceilometer_agent_ipmi.service"
+                "tripleo_ceilometer_agent_notification.service")
 
 PacemakerResourcesToStop=("openstack-cinder-volume"
                           "openstack-cinder-backup"

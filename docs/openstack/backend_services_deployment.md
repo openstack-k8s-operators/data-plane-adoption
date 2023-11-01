@@ -51,6 +51,9 @@ podified OpenStack control plane services.
   passwords can be extracted like this:
 
   ```
+  AODH_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AodhPassword:' | awk -F ': ' '{ print $2; }')
+  CEILOMETER_METERING_SECRET=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CeilometerMeteringSecret:' | awk -F ': ' '{ print $2; }')
+  CEILOMETER_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CeilometerPassword:' | awk -F ': ' '{ print $2; }')
   CINDER_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CinderPassword:' | awk -F ': ' '{ print $2; }')
   GLANCE_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' GlancePassword:' | awk -F ': ' '{ print $2; }')
   HEAT_AUTH_ENCRYPTION_KEY=$(cat ~/tripleo-standalone-passwords.yaml | grep ' HeatAuthEncryptionKey:' | awk -F ': ' '{ print $2; }')
@@ -96,6 +99,9 @@ podified OpenStack control plane services.
   account passwords from the original deployment:
 
   ```
+  oc set data secret/osp-secret "AodhPassword=$AODH_PASSWORD"
+  oc set data secret/osp-secret "CeilometerMeteringSecret=$CEILOMETER_METERING_SECRET"
+  oc set data secret/osp-secret "CeilometerPassword=$CEILOMETER_PASSWORD"
   oc set data secret/osp-secret "CinderPassword=$CINDER_PASSWORD"
   oc set data secret/osp-secret "GlancePassword=$GLANCE_PASSWORD"
   oc set data secret/osp-secret "HeatAuthEncryptionKey=$HEAT_AUTH_ENCRYPTION_KEY"
@@ -245,7 +251,11 @@ podified OpenStack control plane services.
               spec:
                 type: LoadBalancer
 
-    telemetry:
+    ceilometer:
+      enabled: false
+      template: {}
+
+    autoscaling:
       enabled: false
       template: {}
   EOF

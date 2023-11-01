@@ -41,6 +41,12 @@ Perform the actions from the sub-documents in the following order:
 
 * [Ironic adoption](openstack/ironic_adoption.md)
 
+* [Telemetry adoption](openstack/telemetry_adoption.md)
+
+* [Autoscaling adoption](openstack/autoscaling_adoption.md)
+
+* [Troubleshooting](openstack/troubleshooting.md)
+
 If you face issues during adoption, check the
 [Troubleshooting](openstack/troubleshooting.md) document for common
 problems and solutions.
