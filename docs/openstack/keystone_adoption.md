@@ -48,7 +48,7 @@
   ```bash
   openstack endpoint list | grep keystone | awk '/admin/{ print $2; }' | xargs ${BASH_ALIASES[openstack]} endpoint delete || true
 
-  for service in cinderv3 glance neutron nova placement swift; do
+  for service in cinderv3 glance manila manilav2 neutron nova placement swift; do
     openstack service list | awk "/ $service /{ print \$2; }" | xargs ${BASH_ALIASES[openstack]} service delete || true
   done
   ```

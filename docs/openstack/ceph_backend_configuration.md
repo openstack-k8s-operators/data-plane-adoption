@@ -19,7 +19,18 @@ CEPH_KEY=$($CEPH_SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0"
 CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
 ```
 
-## Procedure - Ceph backend configuration
+## Modify capabilities of the "openstack" user to accommodate Manila
+
+On TripleO environments, the CephFS driver in Manila is configured to use 
+its own keypair. For convenience, let's modify the `openstack` user so that we 
+can use it across all OpenStack services.
+
+```
+$CEPH_SSH cephadm shell
+ceph auth caps client.openstack mgr 'allow *' mon 'allow r, profile rbd' osd 'profile rbd pool=vms, profile rbd pool=volumes, profile rbd pool=images, allow rw pool manila_data'
+```
+
+## Ceph backend configuration
 
 Create the `ceph-conf-files` secret, containing Ceph configuration:
 
@@ -72,6 +83,7 @@ spec:
           - CinderVolume
           - CinderBackup
           - GlanceAPI
+          - ManilaShare
           extraVolType: Ceph
           volumes:
           - name: ceph
