@@ -53,13 +53,14 @@ podified OpenStack control plane services.
   ```
   CINDER_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CinderPassword:' | awk -F ': ' '{ print $2; }')
   GLANCE_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' GlancePassword:' | awk -F ': ' '{ print $2; }')
+  HEAT_AUTH_ENCRYPTION_KEY=$(cat ~/tripleo-standalone-passwords.yaml | grep ' HeatAuthEncryptionKey:' | awk -F ': ' '{ print $2; }')
+  HEAT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' HeatPassword:' | awk -F ': ' '{ print $2; }')
   IRONIC_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' IronicPassword:' | awk -F ': ' '{ print $2; }')
+  MANILA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' ManilaPassword:' | awk -F ': ' '{ print $2; }')
   NEUTRON_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NeutronPassword:' | awk -F ': ' '{ print $2; }')
   NOVA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NovaPassword:' | awk -F ': ' '{ print $2; }')
   OCTAVIA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' OctaviaPassword:' | awk -F ': ' '{ print $2; }')
   PLACEMENT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' PlacementPassword:' | awk -F ': ' '{ print $2; }')
-  HEAT_AUTH_ENCRYPTION_KEY=$(cat ~/tripleo-standalone-passwords.yaml | grep ' HeatAuthEncryptionKey:' | awk -F ': ' '{ print $2; }')
-  HEAT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' HeatPassword:' | awk -F ': ' '{ print $2; }')
   ```
 
 ## Pre-checks
@@ -97,13 +98,14 @@ podified OpenStack control plane services.
   ```
   oc set data secret/osp-secret "CinderPassword=$CINDER_PASSWORD"
   oc set data secret/osp-secret "GlancePassword=$GLANCE_PASSWORD"
+  oc set data secret/osp-secret "HeatAuthEncryptionKey=$HEAT_AUTH_ENCRYPTION_KEY"
+  oc set data secret/osp-secret "HeatPassword=$HEAT_PASSWORD"
   oc set data secret/osp-secret "IronicPassword=$IRONIC_PASSWORD"
+  oc set data secret/osp-secret "ManilaPassword=$MANILA_PASSWORD"
   oc set data secret/osp-secret "NeutronPassword=$NEUTRON_PASSWORD"
   oc set data secret/osp-secret "NovaPassword=$NOVA_PASSWORD"
   oc set data secret/osp-secret "OctaviaPassword=$OCTAVIA_PASSWORD"
   oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
-  oc set data secret/osp-secret "HeatPassword=$HEAT_PASSWORD"
-  oc set data secret/osp-secret "HeatAuthEncryptionKey=$HEAT_AUTH_ENCRYPTION_KEY"
   ```
 
 * Deploy OpenStackControlPlane. **Make sure to only enable DNS,

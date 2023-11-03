@@ -51,6 +51,7 @@ etc.
 openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
 openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
 openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \|' | grep -vi error
+openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
 openstack image list -c ID -c Status |grep -E '\| .+ing \|'
 ```
 
@@ -82,12 +83,16 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_cinder_scheduler.service"
                 "tripleo_cinder_backup.service"
                 "tripleo_glance_api.service"
+                "tripleo_manila_api.service"
+                "tripleo_manila_api_cron.service"
+                "tripleo_manila_scheduler.service"
                 "tripleo_neutron_api.service"
                 "tripleo_nova_api.service"
                 "tripleo_placement_api.service")
 
 PacemakerResourcesToStop=("openstack-cinder-volume"
-                          "openstack-cinder-backup")
+                          "openstack-cinder-backup"
+                          "openstack-manila-share")
 
 echo "Stopping systemd OpenStack services"
 for service in ${ServicesToStop[*]}; do
