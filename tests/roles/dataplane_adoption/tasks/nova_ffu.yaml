@@ -1,0 +1,121 @@
+- name: set podified MariaDB copy shell vars
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.set_fact:
+    mariadb_copy_shell_vars: |
+      PODIFIED_DB_ROOT_PASSWORD="{{ podified_db_root_password }}"
+
+- name: wait for cell1 Nova compute EDPM services version updated
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ mariadb_copy_shell_vars }}
+    oc rsh mariadb-openstack-cell1 mysql --user=root --password=${PODIFIED_DB_ROOT_PASSWORD} \
+      -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
+  register: records_check_results
+  until: records_check_results.rc == 0 and records_check_results.stdout_lines | length == 0
+  retries: 20
+  delay: 6
+
+- name: remove pre-FFU workarounds for Nova control plane services
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+    spec:
+      nova:
+        template:
+          cellTemplates:
+            cell0:
+              conductorServiceTemplate:
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=false
+            cell1:
+              metadataServiceTemplate:
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=false
+              conductorServiceTemplate:
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=false
+          apiServiceTemplate:
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=false
+          metadataServiceTemplate:
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=false
+          schedulerServiceTemplate:
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=false
+    '
+
+- name: Wait for Nova control plane services' CRs to become ready
+  ansible.builtin.include_role:
+    name: nova_adoption
+    tasks_from: wait.yaml
+
+- name: remove pre-FFU workarounds for Nova compute EDPM services
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nova-compute-ffu
+      namespace: openstack
+    data:
+      20-nova-compute-cell1-ffu-cleanup.conf: |
+        [workarounds]
+        disable_compute_service_check_for_ffu=false
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: nova-compute-ffu
+      namespace: openstack
+    spec:
+      label: nova.compute.ffu
+      configMaps:
+        - nova-compute-ffu
+      secrets:
+        - nova-cell1-compute-config
+        - nova-migration-ssh-key
+      playbook: osp.edpm.nova
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneDeployment
+    metadata:
+      name: openstack-nova-compute-ffu
+      namespace: openstack
+    spec:
+      nodeSets:
+        - openstack
+      servicesOverride:
+        - nova-compute-ffu
+    EOF
+
+- name: wait for Nova compute EDPM services to become ready
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait --for condition=Ready osdpd/openstack-nova-compute-ffu --timeout=5m
+  register: nova_ffu_edpm_result
+  until: nova_ffu_edpm_result is success
+  retries: 10
+  delay: 6
+
+- name: run Nova DB migrations to complete Wallaby->antelope FFU
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc rsh nova-cell0-conductor-0 nova-manage db online_data_migrations
+    oc rsh nova-cell1-conductor-0 nova-manage db online_data_migrations
+  register: nova_exec_result
+  until: nova_exec_result is success
+  retries: 10
+  delay: 6
