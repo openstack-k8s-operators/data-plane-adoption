@@ -15,11 +15,6 @@
         apiOverride:
           route: {}
         template:
-          customServiceConfig: |
-            [DEFAULT]
-            debug = true
-            [keystone_authtoken]
-            insecure = true
           databaseInstance: openstack
           databaseUser: heat
           rabbitMqClusterName: rabbitmq
