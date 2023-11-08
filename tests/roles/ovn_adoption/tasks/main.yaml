@@ -56,7 +56,7 @@
       OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
 
       # TODO: remove the default(external_...) when CI is transitioned to use 'source_...'
-      SOURCE_OVSDB_IP={{ source_ovndb_ip|default(external_ovndb_ip) }}
+      SOURCE_OVSDB_IP={{ source_ovndb_ip | default(external_ovndb_ip) }}
 
       CONTROLLER1_SSH="{{ controller1_ssh }}"
       CONTROLLER2_SSH="{{ controller2_ssh }}"
