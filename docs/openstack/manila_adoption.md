@@ -219,6 +219,9 @@ oc create secret generic osp-secret-manila-netapp --from-file=~/netapp_secrets.c
 - It is recommended to set the replica count of the `manilaAPI` service and 
   the `manilaScheduler` service to 3. You should ensure to set the replica 
   count of the `manilaShares` service/s to 1.   
+- Ensure that the appropriate storage management network is specified in the 
+  `manilaShares` section. The example below connects the `manilaShares` 
+  instance with the CephFS backend driver to the `storage` network. 
 
 ### Deploying the manila control plane 
 
@@ -269,6 +272,8 @@ spec:
             cephfs_cluster_name=ceph
             cephfs_volume_mode=0755
             cephfs_protocol_helper_type=CEPHFS
+          networkAttachments:
+              - storage
 __EOF__
 ```
 
