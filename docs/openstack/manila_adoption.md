@@ -17,7 +17,7 @@ Manila supports two levels of storage networking abstractions - one where
 users can directly control the networking for their respective file shares; 
 and another where the storage networking is configured by the OpenStack 
 administrator. It is important to ensure that the networking in the Red Hat 
-OpenStack Platform 17.1 matches your network plans for your new cloud after 
+OpenStack Platform 17.1 matches the network plans for your new cloud after 
 adoption. This ensures that tenant workloads remain connected to 
 storage through the adoption process, even as the control plane suffers a 
 minor interruption. Manila's control plane services are not in the data 
@@ -76,8 +76,8 @@ environment:
 - Pay attention to policy overrides. In RHOSP 18, manila ships with a secure 
   default RBAC, and overrides may not be necessary. Please review RBAC 
   defaults by using the [Oslo policy generator](https://docs.openstack.org/oslo.policy/latest/cli/oslopolicy-policy-generator.html)
-  tool. If a custom policy is necessary, you must provide it either as a 
-  `ConfigMap`. The following sample configuration illustrates how a 
+  tool. If a custom policy is necessary, you must provide it as a 
+  `ConfigMap`. The following sample spec illustrates how a 
   `ConfigMap` called `manila-policy` can be set up with the contents of a 
   file called `policy.yaml`.
 
@@ -130,7 +130,10 @@ environment:
       enabled: true
       template:
         manilaAPI:
-          replicas: 2
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_share_protocols = nfs
+          replicas: 3
         manilaScheduler:
           replicas: 3
         manilaShares:
@@ -138,13 +141,13 @@ environment:
            customServiceConfig: |
              [DEFAULT]
              debug = true
-             enabled_share_backends=netapp
+             enabled_share_backends = netapp
              [netapp]
-             driver_handles_share_servers=False
-             share_backend_name=netapp
-             share_driver=manila.share.drivers.netapp.common.NetAppDriver
-             netapp_storage_family=ontap_cluster
-             netapp_transport_type=http
+             driver_handles_share_servers = False
+             share_backend_name = netapp
+             share_driver = manila.share.drivers.netapp.common.NetAppDriver
+             netapp_storage_family = ontap_cluster
+             netapp_transport_type = http
            replicas: 1
          pure:
             customServiceConfig: |
@@ -152,12 +155,12 @@ environment:
              debug = true
              enabled_share_backends=pure-1
              [pure-1]
-             driver_handles_share_servers=False
-             share_backend_name=pure
-             share_driver=manila.share.drivers.purestorage.flashblade.FlashBladeShareDriver
-             flashblade_mgmt_vip=10.1.2.3
-             flashblade_data_vip=10.1.2.4
-            containerImage: quay.io/tripleozedcentos9/openstack-manila-share:current-tripleo
+             driver_handles_share_servers = False
+             share_backend_name = pure
+             share_driver = manila.share.drivers.purestorage.flashblade.FlashBladeShareDriver
+             flashblade_mgmt_vip = 203.0.113.15
+             flashblade_data_vip = 203.0.10.14
+            containerImage: registry.connect.redhat.com/purestorage/openstack-manila-share-pure-rhosp-18-0
             replicas: 1
 ```
 
@@ -193,13 +196,13 @@ oc create secret generic osp-secret-manila-netapp --from-file=~/netapp_secrets.c
            customServiceConfig: |
              [DEFAULT]
              debug = true
-             enabled_share_backends=netapp
+             enabled_share_backends = netapp
              [netapp]
-             driver_handles_share_servers=False
-             share_backend_name=netapp
-             share_driver=manila.share.drivers.netapp.common.NetAppDriver
-             netapp_storage_family=ontap_cluster
-             netapp_transport_type=http
+             driver_handles_share_servers = False
+             share_backend_name = netapp
+             share_driver = manila.share.drivers.netapp.common.NetAppDriver
+             netapp_storage_family = ontap_cluster
+             netapp_transport_type = http
            customServiceConfigSecrets:
              - osp-secret-manila-netapp
            replicas: 1
@@ -222,7 +225,7 @@ oc create secret generic osp-secret-manila-netapp --from-file=~/netapp_secrets.c
 Patch OpenStackControlPlane to deploy Manila; here's an example that uses 
 Native CephFS:
 
-```
+```yaml
 cat << __EOF__ > ~/manila.patch
 spec:
   manila:
@@ -267,7 +270,9 @@ spec:
             cephfs_volume_mode=0755
             cephfs_protocol_helper_type=CEPHFS
 __EOF__
+```
 
+```shell
 oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patch
 ```
 
@@ -275,17 +280,17 @@ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patc
 
 ### Inspect the resulting manila service pods
 
-```bash
+```shell
 oc get pods -l service=manila 
 ```
 
 ### Check that Manila API service is registered in Keystone
 
-```bash
+```shell
 openstack service list | grep manila
 ```
 
-```bash
+```shell
 openstack endpoint list | grep manila
 
 | 1164c70045d34b959e889846f9959c0e | regionOne | manila       | share        | True    | internal  | http://manila-internal.openstack.svc:8786/v1/%(project_id)s        |
@@ -298,22 +303,19 @@ openstack endpoint list | grep manila
 
 We can now test the health of the service
 
-```bash
+```shell
 openstack share service list
 openstack share pool list --detail
 ```
 
 We can check on existing workloads
 
-```bash
+```shell
 openstack share list
 openstack share snapshot list
 ```
 
 We can create further resources
-```bash
+```shell
 openstack share create cephfs 10 --snapshot mysharesnap --name myshareclone
 ```
-
-
-
