@@ -42,7 +42,7 @@ manager service needs to be able to reach it.
 * Ensure that services such as [keystone](keystone_adoption.md) 
   and [memcached](backend_services_deployment.md) are available prior to 
   adopting manila services.
-* If tenant-driven networking was enabled (``driver_handles_share_servers=True`),
+* If tenant-driven networking was enabled (`driver_handles_share_servers=True`),
   ensure that [neutron](neutron_adoption.md) has been deployed prior to 
   adopting manila services.
 
@@ -83,31 +83,31 @@ environment:
 
 ```yaml
   spec:
-     manila:
-       enabled: true
-       template:
-         manilaAPI:
-           customServiceConfig: |
-              [oslo_policy]
-              policy_file=/etc/manila/policy.yaml
-         extraMounts:
-         - extraVol:
-           - extraVolType: Undefined
-             mounts:
-             - mountPath: /etc/manila/
-               name: policy
-               readOnly: true
-             propagation:
-             - ManilaAPI
-             volumes:
-             - name: policy
-               projected:
-                 sources:
-                 - configMap:
-                     name: manila-policy
-                     items:
-                       - key: policy
-                         path: policy.yaml
+    manila:
+      enabled: true
+      template:
+        manilaAPI:
+          customServiceConfig: |
+             [oslo_policy]
+             policy_file=/etc/manila/policy.yaml
+        extraMounts:
+        - extraVol:
+          - extraVolType: Undefined
+            mounts:
+            - mountPath: /etc/manila/
+              name: policy
+              readOnly: true
+            propagation:
+            - ManilaAPI
+            volumes:
+            - name: policy
+              projected:
+                sources:
+                - configMap:
+                    name: manila-policy
+                    items:
+                      - key: policy
+                        path: policy.yaml
 
 ```
 - The Manila API service needs the `enabled_share_protocols` option to be 
@@ -156,7 +156,7 @@ environment:
              enabled_share_backends=pure-1
              [pure-1]
              driver_handles_share_servers = False
-             share_backend_name = pure
+             share_backend_name = pure-1
              share_driver = manila.share.drivers.purestorage.flashblade.FlashBladeShareDriver
              flashblade_mgmt_vip = 203.0.113.15
              flashblade_data_vip = 203.0.10.14

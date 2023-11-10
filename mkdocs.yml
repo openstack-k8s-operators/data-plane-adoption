@@ -40,6 +40,7 @@ nav:
     - openstack/placement_adoption.md
     - openstack/cinder_adoption.md
     - openstack/horizon_adoption.md
+    - openstack/manila_adoption.md
     - openstack/edpm_adoption.md
     - openstack/ironic_adoption.md
     - openstack/heat_adoption.md
