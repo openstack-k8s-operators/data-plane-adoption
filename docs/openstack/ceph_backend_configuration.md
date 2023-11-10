@@ -1,7 +1,7 @@
 # Ceph backend configuration (if applicable)
 
 If the original deployment uses a Ceph storage backend for any service
-(e.g. Glance, Cinder, Nova), the same backend must be used in the
+(e.g. Glance, Cinder, Nova, Manila), the same backend must be used in the
 adopted deployment and CRs must be configured accordingly.
 
 ## Prerequisites
@@ -25,9 +25,18 @@ On TripleO environments, the CephFS driver in Manila is configured to use
 its own keypair. For convenience, let's modify the `openstack` user so that we 
 can use it across all OpenStack services.
 
+Using the same user across the services serves two purposes:
+- The capabilities of the user required to interact with the Manila service 
+  became far simpler and hence, more became more secure with RHOSP 18.
+- It is simpler to create a common ceph secret (keyring and ceph config 
+  file) and propagate the secret to all services that need it.
+
 ```
 $CEPH_SSH cephadm shell
-ceph auth caps client.openstack mgr 'allow *' mon 'allow r, profile rbd' osd 'profile rbd pool=vms, profile rbd pool=volumes, profile rbd pool=images, allow rw pool manila_data'
+ceph auth caps client.openstack \
+  mgr 'allow *' \
+  mon 'allow r, profile rbd' \
+  osd 'profile rbd pool=vms, profile rbd pool=volumes, profile rbd pool=images, allow rw pool manila_data'
 ```
 
 ## Ceph backend configuration
