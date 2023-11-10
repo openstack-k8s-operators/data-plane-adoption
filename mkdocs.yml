@@ -44,6 +44,7 @@ nav:
     - openstack/ironic_adoption.md
     - openstack/heat_adoption.md
     - openstack/troubleshooting.md
+    - openstack/node-selector.md
   - Ceph:
     - Ceph RBD migration: ceph/ceph_rbd.md
     - Ceph RGW migration: ceph/ceph_rgw.md
@@ -64,4 +65,3 @@ plugins:
   - git-revision-date
   - search:
       lang: en
-      prebuild_index: true

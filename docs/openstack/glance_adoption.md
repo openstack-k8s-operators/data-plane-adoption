@@ -69,7 +69,7 @@ Make sure the Ceph-related secret (`ceph-conf-files`) was created in
 the `openstack` namespace and that the `extraMounts` property of the
 `OpenStackControlPlane` CR has been configured properly. These tasks
 are described in an earlier Adoption step [Ceph storage backend
-configuration](../ceph_backend_configuration/).
+configuration](ceph_backend_configuration.md).
 
 ```bash
 cat << EOF > glance_patch.yaml
