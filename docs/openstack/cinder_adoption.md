@@ -451,7 +451,7 @@ available in the w [OpenStack Cinder ecosystem
 page](https://catalog.redhat.com/software/search?target_platforms=Red%20Hat%20OpenStack%20Platform&p=1&functionalCategories=Data%20storage)
 and add it under the specific's driver section using the `containerImage` key.
 For example, if we had a Pure Storage array and the driver was already certified
-for OSP1, then we would have something like this:
+for OSP18, then we would have something like this:
 
    ```yaml
    spec:
