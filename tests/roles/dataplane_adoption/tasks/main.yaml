@@ -105,7 +105,7 @@
     metadata:
         name: dataplane-adoption-secret
     data:
-        ssh-privatekey: "{{ edpm_encoded_privatekey|default(edpm_privatekey.content) }}"
+        ssh-privatekey: "{{ edpm_encoded_privatekey | default(edpm_privatekey.content) }}"
     EOF
 
 - name: "[hack] create nova-metadata-neutron-config-secret.yaml"
@@ -222,8 +222,7 @@
             # Default nic config template for a EDPM compute node
             # These vars are edpm_network_config role vars
             edpm_network_config_override: ""
-            edpm_network_config_template: |
-              {%- raw %}
+            edpm_network_config_template: |{%- raw %}
               ---
               {% set mtu_list = [ctlplane_mtu] %}
               {% for network in role_networks %}
@@ -277,7 +276,7 @@
             edpm_nodes_validation_validate_controllers_icmp: false
             edpm_nodes_validation_validate_gateway_icmp: false
 
-            edpm_chrony_ntp_servers: {{ edpm_chrony_ntp_servers|default(default_edpm_chrony_ntp_servers) }}
+            edpm_chrony_ntp_servers: {{ edpm_chrony_ntp_servers | default(default_edpm_chrony_ntp_servers) }}
 
             edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
             edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"

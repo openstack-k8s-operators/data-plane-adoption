@@ -116,7 +116,7 @@ CPU intensive.  This may be a concern for the OpenShift human operators, and
 they may want to use the `nodeSelector` to prevent these service from
 interfering with their other OpenShift workloads
 
-Please make sure to read the [Nodes Selector guide](node-selector) before
+Please make sure to read the [Nodes Selector guide](node-selector.md) before
 continuing, as we'll be referring to some of the concepts explained there in the
 following sections.
 
@@ -194,7 +194,7 @@ spec:
 
 Remember that if we are using labels to restrict the nodes where cinder
 services are running we'll need to use a `MachineConfigPool` as described in
-the [nodes selector guide](node-labels) to limit the effects of the
+the [nodes selector guide](node-selector.md) to limit the effects of the
 `MachineConfig` to only the nodes were our services may run.
 
 If we are using a toy single node deployment to test the process we may need to
@@ -211,7 +211,8 @@ how to configure it.
 There's nothing to do for FC volumes to work, but the *cinder volume and cinder
 backup services need to run in an OpenShift host that has HBAs*, so if there
 are nodes that don't have HBAs then we'll need to use labels to restrict where
-these services can run, as mentioned in the [node labels section](#node-labels).
+these services can run, as mentioned in the [node selection section]
+(#node-selection).
 
 This also means that for virtualized OpenShift clusters using FC we'll need to
 expose the host's HBAs inside the VM.
@@ -259,7 +260,7 @@ spec:
 
 Remember that if we are using labels to restrict the nodes where cinder
 services are running we'll need to use a `MachineConfigPool` as described in
-the [nodes selector guide](node-labels) to limit the effects of the
+the [nodes selector guide](node-selector.md) to limit the effects of the
 `MachineConfig` to only the nodes were our services may run.
 
 If we are using a toy single node deployment to test the process we may need to
@@ -337,7 +338,7 @@ spec:
 
 Remember that if we are using labels to restrict the nodes where cinder
 services are running we'll need to use a `MachineConfigPool` as described in
-the [nodes selector guide](node-labels) to limit the effects of the
+the [nodes selector guide](node-selector.md) to limit the effects of the
 `MachineConfig` to only the nodes were our services may run.
 
 If we are using a toy single node deployment to test the process we may need to
