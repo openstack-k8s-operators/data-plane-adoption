@@ -1,0 +1,75 @@
+- name: deploy podified Manila with cephfs backend
+  when: manila_backend == "cephfs"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      manila:
+        enabled: true
+        apiOverride:
+          route: {}
+        template:
+          databaseInstance: openstack
+          manilaAPI:
+            customServiceConfig: |
+              [DEFAULT]
+              enabled_share_protocols=cephfs
+            replicas: 1
+            networkAttachments:
+            - internalapi
+            override:
+              service:
+                internal:
+                  metadata:
+                    annotations:
+                      metallb.universe.tf/address-pool: internalapi
+                      metallb.universe.tf/allow-shared-ip: internalapi
+                      metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                  spec:
+                    type: LoadBalancer
+          manilaScheduler:
+            replicas: 1
+          manilaShares:
+            share1:
+              customServiceConfig: |
+                [DEFAULT]
+                enabled_share_backends=cephfs
+                enabled_share_protocols=cephfs
+                [cephfs]
+                driver_handles_share_servers=False
+                share_backend_name=cephfs
+                share_driver=manila.share.drivers.cephfs.driver.CephFSDriver
+                cephfs_conf_path=/etc/ceph/ceph.conf
+                cephfs_auth_id=openstack
+                cephfs_cluster_name=ceph
+                cephfs_volume_mode=0755
+                cephfs_protocol_helper_type=CEPHFS
+              replicas: 1
+              networkAttachments:
+              - storage
+    '
+
+- name: wait for Manila to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=component=manila-api -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc get pod --selector=component=manila-scheduler -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc get pod --selector=component=manila-share -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: manila_running_result
+  until: manila_running_result is success
+  retries: 60
+  delay: 2
+
+- name: check that Manila is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    ${BASH_ALIASES[openstack]} endpoint list | grep -i share
+    ${BASH_ALIASES[openstack]} share pool list
+  register: manila_responding_result
+  until: manila_responding_result is success
+  retries: 15

@@ -1,0 +1,2 @@
+# manila_backend can be 'cephfs' or 'ceph_nfs'
+manila_backend: cephfs
