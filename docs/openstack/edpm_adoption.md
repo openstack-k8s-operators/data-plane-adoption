@@ -334,46 +334,6 @@ later on.
 > **NOTE**: Additional orchestration happening around the FFU workarounds
 > configuration for Nova compute EDPM service is a subject of future changes.
 
-* Configure pre-FFU workarounds for Nova compute EDPM services to update its version records:
-
-    ```yaml
-    oc apply -f - <<EOF
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: nova-compute-workarounds
-      namespace: openstack
-    data:
-      19-nova-compute-cell1-workarounds.conf: |
-        [workarounds]
-        disable_compute_service_check_for_ffu=true
-    EOF
-
-    oc apply -f - <<EOF
-    apiVersion: dataplane.openstack.org/v1beta1
-    kind: OpenStackDataPlaneService
-    metadata:
-      name: nova-compute-workarounds
-      namespace: openstack
-    spec:
-      label: nova.compute.workarounds
-      configMaps:
-        - nova-compute-workarounds
-      playbook: osp.edpm.nova
-    ---
-    apiVersion: dataplane.openstack.org/v1beta1
-    kind: OpenStackDataPlaneDeployment
-    metadata:
-      name: openstack-nova-compute-workarounds
-      namespace: openstack
-    spec:
-      nodeSets:
-        - openstack
-      servicesOverride:
-        - nova-compute-workarounds
-    EOF
-    ```
-
 * Wait for cell1 Nova compute EDPM services version updated (it may take some time):
 
     ```bash
@@ -455,9 +415,7 @@ later on.
       20-nova-compute-cell1-ffu-cleanup.conf: |
         [workarounds]
         disable_compute_service_check_for_ffu=false
-    EOF
-
-    oc apply -f - <<EOF
+    ---
     apiVersion: dataplane.openstack.org/v1beta1
     kind: OpenStackDataPlaneService
     metadata:
@@ -467,6 +425,9 @@ later on.
       label: nova.compute.ffu
       configMaps:
         - nova-compute-ffu
+      configSecrets:
+        - nova-cell1-compute-config
+        - nova-migration-ssh-key
       playbook: osp.edpm.nova
     ---
     apiVersion: dataplane.openstack.org/v1beta1
