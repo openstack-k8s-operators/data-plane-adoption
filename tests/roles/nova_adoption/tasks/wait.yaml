@@ -33,4 +33,3 @@
       name: nova-cell1-novncproxy
     - cr: novaschedulers
       name: nova-scheduler
-

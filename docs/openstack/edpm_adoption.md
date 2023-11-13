@@ -104,6 +104,52 @@ EOF
   EOF
   ```
 
+* Generate an ssh key-pair `nova-migration-ssh-key` secret
+
+  ```bash
+  cd "$(mktemp -d)"
+  ssh-keygen -f ./id -t ed25519 -N ''
+  oc create secret generic nova-migration-ssh-key \
+    -n openstack \
+    --from-file=ssh-privatekey=id \
+    --from-file=ssh-publickey=id.pub \
+    --type kubernetes.io/ssh-auth
+  rm -f id*
+  cd -
+
+* Create a Nova Compute Extra Config service
+    ```yaml
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nova-compute-extraconfig
+      namespace: openstack
+    data:
+      19-nova-compute-cell1-workarounds.conf: |
+        [workarounds]
+        disable_compute_service_check_for_ffu=true
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: nova-compute-extraconfig
+      namespace: openstack
+    spec:
+      label: nova.compute.extraconfig
+      configMaps:
+        - nova-compute-extraconfig
+      configSecrets:
+        - nova-cell1-compute-config
+        - nova-migration-ssh-key
+      playbook: osp.edpm.nova
+    EOF
+    ```
+
+  The secret ``nova-cell<X>-compute-config`` is auto-generated for each
+  ``cell<X>``. That secret, alongside ``nova-migration-ssh-key``, should
+  always be specified for each custom `OpenStackDataPlaneService` related to Nova.
+
 * Deploy OpenStackDataPlaneNodeSet:
 
   ```yaml
@@ -125,6 +171,7 @@ EOF
       - run-os
       - libvirt
       - nova
+      - nova-compute-extraconfig
       - ovn
     env:
       - name: ANSIBLE_CALLBACKS_ENABLED
