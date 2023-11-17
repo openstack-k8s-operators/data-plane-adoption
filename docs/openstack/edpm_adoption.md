@@ -168,6 +168,8 @@ done
         value: "True"
       - name: ANSIBLE_ENABLE_TASK_DEBUGGER
         value: "True"
+      - name: ANSIBLE_SSH_ARGS
+        value: "-C -o ControlMaster=auto -o ControlPersist=80s -o ServerAliveInterval=30"
     nodes:
       standalone:
         hostName: standalone
