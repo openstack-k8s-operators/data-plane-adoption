@@ -150,8 +150,7 @@ podified OpenStack control plane services.
     glance:
       enabled: false
       template:
-        glanceAPIInternal: {}
-        glanceAPIExternal: {}
+        glanceAPI: {}
 
     horizon:
       enabled: false

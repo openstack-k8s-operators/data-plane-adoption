@@ -42,7 +42,7 @@ spec:
       databaseInstance: openstack
       storageClass: "local-storage"
       storageRequest: 10G
-      glanceAPIInternal:
+      glanceAPI:
         override:
           service:
             metadata:
@@ -52,9 +52,6 @@ spec:
                 metallb.universe.tf/loadBalancerIPs: 172.17.0.80
             spec:
               type: LoadBalancer
-        networkAttachments:
-        - storage
-      glanceAPIExternal:
         networkAttachments:
         - storage
 '
@@ -90,7 +87,7 @@ spec:
         store_description=Ceph glance store backend.
       storageClass: "local-storage"
       storageRequest: 10G
-      glanceAPIInternal:
+      glanceAPI:
         override:
           service:
             metadata:
@@ -100,9 +97,6 @@ spec:
                 metallb.universe.tf/loadBalancerIPs: 172.17.0.80
             spec:
               type: LoadBalancer
-        networkAttachments:
-        - storage
-      glanceAPIExternal:
         networkAttachments:
         - storage
 EOF
