@@ -29,6 +29,8 @@ Perform the actions from the sub-documents in the following order:
 
 * [Placement adoption](openstack/placement_adoption.md)
 
+* [Nova adoption](openstack/nova_adoption.md)
+
 * [Cinder adoption](openstack/cinder_adoption.md)
 
 * [Manila adoption](openstack/manila_adoption.md)

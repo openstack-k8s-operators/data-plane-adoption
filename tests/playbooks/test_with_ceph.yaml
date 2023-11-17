@@ -35,6 +35,7 @@
     - ceph_backend_configuration
     - glance_adoption
     - placement_adoption
+    - nova_adoption
     - cinder_adoption
     - horizon_adoption
     - heat_adoption
