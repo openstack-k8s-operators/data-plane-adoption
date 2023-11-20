@@ -303,10 +303,26 @@
       - openstack
     EOF
 
-- name: wait for dataplane node set to be ready
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc wait --for condition=Ready osdpns/openstack --timeout=40m
+- name: Validate EDPM deployment
   # TODO: work on network configuration for making possible to run this task on other IP ranges
   when: "edpm_node_ip.startswith('192.168.122')"
+  block:
+    - name: wait for dataplane node set to be ready
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc wait --for condition=Ready osdpns/openstack --timeout=40m
+
+    - name: trigger manual compute host discovery in nova
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc rsh nova-cell0-conductor-0 nova-manage cell_v2 discover_hosts --verbose
+
+    - name: run make edpm_deploy_instance
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        cd {{ install_yamls_path }}
+        cd devsetup
+        make edpm_deploy_instance
