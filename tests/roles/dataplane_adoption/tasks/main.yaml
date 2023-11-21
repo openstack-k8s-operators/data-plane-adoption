@@ -148,9 +148,6 @@
       label: nova.compute.extraconfig
       configMaps:
         - nova-compute-extraconfig
-      secrets:
-        - nova-cell1-compute-config
-        - nova-migration-ssh-key
       playbook: osp.edpm.nova
     EOF
 
@@ -184,6 +181,16 @@
           value: "True"
         - name: ANSIBLE_ENABLE_TASK_DEBUGGER
           value: "True"
+        - name: ANSIBLE_VERBOSITY
+          value: "4"
+        - name: ANSIBLE_SSH_RETRIES
+          value: "3"
+        - name: ANSIBLE_SSH_ARGS
+          value: "-C -o ControlMaster=auto -o ControlPersist=80s -o ServerAliveInterval=30"
+        - name: DEFAULT_SCP_IF_SSH
+          value: "True"
+        - name: PERSISTENT_CONNECT_TIMEOUT
+          value: "3000"
       nodes:
         standalone:
           hostName: standalone
