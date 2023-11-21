@@ -17,9 +17,9 @@ source_ovndb_ip: 192.168.122.100 #CUSTOMIZE_THIS
 edpm_node_ip: 192.168.122.100 #CUSTOMIZE_THIS
 
 # NTP servers list
-edpm_chrony_ntp_servers:
+timesync_ntp_servers:
   # - clock.redhat.com # Will not work outside of RH intranet
-  - pool.ntp.org
+  - hostname: pool.ntp.org
 
 # Auth URL to use for adopted Keystone.
 auth_url: http://keystone-public-openstack.apps-crc.testing
