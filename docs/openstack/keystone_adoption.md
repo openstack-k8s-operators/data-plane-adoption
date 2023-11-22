@@ -1,7 +1,8 @@
 ## Prerequisites
 
-* Previous Adoption steps completed. Notably, the service databases
-  must already be imported into the podified MariaDB.
+* Previous Adoption steps completed. Notably,
+  * the [service databases](mariadb_copy.md)
+    must already be imported into the podified MariaDB.
 
 ## Variables
 
