@@ -311,12 +311,6 @@
         {{ oc_header }}
         oc wait --for condition=Ready osdpns/openstack --timeout=40m
 
-    - name: trigger manual compute host discovery in nova
-      ansible.builtin.shell: |
-        {{ shell_header }}
-        {{ oc_header }}
-        oc rsh nova-cell0-conductor-0 nova-manage cell_v2 discover_hosts --verbose
-
     - name: run make edpm_deploy_instance
       ansible.builtin.shell: |
         {{ shell_header }}
