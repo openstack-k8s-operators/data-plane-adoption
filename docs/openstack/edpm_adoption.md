@@ -170,8 +170,6 @@ EOF
         value: "profile_tasks"
       - name: ANSIBLE_FORCE_COLOR
         value: "True"
-      - name: ANSIBLE_ENABLE_TASK_DEBUGGER
-        value: "True"
     nodes:
       standalone:
         hostName: standalone
