@@ -46,13 +46,26 @@
     {% endif %}
 
 - name: when not a periodic CI job use the base deployment
-  when: not periodic|default(false)
+  when:
+    - not periodic|default(false)
+    - not platform_rhev|default(false)
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     mkdir -p tmp
     oc kustomize base > tmp/test_deployment.yaml
     oc apply -f tmp/test_deployment.yaml
+  args:
+    chdir: "../config"
+
+- name: For rhev deployed env, use RHEV customize base deployment
+  when: platform_rhev|default(false)
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    mkdir -p tmp
+    oc kustomize base_rhev > tmp/test_deployment_rhev.yaml
+    oc apply -f tmp/test_deployment_rhev.yaml
   args:
     chdir: "../config"
 

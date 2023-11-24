@@ -1,0 +1,6 @@
+registry_name: "quay.io"
+registry_namespace: "podified-antelope-centos9"
+image_tag: "current-podified"
+ansible_ssh_private_key_secret: dataplane-adoption-secret
+default_edpm_chrony_ntp_servers:
+  - pool.ntp.org
