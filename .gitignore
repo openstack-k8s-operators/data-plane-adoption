@@ -3,9 +3,9 @@
 /Gemfile.lock
 /local
 /tests/config/tmp
-/tests/secrets.yaml
+#/tests/secrets.yaml
 /tests/playbooks/tmp
-/tests/vars.yaml
+#/tests/vars.yaml
 /tests/logs
 
 .vscode
