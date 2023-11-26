@@ -1,0 +1,45 @@
+# - name: Prelude
+#   hosts: local
+#   gather_facts: false
+#   module_defaults:
+#     ansible.builtin.shell:
+#       executable: /bin/bash
+#   roles:
+#     - prelude_local
+
+# - name: Cleanup
+#   hosts: local
+#   gather_facts: false
+#   module_defaults:
+#     ansible.builtin.shell:
+#       executable: /bin/bash
+#   roles:
+#     - pcp_cleanup
+# TODO : add CONTROLLER_SSH for ospdo
+# env titan132crucibleOspdo,134crcNg
+#    stop_openstack_services_shell_vars: |
+      # CONTROLLER1_SSH="{{ controller1_ssh }}"
+      # CONTROLLER2_SSH="{{ controller2_ssh }}"
+      # CONTROLLER3_SSH="{{ controller3_ssh }}"
+#       sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com ' export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient bash; . /etc/bashrc;cd ~;ssh controller-1.ctlplane'
+
+
+- name: Adoption
+  hosts: local
+  gather_facts: false
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  roles:
+    # - backend_services
+    - stop_openstack_services
+    - mariadb_copy
+    - ovn_adoption
+    - keystone_adoption
+    - neutron_adoption
+    - glance_adoption
+    - placement_adoption
+    - cinder_adoption
+    - horizon_adoption
+    - dataplane_adoption
+    - heat_adoption
