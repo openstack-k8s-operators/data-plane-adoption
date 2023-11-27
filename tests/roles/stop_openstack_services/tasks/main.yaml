@@ -55,23 +55,25 @@
                 echo "Stopping the $service in controller $i"
                 if ${!SSH_CMD} sudo systemctl is-active $service; then
                     ${!SSH_CMD} sudo systemctl stop $service
+                    ${!SSH_CMD} "timeout 30s sudo while systemctl is-active $service ;do echo $service sleep 3s ;done"
+
                 fi
             fi
         done
     done
 
-    echo "Checking systemd OpenStack services"
-    for service in ${ServicesToStop[*]}; do
-        for i in {1..3}; do
-            SSH_CMD=CONTROLLER${i}_SSH
-            if [ ! -z "${!SSH_CMD}" ]; then
-                echo "Checking status of $service in controller $i"
-                if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
-                   echo "ERROR: Service $service still running on controller $i"
-                fi
-            fi
-        done
-    done
+    # echo "Checking systemd OpenStack services"
+    # for service in ${ServicesToStop[*]}; do
+    #     for i in {1..3}; do
+    #         SSH_CMD=CONTROLLER${i}_SSH
+    #         if [ ! -z "${!SSH_CMD}" ]; then
+    #             echo "Checking status of $service in controller $i"
+    #             if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
+    #                echo "ERROR: Service $service still running on controller $i"
+    #             fi
+    #         fi
+    #     done
+    # done
 
     echo "Stopping pacemaker OpenStack services"
     for i in {1..3}; do
