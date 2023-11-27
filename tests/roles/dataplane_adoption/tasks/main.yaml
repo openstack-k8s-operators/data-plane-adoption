@@ -267,7 +267,7 @@
             edpm_nodes_validation_validate_controllers_icmp: false
             edpm_nodes_validation_validate_gateway_icmp: false
 
-            edpm_chrony_ntp_servers: {{ edpm_chrony_ntp_servers | default(default_edpm_chrony_ntp_servers) }}
+            timesync_ntp_servers: {{ timesync_ntp_servers | default(default_timesync_ntp_servers) }}
 
             edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
             edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"

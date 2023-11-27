@@ -37,7 +37,7 @@ test suite:
 
   * `edpm_privatekey_path`
 
-  * `edpm_chrony_ntp_servers`
+  * `timesync_ntp_servers`
 
 
 ## Running the tests

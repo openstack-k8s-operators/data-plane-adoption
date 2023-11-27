@@ -254,9 +254,9 @@ EOF
           edpm_nodes_validation_validate_controllers_icmp: false
           edpm_nodes_validation_validate_gateway_icmp: false
 
-          edpm_chrony_ntp_servers:
-          - clock.redhat.com
-          - clock2.redhat.com
+          timesync_ntp_servers:
+          - hostname: clock.redhat.com
+          - hostname: clock2.redhat.com
 
           edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
           edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
