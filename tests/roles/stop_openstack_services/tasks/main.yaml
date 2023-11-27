@@ -14,66 +14,20 @@
     {{ oc_header }}
     {{ stop_openstack_services_shell_vars }}
 
-    ServicesToStop=("tripleo_horizon.service"
-                    "tripleo_keystone.service"
-                    "tripleo_cinder_api.service"
-                    "tripleo_cinder_api_cron.service"
-                    "tripleo_cinder_scheduler.service"
-                    "tripleo_cinder_backup.service"
-                    "tripleo_glance_api.service"
-                    "tripleo_manila_api.service"
-                    "tripleo_manila_api_cron.service"
-                    "tripleo_manila_scheduler.service"
-                    "tripleo_neutron_api.service"
-                    "tripleo_nova_api.service"
-                    "tripleo_placement_api.service"
-                    "tripleo_nova_api_cron.service"
-                    "tripleo_nova_api.service"
-                    "tripleo_nova_conductor.service"
-                    "tripleo_nova_metadata.service"
-                    "tripleo_nova_scheduler.service"
-                    "tripleo_nova_vnc_proxy.service"
-                    "tripleo_nova_compute.service"
-                    "tripleo_nova_libvirt.target"
-                    "tripleo_nova_migration_target.service"
-                    "tripleo_nova_virtlogd_wrapper.service"
-                    "tripleo_nova_virtnodedevd.service"
-                    "tripleo_nova_virtproxyd.service"
-                    "tripleo_nova_virtqemud.service"
-                    "tripleo_nova_virtsecretd.service"
-                    "tripleo_nova_virtstoraged.service")
-
     PacemakerResourcesToStop=("openstack-cinder-volume"
                               "openstack-cinder-backup"
                               "openstack-manila-share")
 
     echo "Stopping systemd OpenStack services"
-    for service in ${ServicesToStop[*]}; do
-        for i in {1..3}; do
+    for i in {1..3}; do
             SSH_CMD=CONTROLLER${i}_SSH
             if [ ! -z "${!SSH_CMD}" ]; then
-                echo "Stopping the $service in controller $i"
-                if ${!SSH_CMD} sudo systemctl is-active $service; then
-                    ${!SSH_CMD} sudo systemctl stop $service
-                    ${!SSH_CMD} "timeout 30s sudo while systemctl is-active $service ;do echo $service sleep 3s ;done"
-
-                fi
+                echo "Stopping the tripleo services in controller $i"
+                    ${!SSH_CMD} sudo systemctl stop tripleo*
+                    ${!SSH_CMD} "sudo while systemctl is-active tripleo*|grep tripleo ;do sleep 3s ;done"
+                    ${!SSH_CMD} systemctl show service | grep ActiveState=inactive
             fi
-        done
     done
-
-    # echo "Checking systemd OpenStack services"
-    # for service in ${ServicesToStop[*]}; do
-    #     for i in {1..3}; do
-    #         SSH_CMD=CONTROLLER${i}_SSH
-    #         if [ ! -z "${!SSH_CMD}" ]; then
-    #             echo "Checking status of $service in controller $i"
-    #             if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
-    #                echo "ERROR: Service $service still running on controller $i"
-    #             fi
-    #         fi
-    #     done
-    # done
 
     echo "Stopping pacemaker OpenStack services"
     for i in {1..3}; do
