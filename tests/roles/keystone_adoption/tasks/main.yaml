@@ -37,7 +37,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod --selector=service=openstackclient -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc get pod --selector=app=openstackclient -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
   register: osc_running_result
   until: osc_running_result is success
   retries: 60
