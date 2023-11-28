@@ -100,7 +100,7 @@ EOF
 
   ```bash
   cd "$(mktemp -d)"
-  ssh-keygen -f ./id -t ed25519 -N ''
+  ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
   oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
     -n openstack \
     --from-file=ssh-privatekey=id \
