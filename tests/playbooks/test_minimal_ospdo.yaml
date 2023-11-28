@@ -43,11 +43,11 @@ ansible -i /ctlplane-ansible-inventory test_minimal_ospdo.yaml.yaml
     - stop_openstack_services
     - mariadb_copy
     - ovn_adoption
-    # - keystone_adoption
-    # - neutron_adoption
-    # - glance_adoption
-    # - placement_adoption
-    # - cinder_adoption
-    # - horizon_adoption
-    # - dataplane_adoption
-    # - heat_adoption
+    - keystone_adoption
+    - neutron_adoption
+    - glance_adoption
+    - placement_adoption
+    - cinder_adoption
+    - horizon_adoption
+    - dataplane_adoption
+    - heat_adoption
