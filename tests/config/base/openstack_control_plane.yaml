@@ -82,14 +82,18 @@ spec:
     enabled: false
     template:
       ovnController:
-        external-ids:
-          system-id: "random"
-          ovn-bridge: "br-int"
-          ovn-encap-type: "geneve"
+        networkAttachment: tenant
+      ovnNorthd:
+        networkAttachment: internalapi
+        replicas: 1
       ovnDBCluster:
         ovndbcluster-nb:
+          dbType: NB
+          networkAttachment: internalapi
           containerImage: quay.io/podified-antelope-centos9/openstack-ovn-nb-db-server:current-podified
         ovndbcluster-sb:
+          dbType: SB
+          networkAttachment: internalapi
           containerImage: quay.io/podified-antelope-centos9/openstack-ovn-sb-db-server:current-podified
 
   ovs:

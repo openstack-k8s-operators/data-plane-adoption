@@ -196,11 +196,20 @@ podified OpenStack control plane services.
     ovn:
       enabled: false
       template:
+        ovnDBCluster:
+          ovndbcluster-nb:
+            dbType: NB
+            storageRequest: 10G
+            networkAttachment: internalapi
+          ovndbcluster-sb:
+            dbType: SB
+            storageRequest: 10G
+            networkAttachment: internalapi
+        ovnNorthd:
+          networkAttachment: internalapi
+          replicas: 1
         ovnController:
-          external-ids:
-            system-id: "random"
-            ovn-bridge: "br-int"
-            ovn-encap-type: "geneve"
+          networkAttachment: tenant
 
     placement:
       enabled: false
