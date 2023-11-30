@@ -1,3 +1,6 @@
+/.bundle
+/docs_build
+/Gemfile.lock
 /local
 /tests/config/tmp
 /tests/secrets.yaml
