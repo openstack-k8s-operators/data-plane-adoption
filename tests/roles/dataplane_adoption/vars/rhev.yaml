@@ -1,0 +1,112 @@
+netconfig_networks:
+  - name: CtlPlane
+    dnsDomain: ctlplane.redhat.local
+    subnets:
+      - name: subnet1
+        allocationRanges:
+          - end: 192.168.23.15
+            start: 192.168.23.4
+        cidr: 192.168.23.0/24
+        gateway: 192.168.23.1
+  - name: InternalApi
+    dnsDomain: internalapi.redhat.local
+    subnets:
+      - name: subnet1
+        allocationRanges:
+          - end: 172.15.2.15
+            start: 172.15.2.4
+        cidr: 172.15.2.0/24
+        vlan: 20
+  - name: External
+    dnsDomain: external.redhat.local
+    subnets:
+      - name: subnet1
+        allocationRanges:
+          - end: 10.4.0.15
+            start: 10.4.0.4
+        cidr: 10.4.0.0/24
+        gateway: 10.4.0.1
+        vlan: 10
+  - name: Tenant
+    dnsDomain: tenant.redhat.local
+    subnets:
+      - name: subnet1
+        allocationRanges:
+          - end: 172.15.0.15
+            start: 172.15.0.4
+        cidr: 172.15.0.0/24
+        vlan: 50
+edpm_node_hostname: compute-0.redhat.local
+edpm_node_networks:
+  - defaultRoute: true
+    fixedIP: "{{ edpm_node_ip }}"
+    name: CtlPlane
+    subnetName: subnet1
+  - name: InternalApi
+    fixedIP: 172.15.2.10
+    subnetName: subnet1
+  - name: Tenant
+    fixedIP: 172.15.0.10
+    subnetName: subnet1
+  - name: External
+    fixedIP: 10.4.0.10
+    subnetName: subnet1
+edpm_user: stack
+# The variables inside edpm_network_config_template are evaluated based
+# on the OpenstackDataplaneNodeSet inventory. For adding a variable to the invetory,
+# please add it to OpenstackDataplaneNodeSet.nodeTemplate.ansibleVars
+edpm_network_config_template: |
+  {%- raw %}
+  ---
+  {% set mtu_list = [ctlplane_mtu] %}
+  {% for network in role_networks %}
+  {{ mtu_list.append(lookup('vars', networks_lower[network] ~ '_mtu')) }}
+  {%- endfor %}
+  {% set min_viable_mtu = mtu_list | max %}
+  network_config:
+  - type: interface
+    name: nic1
+    use_dhcp: true
+  - type: interface
+    name: nic2
+    use_dhcp: false
+    dns_servers: {{ ctlplane_dns_nameservers }}
+    domain: {{ dns_search_domains }}
+    addresses:
+    - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
+    routes: {{ ctlplane_host_routes }}
+  - type: interface
+    name: nic3
+    use_dhcp: false
+    addresses:
+    - ip_netmask: {{ tenant_ip }}/{{ tenant_cidr }}
+    routes: {{ tenant_host_routes }}
+  - type: interface
+    name: nic4
+    use_dhcp: false
+    addresses:
+    - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
+    routes: {{ internal_api_host_routes }}
+  - type: ovs_bridge
+    name: {{ neutron_physical_bridge_name }}
+    dns_servers: {{ ctlplane_dns_nameservers }}
+    domain: {{ dns_search_domains }}
+    use_dhcp: false
+    addresses:
+    - ip_netmask: {{ external_ip }}/{{ external_cidr }}
+    routes: []
+    members:
+    - type: interface
+      name: nic5
+      primary: true
+  {% endraw %}
+neutron_physical_bridge_name: br-ex
+neutron_public_interface_name: eth4
+role_networks:
+  - InternalApi
+  - Tenant
+networks_lower:
+  External: external
+  InternalApi: internal_api
+  Tenant: tenant
+edpm_sshd_allowed_ranges: ['192.168.23.0/24']
