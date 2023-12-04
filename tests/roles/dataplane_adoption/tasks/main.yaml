@@ -205,6 +205,9 @@
           ansiblePort: 22
           ansibleUser: root
           ansibleVars:
+            os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
+            os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
+            os_net_config_dns: {{ dataplane_os_net_config_dns | default("") }}
             service_net_map:
               nova_api_network: internal_api
               nova_libvirt_network: internal_api
@@ -220,19 +223,20 @@
               {{ mtu_list.append(lookup('vars', networks_lower[network] ~ '_mtu')) }}
               {%- endfor %}
               {% set min_viable_mtu = mtu_list | max %}
+
               network_config:
               - type: ovs_bridge
                 name: {{ neutron_physical_bridge_name }}
                 mtu: {{ min_viable_mtu }}
                 use_dhcp: false
-                dns_servers: {{ ctlplane_dns_nameservers }}
+                dns_servers: {{ os_net_config_dns | default(ctlplane_dns_nameservers, true) }}
                 domain: {{ dns_search_domains }}
                 addresses:
                 - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
-                routes: {{ ctlplane_host_routes }}
+                routes: {{ ctlplane_host_routes if os_net_config_set_route else '[]' }}
                 members:
                 - type: interface
-                  name: nic1
+                  name: {{ os_net_config_iface }}
                   mtu: {{ min_viable_mtu }}
                   # force the MAC address of the bridge to this interface
                   primary: true
@@ -252,7 +256,8 @@
             # These vars are for the network config templates themselves and are
             # considered EDPM network defaults.
             neutron_physical_bridge_name: br-ctlplane
-            neutron_public_interface_name: eth0
+            neutron_public_interface_name: {{ dataplane_public_iface | default('eth0') }}
+
             role_networks:
             - InternalApi
             - Storage
@@ -280,7 +285,7 @@
             enable_debug: false
             # edpm firewall, change the allowed CIDR if needed
             edpm_sshd_configure_firewall: true
-            edpm_sshd_allowed_ranges: ['192.168.122.0/24']
+            edpm_sshd_allowed_ranges: {{ ['192.168.122.0/24'] if dataplane_os_net_config_set_route|default(true)|bool else ['0.0.0.0/0'] }}
             # SELinux module
             edpm_selinux_mode: enforcing
             plan: overcloud
