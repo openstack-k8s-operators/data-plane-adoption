@@ -308,3 +308,7 @@
     oc wait --for condition=Ready osdpns/openstack --timeout=40m
   # TODO: work on network configuration for making possible to run this task on other IP ranges
   when: "edpm_node_ip.startswith('192.168.122')"
+
+- name: Complete Nova services Wallaby->Antelope FFU
+  ansible.builtin.include_tasks:
+    file: nova_ffu.yaml
