@@ -89,75 +89,51 @@
         ssh-privatekey: "{{ edpm_encoded_privatekey|default(edpm_privatekey.content) }}"
     EOF
 
-- name: "[hack] create nova-metadata-neutron-config-secret.yaml"
+- name: generate an ssh key-pair nova-migration-ssh-key secret
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    cd "$(mktemp -d)"
+    ssh-keygen -f ./id -t ed25519 -N ''
+    oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
+    -n openstack \
+    --from-file=ssh-privatekey=id \
+    --from-file=ssh-publickey=id.pub \
+    --type kubernetes.io/ssh-auth
+    rm -f id*
+    cd -
+
+- name: create a Nova Compute Extra Config service
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     oc apply -f - <<EOF
     apiVersion: v1
-    kind: Secret
+    kind: ConfigMap
     metadata:
-        name: nova-metadata-neutron-config
+      name: nova-compute-extraconfig
+      namespace: openstack
     data:
-        05-nova-metadata.conf: |
-    $(echo "[DEFAULT]\nnova_metadata_host = 1.2.3.4\nnova_metadata_port = 8775\nnova_metadata_protocol = http\nmetadata_proxy_shared_secret = 1234567842\n" | base64 | sed 's/^/        /')
+      19-nova-compute-cell1-workarounds.conf: |
+        [workarounds]
+        disable_compute_service_check_for_ffu=true
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: nova-compute-extraconfig
+      namespace: openstack
+    spec:
+      label: nova.compute.extraconfig
+      configMaps:
+        - nova-compute-extraconfig
+      secrets:
+        - nova-cell1-compute-config
+        - nova-migration-ssh-key
+      playbook: osp.edpm.nova
     EOF
-
-- name: set Nova copy shell vars
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.set_fact:
-    nova_shell_vars: |
-      CONTROLLER1_SSH="{{ controller1_ssh }}"
-      CONTROLLER2_SSH="{{ controller2_ssh }}"
-      CONTROLLER3_SSH="{{ controller3_ssh }}"
-      COMPUTE_SSH="{{ compute_ssh }}"
-
-- name: stop nova services on controllers
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    {{ nova_shell_vars }}
-
-    ServicesToStop=("tripleo_nova_api_cron.service"
-                    "tripleo_nova_api.service"
-                    "tripleo_nova_conductor.service"
-                    "tripleo_nova_metadata.service"
-                    "tripleo_nova_vnc_proxy.service")
-
-    echo "Stopping nova services"
-
-    for service in ${ServicesToStop[*]}; do
-        echo "Stopping the service: $service in each controller node"
-        $CONTROLLER1_SSH sudo systemctl stop $service
-        $CONTROLLER2_SSH sudo systemctl stop $service
-        $CONTROLLER3_SSH sudo systemctl stop $service
-    done
-
-- name: stop nova services on compute
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    {{ nova_shell_vars }}
-
-    ServicesToStop=("tripleo_nova_compute.service"
-                    "tripleo_nova_libvirt.target"
-                    "tripleo_nova_migration_target.service"
-                    "tripleo_nova_virtlogd_wrapper.service"
-                    "tripleo_nova_virtnodedevd.service"
-                    "tripleo_nova_virtproxyd.service"
-                    "tripleo_nova_virtqemud.service"
-                    "tripleo_nova_virtsecretd.service"
-                    "tripleo_nova_virtstoraged.service")
-
-    echo "Stopping nova services"
-
-    for service in ${ServicesToStop[*]}; do
-        echo "Stopping the service: $service in each controller node"
-        $COMPUTE_SSH sudo systemctl stop $service
-    done
 
 - name: deploy dataplane
   ansible.builtin.shell: |
@@ -179,13 +155,13 @@
         - install-os
         - configure-os
         - run-os
+        - libvirt
+        - nova-compute-extraconfig
         - ovn
       env:
         - name: ANSIBLE_CALLBACKS_ENABLED
           value: "profile_tasks"
         - name: ANSIBLE_FORCE_COLOR
-          value: "True"
-        - name: ANSIBLE_ENABLE_TASK_DEBUGGER
           value: "True"
       nodes:
         compute-0.redhat.local:
