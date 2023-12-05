@@ -4,6 +4,11 @@ This document describes how to move the databases from the original
 OpenStack deployment to the MariaDB instances in the OpenShift
 cluster.
 
+> **NOTE** This example scenario describes a simple single-cell setup. Real
+> multi-stack topology recommended for production use results in different
+> cells DBs layout, and should be using different naming schemes (not covered
+> here this time).
+
 ## Prerequisites
 
 * Make sure the previous Adoption steps have been performed successfully.
@@ -13,7 +18,7 @@ cluster.
   * Podified MariaDB and RabbitMQ are running. No other podified
     control plane services are running.
 
-  * OpenStack services have been stopped
+  * OpenStack services have been [stopped](stop_openstack_services.md)
 
   * There must be network routability between:
 
@@ -34,7 +39,7 @@ cluster.
 Define the shell variables used in the steps below. The values are
 just illustrative, use values that are correct for your environment:
 
-```
+```bash
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 
 PODIFIED_MARIADB_IP=$(oc get svc --selector "cr=mariadb-openstack" -ojsonpath='{.items[0].spec.clusterIP}')
@@ -57,21 +62,21 @@ COLLATION=utf8_general_ci
 
 * Test connection to the original DB (show databases):
 
-  ```
+  ```bash
   podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
       mysql -h "$SOURCE_MARIADB_IP" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" -e 'SHOW databases;'
   ```
 
 * Run mysqlcheck on the original DB to look for things that are not OK:
 
-  ```
+  ```bash
   podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
       mysqlcheck --all-databases -h $SOURCE_MARIADB_IP -u root "-p$SOURCE_DB_ROOT_PASSWORD" | grep -v OK
   ```
 
 * Test connection to podified DBs (show databases):
 
-  ```
+  ```bash
   oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
       mysql -h "$PODIFIED_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
   oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
@@ -80,17 +85,25 @@ COLLATION=utf8_general_ci
 
 ## Procedure - data copy
 
+> **NOTE**: We'll need to transition Nova services imported later on into a
+> superconductor architecture. For that, delete the old service records in
+> cells DBs, starting from the cell1. New records will be registered with
+> different hostnames provided by the Nova service operator. All Nova
+> services, except the compute agent, have no internal state, and its service
+> records can be safely deleted. Also we need to rename the former `default` cell
+> as `cell1`.
+
 * Create a temporary folder to store DB dumps and make sure it's the
   working directory for the following steps:
 
-  ```
+  ```bash
   mkdir ~/adoption-db
   cd ~/adoption-db
   ```
 
 * Create a dump of the original databases:
 
-  ```
+  ```bash
   podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE bash <<EOF
 
   # Note we do not want to dump the information and performance schema tables so we filter them
@@ -106,7 +119,7 @@ COLLATION=utf8_general_ci
 
 * Restore the databases from .sql files into the podified MariaDB:
 
-  ```
+  ```bash
   # db schemas to rename on import
   declare -A db_name_map
   db_name_map["nova"]="nova_cell1"
@@ -148,13 +161,17 @@ COLLATION=utf8_general_ci
       oc run ${container_name} --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
           mysql -h "${db_server}" -uroot "-p${db_password}" "${db_name}" < "${db_file}"
   done
+  oc exec -it mariadb-openstack -- mysql --user=root --password=${db_server_password_map["default"]} -e \
+      "update nova_api.cell_mappings set name='cell1' where name='default';"
+  oc exec -it mariadb-openstack-cell1 -- mysql --user=root --password=${db_server_password_map["default"]} -e \
+      "delete from nova_cell1.services where host not like '%nova-cell1-%' and services.binary != 'nova-compute';"
   ```
 
 ## Post-checks
 
 * Check that the databases were imported correctly:
 
-  ```
+  ```bash
   oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
   mysql -h "${PODIFIED_MARIADB_IP}" -uroot "-p${PODIFIED_DB_ROOT_PASSWORD}" -e 'SHOW databases;' \
       | grep keystone

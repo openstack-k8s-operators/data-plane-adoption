@@ -1,0 +1,51 @@
+- name: Patch osp-secret for HeatAuthEncryptionKey
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch secret osp-secret --type='json' -p='[{"op" : "replace" ,"path" : "/data/HeatAuthEncryptionKey" ,"value" : "UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzIK"}]'
+
+- name: deploy podified heat
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      heat:
+        enabled: true
+        apiOverride:
+          route: {}
+        template:
+          databaseInstance: openstack
+          databaseUser: heat
+          rabbitMqClusterName: rabbitmq
+          serviceUser: heat
+          secret: osp-secret
+          memcachedInstance: memcached
+          passwordSelectors:
+            authEncryptionKey: HeatAuthEncryptionKey
+            database: HeatDatabasePassword
+            service: HeatPassword
+    '
+
+- name: wait for Heat to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod -l service=heat -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: heat_running_result
+  until: heat_running_result is success
+  retries: 60
+  delay: 2
+
+- name: check that heat is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    ${BASH_ALIASES[openstack]} endpoint list -c "Service Name" -f yaml | grep heat
+    ${BASH_ALIASES[openstack]} stack list
+  register: heat_responding_result
+  until: heat_responding_result is success
+  retries: 15
+  delay: 2

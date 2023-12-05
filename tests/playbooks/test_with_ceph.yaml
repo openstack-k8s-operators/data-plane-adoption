@@ -21,6 +21,7 @@
   gather_facts: false
   vars:
     glance_backend: ceph
+    manila_backend: cephfs
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash
@@ -34,6 +35,9 @@
     - ceph_backend_configuration
     - glance_adoption
     - placement_adoption
+    - nova_adoption
     - cinder_adoption
     - horizon_adoption
+    - heat_adoption
+    - manila_adoption
     - dataplane_adoption

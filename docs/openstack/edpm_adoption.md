@@ -6,7 +6,12 @@
 
 ## Variables
 
-(There are no shell variables necessary currently.)
+Define the shell variables used in the Fast-forward upgrade steps below.
+The values are just illustrative, use values that are correct for your environment:
+
+```bash
+PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+```
 
 ## Pre-checks
 
@@ -95,55 +100,57 @@ EOF
   $(cat ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa | base64 | sed 's/^/        /')
   EOF
   ```
-* Create the Nova Metadata secret (Workaround while nova isn't adopted yet):
+
+* Generate an ssh key-pair `nova-migration-ssh-key` secret
 
   ```bash
-  oc apply -f - <<EOF
-  apiVersion: v1
-  kind: Secret
-  metadata:
-      name: nova-metadata-neutron-config
-  data:
-      05-nova-metadata.conf: |
-  $(echo "[DEFAULT]\nnova_metadata_host = 1.2.3.4\nnova_metadata_port = 8775\nnova_metadata_protocol = http\nmetadata_proxy_shared_secret = 1234567842\n" | base64 | sed 's/^/        /')
-  EOF
+  cd "$(mktemp -d)"
+  ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
+  oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
+    -n openstack \
+    --from-file=ssh-privatekey=id \
+    --from-file=ssh-publickey=id.pub \
+    --type kubernetes.io/ssh-auth
+  rm -f id*
+  cd -
   ```
 
-* Stop the nova services.
+* Create a Nova Compute Extra Config service
+    ```yaml
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nova-compute-extraconfig
+      namespace: openstack
+    data:
+      19-nova-compute-cell1-workarounds.conf: |
+        [workarounds]
+        disable_compute_service_check_for_ffu=true
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: nova-compute-extraconfig
+      namespace: openstack
+    spec:
+      label: nova.compute.extraconfig
+      configMaps:
+        - nova-compute-extraconfig
+      secrets:
+        - nova-cell1-compute-config
+        - nova-migration-ssh-key
+      playbook: osp.edpm.nova
+    EOF
+    ```
 
-```bash
-
-# Update the services list to be stopped
-
-ServicesToStop=("tripleo_nova_api_cron.service"
-                "tripleo_nova_api.service"
-                "tripleo_nova_compute.service"
-                "tripleo_nova_conductor.service"
-                "tripleo_nova_libvirt.target"
-                "tripleo_nova_metadata.service"
-                "tripleo_nova_migration_target.service"
-                "tripleo_nova_scheduler.service"
-                "tripleo_nova_virtlogd_wrapper.service"
-                "tripleo_nova_virtnodedevd.service"
-                "tripleo_nova_virtproxyd.service"
-                "tripleo_nova_virtqemud.service"
-                "tripleo_nova_virtsecretd.service"
-                "tripleo_nova_virtstoraged.service"
-                "tripleo_nova_vnc_proxy.service")
-
-echo "Stopping nova services"
-
-for service in ${ServicesToStop[*]}; do
-    echo "Stopping the $service in each controller node"
-    $CONTROLLER1_SSH sudo systemctl stop $service
-    $CONTROLLER2_SSH sudo systemctl stop $service
-    $CONTROLLER3_SSH sudo systemctl stop $service
-done
-```
+  The secret ``nova-cell<X>-compute-config`` is auto-generated for each
+  ``cell<X>``. That secret, alongside ``nova-migration-ssh-key``, should
+  always be specified for each custom `OpenStackDataPlaneService` related to Nova.
 
 * Deploy OpenStackDataPlaneNodeSet:
 
-  ```
+  ```yaml
   oc apply -f - <<EOF
   apiVersion: dataplane.openstack.org/v1beta1
   kind: OpenStackDataPlaneNodeSet
@@ -160,13 +167,13 @@ done
       - install-os
       - configure-os
       - run-os
+      - libvirt
+      - nova-compute-extraconfig
       - ovn
     env:
       - name: ANSIBLE_CALLBACKS_ENABLED
         value: "profile_tasks"
       - name: ANSIBLE_FORCE_COLOR
-        value: "True"
-      - name: ANSIBLE_ENABLE_TASK_DEBUGGER
         value: "True"
     nodes:
       standalone:
@@ -252,9 +259,9 @@ done
           edpm_nodes_validation_validate_controllers_icmp: false
           edpm_nodes_validation_validate_gateway_icmp: false
 
-          edpm_chrony_ntp_servers:
-          - clock.redhat.com
-          - clock2.redhat.com
+          timesync_ntp_servers:
+          - hostname: clock.redhat.com
+          - hostname: clock2.redhat.com
 
           edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
           edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
@@ -276,7 +283,7 @@ done
 
 * Deploy OpenStackDataPlaneDeployment:
 
-  ```
+  ```yaml
   oc apply -f - <<EOF
   apiVersion: dataplane.openstack.org/v1beta1
   kind: OpenStackDataPlaneDeployment
@@ -302,6 +309,128 @@ done
     ```
 
 * Wait for the dataplane node set to reach the Ready status:
+
     ```
     oc wait --for condition=Ready osdpns/openstack --timeout=30m
     ```
+
+## Nova compute services fast-forward upgrade from Wallaby to Antelope
+
+Nova services rolling upgrade cannot be done during adoption,
+there is in a lock-step with Nova control plane services, because those
+are managed independently by EDPM ansible, and Kubernetes operators.
+Nova service operator and OpenStack Dataplane operator ensure upgrading
+is done independently of each other, by configuring
+`[upgrade_levels]compute=auto` for Nova services. Nova control plane
+services apply the change right after CR is patched. Nova compute EDPM
+services will catch up the same config change with ansible deployment
+later on.
+
+> **NOTE**: Additional orchestration happening around the FFU workarounds
+> configuration for Nova compute EDPM service is a subject of future changes.
+
+* Wait for cell1 Nova compute EDPM services version updated (it may take some time):
+
+    ```bash
+    oc exec -it mariadb-openstack-cell1 -- mysql --user=root --password=${PODIFIED_DB_ROOT_PASSWORD} \
+      -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
+    ```
+  The above query should return an empty result as a completion criterion.
+
+* Remove pre-FFU workarounds for Nova control plane services:
+
+    ```yaml
+    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+    spec:
+      nova:
+        template:
+          cellTemplates:
+            cell0:
+              conductorServiceTemplate:
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=false
+            cell1:
+              metadataServiceTemplate:
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=false
+              conductorServiceTemplate:
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=false
+          apiServiceTemplate:
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=false
+          metadataServiceTemplate:
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=false
+          schedulerServiceTemplate:
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=false
+    '
+    ```
+
+* Wait for Nova control plane services' CRs to become ready:
+
+    ```bash
+    oc wait --for condition=Ready --timeout=300s Nova/nova
+    ```
+
+* Remove pre-FFU workarounds for Nova compute EDPM services:
+
+    ```yaml
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nova-compute-ffu
+      namespace: openstack
+    data:
+      20-nova-compute-cell1-ffu-cleanup.conf: |
+        [workarounds]
+        disable_compute_service_check_for_ffu=false
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: nova-compute-ffu
+      namespace: openstack
+    spec:
+      label: nova.compute.ffu
+      configMaps:
+        - nova-compute-ffu
+      secrets:
+        - nova-cell1-compute-config
+        - nova-migration-ssh-key
+      playbook: osp.edpm.nova
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneDeployment
+    metadata:
+      name: openstack-nova-compute-ffu
+      namespace: openstack
+    spec:
+      nodeSets:
+        - openstack
+      servicesOverride:
+        - nova-compute-ffu
+    EOF
+    ```
+
+* Wait for Nova compute EDPM service to become ready:
+
+    ```bash
+    oc wait --for condition=Ready osdpd/openstack-nova-compute-ffu --timeout=5m
+    ```
+
+* Run Nova DB online migrations to complete FFU:
+
+    ```bash
+    oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
+    oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
+    ```
+

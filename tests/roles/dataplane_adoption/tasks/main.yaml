@@ -105,63 +105,54 @@
     metadata:
         name: dataplane-adoption-secret
     data:
-        ssh-privatekey: "{{ edpm_encoded_privatekey|default(edpm_privatekey.content) }}"
+        ssh-privatekey: "{{ edpm_encoded_privatekey | default(edpm_privatekey.content) }}"
     EOF
 
-- name: "[hack] create nova-metadata-neutron-config-secret.yaml"
+- name: generate an ssh key-pair nova-migration-ssh-key secret
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    cd "$(mktemp -d)"
+    ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
+    oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
+    -n openstack \
+    --from-file=ssh-privatekey=id \
+    --from-file=ssh-publickey=id.pub \
+    --type kubernetes.io/ssh-auth
+    rm -f id*
+    cd -
+
+- name: create a Nova Compute Extra Config service
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     oc apply -f - <<EOF
     apiVersion: v1
-    kind: Secret
+    kind: ConfigMap
     metadata:
-        name: nova-metadata-neutron-config
+      name: nova-compute-extraconfig
+      namespace: openstack
     data:
-        05-nova-metadata.conf: |
-    $(echo "[DEFAULT]\nnova_metadata_host = 1.2.3.4\nnova_metadata_port = 8775\nnova_metadata_protocol = http\nmetadata_proxy_shared_secret = 1234567842\n" | base64 | sed 's/^/        /')
+      19-nova-compute-cell1-workarounds.conf: |
+        [workarounds]
+        disable_compute_service_check_for_ffu=true
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: nova-compute-extraconfig
+      namespace: openstack
+    spec:
+      label: nova.compute.extraconfig
+      configMaps:
+        - nova-compute-extraconfig
+      secrets:
+        - nova-cell1-compute-config
+        - nova-migration-ssh-key
+      playbook: osp.edpm.nova
     EOF
-
-- name: set Nova copy shell vars
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.set_fact:
-    nova_shell_vars: |
-      CONTROLLER1_SSH="{{ controller1_ssh }}"
-      CONTROLLER2_SSH="{{ controller2_ssh }}"
-      CONTROLLER3_SSH="{{ controller3_ssh }}"
-
-- name: stop nova services
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    {{ nova_shell_vars }}
-
-    ServicesToStop=("tripleo_nova_api_cron.service"
-                    "tripleo_nova_api.service"
-                    "tripleo_nova_compute.service"
-                    "tripleo_nova_conductor.service"
-                    "tripleo_nova_libvirt.target"
-                    "tripleo_nova_metadata.service"
-                    "tripleo_nova_migration_target.service"
-                    "tripleo_nova_scheduler.service"
-                    "tripleo_nova_virtlogd_wrapper.service"
-                    "tripleo_nova_virtnodedevd.service"
-                    "tripleo_nova_virtproxyd.service"
-                    "tripleo_nova_virtqemud.service"
-                    "tripleo_nova_virtsecretd.service"
-                    "tripleo_nova_virtstoraged.service"
-                    "tripleo_nova_vnc_proxy.service")
-
-    echo "Stopping nova services"
-
-    for service in ${ServicesToStop[*]}; do
-        echo "Stopping the service: $service in each controller node"
-        $CONTROLLER1_SSH sudo systemctl stop $service
-        $CONTROLLER2_SSH sudo systemctl stop $service
-        $CONTROLLER3_SSH sudo systemctl stop $service
-    done
 
 - name: deploy dataplane
   ansible.builtin.shell: |
@@ -183,13 +174,13 @@
         - install-os
         - configure-os
         - run-os
+        - libvirt
+        - nova-compute-extraconfig
         - ovn
       env:
         - name: ANSIBLE_CALLBACKS_ENABLED
           value: "profile_tasks"
         - name: ANSIBLE_FORCE_COLOR
-          value: "True"
-        - name: ANSIBLE_ENABLE_TASK_DEBUGGER
           value: "True"
       nodes:
         standalone:
@@ -214,6 +205,9 @@
           ansiblePort: 22
           ansibleUser: root
           ansibleVars:
+            os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
+            os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
+            os_net_config_dns: {{ dataplane_os_net_config_dns | default("") }}
             service_net_map:
               nova_api_network: internal_api
               nova_libvirt_network: internal_api
@@ -222,27 +216,27 @@
             # Default nic config template for a EDPM compute node
             # These vars are edpm_network_config role vars
             edpm_network_config_override: ""
-            edpm_network_config_template: |
-              {%- raw %}
+            edpm_network_config_template: |{%- raw %}
               ---
               {% set mtu_list = [ctlplane_mtu] %}
               {% for network in role_networks %}
               {{ mtu_list.append(lookup('vars', networks_lower[network] ~ '_mtu')) }}
               {%- endfor %}
               {% set min_viable_mtu = mtu_list | max %}
+
               network_config:
               - type: ovs_bridge
                 name: {{ neutron_physical_bridge_name }}
                 mtu: {{ min_viable_mtu }}
                 use_dhcp: false
-                dns_servers: {{ ctlplane_dns_nameservers }}
+                dns_servers: {{ os_net_config_dns | default(ctlplane_dns_nameservers, true) }}
                 domain: {{ dns_search_domains }}
                 addresses:
                 - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
-                routes: {{ ctlplane_host_routes }}
+                routes: {{ ctlplane_host_routes if os_net_config_set_route else '[]' }}
                 members:
                 - type: interface
-                  name: nic1
+                  name: {{ os_net_config_iface }}
                   mtu: {{ min_viable_mtu }}
                   # force the MAC address of the bridge to this interface
                   primary: true
@@ -262,7 +256,8 @@
             # These vars are for the network config templates themselves and are
             # considered EDPM network defaults.
             neutron_physical_bridge_name: br-ctlplane
-            neutron_public_interface_name: eth0
+            neutron_public_interface_name: {{ dataplane_public_iface | default('eth0') }}
+
             role_networks:
             - InternalApi
             - Storage
@@ -277,7 +272,7 @@
             edpm_nodes_validation_validate_controllers_icmp: false
             edpm_nodes_validation_validate_gateway_icmp: false
 
-            edpm_chrony_ntp_servers: {{ edpm_chrony_ntp_servers|default(default_edpm_chrony_ntp_servers) }}
+            timesync_ntp_servers: {{ timesync_ntp_servers | default(default_timesync_ntp_servers) }}
 
             edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
             edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"
@@ -290,7 +285,7 @@
             enable_debug: false
             # edpm firewall, change the allowed CIDR if needed
             edpm_sshd_configure_firewall: true
-            edpm_sshd_allowed_ranges: ['192.168.122.0/24']
+            edpm_sshd_allowed_ranges: {{ ['192.168.122.0/24'] if dataplane_os_net_config_set_route|default(true)|bool else ['0.0.0.0/0'] }}
             # SELinux module
             edpm_selinux_mode: enforcing
             plan: overcloud
@@ -318,3 +313,7 @@
     oc wait --for condition=Ready osdpns/openstack --timeout=40m
   # TODO: work on network configuration for making possible to run this task on other IP ranges
   when: "edpm_node_ip.startswith('192.168.122')"
+
+- name: Complete Nova services Wallaby->Antelope FFU
+  ansible.builtin.include_tasks:
+    file: nova_ffu.yaml

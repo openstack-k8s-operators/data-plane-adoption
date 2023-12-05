@@ -46,7 +46,7 @@
 
     ${BASH_ALIASES[openstack]} endpoint list | grep placement | grep public
     PLACEMENT_PUBLIC_URL=$(${BASH_ALIASES[openstack]} endpoint list -c 'Service Name' -c 'Service Type' -c URL | grep placement | grep public | awk '{ print $6; }')
-    curl "$PLACEMENT_PUBLIC_URL" | grep '"versions"'
+    oc exec -t openstackclient -- curl "$PLACEMENT_PUBLIC_URL" | grep '"versions"'
   register: placement_responding_result
   until: placement_responding_result is success
   retries: 15

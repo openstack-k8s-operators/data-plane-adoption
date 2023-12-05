@@ -37,6 +37,10 @@ are in the right host, for example to stop a service:
 . stackrc ansible -i $(which tripleo-ansible-inventory) Controller -m shell -a "sudo systemctl stop tripleo_horizon.service" -b
 ```
 
+> **NOTE** Nova computpe services in this guide are running on the same controller hosts.
+> Adjust ``CONTROLLER${i}_SSH`` commands and ``ServicesToStop`` given below to your
+> source environment specific topology.
+
 ## Pre-checks
 
 We can stop OpenStack services at any moment, but we may leave things in an
@@ -51,6 +55,7 @@ etc.
 openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
 openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
 openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \|' | grep -vi error
+openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
 openstack image list -c ID -c Status |grep -E '\| .+ing \|'
 ```
 
@@ -64,6 +69,7 @@ there are no ongoing  operations.
 1- Connect to all the controller nodes.
 2- Stop the services.
 3- Make sure all the services are stopped.
+4- Repeat steps 1-3 for compute hosts (workloads running on dataplane will not be affected)
 
 The cinder-backup service on OSP 17.1 could be running as Active-Passive under
 pacemaker or as Active-Active, so we'll have to check how it's running and
@@ -82,12 +88,32 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_cinder_scheduler.service"
                 "tripleo_cinder_backup.service"
                 "tripleo_glance_api.service"
+                "tripleo_manila_api.service"
+                "tripleo_manila_api_cron.service"
+                "tripleo_manila_scheduler.service"
                 "tripleo_neutron_api.service"
                 "tripleo_nova_api.service"
-                "tripleo_placement_api.service")
+                "tripleo_placement_api.service"
+                "tripleo_nova_api_cron.service"
+                "tripleo_nova_api.service"
+                "tripleo_nova_conductor.service"
+                "tripleo_nova_metadata.service"
+                "tripleo_nova_scheduler.service"
+                "tripleo_nova_vnc_proxy.service"
+                # Compute services on dataplane
+                "tripleo_nova_compute.service"
+                "tripleo_nova_libvirt.target"
+                "tripleo_nova_migration_target.service"
+                "tripleo_nova_virtlogd_wrapper.service"
+                "tripleo_nova_virtnodedevd.service"
+                "tripleo_nova_virtproxyd.service"
+                "tripleo_nova_virtqemud.service"
+                "tripleo_nova_virtsecretd.service"
+                "tripleo_nova_virtstoraged.service")
 
 PacemakerResourcesToStop=("openstack-cinder-volume"
-                          "openstack-cinder-backup")
+                          "openstack-cinder-backup"
+                          "openstack-manila-share")
 
 echo "Stopping systemd OpenStack services"
 for service in ${ServicesToStop[*]}; do

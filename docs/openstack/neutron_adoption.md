@@ -16,7 +16,7 @@ This guide also assumes that:
 
 ## Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB and Keystone
+* Previous Adoption steps completed. Notably, MariaDB and Keystone and [OVN DBs](ovn_adoption.md)
   should be already adopted.
 
 ## Procedure - Neutron adoption

@@ -31,6 +31,8 @@
     - neutron_adoption
     - glance_adoption
     - placement_adoption
+    - nova_adoption
     - cinder_adoption
     - horizon_adoption
     - dataplane_adoption
+    - heat_adoption

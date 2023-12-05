@@ -6,6 +6,16 @@
       CEPH_KEY=$($CEPH_SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0")
       CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
 
+- name: update the openstack keyring caps for Manila
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    CEPH_SSH="{{ controller1_ssh }}"
+    CEPH_CAPS="mgr 'allow *' mon 'allow r, profile rbd' osd 'profile rbd pool=vms, profile rbd pool=volumes, profile rbd pool=images, allow rw pool manila_data'"
+    OSP_KEYRING="client.openstack"
+    CEPH_ADM=$($CEPH_SSH "cephadm shell -- ceph auth caps $OSP_KEYRING $CEPH_CAPS")
+
 - name: create ceph-conf-files secret
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -40,6 +50,7 @@
               - CinderVolume
               - CinderBackup
               - GlanceAPI
+              - ManilaShare
               extraVolType: Ceph
               volumes:
               - name: ceph

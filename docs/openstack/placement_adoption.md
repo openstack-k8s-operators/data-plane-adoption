@@ -2,8 +2,12 @@
 
 ## Prerequisites
 
-* Previous Adoption steps completed. Notably, the service databases
-  must already be imported into the podified MariaDB.
+* Previous Adoption steps completed. Notably,
+  * the [service databases](mariadb_copy.md)
+    must already be imported into the podified MariaDB.
+  * the [Keystone service](keystone_adoption.md) needs to be imported.
+  * the Memcached operator needs to be deployed (nothing to import for it from
+    the source environment).
 
 ## Variables
 
@@ -49,7 +53,7 @@
 
   # Without OpenStack CLI placement plugin installed:
   PLACEMENT_PUBLIC_URL=$(openstack endpoint list -c 'Service Name' -c 'Service Type' -c URL | grep placement | grep public | awk '{ print $6; }')
-  curl "$PLACEMENT_PUBLIC_URL"
+  oc exec -t openstackclient -- curl "$PLACEMENT_PUBLIC_URL"
 
   # With OpenStack CLI placement plugin installed:
   openstack resource class list
