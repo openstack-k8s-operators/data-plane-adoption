@@ -24,12 +24,12 @@
 #       sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com ' export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient bash; . /etc/bashrc;cd ~;ssh controller-1.ctlplane'
 
 #TODO can be run with :
-"sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com ' export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest;
-oc exec -it -n openstack openstackclient bash;
-. /etc/bashrc;
-git download adoption-repo;pushd data-plane.. ;
-ansible -i /ctlplane-ansible-inventory test_minimal_ospdo.yaml.yaml
-"
+# "sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com ' export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest;
+# oc exec -it -n openstack openstackclient bash;
+# . /etc/bashrc;
+# git download adoption-repo;pushd data-plane.. ;
+# ansible -i /ctlplane-ansible-inventory test_minimal_ospdo.yaml.yaml
+# "
 
 
 - name: Adoption
@@ -40,14 +40,14 @@ ansible -i /ctlplane-ansible-inventory test_minimal_ospdo.yaml.yaml
       executable: /bin/bash
   roles:
     # - backend_services
-    - stop_openstack_services
+    # - stop_openstack_services
     - mariadb_copy
-    - ovn_adoption
-    - keystone_adoption
-    - neutron_adoption
-    - glance_adoption
-    - placement_adoption
-    - cinder_adoption
-    - horizon_adoption
-    - dataplane_adoption
-    - heat_adoption
+    # - ovn_adoption
+    # - keystone_adoption
+    # - neutron_adoption
+    # - glance_adoption
+    # - placement_adoption
+    # - cinder_adoption
+    # - horizon_adoption
+    # - dataplane_adoption
+    # - heat_adoption
