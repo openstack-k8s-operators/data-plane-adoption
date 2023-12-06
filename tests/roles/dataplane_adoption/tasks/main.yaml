@@ -209,7 +209,20 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait --for condition=Ready osdpns/openstack --timeout=40m
+    NODESET_NAME=openstack
+    DEPLOYMENT_NAME=openstack
+    echo "========= AEE Pods ========="
+    oc get pod -l osdpd=${DEPLOYMENT_NAME}
+    LAST_SERVICE_NAME=$(oc get osdpns ${NODESET_NAME} -o jsonpath='{.spec.services}' | jq -r last)
+    echo "========= Last service name: ${LAST_SERVICE_NAME} ========="
+    LAST_SERVICE_POD=$(oc get pod -l job-name=${LAST_SERVICE_NAME}-${DEPLOYMENT_NAME} -o name)
+    echo "========= Last service POD name: ${LAST_SERVICE_POD} ========="
+    oc get ${LAST_SERVICE_POD} -o jsonpath='{.status.phase}{"\n"}' | grep Succeeded
+    oc get osdpd openstack -o jsonpath='{.status.deployed}{"\n"}' | grep true
+  register: osdpd_running_result
+  until: osdpd_running_result is success
+  retries: 25
+  delay: 60
 
 - name: Complete Nova services Wallaby->Antelope FFU
   ansible.builtin.include_tasks:
