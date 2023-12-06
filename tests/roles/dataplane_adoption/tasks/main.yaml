@@ -10,12 +10,17 @@
       "op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0",
       "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest"}}]'
 
-- name: ensure oc login
+- name: ensure namespace
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     oc project openstack
+
+- name: Include RHEV vars
+  ansible.builtin.include_vars:
+    file: rhev.yaml
+  when: platform_rhev|default(false)
 
 - name: ensure IPAM is configured
   no_log: "{{ use_no_log }}"
@@ -28,63 +33,7 @@
     metadata:
       name: netconfig
     spec:
-      networks:
-      - name: CtlPlane
-        dnsDomain: ctlplane.example.com
-        subnets:
-        - name: subnet1
-          allocationRanges:
-          - end: 192.168.122.120
-            start: 192.168.122.100
-          - end: 192.168.122.200
-            start: 192.168.122.150
-          cidr: 192.168.122.0/24
-          gateway: 192.168.122.1
-      - name: InternalApi
-        dnsDomain: internalapi.example.com
-        subnets:
-        - name: subnet1
-          allocationRanges:
-          - end: 172.17.0.250
-            start: 172.17.0.100
-          cidr: 172.17.0.0/24
-          vlan: 20
-      - name: External
-        dnsDomain: external.example.com
-        subnets:
-        - name: subnet1
-          allocationRanges:
-          - end: 10.0.0.250
-            start: 10.0.0.100
-          cidr: 10.0.0.0/24
-          gateway: 10.0.0.1
-      - name: Storage
-        dnsDomain: storage.example.com
-        subnets:
-        - name: subnet1
-          allocationRanges:
-          - end: 172.18.0.250
-            start: 172.18.0.100
-          cidr: 172.18.0.0/24
-          vlan: 21
-      - name: StorageMgmt
-        dnsDomain: storagemgmt.example.com
-        subnets:
-        - name: subnet1
-          allocationRanges:
-          - end: 172.20.0.250
-            start: 172.20.0.100
-          cidr: 172.20.0.0/24
-          vlan: 23
-      - name: Tenant
-        dnsDomain: tenant.example.com
-        subnets:
-        - name: subnet1
-          allocationRanges:
-          - end: 172.19.0.250
-            start: 172.19.0.100
-          cidr: 172.19.0.0/24
-          vlan: 22
+      networks: {{ netconfig_networks }}
     EOF
 
 - name: Slurp the private key
@@ -183,27 +132,17 @@
         - name: ANSIBLE_FORCE_COLOR
           value: "True"
       nodes:
-        standalone:
-          hostName: standalone
+        {{ edpm_node_hostname }}:
+          hostName: {{ edpm_node_hostname }}
           ansible:
             ansibleHost: {{ edpm_node_ip }}
-          networks:
-          - defaultRoute: true
-            fixedIP: {{ edpm_node_ip }}
-            name: CtlPlane
-            subnetName: subnet1
-          - name: InternalApi
-            subnetName: subnet1
-          - name: Storage
-            subnetName: subnet1
-          - name: Tenant
-            subnetName: subnet1
+          networks: {{ edpm_node_networks }}
       nodeTemplate:
         ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
         managementNetwork: ctlplane
         ansible:
           ansiblePort: 22
-          ansibleUser: root
+          ansibleUser: {{ edpm_user }}
           ansibleVars:
             os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
             os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
@@ -216,57 +155,17 @@
             # Default nic config template for a EDPM compute node
             # These vars are edpm_network_config role vars
             edpm_network_config_override: ""
-            edpm_network_config_template: |{%- raw %}
-              ---
-              {% set mtu_list = [ctlplane_mtu] %}
-              {% for network in role_networks %}
-              {{ mtu_list.append(lookup('vars', networks_lower[network] ~ '_mtu')) }}
-              {%- endfor %}
-              {% set min_viable_mtu = mtu_list | max %}
-
-              network_config:
-              - type: ovs_bridge
-                name: {{ neutron_physical_bridge_name }}
-                mtu: {{ min_viable_mtu }}
-                use_dhcp: false
-                dns_servers: {{ os_net_config_dns | default(ctlplane_dns_nameservers, true) }}
-                domain: {{ dns_search_domains }}
-                addresses:
-                - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
-                routes: {{ ctlplane_host_routes if os_net_config_set_route else '[]' }}
-                members:
-                - type: interface
-                  name: {{ os_net_config_iface }}
-                  mtu: {{ min_viable_mtu }}
-                  # force the MAC address of the bridge to this interface
-                  primary: true
-              {% for network in role_networks %}
-                - type: vlan
-                  mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
-                  vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
-                  addresses:
-                  - ip_netmask:
-                      {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
-                  routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
-              {% endfor %}
-              {% endraw %}
+            edpm_network_config_template: |
+              {{ edpm_network_config_template| indent(10) }}
 
             edpm_network_config_hide_sensitive_logs: false
             #
             # These vars are for the network config templates themselves and are
             # considered EDPM network defaults.
-            neutron_physical_bridge_name: br-ctlplane
-            neutron_public_interface_name: {{ dataplane_public_iface | default('eth0') }}
-
-            role_networks:
-            - InternalApi
-            - Storage
-            - Tenant
-            networks_lower:
-              External: external
-              InternalApi: internal_api
-              Storage: storage
-              Tenant: tenant
+            neutron_physical_bridge_name: {{ neutron_physical_bridge_name }}
+            neutron_public_interface_name: {{ neutron_public_interface_name }}
+            role_networks: {{ role_networks }}
+            networks_lower: {{ networks_lower }}
 
             # edpm_nodes_validation
             edpm_nodes_validation_validate_controllers_icmp: false
@@ -285,7 +184,7 @@
             enable_debug: false
             # edpm firewall, change the allowed CIDR if needed
             edpm_sshd_configure_firewall: true
-            edpm_sshd_allowed_ranges: {{ ['192.168.122.0/24'] if dataplane_os_net_config_set_route|default(true)|bool else ['0.0.0.0/0'] }}
+            edpm_sshd_allowed_ranges: {{ edpm_sshd_allowed_ranges }}
             # SELinux module
             edpm_selinux_mode: enforcing
             plan: overcloud
@@ -311,8 +210,6 @@
     {{ shell_header }}
     {{ oc_header }}
     oc wait --for condition=Ready osdpns/openstack --timeout=40m
-  # TODO: work on network configuration for making possible to run this task on other IP ranges
-  when: "edpm_node_ip.startswith('192.168.122')"
 
 - name: Complete Nova services Wallaby->Antelope FFU
   ansible.builtin.include_tasks:
