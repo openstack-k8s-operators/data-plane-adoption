@@ -1,7 +1,7 @@
 #!/bin/bash
 {{ shell_header }}
 {{ oc_header }}
-{{ mariadb_copy_shell_vars }}
+{{ mariadb_copy_shell_vars_src }}
 
 mkdir -p {{ mariadb_copy_tmp_dir }}
 cd {{ mariadb_copy_tmp_dir }}

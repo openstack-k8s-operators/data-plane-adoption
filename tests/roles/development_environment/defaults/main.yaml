@@ -1,0 +1,2 @@
+prelaunch_test_instance: true
+edpm_privatekey_path: ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa

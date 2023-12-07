@@ -15,12 +15,16 @@ ____
 == Variables
 
 Define the shell variables used in the Fast-forward upgrade steps below.
+Set `FIP` to the floating IP address of the `test` VM pre-created earlier on the source cloud.
 Define the map of compute node name, IP pairs.
 The values are just illustrative, use values that are correct for your environment:
 
 [,bash]
 ----
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+
+alias openstack="oc exec -t openstackclient -- openstack"
+FIP=192.168.122.20
 declare -A computes
 export computes=(
   ["standalone.localdomain"]="192.168.122.100"
@@ -428,7 +432,7 @@ ____
 +
 [,bash]
 ----
-  oc exec -it openstack-cell1-galera-0 -- mysql --user=root --password=${PODIFIED_DB_ROOT_PASSWORD} \
+  oc exec -it openstack-galera-0 -c galera -- mysql --user=root --password=${PODIFIED_DB_ROOT_PASSWORD} \
     -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
 ----
 +
@@ -534,4 +538,22 @@ The above query should return an empty result as a completion criterion.
 ----
   oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
   oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
+----
+
+* Verify if Nova services con stop the existing test VM instance:
++
+[,bash]
+----
+${BASH_ALIASES[openstack]} server list | grep -qF '| test | ACTIVE |' && openstack server stop test
+${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |'
+${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test | grep "it is in power state shutdown" || echo PASS
+----
+
+* Verify if Nova services can start the existing test VM instance:
++
+[,bash]
+----
+${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' && openstack server start test
+${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |'
+${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test --fit-width -f json | jq -r '.state' | grep running
 ----

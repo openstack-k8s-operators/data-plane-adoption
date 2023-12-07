@@ -1,0 +1,30 @@
+- name: set Nova services shell vars
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.set_fact:
+    nova_header: |
+      alias openstack="oc exec -t openstackclient -- openstack"
+      FIP={{ lookup('env', 'FIP') | default('192.168.122.20', True) }}
+
+- name: verify if Nova services can stop the existing test VM instance
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ nova_header }}
+    ${BASH_ALIASES[openstack]} server list | grep -qF '| test | ACTIVE |' && ${BASH_ALIASES[openstack]} server stop test
+    ${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |'
+    ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test | grep "it is in power state shutdown" || echo PASS
+  register: nova_verify_stop_result
+  until: nova_verify_stop_result is success
+  retries: 10
+  delay: 6
+
+- name: verify if Nova services can start the existing test VM instance
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ nova_header }}
+    ${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' && ${BASH_ALIASES[openstack]} server start test
+    ${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |'
+    ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test --fit-width -f json | jq -r '.state' | grep running
+  register: nova_verify_start_result
+  until: nova_verify_start_result is success
+  retries: 60
+  delay: 6

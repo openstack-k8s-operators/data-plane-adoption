@@ -9,8 +9,12 @@ podified OpenStack control plane services.
 
 == Prerequisites
 
-* The cloud which we want to adopt is up and running. It's on
+* The source cloud which we want to adopt is up and running. It's on
 OpenStack Wallaby release.
+* A VM instance named `test` is running on the source cloud and its
+floating IP is set into `FIP` env var. You can use a
+xref:../docs_dev/assemblies/development_environment.adoc#virtual-machine-steps[helper script]
+to create that test VM.
 * The `openstack-operator` is deployed, but `OpenStackControlPlane` is
 *not* deployed.
 +

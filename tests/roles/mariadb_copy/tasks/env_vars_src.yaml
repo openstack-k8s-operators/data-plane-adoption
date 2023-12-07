@@ -1,0 +1,8 @@
+- name: set src MariaDB copy shell vars
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.set_fact:
+    mariadb_copy_shell_vars_src: |
+      MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
+      # TODO: remove the default(external_...) when CI is transitioned to use 'source_...'
+      SOURCE_MARIADB_IP={{ source_mariadb_ip|default(external_mariadb_ip) }}
+      SOURCE_DB_ROOT_PASSWORD="{{ source_db_root_password|default(external_db_root_password) }}"

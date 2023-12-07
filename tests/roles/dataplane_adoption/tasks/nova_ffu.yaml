@@ -1,15 +1,14 @@
-- name: set podified MariaDB copy shell vars
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.set_fact:
-    mariadb_copy_shell_vars: |
-      PODIFIED_DB_ROOT_PASSWORD="{{ podified_db_root_password }}"
+- name: get dst database service environment variables
+  ansible.builtin.include_role:
+    name: mariadb_copy
+    tasks_from: env_vars_dst.yaml
 
 - name: wait for cell1 Nova compute EDPM services version updated
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    {{ mariadb_copy_shell_vars }}
-    oc rsh openstack-cell1-galera-0 mysql --user=root --password=${PODIFIED_DB_ROOT_PASSWORD} \
+    {{ mariadb_copy_shell_vars_dst }}
+    oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
       -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
   register: records_check_results
   until: records_check_results.rc == 0 and records_check_results.stdout_lines | length == 0

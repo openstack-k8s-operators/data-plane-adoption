@@ -17,8 +17,8 @@ must already be imported into the podified MariaDB;
  ** the xref:glance_adoption.adoc[Glance service] needs to be imported;
  ** the xref:ovn_adoption.adoc[OVN DB services] need to be imported;
  ** the xref:neutron_adoption.adoc[Neutron service] needs to be imported;
- ** Required services specific topology link:pull_openstack_configuration.md#get-services-topology-specific-configuration[configuration collected];
- ** OpenStack services have been xref:stop_openstack_services.adoc[stopped]
+ ** Required services specific topology xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[configuration collected];
+ ** OpenStack services have been xref:openstack-stop_openstack_services.adoc[stopped]
 
 == Variables
 
@@ -132,3 +132,26 @@ podified FQDNs and that Nova API responds.
 openstack endpoint list | grep nova
 openstack server list
 ----
+
+Compare the following outputs with the topology specific configuration
+xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[collected earlier]:
+
+* Query the superconductor for cell1 existance and compare it to pre-adoption values:
++
+[,bash]
+----
+echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS
+oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 |'
+----
++
+The expected changes to happen:
+
+ ** cell1's `nova` DB and user name become `nova_cell1`.
+ ** Default cell is renamed to `cell1` (in a multi-cell setup, it should become indexed as the last cell instead).
+ ** RabbitMQ transport URL no longer uses `guest`.
+
+____
+*NOTE* At this point, Nova control plane services have yet taken control over
+existing Nova compute workloads. That would become possible to verify only after
+xref:./edpm_adoption.adoc[EDPM adoption] completed.
+____

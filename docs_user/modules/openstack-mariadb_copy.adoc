@@ -17,6 +17,7 @@ ____
  ** The OpenStackControlPlane resource must be already created at this point.
  ** Podified MariaDB and RabbitMQ are running. No other podified
 control plane services are running.
+ ** Required services specific topology xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[configuration collected]
  ** OpenStack services have been xref:stop_openstack_services.adoc[stopped]
  ** There must be network routability between:
   *** The adoption host and the original MariaDB.
@@ -34,39 +35,29 @@ just illustrative, use values that are correct for your environment:
 
 [,bash]
 ----
-MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
-
 PODIFIED_MARIADB_IP=$(oc get svc --selector "mariadb/name=openstack" -ojsonpath='{.items[0].spec.clusterIP}')
 PODIFIED_CELL1_MARIADB_IP=$(oc get svc --selector "mariadb/name=openstack-cell1" -ojsonpath='{.items[0].spec.clusterIP}')
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
-
-# Replace with your environment's MariaDB IP:
-SOURCE_MARIADB_IP=192.168.122.100
-SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 
 # The CHARACTER_SET and collation should match the source DB
 # if the do not then it will break foreign key relationships
 # for any tables that are created in the future as part of db sync
 CHARACTER_SET=utf8
 COLLATION=utf8_general_ci
+
+MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
+# Replace with your environment's MariaDB IP:
+SOURCE_MARIADB_IP=192.168.122.100
+SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
 == Pre-checks
 
-* Test connection to the original DB (show databases):
+* Get the count of not-OK source databases:
 +
 [,bash]
 ----
-podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
-    mysql -h "$SOURCE_MARIADB_IP" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" -e 'SHOW databases;'
-----
-
-* Run mysqlcheck on the original DB to look for things that are not OK:
-+
-[,bash]
-----
-podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
-    mysqlcheck --all-databases -h $SOURCE_MARIADB_IP -u root "-p$SOURCE_DB_ROOT_PASSWORD" | grep -v OK
+test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ]
 ----
 
 * Test connection to podified DBs (show databases):
@@ -74,9 +65,9 @@ podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
 [,bash]
 ----
 oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
-    mysql -h "$PODIFIED_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
+    mysql -rsh "$PODIFIED_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
 oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
-    mysql -h "$PODIFIED_CELL1_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
+    mysql -rsh "$PODIFIED_CELL1_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
 ----
 
 == Procedure - data copy
@@ -163,29 +154,52 @@ EOF
     oc run ${container_name} --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
         mysql -h "${db_server}" -uroot "-p${db_password}" "${db_name}" < "${db_file}"
 done
-oc exec -it openstack-galera-0 -- mysql --user=root --password=${db_server_password_map["default"]} -e \
+oc exec -it openstack-galera-0 -c galera -- mysql --user=root --password=${db_server_password_map["default"]} -e \
     "update nova_api.cell_mappings set name='cell1' where name='default';"
-oc exec -it openstack-cell1-galera-0 -- mysql --user=root --password=${db_server_password_map["default"]} -e \
+oc exec -it openstack-cell1-galera-0 -c galera -- mysql --user=root --password=${db_server_password_map["default"]} -e \
     "delete from nova_cell1.services where host not like '%nova-cell1-%' and services.binary != 'nova-compute';"
 ----
 
 == Post-checks
 
+Compare the following outputs with the topology specific configuration
+xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[collected earlier]:
+
 * Check that the databases were imported correctly:
 +
 [,bash]
 ----
-oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
-mysql -h "${PODIFIED_MARIADB_IP}" -uroot "-p${PODIFIED_DB_ROOT_PASSWORD}" -e 'SHOW databases;' \
-    | grep keystone
+# use 'oc exec' and 'mysql -rs' to maintain formatting
+dbs=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;')
+echo $dbs | grep -Eq '\bkeystone\b'
+
 # ensure neutron db is renamed from ovs_neutron
-oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
-mysql -h "${PODIFIED_MARIADB_IP}" -uroot "-p${PODIFIED_DB_ROOT_PASSWORD}" -e 'SHOW databases;' \
-    | grep neutron
+echo $dbs | grep -Eq '\bneutron\b'
+echo $PULL_OPENSTACK_CONFIGURATION_DATABASES | grep -Eq '\bovs_neutron\b'
+
 # ensure nova cell1 db is extracted to a separate db server and renamed from nova to nova_cell1
-oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
-mysql -h "${PODIFIED_CELL1_MARIADB_IP}" -uroot "-p${PODIFIED_DB_ROOT_PASSWORD}" -e 'SHOW databases;' \
-    | grep nova_cell1
+c1dbs=$(oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;')
+echo $c1dbs | grep -Eq '\bnova_cell1\b'
+
+# ensure default cell renamed to cell1, and the cell UUIDs retained intact
+novadb_mapped_cells=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" \
+  nova_api -e 'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')
+uuidf='\S{8,}-\S{4,}-\S{4,}-\S{4,}-\S{12,}'
+left_behind=$(comm -23 \
+  <(echo $PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS | grep -oE " $uuidf \S+") \
+  <(echo $novadb_mapped_cells | tr -s "| " " " | grep -oE " $uuidf \S+"))
+changed=$(comm -13 \
+  <(echo $PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS | grep -oE " $uuidf \S+") \
+  <(echo $novadb_mapped_cells | tr -s "| " " " | grep -oE " $uuidf \S+"))
+test $(grep -Ec ' \S+$' <<<$left_behind) -eq 1
+default=$(grep -E ' default$' <<<$left_behind)
+test $(grep -Ec ' \S+$' <<<$changed) -eq 1
+grep -qE " $(awk '{print $1}' <<<$default) cell1$" <<<$changed
+
+# ensure the registered Nova compute service name has not changed
+novadb_svc_records=$(oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" \
+  nova_cell1 -e "select host from services where services.binary='nova-compute' order by host asc;")
+diff -Z <(echo $novadb_svc_records) <(echo $PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES)
 ----
 
 * During the pre/post checks the pod `mariadb-client` might have returned a pod security warning

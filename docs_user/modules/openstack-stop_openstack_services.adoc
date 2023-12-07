@@ -62,6 +62,10 @@ openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep
 openstack image list -c ID -c Status |grep -E '\| .+ing \|'
 ----
 
+Also collect the xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[topology configuration],
+before stopping services required to gather it live. You will need it to compare it
+with the post-adoption values later on.
+
 == Stopping control plane services
 
 We can stop OpenStack services at any moment, but we may leave things in an
