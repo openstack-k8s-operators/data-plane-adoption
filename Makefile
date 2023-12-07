@@ -12,3 +12,8 @@ test-with-ceph: TEST_OUTFILE := tests/logs/test_with_ceph_out_$(shell date +%FT%
 test-with-ceph:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) tests/playbooks/test_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
+
+test-minimal-rhev: TEST_OUTFILE := tests/logs/test_minimal_rhev_out_$(shell date +%FT%T%Z).log
+test-minimal-rhev:
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) tests/playbooks/test_minimal_rhev.yaml 2>&1 | tee $(TEST_OUTFILE)
