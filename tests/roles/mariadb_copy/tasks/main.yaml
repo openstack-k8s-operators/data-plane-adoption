@@ -15,13 +15,13 @@
 - name: get ospdo MariaDB service cluster IP
   ansible.builtin.shell: |
     {{ shell_header }}
-    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d | grep MysqlRootPassword'|sed 's/.*: //g'
+    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-1.ctlplane sudo cat /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg "'| grep -A1 'listen mysql'|tail -n 1|sed 's/.*bind //g' |sed 's/:3306.*//g'
   register: source_mariadb_ip
 
-- name: get ospco MariaDB pass
+- name: get ospdo MariaDB pass
   ansible.builtin.shell: |
     {{ shell_header }}
-    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-1.ctlplane sudo cat /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg "'| grep -A1 'listen mysql'|tail -n 1|sed 's/.*bind //g' |sed 's/:3306.*//g'
+    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d | grep MysqlRootPassword'|sed 's/.*: //g'
   register: source_db_root_password
 
 - name: set MariaDB copy shell vars
