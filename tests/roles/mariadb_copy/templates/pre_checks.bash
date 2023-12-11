@@ -2,7 +2,6 @@
 {{ shell_header }}
 {{ oc_header }}
 {{ mariadb_copy_shell_vars }}
-# TODO:
 {{ ssh_to_ospdo_openstackclient }}
 {{ ssh_to_ospdo_osp_controller }}
 # Test connection to the original DB (show databases)

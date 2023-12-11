@@ -6,10 +6,10 @@ reset_crc_storage: true
 # Snippet to get the desired 'oc' command onto $PATH.
 oc_header: |
   eval $(crc oc-env)
-
+  result=$(oc login -u kubeadmin -p 12345678 https://api.crc.testing:6443)||echo $result
 # Source MariaDB IP for DB exports.
 # ospdo ip:
-source_mariadb_ip: "{{ lookup('ansible.builtin.env', 'SOURCE_MARIADB_IP') }}" #CUSTOMIZE_THIS
+# source_mariadb_ip: "{{ lookup('ansible.builtin.env', 'SOURCE_MARIADB_IP') }}" #CUSTOMIZE_THIS
 
 # Source OVN DB IP for DB exports.
 source_ovndb_ip: 192.168.122.100 #CUSTOMIZE_THIS
