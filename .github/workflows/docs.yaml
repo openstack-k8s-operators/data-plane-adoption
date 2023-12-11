@@ -15,10 +15,52 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.9'
+      - uses: ruby/setup-ruby@v1.160.0
+        with:
+          ruby-version: '3.2'
+
       - name: Install MkDocs
         run: pip install -r docs/doc_requirements.txt
-      - name: Publish docs
+      - name: Build legacy mkdocs documentation
+        run: make mkdocs
+
+      - name: Install Asciidoc
+        run: make docs-dependencies
+      - name: Build user docs
+        run: make docs-user
+      - name: Build dev docs
+        run: make docs-dev
+
+      - name: Prepare gh-pages branch
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          mkdocs gh-deploy --force --clean --verbose
+
+          git branch -D gh-pages &>/dev/null || true
+          git checkout -b gh-pages aabb4803f89a3b006094d8ae7a933650f644d036
+
+      - name: Commit asciidoc docs
+        run: |
+          mv -T docs_build/adoption-user user
+          mv -T docs_build/adoption-dev dev
+
+          mv user/index-upstream.html user/index.html
+          mv dev/index-upstream.html dev/index.html
+
+          git add user
+          git add dev
+          git commit -m "Rendered docs"
+
+      - name: Commit legacy docs
+        run: |
+          git clean -fxd -e site
+
+          mv site/* ./
+          rmdir site
+
+          git add .
+          git commit -m "Rendered legacy docs"
+
+      - name: Push rendered docs to gh-pages
+        run: |
+          git push --force origin gh-pages
