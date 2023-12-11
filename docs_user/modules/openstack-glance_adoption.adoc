@@ -24,7 +24,7 @@ This guide also assumes that:
 
 == Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB and Keystone
+* Previous Adoption steps completed. Notably, MariaDB, Keystone and Barbican
 should be already adopted.
 
 == Procedure - Glance adoption

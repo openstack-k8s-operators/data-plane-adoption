@@ -36,6 +36,7 @@
     - mariadb_copy
     - ovn_adoption
     - keystone_adoption
+    - barbican_adoption
     - neutron_adoption
     - glance_adoption
     - placement_adoption
