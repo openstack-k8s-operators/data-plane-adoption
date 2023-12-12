@@ -42,18 +42,19 @@ spec:
       databaseInstance: openstack
       storageClass: "local-storage"
       storageRequest: 10G
-      glanceAPI:
-        override:
-          service:
-            metadata:
-              annotations:
-                metallb.universe.tf/address-pool: internalapi
-                metallb.universe.tf/allow-shared-ip: internalapi
-                metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-            spec:
-              type: LoadBalancer
-        networkAttachments:
-        - storage
+      glanceAPIs:
+        default:
+          override:
+            service:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+          networkAttachments:
+          - storage
 '
 ```
 
@@ -87,18 +88,19 @@ spec:
         store_description=Ceph glance store backend.
       storageClass: "local-storage"
       storageRequest: 10G
-      glanceAPI:
-        override:
-          service:
-            metadata:
-              annotations:
-                metallb.universe.tf/address-pool: internalapi
-                metallb.universe.tf/allow-shared-ip: internalapi
-                metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-            spec:
-              type: LoadBalancer
-        networkAttachments:
-        - storage
+      glanceAPIs:
+        default:
+          override:
+            service:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+          networkAttachments:
+          - storage
 EOF
 ```
 
@@ -134,7 +136,7 @@ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_patch.
 Inspect the resulting glance pods:
 
 ```bash
-GLANCE_POD=`oc get pod |grep glance-external-api | cut -f 1 -d' '`
+GLANCE_POD=`oc get pod |grep glance-default-external-0 | cut -f 1 -d' '`
 oc exec -t $GLANCE_POD -c glance-api -- cat /etc/glance/glance.conf.d/02-config.conf
 
 [DEFAULT]
