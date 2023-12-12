@@ -173,10 +173,19 @@ podified OpenStack control plane services.
         manilaShares: {}
 
     mariadb:
+      enabled: false
+      templates: {}
+
+    galera:
+      enabled: true
       templates:
         openstack:
+          secret: osp-secret
+          replicas: 1
           storageRequest: 500M
         openstack-cell1:
+          secret: osp-secret
+          replicas: 1
           storageRequest: 500M
 
     memcached:
@@ -247,5 +256,6 @@ podified OpenStack control plane services.
 * Check that MariaDB is running.
 
   ```
-  oc get pod mariadb-openstack -o jsonpath='{.status.phase}{"\n"}'
+  oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}'
+  oc get pod openstack-cell1-galera-0 -o jsonpath='{.status.phase}{"\n"}'
   ```

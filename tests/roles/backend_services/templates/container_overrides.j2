@@ -42,7 +42,7 @@ spec:
         volume1:
           containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-manila-share:{{ container_tag }}
 
-  mariadb:
+  galera:
     templates:
       openstack:
         containerImage: {{ container_registry }}/{{ container_namespace }}/openstack-mariadb:{{ container_tag }}

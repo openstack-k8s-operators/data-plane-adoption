@@ -42,8 +42,8 @@ just illustrative, use values that are correct for your environment:
 ```bash
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 
-PODIFIED_MARIADB_IP=$(oc get svc --selector "cr=mariadb-openstack" -ojsonpath='{.items[0].spec.clusterIP}')
-PODIFIED_CELL1_MARIADB_IP=$(oc get svc --selector "cr=mariadb-openstack-cell1" -ojsonpath='{.items[0].spec.clusterIP}')
+PODIFIED_MARIADB_IP=$(oc get svc --selector "mariadb/name=openstack" -ojsonpath='{.items[0].spec.clusterIP}')
+PODIFIED_CELL1_MARIADB_IP=$(oc get svc --selector "mariadb/name=openstack-cell1" -ojsonpath='{.items[0].spec.clusterIP}')
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
 
 # Replace with your environment's MariaDB IP:
@@ -161,9 +161,9 @@ COLLATION=utf8_general_ci
       oc run ${container_name} --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
           mysql -h "${db_server}" -uroot "-p${db_password}" "${db_name}" < "${db_file}"
   done
-  oc exec -it mariadb-openstack -- mysql --user=root --password=${db_server_password_map["default"]} -e \
+  oc exec -it openstack-galera-0 -- mysql --user=root --password=${db_server_password_map["default"]} -e \
       "update nova_api.cell_mappings set name='cell1' where name='default';"
-  oc exec -it mariadb-openstack-cell1 -- mysql --user=root --password=${db_server_password_map["default"]} -e \
+  oc exec -it openstack-cell1-galera-0 -- mysql --user=root --password=${db_server_password_map["default"]} -e \
       "delete from nova_cell1.services where host not like '%nova-cell1-%' and services.binary != 'nova-compute';"
   ```
 

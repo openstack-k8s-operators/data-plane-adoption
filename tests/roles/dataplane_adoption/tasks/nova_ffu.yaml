@@ -9,7 +9,7 @@
     {{ shell_header }}
     {{ oc_header }}
     {{ mariadb_copy_shell_vars }}
-    oc rsh mariadb-openstack-cell1 mysql --user=root --password=${PODIFIED_DB_ROOT_PASSWORD} \
+    oc rsh openstack-cell1-galera-0 mysql --user=root --password=${PODIFIED_DB_ROOT_PASSWORD} \
       -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
   register: records_check_results
   until: records_check_results.rc == 0 and records_check_results.stdout_lines | length == 0
