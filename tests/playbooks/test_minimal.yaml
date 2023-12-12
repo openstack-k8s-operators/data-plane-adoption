@@ -19,6 +19,7 @@
 - name: Adoption
   hosts: local
   gather_facts: false
+  force_handlers: true
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash

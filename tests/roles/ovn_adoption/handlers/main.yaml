@@ -1,0 +1,6 @@
+- name: delete adoption helper pod and pvc
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc delete pod ovn-copy-data
+    {% if storage_reclaim_policy.lower() == "delete" %}oc delete pvc ovn-data{% endif %}
