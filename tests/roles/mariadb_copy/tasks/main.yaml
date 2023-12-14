@@ -26,8 +26,8 @@
 
 - name: get ospdo galera container name
   ansible.builtin.shell: |
-    {{ shell_header }}
-    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo podman ps -f name=galera --format="{{.Names}}""'
+      {{ shell_header }}
+        sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo podman ps -f name=galera --format="{{'{{'}}.Names{{'}}'}}""'
   register: galera_con_name
 
 - name: check galera container exec
@@ -61,10 +61,23 @@
   ansible.builtin.shell:
     cmd: "{{ lookup('ansible.builtin.template', 'pre_checks.bash') }}"
 
-- name: dump galera DB
+- name: get mysql client on osp controller-0
   ansible.builtin.shell: |
-    {{ shell_header }}
-    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo podman exec -t {{ galera_con_name.stdout }} ps -ef "'
+   {{ shell_header }}
+   sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane "git clone https://gitlab.cee.redhat.com/pkomarov/CI.git ;cd CI ;sudo ./subscription.sh;sudo dnf install -y mysql"
+    "'
+
+
+- name: dump databases
+  ansible.builtin.shell: |
+   {{ shell_header }}
+   sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo podman exec -t {{ galera_con_name.stdout }} sudo podman exec -t {{ galera_con_name.stdout }} -c "  mysql -h {{ source_mariadb_ip.stdout }} -u root "-p{{ source_db_root_password.stdout }}" -N -e 'show databases' | grep -E -v 'schema|mysql' | while read dbname; do echo "Dumping \${dbname}"
+    mysqldump -h {{ source_mariadb_ip.stdout }} -uroot "-p{{ source_db_root_password.stdout }}" \
+        --single-transaction --complete-insert --skip-lock-tables --lock-tables=0 \
+        "\${dbname}" > "/var/log/mariadb/\${dbname}".sql
+  done
+  " # podman exec
+  '" # ssh_openstackclient & controller  '  "'
 
 - meta: end_play
 
