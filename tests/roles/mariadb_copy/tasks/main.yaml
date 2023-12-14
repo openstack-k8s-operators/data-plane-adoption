@@ -24,16 +24,6 @@
     sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d | grep MysqlRootPassword'|sed 's/.*: //g'
   register: source_db_root_password
 
-- name: get ospdo galera container name
-  ansible.builtin.shell: |
-      {{ shell_header }}
-        sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo podman ps -f name=galera --format="{{'{{'}}.Names{{'}}'}}""'
-  register: galera_con_name
-
-- name: check galera container exec
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo podman exec -t {{ galera_con_name.stdout }} ps -ef "'
 
   # The CHARACTER_SET and collation should match the source DB
   # if the do not then it will break foreign key relationships
@@ -51,8 +41,6 @@
       SOURCE_MARIADB_IP={{ source_mariadb_ip.stdout }}
       SOURCE_DB_ROOT_PASSWORD="{{ source_db_root_password.stdout }}"
 
-      GALERA_CON_NAME = {{ galera_con_name.stdout }}
-
       CHARACTER_SET=utf8
       COLLATION=utf8_general_ci
 
@@ -61,32 +49,31 @@
   ansible.builtin.shell:
     cmd: "{{ lookup('ansible.builtin.template', 'pre_checks.bash') }}"
 
-- name: get mysql client on osp controller-0
+#The following setup and execute the db extarction
+- name: get rhel repo script on ctrl0
   ansible.builtin.shell: |
-   {{ shell_header }}
-   sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane "git clone https://gitlab.cee.redhat.com/pkomarov/CI.git ;cd CI ;sudo ./subscription.sh;sudo dnf install -y mysql"
-    "'
+          sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'git clone https://gitlab.cee.redhat.com/pkomarov/CI.git' ''
+  ignore_errors: true
 
-
-- name: dump databases
+- name: register rhel repo on ctrl0
   ansible.builtin.shell: |
-   {{ shell_header }}
-   sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo podman exec -t {{ galera_con_name.stdout }} sudo podman exec -t {{ galera_con_name.stdout }} -c "  mysql -h {{ source_mariadb_ip.stdout }} -u root "-p{{ source_db_root_password.stdout }}" -N -e 'show databases' | grep -E -v 'schema|mysql' | while read dbname; do echo "Dumping \${dbname}"
-    mysqldump -h {{ source_mariadb_ip.stdout }} -uroot "-p{{ source_db_root_password.stdout }}" \
-        --single-transaction --complete-insert --skip-lock-tables --lock-tables=0 \
-        "\${dbname}" > "/var/log/mariadb/\${dbname}".sql
-  done
-  " # podman exec
-  '" # ssh_openstackclient & controller  '  "'
+          sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'sudo /home/cloud-admin/CI/subscription.sh' ''
 
-- meta: end_play
+- name: install mysql on ctrl0
+  ansible.builtin.shell: |
+          sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo dnf install mysql --assumeyes "'
 
-# Below is unutilized in ospdo as it breaks bash variables during remote ssh calls with no W/A.
+# # Below is unutilized in ospdo as it breaks bash variables during remote ssh calls with no W/A.
 # - name: dump databases
 #   no_log: "{{ use_no_log }}"
 #   ansible.builtin.shell:
 #     cmd: "{{ lookup('ansible.builtin.template', 'dump_dbs.bash') }}"
 
+- name: dump dbs
+  ansible.builtin.shell: |
+      sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo /home/cloud-admin/CI/adaption/mysql_db_dump.sh {{ source_mariadb_ip.stdout }} {{ source_db_root_password.stdout }} " ''
+
+# TODO check below
 - name: restore databases
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell:
