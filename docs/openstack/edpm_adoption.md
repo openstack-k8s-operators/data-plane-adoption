@@ -162,6 +162,7 @@ EOF
     preProvisioned: true
     services:
       - download-cache
+      - bootstrap
       - configure-network
       - validate-network
       - install-os
