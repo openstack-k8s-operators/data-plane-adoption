@@ -182,6 +182,24 @@
           - name: External
             fixedIP: 10.4.0.10
             subnetName: subnet1
+        compute-1.redhat.local:
+          hostName: compute-1.redhat.local
+          ansible:
+            ansibleHost: {{ edpm_node2_ip }}
+          networks:
+          - defaultRoute: true
+            fixedIP: {{ edpm_node2_ip }}
+            name: CtlPlane
+            subnetName: subnet1
+          - name: InternalApi
+            fixedIP: 172.15.2.11
+            subnetName: subnet1
+          - name: Tenant
+            fixedIP: 172.15.0.11
+            subnetName: subnet1
+          - name: External
+            fixedIP: 10.4.0.11
+            subnetName: subnet1
       nodeTemplate:
         ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
         managementNetwork: ctlplane
@@ -299,6 +317,17 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait --for condition=Ready osdpns/openstack --timeout=40m
-  # TODO: work on network configuration for making possible to run this task on other IP ranges
-  when: "edpm_node_ip.startswith('192.168.23')"
+    NODESET_NAME=openstack
+    DEPLOYMENT_NAME=openstack
+    echo "========= AEE Pods ========="
+    oc get pod -l osdpd=${DEPLOYMENT_NAME}
+    LAST_SERVICE_NAME=$(oc get osdpns ${NODESET_NAME} -o jsonpath='{.spec.services}' | jq -r last)
+    echo "========= Last service name: ${LAST_SERVICE_NAME} ========="
+    LAST_SERVICE_POD=$(oc get pod -l job-name=${LAST_SERVICE_NAME}-${DEPLOYMENT_NAME} -o name)
+    echo "========= Last service POD name: ${LAST_SERVICE_POD} ========="
+    oc get ${LAST_SERVICE_POD} -o jsonpath='{.status.phase}{"\n"}' | grep Succeeded
+    oc get osdpd openstack -o jsonpath='{.status.deployed}{"\n"}' | grep true
+  register: osdpd_running_result
+  until: osdpd_running_result is success
+  retries: 25
+  delay: 60
