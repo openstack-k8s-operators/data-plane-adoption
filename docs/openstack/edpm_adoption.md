@@ -86,6 +86,35 @@ EOF
 
 ## Procedure - EDPM adoption
 
+* *Temporary fix* until the OSP 17 [backport of the stable compute UUID feature
+](https://code.engineering.redhat.com/gerrit/q/topic:stable-compute-uuid)
+lands.
+
+  Define the map of compute node name, IP pairs:
+  ```bash
+  declare -A computes
+  computes=(
+    ["standalone.localdomain"]="192.168.122.100"
+    # ...
+  )
+  ```
+  For each compute node grab the UUID of the compute service and write it too
+  the stable `compute_id` file in `/var/lib/nova/` directory.
+  ```bash
+  for name in "${!computes[@]}";
+  do
+    uuid=$(\
+      openstack hypervisor show $name \
+      -f value -c 'id'\
+    )
+    echo "Writing $uuid to /var/lib/nova/compute_id on $name"
+    ssh \
+      -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+      root@"${computes[$name]}" \
+      "echo $uuid > /var/lib/nova/compute_id"
+  done
+  ```
+
 * Create a [ssh authentication secret](https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets) for the EDPM nodes:
 
   ```bash
