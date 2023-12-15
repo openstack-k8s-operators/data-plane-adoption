@@ -73,6 +73,23 @@
   ansible.builtin.shell: |
       sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo /home/cloud-admin/CI/adaption/mysql_db_dump.sh {{ source_mariadb_ip.stdout }} {{ source_db_root_password.stdout }} " ''
 
+# Copy DB dumps to local tmp
+- name: Copy DB dumps ctrl0 to openstackclient
+  ansible.builtin.shell: |
+      sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "rsync -avux controller-0.ctlplane:/tmp/mariadb /tmp"'
+
+- name: Copy DB dumps openstackclient to BM
+  ansible.builtin.shell: |
+      sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc cp openstack/openstackclient:/tmp/mariadb/ /tmp/mariadb'
+
+- name: Copy DB dumps BM to local
+  ansible.builtin.shell: |
+      sshpass -p12345678 scp -r root@titan132.lab.eng.tlv2.redhat.com:/tmp/mariadb /tmp
+
+- name: Check dumps BM on local
+  ansible.builtin.shell: |
+      ls /tmp/mariadb/
+
 # TODO check below
 - name: restore databases
   no_log: "{{ use_no_log }}"

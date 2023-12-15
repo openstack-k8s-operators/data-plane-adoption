@@ -1,4 +1,4 @@
-{{ shell_header }}
+ {{ shell_header }}
 {{ oc_header }}
 {{ mariadb_copy_shell_vars }}
 oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
