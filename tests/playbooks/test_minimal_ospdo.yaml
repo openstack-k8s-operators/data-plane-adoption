@@ -41,8 +41,8 @@
   roles:
     # - backend_services
     # - stop_openstack_services
-    - mariadb_copy
-    # - ovn_adoption
+    # - mariadb_copy
+    - ovn_adoption
     # - keystone_adoption
     # - neutron_adoption
     # - glance_adoption

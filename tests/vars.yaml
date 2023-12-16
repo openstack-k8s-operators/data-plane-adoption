@@ -12,7 +12,7 @@ oc_header: |
 # source_mariadb_ip: "{{ lookup('ansible.builtin.env', 'SOURCE_MARIADB_IP') }}" #CUSTOMIZE_THIS
 
 # Source OVN DB IP for DB exports.
-source_ovndb_ip: 192.168.122.100 #CUSTOMIZE_THIS
+# source_ovndb_ip: 192.168.122.100 #CUSTOMIZE_THIS
 
 # EDPM node IP
 edpm_node_ip: 192.168.122.100 #CUSTOMIZE_THIS
