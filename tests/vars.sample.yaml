@@ -13,8 +13,8 @@ storage_reclaim_policy: delete # or retain
 oc_header: |
   eval $(crc oc-env)
 
-# Source MariaDB IP for DB exports.
-source_mariadb_ip: 192.168.122.100 #CUSTOMIZE_THIS
+# Source MariaDB Galera cluster VIP for DB exports.
+source_mariadb_ip: 192.168.122.99 #CUSTOMIZE_THIS
 
 # Source OVN DB IP for DB exports.
 source_ovndb_ip: 192.168.122.100 #CUSTOMIZE_THIS
