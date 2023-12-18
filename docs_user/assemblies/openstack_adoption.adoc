@@ -23,6 +23,7 @@ include::../modules/openstack-ironic_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-heat_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-telemetry_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-autoscaling_adoption.adoc[leveloffset=+1]
+include::../modules/openstack-stop_remaining_services.[leveloffset=+1]
 include::../modules/openstack-edpm_adoption.adoc[leveloffset=+1]
 
 include::../modules/openstack-troubleshooting.adoc[leveloffset=+1]
