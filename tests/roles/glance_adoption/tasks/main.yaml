@@ -12,18 +12,19 @@
           databaseInstance: openstack
           storageClass: "local-storage"
           storageRequest: 10G
-          glanceAPI:
-            override:
-              service:
-                metadata:
-                  annotations:
-                    metallb.universe.tf/address-pool: internalapi
-                    metallb.universe.tf/allow-shared-ip: internalapi
-                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-                spec:
-                  type: LoadBalancer
-            networkAttachments:
-            - storage
+          glanceAPIs:
+            default:
+              override:
+                service:
+                  metadata:
+                    annotations:
+                      metallb.universe.tf/address-pool: internalapi
+                      metallb.universe.tf/allow-shared-ip: internalapi
+                      metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                  spec:
+                    type: LoadBalancer
+              networkAttachments:
+              - storage
     '
   when: glance_backend == 'local'
 
@@ -49,18 +50,19 @@
             store_description=Ceph glance store backend.
           storageClass: "local-storage"
           storageRequest: 10G
-          glanceAPI:
-            override:
-              service:
-                metadata:
-                  annotations:
-                    metallb.universe.tf/address-pool: internalapi
-                    metallb.universe.tf/allow-shared-ip: internalapi
-                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-                spec:
-                  type: LoadBalancer
-            networkAttachments:
-            - storage
+          glanceAPIs:
+            default:
+              override:
+                service:
+                  metadata:
+                    annotations:
+                      metallb.universe.tf/address-pool: internalapi
+                      metallb.universe.tf/allow-shared-ip: internalapi
+                      metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                  spec:
+                    type: LoadBalancer
+              networkAttachments:
+              - storage
     '
   when: glance_backend == 'ceph'
 
@@ -68,8 +70,19 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod --selector=service=glance-external -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
-    oc get pod --selector=service=glance-internal -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+
+    STATUS=$(oc get pod --selector=service=glance -o jsonpath='{.items[*].status.phase}{"\n"}');
+    code=1
+    IFS=" " read -r -a STATUS <<< "$STATUS"
+    for i in "${STATUS[@]}"; do
+        if echo "$i" | grep -v Running; then
+            # if at least one instance is not Running, return
+            exit $code
+        else
+            code=0
+        fi
+    done
+    exit $code
   register: glance_running_result
   until: glance_running_result is success
   retries: 60
