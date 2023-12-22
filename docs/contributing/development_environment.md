@@ -118,7 +118,6 @@ make standalone
 
 ```bash
 cd ..  # back to install_yamls
-make crc_storage
 make input
 make openstack
 ```
@@ -297,11 +296,13 @@ Revert the standalone vm to the snapshotted state
 cd ~/install_yamls/devsetup
 make standalone_revert
 ```
+
 Clean up and initialize the storage PVs in CRC vm
 ```
-cd ..
-make crc_storage_cleanup
-make crc_storage
+oc delete pvc ovn-data
+oc delete pvc ansible-ee-logs
+oc delete pvc mysql-db-openstack-galera-0
+oc delete pvc mysql-db-openstack-cell1-galera-0
 ```
 
 ## Experimenting with an additional compute node

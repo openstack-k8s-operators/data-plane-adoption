@@ -3,9 +3,9 @@ install_yamls_path: ~/install_yamls #CUSTOMIZE_THIS
 # Whether to remove all the persistent data (databases, dumbs, ansible logs) before the test
 reset_crc_storage: true
 
-# source SC for the local-storage SC to be created from it
-storage_class_name: crc-csi-hostpath-provisioner #CUSTOMIZE_THIS
-storage_reclaim_policy: Delete # or Retain
+# source SC for the local-storage SC
+storage_class_name: local-storage #CUSTOMIZE_THIS
+storage_reclaim_policy: delete # or retain
 
 # Snippet to get the desired 'oc' command onto $PATH.
 oc_header: |
