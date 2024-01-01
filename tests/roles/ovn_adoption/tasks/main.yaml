@@ -50,6 +50,13 @@
   retries: 10
   delay: 2
 
+- name: get podified OVN SB ovsdb-server IP
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    sshpass -p12345678 ssh root@titan29.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc get cm -o yaml'|grep ovn_dbs_node_ips|tr -d ' '|sed 's/.*ovn_dbs_node_ips:\\n-//g'|sed 's/\\n.*//g'
+  register: source_ovndb_ip
+
 - name: set OVN copy shell vars
   no_log: "{{ use_no_log }}"
   ansible.builtin.set_fact:
@@ -59,7 +66,7 @@
       PODIFIED_OVSDB_SB_IP={{ podified_ovn_sb_ip_result.stdout }}
       OVSDB_IMAGE={{ ovn_image }}
 
-      SOURCE_OVSDB_IP={{ source_ovndb_ip }}
+      SOURCE_OVSDB_IP={{ source_ovndb_ip.stdout }}
 
       CONTROLLER1_SSH="{{ controller1_ssh }}"
       CONTROLLER2_SSH="{{ controller2_ssh }}"
@@ -138,7 +145,6 @@
     sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo systemctl stop tripleo_ovn_cluster_northd "'
     sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-1.ctlplane sudo systemctl stop tripleo_ovn_cluster_northd "'
     sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-2.ctlplane sudo systemctl stop tripleo_ovn_cluster_northd "'
-
 
 - name: dump OVN databases
   no_log: "{{ use_no_log }}"
