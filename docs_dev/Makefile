@@ -36,6 +36,14 @@ prepare:
 clean:
 	@rm -rf "$(DEST_DIR)" "$(DEST_PDF)"
 
+watch-html:
+	@which inotifywait > /dev/null || ( echo "ERROR: inotifywait not found, install inotify-tools" && exit 1 )
+	while true; do \
+		inotifywait -r -e modify -e create -e delete .; \
+		sleep 0.5; \
+		$(MAKE) html; \
+	done
+
 open-html: html
 	${BROWSER_OPEN} "file://$(realpath $(ROOTDIR)/$(DEST_HTML))"
 
