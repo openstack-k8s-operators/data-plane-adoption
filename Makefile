@@ -55,8 +55,20 @@ docs: docs-user docs-dev
 docs-user:
 	cd docs_user; $(MAKE) html
 
+docs-user-open:
+	cd docs_user; $(MAKE) open-html
+
+docs-user-watch:
+	cd docs_user; $(MAKE) watch-html
+
 docs-dev:
 	cd docs_dev; $(MAKE) html
+
+docs-dev-open:
+	cd docs_dev; $(MAKE) open-html
+
+docs-dev-watch:
+	cd docs_dev; $(MAKE) watch-html
 
 docs-clean:
 	rm -r docs_build
