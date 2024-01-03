@@ -2,9 +2,9 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.set_fact:
     ceph_backend_configuration_shell_vars: |
-      CEPH_SSH="{{ controller1_ssh }}"
-      CEPH_KEY=$($CEPH_SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0")
-      CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
+      CEPH_KEY=$(sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0' '')
+
+      CEPH_CONF=$(sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'cat /etc/ceph/ceph.conf | base64 -w 0' '')
 
 - name: update the openstack keyring caps for Manila
   no_log: "{{ use_no_log }}"
