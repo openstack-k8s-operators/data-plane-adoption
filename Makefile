@@ -53,22 +53,10 @@ docs-dependencies: .bundle
 docs: docs-user docs-dev
 
 docs-user:
-	@if type asciidoctor &> /dev/null; then \
-		BUNDLE_EXEC=""; \
-	else \
-		BUNDLE_EXEC="bundle exec"; \
-	fi; \
-	echo "Running cd docs_user; $$BUNDLE_EXEC $(MAKE) html"; \
-	cd docs_user; $$BUNDLE_EXEC $(MAKE) html
+	cd docs_user; $(MAKE) html
 
 docs-dev:
-	if type asciidoctor &> /dev/null; then \
-		BUNDLE_EXEC=""; \
-	else \
-		BUNDLE_EXEC="bundle exec"; \
-	fi; \
-	echo "Running cd docs_dev; $$BUNDLE_EXEC $(MAKE) html"; \
-	cd docs_dev; $$BUNDLE_EXEC $(MAKE) html
+	cd docs_dev; $(MAKE) html
 
 docs-clean:
 	rm -r docs_build
