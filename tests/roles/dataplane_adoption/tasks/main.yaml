@@ -173,6 +173,7 @@
           hostName: {{ edpm_node_hostname }}
           ansible:
             ansibleHost: {{ edpm_node_ip }}
+            ansibleUser: {{ edpm_user }}
           networks: {{ edpm_node_networks }}
       nodeTemplate:
         ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
