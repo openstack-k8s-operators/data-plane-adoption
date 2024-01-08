@@ -10,6 +10,18 @@
       finalizers: []
     ' || true
 
+    oc delete --wait=false galera openstack || true
+    oc patch galera openstack --type=merge --patch '
+    metadata:
+      finalizers: []
+    ' || true
+
+    oc delete --wait=false keystoneapi keystone || true
+    oc patch keystoneapi keystone --type=merge --patch '
+    metadata:
+      finalizers: []
+    ' || true
+
     while oc get pod | grep rabbitmq-server-0; do
         sleep 2
     done
@@ -17,6 +29,7 @@
         sleep 2
     done
 
+    oc delete --wait=false pod ovn-copy-data || true
     oc delete secret osp-secret || true
   when: pcp_cleanup_enabled|bool
 
@@ -36,4 +49,6 @@
     oc delete --ignore-not-found=true pvc ansible-ee-logs
     oc delete --ignore-not-found=true pvc mysql-db-openstack-galera-0
     oc delete --ignore-not-found=true pvc mysql-db-openstack-cell1-galera-0
+    oc delete --ignore-not-found=true pvc glance-glance-default-external-0
+    oc delete --ignore-not-found=true pvc glance-glance-default-internal-0
   when: reset_crc_storage|bool

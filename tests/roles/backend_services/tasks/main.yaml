@@ -11,7 +11,7 @@
   changed_when: local_sc_result.rc != 0
 
 - name: create a local-storage SC from the given source SC
-  when: not local_sc_result.changed
+  when: not local_sc_result.changed # noqa: no-handler
   no_log: "{{ use_no_log }}"
   vars:
     _sc_params:
@@ -29,7 +29,7 @@
     echo -e '{{ local_sc_result.stdout | from_yaml | combine(_sc_params) | to_nice_yaml }}' | oc apply -f -
 
 - name: create a local-storage SC from crc-csi-hostpath-provisioner SC
-  when: local_sc_result.changed
+  when: local_sc_result.changed # noqa: no-handler
   no_log: "{{ use_no_log }}"
   environment:
     STORAGE_RECLAIM_POLICY: "{{ storage_reclaim_policy }}"

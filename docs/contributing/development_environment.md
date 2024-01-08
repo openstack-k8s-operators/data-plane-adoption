@@ -299,10 +299,12 @@ make standalone_revert
 
 Clean up and initialize the storage PVs in CRC vm
 ```
-oc delete pvc ovn-data
-oc delete pvc ansible-ee-logs
-oc delete pvc mysql-db-openstack-galera-0
-oc delete pvc mysql-db-openstack-cell1-galera-0
+oc delete --ignore-not-found=true pvc ovn-data
+oc delete --ignore-not-found=true pvc ansible-ee-logs
+oc delete --ignore-not-found=true pvc mysql-db-openstack-galera-0
+oc delete --ignore-not-found=true pvc mysql-db-openstack-cell1-galera-0
+oc delete --ignore-not-found=true pvc glance-glance-default-external-0
+oc delete --ignore-not-found=true pvc glance-glance-default-internal-0
 ```
 
 ## Experimenting with an additional compute node
