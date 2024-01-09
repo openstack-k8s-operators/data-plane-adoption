@@ -3,6 +3,10 @@
 Currently this is staticly set up for two BMs one with vv one with OSPdO
 
 ## Envs setup:
+see predocs/contributing/tests.md:
+make sure to have:
+ansible-galaxy collection install community.general
+
 
 CRC :
 
