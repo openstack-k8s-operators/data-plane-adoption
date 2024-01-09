@@ -45,6 +45,6 @@
     echo "Stopping pacemaker OpenStack services"
             for resource in ${PacemakerResourcesToStop[*]}; do
                 if sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo pcs resource config $resource" ''; then
-                shpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo pcs resource disable $resource" ''
+                sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo pcs resource disable $resource" ''
                 fi
             done
