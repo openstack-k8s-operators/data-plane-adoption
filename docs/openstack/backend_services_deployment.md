@@ -63,9 +63,37 @@ podified OpenStack control plane services.
   PLACEMENT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' PlacementPassword:' | awk -F ': ' '{ print $2; }')
   ```
 
+* Chose reclaim policy for persistent storage resources and claims issued for the `local-storage` SC:
+
+  ```
+  STORAGE_RECLAIM_POLICY=Retain
+  ```
+
 ## Pre-checks
 
 ## Procedure - backend services deployment
+
+* Create a storage class named `local-storage`. For real deployments, you may want to
+  create it from
+  [LVMS](https://docs.openshift.com/container-platform/4.14/storage/persistent_storage/persistent_storage_local/persistent-storage-using-lvms.html)
+  SC instead (or reference it directly in `openstackcontrolplanes` CR and its
+  `spec.glanceAPIs`). In this guide, we create a `local-storage` SC from the
+  default `crc-csi-hostpath-provisioner` SC for CRC:
+
+  ```yaml
+  oc apply -f - <<EOF
+  apiVersion: storage.k8s.io/v1
+  kind: StorageClass
+  metadata:
+    storageclass.kubernetes.io/is-default-class: "false"
+    name: local-storage
+  parameters:
+    storagePool: local
+  provisioner: kubevirt.io.hostpath-provisioner
+  reclaimPolicy: $STORAGE_RECLAIM_POLICY
+  volumeBindingMode: WaitForFirstConsumer
+  EOF
+  ```
 
 * Make sure you are using the OpenShift namespace where you want the
   podified control plane deployed:

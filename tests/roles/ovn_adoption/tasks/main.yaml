@@ -54,7 +54,6 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.set_fact:
     ovn_copy_shell_vars: |
-      STORAGE_CLASS={{ storage_class_name }}
       PODIFIED_OVSDB_NB_IP={{ podified_ovn_nb_ip_result.stdout }}
       PODIFIED_OVSDB_SB_IP={{ podified_ovn_sb_ip_result.stdout }}
       OVSDB_IMAGE={{ ovn_image }}
@@ -80,7 +79,7 @@
       labels:
         app: adoption
     spec:
-      storageClassName: $STORAGE_CLASS
+      storageClassName: local-storage
       accessModes:
         - ReadWriteOnce
       resources:

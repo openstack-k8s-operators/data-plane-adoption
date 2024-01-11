@@ -22,13 +22,15 @@ This guide also assumes that:
 * Previous Adoption steps completed. Notably, MariaDB and Keystone
   should be already adopted.
 
+## Variables
+
 ## Procedure - Glance adoption
 
 As already done for [Keystone](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md), the Glance Adoption follows the same pattern.
 
 ### Using local storage backend
 
-When Glance should be deployed with local storage backend (not Ceph),
+When Glance should be deployed without Ceph,
 patch OpenStackControlPlane to deploy Glance:
 
 ```
@@ -40,7 +42,7 @@ spec:
       route: {}
     template:
       databaseInstance: openstack
-      storageClass: "local-storage"
+      storageClass: local-storage
       storageRequest: 10G
       glanceAPIs:
         default:
@@ -86,7 +88,7 @@ spec:
         rbd_store_user=openstack
         rbd_store_pool=images
         store_description=Ceph glance store backend.
-      storageClass: "local-storage"
+      storageClass: local-storage
       storageRequest: 10G
       glanceAPIs:
         default:

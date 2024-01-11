@@ -48,7 +48,7 @@ MariaDB.
 
 ## Variables
 
-No new environmental variables need to be defined, though we use the
+No environmental variables need to be defined, though we use the
 `CONTROLLER1_SSH` that was defined in a previous step for the pre-checks.
 
 ## Pre-checks

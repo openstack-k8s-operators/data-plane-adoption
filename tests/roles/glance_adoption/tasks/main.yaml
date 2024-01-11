@@ -10,7 +10,7 @@
           route: {}
         template:
           databaseInstance: openstack
-          storageClass: "local-storage"
+          storageClass: local-storage
           storageRequest: 10G
           glanceAPIs:
             default:
@@ -48,7 +48,7 @@
             rbd_store_user=openstack
             rbd_store_pool=images
             store_description=Ceph glance store backend.
-          storageClass: "local-storage"
+          storageClass: local-storage
           storageRequest: 10G
           glanceAPIs:
             default:

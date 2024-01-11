@@ -43,7 +43,7 @@ $ oc label nodes worker2 type=openstack
 ```
 
 And then in our `OpenStackControlPlane` we can use the label to place all the
-services in those 3 nodes:
+services in those 3 nodes (adjust the `storageClass` as needed):
 
 ```
 apiVersion: core.openstack.org/v1beta1
