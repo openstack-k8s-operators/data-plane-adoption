@@ -306,12 +306,21 @@ against your environment.
 
 The development environment must be rolled back in case we want to execute another Adoption run.
 
-Delete the data-plane and control-plane resources from the CRC vm
+Delete the data-plane and control-plane resources
 
 [,bash]
 ----
-oc delete osdp openstack
-oc delete oscp openstack
+oc delete --ignore-not-found=true openstackdataplanedeployment/openstack
+oc delete --ignore-not-found=true openstackdataplanenodeset/openstack
+oc delete --ignore-not-found=true openstackcontrolplane/openstack
+oc delete --ignore-not-found=true secret osp-secret
+
+# FIXME: remove once oscp deletion properly cleans this up
+oc delete --wait=false keystoneapi keystone || true
+oc patch keystoneapi keystone --type=merge --patch '
+metadata:
+  finalizers: []
+' || true
 ----
 
 Revert the standalone vm to the snapshotted state
@@ -322,16 +331,37 @@ cd ~/install_yamls/devsetup
 make standalone_revert
 ----
 
-Clean up and initialize the storage PVs in CRC vm
+Clean up and initialize the storage PVs (for each Nova cell DB instance):
 
 [,bash]
 ----
+GALERA_OPERATOR_VERSION=mariadb-operator.v0.0.1
+
+oc delete --ignore-not-found=true pod ovn-copy-data
 oc delete --ignore-not-found=true pvc ovn-data
-oc delete --ignore-not-found=true pvc ansible-ee-logs
+
+oc patch csv $GALERA_OPERATOR_VERSION -n openstack-operators \
+  --type=json -p="[{'op': 'replace', 'path': '/spec/install/spec/deployments/0/spec/replicas', 'value': 0}]"
+
+oc scale statefulsets openstack-galera --replicas=0 || true
+oc scale statefulsets openstack-cell1-galera --replicas=0 || true
+
+
+while oc get pod | grep rabbitmq-server-0; do
+    sleep 2
+done
+while oc get pod | grep openstack-galera-0; do
+    sleep 2
+done
+while oc get pod | grep openstack-cell1-galera-0; do
+    sleep 2
+done
+
 oc delete --ignore-not-found=true pvc mysql-db-openstack-galera-0
 oc delete --ignore-not-found=true pvc mysql-db-openstack-cell1-galera-0
-oc delete --ignore-not-found=true pvc glance-glance-default-external-0
-oc delete --ignore-not-found=true pvc glance-glance-default-internal-0
+
+oc patch csv $GALERA_OPERATOR_VERSION -n openstack-operators \
+  --type=json -p="[{'op': 'replace', 'path': '/spec/install/spec/deployments/0/spec/replicas', 'value': 1}]"
 ----
 
 == Experimenting with an additional compute node

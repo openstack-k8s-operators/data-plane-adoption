@@ -3,34 +3,17 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc delete --wait=false openstackdataplanedeployment/openstack || true
-    oc delete --wait=false openstackcontrolplane/openstack || true
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    metadata:
-      finalizers: []
-    ' || true
+    oc delete --ignore-not-found=true openstackdataplanedeployment/openstack
+    oc delete --ignore-not-found=true openstackdataplanenodeset/openstack
+    oc delete --ignore-not-found=true openstackcontrolplane/openstack
+    oc delete --ignore-not-found=true secret osp-secret
 
-    oc delete --wait=false galera openstack || true
-    oc patch galera openstack --type=merge --patch '
-    metadata:
-      finalizers: []
-    ' || true
-
+    # FIXME: remove once oscp deletion properly cleans this up
     oc delete --wait=false keystoneapi keystone || true
     oc patch keystoneapi keystone --type=merge --patch '
     metadata:
       finalizers: []
     ' || true
-
-    while oc get pod | grep rabbitmq-server-0; do
-        sleep 2
-    done
-    while oc get pod | grep openstack-galera-0; do
-        sleep 2
-    done
-
-    oc delete --wait=false pod ovn-copy-data || true
-    oc delete secret osp-secret || true
   when: pcp_cleanup_enabled|bool
 
 - name: revert standalone VM to snapshotted state
@@ -45,10 +28,32 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
+    GALERA_OPERATOR_VERSION=mariadb-operator.v0.0.1
+
+    oc delete --ignore-not-found=true pod ovn-copy-data
     oc delete --ignore-not-found=true pvc ovn-data
-    oc delete --ignore-not-found=true pvc ansible-ee-logs
+
+    oc patch csv $GALERA_OPERATOR_VERSION -n openstack-operators \
+      --type=json -p="[{'op': 'replace', 'path': '/spec/install/spec/deployments/0/spec/replicas', 'value': 0}]"
+
+    oc scale statefulsets openstack-galera --replicas=0 || true
+    oc scale statefulsets openstack-cell1-galera --replicas=0 || true
+
+    while oc get pod | grep rabbitmq-server-0; do
+        sleep 2
+    done
+    while oc get pod | grep openstack-galera-0; do
+        sleep 2
+    done
+    while oc get pod | grep openstack-cell1-galera-0; do
+        sleep 2
+    done
+
     oc delete --ignore-not-found=true pvc mysql-db-openstack-galera-0
     oc delete --ignore-not-found=true pvc mysql-db-openstack-cell1-galera-0
-    oc delete --ignore-not-found=true pvc glance-glance-default-external-0
-    oc delete --ignore-not-found=true pvc glance-glance-default-internal-0
-  when: reset_crc_storage|bool
+
+    oc patch csv $GALERA_OPERATOR_VERSION -n openstack-operators \
+      --type=json -p="[{'op': 'replace', 'path': '/spec/install/spec/deployments/0/spec/replicas', 'value': 1}]"
+  when:
+    - reset_crc_storage|bool
+    - pcp_cleanup_enabled|bool
