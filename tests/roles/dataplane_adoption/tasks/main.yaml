@@ -1,4 +1,4 @@
-- name: force latest ansible-runner image
+- name: use ansible-runner image built from source or latest if none is defined
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -8,7 +8,7 @@
     oc patch csv -n openstack-operators openstack-ansibleee-operator.v0.0.1 \
       --type='json' -p='[{
       "op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0",
-      "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest"}}]'
+      "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "{{ ansibleee_runner_img | default('quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest')}}"}}]'
 
 - name: ensure namespace
   no_log: "{{ use_no_log }}"
