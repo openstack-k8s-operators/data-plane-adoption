@@ -61,19 +61,26 @@ image_tag: "current-podified"
 ansible_ssh_private_key_secret: dataplane-adoption-secret
 default_timesync_ntp_servers:
   - hostname: pool.ntp.org
-edpm_node_hostname: standalone
-edpm_node_networks:
-  - defaultRoute: true
-    fixedIP: "{{ edpm_node_ip }}"
-    name: CtlPlane
-    subnetName: subnet1
-  - name: InternalApi
-    subnetName: subnet1
-  - name: Storage
-    subnetName: subnet1
-  - name: Tenant
-    subnetName: subnet1
+edpm_node_hostname: standalone.localdomain
 edpm_user: root
+edpm_nodes:
+  standalone:
+    hostName: "{{ edpm_node_hostname }}"
+    ansible:
+      ansibleHost: "{{ edpm_node_ip }}"
+    networks:
+      - defaultRoute: true
+        fixedIP: "{{ edpm_node_ip }}"
+        name: CtlPlane
+        subnetName: subnet1
+      - name: InternalApi
+        subnetName: subnet1
+      - name: Storage
+        subnetName: subnet1
+      - name: Tenant
+        subnetName: subnet1
+edpm_computes: |-
+  ["{{ edpm_node_hostname }}"]="{{ edpm_node_ip }}"
 # The variables inside edpm_network_config_template are evaluated based
 # on the OpenstackDataplaneNodeSet inventory. For adding a variable to the invetory,
 # please add it to OpenstackDataplaneNodeSet.nodeTemplate.ansibleVars
