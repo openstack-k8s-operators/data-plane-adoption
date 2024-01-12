@@ -50,10 +50,7 @@ nav:
   - Ceph:
     - Ceph RBD migration: ceph/ceph_rbd.md
     - Ceph RGW migration: ceph/ceph_rgw.md
-  - Contributing:
-    - contributing/documentation.md
-    - contributing/development_environment.md
-    - contributing/tests.md
+  - Contributor documentation: dev/
 markdown_extensions:
   - toc:
       permalink: "#"

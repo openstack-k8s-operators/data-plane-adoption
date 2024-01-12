@@ -1,3 +1,9 @@
-= Data Plane Adoption developer docs
+= Data Plane Adoption contributor documentation
+:toc: left
+:toclevels: 3
 
-New Adoption documentation for developers will be here.
+include::assemblies/development_environment.adoc[leveloffset=+1]
+
+include::assemblies/documentation.adoc[leveloffset=+1]
+
+include::assemblies/tests.adoc[leveloffset=+1]

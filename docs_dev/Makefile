@@ -7,8 +7,10 @@ DEST_HTML = $(DEST_DIR)/index-$(BUILD).html
 DEST_PDF = $(BUILD_DIR)/$(NAME)-$(BUILD).pdf
 IMAGES_DIR = $(DEST_DIR)/images
 IMAGES_TS = $(DEST_DIR)/.timestamp-images
-SOURCES = main.adoc
+MAIN_SOURCE = main.adoc
+OTHER_SOURCES = $(shell find ./assemblies -type f)
 IMAGES = $(shell find ./images -type f)
+ALL_SOURCES = $(MAIN_SOURCE) $(OTHER_SOURCES) $(IMAGES)
 UNAME = $(shell uname)
 BUNDLE_EXEC ?= bundle exec
 
@@ -34,6 +36,14 @@ prepare:
 clean:
 	@rm -rf "$(DEST_DIR)" "$(DEST_PDF)"
 
+watch-html:
+	@which inotifywait > /dev/null || ( echo "ERROR: inotifywait not found, install inotify-tools" && exit 1 )
+	while true; do \
+		inotifywait -r -e modify -e create -e delete .; \
+		sleep 0.5; \
+		$(MAKE) html; \
+	done
+
 open-html: html
 	${BROWSER_OPEN} "file://$(realpath $(ROOTDIR)/$(DEST_HTML))"
 
@@ -44,8 +54,8 @@ $(IMAGES_TS): $(IMAGES)
 	cp $? $(IMAGES_DIR)
 	touch $(IMAGES_TS)
 
-$(DEST_HTML): $(SOURCES)
-	$(BUNDLE_EXEC) asciidoctor -a source-highlighter=highlightjs -a highlightjs-languages="yaml,bash" -a highlightjs-theme="monokai" --failure-level WARN -a build=$(BUILD) -b xhtml5 -d book -o $@ $<
+$(DEST_HTML): $(ALL_SOURCES)
+	$(BUNDLE_EXEC) asciidoctor -a source-highlighter=highlightjs -a highlightjs-languages="yaml,bash" -a highlightjs-theme="monokai" --failure-level WARN -a build=$(BUILD) -b xhtml5 -d book -o $@ $(MAIN_SOURCE)
 
-$(DEST_PDF): $(SOURCES) $(IMAGES)
-	$(BUNDLE_EXEC) asciidoctor-pdf -a build=$(BUILD) -d book -o $@ $<
+$(DEST_PDF): $(ALL_SOURCES)
+	$(BUNDLE_EXEC) asciidoctor-pdf -a build=$(BUILD) -d book -o $@ $(MAIN_SOURCE) $(IMAGES)
