@@ -1,0 +1,89 @@
+# Telemetry adoption
+
+Adopting Telemetry means that an existing `OpenStackControlPlane` CR, where Telmetry
+services are supposed to be disabled, should be patched to start the service with the
+configuration parameters provided by the source environment.
+
+This guide also assumes that:
+
+1. A `TripleO` environment (the source Cloud) is running on one side;
+2. A `SNO` / `CodeReadyContainers` is running on the other side.
+
+## Prerequisites
+
+* Previous Adoption steps completed. MariaDB, Keystone and EDPM should be already adopted.
+
+## Procedure - Telemetry adoption
+
+Patch OpenStackControlPlane to deploy Ceilometer services:
+
+```
+cat << EOF > ceilometer_patch.yaml
+spec:
+  ceilometer:
+    enabled: true
+    template:
+      centralImage: quay.io/podified-antelope-centos9/openstack-ceilometer-central:current-podified
+      computeImage: quay.io/podified-antelope-centos9/openstack-ceilometer-compute:current-podified
+      customServiceConfig: |
+        [DEFAULT]
+        debug=true
+      ipmiImage: quay.io/podified-antelope-centos9/openstack-ceilometer-ipmi:current-podified
+      nodeExporterImage: quay.io/prometheus/node-exporter:v1.5.0
+      notificationImage: quay.io/podified-antelope-centos9/openstack-ceilometer-notification:current-podified
+      secret: osp-secret
+      sgCoreImage: quay.io/infrawatch/sg-core:v5.1.1
+EOF
+```
+
+> If you have previously backup your Openstack services configuration file from the old environment:
+[pull openstack configuration os-diff](pull_openstack_configuration.md) you can use os-diff to compare
+and make sure the configuration is correct.
+
+```bash
+pushd os-diff
+./os-diff cdiff --service ceilometer -c /tmp/collect_tripleo_configs/ceilometer/etc/ceilometer/ceilometer.conf -o ceilometer_patch.yaml
+```
+
+> This will producre the difference between both ini configuration files.
+
+Patch OpenStackControlPlane to deploy Ceilometer services:
+
+```
+oc patch openstackcontrolplane openstack --type=merge --patch-file ceilometer_patch.yaml
+```
+
+## Post-checks
+
+### Inspect the resulting Ceilometer pods
+```bash
+CEILOMETETR_POD=`oc get pods -l service=ceilometer | tail -n 1 | cut -f 1 -d' '`
+oc exec -t $CEILOMETETR_POD -c ceilometer-central-agent -- cat /etc/ceilometer/ceilometer.conf
+```
+
+### Inspect the resulting Ceilometer IPMI agent pod on Data Plane nodes
+```bash
+podman ps | grep ceilometer-ipmi
+```
+
+### Inspecting enabled pollsters
+```bash
+oc get secret ceilometer-config-data -o jsonpath="{.data['polling\.yaml']}"  | base64 -d
+```
+
+### Enabling pollsters according to requirements
+```bash
+cat << EOF > polling.yaml
+---
+sources:
+    - name: pollsters
+      interval: 300
+      meters:
+        - volume.size
+        - image.size
+        - cpu
+        - memory
+EOF
+
+oc patch secret ceilometer-config-data  --patch="{\"data\": { \"polling.yaml\": \"$(base64 -w0 polling.yaml)\"}}"
+```
