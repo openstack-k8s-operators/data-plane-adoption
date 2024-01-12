@@ -3,4 +3,4 @@
     name: openstack-k8s-operators/data-plane-adoption
     github-check:
       jobs:
-        - data-plane-adoption-OSP-17-to-extracted-crc
+        - data-plane-adoption-osp-17-to-extracted-crc
