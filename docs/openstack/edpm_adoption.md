@@ -190,16 +190,18 @@ lands.
         - ctlplane
     preProvisioned: true
     services:
-      - download-cache
       - bootstrap
+      - download-cache
       - configure-network
       - validate-network
       - install-os
       - configure-os
       - run-os
+      - reboot-os
+      - ovn
+      - neutron-metadata
       - libvirt
       - nova-compute-extraconfig
-      - ovn
     env:
       - name: ANSIBLE_CALLBACKS_ENABLED
         value: "profile_tasks"
