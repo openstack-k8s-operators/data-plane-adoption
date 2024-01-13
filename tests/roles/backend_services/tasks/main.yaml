@@ -12,6 +12,10 @@
     make input
 
 - name: set service passwords
+  ansible.builtin.shell: |
+    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d '>~/tripleo-standalone-passwords.yaml
+
+- name: set service passwords
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
