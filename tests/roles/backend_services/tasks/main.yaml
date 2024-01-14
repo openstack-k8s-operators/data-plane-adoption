@@ -11,7 +11,7 @@
     cd {{ install_yamls_path }}
     make input
 
-- name: set service passwords
+- name: get service passwords
   ansible.builtin.shell: |
     sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d '>~/tripleo-standalone-passwords.yaml
 
