@@ -29,26 +29,23 @@
   retries: 60
   delay: 2
 
-# NOTE: w/o pods readiness gates, a service IP is not immediately comes in, so we wait
-- name: get podified OVN NB ovsdb-server service cluster IP
+- name: get podified OVN NB ovsdb-server IP
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-nb-0" -ojsonpath='{.items[0].spec.clusterIP}'
+    oc get pod ovsdbserver-nb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | \
+    jq 'map(. | select(.name=="openstack/internalapi"))[0].ips[0]' | \
+    tr -d '"'
   register: podified_ovn_nb_ip_result
-  until: podified_ovn_nb_ip_result is success
-  retries: 10
-  delay: 2
 
 - name: get podified OVN SB ovsdb-server IP
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-sb-0" -ojsonpath='{.items[0].spec.clusterIP}'
+    oc get pod ovsdbserver-sb-0 -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | \
+    jq 'map(. | select(.name=="openstack/internalapi"))[0].ips[0]' | \
+    tr -d '"'
   register: podified_ovn_sb_ip_result
-  until: podified_ovn_sb_ip_result is success
-  retries: 10
-  delay: 2
 
 - name: get OSPdO OVN ovsdb-server IP
   ansible.builtin.shell: |
@@ -61,73 +58,9 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.set_fact:
     ovn_copy_shell_vars: |
-      STORAGE_CLASS={{ storage_class_name }}
       PODIFIED_OVSDB_NB_IP={{ podified_ovn_nb_ip_result.stdout }}
       PODIFIED_OVSDB_SB_IP={{ podified_ovn_sb_ip_result.stdout }}
-      OVSDB_IMAGE={{ ovn_image }}
-
-- name: start an adoption helper pod
-  ansible.builtin.shell: |-
-    {{ shell_header }}
-    {{ oc_header }}
-    {{ ovn_copy_shell_vars }}
-
-    oc apply -f - <<EOF
-    ---
-    apiVersion: v1
-    kind: PersistentVolumeClaim
-    metadata:
-      name: ovn-data
-      labels:
-        app: adoption
-    spec:
-      storageClassName: $STORAGE_CLASS
-      accessModes:
-        - ReadWriteOnce
-      resources:
-        requests:
-          storage: 10Gi
-    ---
-    apiVersion: v1
-    kind: Pod
-    metadata:
-      name: ovn-copy-data
-      annotations:
-        openshift.io/scc: anyuid
-      labels:
-        app: adoption
-    spec:
-      containers:
-      - image: $OVSDB_IMAGE
-        command: [ "sh", "-c", "sleep infinity"]
-        name: adoption
-        volumeMounts:
-        - mountPath: /backup
-          name: ovn-data
-      securityContext:
-        allowPrivilegeEscalation: false
-        capabilities:
-          drop: ALL
-        runAsNonRoot: true
-        seccompProfile:
-          type: RuntimeDefault
-      volumes:
-      - name: ovn-data
-        persistentVolumeClaim:
-          claimName: ovn-data
-    EOF
-  changed_when: true
-  notify: delete adoption helper pod and pvc
-
-- name: wait for the pod to come up
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc wait --for condition=Ready pod/ovn-copy-data --timeout=30s
-  register: ovn_data_pod_result
-  until: ovn_data_pod_result is success
-  retries: 2
-  delay: 6
+      OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
 
 - name: stop northd service
   no_log: "{{ use_no_log }}"
@@ -142,9 +75,10 @@
 
 - name: dump OVN databases
   ansible.builtin.shell: |
-    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient ' ovsdb-client backup tcp:{{ source_ovndb_ip.stdout }}:6641 ''> /backup/ovs-nb.db
+    mkdir /tmp/ovndb
+    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient ' ovsdb-client backup tcp:{{ source_ovndb_ip.stdout }}:6641 ''>/tmp/ovndb/ovs-nb.db
 
-    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient ' ovsdb-client backup tcp:{{ source_ovndb_ip.stdout }}:6642 ''> /backup/ovs-sb.db
+    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient ' ovsdb-client backup tcp:{{ source_ovndb_ip.stdout }}:6642 ''>/tmp/ovndb/ovs-sb.db
 
 - name: upgrade OVN databases to the latest schema from podified ovsdb-servers
   no_log: "{{ use_no_log }}"
@@ -153,8 +87,10 @@
     {{ oc_header }}
     {{ ovn_copy_shell_vars }}
 
-    oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB_IP:6641 > /backup/ovs-nb.ovsschema && ovsdb-tool convert /backup/ovs-nb.db /backup/ovs-nb.ovsschema"
-    oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6642 > /backup/ovs-sb.ovsschema && ovsdb-tool convert /backup/ovs-sb.db /backup/ovs-sb.ovsschema"
+    cd {{ ovn_copy_tmp_dir }}
+
+    podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB_IP:6641 > ./ovs-nb.ovsschema && ovsdb-tool convert ovs-nb.db ./ovs-nb.ovsschema"
+    podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6642 > ./ovs-sb.ovsschema && ovsdb-tool convert ovs-sb.db ./ovs-sb.ovsschema"
 
 - name: restore OVN database backups to podified ovsdb-servers
   no_log: "{{ use_no_log }}"
@@ -163,8 +99,10 @@
     {{ oc_header }}
     {{ ovn_copy_shell_vars }}
 
-    oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
-    oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
+    cd {{ ovn_copy_tmp_dir }}
+
+    podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < ovs-nb.db"
+    podman run -it --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $OVSDB_IMAGE bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < ovs-sb.db"
 
 - name: deploy podified OVN northd service to keep databases in sync
   ansible.builtin.shell: |
