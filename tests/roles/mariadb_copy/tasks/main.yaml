@@ -15,13 +15,13 @@
 - name: get ospdo MariaDB service cluster IP
   ansible.builtin.shell: |
     {{ shell_header }}
-    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo cat /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg "'| grep -A1 'listen mysql'|tail -n 1|sed 's/.*bind //g' |sed 's/:3306.*//g'
+    sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -t -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo cat /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg "'| grep -A1 'listen mysql'|tail -n 1|sed 's/.*bind //g' |sed 's/:3306.*//g'
   register: source_mariadb_ip
 
 - name: get ospdo MariaDB pass
   ansible.builtin.shell: |
     {{ shell_header }}
-    sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d | grep MysqlRootPassword'|sed 's/.*: //g'
+    sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d | grep MysqlRootPassword'|sed 's/.*: //g'
   register: source_db_root_password
 
 
@@ -52,16 +52,16 @@
 #The following setup and execute the db extarction
 - name: get rhel repo script on ctrl0
   ansible.builtin.shell: |
-          sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'git clone https://gitlab.cee.redhat.com/pkomarov/CI.git' ''
+          sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'git clone https://gitlab.cee.redhat.com/pkomarov/CI.git' ''
   ignore_errors: true
 
 - name: register rhel repo on ctrl0
   ansible.builtin.shell: |
-          sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'sudo /home/cloud-admin/CI/subscription.sh' ''
+          sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'sudo /home/cloud-admin/CI/subscription.sh' ''
 
 - name: install mysql on ctrl0
   ansible.builtin.shell: |
-          sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo dnf install mysql --assumeyes "'
+          sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo dnf install mysql --assumeyes "'
 
 # # Below is unutilized in ospdo as it breaks bash variables during remote ssh calls with no W/A.
 # - name: dump databases
@@ -71,16 +71,16 @@
 
 - name: dump dbs
   ansible.builtin.shell: |
-      sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo /home/cloud-admin/CI/adaption/mysql_db_dump.sh {{ source_mariadb_ip.stdout }} {{ source_db_root_password.stdout }} " ''
+      sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo /home/cloud-admin/CI/adaption/mysql_db_dump.sh {{ source_mariadb_ip.stdout }} {{ source_db_root_password.stdout }} " ''
 
 # Copy DB dumps to local tmp
 - name: Copy DB dumps ctrl0 to openstackclient
   ansible.builtin.shell: |
-      sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "rsync -avux controller-0.ctlplane:/tmp/mariadb /tmp"'
+      sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "rsync -avux controller-0.ctlplane:/tmp/mariadb /tmp"'
 
 - name: Copy DB dumps openstackclient to BM
   ansible.builtin.shell: |
-      sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc cp openstack/openstackclient:/tmp/mariadb/ /tmp/mariadb'
+      sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc cp openstack/openstackclient:/tmp/mariadb/ /tmp/mariadb'
 
 - name: Copy DB dumps BM to local
   ansible.builtin.shell: |
