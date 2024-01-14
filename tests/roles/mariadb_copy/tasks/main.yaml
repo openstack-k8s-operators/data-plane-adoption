@@ -44,10 +44,10 @@
       CHARACTER_SET=utf8
       COLLATION=utf8_general_ci
 
-- name: MariaDB copy pre checks
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell:
-    cmd: "{{ lookup('ansible.builtin.template', 'pre_checks.bash') }}"
+# - name: MariaDB copy pre checks
+#   no_log: "{{ use_no_log }}"
+#   ansible.builtin.shell:
+#     cmd: "{{ lookup('ansible.builtin.template', 'pre_checks.bash') }}"
 
 #The following setup and execute the db extarction
 - name: get rhel repo script on ctrl0
@@ -69,6 +69,7 @@
 #   ansible.builtin.shell:
 #     cmd: "{{ lookup('ansible.builtin.template', 'dump_dbs.bash') }}"
 
+# currently has issue : ERROR 2013 (HY000): Lost connection to MySQL server at 'reading initial communication packet', system error: 0
 - name: dump dbs
   ansible.builtin.shell: |
       sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo /home/cloud-admin/CI/adaption/mysql_db_dump.sh {{ source_mariadb_ip.stdout }} {{ source_db_root_password.stdout }} " ''
