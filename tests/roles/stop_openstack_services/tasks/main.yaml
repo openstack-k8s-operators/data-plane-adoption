@@ -1,18 +1,15 @@
-- name: set shell vars for stopping openstack services
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.set_fact:
-    stop_openstack_services_shell_vars: |
-      CONTROLLER1_SSH="{{ controller1_ssh }}"
-      CONTROLLER2_SSH="{{ controller2_ssh }}"
-      CONTROLLER3_SSH="{{ controller3_ssh }}"
+# - name: set shell vars for stopping openstack services
+#   no_log: "{{ use_no_log }}"
+#   ansible.builtin.set_fact:
+#     stop_openstack_services_shell_vars: |
+#       CONTROLLER1_SSH="{{ controller1_ssh }}"
+#       CONTROLLER2_SSH="{{ controller2_ssh }}"
+#       CONTROLLER3_SSH="{{ controller3_ssh }}"
 
 # TODO(bogdando): split Compute services on dataplane after the multi-node/multi-cells adoption supported
 - name: stop control plane services
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ stop_openstack_services_shell_vars }}
-
     PacemakerResourcesToStop=("openstack-cinder-volume"
                               "openstack-cinder-backup"
                               "openstack-manila-share")
@@ -23,9 +20,7 @@
 
                 sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-${i}.ctlplane "sudo  systemctl stop tripleo*" ''
 
-                while sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-${i}.ctlplane "systemctl is-active tripleo*"'' |grep tripleo ;do sleep 3s ;sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-${i}.ctlplane "systemctl is-active tripleo*"'' ;done
-
-                sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-${i}.ctlplane "systemctl show service | grep ActiveState=inactive" ''
+                sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-${i}.ctlplane "systemctl list-units --all|grep tripleo" ''
     done
 
     echo "Stopping pacemaker OpenStack services"
@@ -48,3 +43,4 @@
                 sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo pcs resource disable $resource" ''
                 fi
             done
+  ignore_errors: true
