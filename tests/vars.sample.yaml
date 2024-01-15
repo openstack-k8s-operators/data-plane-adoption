@@ -4,7 +4,7 @@ install_yamls_path: ~/install_yamls #CUSTOMIZE_THIS
 reset_crc_storage: true
 
 # source SC for the local-storage SC to be created from it
-storage_class_name: crc-csi-hostpath-provisioner #CUSTOMIZE_THIS
+storage_class_name: local-storage #use pre-created one
 storage_reclaim_policy: Delete # or Retain
 
 # Snippet to get the desired 'oc' command onto $PATH.

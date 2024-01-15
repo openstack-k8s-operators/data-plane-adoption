@@ -123,9 +123,13 @@ make standalone
 
 == Install the openstack-k8s-operators (openstack-operator)
 
+If you are not going to use a `kubernetes.io/no-provisioner` local-storage SC
+pre-created with install_yamls, omit the `crc_storage` target for make.
+
 [,bash]
 ----
 cd ..  # back to install_yamls
+make crc_storage
 make input
 make openstack
 ----
@@ -324,6 +328,9 @@ make standalone_revert
 
 Clean up and initialize the storage PVs in CRC vm
 
+If you are not going to use a local-storage SC pre-created by install_yamls,
+omit the `crc_storage*` targets for make.
+
 [,bash]
 ----
 oc delete --ignore-not-found=true pvc ovn-data
@@ -332,6 +339,9 @@ oc delete --ignore-not-found=true pvc mysql-db-openstack-galera-0
 oc delete --ignore-not-found=true pvc mysql-db-openstack-cell1-galera-0
 oc delete --ignore-not-found=true pvc glance-glance-default-external-0
 oc delete --ignore-not-found=true pvc glance-glance-default-internal-0
+
+make crc_storage_cleanup
+make crc_storage
 ----
 
 == Experimenting with an additional compute node
