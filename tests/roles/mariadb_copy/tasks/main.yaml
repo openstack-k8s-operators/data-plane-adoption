@@ -57,7 +57,7 @@
 
 - name: copy dumpdb script to galera container
   ansible.builtin.shell: |
-          sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "data-plane-adoption_pkomarov/tests/roles/mariadb_copy/templates/dump_dbs_ospdo.sh $(sudo podman ps --format="{{.Names}}"|grep galera):/"'
+          sshpass -p12345678 ssh root@titan30.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo podman cp ~/data-plane-adoption_pkomarov/tests/roles/mariadb_copy/templates/dump_dbs_ospdo.sh $(sudo podman ps --format="{{.Names}}"|grep galera):/"''
 
 # # Below is unutilized in ospdo as it breaks bash variables during remote ssh calls with no W/A.
 # - name: dump databases

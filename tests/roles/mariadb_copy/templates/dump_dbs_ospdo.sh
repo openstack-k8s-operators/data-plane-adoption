@@ -9,3 +9,4 @@ sudo mysqldump -h $1 -uroot "-p${2}" \
 
 done
 ls /tmp/mariadb|grep nova
+
