@@ -1,7 +1,8 @@
 # Whether the cleanup should be run or not.
 pcp_cleanup_enabled: true
 
-# Whether to remove all the persistent data (databases, dumbs, ansible logs) before the test
+# Whether 'make crc_storage_cleanup' + 'make crc_storage' should be
+# run before running the test suite.
 reset_crc_storage: false
 
 # Whether 'make standalone_revert' should be run before

@@ -10,18 +10,6 @@
       finalizers: []
     ' || true
 
-    oc delete --wait=false galera openstack || true
-    oc patch galera openstack --type=merge --patch '
-    metadata:
-      finalizers: []
-    ' || true
-
-    oc delete --wait=false keystoneapi keystone || true
-    oc patch keystoneapi keystone --type=merge --patch '
-    metadata:
-      finalizers: []
-    ' || true
-
     while oc get pod | grep rabbitmq-server-0; do
         sleep 2
     done
@@ -45,10 +33,6 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc delete --ignore-not-found=true pvc ovn-data
-    oc delete --ignore-not-found=true pvc ansible-ee-logs
-    oc delete --ignore-not-found=true pvc mysql-db-openstack-galera-0
-    oc delete --ignore-not-found=true pvc mysql-db-openstack-cell1-galera-0
-    oc delete --ignore-not-found=true pvc glance-glance-default-external-0
-    oc delete --ignore-not-found=true pvc glance-glance-default-internal-0
+    cd {{ install_yamls_path }}
+    for i in {1..3}; do make crc_storage_cleanup crc_storage && break || sleep 5; done
   when: reset_crc_storage|bool
