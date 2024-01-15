@@ -44,20 +44,12 @@
       CHARACTER_SET=utf8
       COLLATION=utf8_general_ci
 
-# - name: MariaDB copy pre checks
-#   no_log: "{{ use_no_log }}"
-#   ansible.builtin.shell:
-#     cmd: "{{ lookup('ansible.builtin.template', 'pre_checks.bash') }}"
 
 #The following setup and execute the db extarction
 - name: get adaption repo on ctrl0
   ansible.builtin.shell: |
           sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'git clone https://github.com/pinikomarov/data-plane-adoption_pkomarov.git' ''
   ignore_errors: true
-
-- name: copy dumpdb script to galera container
-  ansible.builtin.shell: |
-          sshpass -p12345678 ssh root@titan30.lab.eng.tlv2.redhat.com 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo podman cp ~/data-plane-adoption_pkomarov/tests/roles/mariadb_copy/templates/dump_dbs_ospdo.sh $(sudo podman ps --format="{{.Names}}"|grep galera):/"''
 
 # # Below is unutilized in ospdo as it breaks bash variables during remote ssh calls with no W/A.
 # - name: dump databases
@@ -66,9 +58,9 @@
 #     cmd: "{{ lookup('ansible.builtin.template', 'dump_dbs.bash') }}"
 
 # currently has issue : ERROR 2013 (HY000): Lost connection to MySQL server at 'reading initial communication packet', system error: 0
-- name: dump dbs
+- name: run get dbs script on galera container
   ansible.builtin.shell: |
-      sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo /home/cloud-admin/CI/adaption/mysql_db_dump.sh {{ source_mariadb_ip.stdout }} {{ source_db_root_password.stdout }} " ''
+      sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo /home/cloud-admin/data-plane-adoption_pkomarov/tests/roles/mariadb_copy/templates/get_dbs_ospdo.sh {{ source_mariadb_ip.stdout }} {{ source_db_root_password.stdout }}" ''
 
 # Copy DB dumps to local tmp
 - name: Copy DB dumps ctrl0 to openstackclient
