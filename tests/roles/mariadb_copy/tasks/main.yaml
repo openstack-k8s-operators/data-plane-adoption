@@ -50,18 +50,14 @@
 #     cmd: "{{ lookup('ansible.builtin.template', 'pre_checks.bash') }}"
 
 #The following setup and execute the db extarction
-- name: get rhel repo script on ctrl0
+- name: get adaption repo on ctrl0
   ansible.builtin.shell: |
-          sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'git clone https://gitlab.cee.redhat.com/pkomarov/CI.git' ''
+          sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'git clone https://github.com/pinikomarov/data-plane-adoption_pkomarov.git' ''
   ignore_errors: true
 
-- name: register rhel repo on ctrl0
+- name: copy dumpdb script to galera container
   ansible.builtin.shell: |
-          sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'sudo /home/cloud-admin/CI/subscription.sh' ''
-
-- name: install mysql on ctrl0
-  ansible.builtin.shell: |
-          sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo dnf install mysql --assumeyes "'
+          sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "data-plane-adoption_pkomarov/tests/roles/mariadb_copy/templates/dump_dbs_ospdo.sh $(sudo podman ps --format="{{.Names}}"|grep galera):/"'
 
 # # Below is unutilized in ospdo as it breaks bash variables during remote ssh calls with no W/A.
 # - name: dump databases
