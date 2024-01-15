@@ -73,7 +73,7 @@
 
 - name: Copy DB dumps BM to local
   ansible.builtin.shell: |
-      sshpass -p12345678 scp -r root@titan132.lab.eng.tlv2.redhat.com:/tmp/mariadb /tmp
+      sshpass -p{{ admin_password }} scp -r root@{{ adoption_ospdo_host }}:/tmp/mariadb /tmp
 
 - name: Check dumps BM on local
   ansible.builtin.shell: |
