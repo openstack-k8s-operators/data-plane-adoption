@@ -5,3 +5,4 @@ mariadb_templates='/home/cloud-admin/data-plane-adoption_pkomarov/tests/roles/ma
 
 sudo podman cp ${mariadb_templates}/dump_dbs_ospdo.sh $galera_con:/
 sudo podman exec -it $galera_con bash -c "/dump_dbs_ospdo.sh $1 $2"
+sudo podman cp  ${galera_con}:/tmp/mariadb /tmp
