@@ -1,0 +1,6 @@
+= Ceph migration
+:toc: left
+:toclevels: 3
+
+// include::../modules/ceph-rbd_migration.adoc[leveloffset=+1]
+// include::../modules/ceph-rgw_migration.adoc[leveloffset=+1]
