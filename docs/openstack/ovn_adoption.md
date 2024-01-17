@@ -31,6 +31,7 @@ Define the shell variables used in the steps below. The values are
 just illustrative, use values that are correct for your environment:
 
 ```bash
+STORAGE_CLASS_NAME=crc-csi-hostpath-provisioner
 OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
 SOURCE_OVSDB_IP=172.17.1.49
 
@@ -64,7 +65,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: ovn-data
 spec:
-  storageClassName: local-storage
+  storageClassName: $STORAGE_CLASS_NAME
   accessModes:
     - ReadWriteOnce
   resources:
