@@ -25,7 +25,7 @@ As already done for [Keystone](https://github.com/openstack-k8s-operators/data-p
 
 Patch OpenStackControlPlane to deploy Neutron:
 
-```
+```bash
 oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   neutron:

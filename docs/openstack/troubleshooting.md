@@ -32,7 +32,7 @@ Hat console site](https://console.redhat.com/openshift/install/pull-secret),
 store this pull secret locally in a machine with access to the Kubernetes API
 (service node), and then run:
 
-```
+```bash
 oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=<pull_secret_location.json>
 ```
 
@@ -40,7 +40,7 @@ The previous command will make available the authentication information in all
 the cluster's compute nodes, then trigger a new pod deployment to pull the
 container image with:
 
-```
+```bash
 kubectl delete pod rabbitmq-server-0 -n openstack
 ```
 

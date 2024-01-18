@@ -56,7 +56,7 @@ No new environmental variables need to be defined, though we use the
 We are going to need the contents of `cinder.conf`, so we may want to download
 it to have it locally accessible:
 
-```
+```bash
 $CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/cinder/etc/cinder/cinder.conf > cinder.conf
 ```
 
@@ -277,7 +277,7 @@ Once the OpenShift nodes have rebooted and are loading the `nvme-fabrics` module
 we can confirm that the Operating System is configured and supports ANA by
 checking on the host:
 
-```
+```bash
 cat /sys/module/nvme_core/parameters/multipath
 ```
 
@@ -619,7 +619,7 @@ also let us know a change in how the `service_user` has been removed.
 A different example when using multiple backends, one of them being a 3PAR FC
 could be:
 
-```
+```bash
 $ python cinder-cfg.py --config cinder.conf --out-dir ./
 WARNING:root:Cinder is configured to use ['/etc/cinder/policy.yaml'] as policy file, please ensure this file is available for the podified cinder services using "extraMounts" or remove the option.
 
@@ -644,7 +644,7 @@ image is still not available, so an older image is used in the output patch file
 for reference. We can then replace this image with one we build ourselves or
 with a Red Hat official one once the image is available. In this case we can see
 in our `cinder.patch` file:
-  ```
+  ```yaml
         cinderVolumes:
         hpe-fc:
           containerImage: registry.connect.redhat.com/hpe3parcinder/openstack-cinder-volume-hpe3parcinder17-0
@@ -659,7 +659,7 @@ suggests enables multipathing on all the OCP worker nodes. The `Secret` is
 called `openstackcinder-volumes-hpe_fc` and contains the 3PAR backend
 configuration because it has sensitive information (credentials), and in the
 `cinder.patch` file we'll see that it uses this configuration:
-  ```
+  ```yaml
      cinderVolumes:
         hpe-fc:
           customServiceConfigSecrets:
@@ -814,20 +814,20 @@ old database contents:
 * See that Cinder endpoints are defined and pointing to the podified
   FQDNs:
 
-  ```
+  ```bash
   openstack endpoint list --service cinderv3
   ```
 
 * Check that the cinder services are running and up. The API won't show but if
   you get a response you know it's up as well:
 
-  ```
+  ```bash
   openstack volume service list
   ```
 
 * Check that our old volume types, volumes, snapshots, and backups are there:
 
-  ```
+  ```bash
   openstack volume type list
   openstack volume list
   openstack volume snapshot list

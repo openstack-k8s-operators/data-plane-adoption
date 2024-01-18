@@ -13,7 +13,7 @@ adopted deployment and CRs must be configured accordingly.
 Define the shell variables used in the steps below. The values are
 just illustrative, use values that are correct for your environment:
 
-```
+```bash
 CEPH_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 CEPH_KEY=$($CEPH_SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0")
 CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
@@ -31,7 +31,7 @@ Using the same user across the services serves two purposes:
 - It is simpler to create a common ceph secret (keyring and ceph config 
   file) and propagate the secret to all services that need it.
 
-```
+```bash
 $CEPH_SSH cephadm shell
 ceph auth caps client.openstack \
   mgr 'allow *' \
@@ -43,7 +43,7 @@ ceph auth caps client.openstack \
 
 Create the `ceph-conf-files` secret, containing Ceph configuration:
 
-```
+```bash
 oc apply -f - <<EOF
 apiVersion: v1
 data:
@@ -59,7 +59,7 @@ EOF
 
 The content of the file should look something like this:
 
-> ```
+> ```yaml
 > ---
 > apiVersion: v1
 > kind: Secret
@@ -81,7 +81,7 @@ The content of the file should look something like this:
 
 Configure `extraMounts` within the `OpenStackControlPlane` CR:
 
-```
+```bash
 oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   extraMounts:

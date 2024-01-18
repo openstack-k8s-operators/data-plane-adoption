@@ -17,7 +17,7 @@ This guide also assumes that:
 ## Procedure - Autoscaling adoption
 
 Patch OpenStackControlPlane to deploy Autoscaling services:
-```
+```bash
 cat << EOF > aodh_patch.yaml
 spec:
   autoscaling:
@@ -53,7 +53,7 @@ pushd os-diff
 
 Patch OpenStackControlPlane to deploy Aodh services:
 
-```
+```bash
 oc patch openstackcontrolplane openstack --type=merge --patch-file aodh_patch.yaml
 ```
 

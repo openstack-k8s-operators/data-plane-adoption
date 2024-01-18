@@ -17,7 +17,7 @@ This guide also assumes that:
 
 Patch OpenStackControlPlane to deploy Ceilometer services:
 
-```
+```bash
 cat << EOF > ceilometer_patch.yaml
 spec:
   ceilometer:
@@ -49,7 +49,7 @@ pushd os-diff
 
 Patch OpenStackControlPlane to deploy Ceilometer services:
 
-```
+```bash
 oc patch openstackcontrolplane openstack --type=merge --patch-file ceilometer_patch.yaml
 ```
 

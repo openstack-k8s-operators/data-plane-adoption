@@ -31,7 +31,7 @@ As already done for [Keystone](https://github.com/openstack-k8s-operators/data-p
 When Glance should be deployed with local storage backend (not Ceph),
 patch OpenStackControlPlane to deploy Glance:
 
-```
+```bash
 oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   glance:
@@ -117,7 +117,7 @@ pushd os-diff
 
 Patch OpenStackControlPlane to deploy Glance with Ceph backend:
 
-```
+```bash
 oc patch openstackcontrolplane openstack --type=merge --patch-file glance_patch.yaml
 ```
 
@@ -158,7 +158,7 @@ Ceph secrets are properly mounted, at this point let's move to the OpenStack
 CLI and check the service is active and the endpoints are properly updated.
 
 
-```
+```bash
 (openstack)$ service list | grep image
 
 | fc52dbffef36434d906eeb99adfc6186 | glance    | image        |
@@ -173,7 +173,7 @@ CLI and check the service is active and the endpoints are properly updated.
 Check the images that we previously listed in the source Cloud are available
 in the adopted service:
 
-```
+```bash
 (openstack)$ image list
 +--------------------------------------+--------+--------+
 | ID                                   | Name   | Status |
@@ -186,7 +186,7 @@ in the adopted service:
 
 We can test that an image can be created on from the adopted service.
 
-```
+```bash
 (openstack)$ alias openstack="oc exec -t openstackclient -- openstack"
 (openstack)$ curl -L -o /tmp/cirros-0.5.2-x86_64-disk.img http://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
     qemu-img convert -O raw /tmp/cirros-0.5.2-x86_64-disk.img /tmp/cirros-0.5.2-x86_64-disk.img.raw

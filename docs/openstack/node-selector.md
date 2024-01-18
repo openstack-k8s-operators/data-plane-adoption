@@ -45,7 +45,7 @@ $ oc label nodes worker2 type=openstack
 And then in our `OpenStackControlPlane` we can use the label to place all the
 services in those 3 nodes:
 
-```
+```yaml
 apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
 metadata:
@@ -63,7 +63,7 @@ backup services because we are using FC and we only have HBAs on a subset of
 nodes? Then we can just use the selector on for those specific services, which
 for the sake of this example we'll assume they have the label `fc_card: true`:
 
-```
+```yaml
 apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
 metadata:
@@ -113,7 +113,7 @@ For example to be able to limit `MachineConfig` to the 3 OpenShift nodes we
 marked with the `type: openstack` label we would create the
 `MachineConfigPool` like this:
 
-```
+```yaml
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfigPool
 metadata:
@@ -129,7 +129,7 @@ spec:
 
 And then we could use it in the `MachineConfig`:
 
-```
+```yaml
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
 metadata:

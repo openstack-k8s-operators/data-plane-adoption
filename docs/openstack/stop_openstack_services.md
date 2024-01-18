@@ -22,7 +22,7 @@ Define the shell variables used in the steps below. The values are
 just illustrative and refer to a single node standalone director deployment,
 use values that are correct for your environment:
 
-```
+```bash
 CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 CONTROLLER2_SSH=""
 CONTROLLER3_SSH=""
@@ -33,7 +33,7 @@ ansible to try to create instructions that are independent on where they are
 running, but ansible commands could be used to achieve the same result if we
 are in the right host, for example to stop a service:
 
-```
+```bash
 . stackrc ansible -i $(which tripleo-ansible-inventory) Controller -m shell -a "sudo systemctl stop tripleo_horizon.service" -b
 ```
 
@@ -51,7 +51,7 @@ Ensure that there are no ongoing instance live migrations, volume migrations
 (online or offline), volume creation, backup restore, attaching, detaching,
 etc.
 
-```
+```bash
 openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
 openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
 openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \|' | grep -vi error

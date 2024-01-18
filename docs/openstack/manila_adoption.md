@@ -7,7 +7,7 @@ any number of clients. This, coupled with the inherent elasticity of the
 underlying storage makes the Shared File Systems service essential in
 cloud environments with require RWX ("read write many") persistent storage.
 
-# Networking
+## Networking
 
 File shares in OpenStack are accessed directly over a network. Hence, it is
 essential to plan the networking of the cloud to create a successful and 
@@ -168,7 +168,7 @@ environment:
   usernames, it is recommended to use OpenShift secrets, and the
   `customServiceConfigSecrets` key. An example:
 
-```shell
+```bash
 
 cat << __EOF__ > ~/netapp_secrets.conf
 
@@ -277,7 +277,7 @@ spec:
 __EOF__
 ```
 
-```shell
+```bash
 oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patch
 ```
 
@@ -285,17 +285,17 @@ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patc
 
 ### Inspect the resulting manila service pods
 
-```shell
+```bash
 oc get pods -l service=manila 
 ```
 
 ### Check that Manila API service is registered in Keystone
 
-```shell
+```bash
 openstack service list | grep manila
 ```
 
-```shell
+```bash
 openstack endpoint list | grep manila
 
 | 1164c70045d34b959e889846f9959c0e | regionOne | manila       | share        | True    | internal  | http://manila-internal.openstack.svc:8786/v1/%(project_id)s        |
@@ -308,19 +308,19 @@ openstack endpoint list | grep manila
 
 We can now test the health of the service
 
-```shell
+```bash
 openstack share service list
 openstack share pool list --detail
 ```
 
 We can check on existing workloads
 
-```shell
+```bash
 openstack share list
 openstack share snapshot list
 ```
 
 We can create further resources
-```shell
+```bash
 openstack share create cephfs 10 --snapshot mysharesnap --name myshareclone
 ```
