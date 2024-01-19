@@ -1,3 +1,7 @@
-= Data Plane Adoption
+= OpenStack adoption user documentation
+:toc: left
+:toclevels: 3
 
-New Adoption documentation for users will be here.
+include::assemblies/openstack_adoption.adoc[leveloffset=+1]
+
+include::assemblies/ceph_migration.adoc[leveloffset=+1]

@@ -34,12 +34,13 @@ podified OpenStack control plane services.
 * Set the desired admin password for the podified deployment. This can
   be the original deployment's admin password or something else.
 
-  ```
+  ```bash
   ADMIN_PASSWORD=SomePassword
   ```
 
   To use the existing OpenStack deployment password:
-  ```
+
+  ```bash
   ADMIN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
   ```
 
@@ -50,7 +51,7 @@ podified OpenStack control plane services.
   E.g. in developer environments with TripleO Standalone, the
   passwords can be extracted like this:
 
-  ```
+  ```bash
   AODH_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AodhPassword:' | awk -F ': ' '{ print $2; }')
   CEILOMETER_METERING_SECRET=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CeilometerMeteringSecret:' | awk -F ': ' '{ print $2; }')
   CEILOMETER_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CeilometerPassword:' | awk -F ': ' '{ print $2; }')
@@ -73,7 +74,7 @@ podified OpenStack control plane services.
 * Make sure you are using the OpenShift namespace where you want the
   podified control plane deployed:
 
-  ```
+  ```bash
   oc project openstack
   ```
 
@@ -82,7 +83,7 @@ podified OpenStack control plane services.
   The procedure for this will vary, but in developer/CI environments
   we use install_yamls:
 
-  ```
+  ```bash
   # in install_yamls
   make input
   ```
@@ -91,14 +92,14 @@ podified OpenStack control plane services.
   in `osp-secret`, amend the `AdminPassword` key in the `osp-secret`
   correspondingly:
 
-  ```
+  ```bash
   oc set data secret/osp-secret "AdminPassword=$ADMIN_PASSWORD"
   ```
 
 * Set service account passwords in `osp-secret` to match the service
   account passwords from the original deployment:
 
-  ```
+  ```bash
   oc set data secret/osp-secret "AodhPassword=$AODH_PASSWORD"
   oc set data secret/osp-secret "CeilometerMeteringSecret=$CEILOMETER_METERING_SECRET"
   oc set data secret/osp-secret "CeilometerPassword=$CEILOMETER_PASSWORD"
@@ -265,7 +266,7 @@ podified OpenStack control plane services.
 
 * Check that MariaDB is running.
 
-  ```
+  ```bash
   oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}'
   oc get pod openstack-cell1-galera-0 -o jsonpath='{.status.phase}{"\n"}'
   ```

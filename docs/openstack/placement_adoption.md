@@ -17,7 +17,7 @@
 
 * Patch OpenStackControlPlane to deploy Placement:
 
-  ```
+  ```bash
   oc patch openstackcontrolplane openstack --type=merge --patch '
   spec:
     placement:
@@ -45,7 +45,7 @@
 * See that Placement endpoints are defined and pointing to the
   podified FQDNs and that Placement API responds.
 
-  ```
+  ```bash
   alias openstack="oc exec -t openstackclient -- openstack"
 
   openstack endpoint list | grep placement

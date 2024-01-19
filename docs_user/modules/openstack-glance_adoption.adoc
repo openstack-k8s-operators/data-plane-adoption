@@ -1,4 +1,4 @@
-# Glance adoption
+= Glance adoption
 
 Adopting Glance means that an existing `OpenStackControlPlane` CR, where Glance
 is supposed to be disabled, should be patched to start the service with the
@@ -11,27 +11,27 @@ adoption is considered concluded.
 
 This guide also assumes that:
 
-1. A `TripleO` environment (the source Cloud) is running on one side;
-2. A `SNO` / `CodeReadyContainers` is running on the other side;
-3. (optional) an internal/external `Ceph` cluster is reachable by both `crc` and
+. A `TripleO` environment (the source Cloud) is running on one side;
+. A `SNO` / `CodeReadyContainers` is running on the other side;
+. (optional) an internal/external `Ceph` cluster is reachable by both `crc` and
 `TripleO`
 
-
-## Prerequisites
+== Prerequisites
 
 * Previous Adoption steps completed. Notably, MariaDB and Keystone
-  should be already adopted.
+should be already adopted.
 
-## Procedure - Glance adoption
+== Procedure - Glance adoption
 
-As already done for [Keystone](https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md), the Glance Adoption follows the same pattern.
+As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Glance Adoption follows the same pattern.
 
-### Using local storage backend
+=== Using local storage backend
 
 When Glance should be deployed with local storage backend (not Ceph),
 patch OpenStackControlPlane to deploy Glance:
 
-```bash
+[,bash]
+----
 oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   glance:
@@ -56,9 +56,9 @@ spec:
           networkAttachments:
           - storage
 '
-```
+----
 
-### Using Ceph storage backend
+=== Using Ceph storage backend
 
 If a Ceph backend is used, the `customServiceConfig` parameter should
 be used to inject the right configuration to the `GlanceAPI` instance.
@@ -66,10 +66,11 @@ be used to inject the right configuration to the `GlanceAPI` instance.
 Make sure the Ceph-related secret (`ceph-conf-files`) was created in
 the `openstack` namespace and that the `extraMounts` property of the
 `OpenStackControlPlane` CR has been configured properly. These tasks
-are described in an earlier Adoption step [Ceph storage backend
-configuration](ceph_backend_configuration.md).
+are described in an earlier Adoption step xref:ceph_backend_configuration.adoc[Ceph storage backend
+configuration].
 
-```bash
+[,bash]
+----
 cat << EOF > glance_patch.yaml
 spec:
   glance:
@@ -102,40 +103,52 @@ spec:
           networkAttachments:
           - storage
 EOF
-```
+----
 
-> If you have previously backup your Openstack services configuration file from the old environment:
-[pull openstack configuration os-diff](pull_openstack_configuration.md) you can use os-diff to compare
+____
+If you have previously backup your Openstack services configuration file from the old environment:
+xref:pull_openstack_configuration.adoc[pull openstack configuration os-diff] you can use os-diff to compare
 and make sure the configuration is correct.
+____
 
-```bash
+[,bash]
+----
 pushd os-diff
 ./os-diff cdiff --service glance -c /tmp/collect_tripleo_configs/glance/etc/glance/glance-api.conf -o glance_patch.yaml
-```
+----
 
-> This will producre the difference between both ini configuration files.
+____
+This will producre the difference between both ini configuration files.
+____
 
 Patch OpenStackControlPlane to deploy Glance with Ceph backend:
 
-```bash
+[,bash]
+----
 oc patch openstackcontrolplane openstack --type=merge --patch-file glance_patch.yaml
-```
+----
 
-## Post-checks
+== Post-checks
 
-### Test the glance service from the OpenStack CLI
+=== Test the glance service from the OpenStack CLI
 
-> You can compare and make sure the configuration has been correctly applied to the glance pods by running
+____
+You can compare and make sure the configuration has been correctly applied to the glance pods by running
+____
 
-```bash
+[,bash]
+----
 ./os-diff cdiff --service glance -c /etc/glance/glance.conf.d/02-config.conf  -o glance_patch.yaml --frompod -p glance-api
-```
+----
 
-> If no line appear, then the configuration is correctly done.
+____
+If no line appear, then the configuration is correctly done.
+____
 
 Inspect the resulting glance pods:
 
-```bash
+[,bash]
+----
 GLANCE_POD=`oc get pod |grep glance-default-external-0 | cut -f 1 -d' '`
 oc exec -t $GLANCE_POD -c glance-api -- cat /etc/glance/glance.conf.d/02-config.conf
 
@@ -152,13 +165,13 @@ store_description=Ceph glance store backend.
 oc exec -t $GLANCE_POD -c glance-api -- ls /etc/ceph
 ceph.client.openstack.keyring
 ceph.conf
-```
+----
 
 Ceph secrets are properly mounted, at this point let's move to the OpenStack
 CLI and check the service is active and the endpoints are properly updated.
 
-
-```bash
+[,bash]
+----
 (openstack)$ service list | grep image
 
 | fc52dbffef36434d906eeb99adfc6186 | glance    | image        |
@@ -168,25 +181,27 @@ CLI and check the service is active and the endpoints are properly updated.
 | 569ed81064f84d4a91e0d2d807e4c1f1 | regionOne | glance       | image        | True    | internal  | http://glance-internal-openstack.apps-crc.testing   |
 | 5843fae70cba4e73b29d4aff3e8b616c | regionOne | glance       | image        | True    | public    | http://glance-public-openstack.apps-crc.testing     |
 | 709859219bc24ab9ac548eab74ad4dd5 | regionOne | glance       | image        | True    | admin     | http://glance-admin-openstack.apps-crc.testing      |
-```
+----
 
 Check the images that we previously listed in the source Cloud are available
 in the adopted service:
 
-```bash
+[,bash]
+----
 (openstack)$ image list
 +--------------------------------------+--------+--------+
 | ID                                   | Name   | Status |
 +--------------------------------------+--------+--------+
 | c3158cad-d50b-452f-bec1-f250562f5c1f | cirros | active |
 +--------------------------------------+--------+--------+
-```
+----
 
-### Image upload
+=== Image upload
 
 We can test that an image can be created on from the adopted service.
 
-```bash
+[,bash]
+----
 (openstack)$ alias openstack="oc exec -t openstackclient -- openstack"
 (openstack)$ curl -L -o /tmp/cirros-0.5.2-x86_64-disk.img http://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
     qemu-img convert -O raw /tmp/cirros-0.5.2-x86_64-disk.img /tmp/cirros-0.5.2-x86_64-disk.img.raw
@@ -247,4 +262,4 @@ r  cluster:
 sh-4.4$ rbd -p images ls
 46a3eac1-7224-40bc-9083-f2f0cd122ba4
 c3158cad-d50b-452f-bec1-f250562f5c1f
-```
+----

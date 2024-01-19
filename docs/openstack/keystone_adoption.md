@@ -1,3 +1,5 @@
+# Keystone adoption
+
 ## Prerequisites
 
 * Previous Adoption steps completed. Notably,
@@ -14,7 +16,7 @@
 
 * Patch OpenStackControlPlane to deploy Keystone:
 
-  ```
+  ```bash
   oc patch openstackcontrolplane openstack --type=merge --patch '
   spec:
     keystone:

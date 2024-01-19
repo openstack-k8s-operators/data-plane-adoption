@@ -384,7 +384,7 @@ lands.
 
 * Wait for the dataplane node set to reach the Ready status:
 
-    ```
+    ```bash
     oc wait --for condition=Ready osdpns/openstack --timeout=30m
     ```
 
