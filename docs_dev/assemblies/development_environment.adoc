@@ -326,6 +326,7 @@ make standalone_revert
 Clean up and initialize the storage PVs in CRC vm
 
 [,bash]
+----
 cd ..
 make crc_storage_cleanup
 make crc_storage
