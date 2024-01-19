@@ -15,13 +15,13 @@ link:planning.md#Configuration tooling[Configure os-diff]
 Before starting you need to update your ssh parameters according to your environment in the os-diff.cfg.
 Os-diff will use those parameters to connect to your Director node, query and download the configuration files:
 
-[,bash]
----
+[,ini]
+----
 ssh_cmd=ssh -F ssh.config standalone
 container_engine=podman
 connection=ssh
 remote_config_path=/tmp/tripleo
----
+----
 
 Make sure the ssh command you provide in `ssh_cmd` parameter is correct and with key authentication.
 
@@ -34,7 +34,8 @@ https://github.com/openstack-k8s-operators/os-diff/blob/main/config.yaml[service
 You can enable or disable the services you want then you can start to pull the configuration on your local file system.
 Example with default keystone:
 
----
+[,yaml]
+----
 # service name and file location
 services:
   # Service name
@@ -62,7 +63,7 @@ services:
       - /etc/keystone
       - /etc/keystone/keystone.conf
       - /etc/keystone/logging.conf
----
+----
 
 Duplicate the keystone example to each Openstack services you want.
 
