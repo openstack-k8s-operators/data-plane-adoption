@@ -1,5 +1,4 @@
-# Data Plane adoption - Ceph RBD Migration
-
+# Ceph RBD Migration
 
 In this scenario, assuming Ceph is already >= 5, either for HCI or dedicated
 Storage nodes, the daemons living in the OpenStack control plane should be
@@ -15,7 +14,7 @@ use cases).
 - Ceph Mons need to keep their IPs (to avoid cold migration).
 
 
-## SCENARIO 1: Migrate mon and mgr from controller nodes
+## Scenario 1: Migrate mon and mgr from controller nodes
 
 
 The goal of the first POC is to prove we are able to successfully drain a
@@ -45,7 +44,7 @@ additional networks.
 
 Make sure the network is defined in metalsmith.yaml for the CephStorageNodes:
 
-  ```
+  ```yaml
   - name: CephStorage
     count: 2
     instances:
@@ -67,7 +66,7 @@ Make sure the network is defined in metalsmith.yaml for the CephStorageNodes:
 
 Then run:
 
-```
+```bash
 openstack overcloud node provision \
   -o overcloud-baremetal-deployed-0.yaml --stack overcloud-0 \
   --network-config -y --concurrency 2 /home/stack/metalsmith-0.yam
@@ -75,7 +74,7 @@ openstack overcloud node provision \
 
 Verify that the storage network is running on the node:
 
-```
+```bash
 (undercloud) [CentOS-9 - stack@undercloud ~]$ ssh heat-admin@192.168.24.14 ip -o -4 a
 Warning: Permanently added '192.168.24.14' (ED25519) to the list of known hosts.
 1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
@@ -93,14 +92,14 @@ Warning: Permanently added '192.168.24.14' (ED25519) to the list of known hosts.
 Create a ceph spec based on the default roles with the mon/mgr on the
 controller nodes.
 
-```
+```bash
 openstack overcloud ceph spec -o ceph_spec.yaml -y  \
    --stack overcloud-0     overcloud-baremetal-deployed-0.yaml
 ```
 
 Deploy the Ceph cluster
 
-```
+```bash
  openstack overcloud ceph deploy overcloud-baremetal-deployed-0.yaml \
     --stack overcloud-0 -o deployed_ceph.yaml \
     --network-data ~/oc0-network-data.yaml \
@@ -118,7 +117,7 @@ to update the status/info of the daemons.
 Check the status of the cluster:
 
 
-```
+```bash
 [ceph: root@oc0-controller-0 /]# ceph -s
   cluster:
     id:     f6ec3ebe-26f7-56c8-985d-eb974e8e08e3
@@ -138,7 +137,7 @@ Check the status of the cluster:
 ```
 
 
-```
+```bash
 [ceph: root@oc0-controller-0 /]# ceph orch host ls
 HOST              ADDR           LABELS          STATUS
 oc0-ceph-0        192.168.24.14  osd
@@ -158,22 +157,26 @@ actually make this kind of migration using cephadm.
 
 ssh into controller-0, then
 
-`cephadm shell -v /home/ceph-admin/specs:/specs`
+```bash
+cephadm shell -v /home/ceph-admin/specs:/specs
+```
 
 ssh into ceph-0, then
 
 
-`sudo “watch podman ps”  # watch the new mon/mgr being deployed here`
+```bash
+sudo “watch podman ps”  # watch the new mon/mgr being deployed here
+```
 
 (optional) if mgr is active in the source node, then:
 
-```
+```bash
 ceph mgr fail <mgr instance>
 ```
 
 From the cephadm shell, remove the labels on oc0-controller-1
 
-```
+```bash
     for label in mon mgr _admin; do
            ceph orch host rm label oc0-controller-1 $label;
     done
@@ -181,7 +184,7 @@ From the cephadm shell, remove the labels on oc0-controller-1
 
 Add the missing labels to oc0-ceph-0
 
-```
+```bash
 [ceph: root@oc0-controller-0 /]#
 > for label in mon mgr _admin; do ceph orch host label add oc0-ceph-0 $label; done
 Added label mon to host oc0-ceph-0
@@ -191,7 +194,7 @@ Added label _admin to host oc0-ceph-0
 
 Drain and force-remove the oc0-controller-1 node
 
-```
+```bash
 [ceph: root@oc0-controller-0 /]# ceph orch host drain oc0-controller-1
 Scheduled to remove the following daemons from host 'oc0-controller-1'
 type                 id
@@ -201,7 +204,7 @@ mgr                  oc0-controller-1.mtxohd
 crash                oc0-controller-1
 ```
 
-```
+```bash
 [ceph: root@oc0-controller-0 /]# ceph orch host rm oc0-controller-1 --force
 Removed  host 'oc0-controller-1'
 
@@ -218,7 +221,7 @@ If you have only 3 mon nodes, and the drain of the node doesn’t work as
 expected (the containers are still there), then SSH to controller-1 and
 force-purge the containers in the node:
 
-```
+```bash
 [root@oc0-controller-1 ~]# sudo podman ps
 CONTAINER ID  IMAGE                                                                                        COMMAND               CREATED         STATUS             PORTS       NAMES
 5c1ad36472bc  quay.io/ceph/daemon@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mon.oc0-contro...  35 minutes ago  Up 35 minutes ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mon-oc0-controller-1
@@ -237,7 +240,7 @@ effect of removing all the containers and doing some cleanup on the filesystem.
 Before shutting the oc0-controller-1 down, move the IP address (on the same
 network) to the oc0-ceph-0 node:
 
-```
+```bash
 mon_host = [v2:172.16.11.54:3300/0,v1:172.16.11.54:6789/0] [v2:172.16.11.121:3300/0,v1:172.16.11.121:6789/0] [v2:172.16.11.205:3300/0,v1:172.16.11.205:6789/0]
 
 [root@oc0-controller-1 ~]# ip -o -4 a
@@ -254,7 +257,7 @@ mon_host = [v2:172.16.11.54:3300/0,v1:172.16.11.54:6789/0] [v2:172.16.11.121:330
 
 On the oc0-ceph-0:
 
-```
+```bash
 [heat-admin@oc0-ceph-0 ~]$ ip -o -4 a
 1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
 5: br-storage    inet 192.168.24.14/24 brd 192.168.24.255 scope global br-storage\       valid_lft forever preferred_lft forever
@@ -276,14 +279,14 @@ Poweroff oc0-controller-1.
 
 Add the new mon on oc0-ceph-0 using the old IP address:
 
-```
+```bash
 [ceph: root@oc0-controller-0 /]# ceph orch daemon add mon oc0-ceph-0:172.16.11.121
 Deployed mon.oc0-ceph-0 on host 'oc0-ceph-0'
 ```
 
 Check the new container in the oc0-ceph-0 node:
 
-```
+```bash
 b581dc8bbb78  quay.io/ceph/daemon@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mon.oc0-ceph-0...  24 seconds ago  Up 24 seconds ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mon-oc0-ceph-0
 ```
 
@@ -291,7 +294,7 @@ On the cephadm shell, backup the existing ceph_spec.yaml, edit the spec
 removing any oc0-controller-1 entry, and replacing it with oc0-ceph-0:
 
 
-```
+```bash
 cp ceph_spec.yaml ceph_spec.yaml.bkp # backup the ceph_spec.yaml file
 
 [ceph: root@oc0-controller-0 specs]# diff -u ceph_spec.yaml.bkp ceph_spec.yaml
@@ -309,7 +312,7 @@ cp ceph_spec.yaml ceph_spec.yaml.bkp # backup the ceph_spec.yaml file
 -- mon
 -- mgr
 -service_type: host
-----
+ ----
  addr: 192.168.24.19
  hostname: oc0-controller-2
  labels:
@@ -336,8 +339,8 @@ cp ceph_spec.yaml ceph_spec.yaml.bkp # backup the ceph_spec.yaml file
 
 Apply the resulting spec:
 
-```
-ceph orch apply -i ceph_spec.yaml 
+```bash
+ceph orch apply -i ceph_spec.yaml
 
  The result of 12 is having a new mgr deployed on the oc0-ceph-0 node, and the spec reconciled within cephadm
 
@@ -368,13 +371,13 @@ osd.default_drive_group               8  2m ago     69s  oc0-ceph-0;oc0-ceph-1
 
 Fix the warning by refreshing the mgr:
 
-```
+```bash
 ceph mgr fail oc0-controller-0.xzgtvo
 ```
 
 And at this point the cluster is clean:
 
-```
+```bash
 [ceph: root@oc0-controller-0 specs]# ceph -s
   cluster:
     id:     f6ec3ebe-26f7-56c8-985d-eb974e8e08e3
@@ -399,7 +402,6 @@ The same approach and the same steps can be applied to migrate oc0-controller-2 
 ### Screen Recording:
 
 - [Externalize a TripleO deployed Ceph cluster](https://asciinema.org/a/508174)
-<script id="asciicast-508174" src="https://asciinema.org/a/508174.js" async data-autoplay="true" data-speed="2"></script>
 
 ## What’s next
 

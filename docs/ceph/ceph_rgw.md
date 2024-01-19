@@ -1,4 +1,4 @@
-# Data Plane adoption - Ceph RGW Migration
+# Ceph RGW Migration
 
 In this scenario, assuming Ceph is already >= 5, either for HCI or dedicated
 Storage nodes, the RGW daemons living in the OpenStack Controller nodes will be
@@ -24,28 +24,31 @@ nodes in the cluster. The following diagrams cover the distribution of the Ceph
 daemons on the CephStorage nodes where at least three nodes are required in a
 scenario that sees only RGW and RBD (no dashboard):
 
-
+```
 |    |                     |             |
 |----|---------------------|-------------|
 | osd | mon/mgr/crash      | rgw/ingress |
 | osd | mon/mgr/crash      | rgw/ingress |
 | osd | mon/mgr/crash      | rgw/ingress |
-
+```
 
 With dashboard, and without Manila at least four nodes are required (dashboard
 has no failover):
 
+```
 |     |                     |             |
 |-----|---------------------|-------------|
 | osd | mon/mgr/crash | rgw/ingress       |
 | osd | mon/mgr/crash | rgw/ingress       |
 | osd | mon/mgr/crash | dashboard/grafana |
 | osd | rgw/ingress   | (free)            |
+```
 
 
 With dashboard and Manila 5 nodes minimum are required (and dashboard has no
 failover):
 
+```
 |     |                     |                         |
 |-----|---------------------|-------------------------|
 | osd | mon/mgr/crash       | rgw/ingress             |
@@ -53,12 +56,12 @@ failover):
 | osd | mon/mgr/crash       | mds/ganesha/ingress     |
 | osd | rgw/ingress         | mds/ganesha/ingress     |
 | osd | mds/ganesha/ingress | dashboard/grafana       |
-
+```
 
 ## Current Status
 
 
-```
+```bash
 (undercloud) [stack@undercloud-0 ~]$ metalsmith list
 
 
@@ -82,7 +85,7 @@ identify the relevant information that we need to know before starting the
 RGW migration.
 
 
-```
+```bash
 Full List of Resources:
   * ip-192.168.24.46	(ocf:heartbeat:IPaddr2):     	Started controller-0
   * ip-10.0.0.103   	(ocf:heartbeat:IPaddr2):     	Started controller-1
@@ -100,7 +103,7 @@ Full List of Resources:
 
 Use the `ip` command to identify the ranges of the storage networks.
 
-```
+```bash
 [heat-admin@controller-0 ~]$ ip -o -4 a
 
 1: lo	inet 127.0.0.1/8 scope host lo\   	valid_lft forever preferred_lft forever
@@ -135,7 +138,7 @@ ssh into `controller-0` and check the current HaProxy configuration until we
 find `ceph_rgw` section:
 
 
-```
+```bash
 $ less /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg
 
 ...
@@ -159,7 +162,7 @@ listen ceph_rgw
 
 Double check the network used as HaProxy frontend:
 
-```
+```bash
 [controller-0]$ ip -o -4 a
 
 ...
@@ -173,12 +176,12 @@ are exposing the services using the external network, which is not present in
 the CephStorage nodes, and we need to propagate it via TripleO.
 
 
-## Propagate the `HaProxy` frontend network to `CephStorage` nodes
+## Propagate the HaProxy frontend network to CephStorage nodes
 
 Change the nic template used to define the ceph-storage network interfaces and
 add the new config section.
 
-```
+```yaml
 ---
 network_config:
 - type: interface
@@ -223,7 +226,7 @@ metalsmith and run the `overcloud node provision` command passing the
 `--network-config` option:
 
 
-```
+```yaml
 - name: CephStorage
   count: 3
   hostname_format: cephstorage-%index%
@@ -247,7 +250,7 @@ metalsmith and run the `overcloud node provision` command passing the
 ```
 
 
-```
+```bash
 (undercloud) [stack@undercloud-0]$
 
 openstack overcloud node provision
@@ -260,7 +263,7 @@ openstack overcloud node provision
 
 Check the new network on the `CephStorage` nodes:
 
-```
+```bash
 [root@cephstorage-0 ~]# ip -o -4 a
 
 1: lo	inet 127.0.0.1/8 scope host lo\   	valid_lft forever preferred_lft forever
@@ -282,14 +285,14 @@ nodes where a given daemon type should be deployed.
 Add the RGW label to the cephstorage nodes:
 
 
-```
+```bash
 for i in 0 1 2; {
     ceph orch host label add cephstorage-$i rgw;
 }
 ```
 
 
-```
+```bash
 [ceph: root@controller-0 /]#
 
 for i in 0 1 2; {
@@ -322,7 +325,7 @@ approach, and change the rgw backend port to **8090** to avoid conflicts
 with the [Ceph Ingress Daemon][2] (*)
 
 
-```
+```bash
 [root@controller-0 heat-admin]# cat rgw
 
 networks:
@@ -344,7 +347,7 @@ spec:
 
 Patch the spec replacing controller nodes with the label key
 
-```
+```bash
 ---
 networks:
 - 172.17.3.0/24
@@ -363,7 +366,7 @@ spec:
 
 Apply the new RGW spec using the orchestrator CLI:
 
-```
+```bash
 $ cephadm shell -m /home/ceph-admin/specs/rgw
 $ cephadm shell -- ceph orch apply -i /mnt/rgw
 ```
@@ -371,7 +374,7 @@ $ cephadm shell -- ceph orch apply -i /mnt/rgw
 
 Which triggers the redeploy:
 
-```
+```bash
 ...
 osd.9                     	cephstorage-2
 rgw.rgw.cephstorage-0.wsjlgx  cephstorage-0  172.17.3.23:8090   starting
@@ -395,7 +398,7 @@ nodes) and add the iptables rule to allow connections to both 8080 and 8090
 ports in the CephStorage nodes.
 
 
-```
+```bash
 iptables -I INPUT -p tcp -m tcp --dport 8080 -m conntrack --ctstate NEW -m comment --comment "ceph rgw ingress" -j ACCEPT
 
 iptables -I INPUT -p tcp -m tcp --dport 8090 -m conntrack --ctstate NEW -m comment --comment "ceph rgw backends" -j ACCEPT
@@ -412,11 +415,11 @@ for port in 8080 8090; {
 From a Controller node (e.g. controller-0) try to reach (curl) the rgw backends:
 
 
-```
+```bash
 for i in 26 23 81; do {
-    echo "----"
+    echo "---"
     curl 172.17.3.$i:8090;
-    echo "----"
+    echo "---"
     echo
 done
 ```
@@ -425,18 +428,18 @@ done
 
 And you should observe the following:
 
-```
-----
+```bash
+---
 Query 172.17.3.23
 <?xml version="1.0" encoding="UTF-8"?><ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>anonymous</ID><DisplayName></DisplayName></Owner><Buckets></Buckets></ListAllMyBucketsResult>
 ---
 
-----
+---
 Query 172.17.3.26
 <?xml version="1.0" encoding="UTF-8"?><ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>anonymous</ID><DisplayName></DisplayName></Owner><Buckets></Buckets></ListAllMyBucketsResult>
 ---
 
-----
+---
 Query 172.17.3.81
 <?xml version="1.0" encoding="UTF-8"?><ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>anonymous</ID><DisplayName></DisplayName></Owner><Buckets></Buckets></ListAllMyBucketsResult>
 ---
@@ -450,7 +453,7 @@ In case RGW backends are migrated in the CephStorage nodes, there’s no
 keystone endpoint, pointing to the external Network that has been propagated
 (see the previous section)
 
-```
+```bash
 [ceph: root@controller-0 /]# ceph config dump | grep keystone
 global   basic rgw_keystone_url  http://172.16.1.111:5000
 
@@ -472,7 +475,7 @@ ssh  on each Controller node and remove the following is the section from
 `/var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg`:
 
 
-```
+```haproxy
 listen ceph_rgw
   bind 10.0.0.103:8080 transparent
   mode http
@@ -491,7 +494,7 @@ listen ceph_rgw
 
 Restart `haproxy-bundle` and make sure it’s started:
 
-```
+```bash
 [root@controller-0 ~]# sudo pcs resource restart haproxy-bundle
 haproxy-bundle successfully restarted
 
@@ -507,14 +510,14 @@ haproxy-bundle successfully restarted
 
 Double check no process is bound to 8080 anymore”
 
-```
+```bash
 [root@controller-0 ~]# ss -antop | grep 8080
 [root@controller-0 ~]#
 ```
 
 And the swift CLI should fail at this point:
 
-```
+```bash
 (overcloud) [root@cephstorage-0 ~]# swift list
 
 HTTPConnectionPool(host='10.0.0.103', port=8080): Max retries exceeded with url: /swift/v1/AUTH_852f24425bb54fa896476af48cbe35d3?format=json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7fc41beb0430>: Failed to establish a new connection: [Errno 111] Connection refused'))
@@ -524,7 +527,7 @@ Now we can start deploying the Ceph IngressDaemon on the CephStorage nodes.
 
 Set the required images for both HaProxy and Keepalived
 
-```
+```bash
 [ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_haproxy quay.io/ceph/haproxy:2.3
 
 [ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_keepalived quay.io/ceph/keepalived:2.1.5
@@ -533,13 +536,13 @@ Set the required images for both HaProxy and Keepalived
 
 Prepare the ingress spec and mount it to cephadm:
 
-```
+```bash
 $ sudo vim /home/ceph-admin/specs/rgw_ingress
 ```
 
 and paste the following content:
 
-```
+```yaml
 ---
 service_type: ingress
 service_id: rgw.rgw
@@ -557,7 +560,7 @@ spec:
 
 Mount the generated spec and apply it using the orchestrator CLI:
 
-```
+```bash
 $ cephadm shell -m /home/ceph-admin/specs/rgw_ingress
 $ cephadm shell -- ceph orch apply -i /mnt/rgw_ingress
 ```
@@ -565,7 +568,7 @@ $ cephadm shell -- ceph orch apply -i /mnt/rgw_ingress
 
 Wait until the ingress is deployed and query the resulting endpoint:
 
-```
+```bash
 [ceph: root@controller-0 /]# ceph orch ls
 
 NAME                 	PORTS            	RUNNING  REFRESHED  AGE  PLACEMENT
@@ -578,7 +581,7 @@ osd.default_drive_group   15  37s ago	3d   cephstorage-0;cephstorage-1;cephstora
 rgw.rgw   ?:8090          3/3  37s ago	4m   label:rgw
 ```
 
-```
+```bash
 [ceph: root@controller-0 /]# curl  10.0.0.89:8080
 
 ---
@@ -599,7 +602,7 @@ before any other action we should update the object-store endpoint.
 
 List the current endpoints:
 
-```
+```bash
 (overcloud) [stack@undercloud-0 ~]$ openstack endpoint list | grep object
 
 | 1326241fb6b6494282a86768311f48d1 | regionOne | swift    	| object-store   | True	| internal  | http://172.17.3.68:8080/swift/v1/AUTH_%(project_id)s |
@@ -610,7 +613,7 @@ List the current endpoints:
 Update the endpoints pointing to the Ingress VIP:
 
 
-```
+```bash
 (overcloud) [stack@undercloud-0 ~]$ openstack endpoint set --url "http://10.0.0.89:8080/swift/v1/AUTH_%(project_id)s" 95596a2d92c74c15b83325a11a4f07a3
 
 (overcloud) [stack@undercloud-0 ~]$ openstack endpoint list | grep object-store
@@ -622,7 +625,7 @@ Update the endpoints pointing to the Ingress VIP:
 And repeat the same action for both internal and admin.
 Test the migrated service.
 
-```
+```bash
 (overcloud) [stack@undercloud-0 ~]$ swift list --debug
 
 DEBUG:swiftclient:Versionless auth_url - using http://10.0.0.115:5000/v3 as endpoint
@@ -644,7 +647,7 @@ DEBUG:swiftclient:RESP BODY: b'[]'
 
 Run tempest tests against object-storage:
 
-```
+```bash
 (overcloud) [stack@undercloud-0 tempest-dir]$  tempest run --regex tempest.api.object_storage
 ...
 ...
@@ -676,8 +679,7 @@ Worker Balance
 
 ## Additional Resources
 
-A screen recording is available [here](https://asciinema.org/a/560091).
-<script id="asciicast-560091" src="https://asciinema.org/a/560091.js" async data-autoplay="true" data-speed="2"></script>
+A [screen recording](https://asciinema.org/a/560091) is available.
 
 [0]: https://access.redhat.com/articles/1548993
 [1]: https://docs.ceph.com/en/latest/cephadm/services/rgw/#high-availability-service-for-rgw

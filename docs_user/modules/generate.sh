@@ -25,5 +25,5 @@ bundle exec kramdoc -o openstack-stop_openstack_services.adoc ../../docs/opensta
 bundle exec kramdoc -o openstack-telemetry_adoption.adoc ../../docs/openstack/telemetry_adoption.md
 bundle exec kramdoc -o openstack-troubleshooting.adoc ../../docs/openstack/troubleshooting.md
 
-# bundle exec kramdoc -o ceph-rbd_migration.adoc ../../docs/ceph/ceph_rbd.md
-# bundle exec kramdoc -o ceph-rgw_migration.adoc ../../docs/ceph/ceph_rgw.md
+bundle exec kramdoc -o ceph-rbd_migration.adoc ../../docs/ceph/ceph_rbd.md
+bundle exec kramdoc -o ceph-rgw_migration.adoc ../../docs/ceph/ceph_rgw.md
