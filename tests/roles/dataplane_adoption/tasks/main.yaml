@@ -139,6 +139,46 @@
       playbook: osp.edpm.nova
     EOF
 
+- name: create a repo-setup service to configure Antelope repositories
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc apply -f - <<EOF
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: repo-setup
+      namespace: openstack
+    spec:
+      label: dataplane.deployment.repo.setup
+      play: |
+        - hosts: all
+          strategy: linear
+          tasks:
+            - name: Enable podified-repos
+              become: true
+              ansible.builtin.shell: |
+                # TODO: Use subscription-manager and a valid OSP18 repos instead
+                # This is a hack to deploy RDO Delorean repos to RHEL as if it were Centos 9 Stream
+                set -euxo pipefail
+                curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
+                python3 -m venv ./venv
+                PBR_VERSION=0.0.0 ./venv/bin/pip install ./repo-setup-main
+                # This is required for FIPS enabled until trunk.rdoproject.org
+                # is not being served from a centos7 host, tracked by
+                # https://issues.redhat.com/browse/RHOSZUUL-1517
+                dnf -y install crypto-policies
+                update-crypto-policies --set FIPS:NO-ENFORCE-EMS
+                # FIXME: perform dnf upgrade for other packages in EDPM ansible
+                # here we only ensuring that decontainerized libvirt can start
+                ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
+                dnf -y upgrade openstack-selinux
+                rpm -q python3-tripleoclient && dnf -y erase python3-tripleoclient --exclude=openvswitch3.1 --exclude=openvswitch-selinux-extra-policy --exclude=openstack-network-scripts-openvswitch3.1 --exclude=python3-openvswitch3.1 --exclude=python3-rdo-openvswitch --exclude=rdo-openvswitch --exclude=rhosp-openvswitch-3.1 --exclude=python3-rhosp-openvswitch
+                rm -f /run/virtlogd.pid
+                rm -rf repo-setup-main
+    EOF
+
 - name: deploy dataplane
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -153,6 +193,7 @@
         - ctlplane
       preProvisioned: true
       services:
+        - repo-setup
         - download-cache
         - bootstrap
         - configure-network
@@ -225,6 +266,10 @@
             # SELinux module
             edpm_selinux_mode: enforcing
             plan: overcloud
+
+            # Do not attempt OVS 3.2 major upgrades here
+            edpm_ovs_packages:
+            - openvswitch3.1
     EOF
 
 - name: deploy the dataplane deployment
