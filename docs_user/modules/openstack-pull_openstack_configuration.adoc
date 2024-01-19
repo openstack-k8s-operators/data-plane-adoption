@@ -88,4 +88,5 @@ Once it's done, you should have into your local path a directory per services su
   ▾ tmp/
     ▾ tripleo/
       ▾ glance/
+      ▾ keystone/
 ----
