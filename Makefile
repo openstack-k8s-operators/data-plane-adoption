@@ -24,22 +24,6 @@ test-minimal-rhev:
 
 ### DOCS ###
 
-## old style docs, to be removed after migration to asciidoc ##
-mkdocs:
-	if type mkocs &> /dev/null; then \
-		MKDOCS="mkdocs"; \
-	else \
-		MKDOCS="./local/docs-venv/bin/mkdocs"; \
-	fi; \
-	$$MKDOCS build
-
-mkdocs-dependencies:
-	[ -e local/docs-venv ] || python3 -m venv local/docs-venv
-	source local/docs-venv/bin/activate && pip install -r docs/doc_requirements.txt
-
-
-## new-style docs ##
-
 docs-dependencies: .bundle
 
 .bundle:
