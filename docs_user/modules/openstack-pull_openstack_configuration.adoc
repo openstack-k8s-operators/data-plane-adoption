@@ -12,40 +12,32 @@ link:planning.md#Configuration tooling[Configure os-diff]
 
 == Pull configuration from a TripleO deployment
 
-Once you make sure the ssh connnection is confugred correctly and os-diff has been
-built, you can start to pull configuration from your Openstack services.
+Before starting you need to update your ssh parameters according to your environment in the os-diff.cfg.
+Once it's done, you can start to pull configuration from your OpenStack servies.
 
-All the services are describes in an Ansible role:
+All the services are describes in a yaml file:
 
-https://github.com/openstack-k8s-operators/os-diff/blob/main/roles/collect_config/vars/main.yml[collect_config vars]
+https://github.com/openstack-k8s-operators/os-diff/config.yaml[config parameters]
 
-Once you enabled the services you need (you can enable everything even if a services is not deployed)
-you can start to pull the Openstack services configuration files:
+You can enable or disable the services you want then you can start to pull the configuration on your local file system:
 
 [,bash]
 ----
 pushd os-diff
-./os-diff pull --cloud_engine=podman
+./os-diff pull
 ----
 
-The configuration will be pulled and stored in:
-
-[,bash]
-----
-/tmp/collect_tripleo_configs
-----
-
-And you provided another path with:
+The configuration will be pulled and stored by default:
 
 [,bash]
 ----
-./os-diff pull --cloud_engine=podman -e local_working_dir=$HOME
+/tmp/tripleo/
 ----
 
-Once the ansible playbook has been run, you should have into your local directory a directory per services
+Once it's done, you should have into your local path a directory per services such as:
 
 ----
   ▾ tmp/
-    ▾ collect_tripleo_configs/
+    ▾ tripleo/
       ▾ glance/
 ----
