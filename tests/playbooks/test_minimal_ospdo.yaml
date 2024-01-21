@@ -1,36 +1,26 @@
-# - name: Prelude
-#   hosts: local
-#   gather_facts: false
-#   module_defaults:
-#     ansible.builtin.shell:
-#       executable: /bin/bash
-#   roles:
-#     - prelude_local
+- name: Prelude
+  hosts: local
+  gather_facts: false
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  roles:
+    - prelude_local
 
-# - name: Cleanup
-#   hosts: local
-#   gather_facts: false
-#   module_defaults:
-#     ansible.builtin.shell:
-#       executable: /bin/bash
-#   roles:
-#     - pcp_cleanup
-# TODO : add CONTROLLER_SSH for ospdo
-# env titan132crucibleOspdo,134crcNg
-#    stop_openstack_services_shell_vars: |
-      # CONTROLLER1_SSH="{{ controller1_ssh }}"
-      # CONTROLLER2_SSH="{{ controller2_ssh }}"
-      # CONTROLLER3_SSH="{{ controller3_ssh }}"
-#       sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com ' export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient bash; . /etc/bashrc;cd ~;ssh controller-1.ctlplane'
+- name: Cleanup
+  hosts: local
+  gather_facts: false
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  roles:
+    - pcp_cleanup
 
-#TODO can be run with :
-# "sshpass -p12345678 ssh root@titan132.lab.eng.tlv2.redhat.com ' export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest;
-# oc exec -it -n openstack openstackclient bash;
-# . /etc/bashrc;
-# git download adoption-repo;pushd data-plane.. ;
-# ansible -i /ctlplane-ansible-inventory test_minimal_ospdo.yaml.yaml
-# "
-
+# TODO need to execute the first 4 roles against the "controller" host
+# supplied by zuul,
+# two ways about it :
+# 1. add controller to the inventory and call delegate_to (localhost or controller) in the role level
+# 2.extract the controler hostname and pass and use the ssh commands as is in patch.
 
 - name: Adoption
   hosts: local
@@ -39,15 +29,15 @@
     ansible.builtin.shell:
       executable: /bin/bash
   roles:
-    # - backend_services
-    # - stop_openstack_services
-    # - mariadb_copy
-    - ovn_adoption
-    # - keystone_adoption
-    # - neutron_adoption
-    # - glance_adoption
-    # - placement_adoption
-    # - cinder_adoption
-    # - horizon_adoption
-    # - dataplane_adoption
-    # - heat_adoption
+     - backend_services
+     - stop_openstack_services
+     - mariadb_copy
+     - ovn_adoption
+     - keystone_adoption
+     - neutron_adoption
+     - glance_adoption
+     - placement_adoption
+     - cinder_adoption
+     - horizon_adoption
+     - dataplane_adoption
+     - heat_adoption
