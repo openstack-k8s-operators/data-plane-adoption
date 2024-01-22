@@ -299,6 +299,31 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait --for condition=Ready osdpns/openstack --timeout=40m
+
+    DEPLOYMENT_NAME=openstack
+    TRIES=240
+    DELAY=10
+    ALLOWED_JOB_RETRIES=3
+
+    for i in $(seq $TRIES)
+    do
+        ready=$(oc get osdpd/$DEPLOYMENT_NAME -o jsonpath='{.status.conditions[0].status}')
+        if [ "$ready" == "True" ]; then
+            echo "Deployment is Ready"
+            exit 0
+        else
+            failed=$(oc get jobs -l osdpd=$DEPLOYMENT_NAME -o jsonpath="{.items[?(@.status.failed > $ALLOWED_JOB_RETRIES)].metadata.name}")
+            if [ ! -z "${failed}" ]; then
+                echo "There are failed AnsibleEE jobs: $failed"
+                exit 1
+            fi
+        fi
+
+    sleep $DELAY
+    done
+
+    echo "Run out of retries"
+    exit 2
+
   # TODO: work on network configuration for making possible to run this task on other IP ranges
   when: "edpm_node_ip.startswith('192.168.23')"
