@@ -1,0 +1,37 @@
+- name: Deploy podified cinder-volume and configure the backend
+  when: cinder_backend | default('') == 'ceph'
+  block:
+    - name: deploy podified Cinder Volume with a Ceph backend
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc patch openstackcontrolplane openstack --type=merge --patch '
+          spec:
+            cinder:
+              template:
+                cinderVolumes:
+                  volume1:
+                    networkAttachments:
+                    - storage
+                    replicas: 1
+                    customServiceConfig: |
+                      [DEFAULT]
+                      enabled_backends=ceph
+                      [ceph]
+                      volume_backend_name=ceph
+                      volume_driver=cinder.volume.drivers.rbd.RBDDriver
+                      rbd_ceph_conf=/etc/ceph/ceph.conf
+                      rbd_user=openstack
+                      rbd_pool=volumes
+                      rbd_flatten_volume_from_snapshot=False
+          '
+
+    - name: wait for Cinder Volume to start up - Ceph
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc get pod --selector=component=cinder-volume -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+      register: cinder_volume_running_result
+      until: cinder_volume_running_result is success
+      retries: 180
+      delay: 2

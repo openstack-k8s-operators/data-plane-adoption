@@ -1,0 +1,4 @@
+# cinder_backend is an empty string by default. When the OpenStackControlPlane
+# is deployed, no CinderVolumer replicas are present.
+# We currently support only Ceph in the testsuite role.
+cinder_backend: ""
