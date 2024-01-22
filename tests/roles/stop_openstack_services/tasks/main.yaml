@@ -18,6 +18,7 @@
                     "tripleo_cinder_api.service"
                     "tripleo_cinder_api_cron.service"
                     "tripleo_cinder_scheduler.service"
+                    "tripleo_cinder_volume.service"
                     "tripleo_cinder_backup.service"
                     "tripleo_glance_api.service"
                     "tripleo_manila_api.service"

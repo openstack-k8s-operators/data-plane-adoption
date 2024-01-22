@@ -1,0 +1,4 @@
+# Volume backends: ceph
+# Backup backends: ceph or swift
+cinder_volume_backend: ""
+cinder_backup_backend: ""
