@@ -221,7 +221,6 @@ spec:
             # here we only ensuring that decontainerized libvirt can start
             ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
             dnf -y upgrade openstack-selinux
-            rpm -q python3-tripleoclient && dnf -y erase python3-tripleoclient --exclude=openvswitch3.1 --exclude=openvswitch-selinux-extra-policy --exclude=openstack-network-scripts-openvswitch3.1 --exclude=python3-openvswitch3.1 --exclude=python3-rdo-openvswitch --exclude=rdo-openvswitch --exclude=rhosp-openvswitch-3.1 --exclude=python3-rhosp-openvswitch
             rm -f /run/virtlogd.pid
             rm -rf repo-setup-main
 EOF
