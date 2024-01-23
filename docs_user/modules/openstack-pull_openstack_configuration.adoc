@@ -12,40 +12,81 @@ link:planning.md#Configuration tooling[Configure os-diff]
 
 == Pull configuration from a TripleO deployment
 
-Once you make sure the ssh connnection is confugred correctly and os-diff has been
-built, you can start to pull configuration from your Openstack services.
+Before starting you need to update your ssh parameters according to your environment in the os-diff.cfg.
+Os-diff will use those parameters to connect to your Director node, query and download the configuration files:
 
-All the services are describes in an Ansible role:
+[,ini]
+----
+ssh_cmd=ssh -F ssh.config standalone
+container_engine=podman
+connection=ssh
+remote_config_path=/tmp/tripleo
+----
 
-https://github.com/openstack-k8s-operators/os-diff/blob/main/roles/collect_config/vars/main.yml[collect_config vars]
+Make sure the ssh command you provide in `ssh_cmd` parameter is correct and with key authentication.
 
-Once you enabled the services you need (you can enable everything even if a services is not deployed)
-you can start to pull the Openstack services configuration files:
+Once it's done, you can start to pull configuration from your OpenStack servies.
+
+All the services are describes in a yaml file:
+
+https://github.com/openstack-k8s-operators/os-diff/blob/main/config.yaml[service config parameters]
+
+You can enable or disable the services you want then you can start to pull the configuration on your local file system.
+Example with default keystone:
+
+[,yaml]
+----
+# service name and file location
+services:
+  # Service name
+  keystone:
+    # Bool to enable/disable a service (not implemented yet)
+    enable: true
+    # Pod name, in both OCP and podman context.
+    # It could be strict match or will only just grep the podman_name
+    # and work with all the pods which matched with pod_name.
+    # To enable/disable use strict_pod_name_match: true/false
+    podman_name: keystone
+    pod_name: keystone
+    container_name: keystone-api
+    # pod options
+    # strict match for getting pod id in TripleO and podman context
+    strict_pod_name_match: false
+    # Path of the config files you want to analyze.
+    # It could be whatever path you want:
+    # /etc/<service_name> or /etc or /usr/share/<something> or even /
+    # @TODO: need to implement loop over path to support multiple paths such as:
+    # - /etc
+    # - /usr/share
+    path:
+      - /etc/
+      - /etc/keystone
+      - /etc/keystone/keystone.conf
+      - /etc/keystone/logging.conf
+----
+
+Duplicate the keystone example to each Openstack services you want.
+
+Then, you can pull the configuration with this command:
 
 [,bash]
 ----
 pushd os-diff
-./os-diff pull --cloud_engine=podman
+./os-diff pull
 ----
 
-The configuration will be pulled and stored in:
-
-[,bash]
-----
-/tmp/collect_tripleo_configs
-----
-
-And you provided another path with:
+The configuration will be pulled and stored by default:
 
 [,bash]
 ----
-./os-diff pull --cloud_engine=podman -e local_working_dir=$HOME
+/tmp/tripleo/
 ----
 
-Once the ansible playbook has been run, you should have into your local directory a directory per services
+Once it's done, you should have into your local path a directory per services such as:
 
 ----
   ▾ tmp/
-    ▾ collect_tripleo_configs/
+    ▾ tripleo/
       ▾ glance/
+      ▾ keystone/
 ----
