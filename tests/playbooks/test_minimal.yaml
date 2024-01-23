@@ -35,5 +35,6 @@
     - nova_adoption
     - cinder_adoption
     - horizon_adoption
+    - stop_remaining_services
     - dataplane_adoption
     - heat_adoption

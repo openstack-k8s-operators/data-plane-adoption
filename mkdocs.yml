@@ -42,6 +42,7 @@ nav:
     - openstack/cinder_adoption.md
     - openstack/horizon_adoption.md
     - openstack/manila_adoption.md
+    - openstack/stop_remaining_services.md
     - openstack/edpm_adoption.md
     - openstack/ironic_adoption.md
     - openstack/heat_adoption.md

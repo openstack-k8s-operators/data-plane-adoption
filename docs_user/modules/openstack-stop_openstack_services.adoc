@@ -16,6 +16,10 @@ Since gracefully stopping all services is non-trivial and beyond the scope of
 this guide we'll proceed with the force method but present a couple of
 recommendations on how to check some things in the services.
 
+Note that we should not stop the infrastructure management services now, like
+database, RabbitMQ, and HAProxy Load Balancer. Nor should we stop yet the
+Nova compute service and containerized modular libvirt daemons.
+
 == Variables
 
 Define the shell variables used in the steps below. The values are
@@ -38,12 +42,6 @@ are in the right host, for example to stop a service:
 ----
 . stackrc ansible -i $(which tripleo-ansible-inventory) Controller -m shell -a "sudo systemctl stop tripleo_horizon.service" -b
 ----
-
-____
-*NOTE* Nova computpe services in this guide are running on the same controller hosts.
-Adjust `+CONTROLLER${i}_SSH+` commands and `ServicesToStop` given below to your
-source environment specific topology.
-____
 
 == Pre-checks
 
@@ -71,9 +69,8 @@ undesired state, so at the very least we should have a look to confirm that
 there are no ongoing  operations.
 
 1- Connect to all the controller nodes.
-2- Stop the services.
-3- Make sure all the services are stopped.
-4- Repeat steps 1-3 for compute hosts (workloads running on dataplane will not be affected)
+2- Stop the control plane services.
+3- Verify the control plane services are stopped.
 
 The cinder-backup service on OSP 17.1 could be running as Active-Passive under
 pacemaker or as Active-Active, so we'll have to check how it's running and
@@ -105,16 +102,6 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_nova_metadata.service"
                 "tripleo_nova_scheduler.service"
                 "tripleo_nova_vnc_proxy.service"
-                # Compute services on dataplane
-                "tripleo_nova_compute.service"
-                "tripleo_nova_libvirt.target"
-                "tripleo_nova_migration_target.service"
-                "tripleo_nova_virtlogd_wrapper.service"
-                "tripleo_nova_virtnodedevd.service"
-                "tripleo_nova_virtproxyd.service"
-                "tripleo_nova_virtqemud.service"
-                "tripleo_nova_virtsecretd.service"
-                "tripleo_nova_virtstoraged.service"
                 "tripleo_aodh_api.service"
                 "tripleo_aodh_api_cron.service"
                 "tripleo_aodh_evaluator.service"
@@ -149,7 +136,7 @@ for service in ${ServicesToStop[*]}; do
         if [ ! -z "${!SSH_CMD}" ]; then
             echo "Checking status of $service in controller $i"
             if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
-               echo "ERROR: Service $service still running on controller $i"
+                echo "ERROR: Service $service still running on controller $i"
             fi
         fi
     done

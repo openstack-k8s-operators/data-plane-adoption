@@ -3,6 +3,14 @@
 == Prerequisites
 
 * Previous Adoption steps completed.
+* Remaining source cloud xref:stop_remaining_services.adoc[services are stopped] on compute hosts.
+
+____
+*WARNING* This step is a "point of no return" in the EDPM adoption
+procedure. The source control plane and data plane services must not
+be ever enabled back, after EDPM is deployed, and Podified control
+plane has taken control over it!
+____
 
 == Variables
 
@@ -156,31 +164,31 @@ cd -
 +
 [,yaml]
 ----
-  oc apply -f - <<EOF
-  apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: nova-compute-extraconfig
-    namespace: openstack
-  data:
-    19-nova-compute-cell1-workarounds.conf: |
-      [workarounds]
-      disable_compute_service_check_for_ffu=true
-  ---
-  apiVersion: dataplane.openstack.org/v1beta1
-  kind: OpenStackDataPlaneService
-  metadata:
-    name: nova-compute-extraconfig
-    namespace: openstack
-  spec:
-    label: nova.compute.extraconfig
-    configMaps:
-      - nova-compute-extraconfig
-    secrets:
-      - nova-cell1-compute-config
-      - nova-migration-ssh-key
-    playbook: osp.edpm.nova
-  EOF
+oc apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nova-compute-extraconfig
+  namespace: openstack
+data:
+  19-nova-compute-cell1-workarounds.conf: |
+    [workarounds]
+    disable_compute_service_check_for_ffu=true
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: nova-compute-extraconfig
+  namespace: openstack
+spec:
+  label: nova.compute.extraconfig
+  configMaps:
+    - nova-compute-extraconfig
+  secrets:
+    - nova-cell1-compute-config
+    - nova-migration-ssh-key
+  playbook: osp.edpm.nova
+EOF
 ----
 +
 The secret `nova-cell<X>-compute-config` is auto-generated for each

@@ -40,4 +40,5 @@
     - horizon_adoption
     - heat_adoption
     - manila_adoption
+    - stop_remaining_services
     - dataplane_adoption
