@@ -118,6 +118,7 @@ Create the edpm-compute-0 virtual machine.
 [,bash]
 ----
 cd install_yamls/devsetup
+# For RHEL based please check: https://url.corp.redhat.com/57c0618
 make standalone
 ----
 
