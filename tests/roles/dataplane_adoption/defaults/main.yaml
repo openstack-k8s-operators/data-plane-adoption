@@ -93,7 +93,7 @@ edpm_network_config_template: |
     dns_servers: {{ os_net_config_dns | default(ctlplane_dns_nameservers, true) }}
     domain: {{ dns_search_domains }}
     addresses:
-    - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
+    - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
     routes: {{ ctlplane_host_routes if os_net_config_set_route else '[]' }}
     members:
     - type: interface
@@ -119,7 +119,7 @@ role_networks:
   - Tenant
 networks_lower:
   External: external
-  InternalApi: internal_api
+  InternalApi: internalapi
   Storage: storage
   Tenant: tenant
 edpm_sshd_allowed_ranges: "{{ ['192.168.122.0/24'] if dataplane_os_net_config_set_route|default(true)|bool else ['0.0.0.0/0'] }}"

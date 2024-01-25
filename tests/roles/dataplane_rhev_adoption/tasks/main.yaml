@@ -190,8 +190,8 @@
           ansibleUser: stack
           ansibleVars:
             service_net_map:
-              nova_api_network: internal_api
-              nova_libvirt_network: internal_api
+              nova_api_network: internalapi
+              nova_libvirt_network: internalapi
 
             # edpm_network_config
             # Default nic config template for a EDPM compute node
@@ -215,7 +215,7 @@
                 dns_servers: {{ ctlplane_dns_nameservers }}
                 domain: {{ dns_search_domains }}
                 addresses:
-                - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
+                - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
                 routes: {{ ctlplane_host_routes }}
               - type: interface
                 name: nic3
@@ -227,8 +227,8 @@
                 name: nic4
                 use_dhcp: false
                 addresses:
-                - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
-                routes: {{ internal_api_host_routes }}
+                - ip_netmask: {{ internalapi_ip }}/{{ internalapi_cidr }}
+                routes: {{ internalapi_host_routes }}
               - type: ovs_bridge
                 name: {{ neutron_physical_bridge_name }}
                 dns_servers: {{ ctlplane_dns_nameservers }}
@@ -254,7 +254,7 @@
             - Tenant
             networks_lower:
               External: external
-              InternalApi: internal_api
+              InternalApi: internalapi
               Tenant: tenant
 
             # edpm_nodes_validation
