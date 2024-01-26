@@ -3,8 +3,9 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc delete --wait=false openstackdataplanedeployment/openstack || true
-    oc delete --wait=false openstackcontrolplane/openstack || true
+    oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack
+    oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack-nova-compute-ffu
+    oc delete --ignore-not-found=true --wait=false openstackcontrolplane/openstack
     oc patch openstackcontrolplane openstack --type=merge --patch '
     metadata:
       finalizers: []
