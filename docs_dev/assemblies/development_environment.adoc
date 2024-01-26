@@ -311,8 +311,23 @@ Delete the data-plane and control-plane resources from the CRC vm
 
 [,bash]
 ----
-oc delete osdp openstack
-oc delete oscp openstack
+oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack
+oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack-nova-compute-ffu
+oc delete --ignore-not-found=true --wait=false openstackcontrolplane/openstack
+oc patch openstackcontrolplane openstack --type=merge --patch '
+metadata:
+  finalizers: []
+' || true
+
+while oc get pod | grep rabbitmq-server-0; do
+    sleep 2
+done
+while oc get pod | grep openstack-galera-0; do
+    sleep 2
+done
+
+oc delete --wait=false pod ovn-copy-data || true
+oc delete secret osp-secret || true
 ----
 
 Revert the standalone vm to the snapshotted state
@@ -328,8 +343,7 @@ Clean up and initialize the storage PVs in CRC vm
 [,bash]
 ----
 cd ..
-make crc_storage_cleanup
-make crc_storage
+for i in {1..3}; do make crc_storage_cleanup crc_storage && break || sleep 5; done
 ----
 
 == Experimenting with an additional compute node
