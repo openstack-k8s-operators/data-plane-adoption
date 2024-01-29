@@ -22,6 +22,8 @@
   vars:
     glance_backend: ceph
     manila_backend: cephfs
+    cinder_volume_backend: ceph
+    cinder_backup_backend: ceph
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash

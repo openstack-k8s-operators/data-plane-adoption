@@ -25,24 +25,41 @@
           cinderBackup:
             networkAttachments:
             - storage
-            replicas: 0 # backend needs to be configured
+            replicas: 0 # no backups by default
           cinderVolumes:
             volume1:
               networkAttachments:
               - storage
-              replicas: 0 # backend needs to be configured
+              replicas: 0 # no volumes by default
     '
 
-- name: wait for Cinder to start up
+- name: Deploy cinder-volume if necessary
+  when: cinder_volume_backend != ''
+  ansible.builtin.include_tasks: volume_backend.yaml
+
+- name: Deploy cinder-backup if necessary
+  when: cinder_backup_backend != ''
+  ansible.builtin.include_tasks: backup_backend.yaml
+
+- name: wait for Cinder pods to start up
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     oc get pod --selector=component=cinder-scheduler -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
     oc get pod --selector=component=cinder-api -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    [ -n "{{ cinder_volume_backend }}" ] && oc get pod --selector=component=cinder-volume -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    [ -n "{{ cinder_backup_backend }}" ] && oc get pod --selector=component=cinder-backup -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
   register: cinder_running_result
   until: cinder_running_result is success
   retries: 180
   delay: 2
+
+# Give time for volume and backup services to initialize drivers, otherwise they
+# always looks ok (up) because that's the default at the start.
+- name: Pause to allow backend drivers to start
+  when: cinder_volume_backend != '' or cinder_backup_backend != ''
+  ansible.builtin.pause:
+     seconds: 90
 
 - name: check that Cinder is reachable and its endpoints are defined
   ansible.builtin.shell: |
@@ -55,6 +72,28 @@
   register: cinder_responding_result
   until: cinder_responding_result is success
   retries: 60
+  delay: 2
+
+- name: wait for Cinder volume to be up and ready
+  when: cinder_volume_backend != ''
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t openstackclient -- openstack volume service list --service cinder-volume | grep ' up '
+  register: cinder_running_result
+  until: cinder_running_result is success
+  retries: 5
+  delay: 2
+
+- name: wait for Cinder backup to be up and ready
+  when: cinder_backup_backend != ''
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t openstackclient -- openstack volume service list --service cinder-backup | grep ' up '
+  register: cinder_running_result
+  until: cinder_running_result is success
+  retries: 5
   delay: 2
 
 - name: Cinder online data migrations
