@@ -244,6 +244,10 @@ spec:
       databaseInstance: openstack
       secret: osp-secret
       manilaAPI:
+        replicas: 3
+        customServiceConfig: |
+          [DEFAULT]
+          enabled_share_protocols = cephfs
         override:
           service:
             internal:
@@ -254,12 +258,6 @@ spec:
                   metallb.universe.tf/loadBalancerIPs: 172.17.0.80
               spec:
                 type: LoadBalancer
-    template:
-      manilaAPI:
-        replicas: 3
-        customServiceConfig: |
-          [DEFAULT]
-          enabled_share_protocols = cephfs
       manilaScheduler:
         replicas: 3
       manilaShares:
