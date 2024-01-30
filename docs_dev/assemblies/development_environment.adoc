@@ -1,14 +1,5 @@
 = Development environment
 
-'''
-
-_This is a guide for an install_yamls based Adoption environment with
-network isolation as an alternative to the
-https://gitlab.cee.redhat.com/rhos-upgrades/data-plane-adoption-dev/-/tree/main/crc-and-vagrant[CRC and Vagrant TripleO Standalone]
-development environment guide._
-
-'''
-
 The Adoption development environment utilizes
 https://github.com/openstack-k8s-operators/install_yamls[install_yamls]
 for CRC VM creation and for creation of the VM that hosts the original
