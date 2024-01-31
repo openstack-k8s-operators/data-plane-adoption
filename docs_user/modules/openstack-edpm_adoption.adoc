@@ -15,11 +15,17 @@ ____
 == Variables
 
 Define the shell variables used in the Fast-forward upgrade steps below.
+Define the map of compute node name, IP pairs.
 The values are just illustrative, use values that are correct for your environment:
 
 [,bash]
 ----
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+declare -A computes
+export computes=(
+  ["standalone.localdomain"]="192.168.122.100"
+  # ...
+)
 ----
 
 == Pre-checks
@@ -98,17 +104,6 @@ EOF
 
 * _Temporary fix_ until the OSP 17 https://code.engineering.redhat.com/gerrit/q/topic:stable-compute-uuid[backport of the stable compute UUID feature]
 lands.
-+
-Define the map of compute node name, IP pairs:
-+
-[,bash]
-----
-declare -A computes
-computes=(
-  ["standalone.localdomain"]="192.168.122.100"
-  # ...
-)
-----
 +
 For each compute node grab the UUID of the compute service and write it too
 the stable `compute_id` file in `/var/lib/nova/` directory.
@@ -268,10 +263,10 @@ spec:
     standalone:
       hostName: standalone
       ansible:
-        ansibleHost: 192.168.122.100
+        ansibleHost: ${computes[standalone.localdomain]}
       networks:
       - defaultRoute: true
-        fixedIP: 192.168.122.100
+        fixedIP: ${computes[standalone.localdomain]}
         name: CtlPlane
         subnetName: subnet1
       - name: InternalApi

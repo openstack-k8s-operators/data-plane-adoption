@@ -8,7 +8,7 @@
       EDPM_PRIVATEKEY_PATH="{{ edpm_privatekey_path }}"
       declare -A computes
       computes=(
-      ["standalone.localdomain"]="{{ edpm_node_ip }}"
+        ["standalone.localdomain"]="{{ edpm_node_ip }}"
       )
 
 - name: stop compute services
