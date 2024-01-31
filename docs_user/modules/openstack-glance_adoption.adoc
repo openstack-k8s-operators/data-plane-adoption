@@ -69,13 +69,14 @@ In the source cloud, verify the NFS parameters used by the overcloud to configur
 the Glance backend.
 In particular, find among the TripleO heat templates the following variables:
 
-
-[,bash]
 ---
-GlanceBackend : file
-GlanceNfsEnabled: true
-GlanceNfsShare: '192.168.24.1:/var/nfs
-'
+
+**GlanceBackend**: file
+
+**GlanceNfsEnabled**: true
+
+**GlanceNfsShare**: 192.168.24.1:/var/nfs
+
 ---
 
 that are usually an override of the default content provided by
