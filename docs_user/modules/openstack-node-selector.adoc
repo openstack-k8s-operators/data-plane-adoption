@@ -1,4 +1,8 @@
-= Node Selector
+[id="node-selector_{context}"]
+
+//kgilliga: This concept module will be moved under the openstack-planning.adoc assembly.
+
+= About node selector
 
 There are a variety of reasons why we may want to restrict the nodes where
 OpenStack services can be placed:
@@ -35,7 +39,6 @@ affect all the OpenStack services.
 
 For example we can add label `type: openstack` to any 3 OpenShift nodes:
 
-[,bash]
 ----
 $ oc label nodes worker0 type=openstack
 $ oc label nodes worker1 type=openstack
@@ -45,7 +48,7 @@ $ oc label nodes worker2 type=openstack
 And then in our `OpenStackControlPlane` we can use the label to place all the
 services in those 3 nodes:
 
-[,yaml]
+[source,yaml]
 ----
 apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
@@ -64,7 +67,7 @@ backup services because we are using FC and we only have HBAs on a subset of
 nodes? Then we can just use the selector on for those specific services, which
 for the sake of this example we'll assume they have the label `fc_card: true`:
 
-[,yaml]
+[source,yaml]
 ----
 apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
@@ -115,7 +118,7 @@ For example to be able to limit `MachineConfig` to the 3 OpenShift nodes we
 marked with the `type: openstack` label we would create the
 `MachineConfigPool` like this:
 
-[,yaml]
+[source,yaml]
 ----
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfigPool
@@ -132,7 +135,7 @@ spec:
 
 And then we could use it in the `MachineConfig`:
 
-[,yaml]
+[source,yaml]
 ----
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig

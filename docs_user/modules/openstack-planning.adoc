@@ -1,3 +1,9 @@
+[id="planning-the-new-deployment_{context}"]
+
+:context: planning 
+
+//kgilliga: This module will be converted to an assembly.
+
 = Planning the new deployment
 
 Just like you did back when you installed your Director deployed OpenStack, the
@@ -9,7 +15,7 @@ In this document we cover some of this planning, but it is recommended to read
 the whole adoption guide before actually starting the process to be sure that
 there is a global understanding of the whole process.
 
-== Configurations
+== Service configurations
 
 There is a fundamental difference between the Director and Operator deployments
 regarding the configuration of the services.
@@ -38,7 +44,7 @@ if we were to set a configuration at the top Cinder level (`spec: cinder:
 template:`) then it would be applied to all the cinder services; for example to
 enable debug in all the cinder services we would do:
 
-[,yaml]
+[source,yaml]
 ----
 apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
@@ -56,7 +62,7 @@ spec:
 If we only wanted to set it for one of the cinder services, for example the
 scheduler, then we would use the `cinderScheduler` section instead:
 
-[,yaml]
+[source,yaml]
 ----
 apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
@@ -72,7 +78,7 @@ spec:
 < . . . >
 ----
 
-In openshift it is not recommended to store sensitive information like the
+In OpenShift it is not recommended to store sensitive information like the
 credentials to the cinder storage array in the CRs, so most OpenStack operators
 have a mechanism to use OpenShift's `Secrets` for sensitive configuration
 parameters of the services and then use then by reference in the
@@ -94,13 +100,12 @@ some particularities regarding their configuration.
 
 == Configuration tooling
 
-In order to help users to handle the configuration for the TripleO and Openstack
+In order to help users to handle the configuration for the TripleO and OpenStack
 services the tool: https://github.com/openstack-k8s-operators/os-diff has been
 develop to compare the configuration files between the TripleO deployment and
 the next gen cloud.
 Make sure Golang is installed and configured on your env:
 
-[,bash]
 ----
 git clone https://github.com/openstack-k8s-operators/os-diff
 pushd os-diff
@@ -109,7 +114,7 @@ make build
 
 Then configure ansible.cfg and ssh-config file according to your environment:
 
-[,yaml]
+[source,yaml]
 ----
 Host *
     IdentitiesOnly yes
@@ -139,12 +144,11 @@ Host crc
 
 And test your connection:
 
-[,bash]
 ----
 ssh -F ssh.config standalone
 ----
 
-== Node Roles
+== Node roles
 
 In Director deployments we had 4 different standard roles for the nodes:
 `Controller`, `Compute`, `Ceph Storage`, `Swift Storage`, but in podified
@@ -198,13 +202,13 @@ are eligible to run the different OpenStack services.  Refer to the xref:node-se
 Selector guide] to learn more about using labels to define
 placement of the OpenStack services.
 
-*TODO: Talk about Ceph Storage and Swift Storage nodes, HCI deployments,
-etc.*
+//*TODO: Talk about Ceph Storage and Swift Storage nodes, HCI deployments,
+//etc.*
 
-== Network
+//== Network
 
-*TODO: Write about isolated networks, NetworkAttachmentDefinition,
-NetworkAttachmets, etc*
+//*TODO: Write about isolated networks, NetworkAttachmentDefinition,
+//NetworkAttachmets, etc*
 
 == Storage
 
@@ -216,7 +220,7 @@ These requirements may drive our OpenShift node selection, as mentioned above,
 and may even require us to do some preparations on the OpenShift nodes before
 we can deploy the services.
 
-*TODO: Galera, RabbitMQ, Swift, Glance, etc.*
+//*TODO: Galera, RabbitMQ, Swift, Glance, etc.*
 
 === Cinder requirements
 
