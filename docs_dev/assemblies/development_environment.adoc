@@ -1,18 +1,9 @@
 = Development environment
 
-'''
-
-_This is a guide for an install_yamls based Adoption environment with
-network isolation as an alternative to the
-https://gitlab.cee.redhat.com/rhos-upgrades/data-plane-adoption-dev/-/tree/main/crc-and-vagrant[CRC and Vagrant TripleO Standalone]
-development environment guide._
-
-'''
-
 The Adoption development environment utilizes
 https://github.com/openstack-k8s-operators/install_yamls[install_yamls]
-for CRC VM creation and for creation of the VM that hosts the original
-Wallaby OpenStack in Standalone configuration.
+for CRC VM creation and for creation of the VM that hosts the source
+Wallaby (or OSP 17.1) OpenStack in Standalone configuration.
 
 == Environment prep
 
@@ -111,9 +102,13 @@ export EDPM_COMPUTE_CEPH_ENABLED=false  # Optional
 '''
 
 Use the https://github.com/openstack-k8s-operators/install_yamls/tree/main/devsetup[install_yamls devsetup]
-to create a virtual machine connected to the isolated networks.
+to create a virtual machine (edpm-compute-0) connected to the isolated networks.
 
-Create the edpm-compute-0 virtual machine.
+To use OSP 17.1 content to deploy TripleO Standalone, follow the
+https://url.corp.redhat.com/devel-rhoso-adoption[guide for setting up downstream content]
+for `make standalone`.
+
+To use Wallaby content instead, run the following:
 
 [,bash]
 ----
