@@ -36,6 +36,15 @@ docs-dependencies: .bundle
 
 docs: docs-user docs-dev
 
+docs-home:
+	cd docs_home; $(MAKE) html
+
+docs-home-open:
+	cd docs_home; $(MAKE) open-html
+
+docs-home-watch:
+	cd docs_home; $(MAKE) watch-html
+
 docs-user:
 	cd docs_user; $(MAKE) html
 

@@ -43,20 +43,6 @@ jobs:
           git branch -D gh-pages &>/dev/null || true
           git checkout -b gh-pages aabb4803f89a3b006094d8ae7a933650f644d036
 
-      - name: Create index.html
-        run: |
-          cat > index.html <<EOF
-          <html>
-          <body>
-          <h1>Data Plane Adoption documentation</h1>
-          <ul>
-            <li><a href="user/">User documentation</a></li>
-            <li><a href="dev/">Contributor documentation</a></li>
-          </ul>
-          </body>
-          <html>
-          EOF
-
       - name: Commit asciidoc docs
         run: |
           mv -T docs_build/adoption-user user
@@ -67,6 +53,8 @@ jobs:
 
           git add user
           git add dev
+
+          mv docs_build/adoption-home/index-upstream.html index.html
           git add index.html
           git commit -m "Rendered docs"
 
