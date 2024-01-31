@@ -60,7 +60,7 @@
         {{ oc_header }}
         declare -A computes
         computes=(
-          ["{{ edpm_node_hostname }}.localdomain"]="{{ edpm_node_ip }}"
+          {{ edpm_computes }}
         )
 
         for name in "${!computes[@]}";
@@ -75,7 +75,7 @@
           ssh \
             -i {{ edpm_privatekey_path | default("/tmp/ansible_private_key") }} \
             {{ edpm_user }}@"${computes[$name]}" \
-            "echo $uuid > /var/lib/nova/compute_id"
+            "echo $uuid | sudo tee /var/lib/nova/compute_id"
 
         done
 
@@ -208,12 +208,7 @@
           value: "profile_tasks"
         - name: ANSIBLE_FORCE_COLOR
           value: "True"
-      nodes:
-        {{ edpm_node_hostname }}:
-          hostName: {{ edpm_node_hostname }}
-          ansible:
-            ansibleHost: {{ edpm_node_ip }}
-          networks: {{ edpm_node_networks }}
+      nodes: {{ edpm_nodes }}
       nodeTemplate:
         ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
         managementNetwork: ctlplane
