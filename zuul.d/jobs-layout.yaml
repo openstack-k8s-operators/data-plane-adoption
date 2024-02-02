@@ -4,3 +4,4 @@
     github-check:
       jobs:
         - data-plane-adoption-osp-17-to-extracted-crc
+        - adoption-docs-preview
