@@ -29,7 +29,7 @@ docs-dependencies: .bundle
 
 	bundle config set --local path 'local/bundle'; bundle install
 
-docs: docs-user docs-dev
+docs: docs-dependencies docs-user docs-dev
 
 docs-user:
 	cd docs_user; $(MAKE) html
