@@ -3,6 +3,9 @@ install_yamls_path: ~/install_yamls #CUSTOMIZE_THIS
 # Whether to use 'make crc_storage_cleanup; make crc_storage' before the test
 reset_crc_storage: true
 
+# Pre-launch test VM instance on the source cloud
+prelaunch_test_instance: false
+
 storage_class_name: crc-csi-hostpath-provisioner #CUSTOMIZE_THIS
 storage_reclaim_policy: delete # or retain
 

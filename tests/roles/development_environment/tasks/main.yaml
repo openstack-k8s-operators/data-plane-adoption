@@ -1,0 +1,7 @@
+- name: pre-launch test VM instance
+  no_log: "{{ use_no_log }}"
+  when: prelaunch_test_instance|bool
+  ansible.builtin.shell:
+    cmd: |
+      alias openstack="ssh -i {{ edpm_privatekey_path }} root@{{ edpm_node_ip }} OS_CLOUD=standalone openstack"
+      {{ lookup('ansible.builtin.file', 'pre_launch.bash') }}

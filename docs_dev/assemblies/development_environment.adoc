@@ -7,11 +7,17 @@ Wallaby (or OSP 17.1) OpenStack in Standalone configuration.
 
 == Environment prep
 
+Get dataplane adoption repo:
+[,bash]
+----
+git clone https://github.com/openstack-k8s-operators/data-plane-adoption.git ~/data-plane-adoption
+----
+
 Get install_yamls:
 
 [,bash]
 ----
-git clone https://github.com/openstack-k8s-operators/install_yamls.git
+git clone https://github.com/openstack-k8s-operators/install_yamls.git ~/install_yamls
 ----
 
 Install tools for operator development:
@@ -44,7 +50,7 @@ a RedFish BMC emulator.
 
 [,bash]
 ----
-cd ..  # back to install_yamls
+cd ~/install_yamls
 make nmstate
 make namespace
 cd devsetup  # back to install_yamls/devsetup
@@ -112,7 +118,7 @@ To use Wallaby content instead, run the following:
 
 [,bash]
 ----
-cd install_yamls/devsetup
+cd ~/install_yamls/devsetup
 make standalone
 ----
 
@@ -261,11 +267,20 @@ ping -c 4 $(openstack server show baremetal-test -f json -c addresses | jq -r .a
 
 '''
 
+==== Virtual Machine Steps
+
 [,bash]
 ----
-export OS_CLOUD=standalone
-source ~/install_yamls/devsetup/scripts/edpm-deploy-instance.sh
+cd ~/data-plane-adoption
+bash tests/roles/development_environment/templates/pre_launch.bash
 ----
+
+'''
+
+==== Ceph Storage Steps
+
+Make sure a cinder-volume backend is properly configured, or skip below steps
+to create a test workload without volume attachments.
 
 Confirm the image UUID can be seen in Ceph's images pool.
 
