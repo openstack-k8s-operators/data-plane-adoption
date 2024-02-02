@@ -200,9 +200,12 @@
         - install-os
         - configure-os
         - run-os
+        - reboot-os
+        - install-certs
         - libvirt
         - nova-compute-extraconfig
         - ovn
+        - neutron-metadata
       env:
         - name: ANSIBLE_CALLBACKS_ENABLED
           value: "profile_tasks"
