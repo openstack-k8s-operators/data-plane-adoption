@@ -1,59 +1,45 @@
-= Stop OpenStack services
+[id="stopping-openstack-services_{context}"]
 
-Before we can start with the adoption we need to make sure that the OpenStack
-services have been stopped.
+//kgilliga: This module will be converted to a procedure and likely nested under the planning assembly.
 
-This is an important step to avoid inconsistencies in the data migrated for the
-data-plane adoption procedure caused by resource changes after the DB has been
+= Stopping OpenStack services
+
+Before you start the adoption, you must stop the OpenStack services.
+
+This is an important step to avoid inconsistencies in the data migrated for the data-plane adoption procedure caused by resource changes after the DB has been
 copied to the new deployment.
 
-Some services are easy to stop because they only perform short asynchronous
-operations, but other services are a bit more complex to gracefully stop
-because they perform synchronous or long running operations that we may want to
-complete instead of aborting them.
+Some services are easy to stop because they only perform short asynchronous operations, but other services are a bit more complex to gracefully stop because they perform synchronous or long running operations that you might want to complete instead of aborting them.
 
-Since gracefully stopping all services is non-trivial and beyond the scope of
-this guide we'll proceed with the force method but present a couple of
+Since gracefully stopping all services is non-trivial and beyond the scope of this guide, the following procedure uses the force method and presents
 recommendations on how to check some things in the services.
 
-Note that we should not stop the infrastructure management services now, like
-database, RabbitMQ, and HAProxy Load Balancer. Nor should we stop yet the
+Note that you should not stop the infrastructure management services yet, such as database, RabbitMQ, and HAProxy Load Balancer, nor should you stop the
 Nova compute service and containerized modular libvirt daemons.
 
 == Variables
 
-Define the shell variables used in the steps below. The values are
-just illustrative and refer to a single node standalone director deployment,
-use values that are correct for your environment:
+Define the shell variables used in the following steps. The values are illustrative and refer to a single node standalone director deployment. Use values that are correct for your environment:
 
-[,bash]
 ----
 CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 CONTROLLER2_SSH=""
 CONTROLLER3_SSH=""
 ----
 
-We chose to use these ssh variables with the ssh commands instead of using
-ansible to try to create instructions that are independent on where they are
-running, but ansible commands could be used to achieve the same result if we
-are in the right host, for example to stop a service:
+This example uses ssh variables with ssh commands instead of ansible to create instructions that are independent on where they are running. However, you can use ansible commands to achieve the same result if you are in the right host. For example, to stop a service:
 
-[,bash]
 ----
 . stackrc ansible -i $(which tripleo-ansible-inventory) Controller -m shell -a "sudo systemctl stop tripleo_horizon.service" -b
 ----
 
 == Pre-checks
 
-We can stop OpenStack services at any moment, but we may leave things in an
-undesired state, so at the very least we should have a look to confirm that
-there are no long running operations that require other services.
+You can stop OpenStack services at any moment, but you might leave your environment in an undesired state. However, you should confirm that there are no long running operations that require other services.
 
-Ensure that there are no ongoing instance live migrations, volume migrations
-(online or offline), volume creation, backup restore, attaching, detaching,
+Ensure that there are no ongoing instance live migrations, volume migrations (online or offline), volume creation, backup restore, attaching, detaching,
 etc.
 
-[,bash]
 ----
 openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
 openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
@@ -68,22 +54,16 @@ with the post-adoption values later on.
 
 == Stopping control plane services
 
-We can stop OpenStack services at any moment, but we may leave things in an
-undesired state, so at the very least we should have a look to confirm that
-there are no ongoing  operations.
+You can stop OpenStack services at any moment, but you might leave your environment in an undesired state. You should confirm that there are no ongoing operations.
 
 1- Connect to all the controller nodes.
 2- Stop the control plane services.
 3- Verify the control plane services are stopped.
 
-The cinder-backup service on OSP 17.1 could be running as Active-Passive under
-pacemaker or as Active-Active, so we'll have to check how it's running and
-stop it.
+The cinder-backup service on OSP 17.1 could be running as Active-Passive under pacemaker or as Active-Active, so you must check how it is running and stop it.
 
-These steps can be automated with a simple script that relies on the previously
-defined environmental variables and function:
+These steps can be automated with a simple script that relies on the previously defined environmental variables and function:
 
-[,bash]
 ----
 
 # Update the services list to be stopped
