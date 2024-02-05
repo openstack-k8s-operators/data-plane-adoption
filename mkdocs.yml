@@ -27,6 +27,7 @@ theme:
 nav:
   - Overview: README.md
   - OpenStack:
+    - contributing/development_environment.md
     - openstack/planning.md
     - openstack/backend_services_deployment.md
     - openstack/pull_openstack_configuration.md

@@ -200,9 +200,12 @@
         - install-os
         - configure-os
         - run-os
+        - reboot-os
+        - install-certs
         - libvirt
         - nova-compute-extraconfig
         - ovn
+        - neutron-metadata
       env:
         - name: ANSIBLE_CALLBACKS_ENABLED
           value: "profile_tasks"
@@ -316,3 +319,7 @@
 - name: Complete Nova services Wallaby->Antelope FFU
   ansible.builtin.include_tasks:
     file: nova_ffu.yaml
+
+- name: Adopted Nova FFU post-checks
+  ansible.builtin.include_tasks:
+    file: nova_verify.yaml

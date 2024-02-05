@@ -1,5 +1,5 @@
 netconfig_networks:
-  - name: CtlPlane
+  - name: ctlplane
     dnsDomain: ctlplane.example.com
     subnets:
       - name: subnet1
@@ -10,7 +10,7 @@ netconfig_networks:
             start: 192.168.122.150
         cidr: 192.168.122.0/24
         gateway: 192.168.122.1
-  - name: InternalApi
+  - name: internalapi
     dnsDomain: internalapi.example.com
     subnets:
       - name: subnet1
@@ -28,7 +28,7 @@ netconfig_networks:
             start: 10.0.0.100
         cidr: 10.0.0.0/24
         gateway: 10.0.0.1
-  - name: Storage
+  - name: storage
     dnsDomain: storage.example.com
     subnets:
       - name: subnet1
@@ -37,7 +37,7 @@ netconfig_networks:
             start: 172.18.0.100
         cidr: 172.18.0.0/24
         vlan: 21
-  - name: StorageMgmt
+  - name: storagemgmt
     dnsDomain: storagemgmt.example.com
     subnets:
       - name: subnet1
@@ -46,7 +46,7 @@ netconfig_networks:
             start: 172.20.0.100
         cidr: 172.20.0.0/24
         vlan: 23
-  - name: Tenant
+  - name: tenant
     dnsDomain: tenant.example.com
     subnets:
       - name: subnet1
@@ -71,13 +71,13 @@ edpm_nodes:
     networks:
       - defaultRoute: true
         fixedIP: "{{ edpm_node_ip }}"
-        name: CtlPlane
+        name: ctlplane
         subnetName: subnet1
-      - name: InternalApi
+      - name: internalapi
         subnetName: subnet1
-      - name: Storage
+      - name: storage
         subnetName: subnet1
-      - name: Tenant
+      - name: tenant
         subnetName: subnet1
 edpm_computes: |-
   ["{{ edpm_node_hostname }}"]="{{ edpm_node_ip }}"

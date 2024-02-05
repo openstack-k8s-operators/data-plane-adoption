@@ -39,7 +39,7 @@
     {{ oc_header }}
 
     PUBLIC_URL=$(oc get horizon horizon -o jsonpath='{.status.endpoint}')
-    (curl --silent --output /dev/stderr --head --write-out "%{http_code}" "$PUBLIC_URL/dashboard/auth/login/?next=/dashboard/") | grep 200
+    (curl --silent --output /dev/stderr --head --write-out "%{http_code}" "$PUBLIC_URL/dashboard/auth/login/?next=/dashboard/" -k) | grep 200
   register: horizon_http_status_code
   until: horizon_http_status_code is success
   retries: 15
