@@ -1,7 +1,7 @@
 [id="migrating-ovn-data_{context}"]
 
 //:context: migrating-ovn
-//kgilliga: This module will likely be converted to an assembly.
+//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
 
 = Migrating OVN data
 
