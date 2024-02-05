@@ -9,7 +9,12 @@
 - name: Get the count of not-OK source databases
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
+    {% if pulled_openstack_configuration_shell_headers is defined %}
     {{ pulled_openstack_configuration_shell_headers }}
+    {% else %}
+    . ~/.source_cloud_exported_variables
+    {% endif %}
+
     test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ]
 
 - name: test connection to podified DBs (show databases)
@@ -27,7 +32,6 @@
   ansible.builtin.shell:
     cmd: "{{ lookup('ansible.builtin.template', 'restore_dbs.bash') }}"
 
-- name: MariaDB post-checks
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell:
-    cmd: "{{ lookup('ansible.builtin.template', 'post_checks.bash') }}"
+- name: Verify MariaDB data imported
+  ansible.builtin.include_tasks:
+    file: mariadb_verify.yaml

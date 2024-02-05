@@ -1,7 +1,11 @@
 {{ shell_header }}
 {{ oc_header }}
 {{ mariadb_copy_shell_vars_dst }}
+{% if pulled_openstack_configuration_shell_headers is defined %}
 {{ pulled_openstack_configuration_shell_headers }}
+{% else %}
+. ~/.source_cloud_exported_variables
+{% endif %}
 
 # use 'oc exec' and 'mysql -rs' to maintain formatting
 dbs=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;')
