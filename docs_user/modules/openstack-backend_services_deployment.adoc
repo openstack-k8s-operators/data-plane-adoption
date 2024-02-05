@@ -1,6 +1,6 @@
 [id="deploying-backend-services_{context}"]
 
-:context: backend-services
+//:context: backend-services
 
 //kgilliga: The backend services deployment intro will be converted to an assembly. Most of the rest of the module will be converted to a procedure.
 
@@ -10,12 +10,12 @@ The following instructions create OpenStackControlPlane CR with basic
 backend services deployed, and all the OpenStack services disabled.
 This will be the foundation of the podified control plane.
 
-In subsequent steps, we'll import the original databases and then add
+In subsequent steps, you import the original databases and then add
 podified OpenStack control plane services.
 
 == Prerequisites
 
-* The cloud which we want to adopt is up and running. It's on
+* The cloud that you want to adopt is up and running, and it is on the
 OpenStack Wallaby release.
 * The `openstack-operator` is deployed, but `OpenStackControlPlane` is
 *not* deployed.
@@ -85,7 +85,7 @@ oc project openstack
 * Create OSP secret.
 +
 The procedure for this will vary, but in developer/CI environments
-we use install_yamls:
+you use install_yamls:
 +
 ----
 # in install_yamls
