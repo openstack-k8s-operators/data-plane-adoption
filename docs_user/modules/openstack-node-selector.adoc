@@ -1,6 +1,10 @@
-= Node Selector
+[id="node-selector_{context}"]
 
-There are a variety of reasons why we may want to restrict the nodes where
+//kgilliga: This concept module will be moved under the openstack-planning.adoc assembly.
+
+= About node selector
+
+There are a variety of reasons why you might want to restrict the nodes where
 OpenStack services can be placed:
 
 * Hardware requirements: System memory, Disk space, Cores, HBAs
@@ -10,8 +14,7 @@ OpenStack services can be placed:
 The mechanism provided by the OpenStack operators to achieve this is through the
 use of labels.
 
-We would either label the OpenShift nodes or use existing labels they already
-have, and then use those labels in the OpenStack manifests in the
+You either label the OpenShift nodes or use existing labels, and then use those labels in the OpenStack manifests in the
 `nodeSelector` field.
 
 The `nodeSelector` field in the OpenStack manifests follows the standard
@@ -33,19 +36,18 @@ Values of the `nodeSelector` are propagated to the next levels unless they are
 overwritten. This means that a `nodeSelector` value at the deployment level will
 affect all the OpenStack services.
 
-For example we can add label `type: openstack` to any 3 OpenShift nodes:
+For example, you can add label `type: openstack` to any 3 OpenShift nodes:
 
-[,bash]
 ----
 $ oc label nodes worker0 type=openstack
 $ oc label nodes worker1 type=openstack
 $ oc label nodes worker2 type=openstack
 ----
 
-And then in our `OpenStackControlPlane` we can use the label to place all the
+And then in our `OpenStackControlPlane` you can use the label to place all the
 services in those 3 nodes:
 
-[,yaml]
+[source,yaml]
 ----
 apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
@@ -59,12 +61,10 @@ spec:
 < . . . >
 ----
 
-What if we don't mind where any OpenStack services go but the cinder volume and
-backup services because we are using FC and we only have HBAs on a subset of
-nodes? Then we can just use the selector on for those specific services, which
-for the sake of this example we'll assume they have the label `fc_card: true`:
+You can use the selector for specific services. For example, you might want to place your cinder volume and backup services on certain nodes if you are using FC and only have HBAs on a subset of
+nodes. The following example assumes that you have the label `fc_card: true`:
 
-[,yaml]
+[source,yaml]
 ----
 apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
@@ -91,7 +91,7 @@ spec:
 ----
 
 The Cinder operator does not currently have the possibility of defining
-the `nodeSelector` in `cinderVolumes`, so we need to specify it on each of the
+the `nodeSelector` in `cinderVolumes`, so you need to specify it on each of the
 backends.
 
 It's possible to leverage labels added by https://docs.openshift.com/container-platform/4.13/hardware_enablement/psap-node-feature-discovery-operator.html[the node feature discovery
@@ -100,22 +100,22 @@ to place OpenStack services.
 
 == MachineConfig
 
-Some services require us to have services or kernel modules running on the hosts
+Some services require you to have services or kernel modules running on the hosts
 where they run, for example `iscsid` or `multipathd` daemons, or the
 `nvme-fabrics` kernel module.
 
-For those cases we'll use `MachineConfig` manifests, and if we are restricting
-the nodes we are placing the OpenStack services using the `nodeSelector` then
-we'll also want to limit where the `MachineConfig` is applied.
+For those cases you use `MachineConfig` manifests, and if you are restricting
+the nodes that you are placing the OpenStack services on using the `nodeSelector` then
+you also want to limit where the `MachineConfig` is applied.
 
-To define where the `MachineConfig` can be applied we'll need to use a
+To define where the `MachineConfig` can be applied, you need to use a
 `MachineConfigPool` that links the `MachineConfig` to the nodes.
 
-For example to be able to limit `MachineConfig` to the 3 OpenShift nodes we
-marked with the `type: openstack` label we would create the
+For example to be able to limit `MachineConfig` to the 3 OpenShift nodes that you
+marked with the `type: openstack` label, you create the
 `MachineConfigPool` like this:
 
-[,yaml]
+[source,yaml]
 ----
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfigPool
@@ -130,9 +130,9 @@ spec:
       type: openstack
 ----
 
-And then we could use it in the `MachineConfig`:
+And then you use it in the `MachineConfig`:
 
-[,yaml]
+[source,yaml]
 ----
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig

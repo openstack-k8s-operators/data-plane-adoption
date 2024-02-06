@@ -1,15 +1,21 @@
-= Backend services deployment
+[id="deploying-backend-services_{context}"]
+
+//:context: backend-services
+
+//kgilliga: The backend services deployment intro will be converted to an assembly. Most of the rest of the module will be converted to a procedure.
+
+= Deploying backend services
 
 The following instructions create OpenStackControlPlane CR with basic
 backend services deployed, and all the OpenStack services disabled.
 This will be the foundation of the podified control plane.
 
-In subsequent steps, we'll import the original databases and then add
+In subsequent steps, you import the original databases and then add
 podified OpenStack control plane services.
 
 == Prerequisites
 
-* The source cloud which we want to adopt is up and running. It's on
+* The cloud that you want to adopt is up and running, and it is on the
 OpenStack Wallaby release.
 * A VM instance named `test` is running on the source cloud and its
 floating IP is set into `FIP` env var. You can use a
@@ -36,14 +42,12 @@ you've run `make crc_storage`.
 * Set the desired admin password for the podified deployment. This can
 be the original deployment's admin password or something else.
 +
-[,bash]
 ----
 ADMIN_PASSWORD=SomePassword
 ----
 +
 To use the existing OpenStack deployment password:
 +
-[,bash]
 ----
 ADMIN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
 ----
@@ -55,7 +59,6 @@ synchronizing the service account passwords is a required step.
 E.g. in developer environments with TripleO Standalone, the
 passwords can be extracted like this:
 +
-[,bash]
 ----
 AODH_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AodhPassword:' | awk -F ': ' '{ print $2; }')
 CEILOMETER_METERING_SECRET=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CeilometerMeteringSecret:' | awk -F ': ' '{ print $2; }')
@@ -79,7 +82,6 @@ PLACEMENT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' PlacementP
 * Make sure you are using the OpenShift namespace where you want the
 podified control plane deployed:
 +
-[,bash]
 ----
 oc project openstack
 ----
@@ -87,9 +89,8 @@ oc project openstack
 * Create OSP secret.
 +
 The procedure for this will vary, but in developer/CI environments
-we use install_yamls:
+you use install_yamls:
 +
-[,bash]
 ----
 # in install_yamls
 make input
@@ -99,7 +100,6 @@ make input
 in `osp-secret`, amend the `AdminPassword` key in the `osp-secret`
 correspondingly:
 +
-[,bash]
 ----
 oc set data secret/osp-secret "AdminPassword=$ADMIN_PASSWORD"
 ----
@@ -107,7 +107,6 @@ oc set data secret/osp-secret "AdminPassword=$ADMIN_PASSWORD"
 * Set service account passwords in `osp-secret` to match the service
 account passwords from the original deployment:
 +
-[,bash]
 ----
 oc set data secret/osp-secret "AodhPassword=$AODH_PASSWORD"
 oc set data secret/osp-secret "CeilometerMeteringSecret=$CEILOMETER_METERING_SECRET"
@@ -128,7 +127,7 @@ oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
 MariaDB, Memcached, and RabbitMQ services. All other services must
 be disabled.*
 +
-[,yaml]
+[source,yaml]
 ----
 oc apply -f - <<EOF
 apiVersion: core.openstack.org/v1beta1
@@ -276,7 +275,6 @@ EOF
 
 * Check that MariaDB is running.
 +
-[,bash]
 ----
 oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}'
 oc get pod openstack-cell1-galera-0 -o jsonpath='{.status.phase}{"\n"}'
