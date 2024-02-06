@@ -94,7 +94,8 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_ceilometer_agent_central.service"
                 "tripleo_ceilometer_agent_compute.service"
                 "tripleo_ceilometer_agent_ipmi.service"
-                "tripleo_ceilometer_agent_notification.service")
+                "tripleo_ceilometer_agent_notification.service"
+                "tripleo_ovn_cluster_northd.service")
 
 PacemakerResourcesToStop=("openstack-cinder-volume"
                           "openstack-cinder-backup"
