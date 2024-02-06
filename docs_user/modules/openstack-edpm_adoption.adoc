@@ -435,8 +435,8 @@ ____
 +
 [,bash]
 ----
-  oc exec -it openstack-galera-0 -c galera -- mysql --user=root --password=${PODIFIED_DB_ROOT_PASSWORD} \
-    -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
+  oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
+      -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
 ----
 +
 The above query should return an empty result as a completion criterion.
@@ -543,7 +543,7 @@ The above query should return an empty result as a completion criterion.
   oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
 ----
 
-* Verify if Nova services con stop the existing test VM instance:
+* Verify if Nova services can stop the existing test VM instance:
 +
 [,bash]
 ----
