@@ -1,8 +1,12 @@
-= Telemetry adoption
+[id="adopting-telemetry-services_{context}"]
 
-Adopting Telemetry means that an existing `OpenStackControlPlane` CR, where Telmetry
-services are supposed to be disabled, should be patched to start the service with the
-configuration parameters provided by the source environment.
+//:context: adopting-telemetry
+//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
+//Check xref contexts.
+
+= Adopting Telemetry services
+
+Adopting Telemetry means that an existing `OpenStackControlPlane` CR, where Telemetry services are supposed to be disabled, should be patched to start the service with the configuration parameters provided by the source environment.
 
 This guide also assumes that:
 
@@ -17,7 +21,6 @@ This guide also assumes that:
 
 Patch OpenStackControlPlane to deploy Ceilometer services:
 
-[,bash]
 ----
 cat << EOF > ceilometer_patch.yaml
 spec:
@@ -38,24 +41,22 @@ EOF
 ----
 
 ____
-If you have previously backup your Openstack services configuration file from the old environment:
+If you have previously backup your OpenStack services configuration file from the old environment:
 xref:pull_openstack_configuration.adoc[pull openstack configuration os-diff] you can use os-diff to compare
 and make sure the configuration is correct.
 ____
 
-[,bash]
 ----
 pushd os-diff
 ./os-diff cdiff --service ceilometer -c /tmp/collect_tripleo_configs/ceilometer/etc/ceilometer/ceilometer.conf -o ceilometer_patch.yaml
 ----
 
 ____
-This will producre the difference between both ini configuration files.
+This will produce the difference between both ini configuration files.
 ____
 
 Patch OpenStackControlPlane to deploy Ceilometer services:
 
-[,bash]
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch-file ceilometer_patch.yaml
 ----
@@ -64,7 +65,6 @@ oc patch openstackcontrolplane openstack --type=merge --patch-file ceilometer_pa
 
 === Inspect the resulting Ceilometer pods
 
-[,bash]
 ----
 CEILOMETETR_POD=`oc get pods -l service=ceilometer | tail -n 1 | cut -f 1 -d' '`
 oc exec -t $CEILOMETETR_POD -c ceilometer-central-agent -- cat /etc/ceilometer/ceilometer.conf
@@ -72,21 +72,18 @@ oc exec -t $CEILOMETETR_POD -c ceilometer-central-agent -- cat /etc/ceilometer/c
 
 === Inspect the resulting Ceilometer IPMI agent pod on Data Plane nodes
 
-[,bash]
 ----
 podman ps | grep ceilometer-ipmi
 ----
 
 === Inspecting enabled pollsters
 
-[,bash]
 ----
 oc get secret ceilometer-config-data -o jsonpath="{.data['polling\.yaml']}"  | base64 -d
 ----
 
 === Enabling pollsters according to requirements
 
-[,bash]
 ----
 cat << EOF > polling.yaml
 ---

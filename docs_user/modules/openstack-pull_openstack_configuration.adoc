@@ -1,13 +1,12 @@
-= Pull Openstack configuration
+[id="pulling-the-openstack-configuration_{context}"]
 
-Before starting to adoption workflow, we can start by pulling the configuration
-from the Openstack services and TripleO on our file system in order to backup
-the configuration files and then use it for later, during the configuration of
-the adopted services and for the record to compare and make sure nothing has been
-missed or misconfigured.
+//kgilliga: This module will be converted to a procedure and likely nested under the planning assembly.
 
-Make sure you have pull the os-diff repository and configure according to your
-environment:
+= Pulling the OpenStack configuration
+
+Before starting the adoption workflow, pull the configuration from the OpenStack services and TripleO on your file system to back up the configuration files. You can then use the files later, during the configuration of the adopted services, and for the record to compare and make sure nothing has been missed or misconfigured.
+
+Make sure you have pull the os-diff repository and configure according to your environment:
 link:planning.md#Configuration tooling[Configure os-diff]
 
 == Pull configuration from a TripleO deployment
@@ -15,7 +14,6 @@ link:planning.md#Configuration tooling[Configure os-diff]
 Before starting you need to update your ssh parameters according to your environment in the os-diff.cfg.
 Os-diff will use those parameters to connect to your Director node, query and download the configuration files:
 
-[,ini]
 ----
 ssh_cmd=ssh -F ssh.config standalone
 container_engine=podman
@@ -34,7 +32,7 @@ https://github.com/openstack-k8s-operators/os-diff/blob/main/config.yaml[service
 You can enable or disable the services you want then you can start to pull the configuration on your local file system.
 Example with default keystone:
 
-[,yaml]
+[source,yaml]
 ----
 # service name and file location
 services:
@@ -65,11 +63,10 @@ services:
       - /etc/keystone/logging.conf
 ----
 
-Duplicate the keystone example to each Openstack services you want.
+Duplicate the keystone example to each OpenStack services you want.
 
 Then, you can pull the configuration with this command:
 
-[,bash]
 ----
 pushd os-diff
 ./os-diff pull
@@ -77,7 +74,6 @@ pushd os-diff
 
 The configuration will be pulled and stored by default:
 
-[,bash]
 ----
 /tmp/tripleo/
 ----

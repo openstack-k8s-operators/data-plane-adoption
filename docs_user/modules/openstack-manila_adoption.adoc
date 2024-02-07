@@ -1,4 +1,10 @@
-= Manila adoption
+[id="adopting-the-shared-file-systems-service_{context}"]
+
+//:context: adopting-shared-file-systems
+//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
+//Check xref contexts.
+
+= Adopting the Shared File Systems service
 
 OpenStack Manila is the Shared File Systems service. It provides OpenStack
 users with a self-service API to create and manage file shares. File
@@ -71,8 +77,8 @@ environment:
 (`api_paste_config`) and inter-service communication configuration (`
 [neutron]`, `[nova]`, `[cinder]`, `[glance]` `[oslo_messaging_*]`). So
 all of these can be ignored.
-* Ignore the `osapi_share_listen` configuration. In RHOSP 18, we rely on
-OpenShift's routes and ingress.
+* Ignore the `osapi_share_listen` configuration. In RHOSP 18, you rely on
+OpenShift routes and ingress.
 * Pay attention to policy overrides. In RHOSP 18, manila ships with a secure
 default RBAC, and overrides may not be necessary. Please review RBAC
 defaults by using the https://docs.openstack.org/oslo.policy/latest/cli/oslopolicy-policy-generator.html[Oslo policy generator]
@@ -81,7 +87,7 @@ tool. If a custom policy is necessary, you must provide it as a
 `ConfigMap` called `manila-policy` can be set up with the contents of a
 file called `policy.yaml`.
 
-[,yaml]
+[source,yaml]
 ----
   spec:
     manila:
@@ -125,7 +131,7 @@ and set `manila: template: manilaShares: <custom name> : containerImage`
 value. The following example illustrates multiple storage backend drivers,
 using custom container images.
 
-[,yaml]
+[source,yaml]
 ----
   spec:
     manila:
@@ -170,7 +176,6 @@ using custom container images.
 usernames, it is recommended to use OpenShift secrets, and the
 `customServiceConfigSecrets` key. An example:
 
-[,bash]
 ----
 
 cat << __EOF__ > ~/netapp_secrets.conf
@@ -186,9 +191,9 @@ oc create secret generic osp-secret-manila-netapp --from-file=~/netapp_secrets.c
 ----
 
 * `customConfigSecrets` can be used in any service, the following is a
-config example using the secret we created as above.
+config example using the secret you created above.
 
-[,yaml]
+[source,yaml]
 ----
   spec:
     manila:
@@ -232,7 +237,7 @@ instance with the CephFS backend driver to the `storage` network.
 Patch OpenStackControlPlane to deploy Manila; here's an example that uses
 Native CephFS:
 
-[,yaml]
+[source,yaml]
 ----
 cat << __EOF__ > ~/manila.patch
 spec:
@@ -280,7 +285,6 @@ spec:
 __EOF__
 ----
 
-[,bash]
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patch
 ----
@@ -289,19 +293,16 @@ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patc
 
 === Inspect the resulting manila service pods
 
-[,bash]
 ----
 oc get pods -l service=manila
 ----
 
 === Check that Manila API service is registered in Keystone
 
-[,bash]
 ----
 openstack service list | grep manila
 ----
 
-[,bash]
 ----
 openstack endpoint list | grep manila
 
@@ -313,25 +314,22 @@ openstack endpoint list | grep manila
 
 === Verify resources
 
-We can now test the health of the service
+Test the health of the service:
 
-[,bash]
 ----
 openstack share service list
 openstack share pool list --detail
 ----
 
-We can check on existing workloads
+Check on existing workloads:
 
-[,bash]
 ----
 openstack share list
 openstack share snapshot list
 ----
 
-We can create further resources
+You can create further resources:
 
-[,bash]
 ----
 openstack share create cephfs 10 --snapshot mysharesnap --name myshareclone
 ----
