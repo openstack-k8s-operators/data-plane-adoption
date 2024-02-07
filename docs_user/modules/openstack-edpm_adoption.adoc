@@ -1,15 +1,21 @@
-= EDPM adoption
+[id="adopting-edpm_{context}"]
+
+//:context: adopting-edpm
+//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
+//Check xref contexts.
+
+= Adopting EDPM
 
 == Prerequisites
 
 * Previous Adoption steps completed.
-* Remaining source cloud xref:stop_remaining_services.adoc[services are stopped] on compute hosts.
+* Remaining source cloud xref:stopping-infrastructure-management-and-compute-services_{context}[Stopping infrastructure management and Compute services] on Compute hosts.
 
 ____
 *WARNING* This step is a "point of no return" in the EDPM adoption
 procedure. The source control plane and data plane services must not
 be ever enabled back, after EDPM is deployed, and Podified control
-plane has taken control over it!
+plane has taken control over it.
 ____
 
 == Variables
@@ -19,7 +25,6 @@ Set `FIP` to the floating IP address of the `test` VM pre-created earlier on the
 Define the map of compute node name, IP pairs.
 The values are just illustrative, use values that are correct for your environment:
 
-[,bash]
 ----
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
 
@@ -36,7 +41,6 @@ export computes=(
 
 * Make sure the IPAM is configured
 
-[,bash]
 ----
 oc apply -f - <<EOF
 apiVersion: network.openstack.org/v1beta1
@@ -112,7 +116,6 @@ lands.
 For each compute node grab the UUID of the compute service and write it too
 the stable `compute_id` file in `/var/lib/nova/` directory.
 +
-[,bash]
 ----
 for name in "${!computes[@]}";
 do
@@ -130,7 +133,6 @@ done
 
 * Create a https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets[ssh authentication secret] for the EDPM nodes:
 +
-[,bash]
 ----
 oc apply -f - <<EOF
 apiVersion: v1
@@ -146,7 +148,6 @@ EOF
 
 * Generate an ssh key-pair `nova-migration-ssh-key` secret
 +
-[,bash]
 ----
 cd "$(mktemp -d)"
 ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
@@ -161,7 +162,7 @@ cd -
 
 * Create a Nova Compute Extra Config service
 +
-[,yaml]
+[source,yaml]
 ----
 oc apply -f - <<EOF
 apiVersion: v1
@@ -196,7 +197,7 @@ always be specified for each custom `OpenStackDataPlaneService` related to Nova.
 
 * Create a repo-setup service to configure Antelope repositories
 +
-[,yaml]
+[source,yaml]
 ----
 oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -235,7 +236,7 @@ EOF
 
 * Deploy OpenStackDataPlaneNodeSet:
 +
-[,yaml]
+[source,yaml]
 ----
 oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -378,7 +379,7 @@ EOF
 
 * Deploy OpenStackDataPlaneDeployment:
 +
-[,yaml]
+[source,yaml]
 ----
 oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -395,13 +396,11 @@ EOF
 
 * Check if all the Ansible EE pods reaches `Completed` status:
 +
-[,bash]
 ----
   # watching the pods
   watch oc get pod -l app=openstackansibleee
 ----
 +
-[,bash]
 ----
   # following the ansible logs with:
   oc logs -l app=openstackansibleee -f --max-log-requests 10
@@ -409,7 +408,6 @@ EOF
 
 * Wait for the dataplane node set to reach the Ready status:
 +
-[,bash]
 ----
   oc wait --for condition=Ready osdpns/openstack --timeout=30m
 ----
@@ -433,7 +431,6 @@ ____
 
 * Wait for cell1 Nova compute EDPM services version updated (it may take some time):
 +
-[,bash]
 ----
   oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
       -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
@@ -443,7 +440,7 @@ The above query should return an empty result as a completion criterion.
 
 * Remove pre-FFU workarounds for Nova control plane services:
 +
-[,yaml]
+[source,yaml]
 ----
   oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
   spec:
@@ -481,14 +478,13 @@ The above query should return an empty result as a completion criterion.
 
 * Wait for Nova control plane services' CRs to become ready:
 +
-[,bash]
 ----
   oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 
 * Remove pre-FFU workarounds for Nova compute EDPM services:
 +
-[,yaml]
+[source,yaml]
 ----
   oc apply -f - <<EOF
   apiVersion: v1
@@ -530,14 +526,12 @@ The above query should return an empty result as a completion criterion.
 
 * Wait for Nova compute EDPM service to become ready:
 +
-[,bash]
 ----
   oc wait --for condition=Ready osdpd/openstack-nova-compute-ffu --timeout=5m
 ----
 
 * Run Nova DB online migrations to complete FFU:
 +
-[,bash]
 ----
   oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
   oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
@@ -545,7 +539,6 @@ The above query should return an empty result as a completion criterion.
 
 * Verify if Nova services can stop the existing test VM instance:
 +
-[,bash]
 ----
 ${BASH_ALIASES[openstack]} server list | grep -qF '| test | ACTIVE |' && openstack server stop test
 ${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |'
@@ -554,7 +547,6 @@ ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnosti
 
 * Verify if Nova services can start the existing test VM instance:
 +
-[,bash]
 ----
 ${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' && openstack server start test
 ${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |'

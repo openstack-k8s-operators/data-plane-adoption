@@ -1,8 +1,12 @@
-= Autoscaling adoption
+[id="adopting-autoscaling_{context}"]
 
-Adopting Autoscaling means that an existing `OpenStackControlPlane` CR, where Aodh
-services are supposed to be disabled, should be patched to start the service with the
-configuration parameters provided by the source environment.
+//:context: adopting-autoscaling
+//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
+//Check xref contexts.
+
+= Adopting autoscaling
+
+Adopting autoscaling means that an existing `OpenStackControlPlane` CR, where Aodh services are supposed to be disabled, should be patched to start the service with the configuration parameters provided by the source environment.
 
 This guide also assumes that:
 
@@ -16,9 +20,8 @@ should be already adopted.
 
 == Procedure - Autoscaling adoption
 
-Patch OpenStackControlPlane to deploy Autoscaling services:
+Patch OpenStackControlPlane to deploy autoscaling services:
 
-[,bash]
 ----
 cat << EOF > aodh_patch.yaml
 spec:
@@ -43,12 +46,10 @@ EOF
 ----
 
 ____
-If you have previously backup your Openstack services configuration file from the old environment:
-xref:pull_openstack_configuration.adoc[pull openstack configuration os-diff] you can use os-diff to compare
-and make sure the configuration is correct.
+If you have previously backup your OpenStack services configuration file from the old environment:
+xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration] you can use os-diff to compare and make sure the configuration is correct.
 ____
 
-[,bash]
 ----
 pushd os-diff
 ./os-diff cdiff --service aodh -c /tmp/collect_tripleo_configs/aodh/etc/aodh/aodh.conf -o aodh_patch.yaml
@@ -60,7 +61,6 @@ ____
 
 Patch OpenStackControlPlane to deploy Aodh services:
 
-[,bash]
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch-file aodh_patch.yaml
 ----
@@ -69,7 +69,6 @@ oc patch openstackcontrolplane openstack --type=merge --patch-file aodh_patch.ya
 
 === If autoscaling services are enabled inspect Aodh pods
 
-[,bash]
 ----
 AODH_POD=`oc get pods -l service=aodh | tail -n 1 | cut -f 1 -d' '`
 oc exec -t $AODH_POD -c aodh-api -- cat /etc/aodh/aodh.conf
@@ -77,7 +76,6 @@ oc exec -t $AODH_POD -c aodh-api -- cat /etc/aodh/aodh.conf
 
 === Check whether Aodh API service is registered in Keystone
 
-[,bash]
 ----
 openstack endpoint list | grep aodh
 | 6a805bd6c9f54658ad2f24e5a0ae0ab6 | regionOne | aodh      | network      | True    | public    | http://aodh-public-openstack.apps-crc.testing  |
@@ -87,9 +85,8 @@ openstack endpoint list | grep aodh
 
 === Create sample resources
 
-We can now test that user can create alarms.
+You can test whether you can create alarms.
 
-[,bash]
 ----
 openstack alarm create \
 --name low_alarm \
@@ -106,7 +103,7 @@ openstack alarm create \
 --resource-type instance
 ----
 
-=== (TODO)
+//=== (TODO)
 
-* Include adopted autoscaling heat templates
-* Include adopted Aodh alarm create commands of type prometheus
+//* Include adopted autoscaling heat templates
+//* Include adopted Aodh alarm create commands of type prometheus
