@@ -1,3 +1,52 @@
+# OS Diff automation steps
+- name: Make sure Golang is installed
+  failed_when: false
+  become: true
+  ansible.builtin.shell: |
+    dnf -y install golang
+    git clone https://github.com/openstack-k8s-operators/os-diff {{ od_dir }}
+
+- name: Build os-diff
+  ansible.builtin.shell: |
+    cd {{ od_dir }}
+    make build
+  register: make_res
+  become: true
+
+- name: Set ssh command for Tripleo standalone in os-diff.cfg
+  become: true
+  ansible.builtin.lineinfile:
+    path: "{{ od_dir }}/os-diff.cfg"
+    regex: "ssh -F ssh.config standalone"
+    value: "ssh_cmd=ssh -i {{ standalone_private_key | default('/home/zuul/src/github.com/openstack-k8s-operators/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa') }} root@{{ standalone_ip }}"
+
+- name: Set Tripleo config path in os-diff.cfg
+  become: true
+  ansible.builtin.lineinfile:
+    path: "{{ od_dir }}/os-diff.cfg"
+    regex: "local_config_path=/tmp/"
+    value: "local_config_path={{ dpa_dir }}/tripleo"
+
+- name: Set OCP config path in os-diff.cfg
+  become: true
+  ansible.builtin.lineinfile:
+    path: "{{ od_dir }}/os-diff.cfg"
+    regex: "ocp_local_config_path=/tmp/ocp"
+    value: "ocp_local_config_path={{ dpa_dir }}/ocp"
+
+- name: Set config path in os-diff.cfg
+  become: true
+  ansible.builtin.lineinfile:
+    path: "{{ od_dir }}/os-diff.cfg"
+    regex: "local_config_dir=/tmp/"
+    value: "local_config_dir={{ dpa_dir }}"
+
+- name: Pull config from Tripleo os-diff
+  ansible.builtin.shell: |
+    cd {{ od_dir }}
+    ./os-diff pull
+
+# Pull nova configuration steps
 - name: set shell vars pull openstack configuration ssh commands
   no_log: "{{ use_no_log }}"
   ansible.builtin.set_fact:

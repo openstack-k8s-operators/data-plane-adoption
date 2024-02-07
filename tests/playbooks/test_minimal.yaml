@@ -20,6 +20,10 @@
   hosts: local
   gather_facts: false
   force_handlers: true
+  vars:
+    # @matbu: Should overrided by Zuul and be removed from here
+    dpa_dir: "/home/zuul/src/github.com/openstack-k8s-operators/data-plane-adoption"
+    od_dir: "/home/zuul-worker/src/github.com/openstack-k8s-operators/os-diff"
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash
