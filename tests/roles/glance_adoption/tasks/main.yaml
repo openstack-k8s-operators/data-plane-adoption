@@ -6,14 +6,20 @@
     spec:
       glance:
         enabled: true
-        apiOverride:
-          route: {}
         template:
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_backends = default_backend:file
+            [glance_store]
+            default_backend = default_backend
+            [default_backend]
+            filesystem_store_datadir = /var/lib/glance/images/
           databaseInstance: openstack
           storageClass: "local-storage"
           storageRequest: 10G
           glanceAPIs:
             default:
+              type: single
               replicas: 1
               override:
                 service:
