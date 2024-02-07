@@ -276,7 +276,7 @@ be used to inject the right configuration to the `GlanceAPI` instance.
 Make sure the Ceph-related secret (`ceph-conf-files`) was created in
 the `openstack` namespace and that the `extraMounts` property of the
 `OpenStackControlPlane` CR has been configured properly. These tasks
-are described in an earlier Adoption step xref:ceph_backend_configuration_{context}[Configuring a Ceph backend].
+are described in an earlier Adoption step xref:configuring-a-ceph-backend_{context}[Configuring a Ceph backend].
 
 ----
 cat << EOF > glance_patch.yaml
@@ -316,7 +316,7 @@ EOF
 ----
 
 If you have previously backup your OpenStack services configuration file from the old environment:
-xref:pull_openstack_configuration_{context}[Pulling the OpenStack configuration] you can use os-diff to compare and make sure the configuration is correct.
+xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration] you can use os-diff to compare and make sure the configuration is correct.
 
 ----
 pushd os-diff

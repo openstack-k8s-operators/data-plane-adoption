@@ -244,4 +244,4 @@ sure that you are taking them into consideration when placing the Cinder service
 related binaries are running on the OpenShift nodes.
 
 Detailed information about the specifics for each storage transport protocol can
-be found in the xref:cinder_adoption_{context}[Cinder Adoption].
+be found in the xref:adopting-the-block-storage-service_{context}[Adopting the Block Storage service].

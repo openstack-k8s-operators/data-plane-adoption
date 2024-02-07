@@ -1,4 +1,9 @@
-= Ceph RGW Migration
+[id="migrating-ceph-rgw_{context}"]
+
+//:context: migrating-ceph-rgw
+//kgilliga: This module might be converted to an assembly.
+
+= Migrating Ceph RGW
 
 In this scenario, assuming Ceph is already >= 5, either for HCI or dedicated
 Storage nodes, the RGW daemons living in the OpenStack Controller nodes will be
@@ -59,7 +64,6 @@ failover):
 
 == Current Status
 
-[,bash]
 ----
 (undercloud) [stack@undercloud-0 ~]$ metalsmith list
 
@@ -78,11 +82,10 @@ failover):
     +------------------------+    +----------------+
 ----
 
-SSH into `controller-0` and check the `pacemaker` status: this will help
-identify the relevant information that we need to know before starting the
+SSH into `controller-0` and check the `pacemaker` status. This will help you
+identify the relevant information that you need before you start the
 RGW migration.
 
-[,bash]
 ----
 Full List of Resources:
   * ip-192.168.24.46	(ocf:heartbeat:IPaddr2):     	Started controller-0
@@ -100,7 +103,6 @@ Full List of Resources:
 
 Use the `ip` command to identify the ranges of the storage networks.
 
-[,bash]
 ----
 [heat-admin@controller-0 ~]$ ip -o -4 a
 
@@ -126,14 +128,13 @@ environment, haproxy has the frontend VIP assigned
 
 == Prerequisite: check the frontend network (Controller nodes)
 
-Identify the network that we previously had in haproxy and propagate it (via
+Identify the network that you previously had in haproxy and propagate it (via
 TripleO) to the CephStorage nodes. This network is used to reserve a new VIP
 that will be owned by Ceph and used as the entry point for the RGW service.
 
-ssh into `controller-0` and check the current HaProxy configuration until we
+ssh into `controller-0` and check the current HaProxy configuration until you
 find `ceph_rgw` section:
 
-[,bash]
 ----
 $ less /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg
 
@@ -157,7 +158,6 @@ listen ceph_rgw
 
 Double check the network used as HaProxy frontend:
 
-[,bash]
 ----
 [controller-0]$ ip -o -4 a
 
@@ -166,16 +166,16 @@ Double check the network used as HaProxy frontend:
 ...
 ----
 
-As described in the previous section, the check on controller-0 shows that we
+As described in the previous section, the check on controller-0 shows that you
 are exposing the services using the external network, which is not present in
-the CephStorage nodes, and we need to propagate it via TripleO.
+the Ceph Storage nodes, and you need to propagate it via TripleO.
 
 == Propagate the HaProxy frontend network to CephStorage nodes
 
-Change the nic template used to define the ceph-storage network interfaces and
+Change the NIC template used to define the ceph-storage network interfaces and
 add the new config section.
 
-[,yaml]
+[source,yaml]
 ----
 ---
 network_config:
@@ -220,7 +220,7 @@ In addition, add the *External* Network to the `baremetal.yaml` file used by
 metalsmith and run the `overcloud node provision` command passing the
 `--network-config` option:
 
-[,yaml]
+[source,yaml]
 ----
 - name: CephStorage
   count: 3
@@ -244,7 +244,6 @@ metalsmith and run the `overcloud node provision` command passing the
   - network: external
 ----
 
-[,bash]
 ----
 (undercloud) [stack@undercloud-0]$
 
@@ -257,7 +256,6 @@ openstack overcloud node provision
 
 Check the new network on the `CephStorage` nodes:
 
-[,bash]
 ----
 [root@cephstorage-0 ~]# ip -o -4 a
 
@@ -273,19 +271,17 @@ top of them.
 
 == Migrate the RGW backends
 
-To match the cardinality diagram we use cephadm labels to refer to a group of
+To match the cardinality diagram, you use cephadm labels to refer to a group of
 nodes where a given daemon type should be deployed.
 
 Add the RGW label to the cephstorage nodes:
 
-[,bash]
 ----
 for i in 0 1 2; {
     ceph orch host label add cephstorage-$i rgw;
 }
 ----
 
-[,bash]
 ----
 [ceph: root@controller-0 /]#
 
@@ -317,7 +313,6 @@ Find and patch the RGW spec, specifying the right placement using the labels
 approach, and change the rgw backend port to *8090* to avoid conflicts
 with the https://github.com/openstack/tripleo-ansible/blob/master/tripleo_ansible/roles/tripleo_cephadm/tasks/rgw.yaml#L26-L30[Ceph Ingress Daemon] (*)
 
-[,bash]
 ----
 [root@controller-0 heat-admin]# cat rgw
 
@@ -339,7 +334,6 @@ spec:
 
 Patch the spec replacing controller nodes with the label key
 
-[,bash]
 ----
 ---
 networks:
@@ -359,7 +353,6 @@ spec:
 
 Apply the new RGW spec using the orchestrator CLI:
 
-[,bash]
 ----
 $ cephadm shell -m /home/ceph-admin/specs/rgw
 $ cephadm shell -- ceph orch apply -i /mnt/rgw
@@ -367,7 +360,6 @@ $ cephadm shell -- ceph orch apply -i /mnt/rgw
 
 Which triggers the redeploy:
 
-[,bash]
 ----
 ...
 osd.9                     	cephstorage-2
@@ -384,13 +376,12 @@ rgw.rgw.cephstorage-1.qynkan  cephstorage-1  172.17.3.26:8090  running (16s)
 rgw.rgw.cephstorage-2.krycit  cephstorage-2  172.17.3.81:8090  running (13s)
 ----
 
-At this point, we need to make sure that the new RGW backends are reachable on
-the new ports, but we're going to enable an *IngressDaemon* on port *8080*
+At this point, you need to make sure that the new RGW backends are reachable on
+the new ports, but you are going to enable an *IngressDaemon* on port *8080*
 later in the process. For this reason, ssh on each RGW node (the _CephStorage_
 nodes) and add the iptables rule to allow connections to both 8080 and 8090
 ports in the CephStorage nodes.
 
-[,bash]
 ----
 iptables -I INPUT -p tcp -m tcp --dport 8080 -m conntrack --ctstate NEW -m comment --comment "ceph rgw ingress" -j ACCEPT
 
@@ -407,7 +398,6 @@ for port in 8080 8090; {
 
 From a Controller node (e.g. controller-0) try to reach (curl) the rgw backends:
 
-[,bash]
 ----
 for i in 26 23 81; do {
     echo "---"
@@ -419,7 +409,6 @@ done
 
 And you should observe the following:
 
-[,bash]
 ----
 ---
 Query 172.17.3.23
@@ -444,7 +433,6 @@ In case RGW backends are migrated in the CephStorage nodes, there's no
 keystone endpoint, pointing to the external Network that has been propagated
 (see the previous section)
 
-[,bash]
 ----
 [ceph: root@controller-0 /]# ceph config dump | grep keystone
 global   basic rgw_keystone_url  http://172.16.1.111:5000
@@ -457,7 +445,7 @@ global   basic rgw_keystone_url  http://172.16.1.111:5000
 `HaProxy` is managed by TripleO via `Pacemaker`: the three running instances at
 this point will point to the old RGW backends, resulting in a wrong, not
 working configuration.
-Since we're going to deploy the https://github.com/openstack/tripleo-ansible/blob/master/tripleo_ansible/ansible_plugins/modules/ceph_mkspec.py[Ceph Ingress Daemon], the first thing to do
+Since you are going to deploy the https://github.com/openstack/tripleo-ansible/blob/master/tripleo_ansible/ansible_plugins/modules/ceph_mkspec.py[Ceph Ingress Daemon], the first thing to do
 is remove the existing `ceph_rgw` config, clean up the config created by TripleO
 and restart the service to make sure other services are not affected by this
 change.
@@ -465,7 +453,6 @@ change.
 ssh  on each Controller node and remove the following is the section from
 `/var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg`:
 
-[,haproxy]
 ----
 listen ceph_rgw
   bind 10.0.0.103:8080 transparent
@@ -484,7 +471,6 @@ listen ceph_rgw
 
 Restart `haproxy-bundle` and make sure it's started:
 
-[,bash]
 ----
 [root@controller-0 ~]# sudo pcs resource restart haproxy-bundle
 haproxy-bundle successfully restarted
@@ -500,7 +486,6 @@ haproxy-bundle successfully restarted
 
 Double check no process is bound to 8080 anymore`"
 
-[,bash]
 ----
 [root@controller-0 ~]# ss -antop | grep 8080
 [root@controller-0 ~]#
@@ -508,18 +493,16 @@ Double check no process is bound to 8080 anymore`"
 
 And the swift CLI should fail at this point:
 
-[,bash]
 ----
 (overcloud) [root@cephstorage-0 ~]# swift list
 
 HTTPConnectionPool(host='10.0.0.103', port=8080): Max retries exceeded with url: /swift/v1/AUTH_852f24425bb54fa896476af48cbe35d3?format=json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7fc41beb0430>: Failed to establish a new connection: [Errno 111] Connection refused'))
 ----
 
-Now we can start deploying the Ceph IngressDaemon on the CephStorage nodes.
+You can start deploying the Ceph IngressDaemon on the CephStorage nodes.
 
 Set the required images for both HaProxy and Keepalived
 
-[,bash]
 ----
 [ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_haproxy quay.io/ceph/haproxy:2.3
 
@@ -528,14 +511,13 @@ Set the required images for both HaProxy and Keepalived
 
 Prepare the ingress spec and mount it to cephadm:
 
-[,bash]
 ----
 $ sudo vim /home/ceph-admin/specs/rgw_ingress
 ----
 
 and paste the following content:
 
-[,yaml]
+[source,yaml]
 ----
 ---
 service_type: ingress
@@ -553,7 +535,6 @@ spec:
 
 Mount the generated spec and apply it using the orchestrator CLI:
 
-[,bash]
 ----
 $ cephadm shell -m /home/ceph-admin/specs/rgw_ingress
 $ cephadm shell -- ceph orch apply -i /mnt/rgw_ingress
@@ -561,7 +542,6 @@ $ cephadm shell -- ceph orch apply -i /mnt/rgw_ingress
 
 Wait until the ingress is deployed and query the resulting endpoint:
 
-[,bash]
 ----
 [ceph: root@controller-0 /]# ceph orch ls
 
@@ -575,7 +555,6 @@ osd.default_drive_group   15  37s ago	3d   cephstorage-0;cephstorage-1;cephstora
 rgw.rgw   ?:8090          3/3  37s ago	4m   label:rgw
 ----
 
-[,bash]
 ----
 [ceph: root@controller-0 /]# curl  10.0.0.89:8080
 
@@ -584,19 +563,18 @@ rgw.rgw   ?:8090          3/3  37s ago	4m   label:rgw
 —
 ----
 
-The result above shows that we're able to reach the backend from the
-IngressDaemon, which means we're almost ready to interact with it using the
+The result above shows that you are able to reach the backend from the
+IngressDaemon, which means you are almost ready to interact with it using the
 swift CLI.
 
 == Update the object-store endpoints
 
-The endpoints still point to the old VIP owned by pacemaker, but given it's
-still used by other services and we reserved a new VIP on the same network,
-before any other action we should update the object-store endpoint.
+The endpoints still point to the old VIP owned by pacemaker, but because it is
+still used by other services and you reserved a new VIP on the same network,
+before any other action you should update the object-store endpoint.
 
 List the current endpoints:
 
-[,bash]
 ----
 (overcloud) [stack@undercloud-0 ~]$ openstack endpoint list | grep object
 
@@ -607,7 +585,6 @@ List the current endpoints:
 
 Update the endpoints pointing to the Ingress VIP:
 
-[,bash]
 ----
 (overcloud) [stack@undercloud-0 ~]$ openstack endpoint set --url "http://10.0.0.89:8080/swift/v1/AUTH_%(project_id)s" 95596a2d92c74c15b83325a11a4f07a3
 
@@ -620,7 +597,6 @@ Update the endpoints pointing to the Ingress VIP:
 And repeat the same action for both internal and admin.
 Test the migrated service.
 
-[,bash]
 ----
 (overcloud) [stack@undercloud-0 ~]$ swift list --debug
 
@@ -643,7 +619,6 @@ DEBUG:swiftclient:RESP BODY: b'[]'
 
 Run tempest tests against object-storage:
 
-[,bash]
 ----
 (overcloud) [stack@undercloud-0 tempest-dir]$  tempest run --regex tempest.api.object_storage
 ...

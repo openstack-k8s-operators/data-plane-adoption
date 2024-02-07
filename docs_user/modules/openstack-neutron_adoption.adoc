@@ -22,7 +22,7 @@ This guide also assumes that:
 
 == Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB and Keystone and xref:ovn_adoption_{context}[Migrating OVN data]
+* Previous Adoption steps completed. Notably, MariaDB and Keystone and xref:migrating-ovn-data_{context}[Migrating OVN data]
 should be already adopted.
 
 == Procedure - Neutron adoption

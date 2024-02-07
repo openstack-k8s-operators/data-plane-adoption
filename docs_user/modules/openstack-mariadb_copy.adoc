@@ -1,6 +1,7 @@
 [id="migrating-databases-to-mariadb-instances_{context}"]
 
 //kgilliga: This module will be converted to a procedure. Unclear which assembly it should be included in.
+//Check xref contexts.
 
 = Migrating databases to MariaDB instances
 
@@ -21,8 +22,9 @@ ____
  ** The OpenStackControlPlane resource must be already created at this point.
  ** Podified MariaDB and RabbitMQ are running. No other podified
 control plane services are running.
- ** Required services specific topology xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[configuration collected]
- ** OpenStack services have been xref:stop_openstack_services_{context}[Stopping OpenStack services]
+ ** Required services specific topology. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+//kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
+ ** OpenStack services have been stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
  ** There must be network routability between:
   *** The adoption host and the original MariaDB.
   *** The adoption host and the podified MariaDB.
@@ -168,8 +170,9 @@ oc exec -it openstack-cell1-galera-0 -c galera -- mysql --user=root --password=$
 
 == Post-checks
 
-Compare the following outputs with the topology specific configuration
-xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[collected earlier]:
+Compare the following outputs with the topology specific configuration.
+For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+//kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.:
 
 * Check that the databases were imported correctly:
 +
