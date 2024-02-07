@@ -39,17 +39,16 @@ manager service needs to be able to reach it.
 == Prerequisites
 
 * Ensure that manila systemd services (api, cron, scheduler) are
-link:stop_openstack_services.md#stopping-control-plane-services[stopped].
+stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
 * Ensure that manila pacemaker services ("openstack-manila-share") are
-link:stop_openstack_services.md#stopping-control-plane-services[stopped].
-* Ensure that the xref:mariadb_copy.adoc[database migration] has completed.
+stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
+* Ensure that the database migration has completed. For more information, see xref:migrating-databases-to-mariadb-instances_{context}[Migrating databases to MariaDB instances].
 * Ensure that OpenShift nodes where `manila-share` service will be deployed
 can reach the management network that the storage system is in.
-* Ensure that services such as xref:keystone_adoption.adoc[keystone]
-and xref:backend_services_deployment.adoc[memcached] are available prior to
+* Ensure that services such as keystone and memcached are available prior to
 adopting manila services.
 * If tenant-driven networking was enabled (`driver_handles_share_servers=True`),
-ensure that xref:neutron_adoption.adoc[neutron] has been deployed prior to
+ensure that neutron has been deployed prior to
 adopting manila services.
 
 == Procedure - Manila adoption
