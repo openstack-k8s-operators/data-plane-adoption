@@ -25,6 +25,7 @@
       executable: /bin/bash
   vars:
     ironic_adoption: true
+    nova_libvirt_backend: local
   roles:
     - role: development_environment
     - role: backend_services
