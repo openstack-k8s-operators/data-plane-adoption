@@ -26,13 +26,14 @@
                     "tripleo_manila_scheduler.service"
                     "tripleo_neutron_api.service"
                     "tripleo_nova_api.service"
-                    "tripleo_placement_api.service"
                     "tripleo_nova_api_cron.service"
                     "tripleo_nova_api.service"
                     "tripleo_nova_conductor.service"
                     "tripleo_nova_metadata.service"
                     "tripleo_nova_scheduler.service"
-                    "tripleo_nova_vnc_proxy.service")
+                    "tripleo_nova_vnc_proxy.service"
+                    "tripleo_ovn_cluster_northd.service"
+                    "tripleo_placement_api.service")
 
     PacemakerResourcesToStop=("openstack-cinder-volume"
                               "openstack-cinder-backup"
