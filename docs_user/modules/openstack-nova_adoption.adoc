@@ -137,6 +137,7 @@ Compare the following outputs with the topology specific configuration in xref:p
 * Query the superconductor for cell1 existance and compare it to pre-adoption values:
 +
 ----
+. ~/.source_cloud_exported_variables
 echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS
 oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 |'
 ----

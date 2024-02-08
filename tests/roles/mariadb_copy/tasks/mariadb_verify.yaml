@@ -1,0 +1,12 @@
+- name: get the source database service environment variables
+  ansible.builtin.include_tasks:
+    file: env_vars_src.yaml
+
+- name: get the destination database service environment variables
+  ansible.builtin.include_tasks:
+    file: env_vars_dst.yaml
+
+- name: MariaDB checks
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell:
+    cmd: "{{ lookup('ansible.builtin.template', 'post_checks.bash') }}"

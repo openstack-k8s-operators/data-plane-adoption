@@ -68,8 +68,8 @@ podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
 * Run mysqlcheck on the original DB to look for things that are not OK:
 +
 ----
-podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
-    mysqlcheck --all-databases -h $SOURCE_MARIADB_IP -u root "-p$SOURCE_DB_ROOT_PASSWORD" | grep -v OK
+. ~/.source_cloud_exported_variables
+test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ]
 ----
 
 * Test connection to podified DBs (show databases):
@@ -177,6 +177,8 @@ For more information, see xref:pulling-the-openstack-configuration_{context}[Pul
 * Check that the databases were imported correctly:
 +
 ----
+. ~/.source_cloud_exported_variables
+
 # use 'oc exec' and 'mysql -rs' to maintain formatting
 dbs=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;')
 echo $dbs | grep -Eq '\bkeystone\b'
