@@ -32,7 +32,6 @@ control plane services are running.
 future. For example, you might require routability from the original MariaDB to
 podified MariaDB_.
 * Podman package is installed
-* `CONTROLLER1_SSH`, `CONTROLLER2_SSH`, and `CONTROLLER3_SSH` are configured.
 
 == Variables
 
@@ -51,12 +50,30 @@ CHARACTER_SET=utf8
 COLLATION=utf8_general_ci
 
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
-# Replace with your environment's MariaDB IP:
-SOURCE_MARIADB_IP=192.168.122.100
+# Replace with your environment's MariaDB Galera cluster VIP and backend IPs:
+SOURCE_MARIADB_IP=192.168.122.99
+declare -A SOURCE_GALERA_MEMBERS
+SOURCE_GALERA_MEMBERS=(
+  ["standalone.localdomain"]=192.168.122.100
+  # ...
+)
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
 == Pre-checks
+
+* Check that the Galera database cluster members are online and synced:
++
+[,bash]
+----
+for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
+  echo "Checking for the database node $i WSREP status Synced"
+  sudo podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE mysql \
+    -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" \
+    -e "show global status like 'wsrep_local_state_comment';" |\
+    grep -qE '\bSynced\b'
+done
+----
 
 * Get the count of not-OK source databases:
 +
