@@ -287,18 +287,19 @@ ping -c 4 $(openstack server show baremetal-test -f json -c addresses | jq -r .a
 
 ==== Virtual Machine Steps
 
+Create a test VM instance with a test volume attachement:
+
 [,bash]
 ----
 cd ~/data-plane-adoption
 bash tests/roles/development_environment/files/pre_launch.bash
 ----
 
+This also creates a test Cinder volume, a backup from it, and a snapshot of it.
+
 '''
 
 ==== Ceph Storage Steps
-
-Make sure a cinder-volume backend is properly configured, or skip below steps
-to create a test workload without volume attachments.
 
 Confirm the image UUID can be seen in Ceph's images pool.
 
@@ -311,22 +312,6 @@ Create a Barbican secret
 ```
 openstack secret store --name testSecret --payload 'TestPayload'
 ```
-
-Create a Cinder volume, a backup from it, and snapshot it.
-
-[,bash]
-----
-openstack volume create --image cirros --bootable --size 1 disk
-openstack volume backup create --name backup disk
-openstack volume snapshot create --volume disk snapshot
-----
-
-Add volume to the test VM
-
-[,bash]
-----
-openstack server add volume test disk
-----
 
 == Performing the Data Plane Adoption
 
