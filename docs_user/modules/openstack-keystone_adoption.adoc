@@ -18,6 +18,28 @@ must already be imported into the podified MariaDB.
 
 == Pre-checks
 
+== Copy over fernet keys
+
+* Create the `keystone` secret, containing fernet keys:
++
+[,bash]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+data:
+  CredentialKeys0: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/credential-keys/0 | base64 -w 0)
+  CredentialKeys1: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/credential-keys/1 | base64 -w 0)
+  FernetKeys0: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/fernet-keys/0 | base64 -w 0)
+  FernetKeys1: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/fernet-keys/1 | base64 -w 0)
+kind: Secret
+metadata:
+  name: keystone
+  namespace: openstack
+type: Opaque
+EOF
+----
+
+
 == Procedure - Keystone adoption
 
 * Patch OpenStackControlPlane to deploy Keystone:
