@@ -1,9 +1,12 @@
-= Stop other infrastructure management and compute services
+[id="stopping-infrastructure-management-and-compute-services_{context}"]
 
-Before we can start with the EDPM adoption we need to make sure that compute,
-libvirt, load balancing, messaging and database services have been stopped on
-the source cloud. Also, we need to disable repositories for
-modular libvirt daemons on compute hosts.
+//:context: stopping-infrastructure-management
+//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
+
+= Stopping infrastructure management and Compute services
+
+Before you start the EDPM adoption, make sure that you stop the Compute,
+libvirt, load balancing, messaging, and database services on the source cloud. You also need to disable repositories for modular libvirt daemons on Compute hosts.
 
 After this step, the source cloud's control plane can be decomissioned,
 which is taking down only cloud controllers, database and messaging nodes.
@@ -15,10 +18,8 @@ Templates).
 
 Define the shell variables used in the steps below.
 Define the map of compute node name, IP pairs.
-The values are just illustrative and refer to a single node standalone director deployment,
-use values that are correct for your environment:
+The values are just illustrative and refer to a single node standalone director deployment, use values that are correct for your environment:
 
-[,bash]
 ----
 EDPM_PRIVATEKEY_PATH="~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa"
 declare -A computes
@@ -28,10 +29,7 @@ computes=(
 )
 ----
 
-We chose to use these ssh variables with the ssh commands instead of using
-ansible to try to create instructions that are independent on where they are
-running, but ansible commands could be used to achieve the same result if we
-are in the right host, for example to stop a service:
+These ssh variables with the ssh commands are used instead of ansible to try to create instructions that are independent on where they are running. But ansible commands could be used to achieve the same result if you are in the right host, for example to stop a service:
 
 ----
 . stackrc
@@ -49,7 +47,6 @@ containers.
 These steps can be automated with a simple script that relies on the previously
 defined environmental variables and function:
 
-[,bash]
 ----
 
 ComputeServicesToStop=(

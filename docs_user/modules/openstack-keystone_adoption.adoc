@@ -9,7 +9,7 @@
 == Prerequisites
 
 * Previous Adoption steps completed. Notably,
- ** the xref:mariadb_copy_{context}[Migrating databases to MariaDB instances]
+ ** the xref:migrating-databases-to-mariadb-instances_{context}[Migrating databases to MariaDB instances]
 must already be imported into the podified MariaDB.
 
 == Variables

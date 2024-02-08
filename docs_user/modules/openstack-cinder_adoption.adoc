@@ -62,7 +62,7 @@ $CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/cinder/etc/cinder/cin
 
 == Prepare OpenShift
 
-As explained in the xref:planning.adoc[planning section] before deploying OpenStack in OpenShift, you must ensure that the networks are ready, that you have decided the node selection, and also make sure any necessary changes to the OpenShift nodes have been made. For Cinder volume and backup services all these 3 must be carefully considered.
+As explained in xref:planning-the-new-deployment_{context}[Planning the new deployment], before deploying OpenStack in OpenShift, you must ensure that the networks are ready, that you have decided the node selection, and also make sure any necessary changes to the OpenShift nodes have been made. For Cinder volume and backup services all these 3 must be carefully considered.
 
 === Node Selection
 
@@ -100,14 +100,14 @@ spec:
 < . . . >
 ----
 
-As mentioned in the xref:node-selector.adoc[Node Selector guide], an example where you need to use labels is when using FC storage and you do not have HBA cards in all your OpenShift nodes. In this scenario you need to restrict all the cinder volume backends (not only the FC one) as well as the backup services.
+As mentioned in the xref:node-selector_{context}[About node selector], an example where you need to use labels is when using FC storage and you do not have HBA cards in all your OpenShift nodes. In this scenario you need to restrict all the cinder volume backends (not only the FC one) as well as the backup services.
 
 Depending on the cinder backends, their configuration, and the usage of Cinder,
 you can have network intensive cinder volume services with lots of I/O as well as
 cinder backup services that are not only network intensive but also memory and
 CPU intensive. This may be a concern for the OpenShift human operators, and
 they may want to use the `nodeSelector` to prevent these service from
-interfering with their other OpenShift workloads. For more information about node selection, see xref:node-selector.adoc[Nodes Selector guide].
+interfering with their other OpenShift workloads. For more information about node selection, see xref:node-selector_{context}[About node selector].
 
 When selecting the nodes where cinder volume is going to run please remember
 that cinder-volume may also use local storage when downloading a glance image
@@ -180,7 +180,7 @@ spec:
 ----
 
 If you are using labels to restrict the nodes where cinder services are running you need to use a `MachineConfigPool` as described in
-the xref:node-selector.adoc[nodes selector guide] to limit the effects of the
+the xref:node-selector_{context}[About node selector] to limit the effects of the
 `MachineConfig` to only the nodes where your services may run.
 
 If you are using a toy single node deployment to test the process, you might need to replace `worker` with `master` in the `MachineConfig`.
@@ -245,7 +245,7 @@ spec:
 
 If you are using labels to restrict the nodes where cinder
 services are running, you need to use a `MachineConfigPool` as described in
-the xref:node-selector.adoc[nodes selector guide] to limit the effects of the
+the xref:node-selector_{context}[About node selector] to limit the effects of the
 `MachineConfig` to only the nodes where your services may run.
 
 If you are using a toy single node deployment to test the process you migt need to replace `worker` with `master` in the `MachineConfig`.
@@ -323,7 +323,7 @@ spec:
 
 If you are using labels to restrict the nodes where cinder
 services are running you need to use a `MachineConfigPool` as described in
-the xref:node-selector.adoc[nodes selector guide] to limit the effects of the
+the xref:node-selector_{context}[About node selector] to limit the effects of the
 `MachineConfig` to only the nodes where your services may run.
 
 If you are using a toy single node deployment to test the process you might need to replace `worker` with `master` in the `MachineConfig`.
@@ -339,7 +339,7 @@ long as you do not override it setting `use_multipath_for_image_xfer = false` th
 
 == Configurations
 
-As described in the xref:planning.adoc[planning] Cinder is configured using
+As described in xref:planning-the-new-deployment_{context}[Planning the new deployment], Cinder is configured using
 configuration snippets instead of using obscure configuration parameters
 defined by the installer.
 

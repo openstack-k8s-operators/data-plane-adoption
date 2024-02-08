@@ -1,6 +1,7 @@
 [id="stopping-openstack-services_{context}"]
 
 //kgilliga: This module will be converted to a procedure and likely nested under the planning assembly.
+//Check xref context.
 
 = Stopping OpenStack services
 
@@ -48,9 +49,8 @@ openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep
 openstack image list -c ID -c Status |grep -E '\| .+ing \|'
 ----
 
-Also collect the xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[topology configuration],
-before stopping services required to gather it live. You will need it to compare it
-with the post-adoption values later on.
+Also collect the services topology specific configuration before stopping services required to gather it live. You will need it to compare it with the post-adoption values later on. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+//kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
 
 == Stopping control plane services
 

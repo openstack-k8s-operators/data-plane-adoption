@@ -41,9 +41,7 @@ EOF
 ----
 
 ____
-If you have previously backup your OpenStack services configuration file from the old environment:
-xref:pull_openstack_configuration.adoc[pull openstack configuration os-diff] you can use os-diff to compare
-and make sure the configuration is correct.
+If you have previously backed up your OpenStack services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
 ____
 
 ----

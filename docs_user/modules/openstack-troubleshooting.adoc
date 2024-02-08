@@ -1,4 +1,9 @@
-= Troubleshooting
+[id="troubleshooting-adoption_{context}"]
+
+//:context: troubleshooting-adoption
+//kgilliga: This module might be converted to an assembly.
+
+= Troubleshooting adoption
 
 This document contains information about various issues you might face
 and how to solve them.
@@ -27,12 +32,11 @@ An example of a failed pod:
   Normal   BackOff         110s (x7 over 3m38s)   kubelet            Back-off pulling image "registry.redhat.io/rhosp-rhel9/openstack-rabbitmq:17.0"
 ----
 
-To solve this issue we need to get a valid pull-secret from the official https://console.redhat.com/openshift/install/pull-secret[Red
+To solve this issue you need a valid pull-secret from the official https://console.redhat.com/openshift/install/pull-secret[Red
 Hat console site],
 store this pull secret locally in a machine with access to the Kubernetes API
 (service node), and then run:
 
-[,bash]
 ----
 oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=<pull_secret_location.json>
 ----
@@ -41,7 +45,6 @@ The previous command will make available the authentication information in all
 the cluster's compute nodes, then trigger a new pod deployment to pull the
 container image with:
 
-[,bash]
 ----
 kubectl delete pod rabbitmq-server-0 -n openstack
 ----

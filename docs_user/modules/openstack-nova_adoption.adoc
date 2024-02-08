@@ -5,26 +5,26 @@
 //Check xref contexts.
 
 = Adopting the Compute service
-____
+
 *NOTE* This example scenario describes a simple single-cell setup. Real
 multi-stack topology recommended for production use results in different
 cells DBs layout, and should be using different naming schemes (not covered
 here this time).
-____
 
 == Prerequisites
 
 * Previous Adoption steps completed. Notably,
- ** the xref:mariadb_copy_{context}[Migrating databases to MariaDB instances]
+ ** the xref:migrating-databases-to-mariadb-instances_{context}[Migrating databases to MariaDB instances]
 must already be imported into the podified MariaDB;
- ** the xref:keystone_adoption_{context}[Adopting the Identity service] needs to be imported;
- ** the xref:placement_adoption_{context}[Adopting the Placement service] needs to be imported;
- ** the xref:glance_adoption_{context}[Adopting the Image service] needs to be imported;
- ** the xref:ovn_adoption_{context}[Migrating OVN data] need to be imported;
- ** the xref:neutron_adoption_{context}[Adopting the OpenStack Networking service] needs to be imported;
+ ** the xref:adopting-the-identity-service_{context}[Adopting the Identity service] needs to be imported;
+ ** the xref:adopting-the-placement-service_{context}[Adopting the Placement service] needs to be imported;
+ ** the xref:adopting-the-image-service_{context}[Adopting the Image service] needs to be imported;
+ ** the xref:migrating-ovn-data_{context}[Migrating OVN data] need to be imported;
+ ** the xref:adopting-the-openstack-networking-service_{context}[Adopting the OpenStack Networking service] needs to be imported;
  ** Required services specific topology
- xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[configuration collected];
- ** OpenStack services have been xref:openstack-stop_openstack_services.adoc[stopped]
+xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+//kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
+ ** OpenStack services have been stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
 
 == Variables
 
@@ -37,9 +37,9 @@ alias openstack="oc exec -t openstackclient -- openstack"
 
 == Procedure - Nova adoption
 
-____
+
 *NOTE*: This procedure assumes that Nova Metadata is deployed on the top level and not on each cell level, so this example imports it the same way. If the source deployment has a per cell metadata deployment, adjust the given below patch as needed. Metadata service cannot be run in `cell0`.
-____
+
 
 * Patch OpenStackControlPlane to deploy Nova:
 +
@@ -120,8 +120,7 @@ oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 +
 The local Conductor services will be started for each cell, while the superconductor runs in `cell0`.
-Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Nova services, until
-the xref:edpm_adoption.adoc[external dataplane imported], and until Nova Compute services fast-forward upgraded.
+Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Nova services, until the external data plane is imported, and until Nova Compute services fast-forward upgraded. For more information, see xref:adopting-edpm_{context}[Adopting EDPM].
 
 == Post-checks
 
@@ -133,8 +132,7 @@ openstack endpoint list | grep nova
 openstack server list
 ----
 
-Compare the following outputs with the topology specific configuration
-xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[collected earlier]:
+Compare the following outputs with the topology specific configuration in xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
 
 * Query the superconductor for cell1 existance and compare it to pre-adoption values:
 +
@@ -148,8 +146,7 @@ The expected changes to happen:
  ** cell1's `nova` DB and user name become `nova_cell1`.
  ** Default cell is renamed to `cell1` (in a multi-cell setup, it should become indexed as the last cell instead).
  ** RabbitMQ transport URL no longer uses `guest`.
-____
+
 *NOTE* At this point, Nova control plane services have yet taken control over
 existing Nova compute workloads. That would become possible to verify only after
-xref:edpm_adoption_{context}[EDPM adoption] completed.
-____
+EDPM adoption is completed. For more information, see xref:adopting-edpm_{context}[Adopting EDPM].
