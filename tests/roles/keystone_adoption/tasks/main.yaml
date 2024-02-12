@@ -68,22 +68,3 @@
     for service in cinderv3 glance neutron nova placement swift; do
       ${BASH_ALIASES[openstack]} service list | awk "/ $service /{ print \$2; }" | xargs ${BASH_ALIASES[openstack]} service delete || true
     done
-
-# OS Diff automation steps
-- name: Pull config from OCP os-diff
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    cd {{ od_dir }}
-    ./os-diff pull -e ocp
-
-- name: Compare keystone.conf config file
-  register: diff_res
-  become: true
-  ansible.builtin.command:
-    chdir: "{{ od_dir }}"
-    cmd: ./os-diff diff {{ dpa_dir }}/tripleo/keystone/etc/keystone/keystone.conf {{ dpa_dir }}/ocp/keystone/etc/keystone/keystone.conf
-
-- name: Print diff output
-  ansible.builtin.debug:
-    var: diff_res

@@ -1,0 +1,3 @@
+dpa_dir: "/home/zuul/src/github.com/openstack-k8s-operators/data-plane-adoption"
+os_diff_data_dir: "/home/zuul-worker/src/github.com/openstack-k8s-operators/os-diff"
+standalone_ip: 192.168.122.100
