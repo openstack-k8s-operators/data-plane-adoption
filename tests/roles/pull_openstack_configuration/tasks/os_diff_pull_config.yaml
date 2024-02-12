@@ -15,8 +15,9 @@
   failed_when: false
   become: true
   ansible.builtin.git:
-    repo: https://github.com/openstack-k8s-operators/os-diff 
+    repo: https://github.com/openstack-k8s-operators/os-diff
     dest: "{{ od_dir }}"
+    version: main
 
 - name: Build os-diff
   ansible.builtin.shell: |
