@@ -31,7 +31,6 @@
     - development_environment
     - backend_services
     - ceph_backend_configuration
-    - pull_openstack_configuration
     - stop_openstack_services
     - mariadb_copy
     - ovn_adoption
