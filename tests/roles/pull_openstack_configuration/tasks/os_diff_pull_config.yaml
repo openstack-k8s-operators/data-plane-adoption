@@ -14,8 +14,9 @@
 - name: Clone os-diff to install it from source.
   failed_when: false
   become: true
-  ansible.builtin.shell: |
-    git clone https://github.com/openstack-k8s-operators/os-diff {{ od_dir }}
+  ansible.builtin.git:
+    repo: https://github.com/openstack-k8s-operators/os-diff 
+    dest: "{{ od_dir }}"
 
 - name: Build os-diff
   ansible.builtin.shell: |
