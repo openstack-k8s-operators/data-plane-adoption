@@ -1,4 +1,10 @@
-= Neutron adoption
+[id="adopting-the-openstack-networking-service_{context}"]
+
+//:context: adopting-openstack-networking
+//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
+//Check xref context.
+
+= Adopting the OpenStack Networking service
 
 Adopting Neutron means that an existing `OpenStackControlPlane` CR, where Neutron
 is supposed to be disabled, should be patched to start the service with the
@@ -16,7 +22,7 @@ This guide also assumes that:
 
 == Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB and Keystone and xref:ovn_adoption.adoc[OVN DBs]
+* Previous Adoption steps completed. Notably, MariaDB and Keystone and xref:ovn_adoption_{context}[Migrating OVN data]
 should be already adopted.
 
 == Procedure - Neutron adoption
@@ -25,7 +31,6 @@ As already done for https://github.com/openstack-k8s-operators/data-plane-adopti
 
 Patch OpenStackControlPlane to deploy Neutron:
 
-[,bash]
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
@@ -55,7 +60,6 @@ spec:
 
 === Inspect the resulting neutron pods
 
-[,bash]
 ----
 NEUTRON_API_POD=`oc get pods -l service=neutron | tail -n 1 | cut -f 1 -d' '`
 oc exec -t $NEUTRON_API_POD -c neutron-api -- cat /etc/neutron/neutron.conf
@@ -63,12 +67,10 @@ oc exec -t $NEUTRON_API_POD -c neutron-api -- cat /etc/neutron/neutron.conf
 
 === Check that Neutron API service is registered in Keystone
 
-[,bash]
 ----
 openstack service list | grep network
 ----
 
-[,bash]
 ----
 openstack endpoint list | grep network
 
@@ -79,13 +81,12 @@ openstack endpoint list | grep network
 
 === Create sample resources
 
-We can now test that user can create networks, subnets, ports, routers etc.
+You can test whether the user can create networks, subnets, ports, or routers.
 
-[,bash]
 ----
 openstack network create net
 openstack subnet create --network net --subnet-range 10.0.0.0/24 subnet
 openstack router create router
 ----
 
-NOTE: this page should be expanded to include information on SR-IOV adoption.
+//NOTE: this page should be expanded to include information on SR-IOV adoption.

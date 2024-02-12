@@ -1,11 +1,17 @@
-= Placement adoption
+[id="adopting-the-placement-service_{context}"]
+
+//:context: adopting-placement-service
+//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
+//Check xref contexts.
+
+= Adopting the Placement service
 
 == Prerequisites
 
 * Previous Adoption steps completed. Notably,
- ** the xref:mariadb_copy.adoc[service databases]
+ ** the xref:mariadb_copy_{context}[Migrating databases to MariaDB instances]
 must already be imported into the podified MariaDB.
- ** the xref:keystone_adoption.adoc[Keystone service] needs to be imported.
+ ** the xref:keystone_adoption_{context}[Adopting the Identity service] needs to be imported.
  ** the Memcached operator needs to be deployed (nothing to import for it from
 the source environment).
 
@@ -17,7 +23,6 @@ the source environment).
 
 * Patch OpenStackControlPlane to deploy Placement:
 +
-[,bash]
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
@@ -46,7 +51,6 @@ spec:
 * See that Placement endpoints are defined and pointing to the
 podified FQDNs and that Placement API responds.
 +
-[,bash]
 ----
 alias openstack="oc exec -t openstackclient -- openstack"
 

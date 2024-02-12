@@ -1,3 +1,10 @@
+[id="adopting-the-bare-metal-provisioning-service_{context}"]
+
+//:context: adopting-bare-metal-provisioning
+//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
+
+=  Adopting the Bare Metal Provisioning service
+
 == Prerequisites
 
 * Previous Adoption steps completed. Notably, the service databases

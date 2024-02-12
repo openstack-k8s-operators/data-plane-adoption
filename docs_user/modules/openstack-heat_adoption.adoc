@@ -1,4 +1,9 @@
-= Heat adoption
+[id="adopting-heat_{context}"]
+
+//:context: adopting-heat
+//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
+
+= Adopting Heat
 
 Adopting Heat means that an existing `OpenStackControlPlane` CR, where Heat
 is supposed to be disabled, should be patched to start the service with the
@@ -31,7 +36,6 @@ to match what you have configured in the existing TripleO Heat configuration.
 
 You can retrieve and verify the existing `auth_encryption_key` and `service` passwords via:
 
-[,bash]
 ----
 [stack@rhosp17 ~]$ grep -E 'HeatPassword|HeatAuth' ~/overcloud-deploy/overcloud/overcloud-passwords.yaml
   HeatAuthEncryptionKey: Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2
@@ -40,7 +44,6 @@ You can retrieve and verify the existing `auth_encryption_key` and `service` pas
 
 And verifying on one of the Controllers that this is indeed the value in use:
 
-[,bash]
 ----
 [stack@rhosp17 ~]$ ansible -i overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml overcloud-controller-0 -m shell -a "grep auth_encryption_key /var/lib/config-data/puppet-generated/heat/etc/heat/heat.conf | grep -Ev '^#|^$'" -b
 overcloud-controller-0 | CHANGED | rc=0 >>
@@ -49,7 +52,6 @@ auth_encryption_key=Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2
 
 This password needs to be base64 encoded and added to the `osp-secret`
 
-[,bash]
 ----
 ❯ echo Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2 | base64
 UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzIK
@@ -60,7 +62,6 @@ secret/osp-secret patched
 
 Patch OpenStackControlPlane to deploy Heat:
 
-[,bash]
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
@@ -83,7 +84,6 @@ spec:
 
 Ensure all of the CR's reach the "Setup Complete" state:
 
-[,bash]
 ----
 ❯ oc get Heat,HeatAPI,HeatEngine,HeatCFNAPI
 NAME                           STATUS   MESSAGE
@@ -101,7 +101,6 @@ heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
 
 === Check that Heat service is registered in Keystone
 
-[,bash]
 ----
  oc exec -it openstackclient -- openstack service list -c Name -c Type
 +------------+----------------+
@@ -119,7 +118,6 @@ heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
 +------------+----------------+
 ----
 
-[,bash]
 ----
 ❯ oc exec -it openstackclient -- openstack endpoint list --service=heat -f yaml
 - Enabled: true
@@ -140,7 +138,6 @@ heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
 
 === Check Heat engine services are up
 
-[,bash]
 ----
  oc exec -it openstackclient -- openstack orchestration service list -f yaml
 - Binary: heat-engine
@@ -175,9 +172,8 @@ heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
 
 === Verify you can now see your Heat stacks again
 
-We can now test that user can create networks, subnets, ports, routers etc.
+Test whether you can create networks, subnets, ports, or routers:
 
-[,bash]
 ----
 ❯ openstack stack list -f yaml
 - Creation Time: '2023-10-11T22:03:20Z'

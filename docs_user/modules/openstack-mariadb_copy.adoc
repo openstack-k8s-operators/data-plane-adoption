@@ -1,4 +1,8 @@
-= MariaDB data copy
+[id="migrating-databases-to-mariadb-instances_{context}"]
+
+//kgilliga: This module will be converted to a procedure. Unclear which assembly it should be included in.
+
+= Migrating databases to MariaDB instances
 
 This document describes how to move the databases from the original
 OpenStack deployment to the MariaDB instances in the OpenShift
@@ -18,12 +22,12 @@ ____
  ** Podified MariaDB and RabbitMQ are running. No other podified
 control plane services are running.
  ** Required services specific topology xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[configuration collected]
- ** OpenStack services have been xref:stop_openstack_services.adoc[stopped]
+ ** OpenStack services have been xref:stop_openstack_services_{context}[Stopping OpenStack services]
  ** There must be network routability between:
   *** The adoption host and the original MariaDB.
   *** The adoption host and the podified MariaDB.
-  *** _Note that this routability requirement may change in the
-future, e.g. we may require routability from the original MariaDB to
+  *** _Note that this routability requirement might change in the
+future. For example, you might require routability from the original MariaDB to
 podified MariaDB_.
 * Podman package is installed
 * `CONTROLLER1_SSH`, `CONTROLLER2_SSH`, and `CONTROLLER3_SSH` are configured.
@@ -33,7 +37,6 @@ podified MariaDB_.
 Define the shell variables used in the steps below. The values are
 just illustrative, use values that are correct for your environment:
 
-[,bash]
 ----
 PODIFIED_MARIADB_IP=$(oc get svc --selector "mariadb/name=openstack" -ojsonpath='{.items[0].spec.clusterIP}')
 PODIFIED_CELL1_MARIADB_IP=$(oc get svc --selector "mariadb/name=openstack-cell1" -ojsonpath='{.items[0].spec.clusterIP}')
@@ -55,14 +58,20 @@ SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' Mysql
 
 * Get the count of not-OK source databases:
 +
-[,bash]
 ----
-test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ]
+podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
+    mysql -h "$SOURCE_MARIADB_IP" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" -e 'SHOW databases;'
+----
+
+* Run mysqlcheck on the original DB to look for things that are not OK:
++
+----
+podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
+    mysqlcheck --all-databases -h $SOURCE_MARIADB_IP -u root "-p$SOURCE_DB_ROOT_PASSWORD" | grep -v OK
 ----
 
 * Test connection to podified DBs (show databases):
 +
-[,bash]
 ----
 oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
     mysql -rsh "$PODIFIED_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
@@ -73,19 +82,18 @@ oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
 == Procedure - data copy
 
 ____
-*NOTE*: We'll need to transition Nova services imported later on into a
+*NOTE*: You need to transition Nova services imported later on into a
 superconductor architecture. For that, delete the old service records in
 cells DBs, starting from the cell1. New records will be registered with
 different hostnames provided by the Nova service operator. All Nova
 services, except the compute agent, have no internal state, and its service
-records can be safely deleted. Also we need to rename the former `default` cell
-as `cell1`.
+records can be safely deleted. You also need to rename the former `default` cell
+to `cell1`.
 ____
 
 * Create a temporary folder to store DB dumps and make sure it's the
 working directory for the following steps:
 +
-[,bash]
 ----
 mkdir ~/adoption-db
 cd ~/adoption-db
@@ -93,11 +101,10 @@ cd ~/adoption-db
 
 * Create a dump of the original databases:
 +
-[,bash]
 ----
 podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE bash <<EOF
 
-# Note we do not want to dump the information and performance schema tables so we filter them
+# Note Filter the information and performance schema tables
 # Gnocchi is no longer used as a metric store, skip dumping gnocchi database as well
 mysql -h ${SOURCE_MARIADB_IP} -u root "-p${SOURCE_DB_ROOT_PASSWORD}" -N -e 'show databases' | grep -E -v 'schema|mysql|gnocchi' | while read dbname; do
     echo "Dumping \${dbname}"
@@ -111,7 +118,6 @@ EOF
 
 * Restore the databases from .sql files into the podified MariaDB:
 +
-[,bash]
 ----
 # db schemas to rename on import
 declare -A db_name_map
@@ -167,7 +173,6 @@ xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-
 
 * Check that the databases were imported correctly:
 +
-[,bash]
 ----
 # use 'oc exec' and 'mysql -rs' to maintain formatting
 dbs=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;')
@@ -206,4 +211,4 @@ diff -Z <(echo $novadb_svc_records) <(echo $PULL_OPENSTACK_CONFIGURATION_NOVA_CO
 related to the `restricted:latest` security context constraint. This is due to default security
 context constraints and will not prevent pod creation by the admission controller. You'll see a
 warning for the short-lived pod but it will not interfere with functionality.
-For more info https://learn.redhat.com/t5/DO280-Red-Hat-OpenShift/About-pod-security-standards-and-warnings/m-p/32502[visit here]
+For more information, see https://learn.redhat.com/t5/DO280-Red-Hat-OpenShift/About-pod-security-standards-and-warnings/m-p/32502[About pod security standards and warnings].
