@@ -26,7 +26,6 @@
   roles:
     - development_environment
     - backend_services
-    - pull_openstack_configuration
     - stop_openstack_services
     - mariadb_copy
     - ovn_adoption
