@@ -256,8 +256,6 @@ spec:
     - install-os
     - configure-os
     - run-os
-    - reboot-os
-    - install-certs
     - libvirt
     - nova-compute-extraconfig
     - ovn
