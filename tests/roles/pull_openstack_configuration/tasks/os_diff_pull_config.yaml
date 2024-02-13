@@ -21,6 +21,7 @@
 
 - name: Build os-diff
   ansible.builtin.shell: |
+    export PATH=$PATH:/usr/local/go/bin
     cd {{ os_diff_data_dir }}
     make build
   register: make_res
