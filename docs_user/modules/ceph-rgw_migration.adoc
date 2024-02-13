@@ -184,7 +184,7 @@ network_config:
   use_dhcp: false
   dns_servers: {{ ctlplane_dns_nameservers }}
   addresses:
-  - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
+  - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
   routes: {{ ctlplane_host_routes }}
 - type: vlan
   vlan_id: {{ storage_mgmt_vlan_id }}

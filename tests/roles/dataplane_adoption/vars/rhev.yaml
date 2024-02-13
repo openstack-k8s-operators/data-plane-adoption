@@ -100,7 +100,7 @@ edpm_network_config_template: |
     dns_servers: {{ ctlplane_dns_nameservers }}
     domain: {{ dns_search_domains }}
     addresses:
-    - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
+    - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
     routes: {{ ctlplane_host_routes }}
   - type: interface
     name: nic3
@@ -112,8 +112,8 @@ edpm_network_config_template: |
     name: nic4
     use_dhcp: false
     addresses:
-    - ip_netmask: {{ internalapi_ip }}/{{ internalapi_cidr }}
-    routes: {{ internalapi_host_routes }}
+    - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
+    routes: {{ internal_api_host_routes }}
   - type: ovs_bridge
     name: {{ neutron_physical_bridge_name }}
     dns_servers: {{ ctlplane_dns_nameservers }}
@@ -134,6 +134,6 @@ role_networks:
   - Tenant
 networks_lower:
   External: external
-  InternalApi: internalapi
+  InternalApi: internal_api
   Tenant: tenant
 edpm_sshd_allowed_ranges: ['192.168.23.0/24']
