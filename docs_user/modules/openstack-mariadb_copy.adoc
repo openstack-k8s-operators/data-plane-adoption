@@ -49,7 +49,12 @@ PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRoo
 CHARACTER_SET=utf8
 COLLATION=utf8_general_ci
 
+ifeval::["{build}" == "upstream"]
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
+endif::[]
+ifeval::["{build}" == "downstream"]
+MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
+endif::[]
 # Replace with your environment's MariaDB Galera cluster VIP and backend IPs:
 SOURCE_MARIADB_IP=192.168.122.99
 declare -A SOURCE_GALERA_MEMBERS
