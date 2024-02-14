@@ -1,4 +1,4 @@
-BUILD = upstream
+BUILD ?= upstream
 BUILD_DIR = ../docs_build
 ROOTDIR = $(realpath .)
 NAME = adoption-user
@@ -30,6 +30,7 @@ html-latest: prepare $(IMAGES_TS) $(DEST_HTML)
 pdf: prepare $(DEST_PDF)
 
 prepare:
+	@if [ "$(BUILD)" != upstream -a "$(BUILD)" != downstream ]; then echo "BUILD must be 'upstream' or 'downstream'."; exit 1; fi
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p $(DEST_DIR) $(IMAGES_DIR)
 
