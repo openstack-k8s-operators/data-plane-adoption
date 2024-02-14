@@ -200,8 +200,6 @@
         - install-os
         - configure-os
         - run-os
-        - reboot-os
-        - install-certs
         - libvirt
         - nova-compute-extraconfig
         - ovn
@@ -223,8 +221,8 @@
             os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
             os_net_config_dns: {{ dataplane_os_net_config_dns | default("") }}
             service_net_map:
-              nova_api_network: internalapi
-              nova_libvirt_network: internalapi
+              nova_api_network: internal_api
+              nova_libvirt_network: internal_api
 
             # edpm_network_config
             # Default nic config template for a EDPM compute node

@@ -49,7 +49,7 @@ metadata:
   name: netconfig
 spec:
   networks:
-  - name: ctlplane
+  - name: CtlPlane
     dnsDomain: ctlplane.example.com
     subnets:
     - name: subnet1
@@ -60,7 +60,7 @@ spec:
         start: 192.168.122.150
       cidr: 192.168.122.0/24
       gateway: 192.168.122.1
-  - name: internalapi
+  - name: InternalApi
     dnsDomain: internalapi.example.com
     subnets:
     - name: subnet1
@@ -78,7 +78,7 @@ spec:
         start: 10.0.0.100
       cidr: 10.0.0.0/24
       gateway: 10.0.0.1
-  - name: storage
+  - name: Storage
     dnsDomain: storage.example.com
     subnets:
     - name: subnet1
@@ -87,7 +87,7 @@ spec:
         start: 172.18.0.100
       cidr: 172.18.0.0/24
       vlan: 21
-  - name: storagemgmt
+  - name: StorageMgmt
     dnsDomain: storagemgmt.example.com
     subnets:
     - name: subnet1
@@ -96,7 +96,7 @@ spec:
         start: 172.20.0.100
       cidr: 172.20.0.0/24
       vlan: 23
-  - name: tenant
+  - name: Tenant
     dnsDomain: tenant.example.com
     subnets:
     - name: subnet1
@@ -256,8 +256,6 @@ spec:
     - install-os
     - configure-os
     - run-os
-    - reboot-os
-    - install-certs
     - libvirt
     - nova-compute-extraconfig
     - ovn
@@ -275,13 +273,13 @@ spec:
       networks:
       - defaultRoute: true
         fixedIP: ${computes[standalone.localdomain]}
-        name: ctlplane
+        name: CtlPlane
         subnetName: subnet1
-      - name: internalapi
+      - name: InternalApi
         subnetName: subnet1
-      - name: storage
+      - name: Storage
         subnetName: subnet1
-      - name: tenant
+      - name: Tenant
         subnetName: subnet1
   nodeTemplate:
     ansibleSSHPrivateKeySecret: dataplane-adoption-secret
@@ -291,8 +289,8 @@ spec:
       ansiblePort: 22
       ansibleVars:
         service_net_map:
-          nova_api_network: internalapi
-          nova_libvirt_network: internalapi
+          nova_api_network: internal_api
+          nova_libvirt_network: internal_api
 
         # edpm_network_config
         # Default nic config template for a EDPM compute node
@@ -313,7 +311,7 @@ spec:
              dns_servers: {{ ctlplane_dns_nameservers }}
              domain: {{ dns_search_domains }}
              addresses:
-             - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
+             - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
              routes: {{ ctlplane_host_routes }}
              members:
              - type: interface
@@ -343,7 +341,7 @@ spec:
         - Tenant
         networks_lower:
           External: external
-          InternalApi: internalapi
+          InternalApi: internal_api
           Storage: storage
           Tenant: tenant
 
