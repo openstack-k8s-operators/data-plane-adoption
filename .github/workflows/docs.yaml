@@ -30,8 +30,11 @@ jobs:
 
       - name: Install Asciidoc
         run: make docs-dependencies
-      - name: Build user docs
+
+      - name: Build upstream user docs
         run: make docs-user
+      - name: Build downstream preview of user docs
+        run: BUILD=downstream make docs-user
       - name: Build dev docs
         run: make docs-dev
 
@@ -63,6 +66,7 @@ jobs:
           mv -T docs_build/adoption-dev dev
 
           mv user/index-upstream.html user/index.html
+          mv user/index-downstream.html user/downstream.html
           mv dev/index-upstream.html dev/index.html
 
           git add user
