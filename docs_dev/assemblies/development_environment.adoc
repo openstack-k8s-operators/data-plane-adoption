@@ -102,10 +102,15 @@ cat << EOF > /tmp/addtional_nets.json
 EOF
 export EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(jq -c . /tmp/addtional_nets.json)
 export STANDALONE_COMPUTE_DRIVER=ironic
-export NTP_SERVER=pool.ntp.org  # Only neccecary if not on the RedHat network ...
+export NTP_SERVER=pool.ntp.org  # Only necessary if not on the RedHat network ...
 export EDPM_COMPUTE_CEPH_ENABLED=false  # Optional
 ----
 
+[Note]
+===
+If `EDPM_COMPUTE_CEPH_ENABLED=false` is set, TripleO configures `Glance` with
+`Swift` as a backend.
+===
 '''
 
 == Standalone deployment
