@@ -32,6 +32,7 @@
     - ovn_adoption
     - keystone_adoption
     - neutron_adoption
+    - swift_adoption
     - glance_adoption
     - placement_adoption
     - nova_adoption
