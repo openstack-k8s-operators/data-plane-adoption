@@ -47,6 +47,13 @@ spec:
       databaseInstance: openstack
       storageClass: "local-storage"
       storageRequest: 10G
+      customServiceConfig: |
+        [DEFAULT]
+        enabled_backends = default_backend:file
+        [glance_store]
+        default_backend = default_backend
+        [default_backend]
+        filesystem_store_datadir = /var/lib/glance/images/
       glanceAPIs:
         default:
           replicas: 1
