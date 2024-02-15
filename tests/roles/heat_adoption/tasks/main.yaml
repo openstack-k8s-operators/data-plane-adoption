@@ -29,6 +29,8 @@
             authEncryptionKey: HeatAuthEncryptionKey
             database: HeatDatabasePassword
             service: HeatPassword
+          rabbitMqClusterName: rabbitmq
+          serviceUser: heat
     '
 
 - name: wait for Heat to start up
