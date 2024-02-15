@@ -1,0 +1,79 @@
+- name: deploy podified Aodh
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      telemetry:
+        template:
+          enabled: true
+          autoscaling:
+            aodh:
+              databaseAccount: aodh
+              databaseInstance: openstack
+              passwordSelector:
+                aodhService: AodhPassword
+                ceilometerService: CeilometerPassword
+              preserveJobs: false
+              rabbitMqClusterName: rabbitmq
+              secret: osp-secret
+              serviceUser: aodh
+            enabled: true
+            heatInstance: heat
+    '
+
+- name: wait for Aodh to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=service=aodh -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: aodh_running_result
+  until: aodh_running_result is success
+  retries: 60
+  delay: 2
+
+- name: check that Aodh is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    ${BASH_ALIASES[openstack]} endpoint list | grep aodh
+  register: aodh_responding_result
+  until: aodh_responding_result is success
+  retries: 60
+  delay: 2
+
+- name: deploy metric storage
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      telemetry:
+        enabled: true
+        template:
+          metricStorage:
+            enabled: true
+    '
+
+- name: wait for alertmanager metric storage to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=alertmanager=metric-storage -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: alertmanager_running_result
+  until: alertmanager_running_result is success
+  retries: 60
+  delay: 2
+
+- name: wait for prometheus metric storage to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=prometheus=metric-storage -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: prometheus_running_result
+  until: prometheus_running_result is success
+  retries: 60
+  delay: 2
