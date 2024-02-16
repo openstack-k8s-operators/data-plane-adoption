@@ -1,3 +1,22 @@
+- name: add keystone fernet keys secret
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    CONTROLLER1_SSH="{{ controller1_ssh }}"
+    oc apply -f - <<EOF
+    apiVersion: v1
+    data:
+      CredentialKeys0: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/credential-keys/0 | base64 -w 0)
+      CredentialKeys1: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/credential-keys/1 | base64 -w 0)
+      FernetKeys0: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/fernet-keys/0 | base64 -w 0)
+      FernetKeys1: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/fernet-keys/1 | base64 -w 0)
+    kind: Secret
+    metadata:
+      name: keystone
+      namespace: openstack
+    type: Opaque
+    EOF
+
 - name: deploy podified Keystone
   ansible.builtin.shell: |
     {{ shell_header }}

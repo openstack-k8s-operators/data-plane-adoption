@@ -92,6 +92,11 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
+    {% if pulled_openstack_configuration_shell_headers is defined %}
     {{ pulled_openstack_configuration_shell_headers }}
+    {% else %}
+    . ~/.source_cloud_exported_variables
+    {% endif %}
+
     echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS
     oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 |'

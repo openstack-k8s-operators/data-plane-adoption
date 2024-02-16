@@ -94,6 +94,7 @@ just illustrative, use values that are correct for your environment:
 
 [,bash]
 ----
+CONTROLLER_SSH="ssh -F ~/director_standalone/vagrant_ssh_config vagrant@standalone"
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 SOURCE_MARIADB_IP=192.168.122.100
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
@@ -148,3 +149,28 @@ echo "$PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES"
 export PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS=$($CONTROLLER_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)
 echo "$PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS"
 ----
+
+After the source control plane services shutdown, if either of the exported
+values lost, it could be no longer evaluated again. Preserving the exported
+values in an env file should protect you from such a situation:
+
+* Store exported variables for future use
++
+[,bash]
+----
+cat > ~/.source_cloud_exported_variables << EOF
+PULL_OPENSTACK_CONFIGURATION_DATABASES="$(podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
+    mysql -rsh $SOURCE_MARIADB_IP -uroot -p$SOURCE_DB_ROOT_PASSWORD -e 'SHOW databases;')"
+PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK="$(podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
+    mysqlcheck --all-databases -h $SOURCE_MARIADB_IP -u root -p$SOURCE_DB_ROOT_PASSWORD | grep -v OK)"
+PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="$(podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE mysql \
+    -rsh $SOURCE_MARIADB_IP -uroot -p$SOURCE_DB_ROOT_PASSWORD nova_api -e \
+    'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')"
+PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES="$(podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE mysql \
+    -rsh $SOURCE_MARIADB_IP -uroot -p$SOURCE_DB_ROOT_PASSWORD nova_api -e \
+    "select host from nova.services where services.binary='nova-compute';")"
+PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$($CONTROLLER_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)"
+EOF
+chmod 0600 ~/.source_cloud_exported_variables
+----
+

@@ -22,9 +22,6 @@
           route: {}
         template:
           databaseInstance: openstack
-          databaseUser: heat
-          rabbitMqClusterName: rabbitmq
-          serviceUser: heat
           secret: osp-secret
           memcachedInstance: memcached
           passwordSelectors:

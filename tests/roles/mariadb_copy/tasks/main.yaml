@@ -6,10 +6,27 @@
   ansible.builtin.include_tasks:
     file: env_vars_dst.yaml
 
+- name: check that the Galera database cluster members are online and synced
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
+      echo "Checking for the database node $i WSREP status Synced"
+      sudo podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE mysql \
+        -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" \
+        -e "show global status like 'wsrep_local_state_comment';" |\
+        grep -qE '\bSynced\b'
+    done
+
 - name: Get the count of not-OK source databases
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
+    {% if pulled_openstack_configuration_shell_headers is defined %}
     {{ pulled_openstack_configuration_shell_headers }}
+    {% else %}
+    . ~/.source_cloud_exported_variables
+    {% endif %}
+
     test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ]
 
 - name: test connection to podified DBs (show databases)
@@ -27,7 +44,6 @@
   ansible.builtin.shell:
     cmd: "{{ lookup('ansible.builtin.template', 'restore_dbs.bash') }}"
 
-- name: MariaDB post-checks
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell:
-    cmd: "{{ lookup('ansible.builtin.template', 'post_checks.bash') }}"
+- name: Verify MariaDB data imported
+  ansible.builtin.include_tasks:
+    file: mariadb_verify.yaml

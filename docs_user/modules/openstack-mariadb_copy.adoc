@@ -1,6 +1,7 @@
 [id="migrating-databases-to-mariadb-instances_{context}"]
 
 //kgilliga: This module will be converted to a procedure. Unclear which assembly it should be included in.
+//Check xref contexts.
 
 = Migrating databases to MariaDB instances
 
@@ -21,8 +22,9 @@ ____
  ** The OpenStackControlPlane resource must be already created at this point.
  ** Podified MariaDB and RabbitMQ are running. No other podified
 control plane services are running.
- ** Required services specific topology xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[configuration collected]
- ** OpenStack services have been xref:stop_openstack_services_{context}[Stopping OpenStack services]
+ ** Required services specific topology. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+//kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
+ ** OpenStack services have been stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
  ** There must be network routability between:
   *** The adoption host and the original MariaDB.
   *** The adoption host and the podified MariaDB.
@@ -30,7 +32,6 @@ control plane services are running.
 future. For example, you might require routability from the original MariaDB to
 podified MariaDB_.
 * Podman package is installed
-* `CONTROLLER1_SSH`, `CONTROLLER2_SSH`, and `CONTROLLER3_SSH` are configured.
 
 == Variables
 
@@ -49,12 +50,30 @@ CHARACTER_SET=utf8
 COLLATION=utf8_general_ci
 
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
-# Replace with your environment's MariaDB IP:
-SOURCE_MARIADB_IP=192.168.122.100
+# Replace with your environment's MariaDB Galera cluster VIP and backend IPs:
+SOURCE_MARIADB_IP=192.168.122.99
+declare -A SOURCE_GALERA_MEMBERS
+SOURCE_GALERA_MEMBERS=(
+  ["standalone.localdomain"]=192.168.122.100
+  # ...
+)
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
 == Pre-checks
+
+* Check that the Galera database cluster members are online and synced:
++
+[,bash]
+----
+for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
+  echo "Checking for the database node $i WSREP status Synced"
+  sudo podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE mysql \
+    -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" \
+    -e "show global status like 'wsrep_local_state_comment';" |\
+    grep -qE '\bSynced\b'
+done
+----
 
 * Get the count of not-OK source databases:
 +
@@ -66,8 +85,8 @@ podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
 * Run mysqlcheck on the original DB to look for things that are not OK:
 +
 ----
-podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
-    mysqlcheck --all-databases -h $SOURCE_MARIADB_IP -u root "-p$SOURCE_DB_ROOT_PASSWORD" | grep -v OK
+. ~/.source_cloud_exported_variables
+test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ]
 ----
 
 * Test connection to podified DBs (show databases):
@@ -168,12 +187,15 @@ oc exec -it openstack-cell1-galera-0 -c galera -- mysql --user=root --password=$
 
 == Post-checks
 
-Compare the following outputs with the topology specific configuration
-xref:openstack-pull_openstack_configuration.adoc#get-services-topology-specific-configuration[collected earlier]:
+Compare the following outputs with the topology specific configuration.
+For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+//kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.:
 
 * Check that the databases were imported correctly:
 +
 ----
+. ~/.source_cloud_exported_variables
+
 # use 'oc exec' and 'mysql -rs' to maintain formatting
 dbs=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;')
 echo $dbs | grep -Eq '\bkeystone\b'

@@ -30,13 +30,13 @@
   roles:
     - development_environment
     - backend_services
+    - ceph_backend_configuration
     - pull_openstack_configuration
     - stop_openstack_services
     - mariadb_copy
     - ovn_adoption
     - keystone_adoption
     - neutron_adoption
-    - ceph_backend_configuration
     - glance_adoption
     - placement_adoption
     - nova_adoption

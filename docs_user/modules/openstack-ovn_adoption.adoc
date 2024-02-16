@@ -26,6 +26,7 @@ defined. Specifically, _openstack/internalapi_ network is defined.
  ** Podified MariaDB and RabbitMQ may already run. Neutron and OVN are not
 running yet.
  ** Original OVN is older or equal to the podified version.
+ ** Original Neutron Server and OVN northd services are stopped.
  ** There must be network routability between:
   *** The adoption host and the original OVN.
   *** The adoption host and the podified OVN.
@@ -39,12 +40,6 @@ just illustrative, use values that are correct for your environment:
 STORAGE_CLASS_NAME=crc-csi-hostpath-provisioner
 OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
 SOURCE_OVSDB_IP=172.17.1.49
-
-# ssh commands to reach the original controller machines
-CONTROLLER_SSH="ssh -F ~/director_standalone/vagrant_ssh_config vagrant@standalone"
-
-# ssh commands to reach the original compute machines
-COMPUTE_SSH="ssh -F ~/director_standalone/vagrant_ssh_config vagrant@standalone"
 ----
 
 The real value of the `SOURCE_OVSDB_IP` can be get from the puppet generated configs:
@@ -54,12 +49,6 @@ grep -rI 'ovn_[ns]b_conn' /var/lib/config-data/puppet-generated/
 ----
 
 == Procedure
-
-* Stop OVN northd on all original cluster controllers.
-
-----
-${CONTROLLER_SSH} sudo systemctl stop tripleo_ovn_cluster_northd.service
-----
 
 * Prepare the OVN DBs copy dir and the adoption helper pod (pick the storage requests to fit the OVN databases sizes)
 
@@ -177,37 +166,6 @@ oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP
 ----
 oc exec -it ovsdbserver-nb-0 -- ovn-nbctl show
 oc exec -it ovsdbserver-sb-0 -- ovn-sbctl list Chassis
-----
-
-* Switch ovn-remote on compute nodes to point to the new podified database.
-
-----
-${COMPUTE_SSH} sudo podman exec -it ovn_controller ovs-vsctl set open . external_ids:ovn-remote=tcp:$PODIFIED_OVSDB_SB_IP:6642
-----
-
-You should now see the following warning in the `ovn_controller` container logs:
-
-----
-2023-03-16T21:40:35Z|03095|ovsdb_cs|WARN|tcp:172.17.1.50:6642: clustered database server has stale data; trying another server
-----
-
-* Reset RAFT state for all compute ovn-controller instances.
-
-----
-${COMPUTE_SSH} sudo podman exec -it ovn_controller ovn-appctl -t ovn-controller sb-cluster-state-reset
-----
-
-This should complete connection of the controller process to the new remote. See in logs:
-
-----
-2023-03-16T21:42:31Z|03134|main|INFO|Resetting southbound database cluster state
-2023-03-16T21:42:33Z|03135|reconnect|INFO|tcp:172.17.1.50:6642: connected
-----
-
-* Alternatively, just restart ovn-controller on original compute nodes.
-
-----
-$ ${COMPUTE_SSH} sudo systemctl restart tripleo_ovn_controller.service
 ----
 
 * Finally, you can start `ovn-northd` service that will keep OVN northbound and southbound databases in sync.
