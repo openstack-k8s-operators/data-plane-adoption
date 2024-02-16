@@ -355,12 +355,22 @@ spec:
         - hostname: clock.redhat.com
         - hostname: clock2.redhat.com
 
+ifeval::["{build}" == "upstream"]
         edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
         edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
         edpm_logrotate_crond_image: quay.io/podified-antelope-centos9/openstack-cron:current-podified
         edpm_nova_compute_container_image: quay.io/podified-antelope-centos9/openstack-nova-compute:current-podified
         edpm_nova_libvirt_container_image: quay.io/podified-antelope-centos9/openstack-nova-libvirt:current-podified
         edpm_ovn_metadata_agent_image: quay.io/podified-antelope-centos9/openstack-neutron-metadata-agent-ovn:current-podified
+endif::[]
+ifeval::["{build}" == "downstream"]
+        edpm_ovn_controller_agent_image: registry.redhat.io/rhosp-dev-preview/openstack-ovn-controller-rhel9:18.0
+        edpm_iscsid_image: registry.redhat.io/rhosp-dev-preview/openstack-iscsid-rhel9:18.0
+        edpm_logrotate_crond_image: registry.redhat.io/rhosp-dev-preview/openstack-cron-rhel9:18.0
+        edpm_nova_compute_container_image: registry.redhat.io/rhosp-dev-preview/openstack-nova-compute-rhel9:18.0
+        edpm_nova_libvirt_container_image: registry.redhat.io/rhosp-dev-preview/openstack-nova-libvirt-rhel9:18.0
+        edpm_ovn_metadata_agent_image: registry.redhat.io/rhosp-dev-preview/openstack-neutron-metadata-agent-ovn-rhel9:18.0
+endif::[]
 
         gather_facts: false
         enable_debug: false

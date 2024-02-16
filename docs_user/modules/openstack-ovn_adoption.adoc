@@ -38,7 +38,12 @@ just illustrative, use values that are correct for your environment:
 
 ----
 STORAGE_CLASS_NAME=crc-csi-hostpath-provisioner
+ifeval::["{build}" == "upstream"]
 OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
+endif::[]
+ifeval::["{build}" == "downstream"]
+OVSDB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-ovn-base-rhel9:18.0
+endif::[]
 SOURCE_OVSDB_IP=172.17.1.49
 ----
 

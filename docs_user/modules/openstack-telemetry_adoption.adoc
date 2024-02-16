@@ -21,12 +21,15 @@ This guide also assumes that:
 
 Patch OpenStackControlPlane to deploy Ceilometer services:
 
+// TODO(jistr): There are still some quay.io images in the downstream build.
+
 ----
 cat << EOF > ceilometer_patch.yaml
 spec:
   ceilometer:
     enabled: true
     template:
+ifeval::["{build}" == "upstream"]
       centralImage: quay.io/podified-antelope-centos9/openstack-ceilometer-central:current-podified
       computeImage: quay.io/podified-antelope-centos9/openstack-ceilometer-compute:current-podified
       customServiceConfig: |
@@ -37,6 +40,19 @@ spec:
       notificationImage: quay.io/podified-antelope-centos9/openstack-ceilometer-notification:current-podified
       secret: osp-secret
       sgCoreImage: quay.io/infrawatch/sg-core:v5.1.1
+endif::[]
+ifeval::["{build}" == "downstream"]
+      centralImage: registry.redhat.io/rhosp-dev-preview/openstack-ceilometer-central-rhel9:18.0
+      computeImage: registry.redhat.io/rhosp-dev-preview/openstack-ceilometer-compute-rhel9:18.0
+      customServiceConfig: |
+        [DEFAULT]
+        debug=true
+      ipmiImage: registry.redhat.io/rhosp-dev-preview/openstack-ceilometer-ipmi-rhel9:18.0
+      nodeExporterImage: quay.io/prometheus/node-exporter:v1.5.0
+      notificationImage: registry.redhat.io/rhosp-dev-preview/openstack-ceilometer-notification-rhel9:18.0
+      secret: osp-secret
+      sgCoreImage: quay.io/infrawatch/sg-core:v5.1.1
+endif::[]
 EOF
 ----
 
