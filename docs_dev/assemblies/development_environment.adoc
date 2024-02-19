@@ -272,7 +272,7 @@ ping -c 4 $(openstack server show baremetal-test -f json -c addresses | jq -r .a
 [,bash]
 ----
 cd ~/data-plane-adoption
-bash tests/roles/development_environment/templates/pre_launch.bash
+bash tests/roles/development_environment/files/pre_launch.bash
 ----
 
 '''
