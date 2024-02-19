@@ -5,6 +5,16 @@
       CEPH_SSH="{{ controller1_ssh }}"
       CEPH_KEY=$($CEPH_SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0")
       CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
+  when: not ospdo_src
+
+- name: set shell vars for stopping openstack services
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.set_fact:
+    ceph_backend_configuration_shell_vars: |
+      CEPH_KEY=$(sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0' '')
+
+      CEPH_CONF=$(sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'cat /etc/ceph/ceph.conf | base64 -w 0' '')
+  when: ospdo_src
 
 - name: update the openstack keyring caps for Manila
   no_log: "{{ use_no_log }}"
@@ -15,6 +25,15 @@
     CEPH_CAPS="mgr 'allow *' mon 'allow r, profile rbd' osd 'profile rbd pool=vms, profile rbd pool=volumes, profile rbd pool=images, allow rw pool manila_data'"
     OSP_KEYRING="client.openstack"
     CEPH_ADM=$($CEPH_SSH "cephadm shell -- ceph auth caps $OSP_KEYRING $CEPH_CAPS")
+  when: not ospdo_src
+
+- name: update the openstack keyring caps for Manila
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+
+    sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane 'client.openstack mgr allow *' mon 'allow r, profile rbd' osd 'profile rbd pool=vms, profile rbd pool=volumes, profile rbd pool=images, allow rw pool manila_data '''
+  when: ospdo_src
 
 - name: create ceph-conf-files secret
   no_log: "{{ use_no_log }}"
