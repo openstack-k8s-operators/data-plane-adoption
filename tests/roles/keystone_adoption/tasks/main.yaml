@@ -16,6 +16,42 @@
       namespace: openstack
     type: Opaque
     EOF
+  when: ospdo_src is undefined
+
+- name: add keystone fernet keys secret file
+  delegate_to: "{{ adoption_ospdo_host }}"
+  ansible.builtin.shell: |
+    CONTROLLER1_SSH="{{ controller1_ssh }}"
+
+    cat << EOF > oc_apply_fer.yaml
+    apiVersion: v1
+    data:
+      CredentialKeys0: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/credential-keys/0 | base64 -w 0)
+      CredentialKeys1: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/credential-keys/1 | base64 -w 0)
+      FernetKeys0: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/fernet-keys/0 | base64 -w 0)
+      FernetKeys1: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/fernet-keys/1 | base64 -w 0)
+    kind: Secret
+    metadata:
+      name: keystone
+      namespace: openstack
+    type: Opaque
+    EOF
+  when: ospdo_src is defined
+
+- name: Fetch keystone fernet keys secret file
+  delegate_to: "{{ adoption_ospdo_host }}"
+  fetch:
+    src: ~/oc_apply_fer.yaml
+    dest: ~/oc_apply_fer.yaml
+    flat: yes
+  when: ospdo_src is defined
+
+- name: OC apply keystone fernet keys secret file
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc apply -f ~/oc_apply_fer.yaml
+  when: ospdo_src is defined
 
 - name: deploy podified Keystone
   ansible.builtin.shell: |

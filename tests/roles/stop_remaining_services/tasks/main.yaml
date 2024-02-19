@@ -11,32 +11,40 @@
         ["standalone.localdomain"]="{{ edpm_node_ip }}"
       )
 
+- name: Set list of compute services to stop
+  set_fact:
+    compute_services_to_stop:
+      - "tripleo_nova_compute.service"
+      - "tripleo_nova_libvirt.target"
+      - "tripleo_nova_migration_target.service"
+      - "tripleo_nova_virtlogd_wrapper.service"
+      - "tripleo_nova_virtnodedevd.service"
+      - "tripleo_nova_virtproxyd.service"
+      - "tripleo_nova_virtqemud.service"
+      - "tripleo_nova_virtsecretd.service"
+      - "tripleo_nova_virtstoraged.service"
+
+- name: Set list of Pacemaker resources to stop
+  set_fact:
+    pacemaker_resources_to_stop:
+      - "galera-bundle"
+      - "haproxy-bundle"
+      - "rabbitmq-bundle"
+
 - name: stop compute services
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ stop_other_services_shell_vars }}
 
-    ComputeServicesToStop=(
-                    "tripleo_nova_compute.service"
-                    "tripleo_nova_libvirt.target"
-                    "tripleo_nova_migration_target.service"
-                    "tripleo_nova_virtlogd_wrapper.service"
-                    "tripleo_nova_virtnodedevd.service"
-                    "tripleo_nova_virtproxyd.service"
-                    "tripleo_nova_virtqemud.service"
-                    "tripleo_nova_virtsecretd.service"
-                    "tripleo_nova_virtstoraged.service")
+    ComputeServicesToStop=({{ compute_services_to_stop | join(' ') }})
 
-    PacemakerResourcesToStop=(
-                    "galera-bundle"
-                    "haproxy-bundle"
-                    "rabbitmq-bundle")
+    PacemakerResourcesToStop=({{ pacemaker_resources_to_stop | join(' ') }})
 
     echo "Disabling systemd units and cleaning up for compute services"
     for i in "${!computes[@]}"; do
         SSH_CMD="ssh -i $EDPM_PRIVATEKEY_PATH root@${computes[$i]}"
-        for service in ${ComputeServicesToStop[*]}; do
+        for service in ${ComputeServicesToStop[@]}; do
             echo "Stopping the $service in compute $i"
             if ${SSH_CMD} sudo systemctl is-active $service; then
                 ${SSH_CMD} sudo systemctl disable --now $service
@@ -50,7 +58,7 @@
         SSH_CMD=CONTROLLER${i}_SSH
         if [ ! -z "${!SSH_CMD}" ]; then
             echo "Using controller $i to run pacemaker commands"
-            for resource in ${PacemakerResourcesToStop[*]}; do
+            for resource in ${PacemakerResourcesToStop[@]}; do
                 if ${!SSH_CMD} sudo pcs resource config $resource; then
                     ${!SSH_CMD} sudo pcs resource disable $resource
                 fi
@@ -58,3 +66,23 @@
             break
         fi
     done
+  when: ospdo_src is undefined
+
+- name: Stopping systemd OpenStack services
+  delegate_to: "{{ adoption_ospdo_host }}"
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ exec_ospdoclnt_pod }} -- bash -c "{{ ansible_systemctl_disable }} {{ item }}"
+  loop: "{{ compute_services_to_stop }}"
+  when: ospdo_src is defined
+
+- name: Stopping pacemaker OpenStack services
+  delegate_to: "{{ adoption_ospdo_host }}"
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    PacemakerResourcesToStop=({{ pacemaker_resources_to_stop | join(' ') }})
+    for resource in ${PacemakerResourcesToStop[@]}; do
+        {{ item }} {{ pcs_res_disable }} $resource
+    done
+  loop: "{{ osp_controllers_ssh }}"
+  when: ospdo_src is defined

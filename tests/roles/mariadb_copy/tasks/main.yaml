@@ -6,6 +6,14 @@
   ansible.builtin.include_tasks:
     file: env_vars_dst.yaml
 
+- name: get mysql adoption scripts to all controllers
+  delegate_to: "{{ adoption_ospdo_host }}"
+  ansible.builtin.shell: |
+    {{ item }} git clone {{ dpa_repo }}
+  ignore_errors: true
+  loop: "{{ osp_controllers_ssh }}"
+  when: ospdo_src is defined
+
 - name: check that the Galera database cluster members are online and synced
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -17,6 +25,14 @@
         -e "show global status like 'wsrep_local_state_comment';" |\
         grep -qE '\bSynced\b'
     done
+  when: ospdo_src is undefined
+
+- name: check that the Galera database cluster members are online and synced
+  delegate_to: "{{ adoption_ospdo_host }}"
+  shell: |
+    {{ item }} {{ dpa_mysql_script }} check_wsrep | grep -qE '\bSynced\b'
+  loop: "{{ osp_controllers_ssh }}"
+  when: ospdo_src is defined
 
 - name: Get the count of not-OK source databases
   no_log: "{{ use_no_log }}"
@@ -38,6 +54,13 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell:
     cmd: "{{ lookup('ansible.builtin.template', 'dump_dbs.bash') }}"
+  when: ospdo_src is undefined
+
+- name: dump databases
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.include_tasks:
+    file: dbs_ospdo.yaml
+  when: ospdo_src is defined
 
 - name: restore databases
   no_log: "{{ use_no_log }}"

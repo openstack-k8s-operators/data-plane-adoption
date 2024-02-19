@@ -5,6 +5,28 @@
       CEPH_SSH="{{ controller1_ssh }}"
       CEPH_KEY=$($CEPH_SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0")
       CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
+  when: ospdo_src is undefined
+
+- name: register ceph_key_b64
+  delegate_to: "{{ adoption_ospdo_host }}"
+  ansible.builtin.shell: |
+    {{ controller1_ssh }} cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0
+  register: ceph_key_b64
+  when: ospdo_src is defined
+
+- name: register ceph_conf_b64
+  delegate_to: "{{ adoption_ospdo_host }}"
+  ansible.builtin.shell: |
+    {{ controller1_ssh }} cat /etc/ceph/ceph.conf | base64 -w 0
+  register: ceph_conf_b64
+  when: ospdo_src is defined
+
+- name: set shell vars for stopping openstack services
+  ansible.builtin.set_fact:
+    ceph_backend_configuration_shell_vars: |
+      CEPH_KEY={{ ceph_key_b64.stdout }}
+      CEPH_CONF={{ ceph_conf_b64.stdout }}
+  when: ospdo_src is defined
 
 - name: update the openstack keyring caps for Manila
   no_log: "{{ use_no_log }}"
@@ -15,6 +37,19 @@
     CEPH_CAPS="mgr 'allow *' mon 'allow r, profile rbd' osd 'profile rbd pool=vms, profile rbd pool=volumes, profile rbd pool=images, allow rw pool manila_data'"
     OSP_KEYRING="client.openstack"
     CEPH_ADM=$($CEPH_SSH "cephadm shell -- ceph auth caps $OSP_KEYRING $CEPH_CAPS")
+  when: ospdo_src is undefined
+
+- name: update the openstack keyring caps for Manila
+  delegate_to: "{{ adoption_ospdo_host }}"
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    CEPH_SSH="{{ controller1_ssh }}"
+    CEPH_CAPS="mgr 'allow *' mon 'allow r, profile rbd' osd 'profile rbd pool=vms, profile rbd pool=volumes, profile rbd pool=images, allow rw pool manila_data'"
+    OSP_KEYRING="client.openstack"
+    CEPH_ADM=$($CEPH_SSH "cephadm shell -- ceph auth caps $OSP_KEYRING $CEPH_CAPS")
+  when: ospdo_src is defined
 
 - name: create ceph-conf-files secret
   no_log: "{{ use_no_log }}"

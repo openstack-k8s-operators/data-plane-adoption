@@ -1,0 +1,25 @@
+# Path to install_yamls repo
+install_yamls_path: ~/install_yamls #CUSTOMIZE_THIS
+# Whether to use 'make crc_storage_cleanup; make crc_storage' before the test
+reset_crc_storage: true
+
+# Pre-launch test VM instance on the source cloud
+prelaunch_test_instance: false
+
+storage_class_name: crc-csi-hostpath-provisioner #CUSTOMIZE_THIS
+storage_reclaim_policy: delete # or retain
+
+# Snippet to get the desired 'oc' command onto $PATH.
+oc_header: |
+  eval $(crc oc-env)
+
+# EDPM node IP
+edpm_node_ip: 192.168.122.100 #CUSTOMIZE_THIS
+
+# NTP servers list
+timesync_ntp_servers:
+  # - clock.redhat.com # Will not work outside of RH intranet
+  - hostname: pool.ntp.org
+
+# Auth URL to use for adopted Keystone.
+auth_url: http://keystone-public-openstack.apps-crc.testing

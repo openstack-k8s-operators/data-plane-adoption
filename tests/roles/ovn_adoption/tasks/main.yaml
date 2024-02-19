@@ -50,6 +50,14 @@
   retries: 10
   delay: 2
 
+- name: get OSPdO OVN ovsdb-server IP
+  delegate_to: "{{ adoption_ospdo_host }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    oc get cm -o yaml|grep ovn_dbs_node_ips|tr -d ' '|sed 's/.*ovn_dbs_node_ips:\\n-//g'|sed 's/\\n.*//g'
+  register: source_ovndb_ip
+  when: ospdo_src is defined
+
 - name: set OVN copy shell vars
   no_log: "{{ use_no_log }}"
   ansible.builtin.set_fact:
@@ -139,6 +147,15 @@
     $CONTROLLER1_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
     $CONTROLLER2_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
     $CONTROLLER3_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
+  when: ospdo_src is undefined
+
+- name: stop northd service
+  delegate_to: "{{ adoption_ospdo_host }}"
+  ansible.builtin.shell: |
+    {{ controller1_ssh }} sudo systemctl stop tripleo_ovn_cluster_northd
+    {{ controller2_ssh }} sudo systemctl stop tripleo_ovn_cluster_northd
+    {{ controller3_ssh }} sudo systemctl stop tripleo_ovn_cluster_northd
+  when: ospdo_src is defined
 
 - name: dump OVN databases
   no_log: "{{ use_no_log }}"
@@ -149,6 +166,36 @@
 
     oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
     oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
+  when: ospdo_src is undefined
+
+- name: dump OVN databases
+  delegate_to: "{{ adoption_ospdo_host }}"
+  ansible.builtin.shell: |
+    {{ exec_ospdoclnt_pod }} ovsdb-client  backup tcp:{{ source_ovndb_ip.stdout }}:{{ item }}
+  with_items:
+   - 6641 >/tmp/ovs-nb.db
+   - 6642 >/tmp/ovs-sb.db
+  when: ospdo_src is defined
+
+- name: Fetch file from adoption_ospdo_host
+  delegate_to: "{{ adoption_ospdo_host }}"
+  fetch:
+    src: "{{ item }}"
+    dest: /tmp/{{item.split('/')[-1]}}
+    flat: yes
+  with_items:
+    - /tmp/ovs-nb.db
+    - /tmp/ovs-sb.db
+  when: ospdo_src is defined
+
+- name: put the backup db's in the helper pod
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc cp {{ item }} ovn-copy-data:/backup/
+  with_items:
+  - /tmp/ovs-nb.db
+  - /tmp/ovs-sb.db
 
 - name: upgrade OVN databases to the latest schema from podified ovsdb-servers
   no_log: "{{ use_no_log }}"
