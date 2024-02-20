@@ -236,6 +236,17 @@ EOF
 
 * Deploy OpenStackDataPlaneNodeSet:
 +
+Make sure that ovn-controller settings configured in the OpenStackDataPlaneNodeSet are the same as were set in the compute nodes before adoption.
+This configuration is stored in the "external_ids" colum in the "Open_vSwitch" table in ovsdb and can be checked with command:
++
+----
+ovs-vsctl list Open .
+...
+external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings="datacentre:br-ctlplane", ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
+...
+----
+In above example bridge mappings are set as "datacentre:br-ctlplane" and it has to be set in the OpenStackDataPlaneNodeSet CR also.
++
 [source,yaml]
 ----
 oc apply -f - <<EOF
@@ -350,6 +361,15 @@ spec:
         # edpm_nodes_validation
         edpm_nodes_validation_validate_controllers_icmp: false
         edpm_nodes_validation_validate_gateway_icmp: false
+
+        # edpm ovn-controller configuration
+        edpm_ovn_bridge_mappings: ['datacentre:br-ctlplane']
+        edpm_ovn_bridge: br-int
+        edpm_ovn_encap_type: geneve
+        ovn_match_northd_version: false
+        ovn_monitor_all: true
+        edpm_ovn_remote_probe_interval: 60000
+        edpm_ovn_ofctrl_wait_before_clear: 8000
 
         timesync_ntp_servers:
         - hostname: clock.redhat.com
