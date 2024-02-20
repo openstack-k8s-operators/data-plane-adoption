@@ -422,6 +422,13 @@ spec:
 EOF
 ----
 
+* Adoption of the neutron-ovn-metadata-agent:
++
+Neutron-ovn-metadata-agent running on the EDPM nodes don't require any
+additional actions nor config adjustments to do during the adoption process.
+When OpenStackDataPlaneDeployment and OpenStackDataPlaneNodeSet will be ready,
+neutron-ovn-metadata-agent should be up and running on the EDPM nodes.
+
 == Post-checks
 
 * Check if all the Ansible EE pods reaches `Completed` status:
@@ -440,6 +447,18 @@ EOF
 +
 ----
   oc wait --for condition=Ready osdpns/openstack --timeout=30m
+----
+
+* Verify that neutron agents are alive:
++
+----
+oc exec openstackclient -- openstack network agent list
++--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
+| ID                                   | Agent Type                   | Host                   | Availability Zone | Alive | State | Binary                     |
++--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
+| 10482583-2130-5b0d-958f-3430da21b929 | OVN Metadata agent           | standalone.localdomain |                   | :-)   | UP    | neutron-ovn-metadata-agent |
+| a4f1b584-16f1-4937-b2b0-28102a3f6eaa | OVN Controller agent         | standalone.localdomain |                   | :-)   | UP    | ovn-controller             |
++--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
 ----
 
 == Nova compute services fast-forward upgrade from Wallaby to Antelope
