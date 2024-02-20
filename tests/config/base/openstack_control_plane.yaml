@@ -95,9 +95,11 @@ spec:
     template:
       ovnController:
         networkAttachment: tenant
+        nodeSelector:
+          node: non-existing-node-name
       ovnNorthd:
         networkAttachment: internalapi
-        replicas: 1
+        replicas: 0
       ovnDBCluster:
         ovndbcluster-nb:
           dbType: NB
@@ -107,11 +109,6 @@ spec:
           dbType: SB
           networkAttachment: internalapi
           containerImage: quay.io/podified-antelope-centos9/openstack-ovn-sb-db-server:current-podified
-
-  ovs:
-    enabled: false
-    template:
-      external-ids: {}
 
   placement:
     enabled: false
