@@ -1,0 +1,150 @@
+[id="adopting-the-object-storage-service_{context}"]
+
+//:context: adopting-object-storage-service
+
+= Adopting the Object Storage service
+
+== Limitations
+
+* The described process does not migrate data from existing nodes yet. Data is
+  still stored on existing nodes, but is accessed through the Swift proxy
+  instance running on the OpenShift control plane.
+
+== Prerequisites
+
+* Previous adoption steps completed.
+* The Swift storage backend services must NOT be stopped.
+* Storage network has been properly configured on the OpenShift cluster.
+
+== Variables
+
+No new environmental variables need to be defined, though you use the
+`CONTROLLER1_SSH` that was defined in a previous step for the pre-checks.
+
+== Pre-checks
+
+== Copy over swift.conf file
+
+* Create the `swift-conf` secret, containing the Swift hash path suffix and prefix:
++
+[source,yaml]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: swift-conf
+  namespace: openstack
+type: Opaque
+data:
+  swift.conf: $($CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/swift/etc/swift/swift.conf | base64 -w0)
+EOF
+----
+
+== Copy existing Swift ring files
+
+* Create the `swift-ring-files` configmap, containing the Swift ring files:
++
+[source,yaml]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: swift-ring-files
+binaryData:
+  swiftrings.tar.gz: $($CONTROLLER1_SSH "cd /var/lib/config-data/puppet-generated/swift/etc/swift && tar cz *.builder *.ring.gz backups/ | base64 -w0")
+EOF
+----
+
+== Procedure - Swift adoption
+
+* Patch OpenStackControlPlane to deploy Swift:
++
+[source,yaml]
+----
+oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  swift:
+    enabled: true
+    template:
+      secret: osp-secret
+      swiftConfSecret: swift-conf
+      memcachedInstance: memcached
+      swiftRing:
+        ringReplicas: 1
+      swiftStorage:
+        replicas: 0
+        networkAttachments:
+        - storage
+        storageClass: local-storage
+        storageRequest: 10Gi
+      swiftProxy:
+        secret: osp-secret
+        replicas: 1
+        passwordSelectors:
+          service: SwiftPassword
+        serviceUser: swift
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+        networkAttachments:
+        - storage
+'
+----
+
+== Post-checks
+
+=== Inspect the resulting swift service pods
+
+[,bash]
+----
+oc get pods -l component=swift-proxy
+----
+
+=== Check that Swift proxy service is registered in Keystone:
+
+[,bash]
+----
+openstack service list | grep swift
+| b5b9b1d3c79241aa867fa2d05f2bbd52 | swift    | object-store |
+----
+
+[,bash]
+----
+openstack endpoint list | grep swift
+| 32ee4bd555414ab48f2dc90a19e1bcd5 | regionOne | swift        | object-store | True    | public    | https://swift-public-openstack.apps-crc.testing/v1/AUTH_%(tenant_id)s |
+| db4b8547d3ae4e7999154b203c6a5bed | regionOne | swift        | object-store | True    | internal  | http://swift-internal.openstack.svc:8080/v1/AUTH_%(tenant_id)s        |
+----
+
+=== Verify resources
+
+Check that you are able to up- and download objects:
+
+[,bash]
+----
+echo "Hello World!" > obj
+openstack container create test
++---------------------------------------+-----------+------------------------------------+
+| account                               | container | x-trans-id                         |
++---------------------------------------+-----------+------------------------------------+
+| AUTH_4d9be0a9193e4577820d187acdd2714a | test      | txe5f9a10ce21e4cddad473-0065ce41b9 |
++---------------------------------------+-----------+------------------------------------+
+
+openstack object create test obj
++--------+-----------+----------------------------------+
+| object | container | etag                             |
++--------+-----------+----------------------------------+
+| obj    | test      | d41d8cd98f00b204e9800998ecf8427e |
++--------+-----------+----------------------------------+
+
+openstack object save test obj --file -
+Hello World!
+----

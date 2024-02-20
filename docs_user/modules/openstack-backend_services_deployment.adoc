@@ -73,6 +73,7 @@ NEUTRON_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NeutronPassw
 NOVA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NovaPassword:' | awk -F ': ' '{ print $2; }')
 OCTAVIA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' OctaviaPassword:' | awk -F ': ' '{ print $2; }')
 PLACEMENT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' PlacementPassword:' | awk -F ': ' '{ print $2; }')
+SWIFT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' SwiftPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
 == Pre-checks
@@ -121,6 +122,7 @@ oc set data secret/osp-secret "NeutronPassword=$NEUTRON_PASSWORD"
 oc set data secret/osp-secret "NovaPassword=$NOVA_PASSWORD"
 oc set data secret/osp-secret "OctaviaPassword=$OCTAVIA_PASSWORD"
 oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
+oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 ----
 
 * Deploy OpenStackControlPlane. *Make sure to only enable DNS,

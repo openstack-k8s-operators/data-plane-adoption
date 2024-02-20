@@ -16,7 +16,7 @@ Since gracefully stopping all services is non-trivial and beyond the scope of th
 recommendations on how to check some things in the services.
 
 Note that you should not stop the infrastructure management services yet, such as database, RabbitMQ, and HAProxy Load Balancer, nor should you stop the
-Nova compute service and containerized modular libvirt daemons.
+Nova compute service, containerized modular libvirt daemons and Swift storage backend services.
 
 == Variables
 

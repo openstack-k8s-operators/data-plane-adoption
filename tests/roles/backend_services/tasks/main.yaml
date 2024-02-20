@@ -44,6 +44,9 @@
     {% if manila_password %}
         oc set data secret/osp-secret "ManilaPassword={{ manila_password }}"
     {% endif %}
+    {% if swift_password %}
+        oc set data secret/osp-secret "SwiftPassword={{ swift_password }}"
+    {% endif %}
 
 - name: when not a periodic CI job use the base deployment
   when: not periodic|default(false)
