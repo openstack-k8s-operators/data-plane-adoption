@@ -184,6 +184,12 @@
             replicas: 1
     '
 
+- name: Enable ovn controller
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=json -p="[{'op': 'remove', 'path': '/spec/ovn/template/ovnController/nodeSelector'}]"
+
 - name: list briefs from OVN NB and SB databases
   ansible.builtin.shell: |
     {{ shell_header }}

@@ -267,6 +267,15 @@
             # Do not attempt OVS 3.2 major upgrades here
             edpm_ovs_packages:
             - openvswitch3.1
+
+            # ovn-controller settings
+            edpm_ovn_bridge_mappings: ['datacentre:br-ctlplane']
+            edpm_ovn_bridge: br-int
+            edpm_ovn_encap_type: geneve
+            ovn_match_northd_version: false
+            ovn_monitor_all: true
+            edpm_ovn_remote_probe_interval: 60000
+            edpm_ovn_ofctrl_wait_before_clear: 8000
     EOF
 
 - name: deploy the dataplane deployment
@@ -323,3 +332,7 @@
 - name: Adopted Nova FFU post-checks
   ansible.builtin.include_tasks:
     file: nova_verify.yaml
+
+- name: Adopted Neutron and OVN agents post-checks
+  ansible.builtin.include_tasks:
+    file: neutron_verify.yaml

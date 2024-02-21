@@ -163,6 +163,17 @@ sudo ip addr add dev vlan20 172.17.0.222/24
 sudo ip link set up dev vlan20
 ----
 
+To adopt the Swift service as well, route VLAN23 to have access to the storage
+backend services:
+
+[,bash]
+----
+EDPM_BRIDGE=$(sudo virsh dumpxml edpm-compute-0 | grep -oP "(?<=bridge=').*(?=')")
+sudo ip link add link $EDPM_BRIDGE name vlan23 type vlan id 23
+sudo ip addr add dev vlan23 172.20.0.222/24
+sudo ip link set up dev vlan23
+----
+
 === Snapshot/revert
 
 When the deployment of the Standalone OpenStack is finished, it's a
@@ -272,7 +283,7 @@ ping -c 4 $(openstack server show baremetal-test -f json -c addresses | jq -r .a
 [,bash]
 ----
 cd ~/data-plane-adoption
-bash tests/roles/development_environment/templates/pre_launch.bash
+bash tests/roles/development_environment/files/pre_launch.bash
 ----
 
 '''
