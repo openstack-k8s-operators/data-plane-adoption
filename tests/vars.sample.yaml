@@ -16,6 +16,9 @@ oc_header: |
 # Source MariaDB Galera cluster VIP for DB exports.
 source_mariadb_ip: 192.168.122.99 #CUSTOMIZE_THIS
 
+# Source OS diff config ip for Tripleo
+source_os_diff_config_ip: 192.168.122.100 
+
 # Source OVN DB IP for DB exports.
 source_ovndb_ip: 192.168.122.100 #CUSTOMIZE_THIS
 
