@@ -2,24 +2,65 @@
 
 == Rendering documentation locally
 
-Install docs build requirements into virtualenv:
+Install docs build requirements:
 
 [,bash]
 ----
-python3 -m venv local/docs-venv
-source local/docs-venv/bin/activate
-pip install -r docs/doc_requirements.txt
+make docs-dependencies
 ----
 
-Serve docs site on localhost:
+To render the user-facing documentation site locally:
 
 [,bash]
 ----
-mkdocs serve
+make docs-user
 ----
 
-Click the link it outputs. As you save changes to files modified in your editor,
-the browser will automatically show the new content.
+To render the contributor documentation site locally:
+
+[,bash]
+----
+make docs-dev
+----
+
+The built HTML files are in `docs_build/adoption-user` and
+`docs_build/adoption-dev` directories respectively.
+
+
+There are some additional make targets for convenience. The following
+targets, in addition to rendering the docs, will also open the
+resulting HTML in your browser so that you don't have to look for it:
+
+[,bash]
+----
+make docs-user-open
+# or
+make docs-dev-open
+----
+
+The following targets set up an inotify watch on the documentation
+sources, and when it detects modification, the HTML is re-rendered.
+This is so that you can use "edit source - save source - refresh
+browser page" loop when working on the docs, without having to run
+`make docs-*` repeatedly.
+
+[,bash]
+----
+make docs-user-watch
+# or
+make docs-dev-watch
+----
+
+=== Preview of downstream documentation
+
+To render a preview of what should serve as the base for downstream
+docs (e.g. with downstream container image URLs), prepend
+`BUILD=downstream` to your make targets. For example:
+
+[,bash]
+----
+BUILD=downstream make docs-user
+----
 
 == Patterns and tips for contributing to documentation
 
