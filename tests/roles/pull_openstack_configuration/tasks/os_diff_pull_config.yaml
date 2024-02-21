@@ -32,7 +32,7 @@
   ansible.builtin.lineinfile:
     path: "{{ os_diff_data_dir }}/os-diff.cfg"
     regex: "ssh -F ssh.config standalone"
-    value: "ssh_cmd=ssh -i {{ standalone_private_key | default('/home/zuul/src/github.com/openstack-k8s-operators/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa') }} root@{{ standalone_ip }}"
+    value: "ssh_cmd=ssh -i {{ standalone_private_key | default('/home/zuul/src/github.com/openstack-k8s-operators/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa') }} root@{{ source_os_diff_config_ip }}"
 
 - name: Set Tripleo config path in os-diff.cfg
   become: true
