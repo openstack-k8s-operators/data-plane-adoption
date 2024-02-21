@@ -1,0 +1,23 @@
+---
+- name: set Neutron services shell vars
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.set_fact:
+    neutron_header: |
+      alias openstack="oc exec -t openstackclient -- openstack"
+      FIP={{ lookup('env', 'FIP') | default('192.168.122.20', True) }}
+
+- name: verify that neutron-ovn-metadata-agent is alive
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ neutron_header }}
+    ${BASH_ALIASES[openstack]} network agent list | grep -F 'neutron-ovn-metadata-agent' | grep -qF 'XXX' || echo PASS
+  register: neutron_verify_metadata_agent_result
+  until: neutron_verify_metadata_agent_result.stdout == 'PASS'
+  # NOTE(slaweq): retries should not be needed but it seems there is some minor
+  # bug in Neutron which causes reporting ovn-metadata-agent as DOWN in every first API request after deploying it on host.
+  retries: 2
+  delay: 1
+
+- name: verify connectivity to the existing test VM instance using Floating IP
+  ansible.builtin.shell: |
+      ping -c4 {{ lookup('env', 'FIP') | default('192.168.122.20', True) }}

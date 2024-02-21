@@ -46,9 +46,9 @@ ${BASH_ALIASES[openstack]} security group rule list --protocol icmp --ingress -f
 ${BASH_ALIASES[openstack]} security group rule list --protocol tcp --ingress -f json | grep '"Port Range": "22:22"' || \
     ${BASH_ALIASES[openstack]} security group rule create --protocol tcp --ingress --dst-port 22 $(${BASH_ALIASES[openstack]} security group list --project admin -f value -c ID)
 
+export FIP=192.168.122.20
 # check connectivity via FIP
-# FIXME: defer __network_adoption__ - this doesn't work yet in the adoption procedure
-#ping -c4 192.168.122.20
+ping -c4 ${FIP}
 
 # FIXME: Invalid volume: Volume xxx status must be available, but current status is: backing-up
 # Create a Cinder volume, a backup from it, and snapshot it.
@@ -62,5 +62,3 @@ ${BASH_ALIASES[openstack]} security group rule list --protocol tcp --ingress -f 
 # TODO: Add volume to the test VM, after tripleo wallaby (osp 17) isolnet network adoption implemented for storage networks
 #${BASH_ALIASES[openstack]} volume show disk -f json | jq -r '.status' | grep -q available && \
 #    ${BASH_ALIASES[openstack]} server add volume test disk
-
-export FIP=192.168.122.20
