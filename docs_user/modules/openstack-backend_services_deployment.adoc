@@ -234,9 +234,11 @@ spec:
           networkAttachment: internalapi
       ovnNorthd:
         networkAttachment: internalapi
-        replicas: 1
+        replicas: 0
       ovnController:
         networkAttachment: tenant
+        nodeSelector:
+          node: non-existing-node-name
 
   placement:
     enabled: false
