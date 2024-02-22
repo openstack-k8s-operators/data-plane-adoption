@@ -56,7 +56,8 @@
     value: "local_config_dir={{ dpa_dir }}"
 
 - name: Pull config from Tripleo os-diff
+  become: true
   ansible.builtin.shell: |
     cd {{ os_diff_data_dir }}
-    {{ os_diff_data_dir }}/os-diff pull
+    ./os-diff pull
 
