@@ -61,7 +61,7 @@ jobs:
 
                   .asciidoc {
                       height:90vh;
-                      background:#f00;
+                      background:#fff;
                       color:#fff;
                   }
 
