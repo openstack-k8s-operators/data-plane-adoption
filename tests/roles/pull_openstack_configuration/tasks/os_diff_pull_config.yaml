@@ -60,4 +60,3 @@
   ansible.builtin.shell: |
     cd {{ os_diff_data_dir }}
     ./os-diff pull
-
