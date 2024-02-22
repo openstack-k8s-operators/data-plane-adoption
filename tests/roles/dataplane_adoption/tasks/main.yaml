@@ -44,7 +44,8 @@
   when: edpm_encoded_privatekey is undefined
 
 # Remove this when https://code.engineering.redhat.com/gerrit/q/topic:stable-compute-uuid
-# is released in 17.x
+# is released in 17.1.3. note that we use 42436:42436 as the nova user and group may not have
+# been created yet, and we need to ensure the file is owned by the correct user and group
 - name: Temporary fix to ensure stable compute UUID
   block:
     - name: ensure SSH key
@@ -75,8 +76,7 @@
           ssh \
             -i {{ edpm_privatekey_path | default("/tmp/ansible_private_key") }} \
             {{ edpm_user }}@"${computes[$name]}" \
-            "echo $uuid | sudo tee /var/lib/nova/compute_id"
-
+            "echo $uuid | sudo tee /var/lib/nova/compute_id && sudo chown 42436:42436 /var/lib/nova/compute_id && sudo chcon -t container_file_t /var/lib/nova/compute_id"
         done
 
 - name: create dataplane-adoption-secret.yaml
