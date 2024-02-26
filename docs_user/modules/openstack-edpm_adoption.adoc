@@ -127,7 +127,7 @@ do
   ssh \
     -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
     root@"${computes[$name]}" \
-    "echo $uuid > /var/lib/nova/compute_id"
+                "echo $uuid | sudo tee /var/lib/nova/compute_id && sudo chown 42436:42436 /var/lib/nova/compute_id && sudo chcon -t container_file_t /var/lib/nova/compute_id"
 done
 ----
 
