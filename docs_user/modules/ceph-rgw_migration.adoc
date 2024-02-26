@@ -504,9 +504,15 @@ You can start deploying the Ceph IngressDaemon on the CephStorage nodes.
 Set the required images for both HaProxy and Keepalived
 
 ----
+ifeval::["{build}" == "upstream"]
 [ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_haproxy quay.io/ceph/haproxy:2.3
-
 [ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_keepalived quay.io/ceph/keepalived:2.1.5
+endif::[]
+ifeval::["{build}" == "downstream"]
+[ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_haproxy registry.redhat.io/rhceph/rhceph-haproxy-rhel9:latest
+[ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_keepalived registry.redhat.io/rhceph/keepalived-rhel9:latest
+endif::[]
+
 ----
 
 Prepare the ingress spec and mount it to cephadm:
