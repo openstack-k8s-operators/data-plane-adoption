@@ -1,0 +1,302 @@
+[id="migrating-ceph-mds_{context}"]
+
+//:context: migrating-ceph-mds
+//kgilliga: This module might be converted to an assembly.
+
+= Migrating Ceph MDS
+
+In the context of data plane adoption, where the OpenStack services are
+redeployed in OpenShift, a TripleO-deployed Ceph cluster will undergo a
+migration in a process we are calling “externalizing” the Ceph cluster.
+There are two deployment topologies, broadly, that include an “internal” Ceph
+cluster today: one is where OpenStack includes dedicated Storage nodes to host
+OSDs, and the other is Hyperconverged Infrastructure (HCI) where Compute nodes
+double up as Storage nodes. In either scenario, there are some Ceph processes
+that are deployed on OpenStack Controller nodes: Ceph monitors, rgw, rdb, mds,
+ceph dashboard and nfs-ganesha.
+This document describes how to migrate the MDS daemon in case Manila (deployed
+with either a cephfs-native or ceph-nfs backend) is part of the overcloud
+deployment.
+
+== Requirements
+
+For this procedure, we assume that we are beginning with a OpenStack based on
+Wallaby and a Ceph Reef deployment managed by TripleO.
+We assume that:
+
+* Ceph has been upgraded to Reef and is managed by cephadm/orchestrator
+* Both the Ceph public and cluster networks are propagated, via TripleO, to the
+  target nodes
+
+== Gather the current status of the MDS daemon
+
+Before starting the MDS migration, verify the Ceph cluster is healthy and gather
+some information of the MDS status.
+
+[source,bash]
+----
+[ceph: root@controller-0 /]# ceph fs ls
+name: cephfs, metadata pool: manila_metadata, data pools: [manila_data ]
+
+[ceph: root@controller-0 /]# ceph mds stat
+cephfs:1 {0=mds.controller-2.oebubl=up:active} 2 up:standby
+
+[ceph: root@controller-0 /]# ceph fs status cephfs
+
+cephfs - 0 clients
+======
+RANK  STATE         	MDS           	ACTIVITY 	DNS	INOS   DIRS   CAPS
+ 0	active  mds.controller-2.oebubl  Reqs:	0 /s   696	196	173  	0
+  	POOL     	TYPE 	USED  AVAIL
+manila_metadata  metadata   152M   141G
+  manila_data  	data	3072M   141G
+  	STANDBY MDS
+mds.controller-0.anwiwd
+mds.controller-1.cwzhog
+MDS version: ceph version 17.2.6-100.el9cp (ea4e3ef8df2cf26540aae06479df031dcfc80343) quincy (stable)
+----
+
+Eventually, using the `ceph fs dump` command, we can retrieve more detailed
+information of the cephfs MDS status:
+
+[source,bash]
+----
+[ceph: root@controller-0 /]# ceph fs dump
+
+e8
+enable_multiple, ever_enabled_multiple: 1,1
+default compat: compat={},rocompat={},incompat={1=base v0.20,2=client writeable ranges,3=default file layouts on dirs,4=dir inode in separate object,5=mds uses versioned encoding,6=dirfrag is stored in omap,8=no anchor table,9=file layout v2,10=snaprealm v2}
+legacy client fscid: 1
+
+Filesystem 'cephfs' (1)
+fs_name cephfs
+epoch   5
+flags   12 joinable allow_snaps allow_multimds_snaps
+created 2024-01-18T19:04:01.633820+0000
+modified    	2024-01-18T19:04:05.393046+0000
+tableserver 	0
+root	0
+session_timeout 60
+session_autoclose   	300
+max_file_size   1099511627776
+required_client_features    	{}
+last_failure	0
+last_failure_osd_epoch  0
+compat  compat={},rocompat={},incompat={1=base v0.20,2=client writeable ranges,3=default file layouts on dirs,4=dir inode in separate object,5=mds uses versioned encoding,6=dirfrag is stored in omap,7=mds uses inline data,8=no anchor table,9=file layout v2,10=snaprealm v2}
+max_mds 1
+in  	0
+up  	{0=24553}
+failed
+damaged
+stopped
+data_pools  	[7]
+metadata_pool   9
+inline_data 	disabled
+balancer
+standby_count_wanted	1
+[mds.mds.controller-2.oebubl{0:24553} state up:active seq 2 addr [v2:172.17.3.114:6800/680266012,v1:172.17.3.114:6801/680266012] compat {c=[1],r=[1],i=[7ff]}]
+
+
+Standby daemons:
+
+[mds.mds.controller-0.anwiwd{-1:14715} state up:standby seq 1 addr [v2:172.17.3.20:6802/3969145800,v1:172.17.3.20:6803/3969145800] compat {c=[1],r=[1],i=[7ff]}]
+[mds.mds.controller-1.cwzhog{-1:24566} state up:standby seq 1 addr [v2:172.17.3.43:6800/2227381308,v1:172.17.3.43:6801/2227381308] compat {c=[1],r=[1],i=[7ff]}]
+dumped fsmap epoch 8
+----
+
+== Check the OSD blocklist
+
+When a file system client is unresponsive or misbehaving, it may happen that
+the access to the file system is forcibly terminated. This process is called
+eviction. Evicting a CephFS client prevents it from communicating further with
+MDS daemons and OSD daemons.
+Ordinarily, a blocklisted client may not reconnect to the servers: it must be
+unmounted and then remounted. However, in some situations it may be useful to
+permit a client that was evicted to attempt to reconnect. Because CephFS
+uses the RADOS OSD blocklist to control client eviction, CephFS clients can be
+permitted to reconnect by removing them from the blocklist.
+Check the current OSD blocklist and clean up the client list:
+
+[source,bash]
+----
+[ceph: root@controller-0 /]# ceph osd blocklist ls
+..
+..
+for item in $(ceph osd blocklist ls | awk ‘{print $0}’); do
+     ceph osd blocklist rm $item;
+done
+----
+
+== Migrate MDS to the target nodes
+
+The MDS migration is performed by cephadm, and as done for the other daemons,
+the general idea is to move the daemons placement from a "hosts" based approach
+to a "label" based one. This ensures that the human operator can easily visualize
+the status of the cluster and where daemons are placed using the `ceph orch host`
+command, and have a general view of how the daemons are co-located within a
+given host, according to the https://access.redhat.com/articles/1548993[cardinality matrix]
+described in the associated article.
+
+[source,bash]
+----
+[ceph: root@controller-0 /]# ceph orch host ls
+HOST                        ADDR           LABELS          STATUS
+cephstorage-0.redhat.local  192.168.24.25  osd mds
+cephstorage-1.redhat.local  192.168.24.50  osd mds
+cephstorage-2.redhat.local  192.168.24.47  osd mds
+controller-0.redhat.local   192.168.24.24  _admin mgr mon
+controller-1.redhat.local   192.168.24.42  mgr _admin mon
+controller-2.redhat.local   192.168.24.37  mgr _admin mon
+6 hosts in cluster
+
+[ceph: root@controller-0 /]# ceph orch ls --export mds
+service_type: mds
+service_id: mds
+service_name: mds.mds
+placement:
+  hosts:
+  - controller-0.redhat.local
+  - controller-1.redhat.local
+  - controller-2.redhat.local
+----
+
+Extend the MDS labels to the target nodes:
+
+[source,bash]
+----
+for item in $(sudo cephadm shell --  ceph orch host ls --format json | jq -r '.[].hostname'); do
+    sudo cephadm shell -- ceph orch host label add  $item mds;
+done
+----
+
+Verify all the hosts have the MDS label:
+
+[source,bash]
+----
+[tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls
+
+HOST                    	ADDR       	   LABELS
+cephstorage-0.redhat.local  192.168.24.11  osd mds
+cephstorage-1.redhat.local  192.168.24.12  osd mds
+cephstorage-2.redhat.local  192.168.24.47  osd mds
+controller-0.redhat.local   192.168.24.35  _admin mon mgr mds
+controller-1.redhat.local   192.168.24.53  mon _admin mgr mds
+controller-2.redhat.local   192.168.24.10  mon _admin mgr mds
+----
+
+Dump the current MDS spec:
+
+[source,bash]
+----
+[ceph: root@controller-0 /]# ceph orch ls --export mds > mds.yaml
+----
+
+Edit the retrieved spec and replace the `placement.hosts` section with
+`placement.label`:
+
+[source,bash]
+----
+service_type: mds
+service_id: mds
+service_name: mds.mds
+placement:
+  label: mds
+----
+
+Use the `ceph orchestrator` to apply the new MDS spec: it results in an
+increased number of mds daemons:
+
+[source,bash]
+----
+$ sudo cephadm shell -m mds.yaml -- ceph orch apply -i /mnt/mds.yaml
+Scheduling new mds deployment …
+----
+
+Check the new standby daemons temporarily added to the cephfs fs:
+
+[source,bash]
+----
+$ ceph fs dump
+
+Active
+
+standby_count_wanted    1
+[mds.mds.controller-0.awzplm{0:463158} state up:active seq 307 join_fscid=1 addr [v2:172.17.3.20:6802/51565420,v1:172.17.3.20:6803/51565420] compat {c=[1],r=[1],i=[7ff]}]
+
+
+Standby daemons:
+
+[mds.mds.cephstorage-1.jkvomp{-1:463800} state up:standby seq 1 join_fscid=1 addr [v2:172.17.3.135:6820/2075903648,v1:172.17.3.135:6821/2075903648] compat {c=[1],r=[1],i=[7ff]}]
+[mds.mds.controller-2.gfrqvc{-1:475945} state up:standby seq 1 addr [v2:172.17.3.114:6800/2452517189,v1:172.17.3.114:6801/2452517189] compat {c=[1],r=[1],i=[7ff]}]
+[mds.mds.cephstorage-0.fqcshx{-1:476503} state up:standby seq 1 join_fscid=1 addr [v2:172.17.3.92:6820/4120523799,v1:172.17.3.92:6821/4120523799] compat {c=[1],r=[1],i=[7ff]}]
+[mds.mds.cephstorage-2.gnfhfe{-1:499067} state up:standby seq 1 addr [v2:172.17.3.79:6820/2448613348,v1:172.17.3.79:6821/2448613348] compat {c=[1],r=[1],i=[7ff]}]
+[mds.mds.controller-1.tyiziq{-1:499136} state up:standby seq 1 addr [v2:172.17.3.43:6800/3615018301,v1:172.17.3.43:6801/3615018301] compat {c=[1],r=[1],i=[7ff]}]
+----
+
+It is possible to elect as "active" a dedicated MDS for a particular file system.
+To configure this preference, `CephFS` provides a configuration option for MDS
+called `mds_join_fs` which enforces this affinity.
+When failing over MDS daemons, a cluster’s monitors will prefer standby daemons
+with `mds_join_fs` equal to the file system name with the failed rank. If no
+standby exists with `mds_join_fs` equal to the file system name, it will choose
+an unqualified standby as a replacement.
+To properly drive the migration to the right nodes, set the MDS affinity that
+manages the MDS failover:
+
+[source,bash]
+----
+ceph config set mds.mds.cephstorage-0.fqcshx mds_join_fs cephfs
+----
+
+Remove the labels from controller nodes and force the MDS failover to the
+target node:
+
+[source,bash]
+----
+$ for i in 0 1 2; do ceph orch host label rm "controller-$i.redhat.local" mds; done
+
+Removed label mds from host controller-0.redhat.local
+Removed label mds from host controller-1.redhat.local
+Removed label mds from host controller-2.redhat.local
+----
+
+The switch happens behind the scenes, and the new active MDS is the one that
+has been set through the `mds_join_fs` command.
+Check the result of the failover and the new deployed daemons:
+
+
+[source,bash]
+----
+$ ceph fs dump
+…
+…
+standby_count_wanted    1
+[mds.mds.cephstorage-0.fqcshx{0:476503} state up:active seq 168 join_fscid=1 addr [v2:172.17.3.92:6820/4120523799,v1:172.17.3.92:6821/4120523799] compat {c=[1],r=[1],i=[7ff]}]
+
+
+Standby daemons:
+
+[mds.mds.cephstorage-2.gnfhfe{-1:499067} state up:standby seq 1 addr [v2:172.17.3.79:6820/2448613348,v1:172.17.3.79:6821/2448613348] compat {c=[1],r=[1],i=[7ff]}]
+[mds.mds.cephstorage-1.jkvomp{-1:499760} state up:standby seq 1 join_fscid=1 addr [v2:172.17.3.135:6820/452139733,v1:172.17.3.135:6821/452139733] compat {c=[1],r=[1],i=[7ff]}]
+
+
+$ ceph orch ls
+
+NAME                     PORTS   RUNNING  REFRESHED  AGE  PLACEMENT
+crash                                6/6  10m ago    10d  *
+mds.mds                          3/3  10m ago    32m  label:mds
+
+
+$ ceph orch ps | grep mds
+
+
+mds.mds.cephstorage-0.fqcshx  cephstorage-0.redhat.local                     running (79m)     3m ago  79m    27.2M        -  17.2.6-100.el9cp  1af7b794f353  2a2dc5ba6d57
+mds.mds.cephstorage-1.jkvomp  cephstorage-1.redhat.local                     running (79m)     3m ago  79m    21.5M        -  17.2.6-100.el9cp  1af7b794f353  7198b87104c8
+mds.mds.cephstorage-2.gnfhfe  cephstorage-2.redhat.local                     running (79m)     3m ago  79m    24.2M        -  17.2.6-100.el9cp  1af7b794f353  f3cb859e2a15
+----
+
+
+== Useful resources
+
+* https://docs.ceph.com/en/reef/cephfs/eviction[cephfs - eviction]
+* https://docs.ceph.com/en/reef/cephfs/standby/#configuring-mds-file-system-affinity[ceph mds - affinity]
