@@ -11,7 +11,7 @@
       namespace: openstack
     type: Opaque
     data:
-      swift.conf: $($CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/swift/etc/swift/swift.conf | base64 -w0)
+      swift.conf: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/swift/etc/swift/swift.conf | base64 -w0)
     EOF
 
 - name: Add swift ring files configmap
