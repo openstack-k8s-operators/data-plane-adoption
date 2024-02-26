@@ -195,6 +195,7 @@ The secret `nova-cell<X>-compute-config` is auto-generated for each
 `cell<X>`. That secret, alongside `nova-migration-ssh-key`, should
 always be specified for each custom `OpenStackDataPlaneService` related to Nova.
 
+ifeval::["{build}" == "upstream"]
 * Create a repo-setup service to configure Antelope repositories
 +
 [source,yaml]
@@ -233,6 +234,7 @@ spec:
             rm -rf repo-setup-main
 EOF
 ----
+endif::[]
 
 * Deploy OpenStackDataPlaneNodeSet:
 +
@@ -390,6 +392,13 @@ ifeval::["{build}" == "downstream"]
         edpm_nova_compute_container_image: registry.redhat.io/rhosp-dev-preview/openstack-nova-compute-rhel9:18.0
         edpm_nova_libvirt_container_image: registry.redhat.io/rhosp-dev-preview/openstack-nova-libvirt-rhel9:18.0
         edpm_ovn_metadata_agent_image: registry.redhat.io/rhosp-dev-preview/openstack-neutron-metadata-agent-ovn-rhel9:18.0
+
+        edpm_bootstrap_command: |
+          subscription-manager register --username <subscription_manager_username> --password <subscription_manager_password>
+          subscription-manager release --set=9.2
+          subscription-manager repos --disable=*
+          subscription-manager repos --enable=rhel-9-for-x86_64-baseos-eus-rpms --enable=rhel-9-for-x86_64-appstream-eus-rpms --enable=rhel-9-for-x86_64-highavailability-eus-rpms --enable=openstack-17.1-for-rhel-9-x86_64-rpms --enable=fast-datapath-for-rhel-9-x86_64-rpms --enable=openstack-dev-preview-for-rhel-9-x86_64-rpms
+          podman login -u <registry_username> -p <registry_password> registry.redhat.io
 endif::[]
 
         gather_facts: false
