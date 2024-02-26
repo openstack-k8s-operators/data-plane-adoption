@@ -216,8 +216,14 @@ force-purge the containers in the node:
 ----
 [root@oc0-controller-1 ~]# sudo podman ps
 CONTAINER ID  IMAGE                                                                                        COMMAND               CREATED         STATUS             PORTS       NAMES
+ifeval::["{build}" == "upstream"]
 5c1ad36472bc  quay.io/ceph/daemon@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mon.oc0-contro...  35 minutes ago  Up 35 minutes ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mon-oc0-controller-1
 3b14cc7bf4dd  quay.io/ceph/daemon@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mgr.oc0-contro...  35 minutes ago  Up 35 minutes ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mgr-oc0-controller-1-mtxohd
+endif::[]
+ifeval::["{build}" == "downstream"]
+5c1ad36472bc  registry.redhat.io/ceph/rhceph@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mon.oc0-contro...  35 minutes ago  Up 35 minutes ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mon-oc0-controller-1
+3b14cc7bf4dd  registry.redhat.io/ceph/rhceph@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mgr.oc0-contro...  35 minutes ago  Up 35 minutes ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mgr-oc0-controller-1-mtxohd
+endif::[]
 
 [root@oc0-controller-1 ~]# cephadm rm-cluster --fsid f6ec3ebe-26f7-56c8-985d-eb974e8e08e3 --force
 
@@ -277,7 +283,12 @@ Deployed mon.oc0-ceph-0 on host 'oc0-ceph-0'
 Check the new container in the oc0-ceph-0 node:
 
 ----
+ifeval::["{build}" == "upstream"]
 b581dc8bbb78  quay.io/ceph/daemon@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mon.oc0-ceph-0...  24 seconds ago  Up 24 seconds ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mon-oc0-ceph-0
+endif::[]
+ifeval::["{build}" == "downstream"]
+b581dc8bbb78  registry.redhat.io/ceph/rhceph@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mon.oc0-ceph-0...  24 seconds ago  Up 24 seconds ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mon-oc0-ceph-0
+endif::[]
 ----
 
 On the cephadm shell, backup the existing ceph_spec.yaml, edit the spec
