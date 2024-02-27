@@ -3,15 +3,15 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    cd {{ os_diff_data_dir }}
+    cd {{ os_diff_dir }}
     ./os-diff pull -e ocp
 
 - name: Compare keystone.conf config file
   register: diff_res
   become: true
   ansible.builtin.command:
-    chdir: "{{ os_diff_data_dir }}"
-    cmd: ./os-diff diff {{ dpa_dir }}/tripleo/keystone/etc/keystone/keystone.conf {{ dpa_dir }}/ocp/keystone/etc/keystone/keystone.conf
+    chdir: "{{ os_diff_dir }}"
+    cmd: ./os-diff diff {{ os_diff_data_dir }}/tripleo/keystone/etc/keystone/keystone.conf {{ os_diff_data_dir }}/ocp/keystone/etc/keystone/keystone.conf
 
 - name: Print diff output
   ansible.builtin.debug:

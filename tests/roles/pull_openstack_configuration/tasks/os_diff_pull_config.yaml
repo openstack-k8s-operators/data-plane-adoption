@@ -16,13 +16,13 @@
   become: true
   ansible.builtin.git:
     repo: https://github.com/openstack-k8s-operators/os-diff
-    dest: "{{ os_diff_data_dir }}"
+    dest: "{{ os_diff_dir }}"
     version: main
 
 - name: Build os-diff
   ansible.builtin.shell: |
     export PATH=$PATH:/usr/local/go/bin
-    cd {{ os_diff_data_dir }}
+    cd {{ os_diff_dir }}
     make build
   register: make_res
   become: true
@@ -30,33 +30,33 @@
 - name: Set ssh command for Tripleo standalone in os-diff.cfg
   become: true
   ansible.builtin.lineinfile:
-    path: "{{ os_diff_data_dir }}/os-diff.cfg"
+    path: "{{ os_diff_dir }}/os-diff.cfg"
     regex: "ssh -F ssh.config standalone"
     value: "ssh_cmd=ssh -i {{ standalone_private_key | default('~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa') }} root@{{ source_os_diff_config_ip }}"
 
 - name: Set Tripleo config path in os-diff.cfg
   become: true
   ansible.builtin.lineinfile:
-    path: "{{ os_diff_data_dir }}/os-diff.cfg"
+    path: "{{ os_diff_dir }}/os-diff.cfg"
     regex: "local_config_path=/tmp/"
-    value: "local_config_path={{ dpa_dir }}/tripleo"
+    value: "local_config_path={{ os_diff_data_dir }}/tripleo"
 
 - name: Set OCP config path in os-diff.cfg
   become: true
   ansible.builtin.lineinfile:
-    path: "{{ os_diff_data_dir }}/os-diff.cfg"
+    path: "{{ os_diff_dir }}/os-diff.cfg"
     regex: "ocp_local_config_path=/tmp/ocp"
-    value: "ocp_local_config_path={{ dpa_dir }}/ocp"
+    value: "ocp_local_config_path={{ os_diff_data_dir }}/ocp"
 
 - name: Set config path in os-diff.cfg
   become: true
   ansible.builtin.lineinfile:
-    path: "{{ os_diff_data_dir }}/os-diff.cfg"
+    path: "{{ os_diff_dir }}/os-diff.cfg"
     regex: "local_config_dir=/tmp/"
-    value: "local_config_dir={{ dpa_dir }}"
+    value: "local_config_dir={{ os_diff_data_dir }}"
 
 - name: Pull config from Tripleo os-diff
   become: true
   ansible.builtin.shell: |
-    cd {{ os_diff_data_dir }}
+    cd {{ os_diff__dir }}
     ./os-diff pull
