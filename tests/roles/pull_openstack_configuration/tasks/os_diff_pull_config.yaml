@@ -58,5 +58,5 @@
 - name: Pull config from Tripleo os-diff
   become: true
   ansible.builtin.shell: |
-    cd {{ os_diff__dir }}
+    cd {{ os_diff_dir }}
     ./os-diff pull
