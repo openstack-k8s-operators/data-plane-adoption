@@ -8,7 +8,6 @@
 
 - name: Compare keystone.conf config file
   register: diff_res
-  become: true
   ansible.builtin.command:
     chdir: "{{ os_diff_dir }}"
     cmd: ./os-diff diff {{ os_diff_data_dir }}/tripleo/keystone/etc/keystone/keystone.conf {{ os_diff_data_dir }}/ocp/keystone/etc/keystone/keystone.conf
