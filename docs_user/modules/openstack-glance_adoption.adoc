@@ -95,7 +95,7 @@ spec:
               spec:
                 type: LoadBalancer
           networkAttachments:
-          - storage
+            - storage
 ----
 
 Having `Swift` as a backend establishes a dependency between the two services,
