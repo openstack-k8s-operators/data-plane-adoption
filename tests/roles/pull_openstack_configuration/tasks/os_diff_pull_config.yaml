@@ -50,5 +50,6 @@
     value: "local_config_dir={{ os_diff_data_dir }}"
 
 - name: Pull config from Tripleo os-diff
+  ansible.builtin.shell: |
     cd {{ os_diff_dir }}
     ./os-diff pull
