@@ -195,47 +195,6 @@ The secret `nova-cell<X>-compute-config` is auto-generated for each
 `cell<X>`. That secret, alongside `nova-migration-ssh-key`, should
 always be specified for each custom `OpenStackDataPlaneService` related to Nova.
 
-ifeval::["{build}" == "upstream"]
-* Create a repo-setup service to configure Antelope repositories
-+
-[source,yaml]
-----
-oc apply -f - <<EOF
-apiVersion: dataplane.openstack.org/v1beta1
-kind: OpenStackDataPlaneService
-metadata:
-  name: repo-setup
-  namespace: openstack
-spec:
-  label: dataplane.deployment.repo.setup
-  play: |
-    - hosts: all
-      strategy: linear
-      tasks:
-        - name: Enable podified-repos
-          become: true
-          ansible.builtin.shell: |
-            # TODO: Use subscription-manager and a valid OSP18 repos instead
-            # This is a hack to deploy RDO Delorean repos to RHEL as if it were Centos 9 Stream
-            set -euxo pipefail
-            curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
-            python3 -m venv ./venv
-            PBR_VERSION=0.0.0 ./venv/bin/pip install ./repo-setup-main
-            # This is required for FIPS enabled until trunk.rdoproject.org
-            # is not being served from a centos7 host, tracked by
-            # https://issues.redhat.com/browse/RHOSZUUL-1517
-            dnf -y install crypto-policies
-            update-crypto-policies --set FIPS:NO-ENFORCE-EMS
-            # FIXME: perform dnf upgrade for other packages in EDPM ansible
-            # here we only ensuring that decontainerized libvirt can start
-            ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
-            dnf -y upgrade openstack-selinux
-            rm -f /run/virtlogd.pid
-            rm -rf repo-setup-main
-EOF
-----
-endif::[]
-
 * Deploy OpenStackDataPlaneNodeSet:
 +
 [source,yaml]
@@ -250,9 +209,8 @@ spec:
       - ctlplane
   preProvisioned: true
   services:
-    - repo-setup
-    - download-cache
     - bootstrap
+    - download-cache
     - configure-network
     - validate-network
     - install-os
@@ -362,6 +320,24 @@ ifeval::["{build}" == "upstream"]
         edpm_nova_compute_container_image: quay.io/podified-antelope-centos9/openstack-nova-compute:current-podified
         edpm_nova_libvirt_container_image: quay.io/podified-antelope-centos9/openstack-nova-libvirt:current-podified
         edpm_ovn_metadata_agent_image: quay.io/podified-antelope-centos9/openstack-neutron-metadata-agent-ovn:current-podified
+
+        edpm_bootstrap_command: |
+          # This is a hack to deploy RDO Delorean repos to RHEL as if it were Centos 9 Stream
+          set -euxo pipefail
+          curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
+          python3 -m venv ./venv
+          PBR_VERSION=0.0.0 ./venv/bin/pip install ./repo-setup-main
+          # This is required for FIPS enabled until trunk.rdoproject.org
+          # is not being served from a centos7 host, tracked by
+          # https://issues.redhat.com/browse/RHOSZUUL-1517
+          dnf -y install crypto-policies
+          update-crypto-policies --set FIPS:NO-ENFORCE-EMS
+          # FIXME: perform dnf upgrade for other packages in EDPM ansible
+          # here we only ensuring that decontainerized libvirt can start
+          ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
+          dnf -y upgrade openstack-selinux
+          rm -f /run/virtlogd.pid
+          rm -rf repo-setup-main
 endif::[]
 ifeval::["{build}" == "downstream"]
         edpm_ovn_controller_agent_image: registry.redhat.io/rhosp-dev-preview/openstack-ovn-controller-rhel9:18.0
