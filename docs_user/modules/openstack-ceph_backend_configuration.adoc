@@ -39,6 +39,7 @@ file) and propagate the secret to all services that need it.
 
 ----
 $CEPH_SSH cephadm shell
+# wait for shell to come up, then execute:
 ceph auth caps client.openstack \
   mgr 'allow *' \
   mon 'allow r, profile rbd' \

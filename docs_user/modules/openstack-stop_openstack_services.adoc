@@ -56,9 +56,9 @@ Also collect the services topology specific configuration before stopping servic
 
 You can stop OpenStack services at any moment, but you might leave your environment in an undesired state. You should confirm that there are no ongoing operations.
 
-1- Connect to all the controller nodes.
-2- Stop the control plane services.
-3- Verify the control plane services are stopped.
+1. Connect to all the controller nodes.
+2. Stop the control plane services.
+3. Verify the control plane services are stopped.
 
 The cinder-backup service on OSP 17.1 could be running as Active-Passive under pacemaker or as Active-Active, so you must check how it is running and stop it.
 
