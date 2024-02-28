@@ -1,0 +1,177 @@
+[id="rolling-back-control-plane_{context}"]
+
+= Rolling back the control plane adoption
+
+If you encountered a problem during the adoption of the OpenStack
+control plane services that prevents you from following the adoption
+procedure to completion, you can roll back the control plane adoption.
+
+*Important: The roll back operation is only possible during the
+control plane parts of the adoption procedure. Altering the data plane
+nodes in any way during the procedure marks the point of no return and
+the roll back is no longer possible after that.*
+
+== Overview of the rollback procedure
+
+During the control plane adoption, services on the source cloud's
+control plane are stopped but not removed. The databases on the source
+control plane are not edited by the adoption procedure. The
+destination podified control plane received a copy of the original
+control plane databases. The roll back procedure assumes that the data
+plane has not yet been touched by the adoption procedure and it is
+still connected to the source control plane.
+
+The rollback procedure therefore consists of:
+
+* Restoring the functionality of the source control plane.
+
+* Removing the partially or fully deployed destination podified
+  control plane.
+
+== Control plane rollback procedure
+
+=== Restoring the source control plane
+
+To restore the source cloud to a working state, start the OpenStack
+control plane services that you previously stopped during the adoption
+procedure:
+
+----
+ServicesToStart=("tripleo_horizon.service"
+                "tripleo_keystone.service"
+                "tripleo_cinder_api.service"
+                "tripleo_cinder_api_cron.service"
+                "tripleo_cinder_scheduler.service"
+                "tripleo_cinder_backup.service"
+                "tripleo_glance_api.service"
+                "tripleo_manila_api.service"
+                "tripleo_manila_api_cron.service"
+                "tripleo_manila_scheduler.service"
+                "tripleo_neutron_api.service"
+                "tripleo_nova_api.service"
+                "tripleo_placement_api.service"
+                "tripleo_nova_api_cron.service"
+                "tripleo_nova_api.service"
+                "tripleo_nova_conductor.service"
+                "tripleo_nova_metadata.service"
+                "tripleo_nova_scheduler.service"
+                "tripleo_nova_vnc_proxy.service"
+                "tripleo_aodh_api.service"
+                "tripleo_aodh_api_cron.service"
+                "tripleo_aodh_evaluator.service"
+                "tripleo_aodh_listener.service"
+                "tripleo_aodh_notifier.service"
+                "tripleo_ceilometer_agent_central.service"
+                "tripleo_ceilometer_agent_compute.service"
+                "tripleo_ceilometer_agent_ipmi.service"
+                "tripleo_ceilometer_agent_notification.service"
+                "tripleo_ovn_cluster_northd.service")
+
+PacemakerResourcesToStart=("openstack-cinder-volume"
+                          "openstack-cinder-backup"
+                          "openstack-manila-share")
+
+echo "Starting systemd OpenStack services"
+for service in ${ServicesToStart[*]}; do
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+        if [ ! -z "${!SSH_CMD}" ]; then
+            if ${!SSH_CMD} sudo systemctl is-enabled $service &> /dev/null; then
+                echo "Starting the $service in controller $i"
+                ${!SSH_CMD} sudo systemctl start $service
+            fi
+        fi
+    done
+done
+
+echo "Checking systemd OpenStack services"
+for service in ${ServicesToStart[*]}; do
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+        if [ ! -z "${!SSH_CMD}" ]; then
+            if ${!SSH_CMD} sudo systemctl is-enabled $service &> /dev/null; then
+                if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=active >/dev/null; then
+                    echo "ERROR: Service $service is not running on controller $i"
+                else
+                    echo "OK: Service $service is running in controller $i"
+                fi
+            fi
+        fi
+    done
+done
+
+echo "Starting pacemaker OpenStack services"
+for i in {1..3}; do
+    SSH_CMD=CONTROLLER${i}_SSH
+    if [ ! -z "${!SSH_CMD}" ]; then
+        echo "Using controller $i to run pacemaker commands"
+        for resource in ${PacemakerResourcesToStart[*]}; do
+            if ${!SSH_CMD} sudo pcs resource config $resource &>/dev/null; then
+                echo "Starting $resource"
+                ${!SSH_CMD} sudo pcs resource enable $resource
+            else
+                echo "Service $resource not present"
+            fi
+        done
+        break
+    fi
+done
+
+echo "Checking pacemaker OpenStack services"
+for i in {1..3}; do
+    SSH_CMD=CONTROLLER${i}_SSH
+    if [ ! -z "${!SSH_CMD}" ]; then
+        echo "Using controller $i to run pacemaker commands"
+        for resource in ${PacemakerResourcesToStop[*]}; do
+            if ${!SSH_CMD} sudo pcs resource config $resource &>/dev/null; then
+                if ${!SSH_CMD} sudo pcs resource status $resource | grep Started >/dev/null; then
+                    echo "OK: Service $resource is started"
+                else
+                    echo "ERROR: Service $resource is stopped"
+                fi
+            fi
+        done
+        break
+    fi
+done
+----
+
+Now you can verify that the source cloud is operational again, e.g. by
+running `openstack` CLI commands or using the Horizon Dashboard.
+
+=== Removing the podified control plane
+
+After restoring the original control plane functionality, the
+partially or fully deployed podified control plane should be removed:
+so that another adoption attempt can be made later.
+
+To delete the podified control plane:
+
+----
+oc delete --ignore-not-found=true --wait=false openstackcontrolplane/openstack
+oc patch openstackcontrolplane openstack --type=merge --patch '
+metadata:
+  finalizers: []
+' || true
+
+while oc get pod | grep rabbitmq-server-0; do
+    sleep 2
+done
+while oc get pod | grep openstack-galera-0; do
+    sleep 2
+done
+
+oc delete --ignore-not-found=true --wait=false pod ovn-copy-data
+oc delete --ignore-not-found=true secret osp-secret
+----
+
+== Before retrying the adoption procedure
+
+Since restoring the source control plane services, their internal
+state may have changed. Before retrying the adoption procedure, it is
+important to verify that the podified control plane resources have
+been removed and there are no leftovers which could affect the
+following adoption procedure attempt. Notably, the previously created
+copies of the database contents must not be used in another adoption
+attempt, and new copies must be made according to the adoption
+procedure documentation.

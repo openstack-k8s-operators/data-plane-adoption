@@ -35,6 +35,7 @@ include::../modules/openstack-stop_remaining_services.adoc[leveloffset=+1]
 include::../modules/openstack-edpm_adoption.adoc[leveloffset=+1]
 
 include::../modules/openstack-troubleshooting.adoc[leveloffset=+1]
+include::../modules/openstack-rolling_back.adoc[leveloffset=+1]
 
 ifdef::parent-context[:context: {parent-context}]
 ifndef::parent-context[:!context:]
