@@ -72,6 +72,7 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_cinder_api.service"
                 "tripleo_cinder_api_cron.service"
                 "tripleo_cinder_scheduler.service"
+                "tripleo_cinder_volume.service"
                 "tripleo_cinder_backup.service"
                 "tripleo_glance_api.service"
                 "tripleo_manila_api.service"
@@ -119,9 +120,10 @@ for service in ${ServicesToStop[*]}; do
     for i in {1..3}; do
         SSH_CMD=CONTROLLER${i}_SSH
         if [ ! -z "${!SSH_CMD}" ]; then
-            echo "Checking status of $service in controller $i"
             if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
                 echo "ERROR: Service $service still running on controller $i"
+            else
+                echo "OK: Service $service is not running on controller $i"
             fi
         fi
     done
@@ -133,8 +135,29 @@ for i in {1..3}; do
     if [ ! -z "${!SSH_CMD}" ]; then
         echo "Using controller $i to run pacemaker commands"
         for resource in ${PacemakerResourcesToStop[*]}; do
-            if ${!SSH_CMD} sudo pcs resource config $resource; then
+            if ${!SSH_CMD} sudo pcs resource config $resource &>/dev/null; then
+                echo "Stopping $resource"
                 ${!SSH_CMD} sudo pcs resource disable $resource
+            else
+                echo "Service $resource not present"
+            fi
+        done
+        break
+    fi
+done
+
+echo "Checking pacemaker OpenStack services"
+for i in {1..3}; do
+    SSH_CMD=CONTROLLER${i}_SSH
+    if [ ! -z "${!SSH_CMD}" ]; then
+        echo "Using controller $i to run pacemaker commands"
+        for resource in ${PacemakerResourcesToStop[*]}; do
+            if ${!SSH_CMD} sudo pcs resource config $resource &>/dev/null; then
+                if ! ${!SSH_CMD} sudo pcs resource status $resource | grep Started; then
+                    echo "OK: Service $resource is stopped"
+                else
+                    echo "ERROR: Service $resource is started"
+                fi
             fi
         done
         break
