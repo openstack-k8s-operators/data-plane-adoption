@@ -28,12 +28,6 @@ CONTROLLER2_SSH=""
 CONTROLLER3_SSH=""
 ----
 
-This example uses ssh variables with ssh commands instead of ansible to create instructions that are independent on where they are running. However, you can use ansible commands to achieve the same result if you are in the right host. For example, to stop a service:
-
-----
-. stackrc ansible -i $(which tripleo-ansible-inventory) Controller -m shell -a "sudo systemctl stop tripleo_horizon.service" -b
-----
-
 == Pre-checks
 
 You can stop OpenStack services at any moment, but you might leave your environment in an undesired state. However, you should confirm that there are no long running operations that require other services.
