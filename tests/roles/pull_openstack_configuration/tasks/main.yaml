@@ -1,3 +1,7 @@
+- name: Run os_diff pull config tasks
+  ansible.builtin.include_tasks: os_diff_pull_config.yaml
+
+# Pull nova configuration steps
 - name: set shell vars pull openstack configuration ssh commands
   no_log: "{{ use_no_log }}"
   ansible.builtin.set_fact:
