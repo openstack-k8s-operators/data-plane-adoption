@@ -33,6 +33,8 @@ $CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/ironic/etc/ironic/iro
 
 It is critical that this configuration file comes from one of the controllers and *not* an Undercloud node. The Director Undercloud node specifically operated with different configuration which would not be appropriate or applicable to apply when adopting the Overcloud Ironic deployment.
 
+If adopting the Ironic Inspector service you need the value of the `IronicInspectorSubnets` Director parameter. Use the same values to populate the `dhcpRanges` parameter in the target environment.
+
 == Configurations
 
 As described in xref:planning-the-new-deployment_{context}[Planning the new deployment], Ironic is configured using
@@ -89,11 +91,25 @@ spec:
   ironic:
     enabled: true
     template:
+      rpcTransport: oslo
       databaseInstance: openstack
       ironicAPI:
         replicas: 1
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
       ironicConductors:
       - replicas: 1
+        networkAttachments:
+          - baremetal
+        provisionNetwork: baremetal
         storageRequest: 10G
         customServiceConfig: |
           [neutron]
@@ -105,16 +121,50 @@ spec:
           automated_clean=true
       ironicInspector:
         replicas: 1
+        inspectionNetwork: baremetal
+        networkAttachments:
+          - baremetal
+        dhcpRanges:
+          - name: inspector-0
+            cidr: 172.20.1.0/24
+            start: 172.20.1.190
+            end: 172.20.1.199
+            gateway: 172.20.1.1
+        serviceUser: ironic-inspector
+        databaseAccount: ironic-inspector
+        passwordSelectors:
+          database: IronicInspectorDatabasePassword
+          service: IronicInspectorPassword
       ironicNeutronAgent:
         replicas: 1
+        rabbitMqClusterName: rabbitmq
       secret: osp-secret
 '
 ----
 
-// TODO ? Do we want to include something like nova has
-// oc wait --for condition=Ready --timeout=300s Nova/nova
-
 After applying the this configuration, the operator will begin to apply the configuration and start the necessary Ironic services. Once the services have reached a running state, Ironic will automatically begin polling the power state of baremetal nodes for which it is configured to manage. 
+
+Wait for Ironic control plane services' CRs to become ready:
+
+[source,bash]
+----
+oc wait --for condition=Ready --timeout=300s ironics.ironic.openstack.org ironic
+
+# Optionally verify the individual services
+oc wait --for condition=Ready --timeout=300s ironicapis.ironic.openstack.org ironic-api
+oc wait --for condition=Ready --timeout=300s ironicconductors.ironic.openstack.org ironic-conductor
+oc wait --for condition=Ready --timeout=300s ironicinspectors.ironic.openstack.org ironic-inspector
+oc wait --for condition=Ready --timeout=300s ironicneutronagents.ironic.openstack.org ironic-ironic-neutron-agent
+----
+
+=== Updating the DNS Nameservers on the provisoning/cleaning/rescue networks ===
+
+For name resolution to work for ironic operations the DNS nameserver must be set to use the internal DNS servers in the new Openstack Controlplane.
+
+[source,bash]
+----
+openstack subnet set --dns-nameserver 192.168.122.80 provisioning-subnet
+----
 
 === Role Based Access Control - Navigating upstream improvements
 

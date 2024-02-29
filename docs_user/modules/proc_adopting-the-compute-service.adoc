@@ -21,6 +21,7 @@ must already be imported into the control plane MariaDB;
  ** the xref:adopting-the-image-service_{context}[Adopting the Image service] needs to be imported;
  ** the xref:migrating-ovn-data_migrating-databases[Migrating OVN data] need to be imported;
  ** the xref:adopting-the-networking-service_{context}[Adopting the Networking service] needs to be imported;
+ ** the xref:adopting-the-bare-metal-provisioning-service_{context}[Adopting the Openstack Baremetal service] needs to be imported;
  ** Required services specific topology
 xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
 //kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
@@ -109,6 +110,22 @@ spec:
               [workarounds]
               disable_compute_service_check_for_ffu=true
 '
+----
+
+* If adopting nova with the Baremetal service (`ironic`), append the following `novaComputeTemplates` in the `cell1` section of the Nova CR patch:
++
+*NOTE*: Set the `[DEFAULT]host` configuration option to match the hostname of the node running the `ironic` compute driver in the source cloud.
++
+[source,yaml]
+----
+        cell1:
+          novaComputeTemplates:
+            standalone:
+              customServiceConfig: |
+                [DEFAULT]
+                host = standalone.localdomain
+                [workarounds]
+                disable_compute_service_check_for_ffu=true
 ----
 
 . Wait for {compute_service} control plane services' custom resources (CRs) to become ready:

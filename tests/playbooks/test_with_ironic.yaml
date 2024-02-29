@@ -1,0 +1,42 @@
+- name: Prelude
+  hosts: local
+  gather_facts: false
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  roles:
+    - prelude_local
+
+- name: Cleanup
+  hosts: local
+  gather_facts: false
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  roles:
+    - pcp_cleanup
+
+- name: Adoption
+  hosts: local
+  gather_facts: false
+  force_handlers: true
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  vars:
+    ironic_adoption: true
+  roles:
+    - role: development_environment
+    - role: backend_services
+    - role: pull_openstack_configuration
+    - role: stop_openstack_services
+    - role: mariadb_copy
+    - role: ovn_adoption
+    - role: keystone_adoption
+    - role: neutron_adoption
+    - role: swift_adoption
+    - role: glance_adoption
+    - role: ironic_adoption
+    - role: placement_adoption
+    - role: nova_adoption
+    - role: stop_remaining_services

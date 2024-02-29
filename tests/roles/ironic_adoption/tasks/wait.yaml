@@ -1,0 +1,13 @@
+- name: wait for Ironic services to enter "Ready" status
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait --for condition=Ready --timeout=60s ironicapis.ironic.openstack.org ironic-api
+    oc wait --for condition=Ready --timeout=60s ironicconductors.ironic.openstack.org ironic-conductor
+    oc wait --for condition=Ready --timeout=60s ironicinspectors.ironic.openstack.org ironic-inspector
+    oc wait --for condition=Ready --timeout=60s ironicneutronagents.ironic.openstack.org ironic-ironic-neutron-agent
+    oc wait --for condition=Ready --timeout=60s ironics.ironic.openstack.org ironic
+  register: ironic_crs_ready_result
+  until: ironic_crs_ready_result is success
+  retries: 60
+  delay: 2

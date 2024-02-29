@@ -1,0 +1,174 @@
+- name: deploy podified Ironic
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      ironic:
+        enabled: true
+        template:
+          rpcTransport: oslo
+          databaseInstance: openstack
+          ironicAPI:
+            replicas: 1
+            override:
+              service:
+                internal:
+                  metadata:
+                    annotations:
+                      metallb.universe.tf/address-pool: internalapi
+                      metallb.universe.tf/allow-shared-ip: internalapi
+                      metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                  spec:
+                    type: LoadBalancer
+          ironicConductors:
+          - replicas: 1
+            networkAttachments:
+            - baremetal
+            provisionNetwork: baremetal
+            storageRequest: 10G
+            storageClass: {{ storage_class_name }}
+            customServiceConfig: |
+              [neutron]
+              cleaning_network=provisioning
+              provisioning_network=provisioning
+              rescuing_network=provisioning
+              # inspection_network=<introspection network uuid>
+              [conductor]
+              automated_clean=true
+          ironicInspector:
+            replicas: 1
+            inspectionNetwork: baremetal
+            networkAttachments:
+            - baremetal
+            dhcpRanges:
+            - name: inspector-0
+              cidr: 172.20.1.0/24
+              start: 172.20.1.190
+              end: 172.20.1.199
+              gateway: 172.20.1.1
+            serviceUser: ironic-inspector
+            databaseAccount: ironic-inspector
+            passwordSelectors:
+              database: IronicInspectorDatabasePassword
+              service: IronicInspectorPassword
+          ironicNeutronAgent:
+            replicas: 1
+            rabbitMqClusterName: rabbitmq
+          secret: osp-secret
+    '
+
+- name: Wait for Ironic control plane services' CRs to become ready
+  ansible.builtin.include_tasks:
+    file: wait.yaml
+
+- name: check that ironic is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    ${BASH_ALIASES[openstack]} endpoint list -c "Service Name" -f yaml | grep ironic
+    ${BASH_ALIASES[openstack]} baremetal node list
+  register: ironic_running_result
+  until: ironic_running_result is success
+  retries: 60
+  delay: 2
+
+- name: check that ironic-inspector is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    ${BASH_ALIASES[openstack]} endpoint list -c "Service Name" -f yaml | grep ironic-inspector
+
+    # TODO(hjensas): When python3-ironic-inspector-client is in openstackclient container
+    # https://github.com/openstack-k8s-operators/tcib/pull/148
+    # ${BASH_ALIASES[openstack]} baremetal inspection list
+  register: ironic_inspector_running_result
+  until: ironic_inspector_running_result is success
+  retries: 60
+  delay: 2
+
+- name: Disable Role Based Access Control
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+    spec:
+      ironic:
+        template:
+          ironicAPI:
+            customServiceConfig: |
+              [oslo_policy]
+              enforce_scope=false
+              enforce_new_defaults=false
+    '
+
+- name: Wait for Ironic control plane services' CRs to become ready
+  ansible.builtin.include_tasks:
+    file: wait.yaml
+
+- name: Make sure nodes can be listed
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+    ${BASH_ALIASES[openstack]} baremetal node list -f json | jq 'if (. | length) > 0 then true else halt_error(1) end'
+  register: ironic_node_list_result
+  until: ironic_node_list_result is success
+  retries: 60
+  delay: 2
+
+- name: Set owner field on baremeteal nodes
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    ADMIN_PROJECT_ID=$(${BASH_ALIASES[openstack]} project show -c id -f value --domain default admin)
+    NODE_LIST=$(${BASH_ALIASES[openstack]} baremetal node list -f json -c UUID -c Owner | jq -r '.[] | select(.Owner == null) | .UUID')
+    for node in $NODE_LIST; do
+      ${BASH_ALIASES[openstack]} baremetal node set --owner $ADMIN_PROJECT_ID $node;
+    done
+  register: ironic_set_owner_field_result
+
+- name: Re-Enable Role Based Access Control
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+    spec:
+      ironic:
+        template:
+          ironicAPI:
+            customServiceConfig: |
+              [oslo_policy]
+              enforce_scope=true
+              enforce_new_defaults=true
+    '
+
+- name: Wait for Ironic control plane services' CRs to become ready
+  ansible.builtin.include_tasks:
+    file: wait.yaml
+
+- name: Make sure nodes can be listed
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+    ${BASH_ALIASES[openstack]} baremetal node list -f json | jq 'if (. | length) > 0 then true else halt_error(1) end'
+  register: ironic_node_list_result
+  until: ironic_node_list_result is success
+  retries: 60
+  delay: 2
+
+- name: Change the DNS server in the provisioning subnet
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+    ${BASH_ALIASES[openstack]} subnet set --dns-nameserver 192.168.122.80  provisioning-subnet
