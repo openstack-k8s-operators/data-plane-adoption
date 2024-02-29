@@ -17,6 +17,10 @@
     {{ shell_header }}
     {{ stop_other_services_shell_vars }}
 
+    ComputeContainersToStop=(
+                    "nova_virtlogd"
+    )
+
     ComputeServicesToStop=(
                     "tripleo_nova_compute.service"
                     "tripleo_nova_libvirt.target"
@@ -42,6 +46,15 @@
                 ${SSH_CMD} sudo systemctl disable --now $service
                 ${SSH_CMD} test -f /etc/systemd/system/$service '||' sudo systemctl mask $service
             fi
+        done
+    done
+
+    echo "Forcing stop of compute containers not managed by service units"
+    for i in "${!computes[@]}"; do
+        SSH_CMD="ssh -i $EDPM_PRIVATEKEY_PATH root@${computes[$i]}"
+        for container in ${ComputeContainersToStop[*]}; do
+            echo "Stopping the $container in compute $i"
+            ${SSH_CMD} sudo podman stop nova_virtlogd '||' true
         done
     done
 
