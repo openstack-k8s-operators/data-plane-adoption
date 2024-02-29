@@ -1,0 +1,92 @@
+- name: deploy podified Nova conductors, scheduler, metadata, and API
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+    spec:
+      nova:
+        enabled: true
+        apiOverride:
+          route: {}
+        template:
+          secret: osp-secret
+          apiServiceTemplate:
+            override:
+              service:
+                internal:
+                  metadata:
+                    annotations:
+                      metallb.universe.tf/address-pool: internalapi
+                      metallb.universe.tf/allow-shared-ip: internalapi
+                      metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                  spec:
+                    type: LoadBalancer
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=true
+          metadataServiceTemplate:
+            enabled: true # deploy single nova metadata on the top level
+            override:
+              service:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                spec:
+                  type: LoadBalancer
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=true
+          schedulerServiceTemplate:
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=true
+          cellTemplates:
+            cell0:
+              conductorServiceTemplate:
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=true
+            cell1:
+              metadataServiceTemplate:
+                enabled: false # enable here to run it in a cell instead
+                override:
+                    service:
+                      metadata:
+                        annotations:
+                          metallb.universe.tf/address-pool: internalapi
+                          metallb.universe.tf/allow-shared-ip: internalapi
+                          metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                      spec:
+                        type: LoadBalancer
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=true
+              conductorServiceTemplate:
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=true
+    '
+
+- name: wait for Nova control plane services' CRs to become ready
+  ansible.builtin.include_tasks:
+    file: wait.yaml
+
+- name: wait for Nova control plane services' CRs to become ready
+  ansible.builtin.include_tasks:
+    file: check_endpoints.yaml
+
+# TODO(bogdando): provide automated checks for 'The expected changes to happen'
+- name: query the superconductor for cell1 existance and compare it to pre-adoption values
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {% if pulled_openstack_configuration_shell_headers is defined %}
+    {{ pulled_openstack_configuration_shell_headers }}
+    {% else %}
+    . ~/.source_cloud_exported_variables
+    {% endif %}
+
+    echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS
+    oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 |'

@@ -1,3 +1,4 @@
 ovn_image: quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
 storage_class_name: crc-csi-hostpath-provisioner
 storage_reclaim_policy: delete
+ironic_adoption: false

@@ -41,7 +41,7 @@ ${BASH_ALIASES[openstack]} image create --container-format bare --disk-format ${
 export BAREMETAL_NODES=$(${BASH_ALIASES[openstack]} baremetal node list -c UUID -f value)
 # Manage nodes
 for node in $BAREMETAL_NODES; do
-  ${BASH_ALIASES[openstack]} baremetal node manage $node --wait 120
+  ${BASH_ALIASES[openstack]} baremetal node manage $node --wait 300
 done
 
 # Inspect baremetal nodes
