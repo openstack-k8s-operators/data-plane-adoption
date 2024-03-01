@@ -108,6 +108,12 @@ spec:
 EOF
 ----
 
+* In case when neutron-sriov-nic-agent is running on the existing compute nodes,
+  physical device mappings needs to be checked and set the same in the
+  OpenStackDataPlaneNodeSet CR. Those options will need to be set in the
+  OpenStackDataPlaneNodeSet CR.
+  For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+
 == Procedure - EDPM adoption
 
 * _Temporary fix_ until the OSP 17 https://code.engineering.redhat.com/gerrit/q/topic:stable-compute-uuid[backport of the stable compute UUID feature]
@@ -394,6 +400,31 @@ endif::[]
         edpm_ovs_packages:
         - openvswitch3.1
 EOF
+----
+
+* Optionally enable neutron-sriov-nic-agent in the OpenStackDataPlaneNodeSet CR
++
+[source,yaml]
+----
+oc patch openstackdataplanenodeset openstack --type='json' --patch='[
+  {
+    "op": "add",
+    "path": "/spec/services/-",
+    "value": "neutron-sriov"
+  }, {
+    "op": "add",
+    "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_physical_device_mappings",
+    "value": "dummy_sriov_net:dummy-dev"
+  }, {
+    "op": "add",
+    "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_bandwidths",
+    "value": "dummy-dev:40000000:40000000"
+  }, {
+    "op": "add",
+    "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_hypervisors",
+    "value": "dummy-dev:standalone.localdomain"
+  }
+]'
 ----
 
 * Deploy OpenStackDataPlaneDeployment:

@@ -130,3 +130,4 @@ networks_lower:
   Storage: storage
   Tenant: tenant
 edpm_sshd_allowed_ranges: "{{ ['192.168.122.0/24'] if dataplane_os_net_config_set_route|default(true)|bool else ['0.0.0.0/0'] }}"
+edpm_neutron_sriov_agent_enabled: true
