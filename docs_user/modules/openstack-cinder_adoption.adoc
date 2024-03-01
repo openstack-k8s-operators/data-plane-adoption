@@ -45,6 +45,7 @@ this guide.
 * Previous Adoption steps completed. Notably, cinder service must have been
 stopped and the service databases must already be imported into the podified
 MariaDB.
+* Keystone and Barbican should be already adopted.
 * Storage network has been properly configured on the OpenShift cluster.
 
 == Variables

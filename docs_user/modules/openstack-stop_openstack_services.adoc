@@ -63,6 +63,9 @@ These steps can be automated with a simple script that relies on the previously 
 # Update the services list to be stopped
 ServicesToStop=("tripleo_horizon.service"
                 "tripleo_keystone.service"
+                "tripleo_barbican_api.service"
+                "tripleo_barbican_worker.service"
+                "tripleo_barbican_keystone_listener.service"
                 "tripleo_cinder_api.service"
                 "tripleo_cinder_api_cron.service"
                 "tripleo_cinder_scheduler.service"

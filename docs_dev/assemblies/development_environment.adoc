@@ -300,6 +300,11 @@ Confirm the image UUID can be seen in Ceph's images pool.
 ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 sudo cephadm shell -- rbd -p images ls -l
 ----
 
+Create a Barbican secret
+```
+openstack secret store --name testSecret --payload 'TestPayload'
+```
+
 Create a Cinder volume, a backup from it, and snapshot it.
 
 [,bash]
