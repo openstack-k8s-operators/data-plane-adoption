@@ -28,12 +28,6 @@ CONTROLLER2_SSH=""
 CONTROLLER3_SSH=""
 ----
 
-This example uses ssh variables with ssh commands instead of ansible to create instructions that are independent on where they are running. However, you can use ansible commands to achieve the same result if you are in the right host. For example, to stop a service:
-
-----
-. stackrc ansible -i $(which tripleo-ansible-inventory) Controller -m shell -a "sudo systemctl stop tripleo_horizon.service" -b
-----
-
 == Pre-checks
 
 You can stop OpenStack services at any moment, but you might leave your environment in an undesired state. However, you should confirm that there are no long running operations that require other services.
@@ -56,9 +50,9 @@ Also collect the services topology specific configuration before stopping servic
 
 You can stop OpenStack services at any moment, but you might leave your environment in an undesired state. You should confirm that there are no ongoing operations.
 
-1- Connect to all the controller nodes.
-2- Stop the control plane services.
-3- Verify the control plane services are stopped.
+1. Connect to all the controller nodes.
+2. Stop the control plane services.
+3. Verify the control plane services are stopped.
 
 The cinder-backup service on OSP 17.1 could be running as Active-Passive under pacemaker or as Active-Active, so you must check how it is running and stop it.
 
@@ -72,6 +66,7 @@ ServicesToStop=("tripleo_horizon.service"
                 "tripleo_cinder_api.service"
                 "tripleo_cinder_api_cron.service"
                 "tripleo_cinder_scheduler.service"
+                "tripleo_cinder_volume.service"
                 "tripleo_cinder_backup.service"
                 "tripleo_glance_api.service"
                 "tripleo_manila_api.service"
@@ -119,9 +114,10 @@ for service in ${ServicesToStop[*]}; do
     for i in {1..3}; do
         SSH_CMD=CONTROLLER${i}_SSH
         if [ ! -z "${!SSH_CMD}" ]; then
-            echo "Checking status of $service in controller $i"
             if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
                 echo "ERROR: Service $service still running on controller $i"
+            else
+                echo "OK: Service $service is not running on controller $i"
             fi
         fi
     done
@@ -133,8 +129,29 @@ for i in {1..3}; do
     if [ ! -z "${!SSH_CMD}" ]; then
         echo "Using controller $i to run pacemaker commands"
         for resource in ${PacemakerResourcesToStop[*]}; do
-            if ${!SSH_CMD} sudo pcs resource config $resource; then
+            if ${!SSH_CMD} sudo pcs resource config $resource &>/dev/null; then
+                echo "Stopping $resource"
                 ${!SSH_CMD} sudo pcs resource disable $resource
+            else
+                echo "Service $resource not present"
+            fi
+        done
+        break
+    fi
+done
+
+echo "Checking pacemaker OpenStack services"
+for i in {1..3}; do
+    SSH_CMD=CONTROLLER${i}_SSH
+    if [ ! -z "${!SSH_CMD}" ]; then
+        echo "Using controller $i to run pacemaker commands"
+        for resource in ${PacemakerResourcesToStop[*]}; do
+            if ${!SSH_CMD} sudo pcs resource config $resource &>/dev/null; then
+                if ! ${!SSH_CMD} sudo pcs resource status $resource | grep Started; then
+                    echo "OK: Service $resource is stopped"
+                else
+                    echo "ERROR: Service $resource is started"
+                fi
             fi
         done
         break

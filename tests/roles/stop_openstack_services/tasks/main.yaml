@@ -26,14 +26,23 @@
                     "tripleo_manila_scheduler.service"
                     "tripleo_neutron_api.service"
                     "tripleo_nova_api.service"
+                    "tripleo_placement_api.service"
                     "tripleo_nova_api_cron.service"
                     "tripleo_nova_api.service"
                     "tripleo_nova_conductor.service"
                     "tripleo_nova_metadata.service"
                     "tripleo_nova_scheduler.service"
                     "tripleo_nova_vnc_proxy.service"
-                    "tripleo_ovn_cluster_northd.service"
-                    "tripleo_placement_api.service")
+                    "tripleo_aodh_api.service"
+                    "tripleo_aodh_api_cron.service"
+                    "tripleo_aodh_evaluator.service"
+                    "tripleo_aodh_listener.service"
+                    "tripleo_aodh_notifier.service"
+                    "tripleo_ceilometer_agent_central.service"
+                    "tripleo_ceilometer_agent_compute.service"
+                    "tripleo_ceilometer_agent_ipmi.service"
+                    "tripleo_ceilometer_agent_notification.service"
+                    "tripleo_ovn_cluster_northd.service")
 
     PacemakerResourcesToStop=("openstack-cinder-volume"
                               "openstack-cinder-backup"
@@ -57,9 +66,10 @@
         for i in {1..3}; do
             SSH_CMD=CONTROLLER${i}_SSH
             if [ ! -z "${!SSH_CMD}" ]; then
-                echo "Checking status of $service in controller $i"
                 if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
                     echo "ERROR: Service $service still running on controller $i"
+                else
+                    echo "OK: Service $service is not running on controller $i"
                 fi
             fi
         done
@@ -71,8 +81,29 @@
         if [ ! -z "${!SSH_CMD}" ]; then
             echo "Using controller $i to run pacemaker commands"
             for resource in ${PacemakerResourcesToStop[*]}; do
-                if ${!SSH_CMD} sudo pcs resource config $resource; then
+                if ${!SSH_CMD} sudo pcs resource config $resource &>/dev/null; then
+                    echo "Stopping $resource"
                     ${!SSH_CMD} sudo pcs resource disable $resource
+                else
+                    echo "Service $resource not present"
+                fi
+            done
+            break
+        fi
+    done
+
+    echo "Checking pacemaker OpenStack services"
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+        if [ ! -z "${!SSH_CMD}" ]; then
+            echo "Using controller $i to run pacemaker commands"
+            for resource in ${PacemakerResourcesToStop[*]}; do
+                if ${!SSH_CMD} sudo pcs resource config $resource &>/dev/null; then
+                    if ! ${!SSH_CMD} sudo pcs resource status $resource | grep Started; then
+                        echo "OK: Service $resource is stopped"
+                    else
+                        echo "ERROR: Service $resource is started"
+                    fi
                 fi
             done
             break
