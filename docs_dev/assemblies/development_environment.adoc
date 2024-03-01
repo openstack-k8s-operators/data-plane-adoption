@@ -325,7 +325,7 @@ openstack server add volume test disk
 
 The development environment is now set up, you can go to the https://openstack-k8s-operators.github.io/data-plane-adoption/[Adoption
 documentation]
-and perform adoption manually, or run the https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/tests/[test
+and perform adoption manually, or run the https://openstack-k8s-operators.github.io/data-plane-adoption/dev/#_test_suite_information[test
 suite]
 against your environment.
 
