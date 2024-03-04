@@ -28,7 +28,8 @@ cd ~/install_yamls/devsetup
 make download_tools
 ----
 
-== Deployment of CRC with network isolation
+== CRC deployment
+=== CRC environment with network isolation
 
 [,bash]
 ----
@@ -43,7 +44,7 @@ make crc_attach_default_interface
 
 '''
 
-=== Development environment with Openstack ironic
+=== CRC environment with Openstack ironic
 
 Create the BMaaS network (`crc-bmaas`) and virtual baremetal nodes controlled by
 a RedFish BMC emulator.
@@ -107,6 +108,7 @@ export EDPM_COMPUTE_CEPH_ENABLED=false  # Optional
 
 '''
 
+== Standalone deployment
 Use the https://github.com/openstack-k8s-operators/install_yamls/tree/main/devsetup[install_yamls devsetup]
 to create a virtual machine (edpm-compute-0) connected to the isolated networks.
 
