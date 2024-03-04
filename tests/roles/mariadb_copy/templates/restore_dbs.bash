@@ -9,6 +9,7 @@ cd {{ mariadb_copy_tmp_dir }}
 declare -A db_name_map
 db_name_map["nova"]="nova_cell1"
 db_name_map["ovs_neutron"]="neutron"
+db_name_map["ironic-inspector"]="ironic_inspector"
 
 # db servers to import into
 declare -A db_server_map
@@ -37,9 +38,11 @@ for db_file in ${all_db_files}; do
     fi
     echo "creating ${db_name} in ${db_server}"
     container_name=$(echo "mariadb-client-${db_name}-create" | sed 's/_/-/g')
+    sql_command="CREATE DATABASE IF NOT EXISTS ${db_name} DEFAULT CHARACTER SET ${CHARACTER_SET} DEFAULT COLLATE ${COLLATION};"
+    echo "SQL COMMAND: $sql_command"
     oc run ${container_name} --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
         mysql -h "${db_server}" -uroot "-p${db_password}" << EOF
-CREATE DATABASE IF NOT EXISTS ${db_name} DEFAULT CHARACTER SET ${CHARACTER_SET} DEFAULT COLLATE ${COLLATION};
+$sql_command
 EOF
     echo "importing ${db_name} into ${db_server}"
     container_name=$(echo "mariadb-client-${db_name}-restore" | sed 's/_/-/g')
