@@ -1,2 +1,2 @@
-# glance_backend can be 'local', 'ceph' or 'swift'
+# glance_backend can be 'local', 'ceph', 'swift' or 'cinder'
 glance_backend: swift

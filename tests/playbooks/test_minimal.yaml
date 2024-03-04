@@ -39,6 +39,9 @@
     - role: swift_adoption
       tags:
         - swift_adoption
+    - role: cinder_adoption
+      tags:
+        - cinder_adoption
     - role: glance_adoption
       tags:
         - glance_adoption
@@ -48,9 +51,6 @@
     - role: nova_adoption
       tags:
         - nova_adoption
-    - role: cinder_adoption
-      tags:
-        - cinder_adoption
     - role: horizon_adoption
       tags:
         - horizon_adoption
