@@ -54,12 +54,12 @@
     - role: horizon_adoption
       tags:
         - horizon_adoption
+    - role: heat_adoption
+      tags:
+        - heat_adoption
     - role: stop_remaining_services
       tags:
         - stop_remaining_services
     - role: dataplane_adoption
       tags:
         - dataplane_adoption
-    - role: heat_adoption
-      tags:
-        - heat_adoption
