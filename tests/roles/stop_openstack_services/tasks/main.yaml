@@ -78,7 +78,7 @@
             break
         fi
     done
-  when: not ospdo_env
+  when: not ospdo_src
 
 - name: stop control plane services
   no_log: "{{ use_no_log }}"
@@ -104,4 +104,4 @@
                 fi
             done
   ignore_errors: true
-  when: ospdo_env
+  when: ospdo_src
