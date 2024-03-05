@@ -45,7 +45,11 @@
                     "tripleo_ceilometer_agent_compute.service"
                     "tripleo_ceilometer_agent_ipmi.service"
                     "tripleo_ceilometer_agent_notification.service"
-                    "tripleo_ovn_cluster_northd.service")
+                    "tripleo_ovn_cluster_northd.service"
+                    "tripleo_ironic_neutron_agent.service"
+                    "tripleo_ironic_api.service"
+                    "tripleo_ironic_inspector.service"
+                    "tripleo_ironic_conductor.service")
 
     PacemakerResourcesToStop=("openstack-cinder-volume"
                               "openstack-cinder-backup"
