@@ -403,9 +403,9 @@ The high level explanation of the tailor-made approach is:
 . Determine what part of the configuration is generic for all the cinder
 services and remove anything that would change when deployed in OpenShift, like
 the `connection` in the `[dabase]` section, the `transport_url` and `log_dir` in
-`[DEFAULT]`, the whole `[coordination]` section.  This configuration goes into
-the `customServiceConfig` (or a `Secret` and then used in
-`customServiceConfigSecrets`) at the `cinder: template:` level.
+`[DEFAULT]`, the whole `[coordination]` and `[barbican]` sections.  This
+configuration goes into the `customServiceConfig` (or a `Secret` and then used
+in `customServiceConfigSecrets`) at the `cinder: template:` level.
 . Determine if there's any scheduler specific configuration and add it to the
 `customServiceConfig` section in `cinder: template: cinderScheduler`.
 . Determine if there's any API specific configuration and add it to the
@@ -516,7 +516,7 @@ The quick and dirty process is more straightforward:
 . Create an agnostic configuration file removing any specifics from the old
 deployment's `cinder.conf` file, like the `connection` in the `[dabase]`
 section, the `transport_url` and `log_dir` in `[DEFAULT]`, the whole
-`[coordination]` section, etc..
+`[coordination]` and `[barbican]` sections, etc..
 . Assuming the configuration has sensitive information, drop the modified
 contents of the whole file into a `Secret`.
 . Reference this secret in all the services, creating a cinder volumes section
@@ -652,7 +652,7 @@ configuration because it has sensitive information (credentials). The
 Assuming you have already stopped cinder services, prepared the OpenShift nodes,
 deployed the OpenStack operators and a bare OpenStack manifest, and migrated the
 database, and prepared the patch manifest with the Cinder service configuration,
-you must apply the patch and wait for the operator to apply the changes and deploy the Cinder services. 
+you must apply the patch and wait for the operator to apply the changes and deploy the Cinder services.
 //The above first sentence could be turned into prerequisites.
 
 It is recommended to write the patch manifest into a file, for example
@@ -764,7 +764,7 @@ oc exec -it cinder-scheduler-0 -- cinder-manage service remove cinder-scheduler 
 The reason why we haven't preserved the name of the backup service is because
 we have taken the opportunity to change its configuration to support
 Active-Active, even though we are not doing so right now because we have 1
-replica. 
+replica.
 //kgilliga: The above paragraph is confusing. Who changed the configuration? Unclear on what the replica refers to.
 
 Now that the Cinder services are running, the DB schema migration has been completed and you can proceed to apply the DB data migrations.
