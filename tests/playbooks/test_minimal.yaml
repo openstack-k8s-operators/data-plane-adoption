@@ -9,21 +9,57 @@
     ansible.builtin.shell:
       executable: /bin/bash
   roles:
-    - development_environment
-    - backend_services
-    - pull_openstack_configuration
-    - stop_openstack_services
-    - mariadb_copy
-    - ovn_adoption
-    - keystone_adoption
-    - barbican_adoption
-    - neutron_adoption
-    - swift_adoption
-    - glance_adoption
-    - placement_adoption
-    - nova_adoption
-    - cinder_adoption
-    - horizon_adoption
-    - stop_remaining_services
-    - dataplane_adoption
-    - heat_adoption
+    - role: development_environment
+      tags:
+        - development_environment
+    - role: backend_services
+      tags:
+        - backend_services
+    - role: pull_openstack_configuration
+      tags:
+        - pull_openstack_configuration
+    - role: stop_openstack_services
+      tags:
+        - stop_openstack_services
+    - role: mariadb_copy
+      tags:
+        - mariadb_copy
+    - role: ovn_adoption
+      tags:
+        - ovn_adoption
+    - role: keystone_adoption
+      tags:
+        - keystone_adoption
+    - role: barbican_adoption
+      tags:
+        - barbican_adoption
+    - role: neutron_adoption
+      tags:
+        - neutron_adoption
+    - role: swift_adoption
+      tags:
+        - swift_adoption
+    - role: glance_adoption
+      tags:
+        - glance_adoption
+    - role: placement_adoption
+      tags:
+        - placement_adoption
+    - role: nova_adoption
+      tags:
+        - nova_adoption
+    - role: cinder_adoption
+      tags:
+        - cinder_adoption
+    - role: horizon_adoption
+      tags:
+        - horizon_adoption
+    - role: stop_remaining_services
+      tags:
+        - stop_remaining_services
+    - role: dataplane_adoption
+      tags:
+        - dataplane_adoption
+    - role: heat_adoption
+      tags:
+        - heat_adoption
