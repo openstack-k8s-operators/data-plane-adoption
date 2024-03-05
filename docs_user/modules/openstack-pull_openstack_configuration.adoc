@@ -94,7 +94,7 @@ just illustrative, use values that are correct for your environment:
 
 ----
 CONTROLLER_SSH="ssh -F ~/director_standalone/vagrant_ssh_config vagrant@standalone"
-ifeval::["{build}" == "upstream"]
+ifeval::["{build}" != "downstream"]
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 endif::[]
 ifeval::["{build}" == "downstream"]
