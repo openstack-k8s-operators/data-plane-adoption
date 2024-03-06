@@ -14,6 +14,7 @@ spec:
       storageRequest: 10G
       glanceAPIs:
         default:
+          type: single
           replicas: 1
           override:
             service:
