@@ -152,7 +152,7 @@ To set these nodes, for example, to the "admin" project, you can execute the fol
 
 ----
 ADMIN_PROJECT_ID=$(openstack project show -c id -f value --domain default admin)
-for node in $(openstack baremetal node list -f json -c UUID,Owner | jq -r '.[] | select(.Owner == null) | .UUID'); do openstack baremetal node set --owner $ADMIN_PROJECT_ID $node; done
+for node in $(openstack baremetal node list -f json -c UUID -c Owner | jq -r '.[] | select(.Owner == null) | .UUID'); do openstack baremetal node set --owner $ADMIN_PROJECT_ID $node; done
 ----
 
 At which point, you should now be able to re-apply the default access control policy.
