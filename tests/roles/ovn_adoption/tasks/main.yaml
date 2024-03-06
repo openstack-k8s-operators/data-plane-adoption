@@ -56,7 +56,7 @@
     {{ oc_header }}
     sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc get cm -o yaml'|grep ovn_dbs_node_ips|tr -d ' '|sed 's/.*ovn_dbs_node_ips:\\n-//g'|sed 's/\\n.*//g'
   register: source_ovndb_ip
-  when: ospdo_src
+  when: ospdo_src is defined
 
 - name: set OVN copy shell vars
   no_log: "{{ use_no_log }}"
@@ -147,7 +147,7 @@
     $CONTROLLER1_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
     $CONTROLLER2_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
     $CONTROLLER3_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
-  when: not ospdo_src
+  when: ospdo_src is undefined
 
 - name: stop northd service
   no_log: "{{ use_no_log }}"
@@ -155,7 +155,7 @@
     sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-0.ctlplane sudo systemctl stop tripleo_ovn_cluster_northd "'
     sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-1.ctlplane sudo systemctl stop tripleo_ovn_cluster_northd "'
     sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec  -n openstack openstackclient -c openstackclient -- bash -c "ssh controller-2.ctlplane sudo systemctl stop tripleo_ovn_cluster_northd "'
-  when: ospdo_src
+  when: ospdo_src is defined
 
 - name: dump OVN databases
   no_log: "{{ use_no_log }}"
@@ -166,7 +166,7 @@
 
     oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
     oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
-  when: not ospdo_src
+  when: ospdo_src is undefined
 
 - name: dump OVN databases
   ansible.builtin.shell: |
@@ -174,7 +174,7 @@
     sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient ' ovsdb-client backup tcp:{{ source_ovndb_ip.stdout }}:6641 ''>/backup/ovs-nb.db
 
     sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient ' ovsdb-client backup tcp:{{ source_ovndb_ip.stdout }}:6642 ''>/backup/ovs-sb.db
-  when: ospdo_src
+  when: ospdo_src is defined
 
 - name: upgrade OVN databases to the latest schema from podified ovsdb-servers
   no_log: "{{ use_no_log }}"

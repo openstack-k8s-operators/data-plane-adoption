@@ -78,7 +78,7 @@
             break
         fi
     done
-  when: not ospdo_src
+  when: ospdo_src is undefined
 
 - name: stop control plane services
   no_log: "{{ use_no_log }}"
@@ -104,4 +104,4 @@
                 fi
             done
   ignore_errors: true
-  when: ospdo_src
+  when: ospdo_src is defined

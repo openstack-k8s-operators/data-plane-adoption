@@ -1,12 +1,12 @@
 - name: get the source database service environment variables
   ansible.builtin.include_tasks:
     file: env_vars_src.yaml
-  when: not ospdo_src
+  when: ospdo_src is undefined
 
 - name: get the source database service environment variables
   ansible.builtin.include_tasks:
     file: env_vars_src_ospdo.yaml
-  when: ospdo_src
+  when: ospdo_src is defined
 
 - name: get the destination database service environment variables
   ansible.builtin.include_tasks:
@@ -39,19 +39,19 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell:
     cmd: "{{ lookup('ansible.builtin.template', 'pre_checks.bash') }}"
-  when: not ospdo_src
+  when: ospdo_src is undefined
 
 - name: dump databases
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell:
     cmd: "{{ lookup('ansible.builtin.template', 'dump_dbs.bash') }}"
-  when: not ospdo_src
+  when: ospdo_src is undefined
 
 - name: dump databases
   no_log: "{{ use_no_log }}"
   ansible.builtin.include_tasks:
     file: dbs_ospdo.yaml
-  when: ospdo_src
+  when: ospdo_src is defined
 
 - name: restore databases
   no_log: "{{ use_no_log }}"
