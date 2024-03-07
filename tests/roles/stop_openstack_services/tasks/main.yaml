@@ -116,3 +116,30 @@
             break
         fi
     done
+  when: ospdo_src is undefined
+
+- name: stop control plane services
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+
+    echo "Stopping systemd OpenStack services"
+    for i in {0..2}; do
+                echo "Stopping the tripleo services in controller $i"
+
+                sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-${i}.ctlplane "sudo  systemctl stop tripleo*" ''
+
+                sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-${i}.ctlplane "systemctl list-units --all|grep tripleo" ''
+    done
+
+    PacemakerResourcesToStop=("openstack-cinder-volume"
+                              "openstack-cinder-backup"
+                              "openstack-manila-share")
+
+    echo "Stopping pacemaker OpenStack services"
+            for resource in ${PacemakerResourcesToStop[*]}; do
+                if sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo pcs resource config $resource" ''; then
+                sshpass -p{{ admin_password }} ssh root@{{ adoption_ospdo_host }} 'export KUBECONFIG=/home/ocp/crucible/kubeconfig.ostest; oc exec -it -n openstack openstackclient -c openstackclient 'ssh controller-0.ctlplane "sudo pcs resource disable $resource" ''
+                fi
+            done
+  ignore_errors: true
+  when: ospdo_src is defined
