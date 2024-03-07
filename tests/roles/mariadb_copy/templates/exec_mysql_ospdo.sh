@@ -19,14 +19,13 @@ function mysqlcheck() {
   sudo podman exec -it $galera_con bash -c "$query"
 }
 
-function show_db() {
-  query="nova_api -e \"select host from nova.services where services.binary='nova-compute';\""
+function cell_map() {
+  query="nova_api -e 'select uuid,name,transport_url,database_connection,disabled from cell_mappings;'"
   mysql_q "$query"
 }
 
-function show_db() {
-  query="nova_api -e \"select host from nova.services where services.binary='nova-compute';\""
-  mysql_q "$query"
+function list_nova_cells() {
+  query="sudo podman exec -it nova_api nova-manage cell_v2 list_cells"
 }
 
 # Case statement per query
@@ -37,10 +36,10 @@ case $1 in
   "mysqlcheck")
     mysqlcheck
     ;;
-  "show_db")
-    show_db
+  "cell_map")
+    cell_map
     ;;
-  "show_db")
-    show_db
+  "list_nova_cells")
+    list_nova_cells
     ;;
 esac
