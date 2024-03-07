@@ -24,8 +24,18 @@ function cell_map() {
   mysql_q "$query"
 }
 
+function nova_host_names() {
+  query="-e \"select host from nova.services where services.binary='nova-compute';\""
+  mysql_q "$query"
+}
+
 function list_nova_cells() {
-  query="sudo podman exec -it nova_api nova-manage cell_v2 list_cells"
+  sudo podman exec -it nova_api nova-manage cell_v2 list_cells
+}
+
+function check_wsrep() {
+  query="-e \"show global status like 'wsrep_local_state_comment';\""
+  mysql_q "$query"
 }
 
 # Case statement per query
@@ -39,7 +49,13 @@ case $1 in
   "cell_map")
     cell_map
     ;;
+  "nova_host_names")
+    nova_host_names
+    ;;
   "list_nova_cells")
     list_nova_cells
+    ;;
+  "check_wsrep")
+    check_wsrep
     ;;
 esac

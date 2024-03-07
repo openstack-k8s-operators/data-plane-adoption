@@ -1,12 +1,6 @@
 - name: get the source database service environment variables
   ansible.builtin.include_tasks:
     file: env_vars_src.yaml
-  when: ospdo_src is undefined
-
-- name: get the source database service environment variables
-  ansible.builtin.include_tasks:
-    file: env_vars_src_ospdo.yaml
-  when: ospdo_src is defined
 
 - name: get the destination database service environment variables
   ansible.builtin.include_tasks:
@@ -23,6 +17,13 @@
         -e "show global status like 'wsrep_local_state_comment';" |\
         grep -qE '\bSynced\b'
     done
+  when: ospdo_src is undefined
+
+- name: check that the Galera database cluster members are online and synced
+  shell: |
+    {{ item }} {{ dpa_mysql_script }} show_db
+  loop: "{{ osp_controllers_ssh }}"
+  when: ospdo_src is defined
 
 - name: Get the count of not-OK source databases
   no_log: "{{ use_no_log }}"

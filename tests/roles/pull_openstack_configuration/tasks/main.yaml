@@ -9,11 +9,10 @@
     name: mariadb_copy
     tasks_from: env_vars_src.yaml
 
-  # TODO:: switch to main version
 - name: get mysql adaption scripts ready on ctrl0
   delegate_to: "{{ adoption_ospdo_host }}"
   vars:
-    repo: https://github.com/pinikomarov/data-plane-adoption_pkomarov.git
+    repo: "{{ dpa_repo }}"
   ansible.builtin.shell: |
     {{ controller1_ssh }} git clone {{ repo }}
   ignore_errors: true
