@@ -9,6 +9,16 @@
     name: mariadb_copy
     tasks_from: env_vars_src.yaml
 
+  # TODO:: switch to main version
+- name: get mysql adaption scripts ready on ctrl0
+  delegate_to: "{{ adoption_ospdo_host }}"
+  vars:
+    repo: https://github.com/pinikomarov/data-plane-adoption_pkomarov.git
+  ansible.builtin.shell: |
+    {{ controller1_ssh }} git clone {{ repo }}
+  ignore_errors: true
+  when: ospdo_src is defined
+
 # NOTE(bogdando): env variables must be used to keep this consistent with documentation,
 # where the stored values need to be compared with post-adoption ones w/o using ansible specifics
 - name: test connection to the original DB
@@ -20,6 +30,15 @@
       mysql -rsh "$SOURCE_MARIADB_IP" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" -e 'SHOW databases;')
     echo "$PULL_OPENSTACK_CONFIGURATION_DATABASES"
   register: _databases_check
+  when: ospdo_src is undefined
+
+- name: test connection to the original DB
+  delegate_to: "{{ adoption_ospdo_host }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ controller2_ssh }} {{ dpa_mysql_script }} show_db
+  register: _databases_check
+  when: ospdo_src is defined
 
 - name: run mysqlcheck on the original DB to look for things that are not OK
   no_log: "{{ use_no_log }}"
