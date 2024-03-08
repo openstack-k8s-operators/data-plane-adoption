@@ -120,14 +120,5 @@ edpm_network_config_template: |
   {% endraw %}
 neutron_physical_bridge_name: br-ctlplane
 neutron_public_interface_name: "{{ dataplane_public_iface | default('eth0') }}"
-role_networks:
-  - InternalApi
-  - Storage
-  - Tenant
-networks_lower:
-  External: external
-  InternalApi: internalapi
-  Storage: storage
-  Tenant: tenant
 edpm_sshd_allowed_ranges: "{{ ['192.168.122.0/24'] if dataplane_os_net_config_set_route|default(true)|bool else ['0.0.0.0/0'] }}"
 edpm_neutron_sriov_agent_enabled: true

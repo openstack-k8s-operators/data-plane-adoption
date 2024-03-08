@@ -232,6 +232,7 @@ spec:
     - validate-network
     - install-os
     - configure-os
+    - ssh-known-hosts
     - run-os
     - reboot-os
     - install-certs
@@ -262,10 +263,8 @@ spec:
         subnetName: subnet1
   nodeTemplate:
     ansibleSSHPrivateKeySecret: dataplane-adoption-secret
-    managementNetwork: ctlplane
     ansible:
       ansibleUser: root
-      ansiblePort: 22
       ansibleVars:
         service_net_map:
           nova_api_network: internalapi
@@ -274,7 +273,6 @@ spec:
         # edpm_network_config
         # Default nic config template for a EDPM compute node
         # These vars are edpm_network_config role vars
-        edpm_network_config_override: ""
         edpm_network_config_template: |
            ---
            {% set mtu_list = [ctlplane_mtu] %}
@@ -314,15 +312,6 @@ spec:
         # considered EDPM network defaults.
         neutron_physical_bridge_name: br-ctlplane
         neutron_public_interface_name: eth0
-        role_networks:
-        - InternalApi
-        - Storage
-        - Tenant
-        networks_lower:
-          External: external
-          InternalApi: internalapi
-          Storage: storage
-          Tenant: tenant
 
         # edpm_nodes_validation
         edpm_nodes_validation_validate_controllers_icmp: false
@@ -338,17 +327,15 @@ spec:
         edpm_ovn_ofctrl_wait_before_clear: 8000
 
         timesync_ntp_servers:
+ifeval::["{build}" == "upstream"]
+        - hostname: pool.ntp.org
+endif::[]
+ifeval::["{build}" == "downstream"]
         - hostname: clock.redhat.com
         - hostname: clock2.redhat.com
+endif::[]
 
 ifeval::["{build}" == "upstream"]
-        edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
-        edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
-        edpm_logrotate_crond_image: quay.io/podified-antelope-centos9/openstack-cron:current-podified
-        edpm_nova_compute_container_image: quay.io/podified-antelope-centos9/openstack-nova-compute:current-podified
-        edpm_nova_libvirt_container_image: quay.io/podified-antelope-centos9/openstack-nova-libvirt:current-podified
-        edpm_ovn_metadata_agent_image: quay.io/podified-antelope-centos9/openstack-neutron-metadata-agent-ovn:current-podified
-
         edpm_bootstrap_command: |
           # This is a hack to deploy RDO Delorean repos to RHEL as if it were Centos 9 Stream
           set -euxo pipefail
@@ -368,13 +355,6 @@ ifeval::["{build}" == "upstream"]
           rm -rf repo-setup-main
 endif::[]
 ifeval::["{build}" == "downstream"]
-        edpm_ovn_controller_agent_image: registry.redhat.io/rhosp-dev-preview/openstack-ovn-controller-rhel9:18.0
-        edpm_iscsid_image: registry.redhat.io/rhosp-dev-preview/openstack-iscsid-rhel9:18.0
-        edpm_logrotate_crond_image: registry.redhat.io/rhosp-dev-preview/openstack-cron-rhel9:18.0
-        edpm_nova_compute_container_image: registry.redhat.io/rhosp-dev-preview/openstack-nova-compute-rhel9:18.0
-        edpm_nova_libvirt_container_image: registry.redhat.io/rhosp-dev-preview/openstack-nova-libvirt-rhel9:18.0
-        edpm_ovn_metadata_agent_image: registry.redhat.io/rhosp-dev-preview/openstack-neutron-metadata-agent-ovn-rhel9:18.0
-
         edpm_bootstrap_command: |
           subscription-manager register --username <subscription_manager_username> --password <subscription_manager_password>
           subscription-manager release --set=9.2
@@ -394,7 +374,6 @@ endif::[]
         edpm_sshd_allowed_ranges: ['192.168.122.0/24']
         # SELinux module
         edpm_selinux_mode: enforcing
-        plan: overcloud
 
         # Do not attempt OVS 3.2 major upgrades here
         edpm_ovs_packages:
@@ -460,7 +439,7 @@ watch oc get pod -l app=openstackansibleee
 +
 ----
 # following the ansible logs with:
-oc logs -l app=openstackansibleee -f --max-log-requests 10
+oc logs -l app=openstackansibleee -f --max-log-requests 20
 ----
 
 * Wait for the dataplane node set to reach the Ready status:
