@@ -156,7 +156,7 @@ spec:
   tls:
     endpoint:
       internal:
-        enabled: false
+        enabled: true
       public:
         enabled: true
   barbican:

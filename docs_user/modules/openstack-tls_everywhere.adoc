@@ -1,0 +1,190 @@
+[id="tls-everywhere_{context}"]
+
+//:context: tls
+
+//kgilliga: This module will be converted to an assembly. Check xref contexts.
+
+= TLS Everywhere
+
+_Disclaimer: the below steps were reproduced on a FreeIPA 4.10.1 server. The location of files and directories may slightly change on different versions._
+
+== Pre-checks
+
+Check that the source deployment is using TLS Everywhere, skip this step if it's not.
+
+== Variables
+
+Define the shell variables used in the following steps. The values are illustrative and refer to a single node standalone director deployment. Use values that are correct for your environment:
+
+== Transfer the CA certificate and key from FreeIPA to the cert-manager Operator
+
+=== Exporting from FreeIPA
+
+There are a couple of ways to do it:
+1. You can copy the certificate from the `/etc/pki/pki-tomcat/alias` directory. The file is named `ca.crt`.
+2. You can go to the `/etc/pki/pki-tomcat/alias` directory and interact with the database ("*db" files).
+
+==== Locating the CA certificate
+
+The certificate alone won't suffice. Therefore, let's focus on option 2. Your FreeIPA instance may be running on a separate host, or even as a container on such a host. In any case, things will be easier if you create a variable to point to your FreeIPA deployment. Something like:
+
+Separate host:
+
+----
+IPA_SSH="ssh -i <your SSH private key> root@<FreeIPA hostname>"
+----
+
+A container running on a separate host:
+
+----
+IPA_SSH="ssh -i <your SSH private key> root@<FreeIPA hostname> podman exec -ti freeipa-server-container"
+----
+
+The next step is to list all the certificates inside your NSSDB:
+
+----
+$ $IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
+----
+
+The `-L` option lists all certificates, and `-d` specifies where they are stored. This will produce some output like this:
+
+----
+Certificate Nickname                                         Trust Attributes
+                                                             SSL,S/MIME,JAR/XPI
+
+caSigningCert cert-pki-ca                                    CTu,Cu,Cu
+ocspSigningCert cert-pki-ca                                  u,u,u
+Server-Cert cert-pki-ca                                      u,u,u
+subsystemCert cert-pki-ca                                    u,u,u
+auditSigningCert cert-pki-ca                                 u,u,Pu
+----
+
+The item you need to consider is the first one: `caSigningCert cert-pki-ca`.
+
+==== Exporting the items (certificate and key)
+
+The command below generates a P12 file with both, the certificate and the key. The `/etc/pki/pki-tomcat/alias/pwdfile.txt` file contains the password that protects the key. You can use it to both, extract the key and generate the new file, `/tmp/freeipa.p12`. You can also choose another password. Should you choose to apply a different password for the new file, simply replace the parameter of the `-w` option, or alternatively use the `-W` (capital W) option followed by the password (in clear text).
+
+----
+$IPA_SSH pk12util -o /tmp/freeipa.p12 -n 'caSigningCert\ cert-pki-ca' -d /etc/pki/pki-tomcat/alias -k /etc/pki/pki-tomcat/alias/pwdfile.txt -w /etc/pki/pki-tomcat/alias/pwdfile.txt
+----
+
+With that file on hand, you can separately get the certificate and the key. Use the command below to get the certificate only. Observe you will still need the `/etc/pki/pki-tomcat/alias/pwdfile.txt` file so the `pkcs12` utility be able to open the P12 file.
+
+----
+$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509
+----
+
+Likewise, the command below extracts only the key, unencrypted:
+
+----
+$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl x509
+----
+
+The key length is another important property. You will need it below, when crafting one of the YAML files that will be used to provision the new custom resources. You can get it with:
+
+----
+$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl rsa -text -noout | awk -F'[^0-9]+' '{ print $2; exit }'
+----
+
+==== Importing the Items and Provisioning the Custom Resources (CRs) on OpenShift
+
+You will have to create two YAML files. The first one has three sections:
+
+* The `openstack` namespace, which is used by other Red Hat OpenStack operators and CRs.
+* The issuer. The cert-manager operator makes use of a self-signed issuer to issue both, the CA certificate itself and other certificates.
+* The CA certificate itself. We are specifically naming it as `rootca-internal`, which corresponds to the certificate authority leveraged by cert-manager to issue other certificates.
+
+Let's call the first file as `import-1.yaml`:
+
+[source,yaml]
+----
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openstack
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned-issuer
+  namespace: openstack
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rootca-internal
+  namespace: openstack
+spec:
+  isCA: true
+  commonName: rootca-internal
+  secretName: rootca-internal
+  privateKey:
+    algorithm: RSA
+    size: 3072
+  issuerRef:
+    name: selfsigned-issuer
+----
+
+Apply the YAML file to create the corresponding CRs:
+
+----
+oc apply -f import-1.yaml
+----
+
+OK, you just created the CRs with the initial content. Now you will need to import the certificate and the key that you exported from FreeIPA. You can do this with the `oc patch` command. For the CA certificate (correspondeing to the `ca.crt` item on the Certificate, type:
+
+----
+oc patch secret rootca-internal -n openstack -p="{\"data\":{\"ca.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
+----
+
+You will also need to update the `tls.crt` item. For the CA, this will receive the very same contents of `ca.crt`. The command just needs a small adjustment:
+
+----
+oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
+----
+
+Finally, update the key:
+
+----
+oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.key\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl rsa | base64 -w 0`\"}}"
+----
+
+The second YAML file, let's call it `import-2.yaml` will have the cert-manager issuer. This is paramount for issuing other certificates:
+
+[source, yaml]
+----
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openstack
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: rootca-internal
+  namespace: openstack
+spec:
+  ca:
+    secretName: rootca-internal
+----
+
+Apply this file and you will have finished this task:
+
+----
+oc apply -f import-2.yaml
+----
+
+==== Checking the newly provisioned CRs
+
+You can check the created resources with the commands below:
+
+----
+oc get issuers -n openstack
+----
+
+----
+oc get secret rootca-internal -n openstack -o yaml
+----

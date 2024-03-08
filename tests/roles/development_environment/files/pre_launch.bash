@@ -1,5 +1,7 @@
 set -e
 
+alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=standalone openstack"
+
 # Create Image
 IMG=cirros-0.5.2-x86_64-disk.img
 URL=http://download.cirros-cloud.net/0.5.2/$IMG
