@@ -26,12 +26,7 @@ control plane services are running.
 //kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
  ** OpenStack services have been stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
  ** There must be network routability between:
-  *** The adoption host and the original MariaDB.
-  *** The adoption host and the podified MariaDB.
-  *** _Note that this routability requirement might change in the
-future. For example, you might require routability from the original MariaDB to
-podified MariaDB_.
-* Podman package is installed
+  *** The original MariaDB and podified MariaDB.
 
 == Variables
 
@@ -55,6 +50,7 @@ endif::[]
 ifeval::["{build}" == "downstream"]
 MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
 endif::[]
+STORAGE_CLASS=crc-csi-hostpath-provisioner
 # Replace with your environment's MariaDB Galera cluster VIP and backend IPs:
 SOURCE_MARIADB_IP=192.168.122.99
 declare -A SOURCE_GALERA_MEMBERS
@@ -65,6 +61,66 @@ SOURCE_GALERA_MEMBERS=(
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
+* Prepare MariaDB copy directory and the adoption helper pod
+
+* Create a temporary folder to store adoption helper pod (pick storage requests to fit MySQL database size):
++
+----
+mkdir ~/adoption-db
+cd ~/adoption-db
+----
+[source,yaml]
+----
+oc apply -f - <<EOF
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-data
+spec:
+  storageClassName: $STORAGE_CLASS
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mariadb-copy-data
+  annotations:
+    openshift.io/scc: anyuid
+  labels:
+    app: adoption
+spec:
+  containers:
+  - image: $MARIADB_IMAGE
+    command: [ "sh", "-c", "sleep infinity"]
+    name: adoption
+    volumeMounts:
+    - mountPath: /backup
+      name: mariadb-data
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ALL
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  volumes:
+  - name: mariadb-data
+    persistentVolumeClaim:
+      claimName: mariadb-data
+EOF
+----
+
+* Wait for the pod to come up
+
+----
+oc wait --for=condition=Ready pod/mariadb-copy-data --timeout=30s
+----
+
 == Pre-checks
 
 * Check that the Galera database cluster members are online and synced:
@@ -73,18 +129,17 @@ SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' Mysql
 ----
 for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
   echo "Checking for the database node $i WSREP status Synced"
-  sudo podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE mysql \
+  oc exec mariadb-copy-data -- bash -c 'mysql \
     -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" \
     -e "show global status like 'wsrep_local_state_comment';" |\
-    grep -qE '\bSynced\b'
+    grep -qE "\bSynced\b"'
 done
 ----
 
 * Get the count of not-OK source databases:
 +
 ----
-podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE \
-    mysql -h "$SOURCE_MARIADB_IP" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" -e 'SHOW databases;'
+oc exec mariadb-copy-data -- bash -c 'mysql -h "$SOURCE_MARIADB_IP" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" -e "SHOW databases;"'
 ----
 
 * Run mysqlcheck on the original DB to look for things that are not OK:
@@ -115,18 +170,10 @@ records can be safely deleted. You also need to rename the former `default` cell
 to `cell1`.
 ____
 
-* Create a temporary folder to store DB dumps and make sure it's the
-working directory for the following steps:
-+
-----
-mkdir ~/adoption-db
-cd ~/adoption-db
-----
-
 * Create a dump of the original databases:
 +
 ----
-podman run -i --rm --userns=keep-id -u $UID -v $PWD:$PWD:z,rw -w $PWD $MARIADB_IMAGE bash <<EOF
+oc exec mariadb-copy-data -- bash -s <<'EOF'
 
 # Note Filter the information and performance schema tables
 # Gnocchi is no longer used as a metric store, skip dumping gnocchi database as well
@@ -134,7 +181,7 @@ mysql -h ${SOURCE_MARIADB_IP} -u root "-p${SOURCE_DB_ROOT_PASSWORD}" -N -e 'show
     echo "Dumping \${dbname}"
     mysqldump -h $SOURCE_MARIADB_IP -uroot "-p$SOURCE_DB_ROOT_PASSWORD" \
         --single-transaction --complete-insert --skip-lock-tables --lock-tables=0 \
-        "\${dbname}" > "\${dbname}".sql
+        "\${dbname}" > /backup/"\${dbname}".sql
 done
 
 EOF
@@ -159,7 +206,7 @@ declare -A db_server_password_map
 db_server_password_map["default"]=${PODIFIED_DB_ROOT_PASSWORD}
 db_server_password_map["nova_cell1"]=${PODIFIED_DB_ROOT_PASSWORD}
 
-all_db_files=$(ls *.sql)
+all_db_files=$(oc exec mariadb-copy-data -- bash -c "ls /backup/*.sql")
 for db_file in ${all_db_files}; do
     db_name=$(echo ${db_file} | awk -F'.' '{ print $1; }')
     if [[ -v "db_name_map[${db_name}]" ]]; then
@@ -241,4 +288,10 @@ diff -Z <(echo $novadb_svc_records) <(echo $PULL_OPENSTACK_CONFIGURATION_NOVA_CO
 related to the `restricted:latest` security context constraint. This is due to default security
 context constraints and will not prevent pod creation by the admission controller. You'll see a
 warning for the short-lived pod but it will not interfere with functionality.
+* Delete the ovn-data pod and persistent volume claim with OVN databases backup (consider making a snapshot of it, before deleting)
+
+----
+oc delete pod mariadb-copy-data
+oc delete pvc mariadb-data
+----
 For more information, see https://learn.redhat.com/t5/DO280-Red-Hat-OpenShift/About-pod-security-standards-and-warnings/m-p/32502[About pod security standards and warnings].
