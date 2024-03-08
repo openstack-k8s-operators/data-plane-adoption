@@ -256,6 +256,31 @@
             edpm_ovn_ofctrl_wait_before_clear: 8000
     EOF
 
+- name: set neutron-sriov-nic-agent configuration in the OpenStackDataPlaneNodeSet CR
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackdataplanenodeset openstack --type='json' --patch='[
+      {
+        "op": "add",
+        "path": "/spec/services/-",
+        "value": "neutron-sriov"
+      }, {
+        "op": "add",
+        "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_physical_device_mappings",
+        "value": "dummy_sriov_net:dummy-dev"
+      }, {
+        "op": "add",
+        "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_bandwidths",
+        "value": ""
+      }, {
+        "op": "add",
+        "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_hypervisors",
+        "value": ""
+      }]'
+  when: edpm_neutron_sriov_agent_enabled|bool
+
 - name: deploy the dataplane deployment
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |

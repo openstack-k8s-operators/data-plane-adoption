@@ -179,3 +179,13 @@ EOF
 chmod 0600 ~/.source_cloud_exported_variables
 ----
 
+* Optionally, if there are neutron-sriov-nic-agent agents running in the deployment, get its configuration:
++
+[,bash]
+----
+podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE mysql \
+    -rsh "$SOURCE_MARIADB_IP" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" ovs_neutron -e \
+    "select host, configurations from agents where agents.binary='neutron-sriov-nic-agent';"
+----
+
+This configuration will be required later, during the xref:adopting-edpm_{context}[EDPM Adoption].
