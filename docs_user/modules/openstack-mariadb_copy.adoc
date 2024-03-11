@@ -118,7 +118,7 @@ EOF
 * Wait for the pod to come up
 
 ----
-oc wait --for=condition=Ready pod/mariadb-copy-data --timeout=30s
+oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
 ----
 
 == Pre-checks
@@ -129,17 +129,17 @@ oc wait --for=condition=Ready pod/mariadb-copy-data --timeout=30s
 ----
 for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
   echo "Checking for the database node $i WSREP status Synced"
-  oc exec mariadb-copy-data -- bash -c 'mysql \
-    -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" \
-    -e "show global status like 'wsrep_local_state_comment';" |\
-    grep -qE "\bSynced\b"'
+  oc rsh mariadb-copy-data mysql \
+    -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" \
+    -e "show global status like 'wsrep_local_state_comment'" | \
+    grep -qE "\bSynced\b"
 done
 ----
 
 * Get the count of not-OK source databases:
 +
 ----
-oc exec mariadb-copy-data -- bash -c 'mysql -h "$SOURCE_MARIADB_IP" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" -e "SHOW databases;"'
+oc rsh mariadb-copy-data mysql -h "${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" -e "SHOW databases;"
 ----
 
 * Run mysqlcheck on the original DB to look for things that are not OK:
@@ -153,9 +153,9 @@ test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CO
 +
 ----
 oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
-    mysql -rsh "$PODIFIED_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
+    mysql -rsh "$PODIFIED_MARIADB_IP" -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
 oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
-    mysql -rsh "$PODIFIED_CELL1_MARIADB_IP" -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
+    mysql -rsh "$PODIFIED_CELL1_MARIADB_IP" -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
 ----
 
 == Procedure - data copy
@@ -173,71 +173,66 @@ ____
 * Create a dump of the original databases:
 +
 ----
-oc exec mariadb-copy-data -- bash -s <<'EOF'
-
-# Note Filter the information and performance schema tables
-# Gnocchi is no longer used as a metric store, skip dumping gnocchi database as well
-mysql -h ${SOURCE_MARIADB_IP} -u root "-p${SOURCE_DB_ROOT_PASSWORD}" -N -e 'show databases' | grep -E -v 'schema|mysql|gnocchi' | while read dbname; do
-    echo "Dumping \${dbname}"
-    mysqldump -h $SOURCE_MARIADB_IP -uroot "-p$SOURCE_DB_ROOT_PASSWORD" \
-        --single-transaction --complete-insert --skip-lock-tables --lock-tables=0 \
-        "\${dbname}" > /backup/"\${dbname}".sql
-done
-
+oc rsh mariadb-copy-data << EOF
+  mysql -h"${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" \
+  -N -e "show databases" | grep -E -v "schema|mysql|gnocchi" | \
+  while read dbname; do
+    echo "Dumping \${dbname}";
+    mysqldump -h"${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" \
+      --single-transaction --complete-insert --skip-lock-tables --lock-tables=0 \
+      "\${dbname}" > /backup/"\${dbname}".sql;
+   done
 EOF
 ----
 
 * Restore the databases from .sql files into the podified MariaDB:
 +
 ----
-# db schemas to rename on import
-declare -A db_name_map
-db_name_map["nova"]="nova_cell1"
-db_name_map["ovs_neutron"]="neutron"
-db_name_map["ironic-inspector"]="ironic_inspector"
+oc rsh mariadb-copy-data << EOF
+  # db schemas to rename on import
+  declare -A db_name_map
+  db_name_map['nova']='nova_cell1'
+  db_name_map['ovs_neutron']='neutron'
+  db_name_map['ironic-inspector']='ironic_inspector'
 
-# db servers to import into
-declare -A db_server_map
-db_server_map["default"]=${PODIFIED_MARIADB_IP}
-db_server_map["nova_cell1"]=${PODIFIED_CELL1_MARIADB_IP}
+  # db servers to import into
+  declare -A db_server_map
+  db_server_map['default']=${PODIFIED_MARIADB_IP}
+  db_server_map['nova_cell1']=${PODIFIED_CELL1_MARIADB_IP}
 
-# db server root password map
-declare -A db_server_password_map
-db_server_password_map["default"]=${PODIFIED_DB_ROOT_PASSWORD}
-db_server_password_map["nova_cell1"]=${PODIFIED_DB_ROOT_PASSWORD}
+  # db server root password map
+  declare -A db_server_password_map
+  db_server_password_map['default']=${PODIFIED_DB_ROOT_PASSWORD}
+  db_server_password_map['nova_cell1']=${PODIFIED_DB_ROOT_PASSWORD}
 
-all_db_files=$(oc exec mariadb-copy-data -- bash -c "ls /backup/*.sql")
-for db_file in ${all_db_files}; do
-    db_name=$(echo ${db_file} | awk -F'.' '{ print $1; }')
-    if [[ -v "db_name_map[${db_name}]" ]]; then
-        echo "renaming ${db_name} to ${db_name_map[${db_name}]}"
-        db_name=${db_name_map[${db_name}]}
+  cd /backup
+  for db_file in \$(ls *.sql); do
+    db_name=\$(echo \${db_file} | awk -F'.' '{ print \$1; }')
+    if [[ -v "db_name_map[\${db_name}]" ]]; then
+      echo "renaming \${db_name} to \${db_name_map[\${db_name}]}"
+      db_name=\${db_name_map[\${db_name}]}
     fi
-    db_server=${db_server_map["default"]}
-    if [[ -v "db_server_map[${db_name}]" ]]; then
-        db_server=${db_server_map[${db_name}]}
+    db_server=\${db_server_map["default"]}
+    if [[ -v "db_server_map[\${db_name}]" ]]; then
+      db_server=\${db_server_map[\${db_name}]}
     fi
-    db_password=${db_server_password_map["default"]}
-    if [[ -v "db_server_password_map[${db_name}]" ]]; then
-        db_password=${db_server_password_map[${db_name}]}
+    db_password=\${db_server_password_map['default']}
+    if [[ -v "db_server_password_map[\${db_name}]" ]]; then
+      db_password=\${db_server_password_map[\${db_name}]}
     fi
-    echo "creating ${db_name} in ${db_server}"
-    container_name=$(echo "mariadb-client-${db_name}-create" | sed 's/_/-/g')
-    sql_command="CREATE DATABASE IF NOT EXISTS ${db_name} DEFAULT CHARACTER SET ${CHARACTER_SET} DEFAULT COLLATE ${COLLATION};"
-    echo "SQL COMMAND: $sql_command"
-    oc run ${container_name} --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-        mysql -h "${db_server}" -uroot "-p${db_password}" << EOF
-$sql_command
-EOF
-    echo "importing ${db_name} into ${db_server}"
-    container_name=$(echo "mariadb-client-${db_name}-restore" | sed 's/_/-/g')
-    oc run ${container_name} --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-        mysql -h "${db_server}" -uroot "-p${db_password}" "${db_name}" < "${db_file}"
-done
-oc exec -it openstack-galera-0 -c galera -- mysql --user=root --password=${db_server_password_map["default"]} -e \
+    echo "creating \${db_name} in \${db_server}"
+    mysql -h"\${db_server}" -uroot "-p\${db_password}" -e \
+      "CREATE DATABASE IF NOT EXISTS \${db_name} DEFAULT \
+      CHARACTER SET ${CHARACTER_SET} DEFAULT COLLATE ${COLLATION};"
+    echo "importing \${db_name} into \${db_server}"
+    mysql -h "\${db_server}" -uroot "-p\${db_password}" "\${db_name}" < "\${db_file}"
+  done
+
+  mysql -h "\${db_server_map['default']}" -uroot -p"\${db_server_password_map['default']}" -e \
     "update nova_api.cell_mappings set name='cell1' where name='default';"
-oc exec -it openstack-cell1-galera-0 -c galera -- mysql --user=root --password=${db_server_password_map["default"]} -e \
+  mysql -h "\${db_server_map['nova_cell1']}" -uroot -p"\${db_server_password_map['nova_cell1']}" -e \
     "delete from nova_cell1.services where host not like '%nova-cell1-%' and services.binary != 'nova-compute';"
+EOF
 ----
 
 == Post-checks
@@ -288,7 +283,7 @@ diff -Z <(echo $novadb_svc_records) <(echo $PULL_OPENSTACK_CONFIGURATION_NOVA_CO
 related to the `restricted:latest` security context constraint. This is due to default security
 context constraints and will not prevent pod creation by the admission controller. You'll see a
 warning for the short-lived pod but it will not interfere with functionality.
-* Delete the ovn-data pod and persistent volume claim with OVN databases backup (consider making a snapshot of it, before deleting)
+* Delete the mariadb-data pod and mariadb-copy-data persistent volume claim with databases backup (consider making a snapshot of it, before deleting)
 
 ----
 oc delete pod mariadb-copy-data
