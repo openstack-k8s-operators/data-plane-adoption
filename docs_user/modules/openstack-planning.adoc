@@ -248,8 +248,9 @@ Specifically,
 - **<<_ipam_planning,IPAM configuration>>** will either be reused from the
   **existing** deployment or, depending on IP address availability in the
   existing allocation pools, **new** ranges will be defined to be used for the
-  new control plane services. If so, **IP routing** will be configured between
-  the old and new ranges.
+  new control plane services. If so, the new ranges will be configured on the
+  adopted nodes alongside the existing ranges, at least for the duration of the
+  adoption.
 - **<<_vlan_tags,VLAN tags>>** will be reused from the existing deployment.
 
 === Pulling configuration from the existing deployment
@@ -320,9 +321,6 @@ At the end of this process, you should have the following information:
 
 === IPAM planning
 
-// TODO: explain which IP addresses will change during adoption, and which will
-// stay the same.
-
 The new deployment model puts additional burden on the size of IP allocation
 pools available for OpenStack services. This is because each service deployed
 on OpenShift worker nodes will now require an IP address from the IPAM pool (in
@@ -375,7 +373,11 @@ Once you know the required IP pool size for the new deployment, you can choose
 one of the following scenarios to handle IPAM allocatio in the new environment.
 
 The first listed scenario is more general and implies using new IP ranges,
-while the second scenario implies reusing the existing ranges.
+while the second scenario implies reusing the existing ranges. The end state of
+the former scenario is deprovisioning of the old subnet IP addresses for
+control plane communication. The latter scenario will reuse existing IP
+addresses for adopted nodes, which may simplify network fabric configuration in
+some cases.
 
 ==== Scenario 1: Use new subnet ranges
 
@@ -385,22 +387,101 @@ addresses for the new control plane services.
 
 The general idea here is to define new IP ranges for control plane services
 that belong to a different subnet that was not used in the existing cluster.
-Then, configure IP routing between the old and new subnets to allow old and new
-service deployments to communicate.
+Then, add new IP addresses from the new range to each node in the adoption
+cluster, using TripleO mechanisms. Once this is done, the new control plane
+services will be able to communicate with the adopted cluster, and to deploy
+EDPM services via `OpenStackDataPlaneDeployment`.
 
 The new subnet should be sized appropriately to accommodate the new control
 plane services, but otherwise doesn't have any specific requirements as to the
 existing deployment allocation pools already consumed.
 
-// TODO: explain how routing between ranges can be configured.
+First, determine which new subnet range will be used for `ctlplane` network.
+Next, determine the subrange of the subnet that will be used for adopted nodes.
+For each node, write down the new subnet IP address. We'll configure it later.
 
-// TODO: example configurations.
+Once you have the mapping between the new subnet IP addresses and the nodes of
+the adopted cluster, it's time to configure these addresses, *in addition* to
+addresses already configured there. (Your adopted nodes will carry IP addresses
+in both subnets throughout the adoption process. You may remove the old
+addresses once the adoption is complete.)
+
+To add new IP addresses to the adopted nodes, you will need to re-run `tripleo
+deploy` with the new IP addresses added to network configuration. For example,
+you may add the following to `net_config.yaml`:
+
+```yaml
+network_config:
+  - type: ovs_bridge
+    name: br-ctlplane
+    addresses:
+    - ip_netmask: 192.168.1.100/24
+    - ip_netmask: 192.168.1.100/32
+    - ip_netmask: 172.16.1.100/24  # <-- new subnet
+    - ip_netmask: 172.16.1.100/32
+    ...
+```
+
+Make sure each node has a unique IP address in the new subnet configured. Then
+run `tripleo deploy` to apply the new configuration.
+
+Note that network configuration changes are not applied by default to avoid
+risk of network disruption. You will have to enforce the changes by setting the
+`StandaloneNetworkConfigUpdate: true` in the TripleO configuration files.
+
+Once `tripleo deploy` is complete, you should see new IP addresses configured
+for the `br-ctlplane` interface on the adopted nodes. You should now be able to
+ping and SSH to the adopted nodes using the new IP addresses. (As well as the
+old addresses, as usual.)
+
+During EDPM adoption, to retain connectivity for both the old and new IP
+addresses for all nodes, you will need to make sure that:
+
+- the new subnet IP addresses you allocated to each node are configured as
+  `fixedIP` in `OpenstackDataplaneNodeSet` CRs;
+- the old subnet IP addresses are added to each node as follows (assuming
+  `192.168.1.0/24` is the old subnet):
+
+```yaml
+        old_ctlplane_cidr: 24
+        edpm_network_config_template: |
+          ---
+          network_config:
+          - type: ovs_bridge
+            addresses:
+            - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
+            - ip_netmask: {{ old_ctlplane_ip }}/{{ old_ctlplane_cidr }}
+  nodes:
+    standalone:
+      ansible:
+        ansibleHost: 172.16.1.100
+        ansibleUser: ""
+        ansibleVars:
+          old_ctlplane_ip: 192.168.1.130
+
+```
+
+Also, expand SSH range for the firewall configuration to include both subnets:
+
+```yaml
+        edpm_sshd_allowed_ranges:
+        - 192.168.1.0/24
+        - 172.16.1.0/24
+```
+
+Note that examples are incomplete and should be incorporated into your general
+configuration.
+
+Once the adoption is complete, you may decide to remove the old IP addresses
+from the adopted nodes. To achieve this, you will modify
+`OpenstackDataplaneNodeSet` to exclude the old subnet addresses, then re-run
+EDPM deployment as usual.
 
 ==== Scenario 2: Reuse existing subnet ranges
 
 This scenario is only applicable when the existing subnet ranges have enough IP
 addresses for the new control plane services. On the other hand, it allows to
-avoid additional routing configuration between the old and new subnets, as in
+avoid new allocations and potential network fabric reconfiguration, as in
 <<_scenario_1_use_new_subnet_ranges,scenario 1>>.
 
 The general idea here is to instruct the new control plane services to use the
@@ -413,8 +494,7 @@ enough for the new control plane services. If not,
 <<_scenario_1_use_new_subnet_ranges,the first scenario>> should be used
 instead. Please consult <<_ipam_planning,IPAM planning>> for more details.
 
-No special routing configuration is required in this scenario; the only thing
-to pay attention to is to make sure that already consumed IP addresses don't
+In this scenario, pay attention that already consumed IP addresses don't
 overlap with the new allocation pools configured for OpenStack podified control
 services.
 
