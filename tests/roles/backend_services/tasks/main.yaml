@@ -27,6 +27,7 @@
     {% endif %}
     {% if ironic_password %}
         oc set data secret/osp-secret "IronicPassword={{ ironic_password }}"
+        oc set data secret/osp-secret "IronicInspectorPassword={{ ironic_password }}"
     {% endif %}
     {% if neutron_password %}
         oc set data secret/osp-secret "NeutronPassword={{ neutron_password }}"
