@@ -37,11 +37,11 @@ oc rsh mariadb-copy-data << EOF
       db_password=\${db_server_password_map[\${db_name}]}
     fi
     echo "creating \${db_name} in \${db_server}"
-    mysql -h"\${db_server}" -uroot "-p\${db_password}" -e \
+    mysql -h"\${db_server}" -uroot -p"\${db_password}" -e \
       "CREATE DATABASE IF NOT EXISTS \${db_name} DEFAULT \
       CHARACTER SET ${CHARACTER_SET} DEFAULT COLLATE ${COLLATION};"
     echo "importing \${db_name} into \${db_server}"
-    mysql -h "\${db_server}" -uroot "-p\${db_password}" "\${db_name}" < "\${db_file}"
+    mysql -h "\${db_server}" -uroot -p"\${db_password}" "\${db_name}" < "\${db_file}"
   done
 
   mysql -h "\${db_server_map['default']}" -uroot -p"\${db_server_password_map['default']}" -e \
