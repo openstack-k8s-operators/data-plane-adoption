@@ -159,6 +159,7 @@
         - validate-network
         - install-os
         - configure-os
+        - ssh-known-hosts
         - run-os
         - reboot-os
         - install-certs
@@ -174,9 +175,7 @@
       nodes: {{ edpm_nodes }}
       nodeTemplate:
         ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
-        managementNetwork: ctlplane
         ansible:
-          ansiblePort: 22
           ansibleUser: {{ edpm_user }}
           ansibleVars:
             os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
@@ -205,9 +204,7 @@
               rm -rf repo-setup-main
 
             # edpm_network_config
-            # Default nic config template for a EDPM compute node
-            # These vars are edpm_network_config role vars
-            edpm_network_config_override: ""
+            # nic config template for a EDPM compute node
             edpm_network_config_template: |
               {{ edpm_network_config_template| indent(10) }}
 
@@ -217,8 +214,6 @@
             # considered EDPM network defaults.
             neutron_physical_bridge_name: {{ neutron_physical_bridge_name }}
             neutron_public_interface_name: {{ neutron_public_interface_name }}
-            role_networks: {{ role_networks }}
-            networks_lower: {{ networks_lower }}
 
             # edpm_nodes_validation
             edpm_nodes_validation_validate_controllers_icmp: false
@@ -240,7 +235,6 @@
             edpm_sshd_allowed_ranges: {{ edpm_sshd_allowed_ranges }}
             # SELinux module
             edpm_selinux_mode: enforcing
-            plan: overcloud
 
             # Do not attempt OVS 3.2 major upgrades here
             edpm_ovs_packages:
