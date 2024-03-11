@@ -201,6 +201,32 @@ The secret `nova-cell<X>-compute-config` is auto-generated for each
 `cell<X>`. That secret, alongside `nova-migration-ssh-key`, should
 always be specified for each custom `OpenStackDataPlaneService` related to Nova.
 
+ifeval::["{build}" == "downstream"]
+* Create subscription-manager and redhat-registry secrets
++
+[source,yaml]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: subscription-manager
+data:
+  username: <base64 encoded subscription-manager username>
+  password: <base64 encoded subscription-manager password>
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redhat-registry
+data:
+  username: <base64 encoded registry username>
+  password: <base64 encoded registry password>
+EOF
+----
++
+endif::[]
+
 * Deploy OpenStackDataPlaneNodeSet:
 +
 Make sure that ovn-controller settings configured in the OpenStackDataPlaneNodeSet are the same as were set in the compute nodes before adoption.
@@ -265,6 +291,15 @@ spec:
     ansibleSSHPrivateKeySecret: dataplane-adoption-secret
     ansible:
       ansibleUser: root
+ifeval::["{build}" == "downstream"]
+      ansibleVarsFrom:
+      - prefix: subscription_manager_
+        secretRef:
+          name: subscription-manager
+      - prefix: registry_
+        secretRef:
+          name: redhat-registry
+endif::[]
       ansibleVars:
         service_net_map:
           nova_api_network: internalapi
@@ -356,7 +391,7 @@ ifeval::["{build}" == "upstream"]
 endif::[]
 ifeval::["{build}" == "downstream"]
         edpm_bootstrap_command: |
-          subscription-manager register --username <subscription_manager_username> --password <subscription_manager_password>
+          subscription-manager register --username {{ subscription_manager_username }} --password {{ subscription_manager_password }}
           subscription-manager release --set=9.2
           subscription-manager repos --disable=*
           subscription-manager repos --enable=rhel-9-for-x86_64-baseos-eus-rpms --enable=rhel-9-for-x86_64-appstream-eus-rpms --enable=rhel-9-for-x86_64-highavailability-eus-rpms --enable=openstack-17.1-for-rhel-9-x86_64-rpms --enable=fast-datapath-for-rhel-9-x86_64-rpms --enable=openstack-dev-preview-for-rhel-9-x86_64-rpms
@@ -364,7 +399,7 @@ ifeval::["{build}" == "downstream"]
           # here we only ensuring that decontainerized libvirt can start
           dnf -y upgrade openstack-selinux
           rm -f /run/virtlogd.pid
-          podman login -u <registry_username> -p <registry_password> registry.redhat.io
+          podman login -u {{ registry_username }} -p {{ registry_password }} registry.redhat.io
 endif::[]
 
         gather_facts: false
