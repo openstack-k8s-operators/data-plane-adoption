@@ -352,6 +352,11 @@ ifeval::["{build}" == "downstream"]
           subscription-manager release --set=9.2
           subscription-manager repos --disable=*
           subscription-manager repos --enable=rhel-9-for-x86_64-baseos-eus-rpms --enable=rhel-9-for-x86_64-appstream-eus-rpms --enable=rhel-9-for-x86_64-highavailability-eus-rpms --enable=openstack-17.1-for-rhel-9-x86_64-rpms --enable=fast-datapath-for-rhel-9-x86_64-rpms --enable=openstack-dev-preview-for-rhel-9-x86_64-rpms
+          # FIXME: perform dnf upgrade for other packages in EDPM ansible
+          # here we only ensuring that decontainerized libvirt can start
+          dnf -y upgrade openstack-selinux
+          rm -f /run/virtlogd.pid
+          restorecon -R /run/libvirt
           podman login -u <registry_username> -p <registry_password> registry.redhat.io
 endif::[]
 
