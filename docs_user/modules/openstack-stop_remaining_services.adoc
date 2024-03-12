@@ -77,6 +77,12 @@ for i in "${!computes[@]}"; do
     done
 done
 
+echo "Forcing stop of nova_virtlogd"
+for i in "${!computes[@]}"; do
+    SSH_CMD="ssh -i $EDPM_PRIVATEKEY_PATH root@${computes[$i]}"
+    ${SSH_CMD} sudo podman stop nova_virtlogd
+done
+
 echo "Stopping pacemaker services"
 for i in {1..3}; do
     SSH_CMD=CONTROLLER${i}_SSH
