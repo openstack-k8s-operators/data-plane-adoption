@@ -159,6 +159,7 @@ spec:
         enabled: true
       public:
         enabled: true
+
   barbican:
     enabled: false
     template:
