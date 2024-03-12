@@ -1,0 +1,59 @@
+- name: patch rootca-internal with cert and key from IPA
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    IPA_SSH="{{ ipa_ssh }}"
+    $IPA_SSH pk12util -o /tmp/freeipa.p12 -n 'caSigningCert\ cert-pki-ca' -d /etc/pki/pki-tomcat/alias -k /etc/pki/pki-tomcat/alias/pwdfile.txt -w /etc/pki/pki-tomcat/alias/pwdfile.txt
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openstack
+    ---
+    apiVersion: cert-manager.io/v1
+    kind: Issuer
+    metadata:
+      name: selfsigned-issuer
+      namespace: openstack
+    spec:
+      selfSigned: {}
+    ---
+    apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: rootca-internal
+      namespace: openstack
+    spec:
+      isCA: true
+      commonName: rootca-internal
+      secretName: rootca-internal
+      privateKey:
+        algorithm: RSA
+        size: 3072
+      issuerRef:
+        name: selfsigned-issuer
+    EOF
+
+    oc wait --for=condition=ready --timeout=60s -n openstack certificate rootca-internal
+    
+    oc patch secret rootca-internal -n openstack -p="{\"data\":{\"ca.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
+
+    oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
+
+    oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.key\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl rsa | base64 -w 0`\"}}"
+
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openstack
+    ---
+    apiVersion: cert-manager.io/v1
+    kind: Issuer
+    metadata:
+      name: rootca-internal
+      namespace: openstack
+    spec:
+      ca:
+        secretName: rootca-internal
+    EOF

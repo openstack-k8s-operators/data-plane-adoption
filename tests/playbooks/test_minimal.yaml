@@ -12,6 +12,9 @@
     - role: development_environment
       tags:
         - development_environment
+    - role: tls_adoption
+      tags:
+        - tls_adoption
     - role: backend_services
       tags:
         - backend_services
