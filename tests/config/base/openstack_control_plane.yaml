@@ -8,7 +8,7 @@ spec:
 
   tls:
     podLevel:
-      enabled: false
+      enabled: true
 
   barbican:
     enabled: false
