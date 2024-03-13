@@ -1,5 +1,5 @@
 #!/bin/bash
-# Try to stop a service , fail only when the service is present and doesn't stop correctly.
+# Disable and mask the service on the Computes.
 service=$1
 
 cat << EOF > ~/disable_service.yaml
