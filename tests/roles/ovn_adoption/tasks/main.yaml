@@ -73,6 +73,17 @@
 
     oc apply -f - <<EOF
     ---
+    apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: ovn-data-cert
+      namespace: openstack
+    spec:
+      commonName: ovn-data-cert
+      secretName: ovn-data-cert
+      issuerRef:
+        name: rootca-internal
+    ---
     apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:
@@ -104,6 +115,9 @@
         volumeMounts:
         - mountPath: /backup
           name: ovn-data
+        - mountPath: /etc/pki/tls/misc
+          name: ovn-data-cert
+          readOnly: true
       securityContext:
         allowPrivilegeEscalation: false
         capabilities:
@@ -115,6 +129,9 @@
       - name: ovn-data
         persistentVolumeClaim:
           claimName: ovn-data
+      - name: ovn-data-cert
+        secret:
+          secretName: ovn-data-cert
     EOF
   changed_when: true
   notify: delete adoption helper pod and pvc
@@ -140,7 +157,7 @@
     $CONTROLLER2_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
     $CONTROLLER3_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
 
-- name: dump OVN databases
+- name: dump OVN databases using tcp connection
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -149,6 +166,18 @@
 
     oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
     oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
+  when: enable_tlse|bool is false
+
+- name: dump OVN databases using ssl connection
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    oc exec ovn-copy-data -- bash -c "ovsdb-client backup --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
+    oc exec ovn-copy-data -- bash -c "ovsdb-client backup --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
+  when: enable_tlse|bool
 
 - name: upgrade OVN databases to the latest schema from podified ovsdb-servers
   no_log: "{{ use_no_log }}"
