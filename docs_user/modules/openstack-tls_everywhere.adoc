@@ -27,11 +27,11 @@ In this example the FreeIPA instance is running on a separate host, in a contain
 === Exporting from FreeIPA
 
 There are a couple of ways to do it:
+
 1. You can copy the certificate from the `/etc/pki/pki-tomcat/alias` directory. The file is named `ca.crt`.
 2. You can interact with the database located in the `/etc/pki/pki-tomcat/alias` directory ("*db" files).
 
 ==== Locating the CA certificate and key
-
 
 List all the certificates inside your NSSDB:
 
@@ -80,7 +80,6 @@ You will have to create two YAML files. The first one has three sections:
 
 Let's apply the following YAML file to create the corresponding CRs:
 
-+
 [source,yaml]
 ----
 oc apply -f - <<EOF
@@ -135,7 +134,6 @@ oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.key\": \"`$IPA
 
 Now create the cert-manager Issuer, referencing the created secret:
 
-+
 [source, yaml]
 ----
 oc apply -f - <<EOF
@@ -166,3 +164,36 @@ oc get issuers -n openstack
 ----
 oc get secret rootca-internal -n openstack -o yaml
 ----
+
+== Stop and disable certmonger, and remove the existing certificates
+
+The final step on this activity is to stop and disable the certmonger service, and remove all certificates managed by it. The code below accomplishes this task:
+
+[source, bash]
+----
+#!/bin/bash
+
+if sudo systemctl is-active certmonger.service; then
+    echo "Stopping certmonger..."
+    sudo systemctl stop certmonger.service
+    echo "Disabling certmonger..."
+    sudo systemctl disable --now certmonger.service
+fi
+
+# If necessary, adjust the directory below accordingly.
+certs_directory=/var/lib/certmonger/requests/
+certs_to_stop=$(ls -1 $certs_directory)
+number_of_certs=$(ls -1 $certs_directory | wc -l)
+
+if [ $? != 0 ] || [ $number_of_certs = 0 ]; then
+    echo "No certificates to be removed."
+else
+    echo "There is/are $number_of_certs certificates to be removed. Removing certificates..."
+fi
+
+while IFS= read -r cert; do
+    echo "Removing $cert..."
+    rm -f $cert
+done <<< "$certs_to_stop"
+----
+
