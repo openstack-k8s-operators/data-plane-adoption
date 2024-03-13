@@ -1,6 +1,6 @@
 [id="planning-the-new-deployment_{context}"]
 
-//:context: planning 
+//:context: planning
 
 //kgilliga: This module will be converted to an assembly. Check xref contexts.
 
@@ -372,7 +372,8 @@ advised to plan for some extra capacity, for each of the allocation pools used
 in the new environment.
 
 Once you know the required IP pool size for the new deployment, you can choose
-one of the following scenarios to handle IPAM allocatio in the new environment.
+one of the following scenarios to handle IPAM allocation in the new
+environment.
 
 The first listed scenario is more general and implies using new IP ranges,
 while the second scenario implies reusing the existing ranges.
@@ -632,7 +633,7 @@ For example,
   kind: IPAddressPool
   spec:
     addresses:
-    - 172.17.0.65-172.17.0.64
+    - 172.17.0.60-172.17.0.64
     - 172.17.0.66-172.17.0.70
 ```
 
