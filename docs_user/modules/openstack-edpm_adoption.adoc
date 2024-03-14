@@ -306,6 +306,7 @@ spec:
           Tenant: tenant
 
         # edpm_nodes_validation
+        edpm_nodes_validation_validate_fqdn: true
         edpm_nodes_validation_validate_controllers_icmp: false
         edpm_nodes_validation_validate_gateway_icmp: false
 
