@@ -70,7 +70,10 @@ ServicesToStart=("tripleo_horizon.service"
                  "tripleo_ceilometer_agent_notification.service"
                  "tripleo_ovn_cluster_northd.service")
 
-PacemakerResourcesToStart=("openstack-cinder-volume"
+PacemakerResourcesToStart=("galera-bundle"
+                           "haproxy-bundle"
+                           "rabbitmq-bundle"
+                           "openstack-cinder-volume"
                            "openstack-cinder-backup"
                            "openstack-manila-share")
 
