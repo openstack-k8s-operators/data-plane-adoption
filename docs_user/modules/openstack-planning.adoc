@@ -650,8 +650,18 @@ interfaces. Since EDPM nodes are not OpenShift nodes, a different approach to
 configure their network connectivity is used.
 
 Instead, EDPM nodes are configured by `dataplane-operator` and its CRs. The CRs
-define desired network configuration for the nodes. In case of adoption, the
-configuration should reflect the existing network setup.
+define desired network configuration for the nodes.
+
+In case of adoption, the configuration should reflect the existing network
+setup. You should be able to pull `net_config.yaml` files from each node and
+reuse it when defining `OpenstackDataplaneNodeSet`. The format of the
+configuration hasn't changed (`os-net-config` is still being used under the
+hood), so you should be able to put network templates under
+`edpm_network_config_template` variables (either common for all nodes, or
+per-node).
+
+To make sure the latest network configuration is used during EDPM adoption, you
+should also set `edpm_network_config_update: true` in the `nodeTemplate`.
 
 You will proceed with <<adopting-edpm_openstack-adoption,EDPM adoption
 process>> once the OpenStack podified control plane is deployed in the
