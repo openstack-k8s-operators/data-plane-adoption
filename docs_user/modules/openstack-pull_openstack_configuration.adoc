@@ -14,7 +14,12 @@ just illustrative, use values that are correct for your environment:
 [,bash]
 ----
 CONTROLLER_SSH="ssh -F ~/director_standalone/vagrant_ssh_config vagrant@standalone"
+ifeval::["{build}" == "upstream"]
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
+endif::[]
+ifeval::["{build}" == "downstream"]
+MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
+endif::[]
 SOURCE_MARIADB_IP=192.168.122.100
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 ----
