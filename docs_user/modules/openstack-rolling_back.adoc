@@ -136,6 +136,17 @@ for i in {1..3}; do
 done
 ----
 
+If the Ceph NFS service is running on the deployment as a OpenStack Manila
+backend, you must restore the pacemaker ordering and colocation constraints
+involving the "openstack-manila-share" service:
+
+---
+
+sudo pcs constraint order start ceph-nfs then openstack-manila-share kind=Optional id=order-ceph-nfs-openstack-manila-share-Optional
+sudo pcs constraint colocation add openstack-manila-share with ceph-nfs score=INFINITY id=colocation-openstack-manila-share-ceph-nfs-INFINITY
+
+---
+
 Now you can verify that the source cloud is operational again, e.g. by
 running `openstack` CLI commands or using the Horizon Dashboard.
 
