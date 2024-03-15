@@ -1,0 +1,420 @@
+[id="migrating-ceph-monitoring_{context}"]
+
+//:context: migrating-ceph-monitoring
+//kgilliga: This module might be converted to an assembly.
+
+= Migrating Ceph Monitoring Stack
+
+In the context of data plane adoption, where the OpenStack services are
+redeployed in OpenShift, a TripleO-deployed Ceph cluster will undergo a
+migration in a process we are calling “externalizing” the Ceph cluster.
+There are two deployment topologies, broadly, that include an “internal” Ceph
+cluster today: one is where OpenStack includes dedicated Storage nodes to host
+OSDs, and the other is Hyperconverged Infrastructure (HCI) where Compute nodes
+double up as Storage nodes. In either scenario, there are some Ceph processes
+that are deployed on OpenStack Controller nodes: Ceph monitors, rgw, rdb, mds,
+ceph dashboard and nfs-ganesha.
+The Ceph Dashboard module adds web-based monitoring and administration to the
+Ceph Manager.
+With director deployed Ceph this component is enabled as part of the overcloud
+deploy and it’s composed by:
+
+- Ceph mgr module
+- Grafana
+- Prometheus
+- Alertmanager
+- Node exporter
+
+The Ceph Dashboard containers are included via `tripleo-container-image-prepare`
+parameters and the high availability relies on `Haproxy` and `Pacemaker`
+deployed on the OpenStack front.
+For an external Ceph cluster, High availability is not supported and the work
+is tracked in the https://bugzilla.redhat.com/show_bug.cgi?id=1902212[associated RHCS bugzilla].
+The goal of this procedure is to migrate and relocate the Ceph Monitoring
+components to free controller nodes.
+
+
+== Requirements
+
+For this procedure, we assume that we are beginning with a OpenStack based on
+Wallaby and a Ceph Reef deployment managed by TripleO.
+We assume that:
+
+* Ceph has been upgraded to Reef and is managed by cephadm/orchestrator
+* Both the Ceph public and cluster networks are propagated, via TripleO, to the
+  target nodes
+
+== Gather the current status of the Monitoring stack
+
+Before starting the relocation of the monitoring stack components, verify that
+the hosts have no `monitoring` label (or `grafana`, `prometheus`, `alertmanager`
+in case of a per daemons placement evaluation) associated.
+The entire relocation process is driven by cephadm and relies on **labels** to be
+assigned to the target nodes, where the daemons are scheduled. Make sure to
+review the https://access.redhat.com/articles/1548993[cardinality matrix]
+before assigning labels and choose carefully the nodes where the monitoring
+stack components should be scheduled on.
+
+
+[source,bash]
+----
+[tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls
+
+HOST                    	ADDR       	LABELS                 	STATUS
+cephstorage-0.redhat.local  192.168.24.11  osd mds
+cephstorage-1.redhat.local  192.168.24.12  osd mds
+cephstorage-2.redhat.local  192.168.24.47  osd mds
+controller-0.redhat.local   192.168.24.35  _admin mon mgr
+controller-1.redhat.local   192.168.24.53  mon _admin mgr
+controller-2.redhat.local   192.168.24.10  mon _admin mgr
+6 hosts in cluster
+----
+
+In addition, double check the cluster is healthy and both `ceph orch ls` and
+`ceph orch ps` return the expected number of deployed daemons.
+
+== Review and update the container image registry
+
+If the Ceph externalization procedure is executed **after** the Openstack control
+plane has been migrated, it’s important to consider updating the container
+images referenced in the Ceph cluster config. The current container images
+point to the undercloud registry, and it might be no longer available. As the
+undercloud won’t be available in the future, replace the undercloud provided
+images with an alternative registry.
+In case the desired option is to rely on the https://github.com/ceph/ceph/blob/reef/src/cephadm/cephadm.py#L48[default images]
+shipped by cephadm, remove the following config options from the Ceph cluster.
+
+
+[source,bash]
+----
+$ ceph config dump
+...
+...
+ifeval::["{build}" == "upstream"]
+mgr   advanced  mgr/cephadm/container_image_alertmanager    undercloud-0.ctlplane.redhat.local:8787/ceph/alertmanager:v0.25.0
+mgr   advanced  mgr/cephadm/container_image_base            undercloud-0.ctlplane.redhat.local:8787/ceph/ceph:v18
+mgr   advanced  mgr/cephadm/container_image_grafana         undercloud-0.ctlplane.redhat.local:8787/ceph/ceph-grafana:9.4.7
+mgr   advanced  mgr/cephadm/container_image_node_exporter   undercloud-0.ctlplane.redhat.local:8787/ceph/node-exporter:v1.5.0
+mgr   advanced  mgr/cephadm/container_image_prometheus      undercloud-0.ctlplane.redhat.local:8787/ceph/prometheus:v2.43.0
+endif::[]
+ifeval::["{build}" == "downstream"]
+mgr   advanced  mgr/cephadm/container_image_alertmanager    undercloud-0.ctlplane.redhat.local:8787/rh-osbs/openshift-ose-prometheus-alertmanager:v4.10
+mgr   advanced  mgr/cephadm/container_image_base            undercloud-0.ctlplane.redhat.local:8787/rh-osbs/rhceph
+mgr   advanced  mgr/cephadm/container_image_grafana         undercloud-0.ctlplane.redhat.local:8787/rh-osbs/grafana:latest
+mgr   advanced  mgr/cephadm/container_image_node_exporter   undercloud-0.ctlplane.redhat.local:8787/rh-osbs/openshift-ose-prometheus-node-exporter:v4.10
+mgr   advanced  mgr/cephadm/container_image_prometheus      undercloud-0.ctlplane.redhat.local:8787/rh-osbs/openshift-ose-prometheus:v4.10
+endif::[]
+----
+
+Remove the undercloud Container Images
+
+
+[source,bash]
+----
+# remove the base image
+cephadm shell -- ceph config rm mgr mgr/cephadm/container_image_base
+# remove the undercloud images associated to the monitoring
+# stack components
+for i in prometheus grafana alertmanager node_exporter; do
+    cephadm shell -- ceph config rm mgr mgr/cephadm/container_image_$i
+done
+----
+
+=== Note
+
+In the example above, in addition to the monitoring stack related
+container images, we update the config entry related to the
+container_image_base. This has an impact on all the Ceph daemons that rely on
+the undercloud images.
+New daemons will be deployed using the new/default Ceph image.
+
+
+== Migrate Monitoring Stack to the target nodes
+
+The migration procedure relies on nodes re-labeling: this kind of action,
+combined with an update in the existing spec, results in the daemons'
+relocation on the target nodes.
+
+Before start this process, a few considerations are required:
+
+- there’s no need to migrate node exporters: these daemons are deployed across
+the nodes that are part of the Ceph cluster (placement is ‘*’), and  we’re
+going to lose metrics as long as the controller nodes are not part of the ceph
+cluster anymore
+
+- each monitoring stack component is bound to specific ports that TripleO is
+supposed to open beforehand; make sure to double check the firewall rules are
+in place and the ports are opened for a given monitoring stack service
+
+
+== Extend the monitoring label to the target nodes
+
+Depending on the target nodes and the number of deployed/active daemons, it is
+possible to either relocate the existing containers to the target nodes, or
+select a subset of nodes that are supposed to host the monitoring stack
+daemons. As we mentioned in the previous section, HA is not supported, hence
+reducing the placement with `count: 1` is a reasonable solution and allows to
+successfully migrate the existing daemons in an HCI (or HW limited) scenario
+without impacting other services.
+However, it is still possible to put in place a dedicated HA solution and
+realize a component that is consistent with the TripleO model to reach HA.
+Building and deployment such HA model is out of scope for this procedure.
+
+
+=== Scenario 1: migrate the existing daemons to the target nodes
+
+
+Assuming we have 3 CephStorage nodes or ComputeHCI, this scenario extends the
+“monitoring” labels to all the CephStorage (or ComputeHCI) nodes that are part
+of the cluster. This means that we keep the count: 3 placements for the target
+nodes . This scenario is not recommended as we already know that any form of HA
+is not supported for an external Ceph cluster.
+
+[source,bash]
+----
+for item in $(sudo cephadm shell --  ceph orch host ls --format json | jq -r '.[].hostname'); do
+    sudo cephadm shell -- ceph orch host label add  $item monitoring; 
+done
+----
+
+Verify all the (three) hosts have the monitoring label:
+
+[source,bash]
+----
+[tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls
+
+HOST                        ADDR           LABELS
+cephstorage-0.redhat.local  192.168.24.11  osd monitoring
+cephstorage-1.redhat.local  192.168.24.12  osd monitoring
+cephstorage-2.redhat.local  192.168.24.47  osd monitoring
+controller-0.redhat.local   192.168.24.35  _admin mon mgr monitoring
+controller-1.redhat.local   192.168.24.53  mon _admin mgr monitoring
+controller-2.redhat.local   192.168.24.10  mon _admin mgr monitoring
+----
+
+Remove the labels from the controller nodes
+
+[source,bash]
+----
+$ for i in 0 1 2; do ceph orch host label rm "controller-$i.redhat.local" monitoring; done
+
+Removed label monitoring from host controller-0.redhat.local
+Removed label monitoring from host controller-1.redhat.local
+Removed label monitoring from host controller-2.redhat.local
+----
+
+
+=== Scenario 2: reduce `count` to 1 and migrate the existing daemons to the target nodes
+
+Instead of adding a single `monitoring` label to all the target nodes, it is
+possible to relocate one instance of each monitoring stack daemon on a
+particular node.
+For example, assuming we have three target nodes, we can target each of them to
+host a particular daemon instance:
+
+
+[source,bash]
+----
+[tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls | grep -i cephstorage
+
+HOST                        ADDR           LABELS
+cephstorage-0.redhat.local  192.168.24.11  osd ---> grafana
+cephstorage-1.redhat.local  192.168.24.12  osd ---> prometheus
+cephstorage-2.redhat.local  192.168.24.47  osd ---> alertmanager
+----
+
+As per the example above, add the appropriate labels to the target nodes:
+
+[source,bash]
+----
+declare -A target_nodes
+
+target_nodes[grafana]=cephstorage-0
+target_nodes[prometheus]=cephstorage-1
+target_nodes[alertmanager]=cephstorage-2
+
+for label in "${!target_nodes[@]}"; do
+    ceph orch host label add ${target_nodes[$label]} $label
+done
+----
+
+Verify the labels are properly applied to the target nodes:
+
+[source,bash]
+----
+[tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls | grep -i cephstorage
+
+HOST                    	ADDR       	LABELS          	STATUS
+cephstorage-0.redhat.local  192.168.24.11  osd grafana
+cephstorage-1.redhat.local  192.168.24.12  osd prometheus
+cephstorage-2.redhat.local  192.168.24.47  osd alertmanager
+----
+
+== Dump the current monitoring stack spec
+
+
+[source,bash]
+----
+function export_spec {
+    local component="$1"
+    local target_dir="$2"
+    sudo cephadm shell -- ceph orch ls --export "$component" > "$target_dir/$component"
+}
+
+SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+for m in grafana prometheus alertmanager; do
+    export_spec "$m" "$SPEC_DIR"
+done
+----
+
+For each daemon, edit the current spec and replace the placement/hosts section
+with the placement/label section, for example, in case Scenario 1 is the
+adopted approach:
+
+[source,yaml]
+----
+service_type: grafana
+service_name: grafana
+placement:
+  label: monitoring
+networks:
+- 172.17.3.0/24
+spec:
+  port: 3100
+----
+
+Otherwise, if **Scenario 2**  represents the desired solution, we expect to see
+an output like the following:
+
+[source,yaml]
+----
+service_type: grafana
+service_name: grafana
+placement:
+  label: grafana
+networks:
+- 172.17.3.0/24
+spec:
+  port: 3100
+----
+
+The same procedure applies to prometheus and alertmanager specs.
+
+== Apply the new monitoring spec to relocate the monitoring stack daemons:
+
+[source,bash]
+----
+SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+function migrate_daemon {
+    local component="$1"
+    local target_dir="$2"
+    sudo cephadm shell -m "$target_dir" -- ceph orch apply -i /mnt/ceph_specs/$component
+}
+for m in grafana prometheus alertmanager; do
+    migrate_daemon  "$m" "$SPEC_DIR"
+done
+----
+
+The command above results in the Ceph monitoring stack daemons migration.
+Verify the daemons have been deployed on the expected nodes:
+
+[source,bash]
+----
+[ceph: root@controller-0 /]# ceph orch ps | grep -iE "(prome|alert|grafa)"
+alertmanager.cephstorage-2  cephstorage-2.redhat.local  172.17.3.144:9093,9094
+grafana.cephstorage-0       cephstorage-0.redhat.local  172.17.3.83:3100
+prometheus.cephstorage-1    cephstorage-1.redhat.local  172.17.3.53:9092
+----
+
+=== Notes
+
+With the procedure described above we lose High Availability: the monitoring
+stack daemons have no  VIP and haproxy anymore; Node exporters are still
+running on all the nodes: instead of using labels we keep the current approach
+as we want to not reduce the monitoring space covered.
+
+
+== Update the Ceph Dashboard mgr config
+
+An important aspect that should be considered at this point is to replace and
+verify that the Ceph config is aligned with the relocation we just made. Run
+the `ceph config dump` command and review the current config.
+In particular we focus on the following config entries:
+
+[source,bash]
+----
+mgr  advanced  mgr/dashboard/ALERTMANAGER_API_HOST  http://172.17.3.83:9093
+mgr  advanced  mgr/dashboard/GRAFANA_API_URL        https://172.17.3.144:3100
+mgr  advanced  mgr/dashboard/PROMETHEUS_API_HOST    http://172.17.3.83:9092
+mgr  advanced  mgr/dashboard/controller-0.ycokob/server_addr  172.17.3.33
+mgr  advanced  mgr/dashboard/controller-1.lmzpuc/server_addr  172.17.3.147
+mgr  advanced  mgr/dashboard/controller-2.xpdgfl/server_addr  172.17.3.138
+----
+
+Verify that `grafana`, `alertmanager` and `prometheus` `API_HOST/URL` point to
+the IP addresses (on the storage network) of the node where each daemon has been
+relocated. This should be automatically addressed by cephadm and it shouldn’t
+require any manual action.
+
+[source,bash]
+----
+[ceph: root@controller-0 /]# ceph orch ps | grep -iE "(prome|alert|grafa)"
+alertmanager.cephstorage-0  cephstorage-0.redhat.local  172.17.3.83:9093,9094
+alertmanager.cephstorage-1  cephstorage-1.redhat.local  172.17.3.53:9093,9094
+alertmanager.cephstorage-2  cephstorage-2.redhat.local  172.17.3.144:9093,9094
+grafana.cephstorage-0       cephstorage-0.redhat.local  172.17.3.83:3100
+grafana.cephstorage-1       cephstorage-1.redhat.local  172.17.3.53:3100
+grafana.cephstorage-2       cephstorage-2.redhat.local  172.17.3.144:3100
+prometheus.cephstorage-0    cephstorage-0.redhat.local  172.17.3.83:9092
+prometheus.cephstorage-1    cephstorage-1.redhat.local  172.17.3.53:9092
+prometheus.cephstorage-2    cephstorage-2.redhat.local  172.17.3.144:9092
+----
+
+
+[source,bash]
+----
+[ceph: root@controller-0 /]# ceph config dump 
+...
+...
+mgr  advanced  mgr/dashboard/ALERTMANAGER_API_HOST   http://172.17.3.83:9093
+mgr  advanced  mgr/dashboard/PROMETHEUS_API_HOST     http://172.17.3.83:9092
+mgr  advanced  mgr/dashboard/GRAFANA_API_URL         https://172.17.3.144:3100
+----
+
+
+=== Note
+
+The **Ceph dashboard** (mgr module plugin) has not been impacted at all by this
+relocation. The service is provided by the Ceph Mgr daemon, hence we might
+experience an impact when the active mgr is migrated or is force-failed.
+However, having three replicas definition allows to redirect requests to a
+different instance (it’s still an A/P model), hence the impact should be
+limited. When the RBD migration is over, the following Ceph config keys must
+be regenerated to point to the right mgr container:
+
+[source,bash]
+----
+mgr    advanced  mgr/dashboard/controller-0.ycokob/server_addr  172.17.3.33
+mgr    advanced  mgr/dashboard/controller-1.lmzpuc/server_addr  172.17.3.147
+mgr    advanced  mgr/dashboard/controller-2.xpdgfl/server_addr  172.17.3.138
+----
+
+
+[source,bash]
+----
+$ sudo cephadm shell
+$ ceph orch ps | awk '/mgr./ {print $1}'
+----
+
+and for each retrieved mgr, update the entry in the Ceph config:
+
+[source,bash]
+----
+$ ceph config set mgr mgr/dashboard/<>/server_addr/<ip addr>
+----
+
+== Useful resources
+
+* https://docs.ceph.com/en/reef/monitoring[ceph - monitoring]
+* https://docs.ceph.com/en/reef/mgr/dashboard[ceph-mgr - dashboard]
+* https://docs.ceph.com/en/reef/mgr/dashboard/#ssl-tls-support[ceph-dashboard - tls]
