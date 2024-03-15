@@ -20,7 +20,7 @@ ____
 
 == Variables
 
-Define the shell variables used in the Fast-forward upgrade steps below.
+Define the shell variables used in the fast-forward upgrade steps below.
 Set `FIP` to the floating IP address of the `test` VM pre-created earlier on the source cloud.
 Define the map of compute node name, IP pairs.
 The values are just illustrative, use values that are correct for your environment:
