@@ -166,7 +166,7 @@
     metadata:
       name: openstack
     spec:
-      tlsEnabled: false
+      tlsEnabled: {{ enable_tlse }}
       networkAttachments:
         - ctlplane
       preProvisioned: true
