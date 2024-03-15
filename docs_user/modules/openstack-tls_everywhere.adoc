@@ -149,6 +149,8 @@ kind: Issuer
 metadata:
   name: rootca-internal
   namespace: openstack
+  labels:
+    osp-rootca-issuer-internal: ""
 spec:
   ca:
     secretName: rootca-internal
