@@ -17,7 +17,6 @@
           route: {}
         template:
           databaseInstance: openstack
-          databaseUser: barbican
           rabbitMqClusterName: rabbitmq
           secret: osp-secret
           simpleCryptoBackendSecret: osp-secret
