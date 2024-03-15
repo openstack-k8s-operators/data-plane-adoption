@@ -1,0 +1,15 @@
+ifdef::context[:parent-context: {context}]
+
+[id="swift-migration_{context}"]
+
+= Object Storage data migration
+
+:context: swift-migration
+
+:toc: left
+:toclevels: 3
+
+include::../modules/openstack-swift_migration.adoc[leveloffset=+1]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]
