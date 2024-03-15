@@ -246,6 +246,7 @@ spec:
       route: {}
     template:
       databaseInstance: openstack
+      databaseAccount: manila
       secret: osp-secret
       manilaAPI:
         replicas: 3
