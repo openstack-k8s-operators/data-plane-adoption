@@ -18,7 +18,9 @@ _Disclaimer: the below steps were reproduced on a FreeIPA 4.10.1 server. The loc
 
 Define the shell variables used in the following steps. The values are illustrative and refer to a single node standalone director deployment. Use values that are correct for your environment:
 
+----
 IPA_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 podman exec -ti freeipa-server-container"
+----
 
 In this example the FreeIPA instance is running on a separate host, in a container.
 
@@ -67,7 +69,7 @@ With that file on hand, we can separately get the certificate and the key, using
 The key length is another important property. You will need it below, when crafting one of the YAML files that will be used to provision the new custom resources. You can get it with:
 
 ----
-$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl rsa -text -noout | awk -F'[^0-9]+' '{ print $2; exit }'
+KEY_LENGTH=`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl rsa -text -noout | awk -F'[^0-9]+' '{ print $2; exit }'`
 ----
 
 ==== Importing the Items and Provisioning the Custom Resources (CRs) on OpenShift
@@ -107,7 +109,7 @@ spec:
   secretName: rootca-internal
   privateKey:
     algorithm: RSA
-    size: 3072
+    size: $KEY_LENGTH
   issuerRef:
     name: selfsigned-issuer
 EOF
