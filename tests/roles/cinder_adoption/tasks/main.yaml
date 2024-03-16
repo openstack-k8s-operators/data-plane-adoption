@@ -10,6 +10,7 @@
           route: {}
         template:
           databaseInstance: openstack
+          databaseAccount: cinder
           secret: osp-secret
           cinderAPI:
             override:

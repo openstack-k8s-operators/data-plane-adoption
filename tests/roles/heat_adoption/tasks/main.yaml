@@ -22,6 +22,7 @@
           route: {}
         template:
           databaseInstance: openstack
+          databaseAccount: heat
           secret: osp-secret
           memcachedInstance: memcached
           passwordSelectors:
