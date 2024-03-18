@@ -16,6 +16,10 @@ test-with-ceph:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) tests/playbooks/test_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
 
+test-swift-migration: TEST_OUTFILE := tests/logs/test_swift_migration_out_$(shell date +%FT%T%Z).log
+test-swift-migration:
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) tests/playbooks/test_swift_migration.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 ### DOCS ###
 

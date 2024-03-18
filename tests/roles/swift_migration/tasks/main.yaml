@@ -1,0 +1,105 @@
+- name: setup nameserver on standalone node
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    CONTROLLER1_SSH="{{ controller1_ssh }}"
+    echo "nameserver $(oc get service dnsmasq-dns -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" | $CONTROLLER1_SSH tee /etc/resolv.conf
+
+- name: run swift-dispersion-populate
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-dispersion-populate'
+
+- name: start swift-storage instances
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge -p='{"spec":{"swift":{"template":{"swiftStorage":{"replicas": 3}}}}}'
+
+- name: wait until all pods are ready
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    oc wait pods --for condition=Ready -l component=swift-storage
+
+- name: set standalone node weight to 0 in swift rings
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
+    swift-ring-tool get
+    swift-ring-tool drain 172.20.0.100
+    swift-ring-tool forced_rebalance
+    swift-ring-tool push'
+
+- name: push rings to standalone and restart swift services
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    CONTROLLER1_SSH="{{ controller1_ssh }}"
+    oc extract --confirm cm/swift-ring-files
+    $CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
+    $CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
+
+- name: wait until all replicas are 100% available after first rebalance
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    timeout 900s bash -c 'until oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report" | grep -q "100.00% of object copies found" ; do sleep 60; done'
+
+- name: rebalance rings second time
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
+    swift-ring-tool get
+    swift-ring-tool forced_rebalance
+    swift-ring-tool push'
+
+- name: push rings to standalone and restart swift services
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    CONTROLLER1_SSH="{{ controller1_ssh }}"
+    oc extract --confirm cm/swift-ring-files
+    $CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
+    $CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
+
+- name: wait until all replicas are 100% available after second rebalance
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    timeout 900s bash -c 'until oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report" | grep -q "100.00% of object copies found" ; do sleep 60; done'
+
+- name: rebalance rings third time
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
+    swift-ring-tool get
+    swift-ring-tool forced_rebalance
+    swift-ring-tool push'
+
+- name: push rings to standalone and restart swift services
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    CONTROLLER1_SSH="{{ controller1_ssh }}"
+    oc extract --confirm cm/swift-ring-files
+    $CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
+    $CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
+
+- name: wait until all replicas are 100% available after third rebalance
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    timeout 900s bash -c 'until oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report" | grep -q "100.00% of object copies found" ; do sleep 60; done'
+
+- name: wait until /srv/node on standalone is drained
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    CONTROLLER1_SSH="{{ controller1_ssh }}"
+    $CONTROLLER1_SSH "timeout 900s bash -c 'while \$(find /srv/node/ -type f -name \"*.db\" -o -name \"*.data\" | grep -q \".\"); do sleep 5; done'"
+
+- name: remove standalone node from rings
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    CONTROLLER1_SSH="{{ controller1_ssh }}"
+    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
+    swift-ring-tool get
+    swift-ring-tool remove 172.20.0.100
+    swift-ring-tool rebalance
+    swift-ring-tool push'

@@ -1,0 +1,11 @@
+- name: Swift migration
+  hosts: local
+  gather_facts: false
+  force_handlers: true
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  roles:
+    - role: swift_migration
+      tags:
+        - swift_migration
