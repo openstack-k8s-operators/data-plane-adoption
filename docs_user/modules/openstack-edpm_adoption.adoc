@@ -260,7 +260,6 @@ spec:
     - configure-os
     - ssh-known-hosts
     - run-os
-    - reboot-os
     - install-certs
     - libvirt
     - nova-compute-extraconfig
