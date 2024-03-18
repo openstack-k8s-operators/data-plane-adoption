@@ -33,7 +33,7 @@ We assume that:
 Before starting the MDS migration, verify the Ceph cluster is healthy and gather
 some information of the MDS status.
 
-[,bash]
+[source,bash]
 ----
 [ceph: root@controller-0 /]# ceph fs ls
 name: cephfs, metadata pool: manila_metadata, data pools: [manila_data ]
@@ -44,6 +44,7 @@ cephfs:1 {0=mds.controller-2.oebubl=up:active} 2 up:standby
 [ceph: root@controller-0 /]# ceph fs status cephfs
 
 cephfs - 0 clients
+======
 RANK  STATE         	MDS           	ACTIVITY 	DNS	INOS   DIRS   CAPS
  0	active  mds.controller-2.oebubl  Reqs:	0 /s   696	196	173  	0
   	POOL     	TYPE 	USED  AVAIL
@@ -58,7 +59,7 @@ MDS version: ceph version 17.2.6-100.el9cp (ea4e3ef8df2cf26540aae06479df031dcfc8
 Eventually, using the `ceph fs dump` command, we can retrieve more detailed
 information of the cephfs MDS status:
 
-[,bash]
+[source,bash]
 ----
 [ceph: root@controller-0 /]# ceph fs dump
 
@@ -116,7 +117,7 @@ uses the RADOS OSD blocklist to control client eviction, CephFS clients can be
 permitted to reconnect by removing them from the blocklist.
 Check the current OSD blocklist and clean up the client list:
 
-[,bash]
+[source,bash]
 ----
 [ceph: root@controller-0 /]# ceph osd blocklist ls
 ..
@@ -136,7 +137,7 @@ command, and have a general view of how the daemons are co-located within a
 given host, according to the https://access.redhat.com/articles/1548993[cardinality matrix]
 described in the associated article.
 
-[,bash]
+[source,bash]
 ----
 [ceph: root@controller-0 /]# ceph orch host ls
 HOST                        ADDR           LABELS          STATUS
@@ -161,7 +162,7 @@ placement:
 
 Extend the MDS labels to the target nodes:
 
-[,bash]
+[source,bash]
 ----
 for item in $(sudo cephadm shell --  ceph orch host ls --format json | jq -r '.[].hostname'); do
     sudo cephadm shell -- ceph orch host label add  $item mds;
@@ -170,7 +171,7 @@ done
 
 Verify all the hosts have the MDS label:
 
-[,bash]
+[source,bash]
 ----
 [tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls
 
@@ -185,7 +186,7 @@ controller-2.redhat.local   192.168.24.10  mon _admin mgr mds
 
 Dump the current MDS spec:
 
-[,bash]
+[source,bash]
 ----
 [ceph: root@controller-0 /]# ceph orch ls --export mds > mds.yaml
 ----
@@ -193,7 +194,7 @@ Dump the current MDS spec:
 Edit the retrieved spec and replace the `placement.hosts` section with
 `placement.label`:
 
-[,bash]
+[source,bash]
 ----
 service_type: mds
 service_id: mds
@@ -205,15 +206,15 @@ placement:
 Use the `ceph orchestrator` to apply the new MDS spec: it results in an
 increased number of mds daemons:
 
-[,bash]
+[source,bash]
 ----
 $ sudo cephadm shell -m mds.yaml -- ceph orch apply -i /mnt/mds.yaml
-Scheduling new mds deployment ...
+Scheduling new mds deployment …
 ----
 
 Check the new standby daemons temporarily added to the cephfs fs:
 
-[,bash]
+[source,bash]
 ----
 $ ceph fs dump
 
@@ -242,7 +243,7 @@ an unqualified standby as a replacement.
 To properly drive the migration to the right nodes, set the MDS affinity that
 manages the MDS failover:
 
-[,bash]
+[source,bash]
 ----
 ceph config set mds.mds.cephstorage-0.fqcshx mds_join_fs cephfs
 ----
@@ -250,7 +251,7 @@ ceph config set mds.mds.cephstorage-0.fqcshx mds_join_fs cephfs
 Remove the labels from controller nodes and force the MDS failover to the
 target node:
 
-[,bash]
+[source,bash]
 ----
 $ for i in 0 1 2; do ceph orch host label rm "controller-$i.redhat.local" mds; done
 
@@ -264,11 +265,11 @@ has been set through the `mds_join_fs` command.
 Check the result of the failover and the new deployed daemons:
 
 
-[,bash]
+[source,bash]
 ----
 $ ceph fs dump
-...
-...
+…
+…
 standby_count_wanted    1
 [mds.mds.cephstorage-0.fqcshx{0:476503} state up:active seq 168 join_fscid=1 addr [v2:172.17.3.92:6820/4120523799,v1:172.17.3.92:6821/4120523799] compat {c=[1],r=[1],i=[7ff]}]
 
@@ -293,6 +294,7 @@ mds.mds.cephstorage-0.fqcshx  cephstorage-0.redhat.local                     run
 mds.mds.cephstorage-1.jkvomp  cephstorage-1.redhat.local                     running (79m)     3m ago  79m    21.5M        -  17.2.6-100.el9cp  1af7b794f353  7198b87104c8
 mds.mds.cephstorage-2.gnfhfe  cephstorage-2.redhat.local                     running (79m)     3m ago  79m    24.2M        -  17.2.6-100.el9cp  1af7b794f353  f3cb859e2a15
 ----
+
 
 == Useful resources
 
