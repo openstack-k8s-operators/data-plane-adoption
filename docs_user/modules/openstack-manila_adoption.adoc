@@ -60,7 +60,7 @@ that can be decommissioned at will after completing the OpenStack adoption.
 Red Hat Ceph Storage 7.0 introduced a native `clustered Ceph NFS service`. This
 service has to be deployed on the Ceph cluster using the Ceph orchestrator
 prior to adopting Manila. This NFS service will eventually replace the
-standalone NFS service from RHOSP 17.1 in your deployment. When manila is
+standalone NFS service from RHOSP 17.1 in your deployment. When Manila is
 adopted into the RHOSP 18 environment, it will establish all the existing
 exports and client restrictions on the new clustered Ceph NFS service. Clients
 can continue to read and write data on their existing NFS shares, and are not
@@ -85,7 +85,7 @@ for instructions on setting up a clustered NFS service.
 
 == Prerequisites
 
-* Ensure that manila systemd services (`api`, `cron`, `scheduler`) are
+* Ensure that Manila systemd services (`api`, `cron`, `scheduler`) are
 stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
 * If the deployment uses CephFS via NFS as a storage backend, ensure that
 pacemaker ordering and collocation constraints are adjusted. For more
