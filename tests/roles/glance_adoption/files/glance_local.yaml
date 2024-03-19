@@ -3,6 +3,7 @@ spec:
     enabled: true
     template:
       databaseInstance: openstack
+      databaseAccount: glance
       customServiceConfig: |
         [DEFAULT]
         enabled_backends = default_backend:file

@@ -1,0 +1,276 @@
+//:context: migrate-object-storage-service
+
+[id="migrating-the-object-storage-service_{context}"]
+
+This section only applies if you are using OpenStack Swift as Object Storage
+service. If you are using the Object Storage *API* of Ceph RGW this section can
+be skipped.
+
+Data migration to the new deployment might be a long running process that runs
+mostly in the background. The Swift replicators will take care of moving data
+from old to new nodes, but depending on the amount of used storage this might
+take a very long time. You can still use the old nodes as long as they are
+running and continue with adopting other services in the meantime, reducing the
+amount of downtime. Please note that performance might be decreased to the
+amount of replication traffic in the network.
+
+Migration of the data happens replica by replica. Assuming you start with 3
+replicas, only 1 one them is being moved at any time, ensuring the remaining 2
+replicas are still available and the Swift service is usable during the
+migration.
+
+= Overview
+
+To ensure availability during migration the following steps will be done:
+
+. Add new nodes to the Swift rings
+. Set weights of existing nodes to 0
+. Rebalance rings, moving one replica
+. Copy rings to old nodes and restart services
+. Check replication status and repeat previous two steps until old nodes are
+drained
+. Finally remove the old nodes from the rings
+
+= Prerequisites
+
+* Previous Object Storage Service adoption steps successfully completed.
+
+== Variables
+
+No new environmental variables need to be defined, though you use the
+`CONTROLLER1_SSH` alias that was defined in a previous step.
+
+= Preliminary steps
+
+== DNS
+
+All existing nodes must be able to resolve host names of the OpenShift pods, for example by using the
+external IP of the DNSMasq service as name server in `/etc/resolv.conf`:
+
+[,bash]
+----
+oc get service dnsmasq-dns -o jsonpath="{.status.loadBalancer.ingress[0].ip}" | CONTROLLER1_SSH tee /etc/resolv.conf
+----
+
+
+== swift-dispersion
+
+To track the current status of the replication a tool called `swift-dispersion`
+is used. It consists of two parts, a population tool to be run before changing
+the Swift rings and a report tool to run afterwards to gather the current
+status. Run the `swift-dispersion-populate` like this:
+
+[,bash]
+----
+oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-dispersion-populate'
+----
+
+The command might need a few minutes until completed. It creates 0-byte objects
+distributed across the Swift deployment, and its counter-part
+`swift-dispersion-report` can be used afterwards to show the current
+replication status.
+
+The output of the `swift-dispersion-report` command should look like this:
+
+[,bash]
+----
+oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-dispersion-report'
+----
+
+[source]
+----
+Queried 1024 containers for dispersion reporting, 5s, 0 retries
+100.00% of container copies found (3072 of 3072)
+Sample represents 100.00% of the container partition space
+Queried 1024 objects for dispersion reporting, 4s, 0 retries
+There were 1024 partitions missing 0 copies.
+100.00% of object copies found (3072 of 3072)
+Sample represents 100.00% of the object partition space
+----
+
+= Migrate data
+
+== Add new nodes
+The easiest way is to simply scale up the SwiftStorage resource from 0 to 3. In
+that case 3 storage instances using PVCs are created, running on the
+OpenShift cluster.
+
+// TODO add paragraph / link on EDPM node usage for Swift
+
+[,bash]
+----
+oc patch openstackcontrolplane openstack --type=merge -p='{"spec":{"swift":{"template":{"swiftStorage":{"replicas": 3}}}}}'
+----
+
+Wait until all three pods are running:
+
+[,bash]
+----
+oc wait pods --for condition=Ready -l component=swift-storage
+----
+
+== Start migration
+
+You can start to drain the existing nodes now. Get the storage management IP
+addresses of the nodes to drain from the current rings:
+
+[,bash]
+----
+oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-ring-builder object.builder' | tail -n +7 | awk '{print $4}' | sort -u
+----
+
+The output will look similar to this:
+
+[source]
+----
+172.20.0.100:6200
+swift-storage-0.swift-storage.openstack.svc:6200
+swift-storage-1.swift-storage.openstack.svc:6200
+swift-storage-2.swift-storage.openstack.svc:6200
+----
+
+In this case the old node 172.20.0.100 will be drained. Your nodes might be
+different, and depending on the deployment there are likely more nodes to be
+included in the following commands.
+
+[,bash]
+----
+oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
+swift-ring-tool get
+swift-ring-tool drain 172.20.0.100
+swift-ring-tool rebalance
+swift-ring-tool push'
+----
+
+The updated rings need to be copied and applied to the old nodes now. Run the
+ssh commands for your existing nodes storing Swift data.
+[,bash]
+----
+oc extract --confirm cm/swift-ring-files
+CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
+CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
+----
+
+You can now track the replication progress by using the
+`swift-dispersion-report` tool:
+
+[,bash]
+----
+oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report"
+----
+
+The output will show less than 100% of copies found, repeat the above command
+until both the container and all container and object copies are found:
+
+[source]
+----
+Queried 1024 containers for dispersion reporting, 6s, 0 retries
+There were 5 partitions missing 1 copy.
+99.84% of container copies found (3067 of 3072)
+Sample represents 100.00% of the container partition space
+Queried 1024 objects for dispersion reporting, 7s, 0 retries
+There were 739 partitions missing 1 copy.
+There were 285 partitions missing 0 copies.
+75.94% of object copies found (2333 of 3072)
+Sample represents 100.00% of the object partition space
+----
+
+== Move all replicas
+Once all container and object copies are found it's time to move the next
+replica to the new nodes. To do so, rebalance and distribute the rings again:
+
+[,bash]
+----
+oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
+swift-ring-tool get
+swift-ring-tool rebalance
+swift-ring-tool push'
+
+oc extract --confirm cm/swift-ring-files
+CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
+CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
+----
+
+Monitor the `swift-dispersion-report` output again, wait until all copies are
+found again and repeat above step until all your replicas are moved to the new
+nodes.
+
+= Final checks
+
+Even if all replicas are already on the the new nodes and the
+`swift-dispersion-report` command reports 100% of the copies found, there might
+still be data on old nodes. This data is removed by the replicators, but it
+might take some more time.
+
+You can check the disk usage of all disks in the cluster using the following
+command:
+
+[,bash]
+----
+oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-recon -d'
+----
+
+Eventually your existing nodes will be drained and there should
+be no more `\*.db` or `*.data` files in the directory `/srv/node` on these
+nodes:
+
+[,bash]
+----
+CONTROLLER1_SSH "find /srv/node/ -type f -name '*.db' -o -name '*.data' | wc -l"
+----
+
+= Remove old nodes
+
+Once nodes are drained they should be removed from the rings using the
+following commands:
+
+[,bash]
+----
+oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
+swift-ring-tool get
+swift-ring-tool remove 172.20.0.100
+swift-ring-tool rebalance
+swift-ring-tool push'
+----
+
+= Troubleshooting
+
+The following commands might be helpful to debug if the replication is not
+working and the `swift-dispersion-report` is not get back to 100% availability.
+
+
+[,bash]
+----
+CONTROLLER1_SSH tail /var/log/containers/swift/swift.log | grep object-server
+----
+
+This should show progress by the replicators, for example like this:
+[source]
+----
+Mar 14 06:05:30 standalone object-server[652216]: <f+++++++++ 4e2/9cbea55c47e243994b0b10d8957184e2/1710395823.58025.data
+Mar 14 06:05:30 standalone object-server[652216]: Successful rsync of /srv/node/vdd/objects/626/4e2 to swift-storage-1.swift-storage.openstack.svc::object/d1/objects/626 (0.094)
+Mar 14 06:05:30 standalone object-server[652216]: Removing partition: /srv/node/vdd/objects/626
+Mar 14 06:05:31 standalone object-server[652216]: <f+++++++++ 85f/cf53b5a048e5b19049e05a548cde185f/1710395796.70868.data
+Mar 14 06:05:31 standalone object-server[652216]: Successful rsync of /srv/node/vdb/objects/829/85f to swift-storage-2.swift-storage.openstack.svc::object/d1/objects/829 (0.095)
+Mar 14 06:05:31 standalone object-server[652216]: Removing partition: /srv/node/vdb/objects/829
+----
+
+You can also check the ring consistency and replicator status using the
+following command:
+[,bash]
+----
+oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-recon -r --md5'
+----
+
+Note that the output might show a md5 mismatch until approx. 2 minutes after
+pushing new rings. Eventually it looks similar to this:
+
+----
+[...]
+Oldest completion was 2024-03-14 16:53:27 (3 minutes ago) by 172.20.0.100:6000.
+Most recent completion was 2024-03-14 16:56:38 (12 seconds ago) by swift-storage-0.swift-storage.openstack.svc:6200.
+===============================================================================
+[2024-03-14 16:56:50] Checking ring md5sums
+4/4 hosts matched, 0 error[s] while checking hosts.
+[...]
+----

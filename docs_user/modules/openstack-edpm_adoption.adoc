@@ -260,7 +260,6 @@ spec:
     - configure-os
     - ssh-known-hosts
     - run-os
-    - reboot-os
     - install-certs
     - libvirt
     - nova-compute-extraconfig
@@ -623,15 +622,15 @@ oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
 * Verify if Nova services can stop the existing test VM instance:
 +
 ----
-${BASH_ALIASES[openstack]} server list | grep -qF '| test | ACTIVE |' && openstack server stop test
-${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |'
-${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test | grep "it is in power state shutdown" || echo PASS
+${BASH_ALIASES[openstack]} server list | grep -qF '| test | ACTIVE |' && ${BASH_ALIASES[openstack]} server stop test || echo PASS
+${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' || echo FAIL
+${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test 2>&1 || echo PASS
 ----
 
 * Verify if Nova services can start the existing test VM instance:
 +
 ----
-${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' && openstack server start test
-${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |'
-${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test --fit-width -f json | jq -r '.state' | grep running
+${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' && ${BASH_ALIASES[openstack]} server start test || echo PASS
+${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |' && \
+  ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test --fit-width -f json | jq -r '.state' | grep running || echo FAIL
 ----

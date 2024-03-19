@@ -4,11 +4,9 @@
 
 = Adopting the Object Storage service
 
-== Limitations
-
-* The described process does not migrate data from existing nodes yet. Data is
-  still stored on existing nodes, but is accessed through the Swift proxy
-  instance running on the OpenShift control plane.
+This section only applies if you are using OpenStack Swift as Object Storage
+service. If you are using the Object Storage *API* of Ceph RGW this section can
+be skipped.
 
 == Prerequisites
 
@@ -19,11 +17,9 @@
 == Variables
 
 No new environmental variables need to be defined, though you use the
-`CONTROLLER1_SSH` that was defined in a previous step for the pre-checks.
+`CONTROLLER1_SSH` alias that was defined in a previous step.
 
-== Pre-checks
-
-== Copy over swift.conf file
+== Procedure - Swift adoption
 
 * Create the `swift-conf` secret, containing the Swift hash path suffix and prefix:
 +
@@ -41,8 +37,6 @@ data:
 EOF
 ----
 
-== Copy existing Swift ring files
-
 * Create the `swift-ring-files` configmap, containing the Swift ring files:
 +
 [source,yaml]
@@ -57,7 +51,6 @@ binaryData:
 EOF
 ----
 
-== Procedure - Swift adoption
 
 * Patch OpenStackControlPlane to deploy Swift:
 +
@@ -148,3 +141,9 @@ openstack object create test obj
 openstack object save test obj --file -
 Hello World!
 ----
+
+== Data migration
+At this point data is still stored on the previously existing nodes. The
+<<swift-migration_\{context\},Object Storage data migration>>
+ section describes how to migrate the actual data from the old
+to the new deployment.

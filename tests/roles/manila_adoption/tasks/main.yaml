@@ -11,6 +11,7 @@
           route: {}
         template:
           databaseInstance: openstack
+          databaseAccount: manila
           manilaAPI:
             customServiceConfig: |
               [DEFAULT]

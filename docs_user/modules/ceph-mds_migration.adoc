@@ -122,7 +122,7 @@ Check the current OSD blocklist and clean up the client list:
 [ceph: root@controller-0 /]# ceph osd blocklist ls
 ..
 ..
-for item in $(ceph osd blocklist ls | awk ‘{print $0}’); do
+for item in $(ceph osd blocklist ls | awk '{print $0}'); do
      ceph osd blocklist rm $item;
 done
 ----

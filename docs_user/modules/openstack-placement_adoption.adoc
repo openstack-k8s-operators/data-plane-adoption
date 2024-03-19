@@ -32,6 +32,7 @@ spec:
       route: {}
     template:
       databaseInstance: openstack
+      databaseAccount: placement
       secret: osp-secret
       override:
         service:
