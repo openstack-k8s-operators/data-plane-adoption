@@ -18,7 +18,7 @@ use cases).
 * Both the Ceph public and cluster networks are propagated, via TripleO, to the target nodes.
 * Ceph Mons need to keep their IPs (to avoid cold migration).
 
-== Scenario 1: Migrate mon and mgr from controller nodes
+== Scenario: Migrate mon and mgr from controller nodes
 
 The goal of the first POC is to prove that you are able to successfully drain a
 controller node, in terms of ceph daemons, and move them to a different node.

@@ -49,7 +49,7 @@ metadata:
   name: netconfig
 spec:
   networks:
-  - name: ctlplane
+  - name: CtlPlane
     dnsDomain: ctlplane.example.com
     subnets:
     - name: subnet1
@@ -60,7 +60,7 @@ spec:
         start: 192.168.122.150
       cidr: 192.168.122.0/24
       gateway: 192.168.122.1
-  - name: internalapi
+  - name: InternalApi
     dnsDomain: internalapi.example.com
     subnets:
     - name: subnet1
@@ -78,7 +78,7 @@ spec:
         start: 10.0.0.100
       cidr: 10.0.0.0/24
       gateway: 10.0.0.1
-  - name: storage
+  - name: Storage
     dnsDomain: storage.example.com
     subnets:
     - name: subnet1
@@ -87,7 +87,7 @@ spec:
         start: 172.18.0.100
       cidr: 172.18.0.0/24
       vlan: 21
-  - name: storagemgmt
+  - name: StorageMgmt
     dnsDomain: storagemgmt.example.com
     subnets:
     - name: subnet1
@@ -96,7 +96,7 @@ spec:
         start: 172.20.0.100
       cidr: 172.20.0.0/24
       vlan: 23
-  - name: tenant
+  - name: Tenant
     dnsDomain: tenant.example.com
     subnets:
     - name: subnet1
@@ -107,12 +107,6 @@ spec:
       vlan: 22
 EOF
 ----
-
-* In case when neutron-sriov-nic-agent is running on the existing compute nodes,
-  physical device mappings needs to be checked and set the same in the
-  OpenStackDataPlaneNodeSet CR. Those options will need to be set in the
-  OpenStackDataPlaneNodeSet CR.
-  For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
 
 == Procedure - EDPM adoption
 
@@ -133,7 +127,7 @@ do
   ssh \
     -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
     root@"${computes[$name]}" \
-      "grep -qF $uuid /var/lib/nova/compute_id || (echo $uuid | sudo tee /var/lib/nova/compute_id && sudo chown 42436:42436 /var/lib/nova/compute_id && sudo chcon -t container_file_t /var/lib/nova/compute_id)"
+    "echo $uuid > /var/lib/nova/compute_id"
 done
 ----
 
@@ -201,44 +195,7 @@ The secret `nova-cell<X>-compute-config` is auto-generated for each
 `cell<X>`. That secret, alongside `nova-migration-ssh-key`, should
 always be specified for each custom `OpenStackDataPlaneService` related to Nova.
 
-ifeval::["{build}" == "downstream"]
-* Create subscription-manager and redhat-registry secrets
-+
-[source,yaml]
-----
-oc apply -f - <<EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: subscription-manager
-data:
-  username: <base64 encoded subscription-manager username>
-  password: <base64 encoded subscription-manager password>
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: redhat-registry
-data:
-  username: <base64 encoded registry username>
-  password: <base64 encoded registry password>
-EOF
-----
-+
-endif::[]
-
 * Deploy OpenStackDataPlaneNodeSet:
-+
-Make sure that ovn-controller settings configured in the OpenStackDataPlaneNodeSet are the same as were set in the compute nodes before adoption.
-This configuration is stored in the "external_ids" colum in the "Open_vSwitch" table in ovsdb and can be checked with command:
-+
-----
-ovs-vsctl list Open .
-...
-external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings="datacentre:br-ctlplane", ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
-...
-----
-In above example bridge mappings are set as "datacentre:br-ctlplane" and it has to be set in the OpenStackDataPlaneNodeSet CR also.
 +
 [source,yaml]
 ----
@@ -258,9 +215,7 @@ spec:
     - validate-network
     - install-os
     - configure-os
-    - ssh-known-hosts
     - run-os
-    - install-certs
     - libvirt
     - nova-compute-extraconfig
     - ovn
@@ -278,35 +233,29 @@ spec:
       networks:
       - defaultRoute: true
         fixedIP: ${computes[standalone.localdomain]}
-        name: ctlplane
+        name: CtlPlane
         subnetName: subnet1
-      - name: internalapi
+      - name: InternalApi
         subnetName: subnet1
-      - name: storage
+      - name: Storage
         subnetName: subnet1
-      - name: tenant
+      - name: Tenant
         subnetName: subnet1
   nodeTemplate:
     ansibleSSHPrivateKeySecret: dataplane-adoption-secret
+    managementNetwork: ctlplane
     ansible:
       ansibleUser: root
-ifeval::["{build}" == "downstream"]
-      ansibleVarsFrom:
-      - prefix: subscription_manager_
-        secretRef:
-          name: subscription-manager
-      - prefix: registry_
-        secretRef:
-          name: redhat-registry
-endif::[]
+      ansiblePort: 22
       ansibleVars:
         service_net_map:
-          nova_api_network: internalapi
-          nova_libvirt_network: internalapi
+          nova_api_network: internal_api
+          nova_libvirt_network: internal_api
 
         # edpm_network_config
         # Default nic config template for a EDPM compute node
         # These vars are edpm_network_config role vars
+        edpm_network_config_override: ""
         edpm_network_config_template: |
            ---
            {% set mtu_list = [ctlplane_mtu] %}
@@ -322,7 +271,7 @@ endif::[]
              dns_servers: {{ ctlplane_dns_nameservers }}
              domain: {{ dns_search_domains }}
              addresses:
-             - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
+             - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
              routes: {{ ctlplane_host_routes }}
              members:
              - type: interface
@@ -346,30 +295,33 @@ endif::[]
         # considered EDPM network defaults.
         neutron_physical_bridge_name: br-ctlplane
         neutron_public_interface_name: eth0
+        role_networks:
+        - InternalApi
+        - Storage
+        - Tenant
+        networks_lower:
+          External: external
+          InternalApi: internal_api
+          Storage: storage
+          Tenant: tenant
 
         # edpm_nodes_validation
+        edpm_nodes_validation_validate_fqdn: true
         edpm_nodes_validation_validate_controllers_icmp: false
         edpm_nodes_validation_validate_gateway_icmp: false
 
-        # edpm ovn-controller configuration
-        edpm_ovn_bridge_mappings: ['datacentre:br-ctlplane']
-        edpm_ovn_bridge: br-int
-        edpm_ovn_encap_type: geneve
-        ovn_match_northd_version: false
-        ovn_monitor_all: true
-        edpm_ovn_remote_probe_interval: 60000
-        edpm_ovn_ofctrl_wait_before_clear: 8000
-
         timesync_ntp_servers:
-ifeval::["{build}" == "upstream"]
-        - hostname: pool.ntp.org
-endif::[]
-ifeval::["{build}" == "downstream"]
         - hostname: clock.redhat.com
         - hostname: clock2.redhat.com
-endif::[]
 
 ifeval::["{build}" == "upstream"]
+        edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
+        edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
+        edpm_logrotate_crond_image: quay.io/podified-antelope-centos9/openstack-cron:current-podified
+        edpm_nova_compute_container_image: quay.io/podified-antelope-centos9/openstack-nova-compute:current-podified
+        edpm_nova_libvirt_container_image: quay.io/podified-antelope-centos9/openstack-nova-libvirt:current-podified
+        edpm_ovn_metadata_agent_image: quay.io/podified-antelope-centos9/openstack-neutron-metadata-agent-ovn:current-podified
+
         edpm_bootstrap_command: |
           # This is a hack to deploy RDO Delorean repos to RHEL as if it were Centos 9 Stream
           set -euxo pipefail
@@ -389,8 +341,15 @@ ifeval::["{build}" == "upstream"]
           rm -rf repo-setup-main
 endif::[]
 ifeval::["{build}" == "downstream"]
+        edpm_ovn_controller_agent_image: registry.redhat.io/rhosp-dev-preview/openstack-ovn-controller-rhel9:18.0
+        edpm_iscsid_image: registry.redhat.io/rhosp-dev-preview/openstack-iscsid-rhel9:18.0
+        edpm_logrotate_crond_image: registry.redhat.io/rhosp-dev-preview/openstack-cron-rhel9:18.0
+        edpm_nova_compute_container_image: registry.redhat.io/rhosp-dev-preview/openstack-nova-compute-rhel9:18.0
+        edpm_nova_libvirt_container_image: registry.redhat.io/rhosp-dev-preview/openstack-nova-libvirt-rhel9:18.0
+        edpm_ovn_metadata_agent_image: registry.redhat.io/rhosp-dev-preview/openstack-neutron-metadata-agent-ovn-rhel9:18.0
+
         edpm_bootstrap_command: |
-          subscription-manager register --username {{ subscription_manager_username }} --password {{ subscription_manager_password }}
+          subscription-manager register --username <subscription_manager_username> --password <subscription_manager_password>
           subscription-manager release --set=9.2
           subscription-manager repos --disable=*
           subscription-manager repos --enable=rhel-9-for-x86_64-baseos-eus-rpms --enable=rhel-9-for-x86_64-appstream-eus-rpms --enable=rhel-9-for-x86_64-highavailability-eus-rpms --enable=openstack-17.1-for-rhel-9-x86_64-rpms --enable=fast-datapath-for-rhel-9-x86_64-rpms --enable=openstack-dev-preview-for-rhel-9-x86_64-rpms
@@ -398,7 +357,8 @@ ifeval::["{build}" == "downstream"]
           # here we only ensuring that decontainerized libvirt can start
           dnf -y upgrade openstack-selinux
           rm -f /run/virtlogd.pid
-          podman login -u {{ registry_username }} -p {{ registry_password }} registry.redhat.io
+          restorecon -R /run/libvirt
+          podman login -u <registry_username> -p <registry_password> registry.redhat.io
 endif::[]
 
         gather_facts: false
@@ -408,36 +368,12 @@ endif::[]
         edpm_sshd_allowed_ranges: ['192.168.122.0/24']
         # SELinux module
         edpm_selinux_mode: enforcing
+        plan: overcloud
 
         # Do not attempt OVS 3.2 major upgrades here
         edpm_ovs_packages:
         - openvswitch3.1
 EOF
-----
-
-* Optionally enable neutron-sriov-nic-agent in the OpenStackDataPlaneNodeSet CR
-+
-[source,yaml]
-----
-oc patch openstackdataplanenodeset openstack --type='json' --patch='[
-  {
-    "op": "add",
-    "path": "/spec/services/-",
-    "value": "neutron-sriov"
-  }, {
-    "op": "add",
-    "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_physical_device_mappings",
-    "value": "dummy_sriov_net:dummy-dev"
-  }, {
-    "op": "add",
-    "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_bandwidths",
-    "value": "dummy-dev:40000000:40000000"
-  }, {
-    "op": "add",
-    "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_hypervisors",
-    "value": "dummy-dev:standalone.localdomain"
-  }
-]'
 ----
 
 * Deploy OpenStackDataPlaneDeployment:
@@ -455,13 +391,6 @@ spec:
 EOF
 ----
 
-* Adoption of the neutron-ovn-metadata-agent:
-+
-Neutron-ovn-metadata-agent running on the EDPM nodes don't require any
-additional actions nor config adjustments to do during the adoption process.
-When OpenStackDataPlaneDeployment and OpenStackDataPlaneNodeSet will be ready,
-neutron-ovn-metadata-agent should be up and running on the EDPM nodes.
-
 == Post-checks
 
 * Check if all the Ansible EE pods reaches `Completed` status:
@@ -473,25 +402,13 @@ watch oc get pod -l app=openstackansibleee
 +
 ----
 # following the ansible logs with:
-oc logs -l app=openstackansibleee -f --max-log-requests 20
+oc logs -l app=openstackansibleee -f --max-log-requests 10
 ----
 
 * Wait for the dataplane node set to reach the Ready status:
 +
 ----
 oc wait --for condition=Ready osdpns/openstack --timeout=30m
-----
-
-* Verify that neutron agents are alive:
-+
-----
-oc exec openstackclient -- openstack network agent list
-+--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
-| ID                                   | Agent Type                   | Host                   | Availability Zone | Alive | State | Binary                     |
-+--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
-| 10482583-2130-5b0d-958f-3430da21b929 | OVN Metadata agent           | standalone.localdomain |                   | :-)   | UP    | neutron-ovn-metadata-agent |
-| a4f1b584-16f1-4937-b2b0-28102a3f6eaa | OVN Controller agent         | standalone.localdomain |                   | :-)   | UP    | ovn-controller             |
-+--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
 ----
 
 == Nova compute services fast-forward upgrade from Wallaby to Antelope
@@ -622,15 +539,15 @@ oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
 * Verify if Nova services can stop the existing test VM instance:
 +
 ----
-${BASH_ALIASES[openstack]} server list | grep -qF '| test | ACTIVE |' && ${BASH_ALIASES[openstack]} server stop test || echo PASS
-${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' || echo FAIL
-${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test 2>&1 || echo PASS
+${BASH_ALIASES[openstack]} server list | grep -qF '| test | ACTIVE |' && openstack server stop test
+${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |'
+${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test | grep "it is in power state shutdown" || echo PASS
 ----
 
 * Verify if Nova services can start the existing test VM instance:
 +
 ----
-${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' && ${BASH_ALIASES[openstack]} server start test || echo PASS
-${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |' && \
-  ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test --fit-width -f json | jq -r '.state' | grep running || echo FAIL
+${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' && openstack server start test
+${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |'
+${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test --fit-width -f json | jq -r '.state' | grep running
 ----

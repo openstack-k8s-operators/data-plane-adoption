@@ -34,38 +34,12 @@ spec:
         [DEFAULT]
         debug=true
       secret: osp-secret
-ifeval::["{build}" == "upstream"]
-      apiImage: "quay.io/podified-antelope-centos9/openstack-aodh-api:current-podified"
-      evaluatorImage: "quay.io/podified-antelope-centos9/openstack-aodh-evaluator:current-podified"
-      notifierImage: "quay.io/podified-antelope-centos9/openstack-aodh-notifier:current-podified"
-      listenerImage: "quay.io/podified-antelope-centos9/openstack-aodh-listener:current-podified"
-endif::[]
-ifeval::["{build}" == "downstream"]
-      apiImage: "registry.redhat.io/rhosp-dev-preview/openstack-aodh-api-rhel9:18.0"
-      evaluatorImage: "registry.redhat.io/rhosp-dev-preview/openstack-aodh-evaluator-rhel9:18.0"
-      notifierImage: "registry.redhat.io/rhosp-dev-preview/openstack-aodh-notifier-rhel9:18.0"
-      listenerImage: "registry.redhat.io/rhosp-dev-preview/openstack-aodh-listener-rhel9:18.0"
-endif::[]
       passwordSelectors:
       databaseUser: aodh
       databaseInstance: openstack
       memcachedInstance: memcached
 EOF
 ----
-
-
-____
-If you have previously backed up your OpenStack services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
-____
-
-----
-pushd os-diff
-./os-diff cdiff --service aodh -c /tmp/collect_tripleo_configs/aodh/etc/aodh/aodh.conf -o aodh_patch.yaml
-----
-
-____
-This will producre the difference between both ini configuration files.
-____
 
 Patch OpenStackControlPlane to deploy Aodh services:
 

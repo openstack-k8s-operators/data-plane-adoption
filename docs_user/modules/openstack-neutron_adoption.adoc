@@ -50,7 +50,6 @@ spec:
             spec:
               type: LoadBalancer
       databaseInstance: openstack
-      databaseAccount: neutron
       secret: osp-secret
       networkAttachments:
       - internalapi

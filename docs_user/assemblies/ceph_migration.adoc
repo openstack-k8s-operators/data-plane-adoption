@@ -11,8 +11,6 @@ ifdef::context[:parent-context: {context}]
 
 include::../modules/ceph-rbd_migration.adoc[leveloffset=+1]
 include::../modules/ceph-rgw_migration.adoc[leveloffset=+1]
-include::../modules/ceph-mds_migration.adoc[leveloffset=+1]
-include::../modules/ceph-monitoring_migration.adoc[leveloffset=+1]
 
 ifdef::parent-context[:context: {parent-context}]
 ifndef::parent-context[:!context:]

@@ -116,7 +116,7 @@ oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 
 oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
 ----
 
-* Start podified OVN database services prior to import, keeping northd/ovn-controller stopped.
+* Start podified OVN database services prior to import.
 
 [source,yaml]
 ----
@@ -134,13 +134,6 @@ spec:
           dbType: SB
           storageRequest: 10G
           networkAttachment: internalapi
-      ovnNorthd:
-        replicas: 0
-        networkAttachment: internalapi
-      ovnController:
-        networkAttachment: tenant
-        nodeSelector:
-          node: non-existing-node-name
 '
 ----
 
@@ -191,15 +184,7 @@ spec:
     template:
       ovnNorthd:
         networkAttachment: internalapi
-        replicas: 1
 '
-----
-
-* Also enable `ovn-controller`
-
-[source,yaml]
-----
-oc patch openstackcontrolplane openstack --type=json -p="[{'op': 'remove', 'path': '/spec/ovn/template/ovnController/nodeSelector'}]"
 ----
 
 * Delete the ovn-data pod and persistent volume claim with OVN databases backup (consider making a snapshot of it, before deleting)

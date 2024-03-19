@@ -61,7 +61,6 @@ passwords can be extracted like this:
 +
 ----
 AODH_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AodhPassword:' | awk -F ': ' '{ print $2; }')
-BARBICAN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' BarbicanPassword:' | awk -F ': ' '{ print $2; }')
 CEILOMETER_METERING_SECRET=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CeilometerMeteringSecret:' | awk -F ': ' '{ print $2; }')
 CEILOMETER_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CeilometerPassword:' | awk -F ': ' '{ print $2; }')
 CINDER_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CinderPassword:' | awk -F ': ' '{ print $2; }')
@@ -74,7 +73,6 @@ NEUTRON_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NeutronPassw
 NOVA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NovaPassword:' | awk -F ': ' '{ print $2; }')
 OCTAVIA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' OctaviaPassword:' | awk -F ': ' '{ print $2; }')
 PLACEMENT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' PlacementPassword:' | awk -F ': ' '{ print $2; }')
-SWIFT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' SwiftPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
 == Pre-checks
@@ -111,7 +109,6 @@ account passwords from the original deployment:
 +
 ----
 oc set data secret/osp-secret "AodhPassword=$AODH_PASSWORD"
-oc set data secret/osp-secret "BarbicanPassword=$BARBICAN_PASSWORD"
 oc set data secret/osp-secret "CeilometerMeteringSecret=$CEILOMETER_METERING_SECRET"
 oc set data secret/osp-secret "CeilometerPassword=$CEILOMETER_PASSWORD"
 oc set data secret/osp-secret "CinderPassword=$CINDER_PASSWORD"
@@ -119,13 +116,11 @@ oc set data secret/osp-secret "GlancePassword=$GLANCE_PASSWORD"
 oc set data secret/osp-secret "HeatAuthEncryptionKey=$HEAT_AUTH_ENCRYPTION_KEY"
 oc set data secret/osp-secret "HeatPassword=$HEAT_PASSWORD"
 oc set data secret/osp-secret "IronicPassword=$IRONIC_PASSWORD"
-oc set data secret/osp-secret "IronicInspectorPassword=$IRONIC_PASSWORD"
 oc set data secret/osp-secret "ManilaPassword=$MANILA_PASSWORD"
 oc set data secret/osp-secret "NeutronPassword=$NEUTRON_PASSWORD"
 oc set data secret/osp-secret "NovaPassword=$NOVA_PASSWORD"
 oc set data secret/osp-secret "OctaviaPassword=$OCTAVIA_PASSWORD"
 oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
-oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 ----
 
 * Deploy OpenStackControlPlane. *Make sure to only enable DNS,
@@ -142,13 +137,6 @@ metadata:
 spec:
   secret: osp-secret
   storageClass: local-storage
-
-  barbican:
-    enabled: false
-    template:
-      barbicanAPI: {}
-      barbicanWorker: {}
-      barbicanKeystoneListener: {}
 
   cinder:
     enabled: false
@@ -244,11 +232,9 @@ spec:
           networkAttachment: internalapi
       ovnNorthd:
         networkAttachment: internalapi
-        replicas: 0
+        replicas: 1
       ovnController:
         networkAttachment: tenant
-        nodeSelector:
-          node: non-existing-node-name
 
   placement:
     enabled: false

@@ -3,6 +3,8 @@
 //:context: adopting-compute-service
 //kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
 //Check xref contexts.
+//In Post-checks, reinstate the xref in the following text:Compare the following outputs with the topology specific configuration
+//in xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
 
 = Adopting the Compute service
 
@@ -17,13 +19,12 @@ here this time).
  ** the xref:migrating-databases-to-mariadb-instances_{context}[Migrating databases to MariaDB instances]
 must already be imported into the podified MariaDB;
  ** the xref:adopting-the-identity-service_{context}[Adopting the Identity service] needs to be imported;
- ** the xref:adopting-the-key-manager-service_{context}[Key manager service] needs to be imported;
  ** the xref:adopting-the-placement-service_{context}[Adopting the Placement service] needs to be imported;
  ** the xref:adopting-the-image-service_{context}[Adopting the Image service] needs to be imported;
  ** the xref:migrating-ovn-data_{context}[Migrating OVN data] need to be imported;
  ** the xref:adopting-the-openstack-networking-service_{context}[Adopting the OpenStack Networking service] needs to be imported;
  ** Required services specific topology
-xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+//xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].kgilliga: Commented out for dev preview 3.
 //kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
  ** OpenStack services have been stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
 
@@ -133,7 +134,7 @@ openstack endpoint list | grep nova
 openstack server list
 ----
 
-Compare the following outputs with the topology specific configuration in xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+Compare the following outputs with the topology specific configuration.
 
 * Query the superconductor for cell1 existance and compare it to pre-adoption values:
 +
