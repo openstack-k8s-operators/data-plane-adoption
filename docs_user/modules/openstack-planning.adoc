@@ -208,7 +208,7 @@ placement of the OpenStack services.
 
 Barbican doesn't yet support all of the crypto plugins available in TripleO.
 
-**TODO: Right now Barbican only supports the simple crypto plugin.
+//**TODO: Right now Barbican only supports the simple crypto plugin.
 
 //*TODO: Talk about Ceph Storage and Swift Storage nodes, HCI deployments,
 //etc.*

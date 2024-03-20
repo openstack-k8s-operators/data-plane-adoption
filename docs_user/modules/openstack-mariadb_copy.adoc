@@ -125,7 +125,6 @@ oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
 
 * Check that the Galera database cluster members are online and synced:
 +
-[,bash]
 ----
 for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
   echo "Checking for the database node $i WSREP status Synced"
