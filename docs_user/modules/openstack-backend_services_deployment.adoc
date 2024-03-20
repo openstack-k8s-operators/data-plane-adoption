@@ -23,19 +23,23 @@ floating IP is set into `FIP` env var. You can use a helper script to create tha
 //xref:../docs_dev/assemblies/development_environment.adoc#virtual-machine-steps[helper script] kgilliga: Commented out because this might break the build downstream.
 * The `openstack-operator` is deployed, but `OpenStackControlPlane` is
 *not* deployed.
+ifeval::["{build}" != "downstream"]
 +
 For developer/CI environments, the openstack operator can be deployed
 by running `make openstack` inside
 https://github.com/openstack-k8s-operators/install_yamls[install_yamls]
 repo.
 +
+endif::[]
 For production environments, the deployment method will likely be
 different.
 
 * There are free PVs available to be claimed (for MariaDB and RabbitMQ).
+ifeval::["{build}" != "downstream"]
 +
 For developer/CI environments driven by install_yamls, make sure
 you've run `make crc_storage`.
+endif::[]
 
 == Variables
 
@@ -89,6 +93,7 @@ oc project openstack
 ----
 
 * Create OSP secret.
+ifeval::["{build}" != "downstream"]
 +
 The procedure for this will vary, but in developer/CI environments
 you use install_yamls:
@@ -97,7 +102,7 @@ you use install_yamls:
 # in install_yamls
 make input
 ----
-
+endif::[]
 * If the `$ADMIN_PASSWORD` is different than the already set password
 in `osp-secret`, amend the `AdminPassword` key in the `osp-secret`
 correspondingly:
