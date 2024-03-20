@@ -31,49 +31,6 @@ should be already adopted.
 
 As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Glance Adoption follows the same pattern.
 
-=== Using local storage backend
-
-When Glance should be deployed with local storage backend (not Ceph),
-patch OpenStackControlPlane to deploy Glance:
-
-----
-oc patch openstackcontrolplane openstack --type=merge --patch '
-spec:
-  glance:
-    enabled: true
-    apiOverride:
-      route: {}
-    template:
-      databaseInstance: openstack
-      databaseAccount: glance
-      storageClass: "local-storage"
-      storageRequest: 10G
-      customServiceConfig: |
-        [DEFAULT]
-        enabled_backends = default_backend:file
-        [glance_store]
-        default_backend = default_backend
-        [default_backend]
-        filesystem_store_datadir = /var/lib/glance/images/
-      glanceAPIs:
-        default:
-          replicas: 1
-          type: single
-          override:
-            service:
-              internal:
-                metadata:
-                  annotations:
-                    metallb.universe.tf/address-pool: internalapi
-                    metallb.universe.tf/allow-shared-ip: internalapi
-                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-              spec:
-                type: LoadBalancer
-          networkAttachments:
-          - storage
-'
-----
-
 === Using NFS backend
 
 When the source Cloud based on TripleO uses Glance with a NFS backend, before
