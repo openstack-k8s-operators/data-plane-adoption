@@ -93,7 +93,7 @@
           ssh \
             -i {{ edpm_privatekey_path | default("/tmp/ansible_private_key") }} \
             {{ edpm_user }}@"${computes[$name]}" \
-            "grep -qF $uuid /var/lib/nova/compute_id || (echo $uuid | sudo tee /var/lib/nova/compute_id && sudo chown 42436:42436 /var/lib/nova/compute_id && sudo chcon -t container_file_t /var/lib/nova/compute_id)"
+            "echo $uuid | sudo tee /var/lib/nova/compute_id && sudo chown 42436:42436 /var/lib/nova/compute_id && sudo chcon -t nova_var_lib_t /var/lib/nova/compute_id"
         done
 
 - name: create dataplane-adoption-secret.yaml
