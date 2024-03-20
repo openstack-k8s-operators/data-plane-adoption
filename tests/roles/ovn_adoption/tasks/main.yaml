@@ -188,6 +188,18 @@
 
     oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB_IP:6641 > /backup/ovs-nb.ovsschema && ovsdb-tool convert /backup/ovs-nb.db /backup/ovs-nb.ovsschema"
     oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6642 > /backup/ovs-sb.ovsschema && ovsdb-tool convert /backup/ovs-sb.db /backup/ovs-sb.ovsschema"
+  when: enable_tlse|bool is false
+
+- name: upgrade OVN databases to the latest schema from podified ovsdb-servers (tls)
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_NB_IP:6641 > /backup/ovs-nb.ovsschema && ovsdb-tool convert /backup/ovs-nb.db /backup/ovs-nb.ovsschema"
+    oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_SB_IP:6642 > /backup/ovs-sb.ovsschema && ovsdb-tool convert /backup/ovs-sb.db /backup/ovs-sb.ovsschema"
+  when: enable_tlse|bool
 
 - name: restore OVN database backups to podified ovsdb-servers
   no_log: "{{ use_no_log }}"
@@ -198,6 +210,18 @@
 
     oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
     oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
+  when: enable_tlse|bool is false
+
+- name: restore OVN database backups to podified ovsdb-servers (tls)
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    oc exec ovn-copy-data -- bash -c "ovsdb-client restore --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
+    oc exec ovn-copy-data -- bash -c "ovsdb-client restore --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
+  when: enable_tlse|bool
 
 - name: deploy podified OVN northd service to keep databases in sync
   ansible.builtin.shell: |
