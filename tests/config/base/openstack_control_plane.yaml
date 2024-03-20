@@ -7,11 +7,18 @@ spec:
   storageClass: local-storage
 
   tls:
-    endpoint:
+    podLevel:
+      enabled: true
       internal:
-        enabled: true
-      public:
-        enabled: true
+        ca:
+          customIssuer: rootca-internal
+      ovn:
+        ca:
+          customIssuer: rootca-internal
+    ingress:
+      ca:
+        customIssuer: rootca-internal
+      enabled: true
 
   barbican:
     enabled: false

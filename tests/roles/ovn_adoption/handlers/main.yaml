@@ -3,4 +3,6 @@
     {{ shell_header }}
     {{ oc_header }}
     oc delete pod ovn-copy-data
+    oc delete certificate ovn-data-cert
+    oc delete secret ovn-data-cert
     {% if storage_reclaim_policy.lower() == "delete" %}oc delete pvc ovn-data{% endif %}
