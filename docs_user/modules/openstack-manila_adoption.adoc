@@ -36,29 +36,83 @@ For example, if a Ceph cluster was used in the deployment, the "storage"
 network refers to the Ceph cluster's public network, and Manila's share
 manager service needs to be able to reach it.
 
+== Changes to CephFS via NFS
+
+If the Red Hat OpenStack Platform 17.1 deployment uses CephFS via NFS as a
+backend for Manila, there's a `ceph-nfs` service on the RHOSP
+controller nodes deployed and managed by Director. This service cannot be
+directly imported into RHOSP 18. On RHOSP 18, Manila only supports using a
+"clustered" NFS service that is directly managed on the Ceph cluster. So,
+adoption with this service will involve a data path disruption to existing NFS
+clients. The timing of this disruption can be controlled by the deployer
+independent of this adoption procedure.
+
+On RHOSP  17.1, pacemaker controls the high availability of the `ceph-nfs`
+service. This service is assigned a Virtual IP (VIP) address that is also
+managed by pacemaker. The VIP is typically created on an isolated `StorageNFS`
+network. There are ordering and collocation constraints established between
+this VIP, `ceph-nfs` and Manila's share manager service on the
+controller nodes. Prior to adopting Manila, pacemaker's ordering and
+collocation constraints must be adjusted to separate the share manager service.
+This establishes `ceph-nfs` with its VIP as an isolated, standalone NFS service
+that can be decommissioned at will after completing the OpenStack adoption.
+
+Red Hat Ceph Storage 7.0 introduced a native `clustered Ceph NFS service`. This
+service has to be deployed on the Ceph cluster using the Ceph orchestrator
+prior to adopting Manila. This NFS service will eventually replace the
+standalone NFS service from RHOSP 17.1 in your deployment. When Manila is
+adopted into the RHOSP 18 environment, it will establish all the existing
+exports and client restrictions on the new clustered Ceph NFS service. Clients
+can continue to read and write data on their existing NFS shares, and are not
+affected until the old standalone NFS service is decommissioned. This
+switchover window allows clients to re-mount the same share from the new
+clustered Ceph NFS service during a scheduled downtime.
+
+In order to ensure that existing clients can easily switchover to the new NFS
+service, it is necessary that the clustered Ceph NFS service is assigned an
+IP address from the same isolated `StorageNFS` network. Doing this will ensure
+that NFS users aren't expected to make any networking changes to their
+existing workloads. These users only need to discover and re-mount their shares
+using new export paths. When the adoption procedure is complete, OpenStack
+users can query Manila's API to list the export locations on existing shares to
+identify the `preferred` paths to mount these shares. These `preferred` paths
+will correspond to the new clustered Ceph NFS service in contrast to other
+non-preferred export paths that continue to be displayed until the old
+isolated, standalone NFS service is decommissioned.
+
+See xref:creating-a-ceph-nfs-cluster_{context}[Creating a Ceph NFS cluster]
+for instructions on setting up a clustered NFS service.
+
 == Prerequisites
 
-* Ensure that manila systemd services (api, cron, scheduler) are
+* Ensure that Manila systemd services (`api`, `cron`, `scheduler`) are
 stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
-* Ensure that manila pacemaker services ("openstack-manila-share") are
+* If the deployment uses CephFS via NFS as a storage backend, ensure that
+pacemaker ordering and collocation constraints are adjusted. For more
+information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
+* Ensure that manila's pacemaker service (`openstack-manila-share`) is
 stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
 * Ensure that the database migration has completed. For more information, see xref:migrating-databases-to-mariadb-instances_{context}[Migrating databases to MariaDB instances].
 * Ensure that OpenShift nodes where `manila-share` service will be deployed
 can reach the management network that the storage system is in.
+* If the deployment uses CephFS via NFS as a storage backend, ensure that
+a new clustered Ceph NFS service is deployed on the Ceph cluster with the help
+of Ceph orchestrator. For more information, see
+xref:creating-a-ceph-nfs-cluster_{context}[Creating a Ceph NFS cluster].
 * Ensure that services such as keystone and memcached are available prior to
 adopting manila services.
 * If tenant-driven networking was enabled (`driver_handles_share_servers=True`),
-ensure that neutron has been deployed prior to
-adopting manila services.
+ensure that neutron has been deployed prior to adopting manila services.
 
 == Procedure - Manila adoption
 
 === Copying configuration from the RHOSP 17.1 deployment
 
 Define the `CONTROLLER1_SSH` environment variable, if it link:stop_openstack_services.md#variables[hasn't been
-defined] already. Then copy the
-configuration file from RHOSP 17.1 for reference.
+defined] already. Then copy the configuration file from RHOSP 17.1 for
+reference.
 
+[source,bash]
 ----
 $CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/manila/etc/manila/manila.conf | awk '!/^ *#/ && NF' > ~/manila.conf
 ----
@@ -73,8 +127,8 @@ environment:
 (`[database]`), service authentication (`auth_strategy`,
 `[keystone_authtoken]`), message bus configuration
 (`transport_url`, `control_exchange`), the default paste config
-(`api_paste_config`) and inter-service communication configuration (`
-[neutron]`, `[nova]`, `[cinder]`, `[glance]` `[oslo_messaging_*]`). So
+(`api_paste_config`) and inter-service communication configuration (
+`[neutron]`, `[nova]`, `[cinder]`, `[glance]` `[oslo_messaging_*]`). So
 all of these can be ignored.
 * Ignore the `osapi_share_listen` configuration. In RHOSP 18, you rely on
 OpenShift routes and ingress.
@@ -116,6 +170,8 @@ file called `policy.yaml`.
                         path: policy.yaml
 ----
 
+* You must preserve the value of the `host` option under the `[DEFAULT]`
+section as `hostgroup`.
 * The Manila API service needs the `enabled_share_protocols` option to be
 added in the `customServiceConfig` section in `manila: template: manilaAPI`.
 * If you had scheduler overrides, add them to the `customServiceConfig`
@@ -149,6 +205,7 @@ using custom container images.
              [DEFAULT]
              debug = true
              enabled_share_backends = netapp
+             host = hostgroup
              [netapp]
              driver_handles_share_servers = False
              share_backend_name = netapp
@@ -161,6 +218,7 @@ using custom container images.
              [DEFAULT]
              debug = true
              enabled_share_backends=pure-1
+             host = hostgroup
              [pure-1]
              driver_handles_share_servers = False
              share_backend_name = pure-1
@@ -175,6 +233,7 @@ using custom container images.
 usernames, it is recommended to use OpenShift secrets, and the
 `customServiceConfigSecrets` key. An example:
 
+[source,yaml]
 ----
 
 cat << __EOF__ > ~/netapp_secrets.conf
@@ -186,6 +245,10 @@ netapp_password = secret_netapp_password
 netapp_vserver = mydatavserver
 __EOF__
 
+----
+
+[source,bash]
+---
 oc create secret generic osp-secret-manila-netapp --from-file=~/netapp_secrets.conf -n openstack
 ----
 
@@ -205,6 +268,7 @@ config example using the secret you created above.
              [DEFAULT]
              debug = true
              enabled_share_backends = netapp
+             host = hostgroup
              [netapp]
              driver_handles_share_servers = False
              share_backend_name = netapp
@@ -230,6 +294,9 @@ count of the `manilaShares` service/s to 1.
 * Ensure that the appropriate storage management network is specified in the
 `manilaShares` section. The example below connects the `manilaShares`
 instance with the CephFS backend driver to the `storage` network.
+* Prior to adopting the `manilaShares` service for CephFS via NFS, ensure that
+you have a clustered Ceph NFS service created. You will need to provide the
+name of the service as ``cephfs_nfs_cluster_id``.
 
 === Deploying the manila control plane
 
@@ -271,9 +338,10 @@ spec:
           customServiceConfig: |
             [DEFAULT]
             enabled_share_backends = tripleo_ceph
-            [tripleo_ceph]
+            host = hostgroup
+            [cephfs]
             driver_handles_share_servers=False
-            share_backend_name=tripleo_ceph
+            share_backend_name=cephfs
             share_driver=manila.share.drivers.cephfs.driver.CephFSDriver
             cephfs_conf_path=/etc/ceph/ceph.conf
             cephfs_auth_id=openstack
@@ -285,6 +353,65 @@ spec:
 __EOF__
 ----
 
+Below is an example that uses CephFS via NFS. In this example:
+
+* The `cephfs_ganesha_server_ip` option is preserved from the configuration on
+the old RHOSP 17.1 environment.
+* The `cephfs_nfs_cluster_id` option is set with the name of the NFS cluster
+created on Ceph.
+
+
+[source,yaml]
+----
+cat << __EOF__ > ~/manila.patch
+spec:
+  manila:
+    enabled: true
+    apiOverride:
+      route: {}
+    template:
+      databaseInstance: openstack
+      secret: osp-secret
+      manilaAPI:
+        replicas: 3
+        customServiceConfig: |
+          [DEFAULT]
+          enabled_share_protocols = cephfs
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+      manilaScheduler:
+        replicas: 3
+      manilaShares:
+        cephfs:
+          replicas: 1
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_share_backends = cephfs
+            host = hostgroup
+            [cephfs]
+            driver_handles_share_servers=False
+            share_backend_name=tripleo_ceph
+            share_driver=manila.share.drivers.cephfs.driver.CephFSDriver
+            cephfs_conf_path=/etc/ceph/ceph.conf
+            cephfs_auth_id=openstack
+            cephfs_cluster_name=ceph
+            cephfs_protocol_helper_type=NFS
+            cephfs_nfs_cluster_id=cephfs
+            cephfs_ganesha_server_ip=172.17.5.47
+          networkAttachments:
+              - storage
+__EOF__
+----
+
+[source,bash]
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patch
 ----
@@ -293,16 +420,19 @@ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patc
 
 === Inspect the resulting manila service pods
 
+[source,bash]
 ----
 oc get pods -l service=manila
 ----
 
 === Check that Manila API service is registered in Keystone
 
+[source,bash]
 ----
 openstack service list | grep manila
 ----
 
+[source,bash]
 ----
 openstack endpoint list | grep manila
 
@@ -316,6 +446,7 @@ openstack endpoint list | grep manila
 
 Test the health of the service:
 
+[source,bash]
 ----
 openstack share service list
 openstack share pool list --detail
@@ -323,6 +454,7 @@ openstack share pool list --detail
 
 Check on existing workloads:
 
+[source,bash]
 ----
 openstack share list
 openstack share snapshot list
@@ -330,6 +462,80 @@ openstack share snapshot list
 
 You can create further resources:
 
+[source,bash]
 ----
 openstack share create cephfs 10 --snapshot mysharesnap --name myshareclone
+openstack share create nfs 10 --name mynfsshare
+openstack share export location list mynfsshare
 ----
+
+== Decommissioning the old standalone Ceph NFS service
+
+If the deployment uses CephFS via NFS, you must inform your OpenStack users
+that the old, standalone NFS service will be decommissioned. Users can discover
+the new export locations for their pre-existing shares by querying Manila's API.
+To stop using the old NFS server, they need to unmount and remount their
+shared file systems on each client. If users are consuming Manila shares via
+the Manila CSI plugin for OpenShift, this migration can be done by scaling down
+the application pods and scaling them back up. Clients spawning new workloads
+must be discouraged from using share exports via the old NFS service. Manila
+will no longer communicate with the old NFS service, and so it cannot apply or
+alter any export rules on the old NFS service.
+
+Since the old NFS service will no longer be supported by future software
+upgrades, it is recommended that the decommissioning period is short.
+
+Once the old NFS service is no longer used, you can adjust the configuration
+for the `manila-share` service to remove the `cephfs_ganesha_server_ip` option.
+Doing this will restart the `manila-share` process and remove the export
+locations that pertained to the old NFS service from all the shares.
+
+[source,yaml]
+----
+cat << __EOF__ > ~/manila.patch
+spec:
+  manila:
+    enabled: true
+    apiOverride:
+      route: {}
+    template:
+      manilaShares:
+        cephfs:
+          replicas: 1
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_share_backends = cephfs
+            host = hostgroup
+            [cephfs]
+            driver_handles_share_servers=False
+            share_backend_name=cephfs
+            share_driver=manila.share.drivers.cephfs.driver.CephFSDriver
+            cephfs_conf_path=/etc/ceph/ceph.conf
+            cephfs_auth_id=openstack
+            cephfs_cluster_name=ceph
+            cephfs_protocol_helper_type=NFS
+            cephfs_nfs_cluster_id=cephfs
+          networkAttachments:
+              - storage
+__EOF__
+
+----
+
+[source,bash]
+---
+oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patch
+----
+
+To cleanup the standalone ceph nfs service from the old OpenStack control plane
+nodes, you can disable and delete the pacemaker resources associated with the
+service. Replace `<VIP>` in the following commands with the IP address assigned
+to the ceph-nfs service in your environment.
+
+[source,bash]
+---
+sudo pcs resource disable ceph-nfs
+sudo pcs resource disable ip-<VIP>
+sudo pcs resource unmanage ceph-nfs
+sudo pcs resource unmanage ip-<VIP>
+---
+
