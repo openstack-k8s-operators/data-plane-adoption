@@ -18,8 +18,14 @@ adopted deployment and CRs must be configured accordingly.
 Define the shell variables used in the steps below. The values are
 just illustrative, use values that are correct for your environment:
 
+[subs=+quotes]
 ----
+ifeval::["{build}" != "downstream"]
 CEPH_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
+endif::[]
+ifeval::["{build}" == "downstream"]
+CEPH_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
+endif::[]
 CEPH_KEY=$($CEPH_SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0")
 CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
 ----

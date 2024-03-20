@@ -114,6 +114,7 @@ make build
 Then configure ansible.cfg and ssh-config file according to your environment:
 
 [source,yaml]
+[subs=+quotes]
 ----
 Host *
     IdentitiesOnly yes
@@ -128,7 +129,12 @@ Host virthost
 
 Host standalone
     Hostname standalone
+ifeval::["{build}" != "downstream"]
     IdentityFile ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa
+endif::[]
+ifeval::["{build}" == "downstream"]
+    IdentityFile *<path to SSH key>*
+endif::[]
     User root
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null

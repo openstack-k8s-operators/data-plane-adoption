@@ -122,6 +122,7 @@ lands.
 For each compute node grab the UUID of the compute service and write it too
 the stable `compute_id` file in `/var/lib/nova/` directory.
 +
+[subs=+quotes]
 ----
 for name in "${!computes[@]}";
 do
@@ -131,7 +132,12 @@ do
   )
   echo "Writing $uuid to /var/lib/nova/compute_id on $name"
   ssh \
+ifeval::["{build}" != "downstream"]
     -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+endif::[]
+ifeval::["{build}" == "downstream"]
+    -i *<path to SSH key>* \
+endif::[]
     root@"${computes[$name]}" \
       "grep -qF $uuid /var/lib/nova/compute_id || (echo $uuid | sudo tee /var/lib/nova/compute_id && sudo chown 42436:42436 /var/lib/nova/compute_id && sudo chcon -t container_file_t /var/lib/nova/compute_id)"
 done
@@ -139,6 +145,7 @@ done
 
 * Create a https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets[ssh authentication secret] for the EDPM nodes:
 +
+[subs=+quotes]
 ----
 oc apply -f - <<EOF
 apiVersion: v1
@@ -148,7 +155,12 @@ metadata:
     namespace: openstack
 data:
     ssh-privatekey: |
+ifeval::["{build}" != "downstream"]
 $(cat ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa | base64 | sed 's/^/        /')
+endif::[]
+ifeval::["{build}" == "downstream"]
+$(cat *<path to SSH key>* | base64 | sed 's/^/        /')
+endif::[]
 EOF
 ----
 

@@ -38,6 +38,15 @@ jobs:
       - name: Build dev docs
         run: make docs-dev
 
+      - name: Test user docs
+        run: |
+          INSTALL_YAMLS_REF=$(grep -o install_yamls docs_build/adoption-user/index-downstream.html | wc -l)
+          if [[ $INSTALL_YAMLS_REF -gt 0 ]]; then
+              echo user facing docs should NOT mention install_yamls
+              grep install_yamls docs_build/adoption-user/index-downstream.html
+              exit 1
+          fi
+
       - name: Prepare gh-pages branch
         run: |
           git config user.name github-actions

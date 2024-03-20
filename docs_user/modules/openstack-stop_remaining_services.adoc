@@ -20,8 +20,14 @@ Define the shell variables used in the steps below.
 Define the map of compute node name, IP pairs.
 The values are just illustrative and refer to a single node standalone director deployment, use values that are correct for your environment:
 
+[subs=+quotes]
 ----
+ifeval::["{build}" != "downstream"]
 EDPM_PRIVATEKEY_PATH="~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa"
+endif::[]
+ifeval::["{build}" == "downstream"]
+EDPM_PRIVATEKEY_PATH="*<path to SSH key>*"
+endif::[]
 declare -A computes
 computes=(
   ["standalone.localdomain"]="192.168.122.100"

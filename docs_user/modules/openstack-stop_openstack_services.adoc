@@ -31,8 +31,14 @@ as:
 Define the shell variables used in the following steps. The values are illustrative and refer to a single node standalone director deployment. Use values that are correct for your environment:
 
 [source,bash]
+[subs=+quotes]
 ----
+ifeval::["{build}" != "downstream"]
 CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
+endif::[]
+ifeval::["{build}" == "downstream"]
+CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
+endif::[]
 CONTROLLER2_SSH=""
 CONTROLLER3_SSH=""
 ----
