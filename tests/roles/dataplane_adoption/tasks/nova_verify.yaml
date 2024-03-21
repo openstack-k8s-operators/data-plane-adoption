@@ -6,6 +6,7 @@
 
 # NOTE(bogdando): do not use 'set -o pipefail' for these verifications
 - name: verify if Nova services can stop the existing test VM instance
+  when: prelaunch_test_instance|bool
   ansible.builtin.shell: |
     {{ nova_header }}
     ${BASH_ALIASES[openstack]} server list | grep -qF '| test | ACTIVE |' && ${BASH_ALIASES[openstack]} server stop test || echo PASS
@@ -19,6 +20,7 @@
   delay: 6
 
 - name: verify if Nova services can start the existing test VM instance
+  when: prelaunch_test_instance|bool
   ansible.builtin.shell: |
     {{ nova_header }}
     ${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' && ${BASH_ALIASES[openstack]} server start test || echo PASS
