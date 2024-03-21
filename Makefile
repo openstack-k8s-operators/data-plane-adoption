@@ -2,25 +2,24 @@ TEST_INVENTORY ?= tests/inventory.yaml
 TEST_VARS ?= tests/vars.yaml
 TEST_SECRETS ?= tests/secrets.yaml
 TEST_CONFIG ?= tests/ansible.cfg
-# String with comma seperated tags which will be passed to skip-tags during ansible-playbok run to skip part of tests
-TESTS_TO_SKIP ?= 
+TEST_ARGS ?=
 
 ### TESTS ###
 
 test-minimal: TEST_OUTFILE := tests/logs/test_minimal_out_$(shell date +%FT%T%Z).log
 test-minimal:
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(if $(TESTS_TO_SKIP),--skip-tags ${TESTS_TO_SKIP}) tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 test-with-ceph: TEST_OUTFILE := tests/logs/test_with_ceph_out_$(shell date +%FT%T%Z).log
 test-with-ceph:
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(if $(TESTS_TO_SKIP),--skip-tags ${TESTS_TO_SKIP}) tests/playbooks/test_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 test-swift-migration: TEST_OUTFILE := tests/logs/test_swift_migration_out_$(shell date +%FT%T%Z).log
 test-swift-migration:
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) tests/playbooks/test_swift_migration.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_swift_migration.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 ### DOCS ###
 
