@@ -5,6 +5,11 @@
       CONTROLLER1_SSH="{{ controller1_ssh }}"
       CONTROLLER2_SSH="{{ controller2_ssh }}"
       CONTROLLER3_SSH="{{ controller3_ssh }}"
+      EDPM_PRIVATEKEY_PATH="{{ edpm_privatekey_path }}"
+      declare -A computes
+      computes=(
+        ["standalone.ooo.test"]="{{ edpm_node_ip }}"
+      )
 
 - name: stop pacemaker services
   no_log: "{{ use_no_log }}"
