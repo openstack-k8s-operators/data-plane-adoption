@@ -65,34 +65,12 @@
     apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: nova-compute-ffu
+      name: nova-compute-extraconfig
       namespace: openstack
     data:
       20-nova-compute-cell1-ffu-cleanup.conf: |
         [workarounds]
         disable_compute_service_check_for_ffu=false
-    ---
-    apiVersion: dataplane.openstack.org/v1beta1
-    kind: OpenStackDataPlaneService
-    metadata:
-      name: nova-compute-ffu
-      namespace: openstack
-    spec:
-      label: nova.compute.ffu
-      configMaps:
-        - nova-compute-ffu
-      secrets:
-        - nova-cell1-compute-config
-        - nova-migration-ssh-key
-      playbook: osp.edpm.nova
-      tlsCert:
-        contents:
-          - dnsnames
-          - ips
-        networks:
-          - ctlplane
-        issuer: osp-rootca-issuer-internal
-      caCerts: combined-ca-bundle
     ---
     apiVersion: dataplane.openstack.org/v1beta1
     kind: OpenStackDataPlaneDeployment
@@ -103,7 +81,7 @@
       nodeSets:
         - openstack
       servicesOverride:
-        - nova-compute-ffu
+        - nova-compute-extraconfig
     EOF
 
 - name: wait for Nova compute EDPM services to become ready
@@ -113,7 +91,7 @@
     oc wait --for condition=Ready osdpd/openstack-nova-compute-ffu --timeout=5m
   register: nova_ffu_edpm_result
   until: nova_ffu_edpm_result is success
-  retries: 10
+  retries: 300
   delay: 6
 
 - name: run Nova DB migrations to complete Wallaby->antelope FFU
