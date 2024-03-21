@@ -14,7 +14,7 @@ must already be imported into the podified MariaDB.
 
 == Variables
 
-(There are no shell variables necessary currently.)
+There are no shell variables necessary currently.
 
 == Pre-checks
 
@@ -22,7 +22,6 @@ must already be imported into the podified MariaDB.
 
 * Create the `keystone` secret, containing fernet keys:
 +
-[,bash]
 ----
 oc apply -f - <<EOF
 apiVersion: v1

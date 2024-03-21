@@ -24,7 +24,7 @@ should be already adopted.
 
 == Variables
 
-(There are no shell variables necessary currently.)
+There are no shell variables necessary currently.
 
 == Pre-checks
 
@@ -84,28 +84,24 @@ spec:
 * See that Keystone endpoints are defined and pointing to the podified
 FQDNs:
 +
-[,bash]
 ----
 openstack endpoint list | grep key-manager
 ----
 
 === Check that Barbican API service is registered in Keystone
 
-[,bash]
 ----
 openstack service list | grep key-manager
 ----
 
-[,bash]
 ----
 openstack endpoint list | grep key-manager
 ----
 
 === List secrets
 
-[,bash]
 ----
 openstack secret list
 ----
 
-**TODO: Once different crypto plugins are supported, additional lines test those should be added.
+//**TODO: Once different crypto plugins are supported, additional lines test those should be added.
