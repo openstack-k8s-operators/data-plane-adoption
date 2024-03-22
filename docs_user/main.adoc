@@ -6,7 +6,7 @@
 :doctype: book
 :context: osp
 
-include::../docs_user/rhoso_attributes.adoc[]
+include::rhoso_attributes.adoc[]
 
 include::assemblies/openstack_adoption.adoc[leveloffset=+1]
 
