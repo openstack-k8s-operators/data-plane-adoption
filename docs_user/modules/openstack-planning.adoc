@@ -6,7 +6,7 @@
 
 = Planning the new deployment
 
-Just like you did back when you installed your Director deployed OpenStack, the
+Just like you did back when you installed your Director deployed {osp_prev_long}, the
 upgrade/migration to the podified OpenStack requires planning various aspects
 of the environment such as node roles, planning your network topology, and
 storage.

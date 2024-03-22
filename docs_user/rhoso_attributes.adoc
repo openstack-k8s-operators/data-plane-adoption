@@ -1,0 +1,42 @@
+// rhosp_attributes.adoc
+// Add this include statement in your master.adoc file: include::common/global/rhosp_attributes.adoc[]
+// Run this command to create a sym link in your doc folder:   $ ln -s ../common
+// Enclose the attribute in {} brackets in your modules.
+// Example: Use {osp_long} to display "OpenStack Platform".
+
+// RHEL version attributes
+:rhel_prev_ver: 8.4
+:rhel_curr_ver: 9.2
+
+// The {rhelvernum} attribute is currently in use in several deployment docs
+:rhelvernum: 9.2
+
+// OSP version attributes
+
+:osp_long: Red Hat OpenStack Services on OpenShift
+:osp_prev_long: Red Hat OpenStack Platform
+:osp_acro: RHOSO
+:osp_curr_ver: 18.0
+:osp_curr_ver_no_beta: 18.0
+:osp_prev_ver: 17.1
+:osp_z_stream: 0
+
+// OCP version attributes
+
+:ocp_curr_ver: 4.15
+
+
+// Ceph version attributes
+
+:CephVernum: 6.1
+
+// Common URLs. Do not override. Do not delete.
+
+:base_url: https://access.redhat.com/documentation
+:defaultURL: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/{osp_curr_ver}/html
+:defaultOCPURL: https://docs.openshift.com/container-platform/{ocp_curr_ver}/
+:defaultCephURL:  https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/{CephVernum}/html
+
+// Specific links
+
+:setup-tlse: {defaultURL}/hardening_red_hat_openstack_platform/assembly_securing-rhos-with-tls-and-pki_security_and_hardening#proc_implementing-tls-e-with-ansible_encryption-and-key-management[Implementing TLS-e with Ansible]
