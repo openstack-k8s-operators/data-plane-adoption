@@ -38,7 +38,7 @@ just illustrative, use values that are correct for your environment:
 
 ----
 STORAGE_CLASS_NAME=crc-csi-hostpath-provisioner
-ifeval::["{build}" == "upstream"]
+ifeval::["{build}" != "downstream"]
 OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
 endif::[]
 ifeval::["{build}" == "downstream"]

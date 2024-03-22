@@ -90,7 +90,7 @@ shipped by cephadm, remove the following config options from the Ceph cluster.
 $ ceph config dump
 ...
 ...
-ifeval::["{build}" == "upstream"]
+ifeval::["{build}" != "downstream"]
 mgr   advanced  mgr/cephadm/container_image_alertmanager    undercloud-0.ctlplane.redhat.local:8787/ceph/alertmanager:v0.25.0
 mgr   advanced  mgr/cephadm/container_image_base            undercloud-0.ctlplane.redhat.local:8787/ceph/ceph:v18
 mgr   advanced  mgr/cephadm/container_image_grafana         undercloud-0.ctlplane.redhat.local:8787/ceph/ceph-grafana:9.4.7
@@ -173,7 +173,7 @@ is not supported for an external Ceph cluster.
 [source,bash]
 ----
 for item in $(sudo cephadm shell --  ceph orch host ls --format json | jq -r '.[].hostname'); do
-    sudo cephadm shell -- ceph orch host label add  $item monitoring; 
+    sudo cephadm shell -- ceph orch host label add  $item monitoring;
 done
 ----
 
@@ -373,7 +373,7 @@ prometheus.cephstorage-2    cephstorage-2.redhat.local  172.17.3.144:9092
 
 [source,bash]
 ----
-[ceph: root@controller-0 /]# ceph config dump 
+[ceph: root@controller-0 /]# ceph config dump
 ...
 ...
 mgr  advanced  mgr/dashboard/ALERTMANAGER_API_HOST   http://172.17.3.83:9093

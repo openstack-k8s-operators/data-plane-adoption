@@ -373,7 +373,7 @@ endif::[]
         edpm_ovn_ofctrl_wait_before_clear: 8000
 
         timesync_ntp_servers:
-ifeval::["{build}" == "upstream"]
+ifeval::["{build}" != "downstream"]
         - hostname: pool.ntp.org
 endif::[]
 ifeval::["{build}" == "downstream"]
@@ -381,7 +381,7 @@ ifeval::["{build}" == "downstream"]
         - hostname: clock2.redhat.com
 endif::[]
 
-ifeval::["{build}" == "upstream"]
+ifeval::["{build}" != "downstream"]
         edpm_bootstrap_command: |
           # This is a hack to deploy RDO Delorean repos to RHEL as if it were Centos 9 Stream
           set -euxo pipefail
