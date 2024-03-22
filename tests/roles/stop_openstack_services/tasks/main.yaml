@@ -7,37 +7,6 @@
       CONTROLLER2_SSH="{{ controller2_ssh }}"
       CONTROLLER3_SSH="{{ controller3_ssh }}"
 
-- name: Set list of services to stop
-  set_fact:
-    services_to_stop:
-    - "tripleo_horizon.service"
-    - "tripleo_keystone.service"
-    - "tripleo_cinder_api.service"
-    - "tripleo_cinder_api_cron.service"
-    - "tripleo_cinder_scheduler.service"
-    - "tripleo_cinder_volume.service"
-    - "tripleo_cinder_backup.service"
-    - "tripleo_glance_api.service"
-    - "tripleo_manila_api.service"
-    - "tripleo_manila_api_cron.service"
-    - "tripleo_manila_scheduler.service"
-    - "tripleo_neutron_api.service"
-    - "tripleo_nova_api.service"
-    - "tripleo_nova_api_cron.service"
-    - "tripleo_nova_conductor.service"
-    - "tripleo_nova_metadata.service"
-    - "tripleo_nova_scheduler.service"
-    - "tripleo_nova_vnc_proxy.service"
-    - "tripleo_ovn_cluster_northd.service"
-    - "tripleo_placement_api.service"
-
-- name: Set list of Pacemaker resources to stop
-  set_fact:
-    pacemaker_resources_to_stop:
-    - "openstack-cinder-volume"
-    - "openstack-cinder-backup"
-    - "openstack-manila-share"
-
 - name: stop control plane services
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -45,12 +14,34 @@
     {{ oc_header }}
     {{ stop_openstack_services_shell_vars }}
 
-    ServicesToStop=({{ services_to_stop | join(' ') }})
+    ServicesToStop=("tripleo_horizon.service"
+                    "tripleo_keystone.service"
+                    "tripleo_cinder_api.service"
+                    "tripleo_cinder_api_cron.service"
+                    "tripleo_cinder_scheduler.service"
+                    "tripleo_cinder_volume.service"
+                    "tripleo_cinder_backup.service"
+                    "tripleo_glance_api.service"
+                    "tripleo_manila_api.service"
+                    "tripleo_manila_api_cron.service"
+                    "tripleo_manila_scheduler.service"
+                    "tripleo_neutron_api.service"
+                    "tripleo_nova_api.service"
+                    "tripleo_nova_api_cron.service"
+                    "tripleo_nova_api.service"
+                    "tripleo_nova_conductor.service"
+                    "tripleo_nova_metadata.service"
+                    "tripleo_nova_scheduler.service"
+                    "tripleo_nova_vnc_proxy.service"
+                    "tripleo_ovn_cluster_northd.service"
+                    "tripleo_placement_api.service")
 
-    PacemakerResourcesToStop=({{ pacemaker_resources_to_stop | join(' ') }})
+    PacemakerResourcesToStop=("openstack-cinder-volume"
+                              "openstack-cinder-backup"
+                              "openstack-manila-share")
 
     echo "Stopping systemd OpenStack services"
-    for service in ${ServicesToStop[@]}; do
+    for service in ${ServicesToStop[*]}; do
         for i in {1..3}; do
             SSH_CMD=CONTROLLER${i}_SSH
             if [ ! -z "${!SSH_CMD}" ]; then
@@ -63,7 +54,7 @@
     done
 
     echo "Checking systemd OpenStack services"
-    for service in ${ServicesToStop[@]}; do
+    for service in ${ServicesToStop[*]}; do
         for i in {1..3}; do
             SSH_CMD=CONTROLLER${i}_SSH
             if [ ! -z "${!SSH_CMD}" ]; then
@@ -80,7 +71,7 @@
         SSH_CMD=CONTROLLER${i}_SSH
         if [ ! -z "${!SSH_CMD}" ]; then
             echo "Using controller $i to run pacemaker commands"
-            for resource in ${PacemakerResourcesToStop[@]}; do
+            for resource in ${PacemakerResourcesToStop[*]}; do
                 if ${!SSH_CMD} sudo pcs resource config $resource; then
                     ${!SSH_CMD} sudo pcs resource disable $resource
                 fi
@@ -89,39 +80,9 @@
         fi
     done
 
-  when: ospdo_src is undefined
+  when: not ospdo_src| default(false) | bool
 
-# W/A for a adhoc ansible issue from ospdo_clnt_pod
-- name: Get ansible systemctl script
-  delegate_to: "{{ adoption_ospdo_host }}"
-  ansible.builtin.shell: |
-    {{ exec_ospdoclnt_pod }} -- bash -c " test -d {{ ospdo_clnt_repo }} || git clone {{ dpa_repo }} {{ ospdo_clnt_repo }}"
-  when: ospdo_src is defined
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.include_tasks: ospdo_stop_openstack_services.yaml
+  when: ospdo_src| default(false) | bool
 
-- name: Stopping systemd OpenStack services
-  delegate_to: "{{ adoption_ospdo_host }}"
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell: |
-    {{ exec_ospdoclnt_pod }} -- bash -c "{{ ansible_systemctl_stop }} {{ item }}"
-  loop: "{{ services_to_stop }}"
-  ignore_errors: true
-  when: ospdo_src is defined
-
-- name: get adoption scripts to all controllers
-  delegate_to: "{{ adoption_ospdo_host }}"
-  ansible.builtin.shell: |
-    {{ item }} git clone {{ dpa_repo }}
-  ignore_errors: true
-  loop: "{{ osp_controllers_ssh }}"
-  when: ospdo_src is defined
-
-- name: Stopping pacemaker OpenStack services
-  delegate_to: "{{ adoption_ospdo_host }}"
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell: |
-    PacemakerResourcesToStop=({{ pacemaker_resources_to_stop | join(' ') }})
-    for resource in ${PacemakerResourcesToStop[@]}; do
-        {{ item }} {{ pcs_res_disable }} $resource
-    done
-  loop: "{{ osp_controllers_ssh }}"
-  when: ospdo_src is defined

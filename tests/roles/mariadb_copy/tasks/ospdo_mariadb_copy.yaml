@@ -1,0 +1,12 @@
+- name: get mysql adoption scripts to all controllers
+  delegate_to: "{{ adoption_ospdo_host }}"
+  ansible.builtin.shell: |
+    {{ item }} git clone {{ dpa_repo }}
+  ignore_errors: true
+  loop: "{{ osp_controllers_ssh }}"
+
+- name: check that the Galera database cluster members are online and synced
+  delegate_to: "{{ adoption_ospdo_host }}"
+  shell: |
+    {{ item }} {{ dpa_mysql_script }} check_wsrep | grep -qE '\bSynced\b'
+  loop: "{{ osp_controllers_ssh }}"

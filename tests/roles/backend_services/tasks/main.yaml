@@ -11,19 +11,9 @@
     cd {{ install_yamls_path }}
     make input
 
-- name: get service passwords
-  delegate_to: "{{ adoption_ospdo_host }}"
-  ansible.builtin.shell: |
-     oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
-  when: ospdo_src is defined
-
-- name: Fetch file from delegate host
-  delegate_to: "{{ adoption_ospdo_host }}"
-  fetch:
-    src: ~/tripleo-standalone-passwords.yaml
-    dest: ~/tripleo-standalone-passwords.yaml
-    flat: yes
-  when: ospdo_src is defined
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.include_tasks: ospdo_backend_services.yaml
+  when: ospdo_src| default(false) | bool
 
 - name: set service passwords
   no_log: "{{ use_no_log }}"
