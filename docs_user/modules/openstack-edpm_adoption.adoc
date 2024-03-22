@@ -230,7 +230,7 @@ endif::[]
 * Deploy OpenStackDataPlaneNodeSet:
 +
 Make sure that ovn-controller settings configured in the OpenStackDataPlaneNodeSet are the same as were set in the compute nodes before adoption.
-This configuration is stored in the "external_ids" colum in the "Open_vSwitch" table in ovsdb and can be checked with command:
+This configuration is stored in the "external_ids" column in the "Open_vSwitch" table in ovsdb and can be checked with command:
 +
 ----
 ovs-vsctl list Open .
