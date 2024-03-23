@@ -70,6 +70,7 @@
       CONTROLLER1_SSH="{{ controller1_ssh }}"
       CONTROLLER2_SSH="{{ controller2_ssh }}"
       CONTROLLER3_SSH="{{ controller3_ssh }}"
+  when: not ospdo_src| default(false) | bool
 
 - name: start an adoption helper pod
   ansible.builtin.shell: |-
@@ -161,7 +162,7 @@
   ansible.builtin.include_tasks: ospdo_ovn_adoption.yaml
   when: ospdo_src| default(false) | bool
   vars:
-    fetch_to_pod_ovndb : True
+    stop_fetch_to_pod_ovndb : True
 
 - name: upgrade OVN databases to the latest schema from podified ovsdb-servers
   no_log: "{{ use_no_log }}"

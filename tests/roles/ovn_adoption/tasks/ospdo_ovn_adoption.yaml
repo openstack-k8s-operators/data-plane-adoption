@@ -6,8 +6,20 @@
   register: source_ovndb_ip
   when: get_source_ovndb_ip| default(false) | bool
 
-- name: Fetch OVN databases, cp into helper pod
+- name: Stop Fetch OVN databases, cp into helper pod
   block:
+  - name: stop northd service
+    delegate_to: "{{ adoption_ospdo_host }}"
+    no_log: "{{ use_no_log }}"
+    ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ oc_header }}
+      {{ ovn_copy_shell_vars }}
+
+      $CONTROLLER1_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
+      $CONTROLLER2_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
+      $CONTROLLER3_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
+
   - name: dump OVN databases
     delegate_to: "{{ adoption_ospdo_host }}"
     ansible.builtin.shell: |
@@ -34,4 +46,4 @@
     with_items:
     - /tmp/ovs-nb.db
     - /tmp/ovs-sb.db
-  when: fetch_to_pod_ovndb| default(false) | bool
+  when: stop_fetch_to_pod_ovndb| default(false) | bool
