@@ -142,7 +142,8 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
-    ssh -i {{ edpm_privatekey_path }} root@{{ edpm_node_ip }} OS_CLOUD=standalone openstack user list
+    {{ control_plane_rollback_shell_vars }}
+    {{ control_plane_rollback_verify_command }}
   register: source_control_plane_responding_result
   until: source_control_plane_responding_result is success
   retries: 60
