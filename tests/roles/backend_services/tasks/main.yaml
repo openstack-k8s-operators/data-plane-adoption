@@ -13,7 +13,7 @@
 
 - name: execute alternative tasks when source env is ODPdO
   ansible.builtin.include_tasks: ospdo_backend_services.yaml
-  when: ospdo_src| default(false) | bool
+  when: ospdo_src| bool
 
 - name: set service passwords
   no_log: "{{ use_no_log }}"

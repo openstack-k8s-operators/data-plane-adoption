@@ -52,7 +52,7 @@
 
 - name: execute alternative tasks when source env is ODPdO
   ansible.builtin.include_tasks: ospdo_ovn_adoption.yaml
-  when: ospdo_src| default(false) | bool
+  when: ospdo_src| bool
   vars:
     get_source_ovndb_ip : True
 
@@ -70,7 +70,7 @@
       CONTROLLER1_SSH="{{ controller1_ssh }}"
       CONTROLLER2_SSH="{{ controller2_ssh }}"
       CONTROLLER3_SSH="{{ controller3_ssh }}"
-  when: not ospdo_src| default(false) | bool
+  when: not ospdo_src| bool
 
 - name: start an adoption helper pod
   ansible.builtin.shell: |-
@@ -156,11 +156,11 @@
 
     oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
     oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
-  when: not ospdo_src| default(false) | bool
+  when: not ospdo_src| bool
 
 - name: execute alternative tasks when source env is ODPdO
   ansible.builtin.include_tasks: ospdo_ovn_adoption.yaml
-  when: ospdo_src| default(false) | bool
+  when: ospdo_src| bool
   vars:
     stop_fetch_to_pod_ovndb : True
 

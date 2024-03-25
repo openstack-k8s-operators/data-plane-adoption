@@ -46,4 +46,6 @@
     with_items:
     - /tmp/ovs-nb.db
     - /tmp/ovs-sb.db
-  when: stop_fetch_to_pod_ovndb| default(false) | bool
+  when:
+  - stop_fetch_to_pod_ovndb| default(false) | bool
+  - source_ovndb_ip is defined

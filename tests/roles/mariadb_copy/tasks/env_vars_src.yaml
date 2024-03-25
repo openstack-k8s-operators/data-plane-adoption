@@ -11,7 +11,7 @@
       # ...
       )
       SOURCE_DB_ROOT_PASSWORD="{{ source_db_root_password|default(external_db_root_password) }}"
-  when: not ospdo_src| default(false) | bool
+  when: not ospdo_src| bool
 
 - name: register source_mariadb_ip
   no_log: "{{ use_no_log }}"
@@ -19,7 +19,7 @@
   ansible.builtin.shell: |
     {{ controller1_ssh }} sudo cat /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg | grep -A1 'listen mysql'|tail -n 1|sed 's/.*bind //g' |sed 's/:3306.*//g'
   register: source_mariadb_ip
-  when: ospdo_src| default(false) | bool
+  when: ospdo_src| bool
 
 - name: register source_db_root_pass
   no_log: "{{ use_no_log }}"
@@ -27,7 +27,7 @@
   ansible.builtin.shell: |
     oc get secret tripleo-passwords -o jsonpath='{.data.*}'| base64 -d |grep MysqlRootPassword|sed 's/.*: //g'
   register: source_db_root_pass
-  when: ospdo_src| default(false) | bool
+  when: ospdo_src| bool
 
 - name: set src MariaDB copy shell vars
   no_log: "{{ use_no_log }}"
@@ -42,4 +42,4 @@
       # ...
       )
       SOURCE_DB_ROOT_PASSWORD={{ source_db_root_pass.stdout }}
-  when: ospdo_src| default(false) | bool
+  when: ospdo_src| bool

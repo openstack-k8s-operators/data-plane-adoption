@@ -80,9 +80,9 @@
         fi
     done
 
-  when: not ospdo_src| default(false) | bool
+  when: not ospdo_src| bool
 
 - name: execute alternative tasks when source env is ODPdO
   ansible.builtin.include_tasks: ospdo_stop_openstack_services.yaml
-  when: ospdo_src| default(false) | bool
+  when: ospdo_src| bool
 

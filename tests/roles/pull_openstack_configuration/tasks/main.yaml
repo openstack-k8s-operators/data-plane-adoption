@@ -11,7 +11,7 @@
 
 - name: execute alternative tasks when source env is ODPdO
   ansible.builtin.include_tasks: ospdo_pull_openstack_configuration.yaml
-  when: ospdo_src| default(false) | bool
+  when: ospdo_src| bool
   vars:
     fetch_osp_conf : True
 
@@ -26,7 +26,7 @@
       mysql -rsh "$SOURCE_MARIADB_IP" -uroot "-p$SOURCE_DB_ROOT_PASSWORD" -e 'SHOW databases;')
     echo "$PULL_OPENSTACK_CONFIGURATION_DATABASES"
   register: _databases_check
-  when: not ospdo_src| default(false) | bool
+  when: not ospdo_src| bool
 
 - name: run mysqlcheck on the original DB to look for things that are not OK
   no_log: "{{ use_no_log }}"
@@ -38,7 +38,7 @@
     echo "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"
   failed_when: _mysqlnok_check.stdout != ''
   register: _mysqlnok_check
-  when: not ospdo_src| default(false) | bool
+  when: not ospdo_src| bool
 
 - name: get source Nova services topology specific configuration
   no_log: "{{ use_no_log }}"
@@ -52,7 +52,7 @@
           'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')
         echo "$PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS"
       register: _novadb_mapped_cells_check
-      when: not ospdo_src| default(false) | bool
+      when: not ospdo_src| bool
 
     - name: get the host names of the registered Nova compute services
       ansible.builtin.shell: |
@@ -63,7 +63,7 @@
           "select host from nova.services where services.binary='nova-compute';")
         echo "$PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES"
       register: _nova_compute_hostnames_check
-      when: not ospdo_src| default(false) | bool
+      when: not ospdo_src| bool
 
     - name: get the list of mapped Nova cells
       ansible.builtin.shell: |
@@ -72,7 +72,7 @@
         export PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS=$($CONTROLLER_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)
         echo "$PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS"
       register: _nova_cell_mappings_check
-      when: not ospdo_src| default(false) | bool
+      when: not ospdo_src| bool
 
 - name: set cached fact for pulled openstack services configuration shell headers
   no_log: "{{ use_no_log }}"
@@ -103,4 +103,4 @@
     PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$($CONTROLLER_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)"
     EOF
     chmod 0600 ~/.source_cloud_exported_variables
-  when: not ospdo_src| default(false) | bool
+  when: not ospdo_src| bool
