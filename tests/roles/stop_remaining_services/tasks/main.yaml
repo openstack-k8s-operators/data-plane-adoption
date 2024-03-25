@@ -10,6 +10,7 @@
       computes=(
         ["standalone.localdomain"]="{{ edpm_node_ip }}"
       )
+  when: not ospdo_src| default(false) | bool
 
 - name: stop compute services
   no_log: "{{ use_no_log }}"
