@@ -242,7 +242,7 @@ endif::[]
 * Deploy OpenStackDataPlaneNodeSet:
 +
 Make sure that ovn-controller settings configured in the OpenStackDataPlaneNodeSet are the same as were set in the compute nodes before adoption.
-This configuration is stored in the "external_ids" colum in the "Open_vSwitch" table in ovsdb and can be checked with command:
+This configuration is stored in the "external_ids" column in the "Open_vSwitch" table in ovsdb and can be checked with command:
 +
 ----
 ovs-vsctl list Open .
@@ -377,7 +377,7 @@ endif::[]
         edpm_ovn_ofctrl_wait_before_clear: 8000
 
         timesync_ntp_servers:
-ifeval::["{build}" == "upstream"]
+ifeval::["{build}" != "downstream"]
         - hostname: pool.ntp.org
 endif::[]
 ifeval::["{build}" == "downstream"]
@@ -385,7 +385,7 @@ ifeval::["{build}" == "downstream"]
         - hostname: clock2.redhat.com
 endif::[]
 
-ifeval::["{build}" == "upstream"]
+ifeval::["{build}" != "downstream"]
         edpm_bootstrap_command: |
           # This is a hack to deploy RDO Delorean repos to RHEL as if it were Centos 9 Stream
           set -euxo pipefail
@@ -588,26 +588,12 @@ oc apply -f - <<EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nova-compute-ffu
+  name: nova-compute-extraconfig
   namespace: openstack
 data:
-  20-nova-compute-cell1-ffu-cleanup.conf: |
+  20-nova-compute-cell1-workarounds.conf: |
     [workarounds]
     disable_compute_service_check_for_ffu=false
----
-apiVersion: dataplane.openstack.org/v1beta1
-kind: OpenStackDataPlaneService
-metadata:
-  name: nova-compute-ffu
-  namespace: openstack
-spec:
-  label: nova.compute.ffu
-  configMaps:
-    - nova-compute-ffu
-  secrets:
-    - nova-cell1-compute-config
-    - nova-migration-ssh-key
-  playbook: osp.edpm.nova
 ---
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
@@ -618,7 +604,7 @@ spec:
   nodeSets:
     - openstack
   servicesOverride:
-    - nova-compute-ffu
+    - nova-compute-extraconfig
 EOF
 ----
 

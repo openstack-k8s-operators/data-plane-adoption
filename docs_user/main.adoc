@@ -6,6 +6,8 @@
 :doctype: book
 :context: osp
 
+include::rhoso_attributes.adoc[]
+
 include::assemblies/openstack_adoption.adoc[leveloffset=+1]
 
 include::assemblies/ceph_migration.adoc[leveloffset=+1]
