@@ -97,20 +97,17 @@ spec:
 
 === Inspect the resulting swift service pods
 
-[,bash]
 ----
 oc get pods -l component=swift-proxy
 ----
 
 === Check that Swift proxy service is registered in Keystone:
 
-[,bash]
 ----
 openstack service list | grep swift
 | b5b9b1d3c79241aa867fa2d05f2bbd52 | swift    | object-store |
 ----
 
-[,bash]
 ----
 openstack endpoint list | grep swift
 | 32ee4bd555414ab48f2dc90a19e1bcd5 | regionOne | swift        | object-store | True    | public    | https://swift-public-openstack.apps-crc.testing/v1/AUTH_%(tenant_id)s |
@@ -121,7 +118,6 @@ openstack endpoint list | grep swift
 
 Check that you are able to up- and download objects:
 
-[,bash]
 ----
 echo "Hello World!" > obj
 openstack container create test

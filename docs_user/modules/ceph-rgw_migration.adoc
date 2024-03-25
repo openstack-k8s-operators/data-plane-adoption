@@ -1,5 +1,6 @@
 [id="migrating-ceph-rgw_{context}"]
 
+
 //:context: migrating-ceph-rgw
 //kgilliga: This module might be converted to an assembly.
 
@@ -504,7 +505,7 @@ You can start deploying the Ceph IngressDaemon on the CephStorage nodes.
 Set the required images for both HaProxy and Keepalived
 
 ----
-ifeval::["{build}" == "upstream"]
+ifeval::["{build}" != "downstream"]
 [ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_haproxy quay.io/ceph/haproxy:2.3
 [ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_keepalived quay.io/ceph/keepalived:2.1.5
 endif::[]

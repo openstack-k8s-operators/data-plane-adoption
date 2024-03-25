@@ -12,7 +12,7 @@ keystone should be already adopted.
 
 == Variables
 
-(There are no shell variables necessary currently.)
+There are no shell variables necessary currently.
 
 == Procedure - Horizon adoption
 

@@ -29,7 +29,7 @@ spec:
   ceilometer:
     enabled: true
     template:
-ifeval::["{build}" == "upstream"]
+ifeval::["{build}" != "downstream"]
       centralImage: quay.io/podified-antelope-centos9/openstack-ceilometer-central:current-podified
       computeImage: quay.io/podified-antelope-centos9/openstack-ceilometer-compute:current-podified
       customServiceConfig: |

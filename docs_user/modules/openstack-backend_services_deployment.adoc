@@ -34,7 +34,7 @@ endif::[]
 For production environments, the deployment method will likely be
 different.
 
-* If the source environment uses TLS Everywhere, the `tls` root CA must copied over to the cert-manager issuer.
+* If the source environment has TLS Everywhere enabled, it may be possible to copy over the root CA from the source environment to the new environment to minimize disruption on the compute nodes.
 
 * There are free PVs available to be claimed (for MariaDB and RabbitMQ).
 ifeval::["{build}" != "downstream"]
@@ -139,8 +139,7 @@ oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 MariaDB, Memcached, and RabbitMQ services. All other services must
 be disabled.*
 
-* If the source environment enables TLS Everywhere, modify
-spec:tls:endpoint:internal:enabled to true.
+* On RHOSO 18, TLS Everywhere is enabled by default. If the source environment does not use TLS Everywhere and TLS Everywhere is not desired for the new environment, modify spec:tls:endpoint:internal:enabled to false.
 
 +
 [source,yaml]

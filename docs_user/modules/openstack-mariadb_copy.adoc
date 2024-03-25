@@ -44,7 +44,7 @@ PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRoo
 CHARACTER_SET=utf8
 COLLATION=utf8_general_ci
 
-ifeval::["{build}" == "upstream"]
+ifeval::["{build}" != "downstream"]
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 endif::[]
 ifeval::["{build}" == "downstream"]
@@ -125,7 +125,6 @@ oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
 
 * Check that the Galera database cluster members are online and synced:
 +
-[,bash]
 ----
 for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
   echo "Checking for the database node $i WSREP status Synced"
