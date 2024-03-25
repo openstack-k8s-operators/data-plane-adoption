@@ -35,11 +35,11 @@
     '
 
 - name: Deploy cinder-volume if necessary
-  when: cinder_volume_backend != ''
+  when: cinder_volume_backend | default('') != ''
   ansible.builtin.include_tasks: volume_backend.yaml
 
 - name: Deploy cinder-backup if necessary
-  when: cinder_backup_backend != ''
+  when: cinder_backup_backend | default('') != ''
   ansible.builtin.include_tasks: backup_backend.yaml
 
 - name: wait for Cinder pods to start up
@@ -58,7 +58,7 @@
 # Give time for volume and backup services to initialize drivers, otherwise they
 # always looks ok (up) because that's the default at the start.
 - name: Pause to allow backend drivers to start
-  when: cinder_volume_backend != '' or cinder_backup_backend != ''
+  when: cinder_volume_backend | default('') != '' or cinder_backup_backend | default('') != ''
   ansible.builtin.pause:
      seconds: 90
 
