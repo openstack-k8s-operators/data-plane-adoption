@@ -65,26 +65,12 @@
     apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: nova-compute-ffu
+      name: nova-compute-extraconfig
       namespace: openstack
     data:
-      20-nova-compute-cell1-ffu-cleanup.conf: |
+      20-nova-compute-cell1-workarounds.conf: |
         [workarounds]
         disable_compute_service_check_for_ffu=false
-    ---
-    apiVersion: dataplane.openstack.org/v1beta1
-    kind: OpenStackDataPlaneService
-    metadata:
-      name: nova-compute-ffu
-      namespace: openstack
-    spec:
-      label: nova.compute.ffu
-      configMaps:
-        - nova-compute-ffu
-      secrets:
-        - nova-cell1-compute-config
-        - nova-migration-ssh-key
-      playbook: osp.edpm.nova
     ---
     apiVersion: dataplane.openstack.org/v1beta1
     kind: OpenStackDataPlaneDeployment
@@ -95,18 +81,38 @@
       nodeSets:
         - openstack
       servicesOverride:
-        - nova-compute-ffu
+        - nova-compute-extraconfig
     EOF
 
 - name: wait for Nova compute EDPM services to become ready
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait --for condition=Ready osdpd/openstack-nova-compute-ffu --timeout=5m
-  register: nova_ffu_edpm_result
-  until: nova_ffu_edpm_result is success
-  retries: 10
-  delay: 6
+
+    DEPLOYMENT_NAME=openstack-nova-compute-ffu
+    TRIES=180
+    DELAY=10
+    ALLOWED_JOB_RETRIES=3
+
+    for i in $(seq $TRIES)
+    do
+        ready=$(oc get osdpd/$DEPLOYMENT_NAME -o jsonpath='{.status.conditions[0].status}')
+        if [ "$ready" == "True" ]; then
+            echo "Deployment is Ready"
+            exit 0
+        else
+            failed=$(oc get jobs -l osdpd=$DEPLOYMENT_NAME -o jsonpath="{.items[?(@.status.failed > $ALLOWED_JOB_RETRIES)].metadata.name}")
+            if [ ! -z "${failed}" ]; then
+                echo "There are failed AnsibleEE jobs: $failed"
+                exit 1
+            fi
+        fi
+
+    sleep $DELAY
+    done
+
+    echo "Run out of retries"
+    exit 2
 
 - name: run Nova DB migrations to complete Wallaby->antelope FFU
   ansible.builtin.shell: |
