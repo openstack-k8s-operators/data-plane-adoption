@@ -12,37 +12,12 @@
      oc patch openstackcontrolplane openstack --type=merge --patch-file={{ role_path }}/files/glance_ceph.yaml
   when: glance_backend == 'ceph'
 
-- name: wait for Glance to start up
+- name: deploy podified Glance with Swift backend
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch-file={{ role_path }}/files/glance_swift.yaml
+  when: glance_backend == 'swift'
 
-    STATUS=$(oc get pod --selector=service=glance -o jsonpath='{.items[*].status.phase}{"\n"}');
-    code=1
-    IFS=" " read -r -a STATUS <<< "$STATUS"
-    for i in "${STATUS[@]}"; do
-        if echo "$i" | grep -v Running; then
-            # if at least one instance is not Running, return
-            exit $code
-        else
-            code=0
-        fi
-    done
-    exit $code
-  register: glance_running_result
-  until: glance_running_result is success
-  retries: 60
-  delay: 2
-
-- name: check that Glance is reachable and its endpoints are defined
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    alias openstack="oc exec -t openstackclient -- openstack"
-
-    ${BASH_ALIASES[openstack]} endpoint list | grep glance
-    ${BASH_ALIASES[openstack]} image list
-  register: glance_responding_result
-  until: glance_responding_result is success
-  retries: 15
-  delay: 2
+- name: Check the adopted GlanceAPI
+  ansible.builtin.include_tasks: check_glance.yaml

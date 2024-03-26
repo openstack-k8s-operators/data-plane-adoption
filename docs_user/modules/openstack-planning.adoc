@@ -6,7 +6,7 @@
 
 = Planning the new deployment
 
-Just like you did back when you installed your Director deployed OpenStack, the
+Just like you did back when you installed your Director deployed {osp_prev_long}, the
 upgrade/migration to the podified OpenStack requires planning various aspects
 of the environment such as node roles, planning your network topology, and
 storage.
@@ -225,7 +225,7 @@ of trust doesn't have to be modified.
 
 Barbican doesn't yet support all of the crypto plugins available in TripleO.
 
-**TODO: Right now Barbican only supports the simple crypto plugin.
+//**TODO: Right now Barbican only supports the simple crypto plugin.
 
 //*TODO: Talk about Ceph Storage and Swift Storage nodes, HCI deployments,
 //etc.*

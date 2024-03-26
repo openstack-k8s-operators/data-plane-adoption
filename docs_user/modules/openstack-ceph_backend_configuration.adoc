@@ -141,7 +141,7 @@ CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | 
 If you use the Ceph via NFS backend with OpenStack Manila, prior to adoption,
 you must create a new clustered NFS service on the Ceph cluster. This service
 will replace the standalone, pacemaker-controlled `ceph-nfs` service that was
-used on Red Hat OpenStack Platform 17.1.
+used on {osp_prev_long} {osp_prev_ver}.
 
 
 === Ceph node preparation
