@@ -34,7 +34,7 @@ endif::[]
 For production environments, the deployment method will likely be
 different.
 
-* If the source environment uses TLS Everywhere, the `tls` root CA must copied over to the cert-manager issuer.
+* Since TLS Everywhere is enabled by default, the `tls` root CA on the source environment must copied over to the cert-manager issuer.
 
 * There are free PVs available to be claimed (for MariaDB and RabbitMQ).
 ifeval::["{build}" != "downstream"]
@@ -139,8 +139,9 @@ oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 MariaDB, Memcached, and RabbitMQ services. All other services must
 be disabled.*
 
-* If the source environment enables TLS Everywhere, modify
-spec:tls:endpoint:internal:enabled to true.
+* If the source environment does not use TLS Everywhere, modify
+spec:tls:endpoint:internal:enabled to false. Do the same for
+spec:tls:endpoint:public:enabled.
 
 +
 [source,yaml]

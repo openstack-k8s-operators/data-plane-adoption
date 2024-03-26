@@ -19,19 +19,21 @@ _Disclaimer: the below steps were reproduced on a FreeIPA 4.10.1 server. The loc
 Define the shell variables used in the following steps. The values are illustrative and refer to a single node standalone director deployment. Use values that are correct for your environment:
 
 ----
-IPA_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 podman exec -ti freeipa-server-container"
+IPA_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@<freeipa-server-ip-address>"
 ----
 
 In this example the FreeIPA instance is running on a separate host, in a container.
 
 == Transfer the CA certificate and key from FreeIPA to the cert-manager Operator
 
+This is only going to work if:
+
+1. The CA that is used for TLS-e in the source environment (Red Hat OpenStack 16 or 17) is not used for anything else. In such case, it may be advisable not to extract the CA certificate. It is the expected that this CA will be decommissioned afterwards, and the new cert-manager CA will be used instead.
+2. The IPA CA stores its certficates in NSSDB. Otherwise, if the certificate is stored in an HSM (Hardware Security Module), for instance, the key may not be retrievable. Or if it is retrievable, special HSM utilities may be required.
+
 === Exporting from FreeIPA
 
-There are a couple of ways to do it:
-
-1. You can copy the certificate from the `/etc/pki/pki-tomcat/alias` directory. The file is named `ca.crt`.
-2. You can interact with the database located in the `/etc/pki/pki-tomcat/alias` directory ("*db" files).
+You will need to interact with the database located in the `/etc/pki/pki-tomcat/alias` directory ("*db" files).
 
 ==== Locating the CA certificate and key
 
@@ -77,7 +79,7 @@ KEY_LENGTH=`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/p
 You will have to create two YAML files. The first one has three sections:
 
 * The `openstack` namespace, which is used by other Red Hat OpenStack operators and CRs.
-* The issuer. The cert-manager operator makes use of a self-signed issuer to issue both, the CA certificate itself and other certificates.
+* The issuer. The cert-manager operator makes use of a self-signed issuer to issue both the CA certificate itself and other certificates.
 * The CA certificate itself. We are specifically naming it as `rootca-internal`, which corresponds to the certificate authority leveraged by cert-manager to issue other certificates.
 
 Let's apply the following YAML file to create the corresponding CRs:
@@ -157,6 +159,8 @@ spec:
 EOF
 ----
 
+*Note: Do note forget to delete the p12 files you created during the previous steps, like `/tmp/freeipa.p12`!*
+
 ==== Checking the newly provisioned CRs
 
 You can check the created resources with the commands below:
@@ -171,33 +175,37 @@ oc get secret rootca-internal -n openstack -o yaml
 
 == Stop and disable certmonger, and remove the existing certificates
 
-The final step on this activity is to stop and disable the certmonger service, and remove all certificates managed by it. The code below accomplishes this task:
+The final step on this activity is to stop and disable the certmonger service on all EDPM nodes, and stop tracking all certificates managed by it. The code below accomplishes this task:
 
 [source, bash]
 ----
 #!/bin/bash
 
-if sudo systemctl is-active certmonger.service; then
-    echo "Stopping certmonger..."
-    sudo systemctl stop certmonger.service
-    echo "Disabling certmonger..."
-    sudo systemctl disable --now certmonger.service
-fi
+for i in "${!computes[@]}"; do
+    SSH_CMD="ssh -i $EDPM_PRIVATEKEY_PATH root@${computes[$i]}"
+    if ${SSH_CMD} sudo systemctl is-active certmonger.service; then
+        echo "Stopping certmonger on $i..."
+        ${SSH_CMD} sudo systemctl stop certmonger.service
+        echo "Disabling certmonger on $i..."
+        ${SSH_CMD} sudo systemctl disable --now certmonger.service
+        ${SSH_CMD} test -f /etc/systemd/system/certmonger.service '||' sudo systemctl mask certmonger.service
+    fi
 
-# If necessary, adjust the directory below accordingly.
-certs_directory=/var/lib/certmonger/requests/
-certs_to_stop=$(ls -1 $certs_directory)
-number_of_certs=$(ls -1 $certs_directory | wc -l)
+    # If necessary, adjust the directory below accordingly.
+    certs_directory=/var/lib/certmonger/requests
+    certs_to_stop=$(${SSH_CMD} ls -1 $certs_directory)
+    number_of_certs=$(${SSH_CMD} ls -1 $certs_directory | wc -l)
 
-if [ $? != 0 ] || [ $number_of_certs = 0 ]; then
-    echo "No certificates to be removed."
-else
-    echo "There is/are $number_of_certs certificates to be removed. Removing certificates..."
-fi
+    if [ $? != 0 ] || [ $number_of_certs = 0 ]; then
+        echo "No certificates to stop tracking on $i."
+    else
+        echo "There is/are $number_of_certs certificates to stop being tracked on $i. Stopping to track certificates..."
+    fi
 
-while IFS= read -r cert; do
-    echo "Removing $cert..."
-    rm -f $cert
-done <<< "$certs_to_stop"
+    while IFS= read -r cert; do
+        echo "Stopping to track $cert..."
+        ${SSH_CMD} rm -f $certs_directory/$cert
+    done <<< "$certs_to_stop"
+done
 ----
 
