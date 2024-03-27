@@ -13,7 +13,14 @@
     {{ oc_header }}
     {{ stop_openstack_services_shell_vars }}
 
-    ServicesToStop=("tripleo_horizon.service"
+    ServicesToStop=("tripleo_aodh_api.service"
+                    "tripleo_aodh_api_cron.service"
+                    "tripleo_aodh_evaluator.service"
+                    "tripleo_aodh_listener.service"
+                    "tripleo_aodh_notifier.service"
+                    "tripleo_ceilometer_agent_central.service"
+                    "tripleo_ceilometer_agent_notification.service"
+                    "tripleo_horizon.service"
                     "tripleo_keystone.service"
                     "tripleo_barbican_api.service"
                     "tripleo_barbican_worker.service"
@@ -23,7 +30,11 @@
                     "tripleo_cinder_scheduler.service"
                     "tripleo_cinder_volume.service"
                     "tripleo_cinder_backup.service"
+                    "tripleo_collectd.service"
                     "tripleo_glance_api.service"
+                    "tripleo_gnocchi_api.service"
+                    "tripleo_gnocchi_metricd.service"
+                    "tripleo_gnocchi_statsd.service"
                     "tripleo_manila_api.service"
                     "tripleo_manila_api_cron.service"
                     "tripleo_manila_scheduler.service"

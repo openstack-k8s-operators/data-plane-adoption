@@ -1,6 +1,9 @@
 # Service account passwords (not service DB passwords) from the
 # original deployment.
+aodh_password: ''
 barbican_password: ''
+ceilometer_metering_secret: ''
+ceilometer_password: ''
 cinder_password: ''
 manila_password: ''
 glance_password: ''

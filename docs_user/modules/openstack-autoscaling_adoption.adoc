@@ -20,12 +20,12 @@ should be already adopted.
 
 == Procedure - Autoscaling adoption
 
-Patch OpenStackControlPlane to deploy autoscaling services:
+=== Patch OpenStackControlPlane to deploy autoscaling services:
 
 ----
-cat << EOF > aodh_patch.yaml
+oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
-  autoscaling:
+  telemetry:
     enabled: true
     prometheus:
       deployPrometheus: false
@@ -53,29 +53,45 @@ endif::[]
 EOF
 ----
 
-
-____
-If you have previously backed up your OpenStack services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
-____
+=== Install cluster-observability-operator
 
 ----
-pushd os-diff
-./os-diff cdiff --service aodh -c /tmp/collect_tripleo_configs/aodh/etc/aodh/aodh.conf -o aodh_patch.yaml
+oc create -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: cluster-observability-operator
+  namespace: openshift-operators
+spec:
+  channel: development
+  installPlanApproval: Automatic
+  name: cluster-observability-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
 ----
 
-____
-This will producre the difference between both ini configuration files.
-____
-
-Patch OpenStackControlPlane to deploy Aodh services:
+=== Wait for the installation to succeed
 
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch-file aodh_patch.yaml
+oc wait --for jsonpath="{.status.phase}"=Succeeded csv --namespace=openshift-operators -l operators.coreos.com/cluster-observability-operator.openshift-operators
+----
+
+=== Enable metrics storage backend
+----
+oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  telemetry:
+    enabled: true
+    template:
+      metricStorage:
+        enabled: true
+'
 ----
 
 == Post-checks
 
-=== If autoscaling services are enabled inspect Aodh pods
+=== Verify Aodh pods and service endpoints
 
 ----
 AODH_POD=`oc get pods -l service=aodh | tail -n 1 | cut -f 1 -d' '`
@@ -86,29 +102,21 @@ oc exec -t $AODH_POD -c aodh-api -- cat /etc/aodh/aodh.conf
 
 ----
 openstack endpoint list | grep aodh
-| 6a805bd6c9f54658ad2f24e5a0ae0ab6 | regionOne | aodh      | network      | True    | public    | http://aodh-public-openstack.apps-crc.testing  |
-| b943243e596847a9a317c8ce1800fa98 | regionOne | aodh      | network      | True    | internal  | http://aodh-internal.openstack.svc:9696        |
-| f97f2b8f7559476bb7a5eafe3d33cee7 | regionOne | aodh      | network      | True    | admin     | http://192.168.122.99:9696                     |
+| d05d120153cd4f9b8310ac396b572926 | regionOne | aodh  | alarming  | True    | internal  | http://aodh-internal.openstack.svc:8042  |
+| d6daee0183494d7a9a5faee681c79046 | regionOne | aodh  | alarming  | True    | public    | http://aodh-public.openstack.svc:8042    |
 ----
 
-=== Create sample resources
-
-You can test whether you can create alarms.
+=== Verify metric storage pods are deployed
 
 ----
-openstack alarm create \
---name low_alarm \
---type gnocchi_resources_threshold \
---metric cpu \
---resource-id b7ac84e4-b5ca-4f9e-a15c-ece7aaf68987 \
---threshold 35000000000 \
---comparison-operator lt \
---aggregation-method rate:mean \
---granularity 300 \
---evaluation-periods 3 \
---alarm-action 'log:\\' \
---ok-action 'log:\\' \
---resource-type instance
+oc get pods -l alertmanager=metric-storage
+NAME                            READY   STATUS    RESTARTS   AGE
+alertmanager-metric-storage-0   2/2     Running   0          17h
+alertmanager-metric-storage-1   2/2     Running   0          17h
+
+oc get pods -l prometheus=metric-storage
+NAME                          READY   STATUS    RESTARTS   AGE
+prometheus-metric-storage-0   3/3     Running   0          17h
 ----
 
 //=== (TODO)

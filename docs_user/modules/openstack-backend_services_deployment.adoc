@@ -279,14 +279,24 @@ spec:
                 metallb.universe.tf/loadBalancerIPs: 172.17.0.86
             spec:
               type: LoadBalancer
-
-  ceilometer:
+  telemtry:
     enabled: false
-    template: {}
+    template:
+      ceilometer:
+        enabled: false
+        template: {}
 
-  autoscaling:
-    enabled: false
-    template: {}
+      autoscaling:
+        enabled: false
+        template: {}
+
+      metricStorage:
+        enabled: false
+        template: {}
+
+      logging:
+        enabled: false
+        template: {}
 EOF
 ----
 
