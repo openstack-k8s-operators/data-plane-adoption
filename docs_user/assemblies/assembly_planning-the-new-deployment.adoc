@@ -1,12 +1,10 @@
 [id="planning-the-new-deployment_{context}"]
 
-//:context: planning
-
-//kgilliga: This module will be converted to an assembly. Check xref contexts.
+:context: planning
 
 = Planning the new deployment
 
-Just like you did back when you installed your Director deployed {osp_prev_long}, the
+Just like you did back when you installed your director-deployed {osp_prev_long}, the
 upgrade/migration to the podified OpenStack requires planning various aspects
 of the environment such as node roles, planning your network topology, and
 storage.
@@ -14,204 +12,6 @@ storage.
 This document covers some of this planning, but it is recommended to read
 the whole adoption guide before actually starting the process to be sure that
 there is a global understanding of the whole process.
-
-== Service configurations
-
-There is a fundamental difference between the Director and Operator deployments
-regarding the configuration of the services.
-
-In Director deployments many of the service configurations are abstracted by
-Director specific configuration options. A single Director option may trigger
-changes for multiple services and support for drivers (for example Cinder's)
-required patches to the Director code base.
-
-In Operator deployments this approach has changed: reduce the installer specific knowledge and leverage OpenShift and
-OpenStack service specific knowledge whenever possible.
-
-To this effect OpenStack services will have sensible defaults for OpenShift
-deployments and human operators will provide configuration snippets to provide
-necessary configuration, such as cinder backend configuration, or to override
-the defaults.
-
-This shortens the distance between a service specific configuration file (such
-as `cinder.conf`) and what the human operator provides in the manifests.
-
-These configuration snippets are passed to the operators in the different
-`customServiceConfig` sections available in the manifests, and then they are
-layered in the services available in the following levels. To illustrate this,
-if you were to set a configuration at the top Cinder level (`spec: cinder:
-template:`) then it would be applied to all the cinder services; for example to
-enable debug in all the cinder services you would do:
-
-[source,yaml]
-----
-apiVersion: core.openstack.org/v1beta1
-kind: OpenStackControlPlane
-metadata:
-  name: openstack
-spec:
-  cinder:
-    template:
-      customServiceConfig: |
-        [DEFAULT]
-        debug = True
-< . . . >
-----
-
-If you only want to set it for one of the cinder services, for example the
-scheduler, then you use the `cinderScheduler` section instead:
-
-[source,yaml]
-----
-apiVersion: core.openstack.org/v1beta1
-kind: OpenStackControlPlane
-metadata:
-  name: openstack
-spec:
-  cinder:
-    template:
-      cinderScheduler:
-        customServiceConfig: |
-          [DEFAULT]
-          debug = True
-< . . . >
-----
-
-In OpenShift it is not recommended to store sensitive information like the
-credentials to the cinder storage array in the CRs, so most OpenStack operators
-have a mechanism to use OpenShift's `Secrets` for sensitive configuration
-parameters of the services and then use then by reference in the
-`customServiceConfigSecrets` section which is analogous to the
-`customServiceConfig`.
-
-The contents of the `Secret` references passed in the
-`customServiceConfigSecrets` will have the same format as `customServiceConfig`:
-a snippet with the section/s and configuration options.
-
-When there are sensitive information in the service configuration then it
-becomes a matter of personal preference whether to store all the configuration
-in the `Secret` or only the sensitive parts. However, if you split the
-configuration between `Secret` and `customServiceConfig` you still need the
-section header (eg: `[DEFAULT]`) to be present in both places.
-
-Attention should be paid to each service's adoption process as they may have
-some particularities regarding their configuration.
-
-== Configuration tooling
-
-In order to help users to handle the configuration for the TripleO and OpenStack
-services the tool: https://github.com/openstack-k8s-operators/os-diff has been
-develop to compare the configuration files between the TripleO deployment and
-the next gen cloud.
-Make sure Golang is installed and configured on your env:
-
-----
-git clone https://github.com/openstack-k8s-operators/os-diff
-pushd os-diff
-make build
-----
-
-Then configure ansible.cfg and ssh-config file according to your environment:
-
-[source,yaml]
-[subs=+quotes]
-----
-Host *
-    IdentitiesOnly yes
-
-Host virthost
-    Hostname virthost
-    IdentityFile ~/.ssh/id_rsa
-    User root
-    StrictHostKeyChecking no
-    UserKnownHostsFile=/dev/null
-
-
-Host standalone
-    Hostname standalone
-ifeval::["{build}" != "downstream"]
-    IdentityFile ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa
-endif::[]
-ifeval::["{build}" == "downstream"]
-    IdentityFile *<path to SSH key>*
-endif::[]
-    User root
-    StrictHostKeyChecking no
-    UserKnownHostsFile=/dev/null
-
-Host crc
-    Hostname crc
-    IdentityFile ~/.ssh/id_rsa
-    User stack
-    StrictHostKeyChecking no
-    UserKnownHostsFile=/dev/null
-----
-
-And test your connection:
-
-----
-ssh -F ssh.config standalone
-----
-
-== Node roles
-
-In Director deployments you had 4 different standard roles for the nodes:
-`Controller`, `Compute`, `Ceph Storage`, `Swift Storage`, but in podified
-OpenStack you make a distinction based on where things are running, in
-OpenShift or external to it.
-
-When adopting a Director OpenStack your `Compute` nodes will directly become
-external nodes, so there should not be much additional planning needed there.
-
-In many deployments being adopted the `Controller` nodes will require some
-thought because you have many OpenShift nodes where the controller services
-could run, and you have to decide which ones you want to use, how you are going to use them, and make sure those nodes are ready to run the services.
-
-In most deployments running OpenStack services on `master` nodes can have a
-seriously adverse impact on the OpenShift cluster, so it is recommended that you place OpenStack services on non `master` nodes.
-
-By default OpenStack Operators deploy OpenStack services on any worker node, but
-that is not necessarily what's best for all deployments, and there may be even
-services that won't even work deployed like that.
-
-When planing a deployment it's good to remember that not all the services on an
-OpenStack deployments are the same as they have very different requirements.
-
-Looking at the Cinder component you can clearly see different requirements for
-its services: the cinder-scheduler is a very light service with low
-memory, disk, network, and CPU usage; cinder-api service has a higher network
-usage due to resource listing requests; the cinder-volume service will have a
-high disk and network usage since many of its operations are in the data path
-(offline volume migration, create volume from image, etc.), and then you have
-the cinder-backup service which has high memory, network, and CPU (to compress
-data) requirements.
-
-The Glance and Swift components are in the data path, as well as RabbitMQ and Galera services.
-
-Given these requirements it may be preferable not to let these services wander
-all over your OpenShift worker nodes with the possibility of impacting other
-workloads, or maybe you don't mind the light services wandering around but you
-want to pin down the heavy ones to a set of infrastructure nodes.
-
-There are also hardware restrictions to take into consideration, because if you
-are using a Fibre Channel (FC) Cinder backend you need the cinder-volume,
-cinder-backup, and maybe even the glance (if it's using Cinder as a backend)
-services to run on a OpenShift host that has an HBA.
-
-The OpenStack Operators allow a great deal of flexibility on where to run the
-OpenStack services, as you can use node labels to define which OpenShift nodes
-are eligible to run the different OpenStack services.  Refer to the xref:node-selector_{context}[About node
-selector] to learn more about using labels to define
-placement of the OpenStack services.
-
-== Barbican
-
-Barbican doesn't yet support all of the crypto plugins available in TripleO.
-
-//**TODO: Right now Barbican only supports the simple crypto plugin.
-
-//*TODO: Talk about Ceph Storage and Swift Storage nodes, HCI deployments,
-//etc.*
 
 == Network
 
@@ -908,3 +708,17 @@ related binaries are running on the OpenShift nodes.
 
 Detailed information about the specifics for each storage transport protocol can
 be found in the xref:adopting-the-block-storage-service_{context}[Adopting the Block Storage service].
+
+include::../modules/con_service-configurations.adoc[leveloffset=+1]
+
+include::../modules/con_node-roles.adoc[leveloffset=+1]
+
+include::../modules/con_about-node-selector.adoc[leveloffset=+1]
+
+include::../modules/con_about-machineconfig.adoc[leveloffset=+1]
+
+include::../modules/con_key-manager-service-support-for-crypto-plugins.adoc[leveloffset=+1]
+
+include::../modules/con_identity-service-authentication.adoc[leveloffset=+1]
+
+include::../modules/con_configuration-tooling.adoc[leveloffset=+1]

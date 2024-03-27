@@ -1,4 +1,4 @@
-= OpenStack adoption user documentation
+= Adopting a Red Hat OpenStack Platform 17.1 deployment
 :toc: left
 :toclevels: 3
 :icons: font
@@ -7,6 +7,8 @@
 :context: osp
 
 include::rhoso_attributes.adoc[]
+
+include::assemblies/assembly_planning-the-new-deployment.adoc[leveloffset=+1]
 
 include::assemblies/openstack_adoption.adoc[leveloffset=+1]
 
