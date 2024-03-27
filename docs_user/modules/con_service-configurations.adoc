@@ -2,20 +2,20 @@
 
 = Service configurations
 
-There is a fundamental difference between the director and Operator deployments
+There is a fundamental difference between the director and operator deployments
 regarding the configuration of the services.
 
 In director deployments many of the service configurations are abstracted by
 director-specific configuration options. A single director option may trigger
-changes for multiple services and support for drivers (for example Cinder's)
-required patches to the director code base.
+changes for multiple services and support for drivers, for example, the Block Storage service (cinder), that
+require patches to the director code base.
 
-In Operator deployments this approach has changed: reduce the installer specific knowledge and leverage OpenShift and
+In operator deployments this approach has changed: reduce the installer specific knowledge and leverage OpenShift and
 OpenStack service specific knowledge whenever possible.
 
 To this effect OpenStack services will have sensible defaults for OpenShift
 deployments and human operators will provide configuration snippets to provide
-necessary configuration, such as cinder backend configuration, or to override
+necessary configuration, such as the Block Storage service backend configuration, or to override
 the defaults.
 
 This shortens the distance between a service specific configuration file (such
@@ -24,9 +24,9 @@ as `cinder.conf`) and what the human operator provides in the manifests.
 These configuration snippets are passed to the operators in the different
 `customServiceConfig` sections available in the manifests, and then they are
 layered in the services available in the following levels. To illustrate this,
-if you were to set a configuration at the top Cinder level (`spec: cinder:
-template:`) then it would be applied to all the cinder services; for example to
-enable debug in all the cinder services you would do:
+if you were to set a configuration at the top Block Storage service level (`spec: cinder:
+template:`) then it would be applied to all the Block Storage services; for example to
+enable debug in all the Block Storage services you would do:
 
 [source,yaml]
 ----
@@ -43,7 +43,7 @@ spec:
 < . . . >
 ----
 
-If you only want to set it for one of the cinder services, for example the
+If you only want to set it for one of the Block Storage services, for example the
 scheduler, then you use the `cinderScheduler` section instead:
 
 [source,yaml]
@@ -63,7 +63,7 @@ spec:
 ----
 
 In OpenShift it is not recommended to store sensitive information like the
-credentials to the cinder storage array in the CRs, so most OpenStack operators
+credentials to the Block Storage service storage array in the CRs, so most OpenStack operators
 have a mechanism to use OpenShift's `Secrets` for sensitive configuration
 parameters of the services and then use then by reference in the
 `customServiceConfigSecrets` section which is analogous to the
