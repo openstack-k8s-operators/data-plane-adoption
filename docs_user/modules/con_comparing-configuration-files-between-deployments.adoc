@@ -1,6 +1,6 @@
-[id="configuration-tooling_{context}"]
+[id="comparing-configuration-files-between-deployments_{context}"]
 
-= Configuration tooling
+= Comparing configuration files between deployments
 
 In order to help users to handle the configuration for the TripleO and OpenStack
 services the tool: https://github.com/openstack-k8s-operators/os-diff has been

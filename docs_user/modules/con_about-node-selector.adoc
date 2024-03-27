@@ -59,7 +59,7 @@ spec:
 < . . . >
 ----
 
-You can use the selector for specific services. For example, you might want to place your cinder volume and backup services on certain nodes if you are using FC and only have HBAs on a subset of
+You can use the selector for specific services. For example, you might want to place your the Block Storage service (cinder) volume and backup services on certain nodes if you are using FC and only have HBAs on a subset of
 nodes. The following example assumes that you have the label `fc_card: true`:
 
 [source,yaml]
@@ -88,7 +88,7 @@ spec:
 < . . . >
 ----
 
-The Cinder operator does not currently have the possibility of defining
+The Block Storage service operator does not currently have the possibility of defining
 the `nodeSelector` in `cinderVolumes`, so you need to specify it on each of the
 backends.
 

@@ -5,7 +5,7 @@
 = Planning the new deployment
 
 Just like you did back when you installed your director-deployed {osp_prev_long}, the
-upgrade/migration to the podified OpenStack requires planning various aspects
+upgrade/migration to the control plane requires planning various aspects
 of the environment such as node roles, planning your network topology, and
 storage.
 
@@ -15,11 +15,9 @@ there is a global understanding of the whole process.
 
 == Network
 
-=== General information
-
 With OpenShift, the network is a very important aspect of the deployment, and
 it is important to plan it carefully. The general network requirements for the
-OpenStack services are not much different from the ones in a Director
+OpenStack services are not much different from the ones in a director
 deployment, but the way you handle them is.
 
 ____
@@ -44,9 +42,9 @@ configuration:
 
 - configure **OpenShift worker nodes** to align VLAN tags and IPAM
   configuration with the existing deployment.
-- configure **Control Plane services** to use compatible IP ranges for
+- configure **control plane services** to use compatible IP ranges for
   service and load balancing IPs.
-- configure **Data Plane nodes** to use corresponding compatible configuration for
+- configure **data plane nodes** to use corresponding compatible configuration for
   VLAN tags and IPAM.
 
 Specifically,
@@ -207,7 +205,7 @@ they don't consume any IP addresses from the new range.
 
 In this scenario, you will configure `NetworkAttachmentDefinition` CRs to use a
 different subnet from what will be configured in `NetConfig` CR for the same
-networks. The former range will be used for podified control plane services,
+networks. The former range will be used for control plane services,
 while the latter will be used to manage IPAM for EDP nodes.
 
 During the process, you will need to make sure that adopted node IP addresses
@@ -216,7 +214,7 @@ addresses in `fixedIP` fields in `OpenstackDataplaneNodeSet` per-node section.
 
 ---
 
-Before proceeding, configure host routes on the adopted nodes for the podified
+Before proceeding, configure host routes on the adopted nodes for the
 control plane subnets.
 
 To achieve this, you will need to re-run `tripleo deploy` with additional
@@ -254,7 +252,7 @@ new subnet on each node. For example,
 
 ---
 
-The next step is to configure similar routes for the old subnet for podified
+The next step is to configure similar routes for the old subnet for control plane
 services attached to the networks. This is done by adding `routes` entries to
 `NodeNetworkConfigurationPolicy` CRs for each network. For example,
 
@@ -353,8 +351,8 @@ instead. Please consult <<_ipam_planning,IPAM planning>> for more details.
 
 No special routing configuration is required in this scenario; the only thing
 to pay attention to is to make sure that already consumed IP addresses don't
-overlap with the new allocation pools configured for OpenStack podified control
-services.
+overlap with the new allocation pools configured for OpenStack control
+plane services.
 
 If you are especially constrained by the size of the existing subnet, you may
 have to apply elaborate exclusion rules when defining allocation pools for the
@@ -375,7 +373,7 @@ At this point, you should have a good idea about VLAN and IPAM configuration
 you would like to replicate in the new environment.
 
 Before proceeding, you should have a list of the following IP address
-allocations to be used for the new podified control plane services:
+allocations to be used for the new control plane services:
 
 - 1 IP address, per isolated network, per OpenShift worker node. (These
   addresses will <<_configure_openshift_worker_nodes,translate>> to
@@ -475,7 +473,7 @@ items:
       node-role.kubernetes.io/worker: ""
 ```
 
-=== Configure podified OpenStack services
+=== Configure control plane services
 
 ==== Pod connectivity to isolated networks
 
@@ -601,7 +599,7 @@ To make sure the latest network configuration is used during the data plane adop
 should also set `edpm_network_config_update: true` in the `nodeTemplate`.
 
 You will proceed with <<adopting-dataplane_openstack-adoption,Data Plane Adoption
-process>> once the OpenStack podified control plane is deployed in the
+process>> once the OpenStack control plane is deployed in the
 OpenShift cluster. When doing so, you will configure `NetConfig` and
 `OpenstackDataplaneNodeSet` CRs, using the same VLAN tags and IPAM
 configuration as determined in the previous steps.
@@ -669,45 +667,6 @@ spec:
 
 The example above would exclude the `172.17.0.200` address from the pool.
 
-== Storage
-
-When looking into the storage in an OpenStack deployment you can differentiate
-2 different kinds, the storage requirements of the services themselves and the
-storage used for the OpenStack users that the services will manage.
-
-These requirements may drive your OpenShift node selection, as mentioned above,
-and may require you to do some preparations on the OpenShift nodes before
-you can deploy the services.
-
-//*TODO: Galera, RabbitMQ, Swift, Glance, etc.*
-
-=== Cinder requirements
-
-The Cinder service has both local storage used by the service and OpenStack user
-requirements.
-
-Local storage is used for example when downloading a glance image for the create
-volume from image operation, which can become considerable when having
-concurrent operations and not using cinder volume cache.
-
-In the Operator deployed OpenStack, there is a way to configure the
-location of the conversion directory to be an NFS share (using the extra
-volumes feature), something that needed to be done manually before.
-
-Even if it's an adoption and it may seem that there's nothing to consider
-regarding the Cinder backends, because you are using the same ones that you are
-using in your current deployment, you should still evaluate it, because it may not be so straightforward.
-
-First you need to check the transport protocol the Cinder backends are using:
-RBD, iSCSI, FC, NFS, NVMe-oF, etc.
-
-Once you know all the transport protocols that you are using, you can make
-sure that you are taking them into consideration when placing the Cinder services
-(as mentioned above in the Node Roles section) and the right storage transport
-related binaries are running on the OpenShift nodes.
-
-Detailed information about the specifics for each storage transport protocol can
-be found in the xref:adopting-the-block-storage-service_{context}[Adopting the Block Storage service].
 
 include::../modules/con_service-configurations.adoc[leveloffset=+1]
 
@@ -715,10 +674,12 @@ include::../modules/con_node-roles.adoc[leveloffset=+1]
 
 include::../modules/con_about-node-selector.adoc[leveloffset=+1]
 
-include::../modules/con_about-machineconfig.adoc[leveloffset=+1]
+include::../modules/con_about-machine-configs.adoc[leveloffset=+1]
 
 include::../modules/con_key-manager-service-support-for-crypto-plugins.adoc[leveloffset=+1]
 
 include::../modules/con_identity-service-authentication.adoc[leveloffset=+1]
 
-include::../modules/con_configuration-tooling.adoc[leveloffset=+1]
+include::../assemblies/assembly_storage-requirements.adoc[leveloffset=+1]
+
+include::../modules/con_comparing-configuration-files-between-deployments.adoc[leveloffset=+1]

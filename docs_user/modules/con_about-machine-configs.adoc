@@ -1,6 +1,6 @@
-[id="about-machineconfig_{context}"]
+[id="about-machine-configs_{context}"]
 
-= About MachineConfig
+= About machine configs 
 
 Some services require you to have services or kernel modules running on the hosts where they run, for example `iscsid` or `multipathd` daemons, or the
 `nvme-fabrics` kernel module.

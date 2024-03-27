@@ -1,0 +1,17 @@
+[id="storage-requirements_{context}"]
+
+:context: storage-requirements
+
+= Storage requirements
+
+When looking into the storage in an OpenStack deployment you can differentiate
+2 different kinds, the storage requirements of the services themselves and the
+storage used for the OpenStack users that the services will manage.
+
+These requirements may drive your OpenShift node selection, as mentioned above,
+and may require you to do some preparations on the OpenShift nodes before
+you can deploy the services.
+
+//*TODO: Galera, RabbitMQ, Swift, Glance, etc.*
+
+include::../modules/con_block-storage-service-requirements.adoc[leveloffset=+1]
