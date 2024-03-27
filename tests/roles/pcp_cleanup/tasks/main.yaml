@@ -20,6 +20,8 @@
 
     oc delete --wait=false pod ovn-copy-data || true
     oc delete secret osp-secret || true
+    oc delete issuer rootca-internal --ignore-not-found
+    oc delete secret rootca-internal --ignore-not-found
   when: pcp_cleanup_enabled|bool
 
 - name: revert standalone VM to snapshotted state

@@ -61,7 +61,7 @@ image_tag: "current-podified"
 ansible_ssh_private_key_secret: dataplane-adoption-secret
 default_timesync_ntp_servers:
   - hostname: pool.ntp.org
-edpm_node_hostname: standalone.localdomain
+edpm_node_hostname: standalone.ooo.test
 edpm_user: root
 edpm_nodes:
   standalone:

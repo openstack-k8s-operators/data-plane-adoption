@@ -204,6 +204,23 @@ are eligible to run the different OpenStack services.  Refer to the xref:node-se
 selector] to learn more about using labels to define
 placement of the OpenStack services.
 
+== TLS Everywhere
+
+Note: The assumption is, that the new deployment will adopt the settings from the
+old deployment, so in case TLS Everywhere is disabled, it won't be enabled on
+the new deployment.
+
+If the Director deployment was deployed with TLS Everywhere, FreeIPA (IDM) is used
+for providing services with certificates. Certmonger is installed on all hosts,
+which provisions the certificates for services running on the host.
+
+The xref:tls-everywhere__{context}[TLS everywhere document] describes how to extract
+the root CA from IdM in the source environment and import it for use by certmanager
+in the new environment. Because the same root CA is used to issue new certificates,
+we can minimize disruption on the compute nodes because the currently used chain of
+trust does not need to be modified.
+
+
 == Barbican
 
 Barbican doesn't yet support all of the crypto plugins available in TripleO.

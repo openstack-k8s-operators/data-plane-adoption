@@ -8,7 +8,7 @@
       SOURCE_MARIADB_IP={{ source_mariadb_ip|default(external_mariadb_ip) }}
       declare -A SOURCE_GALERA_MEMBERS
       SOURCE_GALERA_MEMBERS=(
-      ["standalone.localdomain"]={{ source_mariadb_ip|default(external_mariadb_ip) }}
+      ["standalone.ooo.test"]={{ source_mariadb_ip|default(external_mariadb_ip) }}
       # ...
       )
       SOURCE_DB_ROOT_PASSWORD="{{ source_db_root_password|default(external_db_root_password) }}"
