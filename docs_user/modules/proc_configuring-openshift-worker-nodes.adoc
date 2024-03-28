@@ -6,7 +6,7 @@ OCP worker nodes that run OpenStack services need a way to connect the service
 pods to isolated networks. This requires physical network configuration on the
 hypervisor.
 
-This configuration is managed by the NMState operator, which uses the CRs to
+This configuration is managed by the NMState operator, which uses the custom resources (CRs) to
 define the desired network configuration for the nodes.
 
 For each node, define a `NodeNetworkConfigurationPolicy` CR that describes the

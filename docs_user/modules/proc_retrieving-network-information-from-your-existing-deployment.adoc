@@ -59,10 +59,10 @@ configuration.
 
 At the end of this process, you should have the following information:
 
-- A list of isolated networks used in the existing deployment.
-- For each of the isolated networks, the VLAN tag and IP ranges used for
+* A list of isolated networks used in the existing deployment.
+* For each of the isolated networks, the VLAN tag and IP ranges used for
   dynamic address allocation.
-- A list of existing IP address allocations used in the environment. You will
+* A list of existing IP address allocations used in the environment. You will
   later exclude these addresses from allocation pools available for the new
   control plane services.
 
