@@ -184,6 +184,20 @@
             replicas: 1
     '
 
+- name: Patch OVN add baremetal bridge mapping
+  when: ironic_adoption|bool
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      ovn:
+        template:
+          ovnController:
+            nicMappings:
+              baremetal: baremetal
+    '
+
 - name: Enable ovn controller
   ansible.builtin.shell: |
     {{ shell_header }}

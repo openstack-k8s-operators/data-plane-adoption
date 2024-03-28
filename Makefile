@@ -22,6 +22,11 @@ test-swift-migration:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) tests/playbooks/test_swift_migration.yaml 2>&1 | tee $(TEST_OUTFILE)
 
+test-with-ironic: TEST_OUTFILE := tests/logs/test_with_ironic_out_$(shell date +%FT%T%Z).log
+test-with-ironic:
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) tests/playbooks/test_with_ironic.yaml 2>&1 | tee $(TEST_OUTFILE)
+
 ### DOCS ###
 
 docs-dependencies: .bundle
