@@ -5,45 +5,17 @@
       CONTROLLER1_SSH="{{ controller1_ssh }}"
       CONTROLLER2_SSH="{{ controller2_ssh }}"
       CONTROLLER3_SSH="{{ controller3_ssh }}"
-      EDPM_PRIVATEKEY_PATH="{{ edpm_privatekey_path }}"
-      declare -A computes
-      computes=(
-        ["standalone.localdomain"]="{{ edpm_node_ip }}"
-      )
 
-- name: stop compute services
+- name: stop pacemaker services
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ stop_other_services_shell_vars }}
 
-    ComputeServicesToStop=(
-                    "tripleo_nova_compute.service"
-                    "tripleo_nova_libvirt.target"
-                    "tripleo_nova_migration_target.service"
-                    "tripleo_nova_virtlogd_wrapper.service"
-                    "tripleo_nova_virtnodedevd.service"
-                    "tripleo_nova_virtproxyd.service"
-                    "tripleo_nova_virtqemud.service"
-                    "tripleo_nova_virtsecretd.service"
-                    "tripleo_nova_virtstoraged.service")
-
     PacemakerResourcesToStop=(
                     "galera-bundle"
                     "haproxy-bundle"
                     "rabbitmq-bundle")
-
-    echo "Disabling systemd units and cleaning up for compute services"
-    for i in "${!computes[@]}"; do
-        SSH_CMD="ssh -i $EDPM_PRIVATEKEY_PATH root@${computes[$i]}"
-        for service in ${ComputeServicesToStop[*]}; do
-            echo "Stopping the $service in compute $i"
-            if ${SSH_CMD} sudo systemctl is-active $service; then
-                ${SSH_CMD} sudo systemctl disable --now $service
-                ${SSH_CMD} test -f /etc/systemd/system/$service '||' sudo systemctl mask $service
-            fi
-        done
-    done
 
     echo "Stopping pacemaker services"
     for i in {1..3}; do
