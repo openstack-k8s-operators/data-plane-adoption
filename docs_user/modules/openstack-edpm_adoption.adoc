@@ -10,6 +10,7 @@
 
 * Previous Adoption steps completed.
 * Remaining source cloud xref:stopping-infrastructure-management-and-compute-services_{context}[Stopping infrastructure management and Compute services] on Compute hosts.
+* Ceph backend for Nova/Libvirt is configured xref:configuring-a-ceph-backend_{context}[Configuring a Ceph backend].
 
 ____
 *WARNING* This step is a "point of no return" in the EDPM adoption
@@ -27,6 +28,7 @@ The values are just illustrative, use values that are correct for your environme
 
 ----
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //'
 
 alias openstack="oc exec -t openstackclient -- openstack"
 FIP=192.168.122.20
@@ -178,7 +180,7 @@ rm -f id*
 cd -
 ----
 
-* Create a Nova Compute Extra Config service
+* Create a Nova Compute Extra Config service (no ceph backend in use)
 +
 [source,yaml]
 ----
@@ -213,6 +215,61 @@ The secret `nova-cell<X>-compute-config` is auto-generated for each
 `cell<X>`. That secret, alongside `nova-migration-ssh-key`, should
 always be specified for each custom `OpenStackDataPlaneService` related to Nova.
 
+That service removes pre-FFU workarounds and configures Nova compute
+services for local storage backend.
+
+* Create a Nova Compute Extra Config service (with ceph backend)
++
+[source,yaml]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nova-compute-extraconfig
+  namespace: openstack
+data:
+  19-nova-compute-cell1-workarounds.conf: |
+    [workarounds]
+    disable_compute_service_check_for_ffu=true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ceph-nova
+  namespace: openstack
+data:
+  03-ceph-nova.conf: |
+    [libvirt]
+    images_type=rbd
+    images_rbd_pool=vms
+    images_rbd_ceph_conf=/etc/ceph/ceph.conf
+    images_rbd_glance_store_name=default_backend
+    images_rbd_glance_copy_poll_interval=15
+    images_rbd_glance_copy_timeout=600
+    rbd_user=openstack
+    rbd_secret_uuid=$CEPH_FSID
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: nova-compute-extraconfig
+  namespace: openstack
+spec:
+  label: nova.compute.extraconfig
+  configMaps:
+    - nova-compute-extraconfig
+    - ceph-nova
+  secrets:
+    - nova-cell1-compute-config
+    - nova-migration-ssh-key
+  playbook: osp.edpm.nova
+EOF
+----
++
+That service removes pre-FFU workarounds and configures Nova compute
+services for Ceph storage backend.
+
 ifeval::["{build}" == "downstream"]
 * Create subscription-manager and redhat-registry secrets
 +
@@ -238,6 +295,9 @@ EOF
 ----
 +
 endif::[]
+
+These should be cell-specific configurations.
+For multi-cell, config maps and OpenStack dataplane services should be named like `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`.
 
 * Deploy OpenStackDataPlaneNodeSet:
 +
@@ -427,6 +487,44 @@ endif::[]
 EOF
 ----
 
+* Prepare adopted EDPM workloads to use Ceph backend for Cinder, if configured so
++
+[source,yaml]
+----
+oc patch osdpns/openstack --type=merge --patch "
+spec:
+  services:
+    - repo-setup
+    - download-cache
+    - bootstrap
+    - configure-network
+    - validate-network
+    - install-os
+    - configure-os
+    - run-os
+    - install-certs
+    - ceph-client
+    - libvirt
+    - nova-compute-extraconfig
+    - ovn
+    - neutron-metadata
+  nodeTemplate:
+    extraMounts:
+    - extraVolType: Ceph
+      volumes:
+      - name: ceph
+        secret:
+          secretName: ceph-conf-files
+      mounts:
+      - name: ceph
+        mountPath: "/etc/ceph"
+        readOnly: true
+"
+----
+
+Note that you should retain the original `OpenStackDataPlaneNodeSet` services
+composition, except the inserted `ceph-client` service.
+
 * Optionally enable neutron-sriov-nic-agent in the OpenStackDataPlaneNodeSet CR
 +
 [source,yaml]
@@ -615,6 +713,12 @@ oc wait --for condition=Ready osdpd/openstack-nova-compute-ffu --timeout=5m
 ----
 oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
 oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
+----
+
+* Ask Nova to discover all compute hosts
++
+----
+oc rsh nova-cell0-conductor-0 nova-manage cell_v2 discover_hosts --verbose
 ----
 
 * Verify if Nova services can stop the existing test VM instance:
