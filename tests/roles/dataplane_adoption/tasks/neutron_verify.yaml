@@ -32,6 +32,20 @@
     fail_msg: "neutron-sriov-nic-agent is DEAD after adoption"
     success_msg: "neutron-sriov-nic-agent is ALIVE after adoption"
 
+- name: get neutron-dhcp-agent alive state
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ neutron_header }}
+    ${BASH_ALIASES[openstack]} network agent list | grep -F 'neutron-dhcp-agent' | grep -qF 'XXX' || echo ALIVE
+  register: neutron_verify_dhcp_agent_result
+
+- name: verify that neutron-dhcp-agent is alive
+  ansible.builtin.assert:
+    that:
+      - neutron_verify_dhcp_agent_result.stdout == 'ALIVE'
+    fail_msg: "neutron-dhcp-agent is DEAD after adoption"
+    success_msg: "neutron-dhcp-agent is ALIVE after adoption"
+
 - name: verify connectivity to the existing test VM instance using Floating IP
   ansible.builtin.shell: |
       ping -c4 {{ lookup('env', 'FIP') | default('192.168.122.20', True) }}
