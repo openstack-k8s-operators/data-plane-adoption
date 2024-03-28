@@ -6,7 +6,7 @@ ifdef::context[:parent-context: {context}]
 
 :context: openstack-adoption
 //kgilliga: I don't think we need the toc and toclevels attributes.
-:toc: left 
+:toc: left
 :toclevels: 3
 
 include::../modules/openstack-planning.adoc[leveloffset=+1]
@@ -33,7 +33,7 @@ include::../modules/openstack-heat_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-telemetry_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-autoscaling_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-stop_remaining_services.adoc[leveloffset=+1]
-include::../modules/openstack-edpm_adoption.adoc[leveloffset=+1]
+include::../modules/openstack-dataplane_adoption.adoc[leveloffset=+1]
 
 include::../modules/openstack-troubleshooting.adoc[leveloffset=+1]
 include::../modules/openstack-rolling_back.adoc[leveloffset=+1]

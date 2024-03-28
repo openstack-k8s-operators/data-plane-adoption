@@ -1,10 +1,10 @@
-[id="adopting-edpm_{context}"]
+[id="adopting-dataplane_{context}"]
 
-//:context: adopting-edpm
+//:context: adopting-dataplane
 //kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
 //Check xref contexts.
 
-= Adopting EDPM
+= Data plane adoption
 
 == Prerequisites
 
@@ -12,9 +12,9 @@
 * Remaining source cloud xref:stopping-infrastructure-management-and-compute-services_{context}[Stopping infrastructure management and Compute services] on Compute hosts.
 
 ____
-*WARNING* This step is a "point of no return" in the EDPM adoption
+*WARNING* This step is a "point of no return" in the data plane adoption
 procedure. The source control plane and data plane services must not
-be ever enabled back, after EDPM is deployed, and Podified control
+be ever enabled back, after the data plane is deployed, and control
 plane has taken control over it.
 ____
 
@@ -114,7 +114,7 @@ EOF
   OpenStackDataPlaneNodeSet CR.
   For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
 
-== Procedure - EDPM adoption
+== Adopting the data plane
 
 * _Temporary fix_ until the OSP 17 https://code.engineering.redhat.com/gerrit/q/topic:stable-compute-uuid[backport of the stable compute UUID feature]
 lands.
@@ -143,7 +143,7 @@ endif::[]
 done
 ----
 
-* Create a https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets[ssh authentication secret] for the EDPM nodes:
+* Create a https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets[ssh authentication secret] for the data plane nodes:
 +
 [subs=+quotes]
 ----
@@ -469,10 +469,10 @@ EOF
 
 * Adoption of the neutron-ovn-metadata-agent:
 +
-Neutron-ovn-metadata-agent running on the EDPM nodes don't require any
+Neutron-ovn-metadata-agent running on the data plane nodes don't require any
 additional actions nor config adjustments to do during the adoption process.
 When OpenStackDataPlaneDeployment and OpenStackDataPlaneNodeSet will be ready,
-neutron-ovn-metadata-agent should be up and running on the EDPM nodes.
+neutron-ovn-metadata-agent should be up and running on the data plane nodes.
 
 == Post-checks
 
@@ -514,16 +514,16 @@ are managed independently by EDPM ansible, and Kubernetes operators.
 Nova service operator and OpenStack Dataplane operator ensure upgrading
 is done independently of each other, by configuring
 `[upgrade_levels]compute=auto` for Nova services. Nova control plane
-services apply the change right after CR is patched. Nova compute EDPM
+services apply the change right after CR is patched. Nova compute data plane
 services will catch up the same config change with ansible deployment
 later on.
 
 ____
 *NOTE*: Additional orchestration happening around the FFU workarounds
-configuration for Nova compute EDPM service is a subject of future changes.
+configuration for Nova compute data plane service is a subject of future changes.
 ____
 
-* Wait for cell1 Nova compute EDPM services version updated (it may take some time):
+* Wait for cell1 Nova compute data plane services version updated (it may take some time):
 +
 ----
 oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
@@ -576,7 +576,7 @@ spec:
 oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 
-* Remove pre-FFU workarounds for Nova compute EDPM services:
+* Remove pre-FFU workarounds for Nova compute data plane services:
 +
 [source,yaml]
 ----
@@ -604,7 +604,7 @@ spec:
 EOF
 ----
 
-* Wait for Nova compute EDPM service to become ready:
+* Wait for Nova compute data plane service to become ready:
 +
 ----
 oc wait --for condition=Ready osdpd/openstack-nova-compute-ffu --timeout=5m
