@@ -1,0 +1,71 @@
+[id="retrieving-the-network-configuration_{context}"]
+
+= Retrieving the network configuration from your existing deployment
+
+Let's first determine which isolated networks are defined in the existing
+deployment. You can find the network configuration in the `network_data.yaml`
+file. For example,
+
+```
+- name: InternalApi
+  mtu: 1500
+  vip: true
+  vlan: 20
+  name_lower: internal_api
+  dns_domain: internal.mydomain.tld.
+  service_net_map_replace: internal
+  subnets:
+    internal_api_subnet:
+      ip_subnet: '172.17.0.0/24'
+      allocation_pools: [{'start': '172.17.0.4', 'end': '172.17.0.250'}]
+```
+
+You should make a note of the VLAN tag used (`vlan` key) and the IP range
+(`ip_subnet` key) for each isolated network. The IP range will later be split
+into separate pools for control plane services and load balancer IP addresses.
+
+You should also determine the list of IP addresses already consumed in the
+adopted environment. Consult `tripleo-ansible-inventory.yaml` file to find this
+information. In the file, for each listed host, note IP and VIP addresses
+consumed by the node.
+
+For example,
+
+```
+Standalone:
+  hosts:
+    standalone:
+      ...
+      internal_api_ip: 172.17.0.100
+    ...
+  ...
+standalone:
+  children:
+    Standalone: {}
+  vars:
+    ...
+    internal_api_vip: 172.17.0.2
+    ...
+```
+
+In the example above, note that the `172.17.0.2` and `172.17.0.100` are
+consumed and won't be available for the new control plane services, at least
+until the adoption is complete.
+
+Repeat the process for each isolated network and each host in the
+configuration.
+
+---
+
+At the end of this process, you should have the following information:
+
+- A list of isolated networks used in the existing deployment.
+- For each of the isolated networks, the VLAN tag and IP ranges used for
+  dynamic address allocation.
+- A list of existing IP address allocations used in the environment. You will
+  later exclude these addresses from allocation pools available for the new
+  control plane services.
+
+
+
+

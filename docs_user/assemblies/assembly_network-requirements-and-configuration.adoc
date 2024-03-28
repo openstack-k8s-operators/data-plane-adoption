@@ -1,0 +1,52 @@
+[id="network-requirements-and-configuration_{context}"]
+
+:context: network-requirements
+
+= Network requirements and configuration
+
+With OpenShift, the network is a very important aspect of the deployment, and
+it is important to plan it carefully. The general network requirements for the
+OpenStack services are not much different from the ones in a Director
+deployment, but the way you handle them is.
+
+____
+Note: More details about the network architecture and configuration can be
+found in the
+https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/18.0-dev-preview/html/deploying_red_hat_openstack_platform_18.0_development_preview_3_on_red_hat_openshift_container_platform/assembly_preparing-rhocp-for-rhosp#doc-wrapper[general
+OpenStack documentation] as well as
+https://docs.openshift.com/container-platform/4.14/networking/about-networking.html[OpenShift
+Networking guide]. This document will address concerns specific to adoption.
+____
+
+// TODO: update the openstack link with the final documentation
+
+// TODO: should we parametrize the version in the links somehow?
+
+When adopting a new OpenStack deployment, it is important to align the network
+configuration with the adopted cluster to maintain connectivity for existing
+workloads.
+
+The following logical configuration steps will incorporate the existing network
+configuration:
+
+- configure **OpenShift worker nodes** to align VLAN tags and IPAM
+  configuration with the existing deployment.
+- configure **Control Plane services** to use compatible IP ranges for
+  service and load balancing IPs.
+- configure **Data Plane nodes** to use corresponding compatible configuration for
+  VLAN tags and IPAM.
+
+Specifically,
+
+- **<<_ipam_planning,IPAM configuration>>** will either be reused from the
+  **existing** deployment or, depending on IP address availability in the
+  existing allocation pools, **new** ranges will be defined to be used for the
+  new control plane services. If so, **IP routing** will be configured between
+  the old and new ranges.
+- **<<_vlan_tags,VLAN tags>>** will be reused from the existing deployment.
+
+include::../modules/proc_retrieving-network-information-from-your-existing-deployment.adoc[leveloffset=+1]
+
+include::../assemblies/assembly_planning-your-ipam-configuration.adoc[leveloffset=+1]
+
+include::../assemblies/assembly_configuring-isolated-networks.adoc[leveloffset=+1]

@@ -1,0 +1,105 @@
+[id="configuring-control-plane-services_{context}"]
+
+= Configuring control plane services
+
+== Pod connectivity to isolated networks
+
+Once NMState operator created the desired hypervisor network configuration for
+isolated networks, we need to configure OpenStack services to use configured
+interfaces. This is achieved by defining `NetworkAttachmentDefinition` CRs for
+each isolated network. (In some clusters, these CRs are managed by
+https://docs.openshift.com/container-platform/4.14/networking/cluster-network-operator.html[Cluster
+Network Operator], in which case `Network` CRs should be used instead.)
+
+For example,
+
+```
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "internalapi",
+      "type": "macvlan",
+      "master": "enp6s0.20",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.17.0.0/24",
+        "range_start": "172.17.0.20",
+        "range_end": "172.17.0.50"
+      }
+    }
+```
+
+Make sure that the interface name and IPAM range match the configuration used
+in `NodeNetworkConfigurationPolicy` CRs.
+
+When reusing existing IP ranges, you may exclude part of the range defined by
+`range_start` and `range_end` that was already consumed in the existing
+deployment. Please use `exclude` as follows.
+
+```
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "internalapi",
+      "type": "macvlan",
+      "master": "enp6s0.20",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.17.0.0/24",
+        "range_start": "172.17.0.20",
+        "range_end": "172.17.0.50",
+        "exclude": [
+          "172.17.0.24/32",
+          "172.17.0.44/31"
+        ]
+      }
+    }
+```
+
+The example above would exclude addresses `172.17.0.24` as well as
+`172.17.0.44` and `172.17.0.45` from the allocation pool.
+
+== Load balancer IP addresses
+
+Some OpenStack services require load balancer IP addresses. These IP addresses
+belong to the same IP range as the control plane services, and are managed by
+MetalLB. The IP address pool is defined by `IPAllocationPool` CRs. This pool
+should also be aligned with the adopted configuration.
+
+For example,
+
+```
+- apiVersion: metallb.io/v1beta1
+  kind: IPAddressPool
+  spec:
+    addresses:
+    - 172.17.0.60-172.17.0.70
+```
+
+Define `IPAddressPool` CRs for each isolated network that requires load
+balancer IP addresses.
+
+When reusing existing IP ranges, you may exclude part of the range by listing
+multiple `addresses` entries.
+
+For example,
+
+```
+- apiVersion: metallb.io/v1beta1
+  kind: IPAddressPool
+  spec:
+    addresses:
+    - 172.17.0.60-172.17.0.64
+    - 172.17.0.66-172.17.0.70
+```
+
+The example above would exclude the `172.17.0.65` address from the allocation
+pool.
+
+// TODO: is there anything specific to mention about BGP L3 mode here?

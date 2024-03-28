@@ -1,0 +1,152 @@
+[id="using-new-subnet-ranges_{context}"]
+
+= Scenario 1: Using new subnet ranges
+
+This scenario is compatible with any existing subnet configuration, and can be
+used even when the existing cluster subnet ranges don't have enough free IP
+addresses for the new control plane services.
+
+The general idea here is to define new IP ranges for control plane services
+that belong to a different subnet that was not used in the existing cluster.
+Then, configure link local IP routing between the old and new subnets to allow
+old and new service deployments to communicate. This involves using TripleO
+mechanism on pre-adopted cluster to configure additional link local routes
+there. This will allow EDP deployment to reach out to adopted nodes using their
+old subnet addresses.
+
+The new subnet should be sized appropriately to accommodate the new control
+plane services, but otherwise doesn't have any specific requirements as to the
+existing deployment allocation pools already consumed. Actually, the
+requirements as to the size of the new subnet are lower than in the second
+scenario, as the old subnet ranges are kept for the adopted nodes, which means
+they don't consume any IP addresses from the new range.
+
+In this scenario, you will configure `NetworkAttachmentDefinition` CRs to use a
+different subnet from what will be configured in `NetConfig` CR for the same
+networks. The former range will be used for podified control plane services,
+while the latter will be used to manage IPAM for EDP nodes.
+
+During the process, you will need to make sure that adopted node IP addresses
+don't change during the adoption process. This is achieved by listing the
+addresses in `fixedIP` fields in `OpenstackDataplaneNodeSet` per-node section.
+
+---
+
+Before proceeding, configure host routes on the adopted nodes for the podified
+control plane subnets.
+
+To achieve this, you will need to re-run `tripleo deploy` with additional
+`routes` entries added to `network_config`. (This change should be applied
+for every adopted node configuration.) For example, you may add the following
+to `net_config.yaml`:
+
+```yaml
+network_config:
+  - type: ovs_bridge
+    name: br-ctlplane
+    routes:
+    - ip_netmask: 0.0.0.0/0
+      next_hop: 192.168.1.1
+    - ip_netmask: 172.31.0.0/24  # <- new ctlplane subnet
+      next_hop: 192.168.1.100    # <- adopted node ctlplane IP address
+```
+
+Do the same for other networks that will need to use different subnets for the
+new and old parts of the deployment.
+
+Once done, run `tripleo deploy` to apply the new configuration.
+
+Note that network configuration changes are not applied by default to avoid
+risk of network disruption. You will have to enforce the changes by setting the
+`StandaloneNetworkConfigUpdate: true` in the TripleO configuration files.
+
+Once `tripleo deploy` is complete, you should see new link local routes to the
+new subnet on each node. For example,
+
+```bash
+# ip route | grep 172
+172.31.0.0/24 via 192.168.122.100 dev br-ctlplane
+```
+
+---
+
+The next step is to configure similar routes for the old subnet for podified
+services attached to the networks. This is done by adding `routes` entries to
+`NodeNetworkConfigurationPolicy` CRs for each network. For example,
+
+```yaml
+      - destination: 192.168.122.0/24
+        next-hop-interface: ospbr
+```
+
+Once applied, you should eventually see the following route added to your OCP nodes.
+
+```bash
+# ip route | grep 192
+192.168.122.0/24 dev ospbr proto static scope link
+```
+
+---
+
+At this point, you should be able to ping the adopted nodes from OCP nodes
+using their old subnet addresses; and vice versa.
+
+---
+
+
+Finally, during the data plane adoption, you will have to take care of several aspects:
+
+- in network_config, add link local routes to the new subnets, for example:
+
+```yaml
+  nodeTemplate:
+    ansible:
+      ansibleUser: root
+      ansibleVars:
+        additional_ctlplane_host_routes:
+        - ip_netmask: 172.31.0.0/24
+          next_hop: '{{ ctlplane_ip }}'
+        edpm_network_config_template: |
+          network_config:
+          - type: ovs_bridge
+            routes: {{ ctlplane_host_routes + additional_ctlplane_host_routes }}
+            ...
+```
+
+- list the old IP addresses as `ansibleHost` and `fixedIP`, for example:
+
+```yaml
+  nodes:
+    standalone:
+      ansible:
+        ansibleHost: 192.168.122.100
+        ansibleUser: ""
+      hostName: standalone
+      networks:
+      - defaultRoute: true
+        fixedIP: 192.168.122.100
+        name: ctlplane
+        subnetName: subnet1
+```
+
+- expand SSH range for the firewall configuration to include both subnets:
+
+```yaml
+        edpm_sshd_allowed_ranges:
+        - 192.168.122.0/24
+        - 172.31.0.0/24
+```
+
+This is to allow SSH access from the new subnet to the adopted nodes as well as
+the old one.
+
+---
+
+Since you are applying new network configuration to the nodes, consider also
+setting `edpm_network_config_update: true` to enforce the changes.
+
+---
+
+Note that the examples above are incomplete and should be incorporated into
+your general configuration.
+
