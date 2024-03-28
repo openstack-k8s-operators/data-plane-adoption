@@ -306,7 +306,7 @@
             echo "Deployment is Ready"
             exit 0
         else
-            failed=$(oc get jobs -l osdpd=$DEPLOYMENT_NAME -o jsonpath="{.items[?(@.status.failed > $ALLOWED_JOB_RETRIES)].metadata.name}")
+            failed=$(oc get jobs -l openstackdataplanedeployment=$DEPLOYMENT_NAME -o jsonpath="{.items[?(@.status.failed > $ALLOWED_JOB_RETRIES)].metadata.name}")
             if [ ! -z "${failed}" ]; then
                 echo "There are failed AnsibleEE jobs: $failed"
                 exit 1
