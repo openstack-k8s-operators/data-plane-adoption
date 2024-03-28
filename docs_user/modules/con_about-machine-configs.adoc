@@ -1,0 +1,49 @@
+[id="about-machine-configs_{context}"]
+
+= About machine configs 
+
+Some services require you to have services or kernel modules running on the hosts where they run, for example `iscsid` or `multipathd` daemons, or the
+`nvme-fabrics` kernel module.
+
+For those cases you use `MachineConfig` manifests, and if you are restricting
+the nodes that you are placing the OpenStack services on using the `nodeSelector` then
+you also want to limit where the `MachineConfig` is applied.
+
+To define where the `MachineConfig` can be applied, you need to use a
+`MachineConfigPool` that links the `MachineConfig` to the nodes.
+
+For example to be able to limit `MachineConfig` to the 3 OpenShift nodes that you
+marked with the `type: openstack` label, you create the
+`MachineConfigPool` like this:
+
+[source,yaml]
+----
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfigPool
+metadata:
+  name: openstack
+spec:
+  machineConfigSelector:
+    matchLabels:
+      machineconfiguration.openshift.io/role: openstack
+  nodeSelector:
+    matchLabels:
+      type: openstack
+----
+
+And then you use it in the `MachineConfig`:
+
+[source,yaml]
+----
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: openstack
+< . . . >
+----
+
+Refer to the https://docs.openshift.com/container-platform/4.13/post_installation_configuration/machine-configuration-tasks.html[OpenShift documentation for additional information on `MachineConfig` and `MachineConfigPools`]
+
+*WARNING:* Applying a `MachineConfig` to an OpenShift node will make the node
+reboot.

@@ -1,0 +1,27 @@
+[id="block-storage-requirements_{context}"]
+
+//xref at the end of this module needs to be updated.
+
+= Block Storage service requirements
+
+The Block Storage service (cinder) has both local storage used by the service and OpenStack user requirements.
+
+Local storage is used for example when downloading a glance image for the create volume from image operation, which can become considerable when having
+concurrent operations and not using the Block Storage service volume cache.
+
+In the Operator deployed OpenStack, there is a way to configure the
+location of the conversion directory to be an NFS share (using the extra
+volumes feature), something that needed to be done manually before.
+
+Even if it's an adoption and it may seem that there's nothing to consider
+regarding the Block Storage service backends, because you are using the same ones that you are
+using in your current deployment, you should still evaluate it, because it may not be so straightforward.
+
+First you need to check the transport protocol the Block Storage service backends are using:
+RBD, iSCSI, FC, NFS, NVMe-oF, etc.
+
+Once you know all the transport protocols that you are using, you can make
+sure that you are taking them into consideration when placing the Block Storage services (as mentioned above in the Node Roles section) and the right storage transport related binaries are running on the OpenShift nodes.
+
+Detailed information about the specifics for each storage transport protocol can be found in the xref:adopting-the-block-storage-service_{context}[Adopting the Block Storage service].
+
