@@ -1,0 +1,57 @@
+[id="comparing-configuration-files-between-deployments_{context}"]
+
+= Comparing configuration files between deployments
+
+In order to help users to handle the configuration for the TripleO and OpenStack
+services the tool: https://github.com/openstack-k8s-operators/os-diff has been
+develop to compare the configuration files between the TripleO deployment and
+the next gen cloud.
+Make sure Golang is installed and configured on your env:
+
+----
+git clone https://github.com/openstack-k8s-operators/os-diff
+pushd os-diff
+make build
+----
+
+Then configure ansible.cfg and ssh-config file according to your environment:
+
+[source,yaml]
+[subs=+quotes]
+----
+Host *
+    IdentitiesOnly yes
+
+Host virthost
+    Hostname virthost
+    IdentityFile ~/.ssh/id_rsa
+    User root
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+
+
+Host standalone
+    Hostname standalone
+ifeval::["{build}" != "downstream"]
+    IdentityFile ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa
+endif::[]
+ifeval::["{build}" == "downstream"]
+    IdentityFile *<path to SSH key>*
+endif::[]
+    User root
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+
+Host crc
+    Hostname crc
+    IdentityFile ~/.ssh/id_rsa
+    User stack
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+----
+
+And test your connection:
+
+----
+ssh -F ssh.config standalone
+----
