@@ -6,7 +6,8 @@
 - name: run get dbs script on galera container
   delegate_to: "{{ adoption_ospdo_host }}"
   ansible.builtin.shell: |
-      {{ controller1_ssh }} {{ dpa_templates }}/get_dbs_ospdo.sh
+
+      {{ controller1_ssh }} {{ dpa_templates }}/dump_dbs.bash
 
 # Copy DB dumps to local tmp
 - name: Copy DB dumps ctrl0 to openstackclient
