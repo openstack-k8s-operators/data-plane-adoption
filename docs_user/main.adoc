@@ -6,7 +6,11 @@
 :doctype: book
 :context: osp
 
+include::adoption-attributes.adoc[]
+
+ifeval::["{build}" == "downstream"]
 include::rhoso_attributes.adoc[]
+endif::[]
 
 include::assemblies/assembly_planning-the-new-deployment.adoc[leveloffset=+1]
 

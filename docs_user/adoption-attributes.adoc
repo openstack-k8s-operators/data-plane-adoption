@@ -1,0 +1,23 @@
+:ProductVersion: 18.0
+:context: assembly
+:build: downstream
+
+ifeval::["{build}" == "upstream"]
+:OpenShift: OpenShift
+:osp_prev_long: OpenStack
+:OpenStackShort: OSP
+:OpenShiftShort: OCP
+:osp_curr_ver: Antelope
+:OpenStackInstaller: TripleO
+endif::[]
+
+ifeval::["{build}" == "downstream"]
+:osp_long: Red Hat OpenStack Services on OpenShift
+:osp_acro: RHOSO
+:osp_prev_long: Red Hat OpenStack Platform
+:OpenStackShort: RHOSP
+:osp_curr_ver: 18.0
+:OpenShift: Red Hat OpenShift Container Platform
+:OpenShiftShort: OpenShift Container Platform
+:OpenStackInstaller: director
+endif::[]
