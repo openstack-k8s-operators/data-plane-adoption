@@ -1,6 +1,9 @@
 #!/bin/bash
 {{ shell_header }}
-{{ oc_header }}
+if [[ "$ospdo_src" != "true" ]]; then
+    {{ oc_header }}
+fi
+
 {{ mariadb_copy_shell_vars_src }}
 
 mkdir -p {{ mariadb_copy_tmp_dir }}
