@@ -2,6 +2,12 @@
   ansible.builtin.include_tasks:
     file: env_vars_src.yaml
 
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.include_tasks: ospdo_mariadb_copy.yaml
+  when: ospdo_src| bool
+  vars:
+    env_vars_ospdo: True
+
 - name: get the destination database service environment variables
   ansible.builtin.include_tasks:
     file: env_vars_dst.yaml
@@ -9,6 +15,8 @@
 - name: execute alternative tasks when source env is ODPdO
   ansible.builtin.include_tasks: ospdo_mariadb_copy.yaml
   when: ospdo_src| bool
+  vars:
+    db_pre_tasks: True
 
 - name: check that the Galera database cluster members are online and synced
   no_log: "{{ use_no_log }}"
@@ -48,8 +56,10 @@
 - name: dump databases
   no_log: "{{ use_no_log }}"
   ansible.builtin.include_tasks:
-    file: dbs_ospdo.yaml
+  file: ospdo_mariadb_copy.yaml
   when: ospdo_src| bool
+  vars:
+    ospdo_get_dbs: True
 
 - name: restore databases
   no_log: "{{ use_no_log }}"
