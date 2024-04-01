@@ -14,6 +14,8 @@ endif::[]
 
 include::assemblies/assembly_planning-the-new-deployment.adoc[leveloffset=+1]
 
+include::assemblies/assembly_migrating-databases-to-the-control-plane.adoc[leveloffset=+1]
+
 include::assemblies/openstack_adoption.adoc[leveloffset=+1]
 
 include::assemblies/ceph_migration.adoc[leveloffset=+1]

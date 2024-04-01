@@ -8,6 +8,7 @@ ifeval::["{build}" == "upstream"]
 :OpenStackShort: OSP
 :OpenShiftShort: OCP
 :osp_curr_ver: Antelope
+:osp_prev_ver: Wallaby
 :OpenStackInstaller: TripleO
 endif::[]
 
@@ -17,6 +18,7 @@ ifeval::["{build}" == "downstream"]
 :osp_prev_long: Red Hat OpenStack Platform
 :OpenStackShort: RHOSP
 :osp_curr_ver: 18.0
+:osp_prev_ver: 17.1
 :OpenShift: Red Hat OpenShift Container Platform
 :OpenShiftShort: OpenShift Container Platform
 :OpenStackInstaller: director
