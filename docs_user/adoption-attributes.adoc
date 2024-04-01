@@ -10,6 +10,8 @@ ifeval::["{build}" == "upstream"]
 :osp_curr_ver: Antelope
 :osp_prev_ver: Wallaby
 :OpenStackInstaller: TripleO
+:CephService_first_ref: Manila
+:CephService: Manila
 endif::[]
 
 ifeval::["{build}" == "downstream"]
@@ -22,4 +24,6 @@ ifeval::["{build}" == "downstream"]
 :OpenShift: Red Hat OpenShift Container Platform
 :OpenShiftShort: OpenShift Container Platform
 :OpenStackInstaller: director
+:CephService_first_ref: Shared File Systems service (manila)
+:CephService: Shared File Systems service
 endif::[]

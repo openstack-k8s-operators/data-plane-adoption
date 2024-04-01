@@ -2,7 +2,7 @@
 
 = Creating a Ceph NFS cluster
 
-If you use the Ceph via NFS backend with OpenStack Manila, prior to adoption, you must create a new clustered NFS service on the Ceph cluster. This service will replace the standalone, pacemaker-controlled `ceph-nfs` service that was used on {osp_prev_long} {osp_prev_ver}.
+If you use the Ceph via NFS backend with {CephService_first_ref}, prior to adoption, you must create a new clustered NFS service on the Ceph cluster. This service will replace the standalone, pacemaker-controlled `ceph-nfs` service that was used on {osp_prev_long} {osp_prev_ver}.
 
 .Procedure
 
@@ -91,7 +91,7 @@ less than the number of hosts identified. This solution has been well tested
 with a 3-node NFS cluster.
 * The `ingress-mode` argument must be set to ``haproxy-protocol``. No other
 ingress-mode will be supported. This ingress mode will allow enforcing client
-restrictions through OpenStack Manila.
+restrictions through {CephService}.
 * For more information on deploying the clustered Ceph NFS service, see the
 link:https://docs.ceph.com/en/latest/cephadm/services/nfs/[ceph orchestrator
 documentation]

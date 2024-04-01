@@ -6,13 +6,13 @@ If the original deployment uses a Ceph storage backend for any service
 (e.g. Glance, Cinder, Nova, Manila), the same backend must be used in the
 adopted deployment and custom resources (CRs) must be configured accordingly.
 
-If you use the Shared File Systems service, on TripleO environments, the CephFS driver in the Shared File Systems service is configured to use
+If you use {CephService_first_ref}, on TripleO environments, the CephFS driver in {CephService} is configured to use
 its own keypair. For convenience, modify the `openstack` user so that you
 can use it across all {osp_prev_long} services.
 
 Using the same user across the services serves two purposes:
 
-* The capabilities of the user required to interact with the Manila service
+* The capabilities of the user required to interact with {CephService}
 became far simpler and hence, more became more secure with RHOSP 18.
 * It is simpler to create a common ceph secret (keyring and ceph config
 file) and propagate the secret to all services that need it.
@@ -32,7 +32,7 @@ ceph auth caps client.openstack \
 
 .Prerequisites
 
-* The `OpenStackControlPlane` CR must already exist.
+* The `OpenStackControlPlane` custom resource (CR) must already exist.
 
 .Variables
 
