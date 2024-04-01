@@ -1,37 +1,25 @@
 [id="migrating-ovn-data_{context}"]
 
-//:context: migrating-ovn
-//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
-
 = Migrating OVN data
 
 This document describes how to move OVN northbound and southbound databases
-from the original OpenStack deployment to ovsdb-server instances running in the
-OpenShift cluster.
+from the original {osp_prev_long} deployment to `ovsdb-server` instances running in the {OpenShift} cluster.
+While it may be argued that the control plane Neutron ML2/OVN driver and OVN northd service will reconstruct the databases on startup, the reconstruction may be time consuming on large existing clusters. The procedure below allows to speed up data migration and avoid unnecessary data plane disruptions due to incomplete OpenFlow table contents.
 
-== Rationale
-
-While it may be argued that the podified Neutron ML2/OVN driver and OVN northd
-service will reconstruct the databases on startup, the reconstruction may be
-time consuming on large existing clusters. The procedure below allows to speed
-up data migration and avoid unnecessary data plane disruptions due to
-incomplete OpenFlow table contents.
-
-== Prerequisites
+.Prerequisites
 
 * Make sure the previous Adoption steps have been performed successfully.
- ** The OpenStackControlPlane resource must be already created at this point.
- ** NetworkAttachmentDefinition CRDs for the original cluster are already
-defined. Specifically, _openstack/internalapi_ network is defined.
- ** Podified MariaDB and RabbitMQ may already run. Neutron and OVN are not
-running yet.
- ** Original OVN is older or equal to the podified version.
+ ** The `OpenStackControlPlane` resource must be already created at this point.
+ ** NetworkAttachmentDefinition custom resource definitions (CRDs) for the original cluster are already
+defined. Specifically, `openstack/internalapi` network is defined.
+ ** Control plane MariaDB and RabbitMQ may already run. Neutron and OVN are not running yet.
+ ** Original OVN is older or equal to the control plane version.
  ** Original Neutron Server and OVN northd services are stopped.
  ** There must be network routability between:
   *** The adoption host and the original OVN.
-  *** The adoption host and the podified OVN.
+  *** The adoption host and the control plane OVN.
 
-== Variables
+.Variables
 
 Define the shell variables used in the steps below. The values are
 just illustrative, use values that are correct for your environment:
@@ -53,10 +41,10 @@ The real value of the `SOURCE_OVSDB_IP` can be get from the puppet generated con
 grep -rI 'ovn_[ns]b_conn' /var/lib/config-data/puppet-generated/
 ----
 
-== Procedure
+.Procedure
 
-* Prepare the OVN DBs copy dir and the adoption helper pod (pick the storage requests to fit the OVN databases sizes)
-
+. Prepare the OVN DBs copy dir and the adoption helper pod (pick the storage requests to fit the OVN databases sizes)
++
 [source,yaml]
 ----
 oc apply -f - <<EOF
@@ -103,21 +91,21 @@ spec:
 EOF
 ----
 
-* Wait for the pod to come up
-
+. Wait for the pod to come up
++
 ----
 oc wait --for=condition=Ready pod/ovn-copy-data --timeout=30s
 ----
 
-* Backup OVN databases.
-
+. Backup OVN databases.
++
 ----
 oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
 oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
 ----
 
-* Start podified OVN database services prior to import, keeping northd/ovn-controller stopped.
-
+. Start the control plane OVN database services prior to import, keeping `northd/ovn-controller` stopped.
++
 [source,yaml]
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch '
@@ -144,44 +132,43 @@ spec:
 '
 ----
 
-* Wait for the OVN DB pods reaching the running phase.
-
+. Wait for the OVN DB pods reaching the running phase.
++
 ----
 oc wait --for=jsonpath='{.status.phase}'=Running pod --selector=service=ovsdbserver-nb
 oc wait --for=jsonpath='{.status.phase}'=Running pod --selector=service=ovsdbserver-sb
 ----
 
-* Fetch podified OVN IP addresses on the clusterIP service network.
-
+. Fetch the control plane OVN IP addresses on the clusterIP service network.
++
 ----
 PODIFIED_OVSDB_NB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-nb-0" -ojsonpath='{.items[0].spec.clusterIP}')
 PODIFIED_OVSDB_SB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-sb-0" -ojsonpath='{.items[0].spec.clusterIP}')
 ----
 
-* Upgrade database schema for the backup files.
-
+. Upgrade database schema for the backup files.
++
 ----
 oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB_IP:6641 > /backup/ovs-nb.ovsschema && ovsdb-tool convert /backup/ovs-nb.db /backup/ovs-nb.ovsschema"
 oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6642 > /backup/ovs-sb.ovsschema && ovsdb-tool convert /backup/ovs-sb.db /backup/ovs-sb.ovsschema"
 ----
 
-* Restore database backup to podified OVN database servers.
-
-
+. Restore database backup to the control plane OVN database servers.
++
 ----
 oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
 oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
 ----
 
-* Check that podified OVN databases contain objects from backup, e.g.:
-
+. Check that the control plane OVN databases contain objects from backup, for example:
++
 ----
 oc exec -it ovsdbserver-nb-0 -- ovn-nbctl show
 oc exec -it ovsdbserver-sb-0 -- ovn-sbctl list Chassis
 ----
 
-* Finally, you can start `ovn-northd` service that will keep OVN northbound and southbound databases in sync.
-
+. Finally, you can start `ovn-northd` service that will keep OVN northbound and southbound databases in sync.
++
 [source,yaml]
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch '
@@ -195,15 +182,15 @@ spec:
 '
 ----
 
-* Also enable `ovn-controller`
-
+. Also enable `ovn-controller`:
++
 [source,yaml]
 ----
 oc patch openstackcontrolplane openstack --type=json -p="[{'op': 'remove', 'path': '/spec/ovn/template/ovnController/nodeSelector'}]"
 ----
 
-* Delete the ovn-data pod and persistent volume claim with OVN databases backup (consider making a snapshot of it, before deleting)
-
+. Delete the `ovn-data`pod and persistent volume claim with OVN databases backup (consider making a snapshot of it, before deleting):
++
 ----
 oc delete pod ovn-copy-data
 oc delete pvc ovn-data
