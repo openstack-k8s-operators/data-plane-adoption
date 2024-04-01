@@ -2,18 +2,17 @@
 
 = TLS Everywhere
 
-If the Director deployment was deployed with TLS Everywhere, FreeIPA (IDM) is used
-for providing services with certificates. Certmonger is installed on all hosts,
-which provisions the certificates for services running on the host.
-
-The new Operator based deployment uses cert-manager to provision the certificates.
-Instructions will be provided on how to retrieve the root CA from IPA and copy it
-over to the new environment.
-
-Because the same root CA is used to generate new certs, the currently used trust
-chain doesn't have to be modified.
-
-Note: The asumption is, that the new deployment will adopt the settings from the
+Note: The assumption is, that the new deployment will adopt the settings from the
 old deployment, so in case TLS Everywhere is disabled, it won't be enabled on
 the new deployment.
 
+If the Director deployment was deployed with TLS Everywhere, FreeIPA (IdM) is used
+to issue certificates for the OpenStack services. Certmonger, a client process which
+is installed on all hosts, interacts with FreeIPA (IdM) to request, install, track
+and renew these certificates.
+
+The new Operator based deployment uses the cert-manager operator to issue, track
+and renew the certificates.
+
+Because the same root CA is used to generate new certificates, the currently used chain
+of trust doesn't have to be modified.
