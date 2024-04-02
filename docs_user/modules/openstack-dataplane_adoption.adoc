@@ -260,6 +260,7 @@ kind: OpenStackDataPlaneNodeSet
 metadata:
   name: openstack
 spec:
+  tlsEnabled: false
   networkAttachments:
       - ctlplane
   preProvisioned: true

@@ -148,6 +148,10 @@ spec:
   secret: osp-secret
   storageClass: local-storage
 
+  tls:
+    podLevel:
+      enabled: false
+
   barbican:
     enabled: false
     template:
