@@ -26,6 +26,9 @@
       name: swift-ring-files
     binaryData:
       swiftrings.tar.gz: $($CONTROLLER1_SSH "cd /var/lib/config-data/puppet-generated/swift/etc/swift && tar cz *.builder *.ring.gz backups/ | base64 -w0")
+      account.ring.gz: $($CONTROLLER1_SSH "base64 -w0 /var/lib/config-data/puppet-generated/swift/etc/swift/account.ring.gz")
+      container.ring.gz: $($CONTROLLER1_SSH "base64 -w0 /var/lib/config-data/puppet-generated/swift/etc/swift/container.ring.gz")
+      object.ring.gz: $($CONTROLLER1_SSH "base64 -w0 /var/lib/config-data/puppet-generated/swift/etc/swift/object.ring.gz")
     EOF
 
 - name: Deploy podified Swift

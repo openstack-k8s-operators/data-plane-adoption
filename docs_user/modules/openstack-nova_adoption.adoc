@@ -121,7 +121,7 @@ oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 +
 The local Conductor services will be started for each cell, while the superconductor runs in `cell0`.
-Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Nova services, until the external data plane is imported, and until Nova Compute services fast-forward upgraded. For more information, see xref:adopting-edpm_{context}[Adopting EDPM].
+Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Nova services, until the external data plane is imported, and until Nova Compute services fast-forward upgraded. For more information, see xref:adopting-dataplane_{context}[Data Plane Adoption].
 
 == Post-checks
 
@@ -151,4 +151,4 @@ The expected changes to happen:
 
 *NOTE* At this point, Nova control plane services have yet taken control over
 existing Nova compute workloads. That would become possible to verify only after
-EDPM adoption is completed. For more information, see xref:adopting-edpm_{context}[Adopting EDPM].
+the data plane adoption is completed. For more information, see xref:adopting-dataplane_{context}[Data Plane Adoption].

@@ -1,0 +1,8 @@
+[id="identity-service-authentication_{context}"]
+
+= Identity service authentication
+
+When you adopt a director OpenStack deployment, users authenticate to the Identity service (keystone) by using Secure RBAC (SRBAC). There is no change to how you perform operations if SRBAC is enabled. If SRBAC is not enabled, then adopting a director OpenStack deployment changes how you perform operations, such as adding roles to users. If you have custom policies enabled, contact support before adopting a director OpenStack deployment.
+
+// For more information on SRBAC see [link].
+

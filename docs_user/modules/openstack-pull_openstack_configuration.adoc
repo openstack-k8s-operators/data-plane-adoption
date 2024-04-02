@@ -181,4 +181,4 @@ podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE mysql \
     "select host, configurations from agents where agents.binary='neutron-sriov-nic-agent';"
 ----
 
-This configuration will be required later, during the xref:adopting-edpm_{context}[EDPM Adoption].
+This configuration will be required later, during the xref:adopting-dataplane_{context}[Data Plane Adoption].
