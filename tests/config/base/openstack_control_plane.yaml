@@ -6,6 +6,17 @@ spec:
   secret: osp-secret
   storageClass: local-storage
 
+  tls:
+    podLevel:
+      enabled: false
+
+  barbican:
+    enabled: false
+    template:
+      barbicanAPI: {}
+      barbicanWorker: {}
+      barbicanKeystoneListener: {}
+
   cinder:
     enabled: false
     template:
