@@ -28,3 +28,35 @@
       ca:
         secretName: rootca-internal
     EOF
+
+- name: Stop certmonger service
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    EDPM_PRIVATEKEY_PATH="{{ edpm_privatekey_path }}"
+    declare -A computes
+    computes=(
+      ["standalone.ooo.test"]="{{ edpm_node_ip }}"
+    )
+    for i in "${!computes[@]}"; do
+        SSH_CMD="ssh -i $EDPM_PRIVATEKEY_PATH root@${computes[$i]}"
+        if ${SSH_CMD} sudo systemctl is-active certmonger.service; then
+            echo "Stopping certmonger on $i..."
+            ${SSH_CMD} sudo systemctl stop certmonger.service
+            echo "Disabling certmonger on $i..."
+            ${SSH_CMD} sudo systemctl disable --now certmonger.service
+            ${SSH_CMD} test -f /etc/systemd/system/certmonger.service '||' sudo systemctl mask certmonger.service
+        fi
+        # If necessary, adjust the directory below accordingly.
+        certs_directory=/var/lib/certmonger/requests
+        certs_to_stop=$(${SSH_CMD} ls -1 $certs_directory)
+        number_of_certs=$(${SSH_CMD} ls -1 $certs_directory | wc -l)
+        if [ $? != 0 ] || [ $number_of_certs = 0 ]; then
+            echo "No certificates to stop tracking on $i."
+        else
+            echo "There is/are $number_of_certs certificates to stop being tracked on $i. Stopping to track certificates..."
+        fi
+        while IFS= read -r cert; do
+            echo "Stopping to track $cert..."
+            ${SSH_CMD} rm -f $certs_directory/$cert
+        done <<< "$certs_to_stop"
+    done
