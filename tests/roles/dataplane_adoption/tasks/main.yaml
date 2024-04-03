@@ -149,6 +149,7 @@
     metadata:
       name: openstack
     spec:
+      tlsEnabled: false
       networkAttachments:
         - ctlplane
       preProvisioned: true
@@ -308,8 +309,8 @@
     {{ oc_header }}
 
     DEPLOYMENT_NAME=openstack
-    TRIES=180
-    DELAY=10
+    TRIES=360
+    DELAY=30
     ALLOWED_JOB_RETRIES=3
 
     for i in $(seq $TRIES)

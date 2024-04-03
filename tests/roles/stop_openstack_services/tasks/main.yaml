@@ -28,7 +28,6 @@
                     "tripleo_manila_api_cron.service"
                     "tripleo_manila_scheduler.service"
                     "tripleo_neutron_api.service"
-                    "tripleo_nova_api.service"
                     "tripleo_placement_api.service"
                     "tripleo_nova_api_cron.service"
                     "tripleo_nova_api.service"

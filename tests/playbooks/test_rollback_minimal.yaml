@@ -1,7 +1,7 @@
 - name: Common pre-adoption tasks
   import_playbook: _before_adoption.yaml
 
-- name: Adoption
+- name: Control plane adoption and rollback
   hosts: local
   gather_facts: false
   force_handlers: true
@@ -39,9 +39,6 @@
     - role: swift_adoption
       tags:
         - swift_adoption
-    - role: cinder_adoption
-      tags:
-        - cinder_adoption
     - role: glance_adoption
       tags:
         - glance_adoption
@@ -51,6 +48,9 @@
     - role: nova_adoption
       tags:
         - nova_adoption
+    - role: cinder_adoption
+      tags:
+        - cinder_adoption
     - role: horizon_adoption
       tags:
         - horizon_adoption
@@ -60,6 +60,7 @@
     - role: stop_remaining_services
       tags:
         - stop_remaining_services
-    - role: dataplane_adoption
+
+    - role: control_plane_rollback
       tags:
-        - dataplane_adoption
+        - control_plane_rollback
