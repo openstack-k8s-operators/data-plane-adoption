@@ -5,10 +5,14 @@
 ifeval::["{build}" == "upstream"]
 :OpenShift: OpenShift
 :osp_prev_long: OpenStack
+:osp_acro: OSP
 :OpenStackShort: OSP
 :OpenShiftShort: OCP
 :osp_curr_ver: Antelope
-:OpenStackInstaller: TripleO
+:osp_prev_ver: Wallaby
+:OpenStackPreviousInstaller: TripleO
+:rhos_component_storage_file_first_ref: Manila
+:rhos_component_storage_file: Manila
 endif::[]
 
 ifeval::["{build}" == "downstream"]
@@ -17,7 +21,10 @@ ifeval::["{build}" == "downstream"]
 :osp_prev_long: Red Hat OpenStack Platform
 :OpenStackShort: RHOSP
 :osp_curr_ver: 18.0
+:osp_prev_ver: 17.1
 :OpenShift: Red Hat OpenShift Container Platform
 :OpenShiftShort: OpenShift Container Platform
-:OpenStackInstaller: director
+:OpenStackPreviousInstaller: director
+:rhos_component_storage_file_first_ref: Shared File Systems service (manila)
+:rhos_component_storage_file: Shared File Systems service
 endif::[]

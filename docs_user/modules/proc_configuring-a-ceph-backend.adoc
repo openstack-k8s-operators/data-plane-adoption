@@ -1,0 +1,123 @@
+[id="configuring-a-ceph-backend_{context}"]
+
+= Configuring a Ceph backend
+
+If the original deployment uses a Ceph storage backend for any service
+(e.g. Glance, Cinder, Nova, Manila), the same backend must be used in the
+adopted deployment and custom resources (CRs) must be configured accordingly.
+
+If you use {rhos_component_storage_file_first_ref}, on TripleO environments, the CephFS driver in {rhos_component_storage_file} is configured to use
+its own keypair. For convenience, modify the `openstack` user so that you
+can use it across all {osp_prev_long} services.
+
+Using the same user across the services serves two purposes:
+
+* The capabilities of the user required to interact with {rhos_component_storage_file}
+became far simpler and hence, more became more secure with {osp_acro} {osp_curr_ver}.
+* It is simpler to create a common ceph secret (keyring and ceph config
+file) and propagate the secret to all services that need it.
+
+[TIP] 
+To run `ceph` commands, you must use SSH to connect to a Ceph
+storage node and run `sudo cephadm shell`. This brings up a ceph orchestrator
+container that allows you to run administrative commands against the ceph
+cluster. If you deployed the ceph cluster by using {OpenStackPreviousInstaller}, you may launch the `cephadm` shell from an {OpenStackShort} controller node.
+
+----
+ceph auth caps client.openstack \
+  mgr 'allow *' \
+  mon 'allow r, profile rbd' \
+  osd 'profile rbd pool=vms, profile rbd pool=volumes, profile rbd pool=images, allow rw pool manila_data'
+----
+
+.Prerequisites
+
+* The `OpenStackControlPlane` custom resource (CR) must already exist.
+
+.Variables
+
+Define the shell variables used in the steps below. The values are
+just illustrative, use values that are correct for your environment:
+
+[subs=+quotes]
+----
+ifeval::["{build}" != "downstream"]
+CEPH_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
+endif::[]
+ifeval::["{build}" == "downstream"]
+CEPH_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
+endif::[]
+CEPH_KEY=$($CEPH_SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0")
+CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
+----
+
+.Procedure
+
+. Create the `ceph-conf-files` secret, containing Ceph configuration:
++
+----
+oc apply -f - <<EOF
+apiVersion: v1
+data:
+  ceph.client.openstack.keyring: $CEPH_KEY
+  ceph.conf: $CEPH_CONF
+kind: Secret
+metadata:
+  name: ceph-conf-files
+  namespace: openstack
+type: Opaque
+EOF
+----
++
+The content of the file should look something like this:
++
+[source,yaml]
+----
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ceph-conf-files
+  namespace: openstack
+stringData:
+  ceph.client.openstack.keyring: |
+    [client.openstack]
+        key = <secret key>
+        caps mgr = "allow *"
+        caps mon = "allow r, profile rbd"
+        caps osd = "pool=vms, profile rbd pool=volumes, profile rbd pool=images, allow rw pool manila_data'
+  ceph.conf: |
+    [global]
+    fsid = 7a1719e8-9c59-49e2-ae2b-d7eb08c695d4
+    mon_host = 10.1.1.2,10.1.1.3,10.1.1.4
+----
+
+. Configure `extraMounts` within the `OpenStackControlPlane` CR:
++
+[source,yaml]
+----
+oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  extraMounts:
+    - name: v1
+      region: r1
+      extraVol:
+        - propagation:
+          - CinderVolume
+          - CinderBackup
+          - GlanceAPI
+          - ManilaShare
+          extraVolType: Ceph
+          volumes:
+          - name: ceph
+            projected:
+              sources:
+              - secret:
+                  name: ceph-conf-files
+          mounts:
+          - name: ceph
+            mountPath: "/etc/ceph"
+            readOnly: true
+'
+----
+
+

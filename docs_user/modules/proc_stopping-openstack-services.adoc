@@ -1,36 +1,50 @@
 [id="stopping-openstack-services_{context}"]
 
-//kgilliga: This module will be converted to a procedure and likely nested under the planning assembly.
 //Check xref context.
 
-= Stopping OpenStack services
+= Stopping {osp_prev_long} services
 
-Before you start the adoption, you must stop the OpenStack services.
+Before you start the adoption, you must stop the {osp_prev_long} ({OpenStackShort}) services.
 
-This is an important step to avoid inconsistencies in the data migrated for the data-plane adoption procedure caused by resource changes after the DB has been
-copied to the new deployment.
+This is an important step to avoid inconsistencies in the data migrated for the data-plane adoption procedure caused by resource changes after the DB has been copied to the new deployment.
 
 Some services are easy to stop because they only perform short asynchronous operations, but other services are a bit more complex to gracefully stop because they perform synchronous or long running operations that you might want to complete instead of aborting them.
 
 Since gracefully stopping all services is non-trivial and beyond the scope of this guide, the following procedure uses the force method and presents
 recommendations on how to check some things in the services.
 
-Note that you should not stop the infrastructure management services yet, such
-as:
+Note that you should not stop the infrastructure management services yet, such as:
 
-- database
-- RabbitMQ
-- HAProxy Load Balancer
-- ceph-nfs
-- Nova compute service
-- containerized modular libvirt daemons
-- Swift storage backend services.
+* database
+* RabbitMQ
+* HAProxy Load Balancer
+* ceph-nfs
+* Nova compute service
+* containerized modular libvirt daemons
+* Swift storage backend services
 
-== Variables
+.Prerequisites
 
-Define the shell variables used in the following steps. The values are illustrative and refer to a single node standalone director deployment. Use values that are correct for your environment:
+You can stop {OpenStackShort} services at any moment, but you might leave your environment in an undesired state. However, you should confirm that there are no long running operations that require other services.
 
-[source,bash]
+Ensure that there are no ongoing instance live migrations, volume migrations (online or offline), volume creation, backup restore, attaching, detaching,
+etc.
+
+----
+openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
+openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
+openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \|' | grep -vi error
+openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
+openstack image list -c ID -c Status |grep -E '\| .+ing \|'
+----
+
+Also collect the services topology specific configuration before stopping services required to gather it live. You will need it to compare it with the post-adoption values later on. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+//kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
+
+.Variables
+
+Define the shell variables used in the following steps. The values are illustrative and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Use values that are correct for your environment:
+
 [subs=+quotes]
 ----
 ifeval::["{build}" != "downstream"]
@@ -43,44 +57,23 @@ CONTROLLER2_SSH=""
 CONTROLLER3_SSH=""
 ----
 
-== Pre-checks
-
-You can stop OpenStack services at any moment, but you might leave your environment in an undesired state. However, you should confirm that there are no long running operations that require other services.
-
-Ensure that there are no ongoing instance live migrations, volume migrations (online or offline), volume creation, backup restore, attaching, detaching,
-etc.
-
-[source,bash]
-----
-openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
-openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
-openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \|' | grep -vi error
-openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
-openstack image list -c ID -c Status |grep -E '\| .+ing \|'
-----
-
-Also collect the services topology specific configuration before stopping services required to gather it live. You will need it to compare it with the post-adoption values later on. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
-//kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
-
-== Stopping control plane services
-
-You can stop OpenStack services at any moment, but you might leave your environment in an undesired state. You should confirm that there are no ongoing operations.
+.Procedure
+//kgilliga: How is this different from the step in the Prerequisites section? In other words, why is one a prerequisite while the following 4 steps are in the main procedure?
+You can stop {OpenStackShort} services at any moment, but you might leave your environment in an undesired state. You should confirm that there are no ongoing operations.
 
 1. Connect to all the controller nodes.
-2. Remove any constraints between infrastructure and OpenStack control plane
+2. Remove any constraints between infrastructure and {OpenStackShort} control plane
 services.
 3. Stop the control plane services.
 4. Verify the control plane services are stopped.
 
-The cinder-backup service on OSP 17.1 could be running as Active-Passive under pacemaker or as Active-Active, so you must check how it is running and stop it.
+The cinder-backup service on {OpenStackShort} {osp_prev_ver} could be running as Active-Passive under pacemaker or as Active-Active, so you must check how it is running and stop it.
 
-If the deployment enables CephFS via NFS as a backend for the OpenStack Shared
-File System service (Manila), there are pacemaker ordering and co-location
+If the deployment enables CephFS via NFS as a backend for {rhos_component_storage_file_first_ref}, there are pacemaker ordering and co-location
 constraints that govern the Virtual IP address assigned to the `ceph-nfs`
 service, the `ceph-nfs` service itself and `manila-share` service.
 These constraints must be removed:
 
-[source,bash]
 ----
 # check the co-location and ordering constraints concerning "manila-share"
 sudo pcs constraint list --full
@@ -90,13 +83,10 @@ sudo pcs constraint remove colocation-openstack-manila-share-ceph-nfs-INFINITY
 sudo pcs constraint remove order-ceph-nfs-openstack-manila-share-Optional
 ----
 
-The following steps to disable OpenStack control plane services can be
-automated with a simple script that relies on the previously defined
+The following steps to disable {OpenStackShort} control plane services can be automated with a simple script that relies on the previously defined
 environmental variables and function:
 
-[source,bash]
 ----
-
 # Update the services list to be stopped
 ServicesToStop=("tripleo_horizon.service"
                 "tripleo_keystone.service"

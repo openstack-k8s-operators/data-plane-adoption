@@ -1,34 +1,30 @@
 [id="migrating-databases-to-mariadb-instances_{context}"]
 
-//kgilliga: This module will be converted to a procedure. Unclear which assembly it should be included in.
 //Check xref contexts.
+//kgilliga: Find out if the steps in the Variables and pre-checks sections can go in the main procedure or if they have to be done before.
 
 = Migrating databases to MariaDB instances
 
 This document describes how to move the databases from the original
-OpenStack deployment to the MariaDB instances in the OpenShift
-cluster.
+{osp_prev_long} ({OpenStackShort}) deployment to the MariaDB instances in the {OpenShift} cluster.
 
-____
-*NOTE* This example scenario describes a simple single-cell setup. Real
+[NOTE] 
+This example scenario describes a simple single-cell setup. Real
 multi-stack topology recommended for production use results in different
 cells DBs layout, and should be using different naming schemes (not covered
 here this time).
-____
 
-== Prerequisites
+.Prerequisites
 
 * Make sure the previous Adoption steps have been performed successfully.
- ** The OpenStackControlPlane resource must be already created at this point.
- ** Podified MariaDB and RabbitMQ are running. No other podified
-control plane services are running.
- ** Required services specific topology. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+ ** The `OpenStackControlPlane` resource must be already created.
+ ** The control plane MariaDB and RabbitMQ are running. No other control plane services are running.
+ ** Required services specific topology. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the {osp_prev_long} configuration].
 //kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
- ** OpenStack services have been stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
- ** There must be network routability between:
-  *** The original MariaDB and podified MariaDB.
+ ** {OpenStackShort} services have been stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping {osp_prev_long} services].
+ ** There must be network routability between the original MariaDB and the MariaDB for the control plane.
 
-== Variables
+.Variables
 
 Define the shell variables used in the steps below. The values are
 just illustrative, use values that are correct for your environment:
@@ -61,7 +57,7 @@ SOURCE_GALERA_MEMBERS=(
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
-* Prepare MariaDB copy directory and the adoption helper pod
+* Prepare MariaDB copy directory and the adoption helper pod 
 
 * Create a temporary folder to store adoption helper pod (pick storage requests to fit MySQL database size):
 +
@@ -121,9 +117,9 @@ EOF
 oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
 ----
 
-== Pre-checks
+.Procedure
 
-* Check that the Galera database cluster members are online and synced:
+. Check that the Galera database cluster members are online and synced:
 +
 ----
 for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
@@ -135,20 +131,20 @@ for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
 done
 ----
 
-* Get the count of not-OK source databases:
+. Get the count of not-OK source databases:
 +
 ----
 oc rsh mariadb-copy-data mysql -h "${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" -e "SHOW databases;"
 ----
 
-* Run mysqlcheck on the original DB to look for things that are not OK:
+. Run mysqlcheck on the original DB to look for things that are not OK:
 +
 ----
 . ~/.source_cloud_exported_variables
 test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ]
 ----
 
-* Test connection to podified DBs (show databases):
+. Test connection to control plane DBs (show databases):
 +
 ----
 oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
@@ -156,20 +152,17 @@ oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
 oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
     mysql -rsh "$PODIFIED_CELL1_MARIADB_IP" -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
 ----
-
-== Procedure - data copy
-
-____
-*NOTE*: You need to transition Nova services imported later on into a
++
+[NOTE]
+You need to transition Nova services imported later on into a
 superconductor architecture. For that, delete the old service records in
 cells DBs, starting from the cell1. New records will be registered with
 different hostnames provided by the Nova service operator. All Nova
 services, except the compute agent, have no internal state, and its service
 records can be safely deleted. You also need to rename the former `default` cell
 to `cell1`.
-____
 
-* Create a dump of the original databases:
+. Create a dump of the original databases:
 +
 ----
 oc rsh mariadb-copy-data << EOF
@@ -184,7 +177,7 @@ oc rsh mariadb-copy-data << EOF
 EOF
 ----
 
-* Restore the databases from .sql files into the podified MariaDB:
+. Restore the databases from .sql files into the control plane MariaDB:
 +
 ----
 oc rsh mariadb-copy-data << EOF
@@ -234,13 +227,13 @@ oc rsh mariadb-copy-data << EOF
 EOF
 ----
 
-== Post-checks
+.Verification
 
 Compare the following outputs with the topology specific configuration.
-For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the {osp_prev_long} configuration].
 //kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.:
 
-* Check that the databases were imported correctly:
+. Check that the databases were imported correctly:
 +
 ----
 . ~/.source_cloud_exported_variables
@@ -278,12 +271,12 @@ novadb_svc_records=$(oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -ur
 diff -Z <(echo $novadb_svc_records) <(echo $PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES)
 ----
 
-* During the pre/post checks the pod `mariadb-client` might have returned a pod security warning
+. During the pre/post checks the pod `mariadb-client` might have returned a pod security warning
 related to the `restricted:latest` security context constraint. This is due to default security
 context constraints and will not prevent pod creation by the admission controller. You'll see a
 warning for the short-lived pod but it will not interfere with functionality.
-* Delete the mariadb-data pod and mariadb-copy-data persistent volume claim with databases backup (consider making a snapshot of it, before deleting)
-
+. Delete the `mariadb-data` pod and `mariadb-copy-data` persistent volume claim with databases backup (consider making a snapshot of it, before deleting)
++
 ----
 oc delete pod mariadb-copy-data
 oc delete pvc mariadb-data

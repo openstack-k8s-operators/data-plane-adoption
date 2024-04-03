@@ -1,31 +1,24 @@
 [id="deploying-backend-services_{context}"]
 
-//:context: backend-services
-
-//kgilliga: The backend services deployment intro will be converted to an assembly. Most of the rest of the module will be converted to a procedure.
-//Check xref context.
-
 = Deploying backend services
 
-The following instructions create OpenStackControlPlane CR with basic
-backend services deployed, and all the OpenStack services disabled.
-This will be the foundation of the podified control plane.
+Create the `OpenStackControlPlane` custom resource (CR) with basic backend services deployed, and all the {osp_prev_long} ({OpenStackShort}) services disabled. This will be the foundation of the control plane.
 
 In subsequent steps, you import the original databases and then add
-podified OpenStack control plane services.
+{OpenStackShort} control plane services.
 
-== Prerequisites
+.Prerequisites
 
 * The cloud that you want to adopt is up and running, and it is on the
-OpenStack Wallaby release.
+{OpenStackShort} {osp_prev_ver} release.
 * A VM instance named `test` is running on the source cloud and its
 floating IP is set into `FIP` env var. You can use a helper script to create that test VM.
-//xref:../docs_dev/assemblies/development_environment.adoc#virtual-machine-steps[helper script] kgilliga: Commented out because this might break the build downstream.
+//xref:../docs_dev/assemblies/development_environment.adoc#virtual-machine-steps[helper script] kgilliga: Engineers, do we want this link here? It points to dev docs.
 * The `openstack-operator` is deployed, but `OpenStackControlPlane` is
-*not* deployed.
+not deployed.
 ifeval::["{build}" != "downstream"]
 +
-For developer/CI environments, the openstack operator can be deployed
+For developer/CI environments, the {OpenStackShort} operator can be deployed
 by running `make openstack` inside
 https://github.com/openstack-k8s-operators/install_yamls[install_yamls]
 repo.
@@ -41,26 +34,26 @@ For developer/CI environments driven by install_yamls, make sure
 you've run `make crc_storage`.
 endif::[]
 
-== Variables
+.Variables
 
-* Set the desired admin password for the podified deployment. This can
+* Set the desired admin password for the control plane deployment. This can
 be the original deployment's admin password or something else.
 +
 ----
 ADMIN_PASSWORD=SomePassword
 ----
 +
-To use the existing OpenStack deployment password:
+To use the existing {OpenStackShort} deployment password:
 +
 ----
 ADMIN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
 * Set service password variables to match the original deployment.
-Database passwords can differ in podified environment, but
+Database passwords can differ in the control plane environment, but
 synchronizing the service account passwords is a required step.
 +
-E.g. in developer environments with TripleO Standalone, the
+For example, in developer environments with TripleO Standalone, the
 passwords can be extracted like this:
 +
 ----
@@ -81,29 +74,28 @@ PLACEMENT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' PlacementP
 SWIFT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' SwiftPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
-== Pre-checks
+.Procedure
 
-== Procedure - backend services deployment
-
-* Make sure you are using the OpenShift namespace where you want the
-podified control plane deployed:
+. Make sure you are using the {OpenShift} namespace where you want the
+control plane deployed:
 +
 ----
 oc project openstack
 ----
 
-* Create OSP secret.
+. Create OSP secret.
 ifeval::["{build}" != "downstream"]
 +
 The procedure for this will vary, but in developer/CI environments
-you use install_yamls:
+you use `install_yamls`:
 +
 ----
 # in install_yamls
 make input
 ----
 endif::[]
-* If the `$ADMIN_PASSWORD` is different than the already set password
+
+. If the `$ADMIN_PASSWORD` is different than the already set password
 in `osp-secret`, amend the `AdminPassword` key in the `osp-secret`
 correspondingly:
 +
@@ -111,7 +103,7 @@ correspondingly:
 oc set data secret/osp-secret "AdminPassword=$ADMIN_PASSWORD"
 ----
 
-* Set service account passwords in `osp-secret` to match the service
+. Set service account passwords in `osp-secret` to match the service
 account passwords from the original deployment:
 +
 ----
@@ -133,9 +125,9 @@ oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
 oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 ----
 
-* Deploy OpenStackControlPlane. *Make sure to only enable DNS,
+. Deploy `OpenStackControlPlane`. Make sure to only enable DNS,
 MariaDB, Memcached, and RabbitMQ services. All other services must
-be disabled.*
+be disabled.
 +
 [source,yaml]
 ----
@@ -294,7 +286,7 @@ spec:
 EOF
 ----
 
-== Post-checks
+.Verification
 
 * Check that MariaDB is running.
 +
