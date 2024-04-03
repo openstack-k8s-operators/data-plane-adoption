@@ -19,5 +19,12 @@
     oc patch openstackcontrolplane openstack --type=merge --patch-file={{ role_path }}/files/glance_swift.yaml
   when: glance_backend == 'swift'
 
+- name: deploy podified Glance with Cinder backend
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch-file={{ role_path }}/files/glance_cinder.yaml
+  when: glance_backend == 'cinder'
+
 - name: Check the adopted GlanceAPI
   ansible.builtin.include_tasks: check_glance.yaml
