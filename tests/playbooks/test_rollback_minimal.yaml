@@ -1,7 +1,7 @@
 - name: Common pre-adoption tasks
   import_playbook: _before_adoption.yaml
 
-- name: Adoption
+- name: Control plane adoption and rollback
   hosts: local
   gather_facts: false
   force_handlers: true
@@ -60,6 +60,7 @@
     - role: stop_remaining_services
       tags:
         - stop_remaining_services
-    - role: dataplane_adoption
+
+    - role: control_plane_rollback
       tags:
-        - dataplane_adoption
+        - control_plane_rollback

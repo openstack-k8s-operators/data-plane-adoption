@@ -1,10 +1,14 @@
 - name: Common pre-adoption tasks
   import_playbook: _before_adoption.yaml
 
-- name: Adoption
+- name: Control plane adoption and rollback
   hosts: local
   gather_facts: false
-  force_handlers: true
+  vars:
+    glance_backend: ceph
+    manila_backend: cephfs
+    cinder_volume_backend: ceph
+    cinder_backup_backend: ceph
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash
@@ -15,6 +19,9 @@
     - role: backend_services
       tags:
         - backend_services
+    - role: ceph_backend_configuration
+      tags:
+        - ceph_backend_configuration
     - role: pull_openstack_configuration
       tags:
         - pull_openstack_configuration
@@ -36,9 +43,6 @@
     - role: neutron_adoption
       tags:
         - neutron_adoption
-    - role: swift_adoption
-      tags:
-        - swift_adoption
     - role: glance_adoption
       tags:
         - glance_adoption
@@ -57,9 +61,13 @@
     - role: heat_adoption
       tags:
         - heat_adoption
+    - role: manila_adoption
+      tags:
+        - manila_adoption
     - role: stop_remaining_services
       tags:
         - stop_remaining_services
-    - role: dataplane_adoption
+
+    - role: control_plane_rollback
       tags:
-        - dataplane_adoption
+        - control_plane_rollback
