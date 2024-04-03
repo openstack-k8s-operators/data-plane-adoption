@@ -21,6 +21,16 @@ test-swift-migration:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_swift_migration.yaml 2>&1 | tee $(TEST_OUTFILE)
 
+test-rollback-minimal: TEST_OUTFILE := tests/logs/test_rollback_minimal_out_$(shell date +%FT%T%Z).log
+test-rollback-minimal:
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_rollback_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
+
+test-rollback-with-ceph: TEST_OUTFILE := tests/logs/test_rollback_with_ceph_out_$(shell date +%FT%T%Z).log
+test-rollback-with-ceph:
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_rollback_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
+
 ### DOCS ###
 
 docs-dependencies: .bundle
