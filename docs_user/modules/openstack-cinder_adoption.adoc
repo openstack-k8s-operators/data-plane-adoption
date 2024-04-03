@@ -747,19 +747,19 @@ openstack volume service list
 +------------------+------------------------+------+---------+-------+----------------------------+
 | Binary           | Host                   | Zone | Status  | State | Updated At                 |
 +------------------+------------------------+------+---------+-------+----------------------------+
-| cinder-backup    | standalone.localdomain | nova | enabled | down  | 2023-06-28T11:00:59.000000 |
-| cinder-scheduler | standalone.localdomain | nova | enabled | down  | 2023-06-28T11:00:29.000000 |
+| cinder-backup    | standalone.ooo.test | nova | enabled | down  | 2023-06-28T11:00:59.000000 |
+| cinder-scheduler | standalone.ooo.test | nova | enabled | down  | 2023-06-28T11:00:29.000000 |
 | cinder-volume    | hostgroup@tripleo_ceph | nova | enabled | up    | 2023-06-28T17:00:03.000000 |
 | cinder-scheduler | cinder-scheduler-0     | nova | enabled | up    | 2023-06-28T17:00:02.000000 |
 | cinder-backup    | cinder-backup-0        | nova | enabled | up    | 2023-06-28T17:00:01.000000 |
 +------------------+------------------------+------+---------+-------+----------------------------+
 ----
 
-In this case you need to remove services for hosts `standalone.localdomain`
+In this case you need to remove services for hosts `standalone.ooo.test`
 
 ----
-oc exec -it cinder-scheduler-0 -- cinder-manage service remove cinder-backup standalone.localdomain
-oc exec -it cinder-scheduler-0 -- cinder-manage service remove cinder-scheduler standalone.localdomain
+oc exec -it cinder-scheduler-0 -- cinder-manage service remove cinder-backup standalone.ooo.test
+oc exec -it cinder-scheduler-0 -- cinder-manage service remove cinder-scheduler standalone.ooo.test
 ----
 
 The reason why we haven't preserved the name of the backup service is because

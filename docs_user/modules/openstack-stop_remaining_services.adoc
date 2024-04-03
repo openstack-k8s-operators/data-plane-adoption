@@ -27,7 +27,7 @@ EDPM_PRIVATEKEY_PATH="*<path to SSH key>*"
 endif::[]
 declare -A computes
 computes=(
-  ["standalone.localdomain"]="192.168.122.100"
+  ["standalone.ooo.test"]="192.168.122.100"
   # ...
 )
 ----
