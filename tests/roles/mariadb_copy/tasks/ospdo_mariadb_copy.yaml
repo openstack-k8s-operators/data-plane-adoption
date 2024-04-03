@@ -12,7 +12,7 @@
     no_log: "{{ use_no_log }}"
     delegate_to: "{{ adoption_ospdo_host }}"
     ansible.builtin.shell: |
-      oc get secret tripleo-passwords -o jsonpath='{.data.*}'| base64 -d |grep MysqlRootPassword|sed 's/.*: //g'
+      oc get secret -n openstack tripleo-passwords -o jsonpath='{.data.*}'| base64 -d |grep MysqlRootPassword|sed 's/.*: //g'
     register: source_db_root_pass
 
   - name: set src MariaDB copy shell vars
@@ -20,15 +20,86 @@
     ansible.builtin.set_fact:
       mariadb_copy_shell_vars_src: |
         MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
-        # TODO: remove the default(external_...) when CI is transitioned to use 'source_...'
-        SOURCE_MARIADB_IP={{ source_mariadb_ip }}
+        STORAGE_CLASS=host-nfs-storageclass
+        SOURCE_MARIADB_IP={{ source_mariadb_ip.stdout }}
         declare -A SOURCE_GALERA_MEMBERS
         SOURCE_GALERA_MEMBERS=(
-        ["standalone.localdomain"]=$SOURCE_MARIADB_IP-
-        # ...
+        ["standalone.localdomain"]={{ source_mariadb_ip.stdout }}
         )
         SOURCE_DB_ROOT_PASSWORD={{ source_db_root_pass.stdout }}
-  when: env_vars_ospdo| default(false) | bool
+
+
+  - name: check that the Galera database cluster members are online and synced
+    delegate_to: "{{ adoption_ospdo_host }}"
+    ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ mariadb_copy_shell_vars_src }}
+
+      oc apply -f - <<EOF
+
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: mariadb-copy-data
+        namespace: openstack
+        annotations:
+          k8s.v1.cni.cncf.io/networks: '[{"name": "internalapi-static", "namespace": "openstack",
+              "ips": ["{{ mariadb_copy_pod_ip }}"]}]'
+          openshift.io/scc: anyuid
+        labels:
+          app: adoption
+      spec:
+        metadata:
+          labels:
+            app: openstackclient
+        containers:
+        - image: $MARIADB_IMAGE
+          command: [ "sh", "-c", "sleep infinity"]
+          name: adoption
+          volumeMounts:
+          - mountPath: /backup
+            name: mariadb-data
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ALL
+          runAsNonRoot: false
+          seccompProfile:
+            type: RuntimeDefault
+        volumes:
+        - name: mariadb-data
+          persistentVolumeClaim:
+            claimName: mariadb-data
+
+      EOF
+
+    changed_when: true
+  - name: wait for the pod to come up
+    delegate_to: "{{ adoption_ospdo_host }}"
+    ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ oc_header }}
+      oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
+    register: mariadb_data_pod_result
+    until: mariadb_data_pod_result is success
+    retries: 5
+    delay: 6
+
+  - name: check that the Galera database cluster members are online and synced
+    no_log: "{{ use_no_log }}"
+    delegate_to: "{{ adoption_ospdo_host }}"
+    ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ mariadb_copy_shell_vars_src }}
+      for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
+        echo "Checking for the database node $i WSREP status Synced"
+        oc rsh mariadb-copy-data mysql \
+          -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" \
+          -e "show global status like 'wsrep_local_state_comment'" | \
+          grep -qE "\bSynced\b"
+      done
+
+  when: env_vars_pre_tasks| default(false) | bool
 
 - name: ospdo pre tasks
   block:
