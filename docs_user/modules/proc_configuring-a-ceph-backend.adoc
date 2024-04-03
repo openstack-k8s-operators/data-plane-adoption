@@ -6,13 +6,13 @@ If the original deployment uses a Ceph storage backend for any service
 (e.g. Glance, Cinder, Nova, Manila), the same backend must be used in the
 adopted deployment and custom resources (CRs) must be configured accordingly.
 
-If you use {CephService_first_ref}, on TripleO environments, the CephFS driver in {CephService} is configured to use
+If you use {rhos_component_storage_file_first_ref}, on TripleO environments, the CephFS driver in {rhos_component_storage_file} is configured to use
 its own keypair. For convenience, modify the `openstack` user so that you
 can use it across all {osp_prev_long} services.
 
 Using the same user across the services serves two purposes:
 
-* The capabilities of the user required to interact with {CephService}
+* The capabilities of the user required to interact with {rhos_component_storage_file}
 became far simpler and hence, more became more secure with {osp_acro} {osp_curr_ver}.
 * It is simpler to create a common ceph secret (keyring and ceph config
 file) and propagate the secret to all services that need it.
@@ -21,7 +21,7 @@ file) and propagate the secret to all services that need it.
 To run `ceph` commands, you must use SSH to connect to a Ceph
 storage node and run `sudo cephadm shell`. This brings up a ceph orchestrator
 container that allows you to run administrative commands against the ceph
-cluster. If you deployed the ceph cluster by using {OpenStackInstaller}, you may launch the `cephadm` shell from an {OpenStackShort} controller node.
+cluster. If you deployed the ceph cluster by using {OpenStackPreviousInstaller}, you may launch the `cephadm` shell from an {OpenStackShort} controller node.
 
 ----
 ceph auth caps client.openstack \
