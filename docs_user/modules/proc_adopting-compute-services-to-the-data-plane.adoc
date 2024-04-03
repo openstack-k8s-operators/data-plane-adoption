@@ -252,10 +252,10 @@ spec:
     standalone:
       hostName: standalone
       ansible:
-        ansibleHost: ${computes[standalone.localdomain]}
+        ansibleHost: ${computes[standalone.ooo.test]}
       networks:
       - defaultRoute: true
-        fixedIP: ${computes[standalone.localdomain]}
+        fixedIP: ${computes[standalone.ooo.test]}
         name: ctlplane
         subnetName: subnet1
       - name: internalapi
@@ -426,7 +426,7 @@ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
   }, {
     "op": "add",
     "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_hypervisors",
-    "value": "dummy-dev:standalone.localdomain"
+    "value": "dummy-dev:standalone.ooo.test"
   }
 ]'
 ----
@@ -535,11 +535,11 @@ oc wait --for condition=Ready osdpns/openstack --timeout=30m
 +
 ----
 oc exec openstackclient -- openstack network agent list
-+--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
-| ID                                   | Agent Type                   | Host                   | Availability Zone | Alive | State | Binary                     |
-+--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
-| 174fc099-5cc9-4348-b8fc-59ed44fcfb0e | DHCP agent                   | standalone.localdomain | nova              | :-)   | UP    | neutron-dhcp-agent         |
-| 10482583-2130-5b0d-958f-3430da21b929 | OVN Metadata agent           | standalone.localdomain |                   | :-)   | UP    | neutron-ovn-metadata-agent |
-| a4f1b584-16f1-4937-b2b0-28102a3f6eaa | OVN Controller agent         | standalone.localdomain |                   | :-)   | UP    | ovn-controller             |
-+--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
++--------------------------------------+------------------------------+---------------------+-------------------+-------+-------+----------------------------+
+| ID                                   | Agent Type                   | Host                | Availability Zone | Alive | State | Binary                     |
++--------------------------------------+------------------------------+---------------------+-------------------+-------+-------+----------------------------+
+| 174fc099-5cc9-4348-b8fc-59ed44fcfb0e | DHCP agent                   | standalone.ooo.test | nova              | :-)   | UP    | neutron-dhcp-agent         |
+| 10482583-2130-5b0d-958f-3430da21b929 | OVN Metadata agent           | standalone.ooo.test |                   | :-)   | UP    | neutron-ovn-metadata-agent |
+| a4f1b584-16f1-4937-b2b0-28102a3f6eaa | OVN Controller agent         | standalone.ooo.test |                   | :-)   | UP    | ovn-controller             |
++--------------------------------------+------------------------------+---------------------+-------------------+-------+-------+----------------------------+
 ----
