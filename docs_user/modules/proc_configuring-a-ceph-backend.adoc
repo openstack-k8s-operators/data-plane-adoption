@@ -13,7 +13,7 @@ can use it across all {osp_prev_long} services.
 Using the same user across the services serves two purposes:
 
 * The capabilities of the user required to interact with {CephService}
-became far simpler and hence, more became more secure with RHOSP 18.
+became far simpler and hence, more became more secure with {osp_acro} {osp_curr_ver}.
 * It is simpler to create a common ceph secret (keyring and ceph config
 file) and propagate the secret to all services that need it.
 
@@ -120,10 +120,4 @@ spec:
 '
 ----
 
-. Configuring some {OpenStackShort} services to use Ceph backend may require
-the FSID value. You can fetch the value from the config like so:
-+
-----
-CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //')
-----
 

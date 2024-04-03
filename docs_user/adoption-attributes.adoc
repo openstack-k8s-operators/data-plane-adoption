@@ -5,6 +5,7 @@
 ifeval::["{build}" == "upstream"]
 :OpenShift: OpenShift
 :osp_prev_long: OpenStack
+:osp_acro: OSP
 :OpenStackShort: OSP
 :OpenShiftShort: OCP
 :osp_curr_ver: Antelope

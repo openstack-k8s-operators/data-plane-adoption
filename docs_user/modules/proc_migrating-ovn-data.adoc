@@ -189,7 +189,7 @@ spec:
 oc patch openstackcontrolplane openstack --type=json -p="[{'op': 'remove', 'path': '/spec/ovn/template/ovnController/nodeSelector'}]"
 ----
 
-. Delete the `ovn-data`pod and persistent volume claim with OVN databases backup (consider making a snapshot of it, before deleting):
+. Delete the `ovn-data` pod and persistent volume claim with OVN databases backup (consider making a snapshot of it, before deleting):
 +
 ----
 oc delete pod ovn-copy-data

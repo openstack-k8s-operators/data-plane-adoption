@@ -21,6 +21,7 @@
 :osp_prev_ver: 17.1
 :osp_z_stream: 0
 
+
 // OCP version attributes
 
 :ocp_curr_ver: 4.15
