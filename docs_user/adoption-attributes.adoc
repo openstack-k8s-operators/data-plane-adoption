@@ -15,6 +15,7 @@ ifeval::["{build}" == "upstream"]
 //Components and services
 
 //Identity service (keystone)
+:identity_service_first_ref: Keystone
 :identity_service: Keystone
 
 //Shared File System service (manila)
@@ -22,16 +23,44 @@ ifeval::["{build}" == "upstream"]
 :rhos_component_storage_file: Manila
 
 //OpenStack Key Manager (barbican)
+:key_manager_first_ref: Barbican
 :key_manager: Barbican
 
 //OpenStack Networking service (neutron)
+:networking_first_ref: Neutron
 :networking: Neutron
 
 //Object Storage service (swift)
+:object_storage_first_ref: Swift
 :object_storage: Swift
 
 //Image service (glance)
+:image_service_first_ref: Glance
 :image_service: Glance
+
+//Compute service (nova)
+:compute_service_first_ref: Nova
+:compute_service: Nova
+
+//Block Storage (cinder)
+:block_storage_first_ref: Cinder
+:block_storage: Cinder
+
+//Dashboard service (horizon)
+:dashboard_first_ref: Horizon
+:dashboard: Horizon
+
+//Bare Metal Provisioning service (ironic)
+:bare_metal_first_ref: Ironic
+:bare_metal: Ironic
+
+//Orchestration service (heat)
+:orchestration_first_ref: Heat
+:orchestration: Heat
+
+//Telemetry service
+:telemetry_first_ref: Telemetry service
+:telemetry: Telemetry service
 
 endif::[]
 
@@ -72,4 +101,27 @@ ifeval::["{build}" == "downstream"]
 :image_service_first_ref: Image Service (glance)
 :image_service: Image service
 
+//Compute service (nova)
+:compute_service_first_ref: Compute service (nova)
+:compute_service: Compute service
+
+//Block Storage (cinder)
+:block_storage_first_ref: Block Storage service (cinder)
+:block_storage: Block Storage service
+
+//Dashboard service (horizon)
+:dashboard_first_ref: The Red Hat OpenStack Platform (RHOSP) Dashboard (horizon)
+:dashboard: Dashboard service
+
+//Bare Metal Provisioning service (ironic)
+:bare_metal_first_ref: Bare Metal Provisioning service (ironic)
+:bare_metal: Bare Metal Provisioning service
+
+//Orchestration service (heat)
+:orchestration_first_ref: Orchestration service (heat)
+:orchestration: Orchestration service
+
+//Telemetry service
+:telemetry_first_ref: Red Hat OpenStack Platform (RHOSP) Telemetry service
+:telemetry: Telemetry service
 endif::[]
