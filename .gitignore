@@ -2,6 +2,7 @@
 /docs_build
 /Gemfile.lock
 /local
+/tests/config/base/tls_overrides.yaml
 /tests/config/tmp
 /tests/secrets.yaml
 /tests/playbooks/tmp

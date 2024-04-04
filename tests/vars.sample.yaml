@@ -2,7 +2,7 @@
 install_yamls_path: ~/install_yamls #CUSTOMIZE_THIS
 
 # This flag signifies if TLS Everywhere is enabled on the source cloud
-enable_tlse: true
+enable_tlse: false
 
 # Whether to use 'make crc_storage_cleanup; make crc_storage' before the test
 reset_crc_storage: true

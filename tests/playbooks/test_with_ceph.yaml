@@ -19,6 +19,7 @@
     - role: tls_adoption
       tags:
         - tls_adoption
+      when: enable_tlse|bool
     - role: backend_services
       tags:
         - backend_services

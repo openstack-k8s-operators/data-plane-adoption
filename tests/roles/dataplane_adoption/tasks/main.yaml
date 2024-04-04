@@ -154,6 +154,7 @@
         - nova-cell1-compute-config
         - nova-migration-ssh-key
       playbook: osp.edpm.nova
+    {% if enable_tlse %}
       tlsCert:
         contents:
           - dnsnames
@@ -162,6 +163,7 @@
           - ctlplane
         issuer: osp-rootca-issuer-internal
       caCerts: combined-ca-bundle
+    {% endif %}
     EOF
 
 - name: Create OpenStackDataPlaneNodeSet

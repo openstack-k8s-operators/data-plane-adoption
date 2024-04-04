@@ -6,20 +6,6 @@ spec:
   secret: osp-secret
   storageClass: local-storage
 
-  tls:
-    podLevel:
-      enabled: true
-      internal:
-        ca:
-          customIssuer: rootca-internal
-      ovn:
-        ca:
-          customIssuer: rootca-internal
-    ingress:
-      ca:
-        customIssuer: rootca-internal
-      enabled: true
-
   barbican:
     enabled: false
     template:
