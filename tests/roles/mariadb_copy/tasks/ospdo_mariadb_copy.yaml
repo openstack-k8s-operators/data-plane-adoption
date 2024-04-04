@@ -28,15 +28,27 @@
         )
         SOURCE_DB_ROOT_PASSWORD={{ source_db_root_pass.stdout }}
 
-
-  - name: check that the Galera database cluster members are online and synced
+  - name:  start an adoption mariadb helper pod
     delegate_to: "{{ adoption_ospdo_host }}"
     ansible.builtin.shell: |
       {{ shell_header }}
       {{ mariadb_copy_shell_vars_src }}
 
       oc apply -f - <<EOF
-
+      ---
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: mariadb-data
+        namespace: openstack
+      spec:
+        storageClassName: $STORAGE_CLASS
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+      ---
       apiVersion: v1
       kind: Pod
       metadata:
@@ -101,51 +113,32 @@
 
   when: env_vars_pre_tasks| default(false) | bool
 
-- name: ospdo pre tasks
-  block:
-  - name: get mysql adoption scripts to all controllers
-    delegate_to: "{{ adoption_ospdo_host }}"
-    ansible.builtin.shell: |
-      {{ item }} git clone {{ dpa_repo }}
-    ignore_errors: true
-    loop: "{{ osp_controllers_ssh }}"
-
-  - name: check that the Galera database cluster members are online and synced
-    delegate_to: "{{ adoption_ospdo_host }}"
-    shell: |
-      {{ item }} {{ dpa_mysql_script }} check_wsrep | grep -qE '\bSynced\b'
-    loop: "{{ osp_controllers_ssh }}"
-  when: db_pre_tasks| default(false) | bool
-
 - name: ospdo get mariadb DBs
   block  :
-    #The following setup and execute the db extarction
-  - name: set mariadb_copy_tmp_dir var
-    set_fact:
-      mariadb_copy_tmp_dir: /tmp/mariadb
-
+    #The following execute the db extarction
   - name: run get dbs script on galera container
     delegate_to: "{{ adoption_ospdo_host }}"
     ansible.builtin.shell: |
-
-        {{ controller1_ssh }} "export ospdo_src=true;{{ dpa_templates }}/dump_dbs.bash"
-
-  # Copy DB dumps to local tmp
-  - name: Copy DB dumps ctrl0 to openstackclient
-    delegate_to: "{{ adoption_ospdo_host }}"
-    ansible.builtin.shell: |
-        {{ exec_ospdoclnt_pod }} -- bash -c "rsync -a controller-0.ctlplane:/tmp/mariadb /tmp"
+      export ospdo_src=true
+      {{ lookup('ansible.builtin.template', 'dump_dbs.bash') }}
 
   - name: Copy DB dumps openstackclient to BM
     delegate_to: "{{ adoption_ospdo_host }}"
     ansible.builtin.shell: |
-      oc cp openstack/openstackclient:/tmp/mariadb/ /tmp/mariadb
+      oc rsync openstack/mariadb-copy-data:/backup /tmp/
 
-  - name: Copy DB dumps BM to local
-    ansible.builtin.shell: |
-        scp -r root@{{ adoption_ospdo_host }}:/tmp/mariadb /tmp
+  - name: Fetch file from delegate host
+    delegate_to: "{{ adoption_ospdo_host }}"
+    fetch:
+      src: /tmp/backup
+      dest: /tmp/backup
+      flat: yes
 
-  - name: Show DB dumps on local
+  - name: Copy DB dumps openstackclient to BM
+    delegate_to: "{{ adoption_ospdo_host }}"
     ansible.builtin.shell: |
-        ls /tmp/mariadb/
-  when: ospdo_get_dbs| default(false) | bool
+      {{ shell_header }}
+      {{ oc_header }}
+      {{ mariadb_copy_shell_vars_src }}
+
+      oc rsync /tmp/backup/ openstack/mariadb-copy-data:/backup
