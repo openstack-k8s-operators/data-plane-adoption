@@ -1,3 +1,11 @@
+- name: Save ansibleee-operator pod name to be able to wait for the rollout of the new pod
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get -n openstack-operators pod -l app.kubernetes.io/name=openstack-ansibleee-operator -o name
+  register: old_ansibleee_operator_pod
+
 - name: use ansible-runner image built from source or latest if none is defined
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -9,6 +17,15 @@
       --type='json' -p='[{
       "op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0",
       "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "{{ ansibleee_runner_img | default('quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest')}}"}}]'
+  register: ansibleee_csv_patched
+
+- name: Wait for the ansible-operator to restart with the new ENV
+  no_log: "{{ use_no_log }}"
+  when: '"no change" not in ansibleee_csv_patched.stdout'
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait -n openstack-operators --timeout=120s --for=delete {{ old_ansibleee_operator_pod.stdout }}
 
 - name: ensure namespace
   no_log: "{{ use_no_log }}"
