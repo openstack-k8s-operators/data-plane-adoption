@@ -4,27 +4,72 @@
 
 ifeval::["{build}" == "upstream"]
 :OpenShift: OpenShift
-:osp_prev_long: OpenStack
-:osp_acro: OSP
+:rhos_prev_long: OpenStack
+:rhos_acro: OSP
 :OpenStackShort: OSP
 :OpenShiftShort: OCP
-:osp_curr_ver: Antelope
-:osp_prev_ver: Wallaby
+:rhos_curr_ver: Antelope
+:rhos_prev_ver: Wallaby
 :OpenStackPreviousInstaller: TripleO
+
+//Components and services
+
+//Identity service (keystone)
+:identity_service: Keystone
+
+//Shared File System service (manila)
 :rhos_component_storage_file_first_ref: Manila
 :rhos_component_storage_file: Manila
+
+//OpenStack Key Manager (barbican)
+:key_manager: Barbican
+
+//OpenStack Networking service (neutron)
+:networking: Neutron
+
+//Object Storage service (swift)
+:object_storage: Swift
+
+//Image service (glance)
+:image_service: Glance
+
 endif::[]
 
 ifeval::["{build}" == "downstream"]
-:osp_long: Red Hat OpenStack Services on OpenShift
-:osp_acro: RHOSO
-:osp_prev_long: Red Hat OpenStack Platform
+:rhos_long: Red{nbsp}Hat OpenStack Services on OpenShift (RHOSO)
+:rhos_acro: RHOSO
+:rhos_prev_long: Red{nbsp}Hat OpenStack Platform
 :OpenStackShort: RHOSP
-:osp_curr_ver: 18.0
-:osp_prev_ver: 17.1
+:rhos_curr_ver: 18.0
+:rhos_prev_ver: 17.1
 :OpenShift: Red Hat OpenShift Container Platform
 :OpenShiftShort: OpenShift Container Platform
 :OpenStackPreviousInstaller: director
+
+//Components and services
+
+//Identity service (keystone)
+:identity_service_first_ref: Identity service (keystone)
+:identity_service: Identity service
+
+//Shared File System service (manila)
 :rhos_component_storage_file_first_ref: Shared File Systems service (manila)
 :rhos_component_storage_file: Shared File Systems service
+
+//OpenStack Key Manager (barbican)
+:key_manager_first_ref: OpenStack Key Manager service (barbican)
+:key_manager: Key Manager service
+
+//OpenStack Networking service (neutron)
+:networking_first_ref: OpenStack Networking service (neutron)
+:networking: Networking service
+
+//Object Storage service (swift)
+:object_storage_first_ref: Object Storage service (swift)
+:object_storage: Object Storage service
+
+//Image service (glance)
+:image_service_first_ref: Image Service (glance)
+:image_service: Image service
+
 endif::[]
