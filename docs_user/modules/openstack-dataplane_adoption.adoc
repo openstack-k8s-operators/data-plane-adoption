@@ -453,6 +453,18 @@ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
 ]'
 ----
 
+* Optionally enable neutron-dhcp in the OpenStackDataPlaneNodeSet CR
++
+[source,yaml]
+----
+oc patch openstackdataplanenodeset openstack --type='json' --patch='[
+  {
+    "op": "add",
+    "path": "/spec/services/-",
+    "value": "neutron-dhcp"
+  }]'
+----
+
 * Deploy OpenStackDataPlaneDeployment:
 +
 [source,yaml]
@@ -502,6 +514,7 @@ oc exec openstackclient -- openstack network agent list
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
 | ID                                   | Agent Type                   | Host                   | Availability Zone | Alive | State | Binary                     |
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
+| 174fc099-5cc9-4348-b8fc-59ed44fcfb0e | DHCP agent                   | standalone.localdomain | nova              | :-)   | UP    | neutron-dhcp-agent         |
 | 10482583-2130-5b0d-958f-3430da21b929 | OVN Metadata agent           | standalone.localdomain |                   | :-)   | UP    | neutron-ovn-metadata-agent |
 | a4f1b584-16f1-4937-b2b0-28102a3f6eaa | OVN Controller agent         | standalone.localdomain |                   | :-)   | UP    | ovn-controller             |
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+

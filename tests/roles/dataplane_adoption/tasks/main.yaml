@@ -275,6 +275,19 @@
       }]'
   when: edpm_neutron_sriov_agent_enabled|bool
 
+- name: set neutron-dhcp configuration in the OpenStackDataPlaneNodeSet CR
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackdataplanenodeset openstack --type='json' --patch='[
+      {
+        "op": "add",
+        "path": "/spec/services/-",
+        "value": "neutron-dhcp"
+      }]'
+  when: edpm_neutron_dhcp_agent_enabled|bool
+
 - name: deploy the dataplane deployment
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
