@@ -1,26 +1,13 @@
 [id="adopting-the-identity-service_{context}"]
 
-//:context: adopting-identity-service
+= Adopting the {identity_service}
 
-//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter. Check xref context.
-
-= Adopting the Identity service
-
-== Prerequisites
+.Prerequisites
 
 * Previous Adoption steps completed. Notably,
- ** the xref:migrating-databases-to-mariadb-instances_{context}[Migrating databases to MariaDB instances]
-must already be imported into the podified MariaDB.
-
-== Variables
-
-There are no shell variables necessary currently.
-
-== Pre-checks
-
-== Copy over fernet keys
-
-* Create the `keystone` secret, containing fernet keys:
+ the xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances]
+must already be imported into the control plane MariaDB.
+* Ensure that you copy the fernet keys. Create the `keystone` secret, containing fernet keys:
 +
 ----
 oc apply -f - <<EOF
@@ -38,10 +25,13 @@ type: Opaque
 EOF
 ----
 
+.Variables
 
-== Procedure - Keystone adoption
+No shell variables are necessary currently.
 
-* Patch OpenStackControlPlane to deploy Keystone:
+.Procedure
+
+. Patch `OpenStackControlPlane` to deploy {identity_service}:
 +
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch '
@@ -66,28 +56,27 @@ spec:
 '
 ----
 
-* Create alias to use `openstack` command in the adopted deployment:
+. Create an alias to use `openstack` command in the adopted deployment:
 +
 ----
-alias openstack="oc exec -t openstackclient -- openstack"
+$ alias openstack="oc exec -t openstackclient -- openstack"
 ----
 
-* Clean up old services and endpoints that still point to the old
-control plane (everything except Keystone service and endpoints):
+. Clean up old services and endpoints that still point to the old
+control plane, excluding the {identity_service} and its endpoints:
 +
 ----
-openstack endpoint list | grep keystone | awk '/admin/{ print $2; }' | xargs ${BASH_ALIASES[openstack]} endpoint delete || true
+$ openstack endpoint list | grep keystone | awk '/admin/{ print $2; }' | xargs ${BASH_ALIASES[openstack]} endpoint delete || true
 
 for service in aodh heat heat-cfn barbican cinderv3 glance manila manilav2 neutron nova placement swift ironic-inspector ironic; do
   openstack service list | awk "/ $service /{ print \$2; }" | xargs ${BASH_ALIASES[openstack]} service delete || true
 done
 ----
 
-== Post-checks
+.Verification
 
-* See that Keystone endpoints are defined and pointing to the podified
-FQDNs:
+* See that {identity_service} endpoints are defined and pointing to the control plane FQDNs:
 +
 ----
-openstack endpoint list | grep keystone
+$ openstack endpoint list | grep keystone
 ----

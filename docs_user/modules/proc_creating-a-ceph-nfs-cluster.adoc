@@ -2,7 +2,7 @@
 
 = Creating a Ceph NFS cluster
 
-If you use the Ceph via NFS backend with {rhos_component_storage_file_first_ref}, prior to adoption, you must create a new clustered NFS service on the Ceph cluster. This service will replace the standalone, pacemaker-controlled `ceph-nfs` service that was used on {osp_prev_long} {osp_prev_ver}.
+If you use the Ceph via NFS backend with {rhos_component_storage_file_first_ref}, prior to adoption, you must create a new clustered NFS service on the Ceph cluster. This service will replace the standalone, pacemaker-controlled `ceph-nfs` service that was used on {rhos_prev_long} {rhos_prev_ver}.
 
 .Procedure
 

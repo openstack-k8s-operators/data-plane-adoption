@@ -8,7 +8,7 @@ adopted deployment and custom resources (CRs) must be configured accordingly.
 
 If you use {rhos_component_storage_file_first_ref}, on TripleO environments, the CephFS driver in {rhos_component_storage_file} is configured to use
 its own keypair. For convenience, modify the `openstack` user so that you
-can use it across all {osp_prev_long} services.
+can use it across all {rhos_prev_long} services.
 
 Using the same user across the services serves two purposes:
 

@@ -10,9 +10,6 @@ ifdef::context[:parent-context: {context}]
 :toclevels: 3
 
 include::../modules/openstack-pull_openstack_configuration.adoc[leveloffset=+1]
-include::../modules/openstack-keystone_adoption.adoc[leveloffset=+1]
-include::../modules/openstack-barbican_adoption.adoc[leveloffset=+1]
-include::../modules/openstack-neutron_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-swift_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-glance_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-placement_adoption.adoc[leveloffset=+1]
@@ -26,8 +23,6 @@ include::../modules/openstack-telemetry_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-autoscaling_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-stop_remaining_services.adoc[leveloffset=+1]
 include::../modules/openstack-dataplane_adoption.adoc[leveloffset=+1]
-
-include::../modules/openstack-troubleshooting.adoc[leveloffset=+1]
 include::../modules/openstack-rolling_back.adoc[leveloffset=+1]
 
 ifdef::parent-context[:context: {parent-context}]
