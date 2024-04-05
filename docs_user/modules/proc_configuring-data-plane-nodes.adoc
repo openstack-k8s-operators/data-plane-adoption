@@ -1,0 +1,91 @@
+[id="configuring-data-plane-nodes_{context}"]
+
+= Configuring data plane nodes
+
+A complete OpenStack cluster consists of OpenShift nodes and data plane nodes. The
+former use `NodeNetworkConfigurationPolicy` custom resource (CR) to configure physical
+interfaces. Since data plane nodes are not OpenShift nodes, a different approach to
+configure their network connectivity is used.
+
+Instead, data plane nodes are configured by `dataplane-operator` and its CRs. The CRs
+define desired network configuration for the nodes.
+
+In case of adoption, the configuration should reflect the existing network
+setup. You should be able to pull `net_config.yaml` files from each node and
+reuse it when defining `OpenstackDataplaneNodeSet`. The format of the
+configuration hasn't changed (`os-net-config` is still being used under the
+hood), so you should be able to put network templates under
+`edpm_network_config_template` variables (either common for all nodes, or
+per-node).
+
+To make sure the latest network configuration is used during the data plane adoption, you
+should also set `edpm_network_config_update: true` in the `nodeTemplate`.
+
+You will proceed with <<adopting-dataplane_openstack-adoption,Data Plane Adoption
+process>> once the OpenStack control plane is deployed in the
+OpenShift cluster. When doing so, you will configure `NetConfig` and
+`OpenstackDataplaneNodeSet` CRs, using the same VLAN tags and IPAM
+configuration as determined in the previous steps.
+
+For example,
+
+```
+apiVersion: network.openstack.org/v1beta1
+kind: NetConfig
+metadata:
+  name: netconfig
+spec:
+  networks:
+  - name: internalapi
+    dnsDomain: internalapi.example.com
+    subnets:
+    - name: subnet1
+      allocationRanges:
+      - end: 172.17.0.250
+        start: 172.17.0.100
+      cidr: 172.17.0.0/24
+      vlan: 20
+  - name: storage
+    dnsDomain: storage.example.com
+    subnets:
+    - name: subnet1
+      allocationRanges:
+      - end: 172.18.0.250
+        start: 172.18.0.100
+      cidr: 172.18.0.0/24
+      vlan: 21
+  - name: tenant
+    dnsDomain: tenant.example.com
+    subnets:
+    - name: subnet1
+      allocationRanges:
+      - end: 172.19.0.250
+        start: 172.19.0.100
+      cidr: 172.19.0.0/24
+      vlan: 22
+```
+
+List multiple `allocationRanges` entries to exclude some of the IP addresses,
+e.g. to accommodate for addresses already consumed by the adopted environment.
+
+```
+apiVersion: network.openstack.org/v1beta1
+kind: NetConfig
+metadata:
+  name: netconfig
+spec:
+  networks:
+  - name: internalapi
+    dnsDomain: internalapi.example.com
+    subnets:
+    - name: subnet1
+      allocationRanges:
+      - end: 172.17.0.199
+        start: 172.17.0.100
+      - end: 172.17.0.250
+        start: 172.17.0.201
+      cidr: 172.17.0.0/24
+      vlan: 20
+```
+
+The example above would exclude the `172.17.0.200` address from the pool.

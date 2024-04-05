@@ -1,0 +1,73 @@
+[id="configuring-openshift-worker-nodes_{context}"]
+
+= Configuring OpenShift worker nodes
+
+OCP worker nodes that run OpenStack services need a way to connect the service
+pods to isolated networks. This requires physical network configuration on the
+hypervisor.
+
+This configuration is managed by the NMState operator, which uses the custom resources (CRs) to
+define the desired network configuration for the nodes.
+
+For each node, define a `NodeNetworkConfigurationPolicy` CR that describes the
+desired network configuration. See the example below.
+
+```
+apiVersion: v1
+items:
+- apiVersion: nmstate.io/v1
+  kind: NodeNetworkConfigurationPolicy
+  spec:
+      interfaces:
+      - description: internalapi vlan interface
+        ipv4:
+          address:
+          - ip: 172.17.0.10
+            prefix-length: 24
+          dhcp: false
+          enabled: true
+        ipv6:
+          enabled: false
+        name: enp6s0.20
+        state: up
+        type: vlan
+        vlan:
+          base-iface: enp6s0
+          id: 20
+          reorder-headers: true
+      - description: storage vlan interface
+        ipv4:
+          address:
+          - ip: 172.18.0.10
+            prefix-length: 24
+          dhcp: false
+          enabled: true
+        ipv6:
+          enabled: false
+        name: enp6s0.21
+        state: up
+        type: vlan
+        vlan:
+          base-iface: enp6s0
+          id: 21
+          reorder-headers: true
+      - description: tenant vlan interface
+        ipv4:
+          address:
+          - ip: 172.19.0.10
+            prefix-length: 24
+          dhcp: false
+          enabled: true
+        ipv6:
+          enabled: false
+        name: enp6s0.22
+        state: up
+        type: vlan
+        vlan:
+          base-iface: enp6s0
+          id: 22
+          reorder-headers: true
+    nodeSelector:
+      kubernetes.io/hostname: ocp-worker-0
+      node-role.kubernetes.io/worker: ""
+```

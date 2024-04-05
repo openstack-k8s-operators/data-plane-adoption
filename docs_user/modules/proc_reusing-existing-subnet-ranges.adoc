@@ -1,0 +1,27 @@
+[id="reusing-existing-subnet-ranges_{context}"]
+
+= Scenario 2: Reusing existing subnet ranges
+
+This scenario is only applicable when the existing subnet ranges have enough IP
+addresses for the new control plane services. On the other hand, it allows to
+avoid additional routing configuration between the old and new subnets, as in xref:using-new-subnet-ranges_{context}[Scenario 1: Using new subnet ranges].
+
+The general idea here is to instruct the new control plane services to use the
+same subnet as in the adopted environment, but define allocation pools used by
+the new services in a way that would exclude IP addresses that were already
+allocated to existing cluster nodes.
+
+This scenario implies that the remaining IP addresses in the existing subnet is
+enough for the new control plane services. If not,
+xref:using-new-subnet-ranges_{context}[Scenario 1: Using new subnet ranges] should be used
+instead. For more information, see xref:planning-your-ipam-configuration_network-requirements[Planning your IPAM configuration].
+
+No special routing configuration is required in this scenario; the only thing
+to pay attention to is to make sure that already consumed IP addresses don't
+overlap with the new allocation pools configured for OpenStack control plane
+services.
+
+If you are especially constrained by the size of the existing subnet, you may
+have to apply elaborate exclusion rules when defining allocation pools for the
+new control plane services. For more information, see 
+

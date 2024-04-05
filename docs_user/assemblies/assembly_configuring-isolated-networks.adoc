@@ -1,0 +1,40 @@
+[id="configuring-isolated-networks_{context}"]
+
+:context: isolated-networks
+
+= Configuring isolated networks
+
+At this point, you should have a good idea about VLAN and IPAM configuration
+you would like to replicate in the new environment.
+
+Before proceeding, you should have a list of the following IP address
+allocations to be used for the new control plane services:
+
+* 1 IP address, per isolated network, per OpenShift worker node. (These
+  addresses will <<_configure_openshift_worker_nodes,translate>> to
+  `NodeNetworkConfigurationPolicy` custom resources (CRs).)
+* IP range, per isolated network, for the data plane nodes. (These ranges will
+  <<_configure_data_plane_nodes,translate>> to `NetConfig` CRs.)
+* IP range, per isolated network, for control plane services. (These ranges
+  will <<_pod_connectivity_to_isolated_networks,translate>> to
+  `NetworkAttachmentDefinition` CRs.)
+* IP range, per isolated network, for load balancer IP addresses. (These ranges
+  will <<_load_balancer_ip_addresses,translate>> to `IPAddressPool` CRs for
+  MetalLB.)
+
+[IMPORTANT]
+Make sure you have the information listed above before proceeding with the next steps.
+
+[NOTE] 
+The exact list and configuration of isolated networks in the examples
+listed below should reflect the actual adopted environment. The number of
+isolated networks may differ from the example below. IPAM scheme may differ.
+Only relevant parts of the configuration are shown. Examples are incomplete and
+should be incorporated into the general configuration for the new deployment,
+as described in the general OpenStack documentation.
+
+include::../modules/proc_configuring-openshift-worker-nodes.adoc[leveloffset=+1]
+
+include::../modules/proc_configuring-networking-for-control-plane-services.adoc[leveloffset=+1]
+
+include::../modules/proc_configuring-data-plane-nodes.adoc[leveloffset=+1]
