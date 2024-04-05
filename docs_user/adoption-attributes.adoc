@@ -15,82 +15,19 @@ ifeval::["{build}" == "upstream"]
 //Components and services
 
 //Identity service (keystone)
-:identity_service_first_ref: Keystone
-:identity_service: Keystone
-
-//Shared File System service (manila)
-:rhos_component_storage_file_first_ref: Manila
-:rhos_component_storage_file: Manila
-
-//OpenStack Key Manager (barbican)
-:key_manager_first_ref: Barbican
-:key_manager: Barbican
-
-//OpenStack Networking service (neutron)
-:networking_first_ref: Neutron
-:networking: Neutron
-
-//Object Storage service (swift)
-:object_storage_first_ref: Swift
-:object_storage: Swift
-
-//Image service (glance)
-:image_service_first_ref: Glance
-:image_service: Glance
-
-//Compute service (nova)
-:compute_service_first_ref: Nova
-:compute_service: Nova
-
-//Block Storage (cinder)
-:block_storage_first_ref: Cinder
-:block_storage: Cinder
-
-//Dashboard service (horizon)
-:dashboard_first_ref: Horizon
-:dashboard: Horizon
-
-//Bare Metal Provisioning service (ironic)
-:bare_metal_first_ref: Ironic
-:bare_metal: Ironic
-
-//Orchestration service (heat)
-:orchestration_first_ref: Heat
-:orchestration: Heat
-
-//Telemetry service
-:telemetry_first_ref: Telemetry service
-:telemetry: Telemetry service
-
-endif::[]
-
-ifeval::["{build}" == "downstream"]
-:rhos_long: Red{nbsp}Hat OpenStack Services on OpenShift (RHOSO)
-:rhos_acro: RHOSO
-:rhos_prev_long: Red{nbsp}Hat OpenStack Platform
-:OpenStackShort: RHOSP
-:rhos_curr_ver: 18.0
-:rhos_prev_ver: 17.1
-:OpenShift: Red Hat OpenShift Container Platform
-:OpenShiftShort: OpenShift Container Platform
-:OpenStackPreviousInstaller: director
-
-//Components and services
-
-//Identity service (keystone)
 :identity_service_first_ref: Identity service (keystone)
 :identity_service: Identity service
 
-//Shared File System service (manila)
+//Shared File Systems service (manila)
 :rhos_component_storage_file_first_ref: Shared File Systems service (manila)
 :rhos_component_storage_file: Shared File Systems service
 
 //OpenStack Key Manager (barbican)
-:key_manager_first_ref: OpenStack Key Manager service (barbican)
+:key_manager_first_ref: Key Manager service (barbican)
 :key_manager: Key Manager service
 
 //OpenStack Networking service (neutron)
-:networking_first_ref: OpenStack Networking service (neutron)
+:networking_first_ref: Networking service (neutron)
 :networking: Networking service
 
 //Object Storage service (swift)
@@ -110,7 +47,7 @@ ifeval::["{build}" == "downstream"]
 :block_storage: Block Storage service
 
 //Dashboard service (horizon)
-:dashboard_first_ref: The Red Hat OpenStack Platform (RHOSP) Dashboard (horizon)
+:dashboard_first_ref: Dashboard service (horizon)
 :dashboard: Dashboard service
 
 //Bare Metal Provisioning service (ironic)
@@ -122,6 +59,67 @@ ifeval::["{build}" == "downstream"]
 :orchestration: Orchestration service
 
 //Telemetry service
-:telemetry_first_ref: Red Hat OpenStack Platform (RHOSP) Telemetry service
+:telemetry: Telemetry service
+
+endif::[]
+
+ifeval::["{build}" == "downstream"]
+:rhos_long: Red{nbsp}Hat OpenStack Services on OpenShift (RHOSO)
+:rhos_acro: RHOSO
+:rhos_prev_long: Red{nbsp}Hat OpenStack Platform
+:OpenStackShort: RHOSP
+:rhos_curr_ver: 18.0
+:rhos_prev_ver: 17.1
+:OpenShift: Red Hat OpenShift Container Platform
+:OpenShiftShort: RHOCP
+:OpenStackPreviousInstaller: director
+
+//Components and services
+
+//Identity service (keystone)
+:identity_service_first_ref: Identity service (keystone)
+:identity_service: Identity service
+
+//Shared File Systems service (manila)
+:rhos_component_storage_file_first_ref: Shared File Systems service (manila)
+:rhos_component_storage_file: Shared File Systems service
+
+//OpenStack Key Manager (barbican)
+:key_manager_first_ref: Key Manager service (barbican)
+:key_manager: Key Manager service
+
+//OpenStack Networking service (neutron)
+:networking_first_ref: Networking service (neutron)
+:networking: Networking service
+
+//Object Storage service (swift)
+:object_storage_first_ref: Object Storage service (swift)
+:object_storage: Object Storage service
+
+//Image service (glance)
+:image_service_first_ref: Image Service (glance)
+:image_service: Image service
+
+//Compute service (nova)
+:compute_service_first_ref: Compute service (nova)
+:compute_service: Compute service
+
+//Block Storage (cinder)
+:block_storage_first_ref: Block Storage service (cinder)
+:block_storage: Block Storage service
+
+//Dashboard service (horizon)
+:dashboard_first_ref: Dashboard service (horizon)
+:dashboard: Dashboard service
+
+//Bare Metal Provisioning service (ironic)
+:bare_metal_first_ref: Bare Metal Provisioning service (ironic)
+:bare_metal: Bare Metal Provisioning service
+
+//Orchestration service (heat)
+:orchestration_first_ref: Orchestration service (heat)
+:orchestration: Orchestration service
+
+//Telemetry service
 :telemetry: Telemetry service
 endif::[]
