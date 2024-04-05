@@ -13,13 +13,13 @@
 
 // OSP version attributes
 
-:osp_long: Red Hat OpenStack Services on OpenShift
-:osp_prev_long: Red Hat OpenStack Platform
-:osp_acro: RHOSO
-:osp_curr_ver: 18.0
-:osp_curr_ver_no_beta: 18.0
-:osp_prev_ver: 17.1
-:osp_z_stream: 0
+:rhos_long: Red{nbsp}Hat OpenStack Services on OpenShift (RHOSO)
+:rhos_prev_long: Red{nbsp}Hat OpenStack Platform
+:rhos_acro: RHOSO
+:rhos_curr_ver: 18.0
+:rhos_curr_ver_no_beta: 18.0
+:rhos_prev_ver: 17.1
+:rhos_z_stream: 0
 
 
 // OCP version attributes
