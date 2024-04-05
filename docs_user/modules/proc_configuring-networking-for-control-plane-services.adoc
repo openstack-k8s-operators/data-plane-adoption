@@ -1,6 +1,6 @@
-[id="configuring-control-plane-services_{context}"]
+[id="configuring-networking-for-control-plane-services_{context}"]
 
-= Configuring control plane services
+= Configuring the networking for control plane services
 
 //== Pod connectivity to isolated networks
 //Heading 2s are commented out until I rewrite this file for GA.

@@ -1,13 +1,12 @@
-[id="network-requirements-and-configuration_{context}"]
+[id="configuring-network-for-RHOSO-deployment_{context}"]
 
-:context: network-requirements
+:context: configuring-network
 
-= Network requirements and configuration
+= Configuring the network for the RHOSO deployment
 
 With OpenShift, the network is a very important aspect of the deployment, and
 it is important to plan it carefully. The general network requirements for the
-OpenStack services are not much different from the ones in a Director
-deployment, but the way you handle them is.
+OpenStack services are not much different from the ones in a {OpenStackPreviousInstaller} deployment, but the way you handle them is.
 
 [NOTE]
 More details about the network architecture and configuration can be

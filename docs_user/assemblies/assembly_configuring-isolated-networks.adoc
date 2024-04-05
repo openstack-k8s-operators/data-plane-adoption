@@ -35,6 +35,6 @@ as described in the general OpenStack documentation.
 
 include::../modules/proc_configuring-openshift-worker-nodes.adoc[leveloffset=+1]
 
-include::../modules/proc_configuring-control-plane-services.adoc[leveloffset=+1]
+include::../modules/proc_configuring-networking-for-control-plane-services.adoc[leveloffset=+1]
 
 include::../modules/proc_configuring-data-plane-nodes.adoc[leveloffset=+1]
