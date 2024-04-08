@@ -11,7 +11,7 @@ section, the `transport_url` and `log_dir` in `[DEFAULT]`, the whole
 `[coordination]` and `[barbican]` sections, etc..
 . Assuming the configuration has sensitive information, drop the modified
 contents of the whole file into a `Secret`.
-. Reference this secret in all the services, creating a cinder volumes section
+. Reference this secret in all the services, creating a {block_storage_first_ref} volumes section
 for each backend and just adding the respective `enabled_backends` option.
 . Add external files as mentioned in the last bullet of the tailor-made
 configuration explanation.

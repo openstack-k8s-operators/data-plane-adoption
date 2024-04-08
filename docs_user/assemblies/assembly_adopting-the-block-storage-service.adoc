@@ -21,3 +21,5 @@ include::../modules/con_block-storage-service-limitations.adoc[leveloffset=+1]
 include::../modules/con_openshift-preparation-for-block-storage-adoption.adoc[leveloffset=+1]
 
 include::../assemblies/assembly_preparing-the-block-storage-service-for-adoption.adoc[leveloffset=+1]
+
+include::../modules/proc_deploying-the-block-storage-services.adoc[leveloffset=+1]

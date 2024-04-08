@@ -1,22 +1,19 @@
 [id="adopting-the-openstack-dashboard_{context}"]
 
-//:context: adopting-openstack-dashboard
-//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
+= Adopting the {dashboard}
 
-= Adopting the OpenStack Dashboard
-
-== Prerequisites
+.Prerequisites
 
 * Previous Adoption steps completed. Notably, Memcached and
-keystone should be already adopted.
+{identity_service_first_ref} should be already adopted.
 
-== Variables
+.Variables
 
-There are no shell variables necessary currently.
+No shell variables are necessary currently.
 
-== Procedure - Horizon adoption
+.Procedure
 
-* Patch OpenStackControlPlane to deploy Horizon:
+* Patch `OpenStackControlPlane` to deploy the {dashboard}:
 +
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch '
@@ -31,16 +28,16 @@ spec:
 '
 ----
 
-== Post-checks
+.Verification
 
-* See that Horizon instance is successfully deployed and ready
-
+. See that the {dashboard} instance is successfully deployed and ready
++
 ----
 oc get horizon
 ----
 
-* Check that dashboard is reachable and returns status code `200`
-
+. Check that the {dashboard} is reachable and returns status code `200`
++
 ----
 PUBLIC_URL=$(oc get horizon horizon -o jsonpath='{.status.endpoint}')
 curl --silent --output /dev/stderr --head --write-out "%{http_code}" "$PUBLIC_URL/dashboard/auth/login/?next=/dashboard/" -k | grep 200

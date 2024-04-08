@@ -2,13 +2,17 @@
 
 = Deploying the Block Storage services
 
+Assuming you have already stopped {block_storage_first_ref} services, prepared the {OpenShift} nodes,
+deployed the {rhos_prev_long} {OpenStackShort} operators and a bare {OpenStackShort} manifest, and migrated the
+database, and prepared the patch manifest with the {block_storage} configuration,
+you must apply the patch and wait for the operator to apply the changes and deploy the Block Storage services.
+
 .Prerequisites
 
-* Previous Adoption steps completed. Notably, cinder service must have been
-stopped and the service databases must already be imported into the podified
-MariaDB.
+* Previous Adoption steps completed. Notably, {block_storage} must have been
+stopped and the service databases must already be imported into the control plane MariaDB.
 * Keystone and Barbican should be already adopted.
-* Storage network has been properly configured on the OpenShift cluster.
+* Storage network has been properly configured on the {OpenShiftShort} cluster.
 * You need the contents of `cinder.conf` file. Download the file so that you can access it locally:
 +
 ----
@@ -22,22 +26,16 @@ No new environmental variables need to be defined, though you use the
 
 .Procedure
 
-Assuming you have already stopped cinder services, prepared the OpenShift nodes,
-deployed the OpenStack operators and a bare OpenStack manifest, and migrated the
-database, and prepared the patch manifest with the Cinder service configuration,
-you must apply the patch and wait for the operator to apply the changes and deploy the Cinder services.
-//The above first sentence could be turned into prerequisites.
-
-It is recommended to write the patch manifest into a file, for example
+. It is recommended to write the patch manifest into a file, for example
 `cinder.patch` and then apply it with something like:
-
++
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch-file=cinder.patch
 ----
-
++
 For example, for the RBD deployment from the Development Guide the
 `cinder.patch` would look like this:
-
++
 [source,yaml]
 ----
 spec:
@@ -110,10 +108,9 @@ spec:
             report_discard_supported=True
 ----
 
-Once the services have been deployed you need to clean up the old scheduler
-and backup services which will appear as being down while you have others that
-appear as being up:
-
+. Once the services have been deployed you need to clean up the old scheduler
+and backup services which will appear as being down while you have others that appear as being up:
++
 ----
 openstack volume service list
 
@@ -128,25 +125,25 @@ openstack volume service list
 +------------------+------------------------+------+---------+-------+----------------------------+
 ----
 
-In this case you need to remove services for hosts `standalone.localdomain`
-
+. In this case you need to remove services for hosts `standalone.localdomain`
++
 ----
 oc exec -it cinder-scheduler-0 -- cinder-manage service remove cinder-backup standalone.localdomain
 oc exec -it cinder-scheduler-0 -- cinder-manage service remove cinder-scheduler standalone.localdomain
 ----
-
++
 The reason why we haven't preserved the name of the backup service is because
 we have taken the opportunity to change its configuration to support
 Active-Active, even though we are not doing so right now because we have 1
 replica.
 //kgilliga: The above paragraph is confusing. Who changed the configuration? Unclear on what the replica refers to.
 
-Now that the Cinder services are running, the DB schema migration has been completed and you can proceed to apply the DB data migrations.
+. Now that the Block Storage services are running, the DB schema migration has been completed and you can proceed to apply the DB data migrations.
 While it is not necessary to run these data migrations at this precise moment,
 because you can run them right before the next upgrade, for adoption it is best to run them now to make sure there are no issues before running production workloads on the deployment.
-
++
 The command to run the DB data migrations is:
-
++
 ----
 oc exec -it cinder-scheduler-0 -- cinder-manage db online_data_migrations
 ----
@@ -154,10 +151,10 @@ oc exec -it cinder-scheduler-0 -- cinder-manage db online_data_migrations
 .Verification
 
 Before you can run any checks you need to set the right cloud configuration for
-the `openstack` command to be able to connect to your OpenShift control plane.
+the `openstack` command to be able to connect to your {OpenShiftShort} control plane.
 
-Ensure that the `openstack` alias is defined:
-
+. Ensure that the `openstack` alias is defined:
++
 ----
 alias openstack="oc exec -t openstackclient -- openstack"
 ----
@@ -165,21 +162,20 @@ alias openstack="oc exec -t openstackclient -- openstack"
 Now you can run a set of tests to confirm that the deployment is using your
 old database contents:
 
-* See that Cinder endpoints are defined and pointing to the podified
-FQDNs:
+. See that {block_storage} endpoints are defined and pointing to the control plane FQDNs:
 +
 ----
 openstack endpoint list --service cinderv3
 ----
 
-* Check that the cinder services are running and up. The API won't show but if
+. Check that the Block Storage services are running and up. The API won't show but if
 you get a response you know it's up as well:
 +
 ----
 openstack volume service list
 ----
 
-* Check that your old volume types, volumes, snapshots, and backups are there:
+. Check that your old volume types, volumes, snapshots, and backups are there:
 +
 ----
 openstack volume type list
@@ -190,19 +186,19 @@ openstack volume backup list
 
 To confirm that the configuration is working, the following basic operations are recommended:
 
-* Create a volume from an image to check that the connection to glance is
+. Create a volume from an image to check that the connection to glance is
 working.
 +
 ----
 openstack volume create --image cirros --bootable --size 1 disk_new
 ----
 
-* Backup the old attached volume to a new backup. Example:
+. Backup the old attached volume to a new backup. Example:
 +
 ----
 openstack --os-volume-api-version 3.47 volume create --backup backup restored
 ----
 
-You do not boot a nova instance using the new volume from image or try to detach
-the old volume because nova and cinder are still not connected.
+[NOTE]
+You do not boot a nova instance using the new volume from image or try to detach the old volume because nova and the {block_storage} are still not connected.
 

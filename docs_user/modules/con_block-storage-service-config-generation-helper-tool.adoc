@@ -2,14 +2,15 @@
 
 = About the {block_storage} configuration generation helper tool
 
-Creating the right Cinder configuration files to deploy using Operators may
+Creating the right {block_storage_first_ref} configuration files to deploy using Operators may
 sometimes be a complicated experience, especially the first times, so you have a
 helper tool that can create a draft of the files from a `cinder.conf` file.
 
 This tool is not meant to be a automation tool. It is mostly to help you get the
 gist of it, maybe point out some potential pitfalls and reminders.
 
-IMPORTANT: The tools requires `PyYAML` Python package to be installed (`pip
+[IMPORTANT] 
+The tools requires `PyYAML` Python package to be installed (`pip
 install PyYAML`).
 
 This link:helpers/cinder-cfg.py[cinder-cfg.py script] defaults to reading the
@@ -17,7 +18,7 @@ This link:helpers/cinder-cfg.py[cinder-cfg.py script] defaults to reading the
 and outputs files to the current directory (unless `--out-dir` option is used).
 
 In the output directory you always get a `cinder.patch` file with the Cinder
-specific configuration patch to apply to the `OpenStackControlPlane` CR but you might also get an additional file called `cinder-prereq.yaml` file with some
+specific configuration patch to apply to the `OpenStackControlPlane` custom resource but you might also get an additional file called `cinder-prereq.yaml` file with some
 `Secrets` and `MachineConfigs`.
 
 Example of an invocation setting input and output explicitly to the defaults for
@@ -25,7 +26,7 @@ a Ceph backend:
 
 ----
 $ python cinder-cfg.py --config cinder.conf --out-dir ./
-WARNING:root:Cinder is configured to use ['/etc/cinder/policy.yaml'] as policy file, please ensure this file is available for the podified cinder services using "extraMounts" or remove the option.
+WARNING:root:The {block_storage} is configured to use ['/etc/cinder/policy.yaml'] as policy file, please ensure this file is available for the control plane {block_storage} services using "extraMounts" or remove the option.
 
 WARNING:root:Deployment uses Ceph, so make sure the Ceph credentials and configuration are present in OpenShift as a asecret and then use the extra volumes to make them available in all the services that would need them.
 
@@ -45,7 +46,7 @@ could be:
 
 ----
 $ python cinder-cfg.py --config cinder.conf --out-dir ./
-WARNING:root:Cinder is configured to use ['/etc/cinder/policy.yaml'] as policy file, please ensure this file is available for the podified cinder services using "extraMounts" or remove the option.
+WARNING:root:The {block_storage} is configured to use ['/etc/cinder/policy.yaml'] as policy file, please ensure this file is available for the control plane Block Storage services using "extraMounts" or remove the option.
 
 ERROR:root:Backend hpe_fc requires a vendor container image, but there is no certified image available yet. Patch will use the last known image for reference, but IT WILL NOT WORK
 
@@ -74,9 +75,9 @@ with a Red Hat official image once the image is available. In this case you can 
       hpe-fc:
         containerImage: registry.connect.redhat.com/hpe3parcinder/openstack-cinder-volume-hpe3parcinder17-0
 ----
-
++
 * The FC message reminds you that this transport protocol requires specific HBA
-cards to be present on the nodes where cinder services are running.
+cards to be present on the nodes where Block Storage services are running.
 * In this case it has created the `cinder-prereq.yaml` file and within the file
 there is one `MachineConfig` and one `Secret`. The `MachineConfig` is called `99-master-cinder-enable-multipathd` and like the name suggests enables multipathing on all the OCP worker nodes. The `Secret` is
 called `openstackcinder-volumes-hpe_fc` and contains the 3PAR backend

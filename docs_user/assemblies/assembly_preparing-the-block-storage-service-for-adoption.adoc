@@ -4,14 +4,14 @@
 
 = Preparing the {block_storage} configurations for adoption
 
-As described in xref:planning-the-new-deployment_planning[Planning the new deployment], Cinder is configured using
+As described in xref:planning-the-new-deployment_planning[Planning the new deployment], {block_storage_first_ref} is configured using
 configuration snippets instead of using obscure configuration parameters
 defined by the installer.
 
-The recommended way to deploy Cinder volume backends has changed to remove old
+The recommended way to deploy {block_storage} volume backends has changed to remove old
 limitations, add flexibility, and improve operations in general.
 
-When deploying with Director you used to run a single Cinder volume service with
+When deploying with {OpenStackPreviousInstaller} you used to run a single {block_storage} volume service with
 all your backends (each backend would run on its own process), and even though
 that way of deploying is still supported, it is not recommended. It is recommended to use a volume service per backend since it is a superior deployment model.
 
@@ -49,14 +49,18 @@ and the `customServiceConfigSecrets` key is the recommended way to go.
 
 For adoption instead of using a whole deployment manifest you use a targeted
 patch, like you did with other services, and in this patch you will enable the
-different cinder services with their specific configurations.
+different Block Storage services with their specific configurations.
 
 [WARNING]
 Check that all configuration options are still valid for the new
-OpenStack version, since configuration options may have been deprecated,
+{rhos_prev_long} version, since configuration options may have been deprecated,
 removed, or added. This applies to both backend driver specific configuration
 options and other generic options.
 
-There are 2 ways to prepare a cinder configuration for adoption, tailor-making
-it or doing it quick and dirty. There is no difference in how Cinder will
+There are 2 ways to prepare a {block_storage} configuration for adoption, tailor-making
+it or doing it quick and dirty. There is no difference in how {block_storage} will
 operate with both methods, though tailor-making it is recommended whenever possible.
+
+include::../modules/proc_preparing-block-storage-service-by-customizing-configuration.adoc[leveloffset=+1]
+
+include::../modules/proc_preparing-block-storage-service-by-using-agnostic-config-file.adoc[leveloffset=+1]
