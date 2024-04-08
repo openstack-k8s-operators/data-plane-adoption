@@ -19,3 +19,5 @@ situations, but it still requires knowledge on how {OpenStackShort} services wor
 include::../modules/con_block-storage-service-limitations.adoc[leveloffset=+1]
 
 include::../modules/con_openshift-preparation-for-block-storage-adoption.adoc[leveloffset=+1]
+
+include::../assemblies/assembly_preparing-the-block-storage-service-for-adoption.adoc[leveloffset=+1]

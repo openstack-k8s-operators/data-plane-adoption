@@ -2,11 +2,9 @@
 
 :context: preparing-block-storage
 
-//Check xref contexts.
-
 = Preparing the {block_storage} configurations for adoption
 
-As described in xref:planning-the-new-deployment_{context}[Planning the new deployment], Cinder is configured using
+As described in xref:planning-the-new-deployment_planning[Planning the new deployment], Cinder is configured using
 configuration snippets instead of using obscure configuration parameters
 defined by the installer.
 
@@ -53,7 +51,8 @@ For adoption instead of using a whole deployment manifest you use a targeted
 patch, like you did with other services, and in this patch you will enable the
 different cinder services with their specific configurations.
 
-*WARNING:* Check that all configuration options are still valid for the new
+[WARNING]
+Check that all configuration options are still valid for the new
 OpenStack version, since configuration options may have been deprecated,
 removed, or added. This applies to both backend driver specific configuration
 options and other generic options.

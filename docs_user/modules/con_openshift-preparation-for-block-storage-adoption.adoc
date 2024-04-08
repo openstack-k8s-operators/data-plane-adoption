@@ -1,19 +1,18 @@
 [id="openshift-preparation-for-block-storage-adoption_{context}"]
 
-= OpenShift preparation for {block_storage} adoption
+= {OpenShift} preparation for {block_storage} adoption
 
-As explained in xref:planning-the-new-deployment_{context}[Planning the new deployment], before deploying OpenStack in OpenShift, you must ensure that the networks are ready, that you have decided the node selection, and also make sure any necessary changes to the OpenShift nodes have been made. For Cinder volume and backup services all these 3 must be carefully considered.
+As explained in xref:planning-the-new-deployment_planning[Planning the new deployment], before deploying {rhos_prev_long} {OpenStackShort} in {OpenShift}, you must ensure that the networks are ready, that you have decided the node selection, and also make sure any necessary changes to the {OpenShiftShort} nodes have been made. For {block_storage_first_ref} volume and backup services all these 3 must be carefully considered.
 
 Node Selection::
-You might need, or want, to restrict the OpenShift nodes where cinder volume and
+You might need, or want, to restrict the {OpenShiftShort} nodes where {block_storage} volume and
 backup services can run.
 +
-The best example of when you need to do node selection for a specific cinder
-service is when you deploy Cinder with the LVM driver. In that scenario, the
+The best example of when you need to do node selection for a specific {block_storage} is when you deploy the {block_storage} with the LVM driver. In that scenario, the
 LVM data where the volumes are stored only exists in a specific host, so you
-need to pin the cinder-volume service to that specific OpenShift node. Running
-the service on any other OpenShift node would not work.  Since `nodeSelector`
-only works on labels, you cannot use the OpenShift host node name to restrict
+need to pin the Block Storage-volume service to that specific {OpenShiftShort} node. Running
+the service on any other {OpenShiftShort} node would not work.  Since `nodeSelector`
+only works on labels, you cannot use the {OpenShiftShort} host node name to restrict
 the LVM backend and you need to identify it using a unique label, an existing label, or new label:
 +
 ----
@@ -39,27 +38,25 @@ spec:
 < . . . >
 ----
 +
-As mentioned in the xref:node-selector_{context}[About node selector], an example where you need to use labels is when using FC storage and you do not have HBA cards in all your OpenShift nodes. In this scenario you need to restrict all the cinder volume backends (not only the FC one) as well as the backup services.
+As mentioned in the xref:about-node-selector_planning[About node selector], an example where you need to use labels is when using FC storage and you do not have HBA cards in all your {OpenShiftShort} nodes. In this scenario you need to restrict all the {block_storage} volume backends (not only the FC one) as well as the backup services.
 +
-Depending on the cinder backends, their configuration, and the usage of Cinder,
-you can have network intensive cinder volume services with lots of I/O as well as
-cinder backup services that are not only network intensive but also memory and
-CPU intensive. This may be a concern for the OpenShift human operators, and
+Depending on the {block_storage} backends, their configuration, and the usage of {block_storage},
+you can have network intensive {block_storage} volume services with lots of I/O as well as
+{block_storage} backup services that are not only network intensive but also memory and
+CPU intensive. This may be a concern for the {OpenShiftShort} human operators, and
 they may want to use the `nodeSelector` to prevent these service from
-interfering with their other OpenShift workloads. For more information about node selection, see xref:node-selector_{context}[About node selector].
+interfering with their other {OpenShiftShort} workloads. For more information about node selection, see xref:about-node-selector_planning[About node selector].
 +
-When selecting the nodes where cinder volume is going to run please remember
-that cinder-volume may also use local storage when downloading a glance image
-for the create volume from image operation, and it can require a considerable
-amount of space when having concurrent operations and not using cinder volume
+When selecting the nodes where the {block_storage} volume is going to run remember that {block_storage}-volume may also use local storage when downloading a glance image for the create volume from image operation, and it can require a considerable
+amount of space when having concurrent operations and not using {block_storage} volume
 cache.
 +
-If you do not have nodes with enough local disk space for the temporary images, you can use a remote NFS location for the images. You had to manually set this up in Director deployments, but with operators, you can do it
+If you do not have nodes with enough local disk space for the temporary images, you can use a remote NFS location for the images. You had to manually set this up in {OpenStackPreviousInstaller} deployments, but with operators, you can do it
 automatically using the extra volumes feature ()`extraMounts`.
 
 Transport protocols::
 Due to the specifics of the storage transport protocols some changes may be
-required on the OpenShift side, and although this is something that must be
+required on the {OpenShiftShort} side, and although this is something that must be
 documented by the Vendor here wer are going to provide some generic
 instructions that can serve as a guide for the different transport protocols.
 +
@@ -73,26 +70,26 @@ Depending on the backend, you can find the transport protocol:
 protocol itself: RBD, iSCSI, FC...
 * Looking at the `target_protocol` configuration option
 +
-WARNING: Any time a `MachineConfig` is used to make changes to OpenShift
+WARNING: Any time a `MachineConfig` is used to make changes to {OpenShiftShort}
 nodes the node will reboot!!  Act accordingly.
 
 NFS::
-There is nothing to do for NFS. OpenShift can connect to NFS backends without
+There is nothing to do for NFS. {OpenShiftShort} can connect to NFS backends without
 any additional changes.
 
 RBD/Ceph::
-There is nothing to do for RBD/Ceph in terms of preparing the nodes, OpenShift
+There is nothing to do for RBD/Ceph in terms of preparing the nodes, {OpenShiftShort}
 can connect to Ceph backends without any additional changes. Credentials and
 configuration files will need to be provided to the services though.
 
 iSCSI::
 Connecting to iSCSI volumes requires that the iSCSI initiator is running on the
-OpenShift hosts where volume and backup services are going to run, because
+{OpenShiftShort} hosts where volume and backup services are going to run, because
 the Linux Open iSCSI initiator does not currently support network namespaces, so
-you must only run 1 instance of the service for the normal OpenShift usage, plus
-the OpenShift CSI plugins, plus the OpenStack services.
+you must only run 1 instance of the service for the normal {OpenShiftShort} usage, plus
+the {OpenShiftShort} CSI plugins, plus the {OpenStackShort} services.
 +
-If you are not already running `iscsid` on the OpenShift nodes, then you need
+If you are not already running `iscsid` on the {OpenShiftShort} nodes, then you need
 to apply a `MachineConfig` similar to this one:
 +
 [source,yaml]
@@ -114,8 +111,8 @@ spec:
         name: iscsid.service
 ----
 +
-If you are using labels to restrict the nodes where cinder services are running you need to use a `MachineConfigPool` as described in
-the xref:node-selector_{context}[About node selector] to limit the effects of the
+If you are using labels to restrict the nodes where the Block Storage services are running you need to use a `MachineConfigPool` as described in
+the xref:about-node-selector_planning[About node selector] to limit the effects of the
 `MachineConfig` to only the nodes where your services may run.
 +
 If you are using a toy single node deployment to test the process, you might need to replace `worker` with `master` in the `MachineConfig`.
@@ -127,13 +124,11 @@ If you are using a toy single node deployment to test the process, you might nee
 //*TODO:* Add, or at least mention, the Nova eDPM side for iSCSI.
 
 FC::
-There is nothing to do for FC volumes to work, but the _cinder volume and cinder
-backup services need to run in an OpenShift host that has HBAs_, so if there
+There is nothing to do for FC volumes to work, but the {block_storage} volume and {block_storage} backup services need to run in an {OpenShiftShort} host that has HBAs, so if there
 are nodes that do not have HBAs then you need to use labels to restrict where
-these services can run, as mentioned in the [node selection section]
-(#node-selection).
+these services can run, as mentioned in xref:about-node-selector_planning[About node selector].
 +
-This also means that for virtualized OpenShift clusters using FC you need to
+This also means that for virtualized {OpenShiftShort} clusters using FC you need to
 expose the host's HBAs inside the VM.
 
 //For production deployments using FC volumes we always recommend setting up
@@ -142,9 +137,9 @@ expose the host's HBAs inside the VM.
 
 NVMe-oF::
 Connecting to NVMe-oF volumes requires that the nvme kernel modules are loaded
-on the OpenShift hosts.
+on the {OpenShiftShort} hosts.
 +
-If you are not already loading the `nvme-fabrics` module on the OpenShift nodes
+If you are not already loading the `nvme-fabrics` module on the {OpenShiftShort} nodes
 where volume and backup services are going to run then you need to apply a
 `MachineConfig` similar to this one:
 +
@@ -176,9 +171,9 @@ spec:
             source: data:,nvme-fabrics
 ----
 +
-If you are using labels to restrict the nodes where cinder
+If you are using labels to restrict the nodes where Block Storage
 services are running, you need to use a `MachineConfigPool` as described in
-the xref:node-selector_{context}[About node selector] to limit the effects of the
+the xref:about-node-selector_planning[About node selector] to limit the effects of the
 `MachineConfig` to only the nodes where your services may run.
 +
 If you are using a toy single node deployment to test the process you migt need to replace `worker` with `master` in the `MachineConfig`.
@@ -187,10 +182,10 @@ You are only loading the `nvme-fabrics` module because it takes care of loading
 the transport specific modules (tcp, rdma, fc) as needed.
 +
 For production deployments using NVMe-oF volumes it is recommended that you use
-multipathing. For NVMe-oF volumes OpenStack uses native multipathing, called
+multipathing. For NVMe-oF volumes {OpenStackShort} uses native multipathing, called
 https://nvmexpress.org/faq-items/what-is-ana-nvme-multipathing/[ANA].
 +
-Once the OpenShift nodes have rebooted and are loading the `nvme-fabrics` module
+Once the {OpenShiftShort} nodes have rebooted and are loading the `nvme-fabrics` module
 you can confirm that the Operating System is configured and supports ANA by
 checking on the host:
 +
@@ -199,8 +194,8 @@ cat /sys/module/nvme_core/parameters/multipath
 ----
 +
 IMPORTANT: ANA doesn't use the Linux Multipathing Device Mapper, but the
-*current OpenStack
-code requires `multipathd` on compute nodes to be running for Nova to be able to
+*current {OpenStackShort}
+code requires `multipathd` on compute nodes to be running for {compute_service_first_ref} to be able to
 use multipathing, so please remember to follow the multipathing part for compute
 nodes on the <<multipathing,multipathing section>>.
 
@@ -210,13 +205,13 @@ Multipathing::
 For iSCSI and FC protocols, using multipathing is recommended, which
 has 4 parts:
 
-* Prepare the OpenShift hosts
-* Configure the Cinder services
-* Prepare the Nova computes
-* Configure the Nova service
+* Prepare the {OpenShiftShort} hosts
+* Configure the Block Storage services
+* Prepare the {compute_service} computes
+* Configure the {compute_service} service
 +
-To prepare the OpenShift hosts, you need to ensure that the Linux Multipath
-Device Mapper is configured and running on the OpenShift hosts, and you do
+To prepare the {OpenShiftShort} hosts, you need to ensure that the Linux Multipath
+Device Mapper is configured and running on the {OpenShiftShort} hosts, and you do
 that using `MachineConfig` like this one:
 +
 [source,yaml]
@@ -253,18 +248,18 @@ spec:
         name: multipathd.service
 ----
 +
-If you are using labels to restrict the nodes where cinder
+If you are using labels to restrict the nodes where Block Storage
 services are running you need to use a `MachineConfigPool` as described in
-the xref:node-selector_{context}[About node selector] to limit the effects of the
+the xref:about-node-selector_planning[About node selector] to limit the effects of the
 `MachineConfig` to only the nodes where your services may run.
 +
 If you are using a toy single node deployment to test the process you might need to replace `worker` with `master` in the `MachineConfig`.
 +
-To configure the cinder services to use multipathing you need to enable the
+To configure the Block Storage services to use multipathing you need to enable the
 `use_multipath_for_image_xfer` configuration option in all the backend sections
-and in the `[DEFAULT]` section for the backup service, but in Podified
+and in the `[DEFAULT]` section for the backup service, but in control plane
 deployments you do not need to worry about it, because that's the default. So as
-long as you do not override it setting `use_multipath_for_image_xfer = false` then multipathing will work as long as the service is running on the OpenShift host.
+long as you do not override it setting `use_multipath_for_image_xfer = false` then multipathing will work as long as the service is running on the {OpenShiftShort} host.
 
 //*TODO:* Add, or at least mention, the Nova eDPM side for Multipathing once
 //it's implemented.
