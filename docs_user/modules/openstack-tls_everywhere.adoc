@@ -212,3 +212,10 @@ for i in "${!computes[@]}"; do
     done <<< "$certs_to_stop"
 done
 ----
+
+=== Post-steps (after adoption)
+
+After the adoption procedure is finished, the cert-manager operator will be responsible for issuing and refreshing new certificates when they expire.
+
+However, since compute services are not restarted during adoption, you will need to eventually restart the EDPM (compute) nodes.
+This must be done before the certificates expire. Please, check the expiration dates of all certificates and plan accordingly.
