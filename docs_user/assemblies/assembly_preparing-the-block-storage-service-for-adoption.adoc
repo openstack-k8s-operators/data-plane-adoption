@@ -1,0 +1,63 @@
+[id="preparing-the-block-storage-service_{context}"]
+
+:context: preparing-block-storage
+
+//Check xref contexts.
+
+= Preparing the {block_storage} configurations for adoption
+
+As described in xref:planning-the-new-deployment_{context}[Planning the new deployment], Cinder is configured using
+configuration snippets instead of using obscure configuration parameters
+defined by the installer.
+
+The recommended way to deploy Cinder volume backends has changed to remove old
+limitations, add flexibility, and improve operations in general.
+
+When deploying with Director you used to run a single Cinder volume service with
+all your backends (each backend would run on its own process), and even though
+that way of deploying is still supported, it is not recommended. It is recommended to use a volume service per backend since it is a superior deployment model.
+
+So for an LVM and a Ceph backend you would have 2 entries in `cinderVolume` and,
+as mentioned in the limitations section, you cannot set global defaults for all
+volume services, so you have to define it for each of them, like this:
+
+[source,yaml]
+----
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+spec:
+  cinder:
+    enabled: true
+    template:
+      cinderVolume:
+        lvm:
+          customServiceConfig: |
+            [DEFAULT]
+            debug = True
+            [lvm]
+< . . . >
+        ceph:
+          customServiceConfig: |
+            [DEFAULT]
+            debug = True
+            [ceph]
+< . . . >
+----
+
+Reminder that for volume backends that have sensitive information using `Secret`
+and the `customServiceConfigSecrets` key is the recommended way to go.
+
+For adoption instead of using a whole deployment manifest you use a targeted
+patch, like you did with other services, and in this patch you will enable the
+different cinder services with their specific configurations.
+
+*WARNING:* Check that all configuration options are still valid for the new
+OpenStack version, since configuration options may have been deprecated,
+removed, or added. This applies to both backend driver specific configuration
+options and other generic options.
+
+There are 2 ways to prepare a cinder configuration for adoption, tailor-making
+it or doing it quick and dirty. There is no difference in how Cinder will
+operate with both methods, though tailor-making it is recommended whenever possible.

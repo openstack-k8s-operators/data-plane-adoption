@@ -1,0 +1,20 @@
+[id="block-storage-limitations_{context}"]
+
+= Limitations for adopting the {block_storage}
+
+There are currently some limitations that are worth highlighting; some are
+related to this guideline while some to the operator:
+
+* There is no global `nodeSelector` for all {block_storage_first_ref} volumes, so it needs to be
+specified per backend.  This may change in the future.
+* There is no global `customServiceConfig` or `customServiceConfigSecrets` for
+all {block_storage} volumes, so it needs to be specified per backend.  This may change in
+the future.
+* Adoption of LVM backends, where the volume data is stored in the compute
+nodes, is not currently being documented in this process. It may get documented
+in the future.
+* Support for {block_storage} backends that require kernel modules not included in RHEL
+has not been tested in Operator deployed {rhos_prev_long} so it is not documented in
+this guide.
+* Adoption of DCN/Edge deployment is not currently described in this guide.
+

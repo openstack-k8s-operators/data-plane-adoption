@@ -10,7 +10,6 @@ ifdef::context[:parent-context: {context}]
 :toclevels: 3
 
 include::../modules/openstack-pull_openstack_configuration.adoc[leveloffset=+1]
-include::../modules/openstack-cinder_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-horizon_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-manila_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-ironic_adoption.adoc[leveloffset=+1]
