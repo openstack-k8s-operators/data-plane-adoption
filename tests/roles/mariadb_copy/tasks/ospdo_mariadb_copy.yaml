@@ -28,7 +28,7 @@
         )
         SOURCE_DB_ROOT_PASSWORD={{ source_db_root_pass.stdout }}
 
-  - name:  start an adoption mariadb helper pod
+  - name: start an adoption mariadb helper pod on ospdo src env
     delegate_to: "{{ adoption_ospdo_host }}"
     ansible.builtin.shell: |
       {{ shell_header }}
