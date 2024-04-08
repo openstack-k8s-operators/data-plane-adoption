@@ -8,6 +8,7 @@
       {{ controller1_ssh }} git clone {{ repo }}
     ignore_errors: true
 
+  # TODO# remove dpa_mysql_script usage and use the dedicated mysql_data-copy_pod
   - name: test connection to the original DB
     delegate_to: "{{ adoption_ospdo_host }}"
     ansible.builtin.shell: |
