@@ -1,48 +1,45 @@
 [id="adopting-the-compute-service_{context}"]
 
-//:context: adopting-compute-service
-//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
 //Check xref contexts.
 
-= Adopting the Compute service
+= Adopting the {compute_service}
 
-*NOTE* This example scenario describes a simple single-cell setup. Real
+[NOTE]
+This example scenario describes a simple single-cell setup. Real
 multi-stack topology recommended for production use results in different
 cells DBs layout, and should be using different naming schemes (not covered
 here this time).
 
-== Prerequisites
+.Prerequisites
 
 * Previous Adoption steps completed. Notably,
- ** the xref:migrating-databases-to-mariadb-instances_{context}[Migrating databases to MariaDB instances]
-must already be imported into the podified MariaDB;
+ ** the xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances]
+must already be imported into the control plane MariaDB;
  ** the xref:adopting-the-identity-service_{context}[Adopting the Identity service] needs to be imported;
- ** the xref:adopting-the-key-manager-service_{context}[Key manager service] needs to be imported;
+ ** the xref:adopting-the-key-manager-service_{context}[Adopting the Key Manager service] needs to be imported;
  ** the xref:adopting-the-placement-service_{context}[Adopting the Placement service] needs to be imported;
  ** the xref:adopting-the-image-service_{context}[Adopting the Image service] needs to be imported;
- ** the xref:migrating-ovn-data_{context}[Migrating OVN data] need to be imported;
- ** the xref:adopting-the-openstack-networking-service_{context}[Adopting the OpenStack Networking service] needs to be imported;
+ ** the xref:migrating-ovn-data_migrating-databases[Migrating OVN data] need to be imported;
+ ** the xref:adopting-the-networking-service_{context}[Adopting the Networking service] needs to be imported;
  ** Required services specific topology
 xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
 //kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
- ** OpenStack services have been stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
+ ** {rhos_prev_long} services have been stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
 
-== Variables
+.Variables
 
-Define the shell variables and aliases used in the steps below. The values are
-just illustrative, use values that are correct for your environment:
-
+Define the shell variables and aliases used in the steps below. The values are just illustrative, use values that are correct for your environment:
 ----
 alias openstack="oc exec -t openstackclient -- openstack"
 ----
 
-== Procedure - Nova adoption
+.Procedure
+
+[NOTE]
+This procedure assumes that Nova Metadata is deployed on the top level and not on each cell level, so this example imports it the same way. If the source deployment has a per cell metadata deployment, adjust the given below patch as needed. Metadata service cannot be run in `cell0`.
 
 
-*NOTE*: This procedure assumes that Nova Metadata is deployed on the top level and not on each cell level, so this example imports it the same way. If the source deployment has a per cell metadata deployment, adjust the given below patch as needed. Metadata service cannot be run in `cell0`.
-
-
-* Patch OpenStackControlPlane to deploy Nova:
+. Patch `OpenStackControlPlane` to deploy the {compute_service}:
 +
 [source,yaml]
 ----
@@ -114,7 +111,7 @@ spec:
 '
 ----
 
-* Wait for Nova control plane services' CRs to become ready:
+. Wait for {compute_service} control plane services' custom resources (CRs) to become ready:
 +
 ----
 oc wait --for condition=Ready --timeout=300s Nova/nova
@@ -123,14 +120,14 @@ oc wait --for condition=Ready --timeout=300s Nova/nova
 The local Conductor services will be started for each cell, while the superconductor runs in `cell0`.
 Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Nova services, until the external data plane is imported, and until Nova Compute services fast-forward upgraded. For more information, see xref:adopting-dataplane_{context}[Data Plane Adoption].
 
-== Post-checks
+.Verification 
 
-* Check that Nova endpoints are defined and pointing to the
-podified FQDNs and that Nova API responds.
+* Check that {compute_service} endpoints are defined and pointing to the
+control plane FQDNs and that Nova API responds.
 +
 ----
-openstack endpoint list | grep nova
-openstack server list
+$ openstack endpoint list | grep nova
+$ openstack server list
 ----
 
 Compare the following outputs with the topology specific configuration in xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
@@ -149,6 +146,5 @@ The expected changes to happen:
  ** Default cell is renamed to `cell1` (in a multi-cell setup, it should become indexed as the last cell instead).
  ** RabbitMQ transport URL no longer uses `guest`.
 
-*NOTE* At this point, Nova control plane services have yet taken control over
-existing Nova compute workloads. That would become possible to verify only after
-the data plane adoption is completed. For more information, see xref:adopting-dataplane_{context}[Data Plane Adoption].
+[NOTE]
+At this point, the {compute_service} control plane services have yet taken control over existing {compute_service} compute workloads. That would become possible to verify only after the data plane adoption is completed. For more information, see xref:adopting-dataplane_{context}[Data Plane Adoption].

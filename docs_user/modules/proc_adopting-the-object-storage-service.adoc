@@ -1,27 +1,23 @@
 [id="adopting-the-object-storage-service_{context}"]
-
-//:context: adopting-object-storage-service
-
+//check xref
 = Adopting the Object Storage service
 
-This section only applies if you are using OpenStack Swift as Object Storage
-service. If you are using the Object Storage *API* of Ceph RGW this section can
-be skipped.
+This section only applies if you are using OpenStack Swift as {object_storage_first_ref}. If you are using the Object Storage API of Ceph RGW this section can be skipped.
 
-== Prerequisites
+.Prerequisites
 
 * Previous adoption steps completed.
-* The Swift storage backend services must NOT be stopped.
-* Storage network has been properly configured on the OpenShift cluster.
+* The {object_storage} storage backend services must still be running.
+* Storage network has been properly configured on the {OpenShift} cluster.
 
-== Variables
+.Variables
 
 No new environmental variables need to be defined, though you use the
 `CONTROLLER1_SSH` alias that was defined in a previous step.
 
-== Procedure - Swift adoption
+.Procedure
 
-* Create the `swift-conf` secret, containing the Swift hash path suffix and prefix:
+. Create the `swift-conf` secret, containing the {object_storage} hash path suffix and prefix:
 +
 [source,yaml]
 ----
@@ -37,7 +33,7 @@ data:
 EOF
 ----
 
-* Create the `swift-ring-files` configmap, containing the Swift ring files:
+. Create the `swift-ring-files` configmap, containing the {object_storage} ring files:
 +
 [source,yaml]
 ----
@@ -54,8 +50,7 @@ binaryData:
 EOF
 ----
 
-
-* Patch OpenStackControlPlane to deploy Swift:
+. Patch `OpenStackControlPlane` to deploy the {object_storage}:
 +
 [source,yaml]
 ----
@@ -96,31 +91,29 @@ spec:
 '
 ----
 
-== Post-checks
+.Verification
 
-=== Inspect the resulting swift service pods
-
+* Inspect the resulting {object_storage} service pods:
++
 ----
-oc get pods -l component=swift-proxy
+$ oc get pods -l component=swift-proxy
 ----
 
-=== Check that Swift proxy service is registered in Keystone:
-
+* Check that the {object_storage} proxy service is registered in the {identity_service}:
++
 ----
-openstack service list | grep swift
+$ openstack service list | grep swift
 | b5b9b1d3c79241aa867fa2d05f2bbd52 | swift    | object-store |
 ----
-
++
 ----
-openstack endpoint list | grep swift
+$ openstack endpoint list | grep swift
 | 32ee4bd555414ab48f2dc90a19e1bcd5 | regionOne | swift        | object-store | True    | public    | https://swift-public-openstack.apps-crc.testing/v1/AUTH_%(tenant_id)s |
 | db4b8547d3ae4e7999154b203c6a5bed | regionOne | swift        | object-store | True    | internal  | http://swift-internal.openstack.svc:8080/v1/AUTH_%(tenant_id)s        |
 ----
 
-=== Verify resources
-
-Check that you are able to up- and download objects:
-
+* Check that you are able to up- and download objects:
++
 ----
 echo "Hello World!" > obj
 openstack container create test
@@ -141,8 +134,6 @@ openstack object save test obj --file -
 Hello World!
 ----
 
-== Data migration
-At this point data is still stored on the previously existing nodes. The
-<<swift-migration_\{context\},Object Storage data migration>>
- section describes how to migrate the actual data from the old
-to the new deployment.
+[NOTE] 
+At this point data is still stored on the previously existing nodes. For more information about migrating the actual data from the old
+to the new deployment, see xref:migrating-the-object-storage-service_migrate-object-storage-service[Object Storage service migration].

@@ -2,9 +2,9 @@
 
 //Check xref context.
 
-= Stopping {osp_prev_long} services
+= Stopping {rhos_prev_long} services
 
-Before you start the adoption, you must stop the {osp_prev_long} ({OpenStackShort}) services.
+Before you start the adoption, you must stop the {rhos_prev_long} ({OpenStackShort}) services.
 
 This is an important step to avoid inconsistencies in the data migrated for the data-plane adoption procedure caused by resource changes after the DB has been copied to the new deployment.
 
@@ -67,7 +67,7 @@ services.
 3. Stop the control plane services.
 4. Verify the control plane services are stopped.
 
-The cinder-backup service on {OpenStackShort} {osp_prev_ver} could be running as Active-Passive under pacemaker or as Active-Active, so you must check how it is running and stop it.
+The cinder-backup service on {OpenStackShort} {rhos_prev_ver} could be running as Active-Passive under pacemaker or as Active-Active, so you must check how it is running and stop it.
 
 If the deployment enables CephFS via NFS as a backend for {rhos_component_storage_file_first_ref}, there are pacemaker ordering and co-location
 constraints that govern the Virtual IP address assigned to the `ceph-nfs`

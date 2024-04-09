@@ -1,40 +1,36 @@
 [id="adopting-the-image-service_{context}"]
 
-//:context: adopting-image-service
-//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
 //Check xref context.
+//Need to revisit this procedure. It will likely need to be split into multiple procedures: one for each backend. Do the verification steps apply to each backend?
 
-= Adopting the Image service
+= Adopting the {image_service}
 
-Adopting Glance means that an existing `OpenStackControlPlane` CR, where Glance
+Adopting {image_service_first_ref} means that an existing `OpenStackControlPlane` custom resource (CR), where {image_service}
 is supposed to be disabled, should be patched to start the service with the
 configuration parameters provided by the source environment.
 
 When the procedure is over, the expectation is to see the `GlanceAPI` service
-up and running: the `Keystone endpoints` should be updated and the same backend
-of the source Cloud will be available. If the conditions above are met, the
-adoption is considered concluded.
+up and running: the {identity_service} endpoints should be updated and the same backend of the source Cloud will be available. If the conditions above are met, the adoption is considered concluded.
 
 This guide also assumes that:
 
 . A `TripleO` environment (the source Cloud) is running on one side;
 . A `SNO` / `CodeReadyContainers` is running on the other side;
-. (optional) an internal/external `Ceph` cluster is reachable by both `crc` and
-`TripleO`
+. (optional) an internal/external `Ceph` cluster is reachable by both `crc` and `TripleO`
 
-== Prerequisites
+.Prerequisites
 
 * Previous Adoption steps completed. Notably, MariaDB, Keystone and Barbican
 should be already adopted.
 
-== Procedure - Glance adoption
-
+.Procedure
+//This link goes to a 404. Do we need this text downstream? 
 As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Glance Adoption follows the same pattern.
 
-=== Using Swift backend
+.Using {object_storage} backend
 
-When Glance is deployed with Swift as a backend in the source environment based
-on TripleO, the podified `glanceAPI` instance should be deployed with the following
+When {image_service} is deployed with {object_storage_first_ref} as a backend in the source environment based
+on TripleO, the control plane `glanceAPI` instance should be deployed with the following
 configuration:
 
 ----
@@ -57,7 +53,7 @@ spec
 ----
 
 It is recommended to write the patch manifest into a file, for example `glance_swift.patch`.
-For example, the Glance deployment with a Swift backend would look like this:
+For example, the {image_service} deployment with a {object_storage} backend would look like this:
 
 ----
 spec:
@@ -98,10 +94,9 @@ spec:
             - storage
 ----
 
-Having `Swift` as a backend establishes a dependency between the two services,
-and any deployed `GlanceAPI` instance would **not work** if `Glance` is
-configured with `Swift` that is still not available in the `OpenStackControlPlane`.
-Once Swift, and in particular `SwiftProxy`, has been adopted through the
+Having {object_storage} as a backend establishes a dependency between the two services,
+and any deployed `GlanceAPI` instance would **not work** if {image_service} is configured with {object_storage} that is still not available in the `OpenStackControlPlane`.
+Once {object_storage}, and in particular `SwiftProxy`, has been adopted through the
 procedure described in <<adopting-object-storage-service>>, it is possible
 to proceed with the `GlanceAPI` adoption.
 
@@ -113,17 +108,17 @@ swift-proxy-75cb47f65-92rxq   3/3     Running   0
 ----
 
 If the output is similar to the above, it is possible to move forward and patch
-the `GlanceAPI` service deployed in the podified context with the following
+the `GlanceAPI` service deployed in the control plane context with the following
 command:
 
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch-file=glance_swift.patch
 ----
 
-=== Using Cinder backend
+.Using Cinder backend
 
-When Glance is deployed with Cinder as a backend in the source environment based
-on TripleO, the podified `glanceAPI` instance should be deployed with the following
+When the {image_service} is deployed with Cinder as a backend in the source environment based
+on TripleO, the control plane `glanceAPI` instance should be deployed with the following
 configuration:
 
 ----
@@ -148,7 +143,7 @@ spec
 ----
 
 It is recommended to write the patch manifest into a file, for example `glance_cinder.patch`.
-For example, the Glance deployment with a Cinder backend would look like this:
+For example, the {image_service} deployment with a Cinder backend would look like this:
 
 ----
 spec:
@@ -192,7 +187,7 @@ spec:
 ----
 
 Having `Cinder` as a backend establishes a dependency between the two services,
-and any deployed `GlanceAPI` instance would **not work** if `Glance` is
+and any deployed `GlanceAPI` instance would **not work** if the {image_service} is
 configured with `Cinder` that is still not available in the `OpenStackControlPlane`.
 Once Cinder, and in particular `CinderVolume`, has been adopted through the
 procedure described in <<adopting-the-block-storage-service>>, it is possible
@@ -206,20 +201,20 @@ cinder-volume-75cb47f65-92rxq   3/3     Running   0
 ----
 
 If the output is similar to the above, it is possible to move forward and patch
-the `GlanceAPI` service deployed in the podified context with the following
+the `GlanceAPI` service deployed in the control plane context with the following
 command:
 
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch-file=glance_cinder.patch
 ----
 
-=== Using NFS backend
+.Using NFS backend
 
-When the source Cloud based on TripleO uses Glance with a NFS backend, before
-patching the OpenStackControlPlane to deploy Glance it is important to validate
+When the source Cloud based on TripleO uses the {image_service} with a NFS backend, before
+patching the OpenStackControlPlane to deploy the {image_service} it is important to validate
 a few networking related prerequisites.
 In the source cloud, verify the NFS parameters used by the overcloud to configure
-the Glance backend.
+the {image_service} backend.
 In particular, find among the TripleO heat templates the following variables that are usually an override of the default content provided by
 `/usr/share/openstack-tripleo-heat-templates/environments/storage/glance-nfs.yaml`[glance-nfs.yaml].:
 
@@ -233,21 +228,21 @@ In particular, find among the TripleO heat templates the following variables tha
 
 ---
 
-In the example above, as the first variable shows, unlike Cinder, Glance has no
+In the example above, as the first variable shows, unlike Cinder, the {image_service} has no
 notion of NFS backend: the `File` driver is used in this scenario, and behind the
 scenes, the `filesystem_store_datadir` which usually points to `/var/lib/glance/images/`
 is mapped to the export value provided by the `GlanceNfsShare` variable.
 If the `GlanceNfsShare` is not exported through a network that is supposed to be
-propagated to the adopted `OpenStack` control plane, an extra action is required
+propagated to the adopted {rhos_prev_long} control plane, an extra action is required
 by the human administrator, who must stop the `nfs-server` and remap the export
-to the `storage` network. This action usually happens when the Glance service is
+to the `storage` network. This action usually happens when the {image_service} is
 stopped in the source controller nodes.
 In the podified control plane, as per the
 (https://github.com/openstack-k8s-operators/docs/blob/main/images/network_diagram.jpg)[network isolation diagram],
-Glance is attached to the Storage network, propagated via the associated
+the {image_service} is attached to the Storage network, propagated via the associated
 `NetworkAttachmentsDefinition` CR, and the resulting Pods have already the right
 permissions to handle the Image Service traffic through this network.
-In a deployed OpenStack control plane, you can verify that the network mapping
+In a deployed {OpenStackShort} control plane, you can verify that the network mapping
 matches with what has been deployed in the TripleO based environment by checking
 both the `NodeNetworkConfigPolicy` (`nncp`) and the `NetworkAttachmentDefinition`
 (`net-attach-def`) with the following commands:
@@ -273,16 +268,16 @@ tenant        true          false             ["172.19.0.80-172.19.0.90"]
 ```
 
 The above represents an example of the output that should be checked in the
-openshift environment to make sure there are no issues with the propagated
+{OpenShift} environment to make sure there are no issues with the propagated
 networks.
 
 The following steps assume that:
 
-1. the Storage network has been propagated to the openstack control plane
-2. Glance is able to reach the Storage network and connect to the nfs-server
+1. the Storage network has been propagated to the {OpenStackShort} control plane
+2. The {image_service} is able to reach the Storage network and connect to the nfs-server
    through the port `2049`.
 
-If the above conditions are met, it is possible to adopt the `Glance` service
+If the above conditions are met, it is possible to adopt the {image_service} 
 and create a new `default` `GlanceAPI` instance connected with the existing
 NFS share.
 
@@ -337,13 +332,12 @@ spec:
 EOF
 ----
 
-*Note*:
-
+[NOTE]
 Replace in `glance_nfs_patch.yaml` the `nfs/server` ip address with the IP used
 to reach the `nfs-server` and make sure the `nfs/path` points to the exported
 path in the `nfs-server`.
 
-Patch OpenStackControlPlane to deploy Glance with a NFS backend:
+Patch `OpenStackControlPlane` to deploy {image_service} with a NFS backend:
 
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch-file glance_nfs_patch.yaml
@@ -415,7 +409,7 @@ $ ls /var/nfs/
 634482ca-4002-4a6d-b1d5-64502ad02630
 ```
 
-=== Using Ceph storage backend
+.Using Ceph storage backend
 
 If a Ceph backend is used, the `customServiceConfig` parameter should
 be used to inject the right configuration to the `GlanceAPI` instance.
@@ -423,7 +417,7 @@ be used to inject the right configuration to the `GlanceAPI` instance.
 Make sure the Ceph-related secret (`ceph-conf-files`) was created in
 the `openstack` namespace and that the `extraMounts` property of the
 `OpenStackControlPlane` CR has been configured properly. These tasks
-are described in an earlier Adoption step xref:configuring-a-ceph-backend_{context}[Configuring a Ceph backend].
+are described in an earlier Adoption step xref:configuring-a-ceph-backend_migrating-databases[Configuring a Ceph backend].
 
 ----
 cat << EOF > glance_patch.yaml
@@ -462,8 +456,8 @@ spec:
 EOF
 ----
 
-If you have previously backup your OpenStack services configuration file from the old environment:
-xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration] you can use os-diff to compare and make sure the configuration is correct.
+If you have previously backup your {OpenStackShort} services configuration file from the old environment:
+xref:reviewing-the-openstack-control-plane-configuration_{context}[Reviewing the OpenStack control plane configruation] you can use os-diff to compare and make sure the configuration is correct.
 
 ----
 pushd os-diff
@@ -472,16 +466,15 @@ pushd os-diff
 
 This will produce the difference between both ini configuration files.
 
-Patch OpenStackControlPlane to deploy Glance with Ceph backend:
+Patch OpenStackControlPlane to deploy {image_service} with Ceph backend:
 
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch-file glance_patch.yaml
 ----
 
-== Post-checks
+.Verification
 
-=== Test the glance service from the OpenStack CLI
-
+* Test the glance service from the {OpenStackShort} CLI.
 
 You can compare and make sure the configuration has been correctly applied to the glance pods by running
 
@@ -512,7 +505,7 @@ ceph.client.openstack.keyring
 ceph.conf
 ----
 
-Ceph secrets are properly mounted, at this point let's move to the OpenStack
+Ceph secrets are properly mounted, at this point let's move to the {OpenStackShort}
 CLI and check the service is active and the endpoints are properly updated.
 
 ----
@@ -538,8 +531,7 @@ Check that the images that you previously listed in the source Cloud are availab
 +--------------------------------------+--------+--------+
 ----
 
-=== Image upload
-
+* Image upload.
 You can test that an image can be created on the adopted service.
 
 ----

@@ -3,7 +3,7 @@
 = Migrating OVN data
 
 This document describes how to move OVN northbound and southbound databases
-from the original {osp_prev_long} deployment to `ovsdb-server` instances running in the {OpenShift} cluster.
+from the original {rhos_prev_long} deployment to `ovsdb-server` instances running in the {OpenShift} cluster.
 While it may be argued that the control plane Neutron ML2/OVN driver and OVN northd service will reconstruct the databases on startup, the reconstruction may be time consuming on large existing clusters. The procedure below allows to speed up data migration and avoid unnecessary data plane disruptions due to incomplete OpenFlow table contents.
 
 .Prerequisites

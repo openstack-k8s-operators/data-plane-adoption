@@ -1,0 +1,21 @@
+[id="adopting-openstack-control-plane-services_{context}"]
+
+:context: adopt-control-plane
+
+= Adopting {rhos_prev_long} control plane services
+
+Adopt your {rhos_prev_long} {rhos_prev_ver} control plane services to deploy them in the {rhos_long} {rhos_curr_ver} control plane.
+
+include::../modules/proc_adopting-the-identity-service.adoc[leveloffset=+1]
+
+include::../modules/proc_adopting-key-manager-service.adoc[leveloffset=+1]
+
+include::../modules/proc_adopting-the-networking-service.adoc[leveloffset=+1]
+
+include::../modules/proc_adopting-the-object-storage-service.adoc[leveloffset=+1]
+
+include::../modules/proc_adopting-the-image-service.adoc[leveloffset=+1]
+
+include::../modules/proc_adopting-the-placement-service.adoc[leveloffset=+1]
+
+include::../modules/proc_adopting-the-compute-service.adoc[leveloffset=+1]

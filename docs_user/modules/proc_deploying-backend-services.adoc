@@ -2,7 +2,7 @@
 
 = Deploying backend services
 
-Create the `OpenStackControlPlane` custom resource (CR) with basic backend services deployed, and all the {osp_prev_long} ({OpenStackShort}) services disabled. This will be the foundation of the control plane.
+Create the `OpenStackControlPlane` custom resource (CR) with basic backend services deployed, and all the {rhos_prev_long} ({OpenStackShort}) services disabled. This will be the foundation of the control plane.
 
 In subsequent steps, you import the original databases and then add
 {OpenStackShort} control plane services.
@@ -10,7 +10,7 @@ In subsequent steps, you import the original databases and then add
 .Prerequisites
 
 * The cloud that you want to adopt is up and running, and it is on the
-{OpenStackShort} {osp_prev_ver} release.
+{OpenStackShort} {rhos_prev_ver} release.
 * A VM instance named `test` is running on the source cloud and its
 floating IP is set into `FIP` env var. You can use a helper script to create that test VM.
 //xref:../docs_dev/assemblies/development_environment.adoc#virtual-machine-steps[helper script] kgilliga: Engineers, do we want this link here? It points to dev docs.

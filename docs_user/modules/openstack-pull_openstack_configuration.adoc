@@ -1,4 +1,4 @@
-[id="pulling-the-openstack-configuration_{context}"]
+[id="reviewing-the-openstack-control-plane-configuration_{context}"]
 
 //kgilliga: This module will be converted to a procedure and likely nested under the planning assembly.
 

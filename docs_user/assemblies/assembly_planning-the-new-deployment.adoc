@@ -4,7 +4,7 @@
 
 = Planning the new deployment
 
-Just like you did back when you installed your director-deployed {osp_prev_long}, the
+Just like you did back when you installed your director-deployed {rhos_prev_long}, the
 upgrade/migration to the control plane requires planning various aspects
 of the environment such as node roles, planning your network topology, and
 storage.
