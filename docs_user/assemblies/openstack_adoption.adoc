@@ -10,10 +10,6 @@ ifdef::context[:parent-context: {context}]
 :toclevels: 3
 
 include::../modules/openstack-pull_openstack_configuration.adoc[leveloffset=+1]
-include::../modules/proc_adopting-the-orchestration-service.adoc[leveloffset=+1]
-include::../modules/openstack-telemetry_adoption.adoc[leveloffset=+1]
-include::../modules/openstack-autoscaling_adoption.adoc[leveloffset=+1]
-include::../modules/openstack-stop_remaining_services.adoc[leveloffset=+1]
 include::../modules/openstack-dataplane_adoption.adoc[leveloffset=+1]
 include::../modules/openstack-rolling_back.adoc[leveloffset=+1]
 
