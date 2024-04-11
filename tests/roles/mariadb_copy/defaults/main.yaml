@@ -1,1 +1,2 @@
+edpm_node_hostname: standalone.localdomain
 mariadb_copy_tmp_dir: tmp/mariadb

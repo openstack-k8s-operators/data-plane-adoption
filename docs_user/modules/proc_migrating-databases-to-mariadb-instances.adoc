@@ -51,7 +51,7 @@ STORAGE_CLASS=crc-csi-hostpath-provisioner
 SOURCE_MARIADB_IP=192.168.122.99
 declare -A SOURCE_GALERA_MEMBERS
 SOURCE_GALERA_MEMBERS=(
-  ["standalone.ooo.test"]=192.168.122.100
+  ["standalone.localdomain"]=192.168.122.100
   # ...
 )
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')

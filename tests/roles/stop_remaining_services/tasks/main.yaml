@@ -8,7 +8,7 @@
       EDPM_PRIVATEKEY_PATH="{{ edpm_privatekey_path }}"
       declare -A computes
       computes=(
-        ["standalone.ooo.test"]="{{ edpm_node_ip }}"
+        ["{{ edpm_node_hostname }}"]="{{ edpm_node_ip }}"
       )
 
 - name: stop pacemaker services
