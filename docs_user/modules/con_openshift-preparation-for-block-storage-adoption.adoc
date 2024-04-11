@@ -115,7 +115,7 @@ If you are using labels to restrict the nodes where the Block Storage services a
 the xref:about-node-selector_planning[About node selector] to limit the effects of the
 `MachineConfig` to only the nodes where your services may run.
 +
-If you are using a toy single node deployment to test the process, you might need to replace `worker` with `master` in the `MachineConfig`.
+If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
 
 //For production deployments using iSCSI volumes, we always recommend setting up
 //multipathing, please look at the <<multipathing,multipathing section>> to see
@@ -176,7 +176,7 @@ services are running, you need to use a `MachineConfigPool` as described in
 the xref:about-node-selector_planning[About node selector] to limit the effects of the
 `MachineConfig` to only the nodes where your services may run.
 +
-If you are using a toy single node deployment to test the process you migt need to replace `worker` with `master` in the `MachineConfig`.
+If you are using a single node deployment to test the process,replace `worker` with `master` in the `MachineConfig`.
 +
 You are only loading the `nvme-fabrics` module because it takes care of loading
 the transport specific modules (tcp, rdma, fc) as needed.
@@ -250,17 +250,14 @@ spec:
 +
 If you are using labels to restrict the nodes where Block Storage
 services are running you need to use a `MachineConfigPool` as described in
-the xref:about-node-selector_planning[About node selector] to limit the effects of the
+the xref:about-node-selector_planning[About node selector] to limit the effects of the 
 `MachineConfig` to only the nodes where your services may run.
 +
-If you are using a toy single node deployment to test the process you might need to replace `worker` with `master` in the `MachineConfig`.
+If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
 +
-To configure the Block Storage services to use multipathing you need to enable the
+To configure the Block Storage services to use multipathing, enable the
 `use_multipath_for_image_xfer` configuration option in all the backend sections
-and in the `[DEFAULT]` section for the backup service, but in control plane
-deployments you do not need to worry about it, because that's the default. So as
-long as you do not override it setting `use_multipath_for_image_xfer = false` then multipathing will work as long as the service is running on the {OpenShiftShort} host.
+and in the `[DEFAULT]` section for the backup service. This is the default in control plane deployments. Multipathing works as long as the service is running on the {OpenShiftShort} host. Do not override this option by setting `use_multipath_for_image_xfer = false`. 
 
 //*TODO:* Add, or at least mention, the Nova eDPM side for Multipathing once
 //it's implemented.
-
