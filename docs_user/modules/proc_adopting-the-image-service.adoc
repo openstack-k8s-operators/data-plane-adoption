@@ -10,9 +10,9 @@ is supposed to be disabled, should be patched to start the service with the
 configuration parameters provided by the source environment.
 
 When the procedure is over, the expectation is to see the `GlanceAPI` service
-up and running: the {identity_service} endpoints should be updated and the same backend of the source Cloud will be available. If the conditions above are met, the adoption is considered concluded.
+up and running: the {identity_service} endpoints are updated and the same backend of the source Cloud is available. If the conditions above are met, the adoption is considered concluded.
 
-This guide also assumes that:
+This guide also assumes that: 
 
 . A `TripleO` environment (the source Cloud) is running on one side;
 . A `SNO` / `CodeReadyContainers` is running on the other side;
@@ -30,7 +30,7 @@ As already done for https://github.com/openstack-k8s-operators/data-plane-adopti
 .Using {object_storage} backend
 
 When {image_service} is deployed with {object_storage_first_ref} as a backend in the source environment based
-on TripleO, the control plane `glanceAPI` instance should be deployed with the following
+on TripleO, the control plane `glanceAPI` instance is deployed with the following
 configuration:
 
 ----
