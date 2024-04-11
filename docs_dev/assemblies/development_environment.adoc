@@ -46,6 +46,10 @@ make crc_attach_default_interface
 
 === CRC environment with Openstack ironic
 
+[IMPORTANT]
+This section is specific to deploying Nova with Ironic backend. Skip
+it if you want to deploy Nova normally.
+
 Create the BMaaS network (`crc-bmaas`) and virtual baremetal nodes controlled by
 a RedFish BMC emulator.
 
@@ -118,6 +122,7 @@ If `EDPM_COMPUTE_CEPH_ENABLED=false` is set, TripleO configures `Glance` with
 Use the https://github.com/openstack-k8s-operators/install_yamls/tree/main/devsetup[install_yamls devsetup]
 to create a virtual machine (edpm-compute-0) connected to the isolated networks.
 
+[IMPORTANT]
 To use OSP 17.1 content to deploy TripleO Standalone, follow the
 https://url.corp.redhat.com/devel-rhoso-adoption[guide for setting up downstream content]
 for `make standalone`.
