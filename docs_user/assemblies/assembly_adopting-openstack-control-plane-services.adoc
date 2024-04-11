@@ -30,4 +30,6 @@ include::../modules/proc_adopting-telemetry-services.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-autoscaling.adoc[leveloffset=+1]
 
+include::assembly_reviewing-the-openstack-control-plane-configuration.adoc[leveloffset=+1]
+
 include::../modules/proc_rolling-back-the-control-plane-adoption.adoc[leveloffset=+1]

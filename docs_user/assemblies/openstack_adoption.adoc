@@ -9,7 +9,7 @@ ifdef::context[:parent-context: {context}]
 :toc: left
 :toclevels: 3
 
-include::../modules/openstack-pull_openstack_configuration.adoc[leveloffset=+1]
+include::../modules/openstack-stop_remaining_services.adoc[leveloffset=+1]
 include::../modules/openstack-dataplane_adoption.adoc[leveloffset=+1]
 
 ifdef::parent-context[:context: {parent-context}]

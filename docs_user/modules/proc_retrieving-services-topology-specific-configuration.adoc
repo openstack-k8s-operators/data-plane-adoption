@@ -1,93 +1,10 @@
-[id="reviewing-the-openstack-control-plane-configuration_{context}"]
+[id="proc_retrieving-services-topology-specific-configuration_{context}"]
 
-//kgilliga: This module will be converted to a procedure and likely nested under the planning assembly.
+= Retrieving services from a topology specific-configuration
 
-= Pulling the OpenStack configuration
+//Check xrefs
 
-Before starting the adoption workflow, pull the configuration from the OpenStack services and TripleO on your file system to back up the configuration files. You can then use the files later, during the configuration of the adopted services, and for the record to compare and make sure nothing has been missed or misconfigured.
-
-Make sure you have pull the os-diff repository and configure according to your environment:
-link:planning.md#Configuration tooling[Configure os-diff]
-
-== Pull configuration from a TripleO deployment
-
-Before starting you need to update your ssh parameters according to your environment in the os-diff.cfg.
-Os-diff will use those parameters to connect to your Director node, query and download the configuration files:
-
-----
-ssh_cmd=ssh -F ssh.config standalone
-container_engine=podman
-connection=ssh
-remote_config_path=/tmp/tripleo
-----
-
-Make sure the ssh command you provide in `ssh_cmd` parameter is correct and with key authentication.
-
-Once it's done, you can start to pull configuration from your OpenStack servies.
-
-All the services are describes in a yaml file:
-
-https://github.com/openstack-k8s-operators/os-diff/blob/main/config.yaml[service config parameters]
-
-You can enable or disable the services you want then you can start to pull the configuration on your local file system.
-Example with default keystone:
-
-[source,yaml]
-----
-# service name and file location
-services:
-  # Service name
-  keystone:
-    # Bool to enable/disable a service (not implemented yet)
-    enable: true
-    # Pod name, in both OCP and podman context.
-    # It could be strict match or will only just grep the podman_name
-    # and work with all the pods which matched with pod_name.
-    # To enable/disable use strict_pod_name_match: true/false
-    podman_name: keystone
-    pod_name: keystone
-    container_name: keystone-api
-    # pod options
-    # strict match for getting pod id in TripleO and podman context
-    strict_pod_name_match: false
-    # Path of the config files you want to analyze.
-    # It could be whatever path you want:
-    # /etc/<service_name> or /etc or /usr/share/<something> or even /
-    # @TODO: need to implement loop over path to support multiple paths such as:
-    # - /etc
-    # - /usr/share
-    path:
-      - /etc/
-      - /etc/keystone
-      - /etc/keystone/keystone.conf
-      - /etc/keystone/logging.conf
-----
-
-Duplicate the keystone example to each OpenStack services you want.
-
-Then, you can pull the configuration with this command:
-
-----
-pushd os-diff
-./os-diff pull
-----
-
-The configuration will be pulled and stored by default:
-
-----
-/tmp/tripleo/
-----
-
-Once it's done, you should have into your local path a directory per services such as:
-
-----
-  ▾ tmp/
-    ▾ tripleo/
-      ▾ glance/
-      ▾ keystone/
-----
-
-== Get services topology specific configuration
+.Variables
 
 Define the shell variables used in the steps below. The values are
 just illustrative, use values that are correct for your environment:
@@ -104,9 +21,11 @@ SOURCE_MARIADB_IP=192.168.122.100
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
-Export shell variables for the following outputs to compare it with post-adoption values later on:
+.Procedure
 
-* Test connection to the original DB:
+. Export shell variables for the following outputs to compare it with post-adoption values later on: 
+Test connection to the original database:
+//kgilliga: Are these two separate actions, or are both happening in the following command?
 +
 ----
 export PULL_OPENSTACK_CONFIGURATION_DATABASES=$(oc run mariadb-client -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
@@ -114,9 +33,9 @@ export PULL_OPENSTACK_CONFIGURATION_DATABASES=$(oc run mariadb-client -q --image
 echo "$PULL_OPENSTACK_CONFIGURATION_DATABASES"
 ----
 +
-Note the `nova`, `nova_api`, `nova_cell0` databases residing in the same DB host.
+Note that the `nova`, `nova_api`, `nova_cell0` databases reside in the same DB host.
 
-* Run mysqlcheck on the original DB to look for things that are not OK:
+. Run `mysqlcheck` on the original database to look for inaccuracies:
 +
 ----
 export PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc run mariadb-client -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
@@ -124,7 +43,7 @@ export PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc run mariadb-client -q --
 echo "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"
 ----
 
-* Get Nova cells mappings from database:
+. Get the {compute_service_first_ref} cells mappings from the database:
 +
 ----
 export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
@@ -133,28 +52,27 @@ export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client 
 echo "$PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS"
 ----
 
-* Get the host names of the registered Nova compute services:
+. Get the host names of the registered Compute services:
 +
 ----
-
 export PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES=$(oc run mariadb-client -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
     mysql -rsh "$SOURCE_MARIADB_IP" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" nova_api -e \
     "select host from nova.services where services.binary='nova-compute';")
 echo "$PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES"
 ----
 
-* Get the list of mapped Nova cells:
+. Get the list of mapped the {compute_service} cells:
 +
 ----
 export PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS=$($CONTROLLER_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)
 echo "$PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS"
 ----
-
++
 After the source control plane services shutdown, if either of the exported
 values lost, it could be no longer evaluated again. Preserving the exported
-values in an env file should protect you from such a situation:
+values in an environment file should protect you from such a situation.
 
-* Store exported variables for future use
+. Store exported variables for future use:
 +
 ----
 cat > ~/.source_cloud_exported_variables << EOF
@@ -173,7 +91,7 @@ EOF
 chmod 0600 ~/.source_cloud_exported_variables
 ----
 
-* Optionally, if there are neutron-sriov-nic-agent agents running in the deployment, get its configuration:
+. Optional: If there are neutron-sriov-nic-agent agents running in the deployment, get its configuration:
 +
 ----
 podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE mysql \

@@ -1,5 +1,7 @@
 [id="con_bare-metal-provisioning-service-configurations_{context}"]
 
+//Check xrefs
+
 = Bare Metal Provisioning service configurations
 
 As described in xref:planning-the-new-deployment_planning[Planning the new deployment], {bare_metal_first_ref} is configured using
