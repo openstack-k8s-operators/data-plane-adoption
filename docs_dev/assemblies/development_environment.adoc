@@ -55,7 +55,7 @@ cd ~/install_yamls
 make nmstate
 make namespace
 cd devsetup  # back to install_yamls/devsetup
-make bmaas
+make bmaas BMAAS_NODE_COUNT=2
 ----
 
 A node definition YAML file to use with the `openstack baremetal

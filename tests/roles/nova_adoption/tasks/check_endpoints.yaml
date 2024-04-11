@@ -1,0 +1,13 @@
+# TODO(bogdando): implement podified FQDNs check for Nova endpoints
+- name: check that Nova endpoints are defined and pointing to the podified FQDNs and that Nova API responds
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    ${BASH_ALIASES[openstack]} endpoint list | grep nova
+    ${BASH_ALIASES[openstack]} server list
+  register: nova_responding_result
+  until: nova_responding_result is success
+  retries: 60
+  delay: 2

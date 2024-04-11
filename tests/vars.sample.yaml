@@ -32,3 +32,6 @@ timesync_ntp_servers:
 
 # Auth URL to use for adopted Keystone.
 auth_url: http://keystone-public-openstack.apps-crc.testing
+
+# Set this to true if adopting the ironic services (ironic + ironic-inspector + nova w/compute-ironic)
+ironic_adoption: false

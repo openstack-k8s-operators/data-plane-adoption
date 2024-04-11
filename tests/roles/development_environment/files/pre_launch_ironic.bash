@@ -1,5 +1,40 @@
 set -e
 
+function wait_node_state() {
+  local node_state=$1
+  local retries=50
+  local counter=0
+  set +e
+  until ! ${BASH_ALIASES[openstack]} baremetal node list -f value -c "Provisioning\ State" | grep -P "^(?!${node_state}).*$"; do
+    if [[ "$counter" -eq "$retries" ]]; then
+      echo "ERROR: Timeout. Nodes did not reach provisioning state: ${node_state}"
+      exit 1
+    fi
+    echo "Waiting for nodes to reach provisioning state: ${node_state}"
+    sleep 10
+    ((counter++))
+  done
+  set -e
+}
+
+function wait_image_active() {
+  local image_name=$1
+  local retries=100
+  local counter=0
+  set +e
+  until ! ${BASH_ALIASES[openstack]} image show  Fedora-Cloud-Base-38 -f value -c status | grep -P "^(?!active).*$"; do
+    if [[ "$counter" -eq "$retries" ]]; then
+      echo "ERROR: Timeout. Image: ${image_name} did not reach state: active"
+      exit 1
+    fi
+    echo "Waiting for image \"${image_name}\" to reach state \"active\""
+    sleep 10
+    ((counter++))
+  done
+  set -e
+}
+
+
 # If the snapshot was reverted, and time is way off we get SSL issues in agent<->ironic connection
 # Workaround by restarting chronyd.service
 ssh -i $EDPM_PRIVATEKEY_PATH root@192.168.122.100 systemctl restart chronyd.service
@@ -37,22 +72,29 @@ URL=https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64
 curl --silent --show-error -o /tmp/${IMG} -L $URL
 DISK_FORMAT=$(qemu-img info /tmp/${IMG} | grep "file format:" | awk '{print $NF}')
 ${BASH_ALIASES[openstack]} image create --container-format bare --disk-format ${DISK_FORMAT} Fedora-Cloud-Base-38 < /tmp/${IMG}
+wait_image_active Fedora-Cloud-Base-38
+
 
 export BAREMETAL_NODES=$(${BASH_ALIASES[openstack]} baremetal node list -c UUID -f value)
 # Manage nodes
 for node in $BAREMETAL_NODES; do
-  ${BASH_ALIASES[openstack]} baremetal node manage $node --wait 120
+  ${BASH_ALIASES[openstack]} baremetal node manage $node
 done
+wait_node_state "manageable"
 
 # Inspect baremetal nodes
 for node in $BAREMETAL_NODES; do
-  ${BASH_ALIASES[openstack]} baremetal node inspect $node --wait 300
+  ${BASH_ALIASES[openstack]} baremetal node inspect $node
+  sleep 10
 done
+wait_node_state "manageable"
 
 # Provide nodes
 for node in $BAREMETAL_NODES; do
-  ${BASH_ALIASES[openstack]} baremetal node provide $node --wait 300
+  ${BASH_ALIASES[openstack]} baremetal node provide $node
+  sleep 10
 done
+wait_node_state "available"
 
 # Wait for nova to be aware of the node
 sleep 60
