@@ -1,0 +1,45 @@
+[id="con_bare-metal-provisioning-service-configurations_{context}"]
+
+= Bare Metal Provisioning service configurations
+
+As described in xref:planning-the-new-deployment_planning[Planning the new deployment], {bare_metal_first_ref} is configured using
+configuration snippets instead of using obscure configuration parameters
+defined by the installer.
+
+{OpenStackPreviousInstaller} generally took care to not override the defaults of the {bare_metal}, however as with any system of descreet configuration management attempting to provide a cross-version compatability layer, some configuration was certainly defaulted in particular ways. For example, PXE Loader file names were often overridden at intermediate layers, and you will thus want to pay particular attention to the settings you choose to apply in your adopted deployment. The operator attempts to apply reasonable working default configuration, but if you override them with prior configuration, your experience may not be ideal or your new {bare_metal} will fail to operate. Similarly, additional configuration may be necessary, for example
+if your `ironic.conf` has additional hardware types enabled and in use.
+
+Furthermore, the model of reasonable defaults includes commonly used hardware-types and driver interfaces. For example, if you previously needed to enable the `redfish-virtual-media` boot interface and the `ramdisk` deploy interface, the good news is you don't need to, they are enabled by default. One aspect to be on the watch for after completing adoption is when adding new bare metal nodes, the driver interface selection occurs based upon order of presidence in the configuration if not explicitly set on the node creation request or as an established default in `ironic.conf`.
+
+That being said, some configuration parameters are provided as either a convenience to the operator so they don't need to be set on an individual node level while also needing to know precise values, for example, network UUID values, or it is centrally configured in `ironic.conf` as the setting controls behaivor a security control.
+
+The settings, if configured, and formatted as [section] and parameter name, are critical to be maintained from the prior deployment to the new deployment as it will govern quite a bit of the underlying behavior and values in the previous configuration, would have used specific values if
+set.
+
+* [neutron]cleaning_network
+* [neutron]provisioning_network
+* [neutron]rescuing_network
+* [neutron]inspection_network
+* [conductor]automated_clean
+* [deploy]erase_devices_priority
+* [deploy]erase_devices_metadata_priority
+* [conductor]force_power_state_during_sync
+// FIXME: The setting above likely should be True by default in deployments, but would have been *false* by defaults on prior underclouds.
+
+The following parameters *can* be set individually on a node, however, some operators choose to use embedded configuration options to avoid the need to set it individually when creating/managing bare metal nodes. We recommend you check your prior ironic.conf file for these parameters, and if set apply as specific override configuration.
+
+* [conductor]bootloader
+* [conductor]rescue_ramdisk
+* [conductor]rescue_kernel
+* [conductor]deploy_kernel
+* [conductor]deploy_ramdisk
+
+Finally, a parameter which may be important based upon your configuration and experience, are the instances of `kernel_append_params`, formerly `pxe_append_params` in the `[pxe]` and `[redfish]` configuration sections. Largely this parameter is used to appy boot time options like "console" for the deployment ramdisk and as such often seeks to be changed.
+
+// TODO:
+// Conductor Groups?!
+
+As a warning, hardware types set via the `ironic.conf` `enabled_hardware_types` parameter and hardware type driver interfaces starting with `staging-` are not available to be migrated into an adopted configuration.
+
+Furthermore, {OpenStackPreviousInstaller}-based deployments made architectural decisions based upon self-management of services. When adopting deployments, you don't necessarilly need multiple replicas of secondary services such as the Introspection service. Should the host the container is running upon fail, OpenShift will restart the container on another host. The short-term transitory loss 
+//kgilliga: This last sentence tails off.
