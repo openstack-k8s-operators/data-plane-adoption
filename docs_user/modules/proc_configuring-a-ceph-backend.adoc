@@ -13,7 +13,7 @@ can use it across all {rhos_prev_long} services.
 Using the same user across the services serves two purposes:
 
 * The capabilities of the user required to interact with {rhos_component_storage_file}
-became far simpler and hence, more became more secure with {osp_acro} {osp_curr_ver}.
+became far simpler and hence, more became more secure with {rhos_acro} {rhos_curr_ver}.
 * It is simpler to create a common ceph secret (keyring and ceph config
 file) and propagate the secret to all services that need it.
 

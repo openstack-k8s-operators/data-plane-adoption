@@ -1,0 +1,65 @@
+[id="preparing-the-block-storage-service_{context}"]
+
+:context: preparing-block-storage
+
+= Preparing the {block_storage} configurations for adoption
+
+As described in xref:planning-the-new-deployment_planning[Planning the new deployment], {block_storage_first_ref} is configured using
+configuration snippets instead of using configuration parameters
+defined by the installer.
+
+The recommended way to deploy {block_storage} volume backends has changed to remove old
+limitations, add flexibility, and improve operations.
+
+When deploying with {OpenStackPreviousInstaller} you used to run a single {block_storage} volume service with
+all your backends (each backend would run on its own process), and even though
+that way of deploying is still supported, it is not recommended. It is recommended to use a volume service per backend since it is a superior deployment model.
+
+With an LVM and a Ceph backend you have 2 entries in `cinderVolume` and,
+as mentioned in the limitations section, you cannot set global defaults for all
+volume services, so you have to define it for each of them, like this:
+
+[source,yaml]
+----
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+spec:
+  cinder:
+    enabled: true
+    template:
+      cinderVolume:
+        lvm:
+          customServiceConfig: |
+            [DEFAULT]
+            debug = True
+            [lvm]
+< . . . >
+        ceph:
+          customServiceConfig: |
+            [DEFAULT]
+            debug = True
+            [ceph]
+< . . . >
+----
+
+Reminder that for volume backends that have sensitive information using `Secret`
+and the `customServiceConfigSecrets` key is the recommended way to go.
+
+For adoption instead of using a whole deployment manifest you use a targeted
+patch, like you did with other services, and in this patch you will enable the
+different Block Storage services with their specific configurations.
+
+[WARNING]
+Check that all configuration options are still valid for the new
+{rhos_prev_long} version. Configuration options may have been deprecated,
+removed, or added. This applies to both backend driver specific configuration
+options and other generic options.
+
+There are 2 ways to prepare a {block_storage} configuration for adoption, tailor-making
+it or doing it quick and dirty. There is no difference in how {block_storage} operates with both methods, though tailor-making it is recommended whenever possible.
+
+include::../modules/proc_preparing-block-storage-service-by-customizing-configuration.adoc[leveloffset=+1]
+
+include::../modules/proc_preparing-block-storage-service-by-using-agnostic-config-file.adoc[leveloffset=+1]

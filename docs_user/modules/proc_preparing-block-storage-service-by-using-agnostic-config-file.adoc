@@ -1,0 +1,49 @@
+[id="preparing-block-storage-by-using-agnostic-configuration-file_{context}"]
+
+= Preparing the {block_storage} by using an agnostic configuration file
+
+The quick and dirty process is more straightforward:
+
+.Procedure
+. Create an agnostic configuration file removing any specifics from the old
+deployment's `cinder.conf` file, like the `connection` in the `[dabase]`
+section, the `transport_url` and `log_dir` in `[DEFAULT]`, the whole
+`[coordination]` and `[barbican]` sections, etc..
+. Assuming the configuration has sensitive information, drop the modified
+contents of the whole file into a `Secret`.
+. Reference this secret in all the services, creating a {block_storage_first_ref} volumes section
+for each backend and just adding the respective `enabled_backends` option.
+. Add external files as mentioned in the last bullet of the tailor-made
+configuration explanation.
+
+Example of what the quick and dirty configuration patch would look like:
+
+[source,yaml]
+----
+   spec:
+     cinder:
+       enabled: true
+       template:
+         cinderAPI:
+           customServiceConfigSecrets:
+             - cinder-conf
+         cinderScheduler:
+           customServiceConfigSecrets:
+             - cinder-conf
+         cinderBackup:
+           customServiceConfigSecrets:
+             - cinder-conf
+         cinderVolume:
+           lvm1:
+             customServiceConfig: |
+               [DEFAULT]
+               enabled_backends = lvm1
+             customServiceConfigSecrets:
+               - cinder-conf
+           lvm2:
+             customServiceConfig: |
+               [DEFAULT]
+               enabled_backends = lvm2
+             customServiceConfigSecrets:
+               - cinder-conf
+----

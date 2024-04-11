@@ -1,7 +1,5 @@
 [id="adopting-telemetry-services_{context}"]
 
-//:context: adopting-telemetry
-//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
 //Check xref contexts.
 
 = Adopting Telemetry services

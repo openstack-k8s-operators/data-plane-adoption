@@ -1,0 +1,117 @@
+[id="preparing-block-storage-by-customizing-configuration_{context}"]
+
+= Preparing the {block_storage} by customizing the configuration
+
+The high level explanation of the tailor-made approach is:
+
+.Procedure
+. Determine what part of the configuration is generic for all the {block_storage_first_ref}
+services and remove anything that would change when deployed in {OpenShift}, like
+the `connection` in the `[dabase]` section, the `transport_url` and `log_dir` in
+`[DEFAULT]`, the whole `[coordination]` and `[barbican]` sections.  This
+configuration goes into the `customServiceConfig` (or a `Secret` and then used
+in `customServiceConfigSecrets`) at the `cinder: template:` level.
+. Determine if there's any scheduler specific configuration and add it to the
+`customServiceConfig` section in `cinder: template: cinderScheduler`.
+. Determine if there's any API specific configuration and add it to the
+`customServiceConfig` section in `cinder: template: cinderAPI`.
+. If you have {block_storage} backup deployed, then you get the {block_storage} backup relevant
+configuration options and add them to `customServiceConfig` (or a `Secret` and
+then used in `customServiceConfigSecrets`) at the `cinder: template:
+cinderBackup:` level. You should remove the `host` configuration in the
+`[DEFAULT]` section to facilitate supporting multiple replicas in the future.
+. Determine the individual volume backend configuration for each of the
+drivers. The configuration will not only be the specific driver section, it
+should also include the `[backend_defaults]` section and FC zoning sections is
+they are being used, because the {block_storage} operator doesn't support a
+`customServiceConfig` section global for all volume services.  Each backend
+would have its own section under `cinder: template: cinderVolumes` and the
+configuration would go in `customServiceConfig` (or a `Secret` and then used in
+`customServiceConfigSecrets`).
+. Check if any of the {block_storage} volume drivers being used requires a custom vendor
+image. If they do, find the location of the image in the vendor's instruction
+available in the w https://catalog.redhat.com/software/search?target_platforms=Red%20Hat%20OpenStack%20Platform&p=1&functionalCategories=Data%20storage[OpenStack Cinder ecosystem
+page]
+and add it under the specific's driver section using the `containerImage` key.
+The following example shows a CRD for a Pure Storage array with a certified driver:
++
+[source,yaml]
+----
+spec:
+  cinder:
+    enabled: true
+    template:
+      cinderVolume:
+        pure:
+          containerImage: registry.connect.redhat.com/purestorage/openstack-cinder-volume-pure-rhosp-18-0'
+          customServiceConfigSecrets:
+            - openstack-cinder-pure-cfg
+< . . . >
+----
+
+. External files: Block Storage services sometimes use external files, for example for
+a custom policy, or to store credentials, or SSL CA bundles to connect to a
+storage array, and you need to make those files available to the right
+containers. To achieve this, you use `Secrets` or `ConfigMap` to store the
+information in {OpenShiftShort} and then the `extraMounts` key. For example, for the
+Ceph credentials stored in a `Secret` called `ceph-conf-files` you patch
+the top level `extraMounts` in `OpenstackControlPlane`:
++
+[source,yaml]
+----
+spec:
+  extraMounts:
+  - extraVol:
+    - extraVolType: Ceph
+      mounts:
+      - mountPath: /etc/ceph
+        name: ceph
+        readOnly: true
+      propagation:
+      - CinderVolume
+      - CinderBackup
+      - Glance
+      volumes:
+      - name: ceph
+        projected:
+          sources:
+          - secret:
+              name: ceph-conf-files
+----
++
+But for a service specific one, like the API policy, you do it directly
+on the service itself. In this example, you include the Block Storage API
+configuration that references the policy you are adding from a `ConfigMap`
+called `my-cinder-conf` that has a key `policy` with the contents of the
+policy:
++
+[source,yaml]
+----
+spec:
+  cinder:
+    enabled: true
+    template:
+      cinderAPI:
+        customServiceConfig: |
+           [oslo_policy]
+           policy_file=/etc/cinder/api/policy.yaml
+      extraMounts:
+      - extraVol:
+        - extraVolType: Ceph
+          mounts:
+          - mountPath: /etc/cinder/api
+            name: policy
+            readOnly: true
+          propagation:
+          - CinderAPI
+          volumes:
+          - name: policy
+            projected:
+              sources:
+              - configMap:
+                  name: my-cinder-conf
+                  items:
+                    - key: policy
+                      path: policy.yaml
+----
+

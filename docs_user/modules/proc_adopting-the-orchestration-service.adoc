@@ -1,57 +1,52 @@
-[id="adopting-heat_{context}"]
+[id="adopting-the-orchestration-service_{context}"]
 
-//:context: adopting-heat
-//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
+= Adopting the {orchestration}
 
-= Adopting Heat
-
-Adopting Heat means that an existing `OpenStackControlPlane` CR, where Heat
+Adopting the {orchestration_first_ref} means that an existing `OpenStackControlPlane` custom resource (CR), where {orchestration}
 is supposed to be disabled, should be patched to start the service with the
 configuration parameters provided by the source environment.
 
 After the adoption process has been completed, a user can expect that they
-will then have CR's for `Heat`, `HeatAPI`, `HeatEngine` and `HeatCFNAPI`.
-Additionally, a user should have endpoints created within Keystone to facilitate
+will then have CRs for `Heat`, `HeatAPI`, `HeatEngine` and `HeatCFNAPI`.
+Additionally, a user should have endpoints created within {identity_service_first_ref} to facilitate
 the above mentioned servies.
 
 This guide also assumes that:
 
-. A `TripleO` environment (the source Cloud) is running on one side;
-. A OpenShift environment is running on the other side.
+. A `{OpenStackPreviousInstaller}` environment (the source Cloud) is running on one side;
+. A {OpenShift} environment is running on the other side.
 
-== Prerequisites
+.Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB and Keystone
+* Previous Adoption steps completed. Notably, MariaDB and {identity_service}
 should be already adopted.
-* In addition, if your existing Heat stacks contain resources from other services
-such as Neutron, Nova, Swift, etc. Those services should be adopted first before
-trying to adopt Heat.
+* In addition, if your existing {orchestration} stacks contain resources from other services
+such as {networking_first_ref}, {compute_service_first_ref}, {object_storage_first_ref}, etc. Those services should be adopted first before
+trying to adopt {orchestration}.
 
-== Procedure - Heat adoption
-
+.Procedure
+//kgilliga: I get an error when I click this link. Do we need it in the downstream docs?
 As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Heat Adoption follows a similar pattern.
 
-Patch the `osp-secret` to update the `HeatAuthEncryptionKey` and `HeatPassword`. This needs
-to match what you have configured in the existing TripleO Heat configuration.
-
+. Patch the `osp-secret` to update the `HeatAuthEncryptionKey` and `HeatPassword`. This needs to match what you have configured in the existing {OpenStackPreviousInstaller} {orchestration} configuration.
 You can retrieve and verify the existing `auth_encryption_key` and `service` passwords via:
-
++
 ----
 [stack@rhosp17 ~]$ grep -E 'HeatPassword|HeatAuth' ~/overcloud-deploy/overcloud/overcloud-passwords.yaml
   HeatAuthEncryptionKey: Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2
   HeatPassword: dU2N0Vr2bdelYH7eQonAwPfI3
 ----
 
-And verifying on one of the Controllers that this is indeed the value in use:
-
+. And verifying on one of the Controllers that this is indeed the value in use:
++
 ----
 [stack@rhosp17 ~]$ ansible -i overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml overcloud-controller-0 -m shell -a "grep auth_encryption_key /var/lib/config-data/puppet-generated/heat/etc/heat/heat.conf | grep -Ev '^#|^$'" -b
 overcloud-controller-0 | CHANGED | rc=0 >>
 auth_encryption_key=Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2
 ----
 
-This password needs to be base64 encoded and added to the `osp-secret`
-
+. This password needs to be base64 encoded and added to the `osp-secret`
++
 ----
 ❯ echo Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2 | base64
 UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzIK
@@ -60,8 +55,8 @@ UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzIK
 secret/osp-secret patched
 ----
 
-Patch OpenStackControlPlane to deploy Heat:
-
+. Patch `OpenStackControlPlane` to deploy the {orchestration}:
++
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
@@ -81,10 +76,10 @@ spec:
 '
 ----
 
-== Post-checks
+.Verification
 
-Ensure all of the CR's reach the "Setup Complete" state:
-
+. Ensure all of the CRs reach the "Setup Complete" state:
++
 ----
 ❯ oc get Heat,HeatAPI,HeatEngine,HeatCFNAPI
 NAME                           STATUS   MESSAGE
@@ -100,8 +95,8 @@ NAME                                        STATUS   MESSAGE
 heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
 ----
 
-=== Check that Heat service is registered in Keystone
-
+. Check that the {orchestration} is registered in {identity_service}:
++
 ----
  oc exec -it openstackclient -- openstack service list -c Name -c Type
 +------------+----------------+
@@ -118,7 +113,7 @@ heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
 | neutron    | network        |
 +------------+----------------+
 ----
-
++
 ----
 ❯ oc exec -it openstackclient -- openstack endpoint list --service=heat -f yaml
 - Enabled: true
@@ -137,8 +132,8 @@ heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
   URL: http://heat-api-internal.openstack-operators.svc:8004/v1/%(tenant_id)s
 ----
 
-=== Check Heat engine services are up
-
+. Check the {orchestration} engine services are up:
++
 ----
  oc exec -it openstackclient -- openstack orchestration service list -f yaml
 - Binary: heat-engine
@@ -171,10 +166,8 @@ heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
   Updated At: '2023-10-11T21:48:01.000000'
 ----
 
-=== Verify you can now see your Heat stacks again
-
-Test whether you can create networks, subnets, ports, or routers:
-
+. Verify you can now see your the {orchestration} stacks again. Test whether you can create networks, subnets, ports, or routers:
++
 ----
 ❯ openstack stack list -f yaml
 - Creation Time: '2023-10-11T22:03:20Z'
