@@ -1,21 +1,19 @@
 [id="stopping-infrastructure-management-and-compute-services_{context}"]
 
-//:context: stopping-infrastructure-management
-//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
-
-= Stopping infrastructure management
+= Stopping infrastructure management and Compute services
 
 The source cloud's control plane can be decomissioned,
 which is taking down only cloud controllers, database and messaging nodes.
-Nodes that must remain functional are those running the compute, storage,
+Nodes that must remain functional are those running the Compute, storage,
 or networker roles (in terms of composable roles covered by Tripleo Heat
 Templates).
 
-== Variables
+.Variables
 
-Define the shell variables used in the steps below.
-Define the map of compute node name, IP pairs.
-The values are just illustrative and refer to a single node standalone director deployment, use values that are correct for your environment:
+Define the following shell variables.
+Define the map of Compute node name, IP pairs.
+The values are just illustrative and refer to a single node standalone {OpenStackPreviousInstaller} deployment, use values that are correct for your environment: 
+//kgilliga: Is this correct? Standalone director deployment for downstream, standalone tripleo for upstream?
 
 [subs=+quotes]
 ----
@@ -39,17 +37,10 @@ These ssh variables with the ssh commands are used instead of ansible to try to 
 ansible -i $(which tripleo-ansible-inventory) Compute -m shell -a "sudo systemctl stop tripleo_virtqemud.service" -b
 ----
 
-== Stopping remaining services
+.Procedure
 
-Remove the conflicting repositories and packages (in case of a devsetup that
-uses Standalone TripleO) from all compute hosts. That is required to install
-libvirt packages, when these hosts become adopted as External DataPlane Managed
-(EDPM) nodes, where modular libvirt daemons are no longer running in podman
-containers.
-
-These steps can be automated with a simple script that relies on the previously
-defined environmental variables and function:
-
+* Run the following script to remove the conflicting repositories and packages (in case of a devsetup that uses Standalone {OpenStackPreviousInstaller}) from all Compute hosts. That is required to install libvirt packages, when these hosts become adopted as data plane nodes, where modular libvirt daemons are no longer running in podman containers.
++
 ----
 
 PacemakerResourcesToStop=(

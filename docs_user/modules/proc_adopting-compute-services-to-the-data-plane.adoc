@@ -1,46 +1,12 @@
-[id="adopting-dataplane_{context}"]
+[id="adopting-compute-services-to-the-data-plane_{context}"]
 
-//:context: adopting-dataplane
-//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
-//Check xref contexts.
+= Adopting Compute services to the {rhos_acro} data plane
 
-= Data plane adoption
+.Prerequisites
 
-== Prerequisites
-
-* Previous Adoption steps completed.
 * Remaining source cloud xref:stopping-infrastructure-management-and-compute-services_{context}[Stopping infrastructure management and Compute services] on Compute hosts.
-
-____
-*WARNING* This step is a "point of no return" in the data plane adoption
-procedure. The source control plane and data plane services must not
-be ever enabled back, after the data plane is deployed, and control
-plane has taken control over it.
-____
-
-== Variables
-
-Define the shell variables used in the Fast-forward upgrade steps below.
-Set `FIP` to the floating IP address of the `test` VM pre-created earlier on the source cloud.
-Define the map of compute node name, IP pairs.
-The values are just illustrative, use values that are correct for your environment:
-
-----
-PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
-
-alias openstack="oc exec -t openstackclient -- openstack"
-FIP=192.168.122.20
-declare -A computes
-export computes=(
-  ["standalone.localdomain"]="192.168.122.100"
-  # ...
-)
-----
-
-== Pre-checks
-
-* Make sure the IPAM is configured
-
+* Make sure the IPAM is configured:
++
 ----
 oc apply -f - <<EOF
 apiVersion: network.openstack.org/v1beta1
@@ -107,20 +73,35 @@ spec:
       vlan: 22
 EOF
 ----
++
+* In case when `neutron-sriov-nic-agent` is running on the existing Compute nodes, physical device mappings needs to be checked and set the same in the
+`OpenStackDataPlaneNodeSet` custom resource (CR). Those options will need to be set in the `OpenStackDataPlaneNodeSet` CR. For more information, see xref:reviewing-the-openstack-control-plane-configuration_adopt-control-plane[Reviewing the {rhos_prev_long} control plane configuration].
 
-* In case when neutron-sriov-nic-agent is running on the existing compute nodes,
-  physical device mappings needs to be checked and set the same in the
-  OpenStackDataPlaneNodeSet CR. Those options will need to be set in the
-  OpenStackDataPlaneNodeSet CR.
-  For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+.Variables
 
-== Adopting the data plane
+Define the shell variables used in the Fast-forward upgrade steps below.
+Set `FIP` to the floating IP address of the `test` VM pre-created earlier on the source cloud.
+Define the map of Compute node name, IP pairs.
+The values are just illustrative, use values that are correct for your environment:
+
+----
+PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+
+alias openstack="oc exec -t openstackclient -- openstack"
+FIP=192.168.122.20
+declare -A computes
+export computes=(
+  ["standalone.localdomain"]="192.168.122.100"
+  # ...
+)
+----
+
+.Procedure
 
 * _Temporary fix_ until the OSP 17 https://code.engineering.redhat.com/gerrit/q/topic:stable-compute-uuid[backport of the stable compute UUID feature]
-lands.
-+
-For each compute node grab the UUID of the compute service and write it too
-the stable `compute_id` file in `/var/lib/nova/` directory.
+lands. 
+//kgilliga: Can this text be removed? I think the fix was merged?
+. For each Compute node grab the UUID of the Compute service and write it to the stable `compute_id` file in `/var/lib/nova/` directory.
 +
 [subs=+quotes]
 ----
@@ -143,7 +124,8 @@ endif::[]
 done
 ----
 
-* Create a https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets[ssh authentication secret] for the data plane nodes:
+. Create a https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets[ssh authentication secret] for the data plane nodes: 
+//kgilliga: We probably shouldn't link to an external site. I need to check if we will document this in Red Hat docs.
 +
 [subs=+quotes]
 ----
@@ -164,7 +146,7 @@ endif::[]
 EOF
 ----
 
-* Generate an ssh key-pair `nova-migration-ssh-key` secret
+. Generate an ssh key-pair `nova-migration-ssh-key` secret:
 +
 ----
 cd "$(mktemp -d)"
@@ -178,7 +160,7 @@ rm -f id*
 cd -
 ----
 
-* Create a Nova Compute Extra Config service
+. Create a `nova-compute-extra-config` service:
 +
 [source,yaml]
 ----
@@ -210,11 +192,10 @@ EOF
 ----
 +
 The secret `nova-cell<X>-compute-config` is auto-generated for each
-`cell<X>`. That secret, alongside `nova-migration-ssh-key`, should
-always be specified for each custom `OpenStackDataPlaneService` related to Nova.
+`cell<X>`. You must specify `nova-cell<X>-compute-config` and `nova-migration-ssh-key` for each custom `OpenStackDataPlaneService` related to the Compute service.
 
 ifeval::["{build}" == "downstream"]
-* Create subscription-manager and redhat-registry secrets
+. Create subscription-manager and redhat-registry secrets:
 +
 [source,yaml]
 ----
@@ -239,9 +220,9 @@ EOF
 +
 endif::[]
 
-* Deploy OpenStackDataPlaneNodeSet:
+. Deploy the `OpenStackDataPlaneNodeSet` CR:
 +
-Make sure that ovn-controller settings configured in the OpenStackDataPlaneNodeSet are the same as were set in the compute nodes before adoption.
+Make sure that ovn-controller settings configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the Compute nodes before adoption.
 This configuration is stored in the "external_ids" column in the "Open_vSwitch" table in ovsdb and can be checked with command:
 +
 ----
@@ -250,7 +231,7 @@ ovs-vsctl list Open .
 external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings="datacentre:br-ctlplane", ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
 ...
 ----
-In above example bridge mappings are set as "datacentre:br-ctlplane" and it has to be set in the OpenStackDataPlaneNodeSet CR also.
+In above example bridge mappings are set as "datacentre:br-ctlplane" and it has to be set in the `OpenStackDataPlaneNodeSet` CR also.
 +
 [source,yaml]
 ----
@@ -428,7 +409,7 @@ endif::[]
 EOF
 ----
 
-* Optionally enable neutron-sriov-nic-agent in the OpenStackDataPlaneNodeSet CR
+. Optional: Enable `neutron-sriov-nic-agent` in the `OpenStackDataPlaneNodeSet` CR:
 +
 [source,yaml]
 ----
@@ -453,7 +434,7 @@ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
 ]'
 ----
 
-* Optionally enable neutron-dhcp in the OpenStackDataPlaneNodeSet CR
+. Optional: Enable `neutron-dhcp` in the `OpenStackDataPlaneNodeSet` CR:
 +
 [source,yaml]
 ----
@@ -465,9 +446,9 @@ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
   }]'
 ----
 
-* Run pre-adoption validation:
+. Run pre-adoption validation:
 
-** Create the validation service
+.. Create the validation service:
 +
 [source,yaml]
 ----
@@ -480,7 +461,7 @@ spec:
   playbook: osp.edpm.pre_adoption_validation
 EOF
 ----
-** Create a OpenStackDataPlaneDeployment that runs the validation only
+.. Create a `OpenStackDataPlaneDeployment` CR that runs the validation only:
 +
 [source,yaml]
 ----
@@ -496,7 +477,7 @@ spec:
   - pre-adoption-validation
 EOF
 ----
-** Wait for the validation to finish
+** Wait for the validation to finish.
 +
 Check if all the Ansible EE pods reaches `Completed` status:
 +
@@ -513,10 +494,10 @@ oc logs -l app=openstackansibleee -f --max-log-requests 20
 Wait for the deployment to reach the Ready status:
 +
 ----
-oc wait --for condition=Ready osdpd/openstack-pre-adoption --timeout=10m
+oc wait --for condition=Ready openstackdataplanedeployment/openstack-pre-adoption --timeout=10m
 ----
 
-* Deploy OpenStackDataPlaneDeployment:
+* Deploy `OpenStackDataPlaneDeployment`:
 +
 [source,yaml]
 ----
@@ -531,12 +512,10 @@ spec:
 EOF
 ----
 
-* Adoption of the neutron-ovn-metadata-agent:
+* Adoption of the `neutron-ovn-metadata-agent`:
 +
-Neutron-ovn-metadata-agent running on the data plane nodes don't require any
-additional actions nor config adjustments to do during the adoption process.
-When OpenStackDataPlaneDeployment and OpenStackDataPlaneNodeSet will be ready,
-neutron-ovn-metadata-agent should be up and running on the data plane nodes.
+`Neutron-ovn-metadata-agent` running on the data plane nodes do not require any additional actions nor configuration adjustments to do during the adoption process.
+When `OpenStackDataPlaneDeployment` and `OpenStackDataPlaneNodeSet` will be ready, `neutron-ovn-metadata-agent` should be up and running on the data plane nodes.
 
 == Post-checks
 
@@ -569,131 +548,4 @@ oc exec openstackclient -- openstack network agent list
 | 10482583-2130-5b0d-958f-3430da21b929 | OVN Metadata agent           | standalone.localdomain |                   | :-)   | UP    | neutron-ovn-metadata-agent |
 | a4f1b584-16f1-4937-b2b0-28102a3f6eaa | OVN Controller agent         | standalone.localdomain |                   | :-)   | UP    | ovn-controller             |
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
-----
-
-== Nova compute services fast-forward upgrade from Wallaby to Antelope
-
-Nova services rolling upgrade cannot be done during adoption,
-there is in a lock-step with Nova control plane services, because those
-are managed independently by EDPM ansible, and Kubernetes operators.
-Nova service operator and OpenStack Dataplane operator ensure upgrading
-is done independently of each other, by configuring
-`[upgrade_levels]compute=auto` for Nova services. Nova control plane
-services apply the change right after CR is patched. Nova compute data plane
-services will catch up the same config change with ansible deployment
-later on.
-
-____
-*NOTE*: Additional orchestration happening around the FFU workarounds
-configuration for Nova compute data plane service is a subject of future changes.
-____
-
-* Wait for cell1 Nova compute data plane services version updated (it may take some time):
-+
-----
-oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
-    -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
-----
-+
-The above query should return an empty result as a completion criterion.
-
-* Remove pre-FFU workarounds for Nova control plane services:
-+
-[source,yaml]
-----
-oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
-spec:
-  nova:
-    template:
-      cellTemplates:
-        cell0:
-          conductorServiceTemplate:
-            customServiceConfig: |
-              [workarounds]
-              disable_compute_service_check_for_ffu=false
-        cell1:
-          metadataServiceTemplate:
-            customServiceConfig: |
-              [workarounds]
-              disable_compute_service_check_for_ffu=false
-          conductorServiceTemplate:
-            customServiceConfig: |
-              [workarounds]
-              disable_compute_service_check_for_ffu=false
-      apiServiceTemplate:
-        customServiceConfig: |
-          [workarounds]
-          disable_compute_service_check_for_ffu=false
-      metadataServiceTemplate:
-        customServiceConfig: |
-          [workarounds]
-          disable_compute_service_check_for_ffu=false
-      schedulerServiceTemplate:
-        customServiceConfig: |
-          [workarounds]
-          disable_compute_service_check_for_ffu=false
-'
-----
-
-* Wait for Nova control plane services' CRs to become ready:
-+
-----
-oc wait --for condition=Ready --timeout=300s Nova/nova
-----
-
-* Remove pre-FFU workarounds for Nova compute data plane services:
-+
-[source,yaml]
-----
-oc apply -f - <<EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nova-compute-extraconfig
-  namespace: openstack
-data:
-  20-nova-compute-cell1-workarounds.conf: |
-    [workarounds]
-    disable_compute_service_check_for_ffu=false
----
-apiVersion: dataplane.openstack.org/v1beta1
-kind: OpenStackDataPlaneDeployment
-metadata:
-  name: openstack-nova-compute-ffu
-  namespace: openstack
-spec:
-  nodeSets:
-    - openstack
-  servicesOverride:
-    - nova-compute-extraconfig
-EOF
-----
-
-* Wait for Nova compute data plane service to become ready:
-+
-----
-oc wait --for condition=Ready osdpd/openstack-nova-compute-ffu --timeout=5m
-----
-
-* Run Nova DB online migrations to complete FFU:
-+
-----
-oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
-oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
-----
-
-* Verify if Nova services can stop the existing test VM instance:
-+
-----
-${BASH_ALIASES[openstack]} server list | grep -qF '| test | ACTIVE |' && ${BASH_ALIASES[openstack]} server stop test || echo PASS
-${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' || echo FAIL
-${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test 2>&1 || echo PASS
-----
-
-* Verify if Nova services can start the existing test VM instance:
-+
-----
-${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' && ${BASH_ALIASES[openstack]} server start test || echo PASS
-${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |' && \
-  ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test --fit-width -f json | jq -r '.state' | grep running || echo FAIL
 ----
