@@ -465,6 +465,57 @@ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
   }]'
 ----
 
+* Run pre-adoption validation:
+
+** Create the validation service
++
+[source,yaml]
+----
+oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: pre-adoption-validation
+spec:
+  playbook: osp.edpm.pre_adoption_validation
+EOF
+----
+** Create a OpenStackDataPlaneDeployment that runs the validation only
++
+[source,yaml]
+----
+oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneDeployment
+metadata:
+  name: openstack-pre-adoption
+spec:
+  nodeSets:
+  - openstack
+  servicesOverride:
+  - pre-adoption-validation
+EOF
+----
+** Wait for the validation to finish
++
+Check if all the Ansible EE pods reaches `Completed` status:
++
+----
+# watching the pods
+watch oc get pod -l app=openstackansibleee
+----
++
+----
+# following the ansible logs with:
+oc logs -l app=openstackansibleee -f --max-log-requests 20
+----
++
+Wait for the deployment to reach the Ready status:
++
+----
+oc wait --for condition=Ready osdpd/openstack-pre-adoption --timeout=10m
+----
+
 * Deploy OpenStackDataPlaneDeployment:
 +
 [source,yaml]

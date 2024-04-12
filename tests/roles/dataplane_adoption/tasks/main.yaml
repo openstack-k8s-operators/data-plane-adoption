@@ -156,7 +156,7 @@
       playbook: osp.edpm.nova
     EOF
 
-- name: deploy dataplane
+- name: Create OpenStackDataPlaneNodeSet
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -306,6 +306,70 @@
         "value": "neutron-dhcp"
       }]'
   when: edpm_neutron_dhcp_agent_enabled|bool
+
+- name: Run pre-adoption validation
+  when: run_pre_adoption_validation|bool
+  block:
+    - name: Create OpenStackDataPlaneService/pre-adoption-validation
+      no_log: "{{ use_no_log }}"
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc apply -f - <<EOF
+        apiVersion: dataplane.openstack.org/v1beta1
+        kind: OpenStackDataPlaneService
+        metadata:
+          name: pre-adoption-validation
+        spec:
+          playbook: osp.edpm.pre_adoption_validation
+        EOF
+
+    - name: Create OpenStackDataPlaneDeployment to run the validation only
+      no_log: "{{ use_no_log }}"
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc apply -f - <<EOF
+        apiVersion: dataplane.openstack.org/v1beta1
+        kind: OpenStackDataPlaneDeployment
+        metadata:
+          name: openstack-pre-adoption
+        spec:
+          nodeSets:
+          - openstack
+          servicesOverride:
+          - pre-adoption-validation
+        EOF
+
+    - name: Wait for the validation deployment to finish
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+
+        DEPLOYMENT_NAME=openstack-pre-adoption
+        TRIES=180
+        DELAY=10
+        ALLOWED_JOB_RETRIES=1
+
+        for i in $(seq $TRIES)
+        do
+            ready=$(oc get osdpd/$DEPLOYMENT_NAME -o jsonpath='{.status.conditions[0].status}')
+            if [ "$ready" == "True" ]; then
+                echo "Pre adoption validation Deployment is Ready"
+                exit 0
+            else
+                failed=$(oc get jobs -l openstackdataplanedeployment=$DEPLOYMENT_NAME -o jsonpath="{.items[?(@.status.failed > $ALLOWED_JOB_RETRIES)].metadata.name}")
+                if [ ! -z "${failed}" ]; then
+                    echo "There are failed AnsibleEE jobs: $failed"
+                    exit 1
+                fi
+            fi
+
+        sleep $DELAY
+        done
+
+        echo "Run out of retries"
+        exit 2
 
 - name: deploy the dataplane deployment
   no_log: "{{ use_no_log }}"

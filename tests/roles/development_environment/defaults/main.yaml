@@ -1,3 +1,4 @@
 prelaunch_test_instance: true
 prelaunch_test_instance_script: pre_launch.bash
 edpm_privatekey_path: ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa
+run_pre_adoption_validation: true
