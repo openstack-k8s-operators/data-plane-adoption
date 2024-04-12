@@ -1,5 +1,7 @@
 [id="adopting-compute-services-to-the-data-plane_{context}"]
 
+//check xrefs.
+
 = Adopting Compute services to the {rhos_acro} data plane
 
 .Prerequisites
@@ -101,7 +103,7 @@ export computes=(
 * _Temporary fix_ until the OSP 17 https://code.engineering.redhat.com/gerrit/q/topic:stable-compute-uuid[backport of the stable compute UUID feature]
 lands. 
 //kgilliga: Can this text be removed? I think the fix was merged?
-. For each Compute node grab the UUID of the Compute service and write it to the stable `compute_id` file in `/var/lib/nova/` directory.
+. For each Compute node, write the UUID of the Compute service to the stable `compute_id` file in `/var/lib/nova/` directory:
 +
 [subs=+quotes]
 ----
@@ -220,18 +222,7 @@ EOF
 +
 endif::[]
 
-. Deploy the `OpenStackDataPlaneNodeSet` CR:
-+
-Make sure that ovn-controller settings configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the Compute nodes before adoption.
-This configuration is stored in the "external_ids" column in the "Open_vSwitch" table in ovsdb and can be checked with command:
-+
-----
-ovs-vsctl list Open .
-...
-external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings="datacentre:br-ctlplane", ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
-...
-----
-In above example bridge mappings are set as "datacentre:br-ctlplane" and it has to be set in the `OpenStackDataPlaneNodeSet` CR also.
+. Deploy the `OpenStackDataPlaneNodeSet` CR. Ensure that the bridge mappings are set as "datacentre:br-ctlplane".
 +
 [source,yaml]
 ----
@@ -409,6 +400,15 @@ endif::[]
 EOF
 ----
 
+. Make sure that ovn-controller settings configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the Compute nodes before adoption. This configuration is stored in the "external_ids" column in the "Open_vSwitch" table in ovsdb:
++
+----
+ovs-vsctl list Open .
+...
+external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings="datacentre:br-ctlplane", ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
+...
+----
+
 . Optional: Enable `neutron-sriov-nic-agent` in the `OpenStackDataPlaneNodeSet` CR:
 +
 [source,yaml]
@@ -477,9 +477,10 @@ spec:
   - pre-adoption-validation
 EOF
 ----
-** Wait for the validation to finish.
 +
-Check if all the Ansible EE pods reaches `Completed` status:
+Wait for the validation to finish.
+
+.. Check if all the Ansible EE pods reaches `Completed` status:
 +
 ----
 # watching the pods
@@ -490,14 +491,14 @@ watch oc get pod -l app=openstackansibleee
 # following the ansible logs with:
 oc logs -l app=openstackansibleee -f --max-log-requests 20
 ----
-+
-Wait for the deployment to reach the Ready status:
+
+.. Wait for the deployment to reach the `Ready` status:
 +
 ----
 oc wait --for condition=Ready openstackdataplanedeployment/openstack-pre-adoption --timeout=10m
 ----
 
-* Deploy `OpenStackDataPlaneDeployment`:
+. Deploy the `OpenStackDataPlaneDeployment` CR:
 +
 [source,yaml]
 ----
@@ -512,14 +513,13 @@ spec:
 EOF
 ----
 
-* Adoption of the `neutron-ovn-metadata-agent`:
-+
-`Neutron-ovn-metadata-agent` running on the data plane nodes do not require any additional actions nor configuration adjustments to do during the adoption process.
-When `OpenStackDataPlaneDeployment` and `OpenStackDataPlaneNodeSet` will be ready, `neutron-ovn-metadata-agent` should be up and running on the data plane nodes.
+[NOTE]
+`Neutron-ovn-metadata-agent` running on the data plane nodes do not require any additional actions or configuration during adoption.
+When the `OpenStackDataPlaneDeployment` and `OpenStackDataPlaneNodeSet` CRs are ready, `neutron-ovn-metadata-agent` is up and running on the data plane nodes.
 
-== Post-checks
+.Verification
 
-* Check if all the Ansible EE pods reaches `Completed` status:
+. Check if all the Ansible EE pods reaches `Completed` status:
 +
 ----
 # watching the pods
@@ -531,13 +531,13 @@ watch oc get pod -l app=openstackansibleee
 oc logs -l app=openstackansibleee -f --max-log-requests 20
 ----
 
-* Wait for the dataplane node set to reach the Ready status:
+. Wait for the data plane node set to reach the `Ready` status:
 +
 ----
 oc wait --for condition=Ready osdpns/openstack --timeout=30m
 ----
 
-* Verify that neutron agents are alive:
+. Verify that neutron agents are alive:
 +
 ----
 oc exec openstackclient -- openstack network agent list

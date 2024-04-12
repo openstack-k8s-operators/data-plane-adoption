@@ -6,8 +6,8 @@
 
 Adopting the {rhos_long} data plane involves the following steps:
 
-* Stopping any remaining services on the {rhos_prev_long} ({OpenStackShort}) control plane
-* Deploying the required custom resources
+* Stopping any remaining services on the {rhos_prev_long} ({OpenStackShort}) control plane.
+* Deploying the required custom resources.
 * If applicable, performing a fast-forward upgrade on Compute services from {OpenStackShort} {rhos_prev_ver} to {rhos_acro} {rhos_curr_ver}.
 
 [WARNING]
@@ -16,128 +16,8 @@ procedure. The source control plane and data plane services must not
 be re-enabled after the data plane is deployed and the control
 plane has taken control of the data plane.
 
+include::../modules/proc_stopping-infrastructure-management-and-compute-services.adoc[leveloffset=+1]
 
+include::../modules/proc_adopting-compute-services-to-the-data-plane.adoc[leveloffset=+1]
 
-== Compute services fast-forward upgrade from Wallaby to Antelope
-
-Compute services rolling upgrade cannot be done during adoption,
-there is in a lock-step with Compute control plane services, because those
-are managed independently by data plane ansible and Kubernetes Operators.
-Compute service operator and Dataplane Operator ensure upgrading
-is done independently of each other, by configuring
-`[upgrade_levels]compute=auto` for Compute services. Compute control plane
-services apply the change right after custom resource is patched. Compute data plane services will catch up the same config change with ansible deployment later on.
-
-[NOTE] 
-Additional orchestration happening around the FFU workarounds
-configuration for Compute data plane service is a subject of future changes.
-
-* Wait for cell1 Compute data plane services version updated (it may take some time):
-+
-----
-oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
-    -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
-----
-+
-The above query should return an empty result as a completion criterion.
-
-* Remove pre-FFU workarounds for Compute control plane services:
-+
-[source,yaml]
-----
-oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
-spec:
-  nova:
-    template:
-      cellTemplates:
-        cell0:
-          conductorServiceTemplate:
-            customServiceConfig: |
-              [workarounds]
-              disable_compute_service_check_for_ffu=false
-        cell1:
-          metadataServiceTemplate:
-            customServiceConfig: |
-              [workarounds]
-              disable_compute_service_check_for_ffu=false
-          conductorServiceTemplate:
-            customServiceConfig: |
-              [workarounds]
-              disable_compute_service_check_for_ffu=false
-      apiServiceTemplate:
-        customServiceConfig: |
-          [workarounds]
-          disable_compute_service_check_for_ffu=false
-      metadataServiceTemplate:
-        customServiceConfig: |
-          [workarounds]
-          disable_compute_service_check_for_ffu=false
-      schedulerServiceTemplate:
-        customServiceConfig: |
-          [workarounds]
-          disable_compute_service_check_for_ffu=false
-'
-----
-
-* Wait for Compute control plane services' CRs to become ready:
-+
-----
-oc wait --for condition=Ready --timeout=300s Nova/nova
-----
-
-* Remove pre-FFU workarounds for Compute data plane services:
-+
-[source,yaml]
-----
-oc apply -f - <<EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nova-compute-extraconfig
-  namespace: openstack
-data:
-  20-nova-compute-cell1-workarounds.conf: |
-    [workarounds]
-    disable_compute_service_check_for_ffu=false
----
-apiVersion: dataplane.openstack.org/v1beta1
-kind: OpenStackDataPlaneDeployment
-metadata:
-  name: openstack-nova-compute-ffu
-  namespace: openstack
-spec:
-  nodeSets:
-    - openstack
-  servicesOverride:
-    - nova-compute-extraconfig
-EOF
-----
-
-* Wait for Compute data plane service to become ready:
-+
-----
-oc wait --for condition=Ready openstackdataplanedeployment/openstack-nova-compute-ffu --timeout=5m
-----
-
-* Run Compute database online migrations to complete FFU:
-+
-----
-oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
-oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
-----
-
-* Verify if Compute services can stop the existing test VM instance:
-+
-----
-${BASH_ALIASES[openstack]} server list | grep -qF '| test | ACTIVE |' && ${BASH_ALIASES[openstack]} server stop test || echo PASS
-${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' || echo FAIL
-${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test 2>&1 || echo PASS
-----
-
-* Verify if Compute services can start the existing test VM instance:
-+
-----
-${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' && ${BASH_ALIASES[openstack]} server start test || echo PASS
-${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |' && \
-  ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test --fit-width -f json | jq -r '.state' | grep running || echo FAIL
-----
+include::../modules/proc_performing-a-fast-forward-upgrade-on-compute-services.adoc[leveloffset=+1]

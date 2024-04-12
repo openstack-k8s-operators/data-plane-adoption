@@ -39,7 +39,7 @@ ansible -i $(which tripleo-ansible-inventory) Compute -m shell -a "sudo systemct
 
 .Procedure
 
-* Run the following script to remove the conflicting repositories and packages (in case of a devsetup that uses Standalone {OpenStackPreviousInstaller}) from all Compute hosts. That is required to install libvirt packages, when these hosts become adopted as data plane nodes, where modular libvirt daemons are no longer running in podman containers.
+* Run the following script to remove the conflicting repositories and packages (in case of a devsetup that uses Standalone {OpenStackPreviousInstaller}) from all Compute hosts. That is required to install libvirt packages, when these hosts become adopted as data plane nodes, where modular libvirt daemons are no longer running in podman containers:
 +
 ----
 
