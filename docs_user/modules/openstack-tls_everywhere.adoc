@@ -31,6 +31,18 @@ IPA_SSH="ssh -i <path_to_ssh_key> root@<freeipa-server-ip-address>"
 ----
 endif::[]
 
+Define the map of compute node name, IP pairs.
+The values are just illustrative and refer to a single node standalone director deployment, use values that are correct for your environment:
+
+[subs=+quotes]
+----
+declare -A computes
+computes=(
+  ["standalone.localdomain"]="192.168.122.100"
+  # ...
+)
+----
+
 == Transfer the CA certificate and key from FreeIPA to the cert-manager Operator
 
 These instructions explain how to extract the CA signing certificate from the FreeIPA instance that is used to provide the certificates in the source environment and import it into certmanager for use in the target environment. In this way, disruption on the compute nodes can be minimized because a new chain of trust need not be installed.
@@ -47,7 +59,7 @@ You will need to interact with the database located in the `/etc/pki/pki-tomcat/
 List all the certificates inside your NSSDB:
 
 ----
-$ $IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
+$IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
 ----
 
 The `-L` option lists all certificates, and `-d` specifies where they are stored. This will produce some output like this:
