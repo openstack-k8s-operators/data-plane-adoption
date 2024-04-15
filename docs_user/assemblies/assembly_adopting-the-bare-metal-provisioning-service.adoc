@@ -8,4 +8,4 @@ Review information about your {bare_metal_first_ref} configuration and then adop
 
 include::../modules/con_bare-metal-provisioning-service-configurations.adoc[leveloffset=+1]
 
-include::../modules/deploying-the-bare-metal-provisioning-service.adoc[leveloffset=+1]
+include::../modules/proc_deploying-the-bare-metal-provisioning-service.adoc[leveloffset=+1]

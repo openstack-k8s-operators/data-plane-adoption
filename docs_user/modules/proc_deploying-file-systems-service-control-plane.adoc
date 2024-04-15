@@ -8,7 +8,7 @@ Copy the {rhos_component_storage_file_first_ref} configuration from the {rhos_pr
 
 * Ensure that {rhos_component_storage_file} systemd services (`api`, `cron`, `scheduler`) are
 stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
-* If the deployment uses CephFS via NFS as a storage backend, ensure that
+* If the deployment uses CephFS through NFS as a storage backend, ensure that
 pacemaker ordering and collocation constraints are adjusted. For more
 information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
 * Ensure that the {rhos_component_storage_file} pacemaker service (`openstack-manila-share`) is
@@ -16,7 +16,7 @@ stopped. For more information, see xref:stopping-openstack-services_migrating-da
 * Ensure that the database migration has completed. For more information, see xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances].
 * Ensure that {OpenShift} nodes where `manila-share` service will be deployed
 can reach the management network that the storage system is in.
-* If the deployment uses CephFS via NFS as a storage backend, ensure that
+* If the deployment uses CephFS through NFS as a storage backend, ensure that
 a new clustered Ceph NFS service is deployed on the Ceph cluster with the help
 of Ceph orchestrator. For more information, see
 xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a Ceph NFS cluster].
@@ -206,7 +206,7 @@ count of the `manilaShares` service/s to 1.
 * Ensure that the appropriate storage management network is specified in the
 `manilaShares` section. The example below connects the `manilaShares`
 instance with the CephFS backend driver to the `storage` network.
-* Prior to adopting the `manilaShares` service for CephFS via NFS, ensure that
+* Prior to adopting the `manilaShares` service for CephFS through NFS, ensure that
 you have a clustered Ceph NFS service created. You will need to provide the
 name of the service as ``cephfs_nfs_cluster_id``.
 
@@ -263,7 +263,7 @@ spec:
 __EOF__
 ----
 +
-Below is an example that uses CephFS via NFS. In this example:
+Below is an example that uses CephFS through NFS. In this example:
 
 * The `cephfs_ganesha_server_ip` option is preserved from the configuration on
 the old {OpenStackShort} {rhos_prev_ver} environment.

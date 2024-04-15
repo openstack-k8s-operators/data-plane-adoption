@@ -1,8 +1,8 @@
-[id="changes-to-cephFS-via-NFS_{context}"]
+[id="changes-to-cephFS-through-NFS_{context}"]
 
-= Changes to CephFS via NFS
+= Changes to CephFS through NFS
 
-If the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} deployment uses CephFS via NFS as a backend for {rhos_component_storage_file_first_ref}, there's a `ceph-nfs` service on the {OpenStackShort} controller nodes deployed and managed by {OpenStackPreviousInstaller}. This service cannot be directly imported into {rhos_long} {rhos_curr_ver}. On {rhos_acro} {rhos_curr_ver}, the {rhos_component_storage_file} only supports using a "clustered" NFS service that is directly managed on the Ceph cluster. So, adoption with this service will involve a data path disruption to existing NFS clients. The timing of this disruption can be controlled by the deployer independent of this adoption procedure.
+If the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} deployment uses CephFS through NFS as a backend for {rhos_component_storage_file_first_ref}, there's a `ceph-nfs` service on the {OpenStackShort} controller nodes deployed and managed by {OpenStackPreviousInstaller}. This service cannot be directly imported into {rhos_long} {rhos_curr_ver}. On {rhos_acro} {rhos_curr_ver}, the {rhos_component_storage_file} only supports using a "clustered" NFS service that is directly managed on the Ceph cluster. So, adoption with this service will involve a data path disruption to existing NFS clients. The timing of this disruption can be controlled by the deployer independent of this adoption procedure.
 
 On {OpenStackShort} {rhos_prev_ver}, pacemaker controls the high availability of the `ceph-nfs` service. This service is assigned a Virtual IP (VIP) address that is also managed by pacemaker. The VIP is typically created on an isolated `StorageNFS` network. There are ordering and collocation constraints established between this VIP, `ceph-nfs` and the Shared File Systems service's share manager service on the
 controller nodes. Prior to adopting {rhos_component_storage_file}, pacemaker's ordering and collocation constraints must be adjusted to separate the share manager service. This establishes `ceph-nfs` with its VIP as an isolated, standalone NFS service that can be decommissioned at will after completing the {OpenStackShort} adoption.

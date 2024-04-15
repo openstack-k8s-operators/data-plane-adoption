@@ -69,7 +69,7 @@ services.
 
 The cinder-backup service on {OpenStackShort} {rhos_prev_ver} could be running as Active-Passive under pacemaker or as Active-Active, so you must check how it is running and stop it.
 
-If the deployment enables CephFS via NFS as a backend for {rhos_component_storage_file_first_ref}, there are pacemaker ordering and co-location
+If the deployment enables CephFS through NFS as a backend for {rhos_component_storage_file_first_ref}, there are pacemaker ordering and co-location
 constraints that govern the Virtual IP address assigned to the `ceph-nfs`
 service, the `ceph-nfs` service itself and `manila-share` service.
 These constraints must be removed:
