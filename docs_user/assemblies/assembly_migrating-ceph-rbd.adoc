@@ -1,44 +1,39 @@
 [id="migrating-ceph-rbd_{context}"]
 
-//:context: migrating-ceph-rbd
-//kgilliga: This module might be converted to an assembly.
+:context: migrating-ceph-rbd
 
-= Migrating Ceph RBD
+= Migrating Red Hat Ceph Storage RBD
 
-In this scenario, assuming Ceph is already >= 5, either for HCI or dedicated
-Storage nodes, the daemons living in the OpenStack control plane should be
-moved/migrated into the existing external RHEL nodes (typically the compute
-nodes for an HCI environment or dedicated storage nodes in all the remaining
-use cases).
+For hyperconverged infrastructure (HCI) or dedicated Storage nodes that are running version 5 or later, you must migrate the daemons that are included in the {rhos_prev_long} control plane into the existing external RHEL nodes. The external RHEL nodes typically include the Compute nodes for an HCI environment or dedicated storage nodes.
+//kgilliga: SMEs, please check the accuracy of the second sentence.^
+To migrate Red Hat Ceph Storage RBD, your environment must meet the following requirements:
 
-== Requirements
-
-* Ceph is >= 5 and managed by cephadm/orchestrator.
-* Ceph NFS (ganesha) migrated from a https://bugzilla.redhat.com/show_bug.cgi?id=2044910[TripleO based deployment to cephadm].
-* Both the Ceph public and cluster networks are propagated, via TripleO, to the target nodes.
-* Ceph Mons need to keep their IPs (to avoid cold migration).
+* Red Hat Ceph Storage is running version 5 or later and is managed by cephadm/orchestrator.
+* Ceph NFS (ganesha) is migrated from a https://bugzilla.redhat.com/show_bug.cgi?id=2044910[TripleO based deployment to cephadm].
+* Both the Red Hat Ceph Storage public and cluster networks are propagated, with {OpenStackPreviousInstaller}, to the target nodes.
+* Ceph Monitors need to keep their IPs to avoid cold migration.
 
 == Scenario: Migrate mon and mgr from controller nodes
 
 The goal of the first POC is to prove that you are able to successfully drain a
-controller node, in terms of ceph daemons, and move them to a different node.
+controller node, in terms of Red Hat Ceph Storage daemons, and move them to a different node.
 The initial target of the POC is RBD only, which means you are going to move only
-mon and mgr daemons. For the purposes of this POC, you will deploy a ceph cluster
+mon and mgr daemons. For the purposes of this POC, you will deploy a Red Hat Ceph Storage cluster
 with only mon, mgrs, and osds to simulate the environment a customer will be in
 before starting the migration.
 The goal of the first POC is to ensure that:
 
-* You can keep the mon IP addresses moving them to the Ceph Storage nodes.
+* You can keep the mon IP addresses moving them to the Red Hat Ceph Storage nodes.
 * You can drain the existing controller nodes and shut them down.
 * You can deploy additional monitors to the existing nodes, promoting them as
-_admin nodes that can be used by administrators to manage the Ceph cluster
+_admin nodes that can be used by administrators to manage the Red Hat Ceph Storage cluster
 and perform day2 operations against it.
 * You can keep the cluster operational during the migration.
 
 === Prerequisites
 
 The Storage Nodes should be configured to have both *storage* and *storage_mgmt*
-network to make sure that you can use both Ceph public and cluster networks.
+network to make sure that you can use both Red Hat Ceph Storage public and cluster networks.
 
 This step is the only one where the interaction with TripleO is required. From
 17+ you do not have to run any stack update. However, there are commands that you
@@ -90,7 +85,7 @@ Warning: Permanently added '192.168.24.14' (ED25519) to the list of known hosts.
 
 === Migrate mon(s) and mgr(s) on the two existing CephStorage nodes
 
-Create a ceph spec based on the default roles with the mon/mgr on the
+Create a Red Hat Ceph Storage spec based on the default roles with the mon/mgr on the
 controller nodes.
 
 ----
@@ -98,7 +93,7 @@ openstack overcloud ceph spec -o ceph_spec.yaml -y  \
    --stack overcloud-0     overcloud-baremetal-deployed-0.yaml
 ----
 
-Deploy the Ceph cluster:
+Deploy the Red Hat Ceph Storage cluster:
 
 ----
  openstack overcloud ceph deploy overcloud-baremetal-deployed-0.yaml \
@@ -109,7 +104,7 @@ Deploy the Ceph cluster:
 
 *Note*:
 
-The ceph_spec.yaml, which is the OSP-generated description of the ceph cluster,
+The ceph_spec.yaml, which is the OSP-generated description of the Red Hat Ceph Storage cluster,
 will be used, later in the process, as the basic template required by cephadm
 to update the status/info of the daemons.
 
@@ -399,12 +394,14 @@ oc0-controller-1 has been removed and powered off without leaving traces on the 
 
 The same approach and the same steps can be applied to migrate oc0-controller-2 to oc0-ceph-1.
 
-=== Screen Recording:
+//=== Screen Recording:
 
-* https://asciinema.org/a/508174[Externalize a TripleO deployed Ceph cluster]
+//* https://asciinema.org/a/508174[Externalize a TripleO deployed Ceph cluster]
 
 //== What's next
 
-== Useful resources
+//== Useful resources
 
-* https://docs.ceph.com/en/pacific/cephadm/services/mon/#deploy-additional-monitors[cephadm - deploy additional mon(s)]
+//* https://docs.ceph.com/en/pacific/cephadm/services/mon/#deploy-additional-monitors[cephadm - deploy additional mon(s)]
+
+//kgilliga: I commented out the screen recording and useful resources headings because I'm not sure if we need them in the downstream documentation.
