@@ -76,16 +76,8 @@ spec:
 EOF
 ----
 +
-* In case when `neutron-sriov-nic-agent` is running on the existing Compute nodes, physical device mappings needs to be checked and set the same in the
-`OpenStackDataPlaneNodeSet` custom resource (CR). Those options will need to be set in the `OpenStackDataPlaneNodeSet` CR. For more information, see xref:reviewing-the-openstack-control-plane-configuration_adopt-control-plane[Reviewing the {rhos_prev_long} control plane configuration].
-
-.Variables
-
-Define the shell variables used in the Fast-forward upgrade steps below.
-Set `FIP` to the floating IP address of the `test` VM pre-created earlier on the source cloud.
-Define the map of Compute node name, IP pairs.
-The values are just illustrative, use values that are correct for your environment:
-
+* When `neutron-sriov-nic-agent` is running on the existing Compute nodes, check the physical device mappings and ensure that they match the values that are defined in the `OpenStackDataPlaneNodeSet` custom resource (CR). For more information, see xref:reviewing-the-openstack-control-plane-configuration_adopt-control-plane[Reviewing the {rhos_prev_long} control plane configuration].
+* Define the shell variables necessary to run the script that runs the Fast-forward upgrade:
 ----
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
 
@@ -97,12 +89,14 @@ export computes=(
   # ...
 )
 ----
+** Replace the value for `FIP` with the floating IP address of the test instance that you created on the source cloud.
+** Replace `["standalone.localdomain"]="192.168.122.100"` with the name of the Compute node and its IP address.
 
 .Procedure
 
 * _Temporary fix_ until the OSP 17 https://code.engineering.redhat.com/gerrit/q/topic:stable-compute-uuid[backport of the stable compute UUID feature]
 lands. 
-//kgilliga: Can this text be removed? I think the fix was merged?
+//kgilliga: Revisit this step after 17.1.3 is on the CDN.
 . For each Compute node, write the UUID of the Compute service to the stable `compute_id` file in `/var/lib/nova/` directory:
 +
 [subs=+quotes]
@@ -197,7 +191,7 @@ The secret `nova-cell<X>-compute-config` is auto-generated for each
 `cell<X>`. You must specify `nova-cell<X>-compute-config` and `nova-migration-ssh-key` for each custom `OpenStackDataPlaneService` related to the Compute service.
 
 ifeval::["{build}" == "downstream"]
-. Create subscription-manager and redhat-registry secrets:
+. Create a secret for the subscription manager and a secret for the Red Hat registry:
 +
 [source,yaml]
 ----
@@ -400,7 +394,7 @@ endif::[]
 EOF
 ----
 
-. Make sure that ovn-controller settings configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the Compute nodes before adoption. This configuration is stored in the "external_ids" column in the "Open_vSwitch" table in ovsdb:
+. Ensure that the ovn-controller settings that are configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the Compute nodes before adoption. This configuration is stored in the "external_ids" column in the "Open_vSwitch" table in ovsdb:
 +
 ----
 ovs-vsctl list Open .
@@ -480,7 +474,7 @@ EOF
 +
 Wait for the validation to finish.
 
-.. Check if all the Ansible EE pods reaches `Completed` status:
+.. Confirm that all the Ansible EE pods reach a `Completed` status:
 +
 ----
 # watching the pods
@@ -514,12 +508,12 @@ EOF
 ----
 
 [NOTE]
-`Neutron-ovn-metadata-agent` running on the data plane nodes do not require any additional actions or configuration during adoption.
+`Neutron-ovn-metadata-agent` running on the data plane nodes does not require any additional actions or configuration during adoption.
 When the `OpenStackDataPlaneDeployment` and `OpenStackDataPlaneNodeSet` CRs are ready, `neutron-ovn-metadata-agent` is up and running on the data plane nodes.
 
 .Verification
 
-. Check if all the Ansible EE pods reaches `Completed` status:
+. Confirm that all the Ansible EE pods reach a `Completed` status:
 +
 ----
 # watching the pods

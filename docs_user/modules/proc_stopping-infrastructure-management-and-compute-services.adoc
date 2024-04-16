@@ -8,13 +8,10 @@ Nodes that must remain functional are those running the Compute, storage,
 or networker roles (in terms of composable roles covered by Tripleo Heat
 Templates).
 
-.Variables
+.Prerequisites
 
-Define the following shell variables.
-Define the map of Compute node name, IP pairs.
-The values are just illustrative and refer to a single node standalone {OpenStackPreviousInstaller} deployment, use values that are correct for your environment: 
-//kgilliga: Is this correct? Standalone director deployment for downstream, standalone tripleo for upstream?
-
+* Define the following shell variables. The values are illustrative and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Use values that are correct for your environment: 
++
 [subs=+quotes]
 ----
 ifeval::["{build}" != "downstream"]
@@ -29,9 +26,10 @@ computes=(
   # ...
 )
 ----
-
-These ssh variables with the ssh commands are used instead of ansible to try to create instructions that are independent on where they are running. But ansible commands could be used to achieve the same result if you are in the right host, for example to stop a service:
-
++
+** Replace `["standalone.localdomain"]="192.168.122.100"` with the name of the Compute node and its IP address.
+** These ssh variables with the ssh commands are used instead of ansible to create instructions that are independent of where they are running. But ansible commands could be used to achieve the same result if you are in the right host, for example to stop a service:
++
 ----
 . stackrc
 ansible -i $(which tripleo-ansible-inventory) Compute -m shell -a "sudo systemctl stop tripleo_virtqemud.service" -b
