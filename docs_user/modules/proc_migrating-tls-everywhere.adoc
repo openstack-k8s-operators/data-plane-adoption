@@ -1,8 +1,6 @@
-[id="tls-everywhere_{context}"]
+[id="migrating-tls-everywhere_{context}"]
 
 //:context: tls
-
-//kgilliga: This module will be converted to an assembly. Check xref contexts.
 
 = TLS Everywhere
 
@@ -43,18 +41,19 @@ computes=(
 )
 ----
 
-== Transfer the CA certificate and key from FreeIPA to the cert-manager Operator
+== Procedure - transfer the CA
 
 These instructions explain how to extract the CA signing certificate from the FreeIPA instance that is used to provide the certificates in the source environment and import it into certmanager for use in the target environment. In this way, disruption on the compute nodes can be minimized because a new chain of trust need not be installed.
 
 It is expected that the old FreeIPA node will then be decommissioned and no longer used to issue certificates, This may not be possible if the IPA server is used to issue certificates for non-Openstack systems.
 
 This procedure will also need to be modified if the signing keys are stored in an HSM (hardware security module) instead of an NSSDB. In that case, if the key is retrievable, special HSM utilities may be required.
-=== Exporting from FreeIPA
+
+.Exporting from FreeIPA
 
 You will need to interact with the database located in the `/etc/pki/pki-tomcat/alias` directory ("*db" files).
 
-=== Locating the CA certificate and key
+.Locating the CA certificate and key
 
 List all the certificates inside your NSSDB:
 
@@ -77,7 +76,8 @@ auditSigningCert cert-pki-ca                                 u,u,Pu
 
 The item you need to consider is the first one: `caSigningCert cert-pki-ca`.
 
-=== Exporting the items (certificate and key)
+
+.Exporting the certificate and key
 
 The command below generates a P12 file with both, the certificate and the key. The `/etc/pki/pki-tomcat/alias/pwdfile.txt` file contains the password that protects the key. You can use it to both, extract the key and generate the new file, `/tmp/freeipa.p12`. You can also choose another password. Should you choose to apply a different password for the new file, simply replace the parameter of the `-w` option, or alternatively use the `-W` (capital W) option followed by the password (in clear text).
 
@@ -87,71 +87,22 @@ $IPA_SSH pk12util -o /tmp/freeipa.p12 -n 'caSigningCert\ cert-pki-ca' -d /etc/pk
 
 With that file on hand, we can separately get the certificate and the key, using the openssl pkcs12 command.
 
-The key length is another important property. You will need it below, when crafting one of the YAML files that will be used to provision the new custom resources. You can get it with:
+
+.Importing the certificate and key
+
+Create the secret that will contain the root CA
 
 ----
-KEY_LENGTH=`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl rsa -text -noout | awk -F'[^0-9]+' '{ print $2; exit }'`
+oc create secret generic rootca-internal
 ----
 
-=== Importing the Items and Provisioning the Custom Resources (CRs) on OpenShift
-
-You will have to create two YAML files. The first one has three sections:
-
-* The `openstack` namespace, which is used by other Red Hat OpenStack operators and CRs.
-* The issuer. The cert-manager operator makes use of a self-signed issuer to issue both the CA certificate itself and other certificates.
-* The CA certificate itself. We are specifically naming it as `rootca-internal`, which corresponds to the certificate authority leveraged by cert-manager to issue other certificates.
-
-Let's apply the following YAML file to create the corresponding CRs:
-
-[source,yaml]
-----
-oc apply -f - <<EOF
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: openstack
----
-apiVersion: cert-manager.io/v1
-kind: Issuer
-metadata:
-  name: selfsigned-issuer
-  namespace: openstack
-spec:
-  selfSigned: {}
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: rootca-internal
-  namespace: openstack
-spec:
-  isCA: true
-  commonName: rootca-internal
-  secretName: rootca-internal
-  privateKey:
-    algorithm: RSA
-    size: $KEY_LENGTH
-  issuerRef:
-    name: selfsigned-issuer
-EOF
-----
-
-
-OK, you just created the CRs with the initial content. Now you will need to import the certificate and the key that you exported from FreeIPA. You can do this with the `oc patch` command. For the CA certificate (correspondeing to the `ca.crt` item on the Certificate, type:
+Import the certificate and the key from FreeIPA:
 
 ----
 oc patch secret rootca-internal -n openstack -p="{\"data\":{\"ca.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
-----
 
-You will also need to update the `tls.crt` item. For the CA, this will receive the very same contents of `ca.crt`. The command just needs a small adjustment:
-
-----
 oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
-----
 
-Finally, update the key:
-
-----
 oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.key\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl rsa | base64 -w 0`\"}}"
 ----
 
@@ -160,27 +111,29 @@ Now create the cert-manager Issuer, referencing the created secret:
 [source, yaml]
 ----
 oc apply -f - <<EOF
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: openstack
----
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: rootca-internal
   namespace: openstack
   labels:
+    osp-rootca-issuer-public: ""
     osp-rootca-issuer-internal: ""
+    osp-rootca-issuer-ovn: ""
 spec:
   ca:
     secretName: rootca-internal
 EOF
 ----
 
-*Note: Do note forget to delete the p12 files you created during the previous steps, like `/tmp/freeipa.p12`!*
+Delete the p12 files created during the previous steps
 
-=== Checking the newly provisioned CRs
+----
+$IPA_SSH rm /tmp/freeipa.p12
+----
+
+
+== Post-checks
 
 You can check the created resources with the commands below:
 
@@ -192,7 +145,7 @@ oc get issuers -n openstack
 oc get secret rootca-internal -n openstack -o yaml
 ----
 
-== Stop and disable certmonger, and remove tracking requests for the existing certificates
+== Stop and disable certmonger
 
 The final step on this activity is to stop and disable the certmonger service on all EDPM nodes, and stop tracking all certificates managed by it. The code below accomplishes this task:
 
@@ -225,7 +178,7 @@ for i in "${!computes[@]}"; do
 done
 ----
 
-=== Post-steps (after adoption)
+== Steps after adoption
 
 After the adoption procedure is finished, the cert-manager operator will be responsible for issuing and refreshing new certificates when they expire.
 
