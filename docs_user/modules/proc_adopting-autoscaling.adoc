@@ -1,27 +1,26 @@
 [id="adopting-autoscaling_{context}"]
 
-//:context: adopting-autoscaling
-//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
 //Check xref contexts.
 
 = Adopting autoscaling
 
-Adopting autoscaling means that an existing `OpenStackControlPlane` CR, where Aodh services are supposed to be disabled, should be patched to start the service with the configuration parameters provided by the source environment.
+Adopting autoscaling means that an existing `OpenStackControlPlane` custom resource (CR), where Aodh services are supposed to be disabled, should be patched to start the service with the configuration parameters provided by the source environment.
 
 This guide also assumes that:
 
 . A `TripleO` environment (the source Cloud) is running on one side;
 . A `SNO` / `CodeReadyContainers` is running on the other side.
 
-== Prerequisites
+.Prerequisites
 
-* Previous Adoption steps completed. MariaDB, Keystone, Heat and Telemetry
-should be already adopted.
+* Previous Adoption steps completed. MariaDB, the {identity_service_first_ref}, the {orchestration_first_ref}, and Telemetry
+should be already adopted. 
+//kgilliga: Should this procedure be moved to after the data plane adoption chapter?
 
-== Procedure - Autoscaling adoption
+.Procedure
 
-Patch OpenStackControlPlane to deploy autoscaling services:
-
+. Patch the `OpenStackControlPlane` CR to deploy autoscaling services:
++
 ----
 cat << EOF > aodh_patch.yaml
 spec:
@@ -53,37 +52,32 @@ endif::[]
 EOF
 ----
 
-
-____
-If you have previously backed up your OpenStack services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
-____
-
+. Optional: If you have previously backed up your {OpenStackShort} services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct. This will producre the difference between both ini configuration files:
++
 ----
 pushd os-diff
 ./os-diff cdiff --service aodh -c /tmp/collect_tripleo_configs/aodh/etc/aodh/aodh.conf -o aodh_patch.yaml
 ----
++
+For more information, see xref:pulling-the-openstack-configuration_{context}[Reviewing the {rhos_prev_long} control plane configuration].
 
-____
-This will producre the difference between both ini configuration files.
-____
-
-Patch OpenStackControlPlane to deploy Aodh services:
-
+. Patch the `OpenStackControlPlane` CR to deploy Aodh services:
++
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch-file aodh_patch.yaml
 ----
 
-== Post-checks
+.Verification
 
-=== If autoscaling services are enabled inspect Aodh pods
-
+. If autoscaling services are enabled, inspect Aodh pods:
++
 ----
 AODH_POD=`oc get pods -l service=aodh | tail -n 1 | cut -f 1 -d' '`
 oc exec -t $AODH_POD -c aodh-api -- cat /etc/aodh/aodh.conf
 ----
 
-=== Check whether Aodh API service is registered in Keystone
-
+. Check whether Aodh API service is registered in {identity_service}: 
++
 ----
 openstack endpoint list | grep aodh
 | 6a805bd6c9f54658ad2f24e5a0ae0ab6 | regionOne | aodh      | network      | True    | public    | http://aodh-public-openstack.apps-crc.testing  |
@@ -91,10 +85,8 @@ openstack endpoint list | grep aodh
 | f97f2b8f7559476bb7a5eafe3d33cee7 | regionOne | aodh      | network      | True    | admin     | http://192.168.122.99:9696                     |
 ----
 
-=== Create sample resources
-
-You can test whether you can create alarms.
-
+. Create sample resources. You can test whether you can create alarms:
++
 ----
 openstack alarm create \
 --name low_alarm \

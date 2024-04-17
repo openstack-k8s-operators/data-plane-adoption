@@ -1,145 +1,60 @@
-[id="adopting-the-shared-file-systems-service_{context}"]
+[id="deploying-file-systems-service-control-plane_{context}"]
 
-//:context: adopting-shared-file-systems
-//kgilliga: This module might be converted to an assembly, or a procedure as a standalone chapter.
-//Check xref contexts.
+= Deploying the {rhos_component_storage_file} control plane
 
-= Adopting the Shared File Systems service
+Copy the {rhos_component_storage_file_first_ref} configuration from the {rhos_prev_long} {rhos_prev_ver} deployment, and then deploy the {rhos_component_storage_file} on the control plane.
 
-OpenStack Manila is the Shared File Systems service. It provides OpenStack
-users with a self-service API to create and manage file shares. File
-shares (or simply, "shares"), are built for concurrent read/write access by
-any number of clients. This, coupled with the inherent elasticity of the
-underlying storage makes the Shared File Systems service essential in
-cloud environments with require RWX ("read write many") persistent storage.
+.Prerequisites
 
-== Networking
-
-File shares in OpenStack are accessed directly over a network. Hence, it is
-essential to plan the networking of the cloud to create a successful and
-sustainable orchestration layer for shared file systems.
-
-Manila supports two levels of storage networking abstractions - one where
-users can directly control the networking for their respective file shares;
-and another where the storage networking is configured by the OpenStack
-administrator. It is important to ensure that the networking in the Red Hat
-OpenStack Platform 17.1 matches the network plans for your new cloud after
-adoption. This ensures that tenant workloads remain connected to
-storage through the adoption process, even as the control plane suffers a
-minor interruption. Manila's control plane services are not in the data
-path; and shutting down the API, scheduler and share manager services will
-not impact access to existing shared file systems.
-
-Typically, storage and storage device management networks are separate.
-Manila services only need access to the storage device management network.
-For example, if a Ceph cluster was used in the deployment, the "storage"
-network refers to the Ceph cluster's public network, and Manila's share
-manager service needs to be able to reach it.
-
-== Changes to CephFS via NFS
-
-If the Red Hat OpenStack Platform 17.1 deployment uses CephFS via NFS as a
-backend for Manila, there's a `ceph-nfs` service on the RHOSP
-controller nodes deployed and managed by Director. This service cannot be
-directly imported into RHOSP 18. On RHOSP 18, Manila only supports using a
-"clustered" NFS service that is directly managed on the Ceph cluster. So,
-adoption with this service will involve a data path disruption to existing NFS
-clients. The timing of this disruption can be controlled by the deployer
-independent of this adoption procedure.
-
-On RHOSP  17.1, pacemaker controls the high availability of the `ceph-nfs`
-service. This service is assigned a Virtual IP (VIP) address that is also
-managed by pacemaker. The VIP is typically created on an isolated `StorageNFS`
-network. There are ordering and collocation constraints established between
-this VIP, `ceph-nfs` and Manila's share manager service on the
-controller nodes. Prior to adopting Manila, pacemaker's ordering and
-collocation constraints must be adjusted to separate the share manager service.
-This establishes `ceph-nfs` with its VIP as an isolated, standalone NFS service
-that can be decommissioned at will after completing the OpenStack adoption.
-
-Red Hat Ceph Storage 7.0 introduced a native `clustered Ceph NFS service`. This
-service has to be deployed on the Ceph cluster using the Ceph orchestrator
-prior to adopting Manila. This NFS service will eventually replace the
-standalone NFS service from RHOSP 17.1 in your deployment. When Manila is
-adopted into the RHOSP 18 environment, it will establish all the existing
-exports and client restrictions on the new clustered Ceph NFS service. Clients
-can continue to read and write data on their existing NFS shares, and are not
-affected until the old standalone NFS service is decommissioned. This
-switchover window allows clients to re-mount the same share from the new
-clustered Ceph NFS service during a scheduled downtime.
-
-In order to ensure that existing clients can easily switchover to the new NFS
-service, it is necessary that the clustered Ceph NFS service is assigned an
-IP address from the same isolated `StorageNFS` network. Doing this will ensure
-that NFS users aren't expected to make any networking changes to their
-existing workloads. These users only need to discover and re-mount their shares
-using new export paths. When the adoption procedure is complete, OpenStack
-users can query Manila's API to list the export locations on existing shares to
-identify the `preferred` paths to mount these shares. These `preferred` paths
-will correspond to the new clustered Ceph NFS service in contrast to other
-non-preferred export paths that continue to be displayed until the old
-isolated, standalone NFS service is decommissioned.
-
-See xref:creating-a-ceph-nfs-cluster_{context}[Creating a Ceph NFS cluster]
-for instructions on setting up a clustered NFS service.
-
-== Prerequisites
-
-* Ensure that Manila systemd services (`api`, `cron`, `scheduler`) are
-stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
-* If the deployment uses CephFS via NFS as a storage backend, ensure that
+* Ensure that {rhos_component_storage_file} systemd services (`api`, `cron`, `scheduler`) are
+stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
+* If the deployment uses CephFS through NFS as a storage backend, ensure that
 pacemaker ordering and collocation constraints are adjusted. For more
-information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
-* Ensure that manila's pacemaker service (`openstack-manila-share`) is
-stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping OpenStack services].
-* Ensure that the database migration has completed. For more information, see xref:migrating-databases-to-mariadb-instances_{context}[Migrating databases to MariaDB instances].
-* Ensure that OpenShift nodes where `manila-share` service will be deployed
+information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
+* Ensure that the {rhos_component_storage_file} pacemaker service (`openstack-manila-share`) is
+stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
+* Ensure that the database migration has completed. For more information, see xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances].
+* Ensure that {OpenShift} nodes where `manila-share` service will be deployed
 can reach the management network that the storage system is in.
-* If the deployment uses CephFS via NFS as a storage backend, ensure that
+* If the deployment uses CephFS through NFS as a storage backend, ensure that
 a new clustered Ceph NFS service is deployed on the Ceph cluster with the help
 of Ceph orchestrator. For more information, see
-xref:creating-a-ceph-nfs-cluster_{context}[Creating a Ceph NFS cluster].
+xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a Ceph NFS cluster].
 * Ensure that services such as keystone and memcached are available prior to
-adopting manila services.
+adopting the Shared File Systems services.
 * If tenant-driven networking was enabled (`driver_handles_share_servers=True`),
-ensure that neutron has been deployed prior to adopting manila services.
+ensure that neutron has been deployed prior to adopting Shared File Systems services.
 
-== Procedure - Manila adoption
+.Procedure
 
-=== Copying configuration from the RHOSP 17.1 deployment
-
-Define the `CONTROLLER1_SSH` environment variable, if it link:stop_openstack_services.md#variables[hasn't been
-defined] already. Then copy the configuration file from RHOSP 17.1 for
+. Define the `CONTROLLER1_SSH` environment variable, if it link:stop_openstack_services.md#variables[hasn't been
+defined] already. Then copy the configuration file from {OpenStackShort} {rhos_prev_ver} for
 reference.
-
-[source,bash]
++
 ----
 $CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/manila/etc/manila/manila.conf | awk '!/^ *#/ && NF' > ~/manila.conf
 ----
 
-Review this configuration, alongside any configuration changes that were noted
-since RHOSP 17.1. Not all of it makes sense to bring into the new cloud
-environment:
-
+. Review this configuration alongside any configuration changes that were noted since {OpenStackShort} {rhos_prev_ver}. Not all of it makes sense to bring into the new cloud environment:
 // - TODO link config diff tables for RHOSP 17.1 (Wallaby) to RHOSP 18 (Antelope) -
-
-* The manila operator is capable of setting up database related configuration
+//kgilliga: The following list might need to be placed in its own module and linked here. This is too much text for a procedure.
+* The {rhos_component_storage_file} operator is capable of setting up database related configuration
 (`[database]`), service authentication (`auth_strategy`,
 `[keystone_authtoken]`), message bus configuration
 (`transport_url`, `control_exchange`), the default paste config
 (`api_paste_config`) and inter-service communication configuration (
 `[neutron]`, `[nova]`, `[cinder]`, `[glance]` `[oslo_messaging_*]`). So
 all of these can be ignored.
-* Ignore the `osapi_share_listen` configuration. In RHOSP 18, you rely on
-OpenShift routes and ingress.
-* Pay attention to policy overrides. In RHOSP 18, manila ships with a secure
+* Ignore the `osapi_share_listen` configuration. In {rhos_long} {rhos_curr_ver}, you rely on
+{OpenShift} routes and ingress.
+* Pay attention to policy overrides. In {rhos_acro} {rhos_curr_ver}, the {rhos_component_storage_file} ships with a secure
 default RBAC, and overrides may not be necessary. Please review RBAC
 defaults by using the https://docs.openstack.org/oslo.policy/latest/cli/oslopolicy-policy-generator.html[Oslo policy generator]
 tool. If a custom policy is necessary, you must provide it as a
 `ConfigMap`. The following sample spec illustrates how a
 `ConfigMap` called `manila-policy` can be set up with the contents of a
 file called `policy.yaml`.
-
++
 [source,yaml]
 ----
   spec:
@@ -172,12 +87,12 @@ file called `policy.yaml`.
 
 * You must preserve the value of the `host` option under the `[DEFAULT]`
 section as `hostgroup`.
-* The Manila API service needs the `enabled_share_protocols` option to be
+* The {rhos_component_storage_file} API service needs the `enabled_share_protocols` option to be
 added in the `customServiceConfig` section in `manila: template: manilaAPI`.
 * If you had scheduler overrides, add them to the `customServiceConfig`
 section in `manila: template: manilaScheduler`.
-* If you had multiple storage backend drivers configured with RHOSP 17.1,
-you will need to split them up when deploying RHOSP 18. Each storage
+* If you had multiple storage backend drivers configured with {OpenStackShort} {rhos_prev_ver},
+you will need to split them up when deploying {rhos_acro} {rhos_curr_ver}. Each storage
 backend driver needs to use its own instance of the `manila-share`
 service.
 * If a storage backend driver needs a custom container image, find it on the
@@ -185,7 +100,7 @@ https://catalog.redhat.com/software/containers/search?gs&q=manila[RHOSP Ecosyste
 and set `manila: template: manilaShares: <custom name> : containerImage`
 value. The following example illustrates multiple storage backend drivers,
 using custom container images.
-
++
 [source,yaml]
 ----
   spec:
@@ -229,13 +144,12 @@ using custom container images.
             replicas: 1
 ----
 
-* If providing sensitive information, such as passwords, hostnames and
-usernames, it is recommended to use OpenShift secrets, and the
+. If providing sensitive information, such as passwords, hostnames and
+usernames, it is recommended to use {OpenShift} secrets, and the
 `customServiceConfigSecrets` key. An example:
-
++
 [source,yaml]
 ----
-
 cat << __EOF__ > ~/netapp_secrets.conf
 
 [netapp]
@@ -244,17 +158,15 @@ netapp_login = fancy_netapp_user
 netapp_password = secret_netapp_password
 netapp_vserver = mydatavserver
 __EOF__
-
 ----
-
-[source,bash]
----
++
+----
 oc create secret generic osp-secret-manila-netapp --from-file=~/netapp_secrets.conf -n openstack
 ----
 
 * `customConfigSecrets` can be used in any service, the following is a
 config example using the secret you created above.
-
++
 [source,yaml]
 ----
   spec:
@@ -280,29 +192,27 @@ config example using the secret you created above.
            replicas: 1
     < . . . >
 ----
-
++
 * If you need to present extra files to any of the services, you can use
-`extraMounts`. For example, when using ceph, you'd need Manila's ceph
+`extraMounts`. For example, when using ceph, you'd need the {rhos_component_storage_file} ceph
 user's keyring file as well as the `ceph.conf` configuration file
 available. These are mounted via `extraMounts` as done with the example
 below.
 * Ensure that the names of the backends (`share_backend_name`) remain as they
-did on RHOSP 17.1.
+did on {OpenStackShort} {rhos_prev_ver}.
 * It is recommended to set the replica count of the `manilaAPI` service and
 the `manilaScheduler` service to 3. You should ensure to set the replica
 count of the `manilaShares` service/s to 1.
 * Ensure that the appropriate storage management network is specified in the
 `manilaShares` section. The example below connects the `manilaShares`
 instance with the CephFS backend driver to the `storage` network.
-* Prior to adopting the `manilaShares` service for CephFS via NFS, ensure that
+* Prior to adopting the `manilaShares` service for CephFS through NFS, ensure that
 you have a clustered Ceph NFS service created. You will need to provide the
 name of the service as ``cephfs_nfs_cluster_id``.
 
-=== Deploying the manila control plane
-
-Patch OpenStackControlPlane to deploy Manila; here's an example that uses
+. Patch `OpenStackControlPlane` to deploy the {rhos_component_storage_file}; here's an example that uses
 Native CephFS:
-
++
 [source,yaml]
 ----
 cat << __EOF__ > ~/manila.patch
@@ -352,15 +262,14 @@ spec:
               - storage
 __EOF__
 ----
-
-Below is an example that uses CephFS via NFS. In this example:
++
+Below is an example that uses CephFS through NFS. In this example:
 
 * The `cephfs_ganesha_server_ip` option is preserved from the configuration on
-the old RHOSP 17.1 environment.
+the old {OpenStackShort} {rhos_prev_ver} environment.
 * The `cephfs_nfs_cluster_id` option is set with the name of the NFS cluster
 created on Ceph.
-
-
++
 [source,yaml]
 ----
 cat << __EOF__ > ~/manila.patch
@@ -410,29 +319,25 @@ spec:
               - storage
 __EOF__
 ----
-
-[source,bash]
++
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patch
 ----
 
-== Post-checks
+.Verification
 
-=== Inspect the resulting manila service pods
-
-[source,bash]
+. Inspect the resulting {rhos_component_storage_file} pods:
++
 ----
 oc get pods -l service=manila
 ----
 
-=== Check that Manila API service is registered in Keystone
-
-[source,bash]
+. Check that the {rhos_component_storage_file} API service is registered in {identity_service_first_ref}:
++
 ----
 openstack service list | grep manila
 ----
-
-[source,bash]
++
 ----
 openstack endpoint list | grep manila
 
@@ -442,100 +347,24 @@ openstack endpoint list | grep manila
 | d655b4390d7544a29ce4ea356cc2b547 | regionOne | manilav2     | sharev2      | True    | internal  | http://manila-internal.openstack.svc:8786/v2                       |
 ----
 
-=== Verify resources
-
-Test the health of the service:
-
-[source,bash]
+. Test the health of the service:
++
 ----
 openstack share service list
 openstack share pool list --detail
 ----
 
-Check on existing workloads:
-
-[source,bash]
+. Check on existing workloads:
++
 ----
 openstack share list
 openstack share snapshot list
 ----
 
-You can create further resources:
-
-[source,bash]
+. You can create further resources:
++
 ----
 openstack share create cephfs 10 --snapshot mysharesnap --name myshareclone
 openstack share create nfs 10 --name mynfsshare
 openstack share export location list mynfsshare
 ----
-
-== Decommissioning the old standalone Ceph NFS service
-
-If the deployment uses CephFS via NFS, you must inform your OpenStack users
-that the old, standalone NFS service will be decommissioned. Users can discover
-the new export locations for their pre-existing shares by querying Manila's API.
-To stop using the old NFS server, they need to unmount and remount their
-shared file systems on each client. If users are consuming Manila shares via
-the Manila CSI plugin for OpenShift, this migration can be done by scaling down
-the application pods and scaling them back up. Clients spawning new workloads
-must be discouraged from using share exports via the old NFS service. Manila
-will no longer communicate with the old NFS service, and so it cannot apply or
-alter any export rules on the old NFS service.
-
-Since the old NFS service will no longer be supported by future software
-upgrades, it is recommended that the decommissioning period is short.
-
-Once the old NFS service is no longer used, you can adjust the configuration
-for the `manila-share` service to remove the `cephfs_ganesha_server_ip` option.
-Doing this will restart the `manila-share` process and remove the export
-locations that pertained to the old NFS service from all the shares.
-
-[source,yaml]
-----
-cat << __EOF__ > ~/manila.patch
-spec:
-  manila:
-    enabled: true
-    apiOverride:
-      route: {}
-    template:
-      manilaShares:
-        cephfs:
-          replicas: 1
-          customServiceConfig: |
-            [DEFAULT]
-            enabled_share_backends = cephfs
-            host = hostgroup
-            [cephfs]
-            driver_handles_share_servers=False
-            share_backend_name=cephfs
-            share_driver=manila.share.drivers.cephfs.driver.CephFSDriver
-            cephfs_conf_path=/etc/ceph/ceph.conf
-            cephfs_auth_id=openstack
-            cephfs_cluster_name=ceph
-            cephfs_protocol_helper_type=NFS
-            cephfs_nfs_cluster_id=cephfs
-          networkAttachments:
-              - storage
-__EOF__
-
-----
-
-[source,bash]
----
-oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patch
-----
-
-To cleanup the standalone ceph nfs service from the old OpenStack control plane
-nodes, you can disable and delete the pacemaker resources associated with the
-service. Replace `<VIP>` in the following commands with the IP address assigned
-to the ceph-nfs service in your environment.
-
-[source,bash]
----
-sudo pcs resource disable ceph-nfs
-sudo pcs resource disable ip-<VIP>
-sudo pcs resource unmanage ceph-nfs
-sudo pcs resource unmanage ip-<VIP>
----
-

@@ -1,0 +1,183 @@
+[id="deploying-the-bare-metal-provisioning-service_{context}"]
+
+= Deploying the Bare Metal Provisioning service
+
+Applying the configuration to deploy the {bare_metal_first_ref}.
+
+[NOTE]
+By default, newer versions of the {bare_metal} contain a more restrictive access control model while also becoming multi-tenant aware. As a result,  bare metal nodes might be missing from a `openstack baremetal node list` command after upgrade. Your nodes have not been deleted, but you must set the `owner` field on each bare metal node due to the increased access restrictions in the role-based access control (RBAC) model. Because this involves access controls and the model of use which can be site specific, it is highly recommended that you identify the "project" to "own" the bare metal nodes.
+
+//kgillga: Does "after upgrade" mean after upgrading to RHOSP 17.1 or after adopting RHOSO 18.0?
+
+.Prerequisites
+
+* Previous Adoption steps completed. Notably, the service databases
+must already be imported into the control plane MariaDB, {identity_service_first_ref}, {networking_first_ref}, {image_service_first_ref}, and {block_storage_first_ref} should be in an operational state. Ideally, {compute_service_first_ref} has not been adopted yet if {bare_metal} is leveraged in a Bare Metal as a Service configuration.
+
+* As explained in xref:planning-the-new-deployment_planning[Planning the new deployment], before deploying {rhos_prev_long} in {rhos_long}, you must ensure that the networks are ready, that you have decided the node selection, and also make sure any necessary changes to the {rhos_acro} nodes have been made. For {bare_metal} conductor services, it is necessary that the services be able to reach Baseboard Management Controllers of hardware which is configured to be managed by {bare_metal}. If this hardware is unreachable, the nodes may enter "maintenance" state and be unable to be acted upon until connectivity is restored at a later point in time.
+
+* You need the contents of `ironic.conf` file. Download the file so that you can access it locally:
++
+----
+$CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/ironic/etc/ironic/ironic.conf > ironic.conf
+----
++
+[NOTE] 
+It is critical that this configuration file comes from one of the controllers and not a {OpenStackPreviousInstaller} undercloud node. The {OpenStackPreviousInstaller} undercloud node specifically operated with different configuration which would not be appropriate or applicable to apply when adopting the Overcloud Ironic deployment. 
+//kgilliga: What is meant by "overcloud Ironic deployment? Can this be changed to the "RHOSP Bare Metal Provisioning service deployment"?
+
+* If adopting the Ironic Inspector service you need the value of the `IronicInspectorSubnets` {OpenStackPreviousInstaller} parameter. Use the same values to populate the `dhcpRanges` parameter in the target environment.
+
+.Variables
+
+Define the shell variables and aliases used in the steps below. The values are just illustrative, use values that are correct for your environment:
+
+----
+alias openstack="oc exec -t openstackclient -- openstack"
+----
+
+.Procedure
+
+. Patch the `OpenStackControlPlane` to deploy the {bare_metal}:
++
+[source,yaml]
+----
+oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+spec:
+  ironic:
+    enabled: true
+    template:
+      rpcTransport: oslo
+      databaseInstance: openstack
+      ironicAPI:
+        replicas: 1
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+      ironicConductors:
+      - replicas: 1
+        networkAttachments:
+          - baremetal
+        provisionNetwork: baremetal
+        storageRequest: 10G
+        customServiceConfig: |
+          [neutron]
+          cleaning_network=<cleaning network uuid>
+          provisioning_network=<provisioning network uuid>
+          rescuing_network=<rescuing network uuid>
+          inspection_network=<introspection network uuid>
+          [conductor]
+          automated_clean=true
+      ironicInspector:
+        replicas: 1
+        inspectionNetwork: baremetal
+        networkAttachments:
+          - baremetal
+        dhcpRanges:
+          - name: inspector-0
+            cidr: 172.20.1.0/24
+            start: 172.20.1.190
+            end: 172.20.1.199
+            gateway: 172.20.1.1
+        serviceUser: ironic-inspector
+        databaseAccount: ironic-inspector
+        passwordSelectors:
+          database: IronicInspectorDatabasePassword
+          service: IronicInspectorPassword
+      ironicNeutronAgent:
+        replicas: 1
+        rabbitMqClusterName: rabbitmq
+      secret: osp-secret
+'
+----
++
+The operator begins to apply the configuration and start the necessary Bare Metal Provisioning services. Once the services have reached a running state, the {bare_metal} automatically begins polling the power state of bare metal nodes for which it is configured to manage. 
+
+. Wait for Bare Metal Provisioning control plane services' custom resources to become ready: 
++
+----
+oc wait --for condition=Ready --timeout=300s ironics.ironic.openstack.org ironic
+//kgilliga: Is "optionally verify the individual service" part of the code block, or is it a separate step?
+# Optionally verify the individual services 
+oc wait --for condition=Ready --timeout=300s ironicapis.ironic.openstack.org ironic-api
+oc wait --for condition=Ready --timeout=300s ironicconductors.ironic.openstack.org ironic-conductor
+oc wait --for condition=Ready --timeout=300s ironicinspectors.ironic.openstack.org ironic-inspector
+oc wait --for condition=Ready --timeout=300s ironicneutronagents.ironic.openstack.org ironic-ironic-neutron-agent
+----
+
+. Update the DNS Nameservers on the provisoning/cleaning/rescue networks. For name resolution to work for {bare_metal} operations the DNS nameserver must be set to use the internal DNS servers in the {rhos_acro} control plane:
++
+----
+openstack subnet set --dns-nameserver 192.168.122.80 provisioning-subnet
+----
+
+. Your {bare_metal} nodes might be missing from a `openstack baremetal node list` command due to increased access restrictions in the role-based access control model. To see the nodes again, temporarily disable the new role- based access control policy, which you can then re-enable after setting the 'owner' field on the nodes.
++
+[source,yaml]
+----
+oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+spec:
+  ironic:
+    enabled: true
+    template:
+      databaseInstance: openstack
+      ironicAPI:
+        replicas: 1
+        customServiceConfig: |
+          [oslo_policy]
+          enforce_scope=false
+          enforce_new_defaults=false
+'
+----
+
+. Once this configuration has applied, the operator restarts the Ironic API service disabling the new RBAC policy which is enabled by default. After which, you should be able to view bare metal nodes without an `owner` field:
++
+----
+openstack baremetal node list -f uuid,provision_state,owner
+----
+
+. Run the following command to assign all bare metal nodes with no owner to a new project, for example, the "admin" project:
++
+----
+ADMIN_PROJECT_ID=$(openstack project show -c id -f value --domain default admin)
+for node in $(openstack baremetal node list -f json -c UUID -c Owner | jq -r '.[] | select(.Owner == null) | .UUID'); do openstack baremetal node set --owner $ADMIN_PROJECT_ID $node; done
+----
+
+. Re-apply the default access control policy:
++
+[source,yaml]
+----
+oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+spec:
+  ironic:
+    enabled: true
+    template:
+      databaseInstance: openstack
+      ironicAPI:
+        replicas: 1
+        customServiceConfig: |
+          [oslo_policy]
+          enforce_scope=true
+          enforce_new_defaults=true
+'
+----
+
+.Verification 
+
+// TODO, this will need more work
+
+* After applying the configuration update to {rhos_acro}, apply the configuration and start the related services. The {bare_metal} begins to poll power state of the bare metal nodes:
++
+----
+openstack endpoint list |grep ironic
+openstack baremetal node list
+----
++
+The time required for the {bare_metal} to review and reconcile the power state of bare metal nodes is dependent upon the number of operating conductors through the `replicas` parameter and which are present in the {bare_metal} deployment being adopted. 

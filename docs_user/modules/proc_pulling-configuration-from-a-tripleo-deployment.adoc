@@ -1,0 +1,83 @@
+[id="pulling-configuration-from-tripleo-deployment_{context}"]
+
+= Pulling the configuration from a {OpenStackPreviousInstaller} deployment
+
+You can pull configuration from your {rhos_prev_long} ({OpenStackShort}) services.
+
+All the services are describes in a yaml file:
+
+https://github.com/openstack-k8s-operators/os-diff/blob/main/config.yaml[service config parameters]
+//kgilliga: Do we want this link in the downstream guide?
+
+.Procedure
+
+. Update your ssh parameters according to your environment in the os-diff.cfg. Os-diff uses those parameters to connect to your {OpenStackPreviousInstaller} node, query and download the configuration files:
++
+----
+ssh_cmd=ssh -F ssh.config standalone
+container_engine=podman
+connection=ssh
+remote_config_path=/tmp/tripleo
+----
++
+Make sure the ssh command you provide in `ssh_cmd` parameter is correct and with key authentication.
+
+. Enable or disable the services you want:
+Example with default {identity_service_first_ref}:
++
+[source,yaml]
+----
+# service name and file location
+services:
+  # Service name
+  keystone:
+    # Bool to enable/disable a service (not implemented yet)
+    enable: true
+    # Pod name, in both OCP and podman context.
+    # It could be strict match or will only just grep the podman_name
+    # and work with all the pods which matched with pod_name.
+    # To enable/disable use strict_pod_name_match: true/false
+    podman_name: keystone
+    pod_name: keystone
+    container_name: keystone-api
+    # pod options
+    # strict match for getting pod id in TripleO and podman context
+    strict_pod_name_match: false
+    # Path of the config files you want to analyze.
+    # It could be whatever path you want:
+    # /etc/<service_name> or /etc or /usr/share/<something> or even /
+    # @TODO: need to implement loop over path to support multiple paths such as:
+    # - /etc
+    # - /usr/share
+    path:
+      - /etc/
+      - /etc/keystone
+      - /etc/keystone/keystone.conf
+      - /etc/keystone/logging.conf
+----
++
+Repeat this step for each {OpenStackShort} service that you want to disable or enable.
+
+. Pull the configuration:
++
+----
+pushd os-diff
+./os-diff pull
+----
++
+The configuration will be pulled and stored by default:
++
+----
+/tmp/tripleo/
+----
+
+.Verification
+
+* You should have into your local path a directory per services such as:
++
+----
+  ▾ tmp/
+    ▾ tripleo/
+      ▾ glance/
+      ▾ keystone/
+----

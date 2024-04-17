@@ -1,26 +1,24 @@
 [id="adopting-telemetry-services_{context}"]
 
-//Check xref contexts.
-
 = Adopting Telemetry services
 
-Adopting Telemetry means that an existing `OpenStackControlPlane` CR, where Telemetry services are supposed to be disabled, should be patched to start the service with the configuration parameters provided by the source environment.
+Adopting Telemetry means that an existing `OpenStackControlPlane` custom resource (CR), where Telemetry services are supposed to be disabled, should be patched to start the service with the configuration parameters provided by the source environment.
 
 This guide also assumes that:
 
 . A `TripleO` environment (the source Cloud) is running on one side;
 . A `SNO` / `CodeReadyContainers` is running on the other side.
 
-== Prerequisites
+.Prerequisites
 
-* Previous Adoption steps completed. MariaDB, Keystone and EDPM should be already adopted.
+* Previous Adoption steps completed. MariaDB, the {identity_service_first_ref} and the data plane should be already adopted. 
+//kgilliga:Should this procedure be moved after the "Adopting the data plane" chapter?
 
-== Procedure - Telemetry adoption
+.Procedure
 
-Patch OpenStackControlPlane to deploy Ceilometer services:
-
+. Patch the `OpenStackControlPlane` CR to deploy Ceilometer services:
 // TODO(jistr): There are still some quay.io images in the downstream build.
-
++
 ----
 cat << EOF > ceilometer_patch.yaml
 spec:
@@ -54,48 +52,44 @@ endif::[]
 EOF
 ----
 
-____
-If you have previously backed up your OpenStack services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
-____
-
+. Optional: If you previously backed up your {OpenStackShort} services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct. This will produce the difference between both ini configuration files:
++
 ----
 pushd os-diff
 ./os-diff cdiff --service ceilometer -c /tmp/collect_tripleo_configs/ceilometer/etc/ceilometer/ceilometer.conf -o ceilometer_patch.yaml
 ----
++
+For more information, see xref:pulling-the-openstack-configuration_{context}[Reviewing the {rhos_prev_long} control plane configuration].
 
-____
-This will produce the difference between both ini configuration files.
-____
-
-Patch OpenStackControlPlane to deploy Ceilometer services:
-
+. Patch the `OpenStackControlPlane` CR to deploy Ceilometer services:
++
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch-file ceilometer_patch.yaml
 ----
 
-== Post-checks
+.Verification
 
-=== Inspect the resulting Ceilometer pods
-
+. Inspect the resulting Ceilometer pods:
++
 ----
 CEILOMETETR_POD=`oc get pods -l service=ceilometer | tail -n 1 | cut -f 1 -d' '`
 oc exec -t $CEILOMETETR_POD -c ceilometer-central-agent -- cat /etc/ceilometer/ceilometer.conf
 ----
 
-=== Inspect the resulting Ceilometer IPMI agent pod on Data Plane nodes
-
+. Inspect the resulting Ceilometer IPMI agent pod on data plane nodes:
++
 ----
 podman ps | grep ceilometer-ipmi
 ----
 
-=== Inspecting enabled pollsters
-
+. Inspect enabled pollsters:
++
 ----
 oc get secret ceilometer-config-data -o jsonpath="{.data['polling\.yaml']}"  | base64 -d
 ----
 
-=== Enabling pollsters according to requirements
-
+. Enable pollsters according to requirements:
++
 ----
 cat << EOF > polling.yaml
 ---
