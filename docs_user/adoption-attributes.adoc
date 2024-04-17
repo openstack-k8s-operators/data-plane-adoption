@@ -12,6 +12,8 @@ ifeval::["{build}" == "upstream"]
 :rhos_curr_ver: Antelope
 :rhos_prev_ver: Wallaby
 :OpenStackPreviousInstaller: TripleO
+:Ceph: Ceph
+:CephCluster: Ceph Storage
 
 //Components and services
 
@@ -74,6 +76,8 @@ ifeval::["{build}" == "downstream"]
 :OpenShift: Red Hat OpenShift Container Platform
 :OpenShiftShort: RHOCP
 :OpenStackPreviousInstaller: director
+:Ceph: Red Hat Ceph Storage 
+:CephCluster: Red Hat Ceph Storage 
 
 //Components and services
 

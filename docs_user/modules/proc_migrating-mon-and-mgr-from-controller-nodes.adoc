@@ -1,21 +1,21 @@
 [id="migrating-mon-and-mgr-from-controller-nodes_{context}"]
 
-= Migrating Ceph Monitor and Ceph Manager daemons to Red Hat Ceph Storage nodes
+= Migrating Ceph Monitor and Ceph Manager daemons to {Ceph} nodes
 //kgilliga: I'm trying to understand the purpose of this procedure. Is this procedure a prescriptive way for customers to migrate Ceph Monitor and Ceph manager daemons from controller nodes to Red Hat Ceph Storage nodes? Or are we recommending that customers create a proof of concept before doing the actual migration? And are oc0-controller-1 and oc0-ceph-0 just examples of the names of nodes for the purposes of this procedure? Note: The SME addressed these questions in the PR. This procedure needs more work. It should not be a POC.
-Migrate your Ceph Monitor daemons, Ceph Manager daemons, and object storage daemons (OSDs) from your {rhos_prev_long} Controller nodes to existing Red Hat Ceph Storage nodes. During the migration,ensure that you can do the following actions:
+Migrate your Ceph Monitor daemons, Ceph Manager daemons, and object storage daemons (OSDs) from your {rhos_prev_long} Controller nodes to existing {Ceph} nodes. During the migration, ensure that you can do the following actions:
 
-* Keep the mon IP addresses by moving them to the Red Hat Ceph Storage nodes.
+* Keep the mon IP addresses by moving them to the {Ceph} nodes.
 * Drain the existing Controller nodes and shut them down.
 * Deploy additional monitors to the existing nodes, and promote them as
-_admin nodes that administrators can use to manage the Red Hat Ceph Storage cluster and perform day 2 operations against it.
-* Keep the cluster operational during the migration.
+_admin nodes that administrators can use to manage the {CephCluster} cluster and perform day 2 operations against it.
+* Keep the {CephCluster} cluster operational during the migration.
 
-The following procedure shows an example migration from a Controller node (`oc0-controller-1`) and a Red Hat Ceph Storage node (`oc0-ceph-0`). Use the names of the nodes in your environment. 
+The following procedure shows an example migration from a Controller node (`oc0-controller-1`) and a {Ceph} node (`oc0-ceph-0`). Use the names of the nodes in your environment. 
 
 .Prerequisites
 
 * Configure the Storage nodes to have both storage and storage_mgmt
-network to ensure that you can use both Red Hat Ceph Storage public and cluster networks. This step requires you to interact with {OpenStackPreviousInstaller}. From {rhos_prev_long} {rhos_prev_ver} and later you do not have to run a stack update. However, there are commands that you must perform to run `os-net-config` on the bare metal node and configure additional networks.
+network to ensure that you can use both {Ceph} public and cluster networks. This step requires you to interact with {OpenStackPreviousInstaller}. From {rhos_prev_long} {rhos_prev_ver} and later you do not have to run a stack update. However, there are commands that you must perform to run `os-net-config` on the bare metal node and configure additional networks.
 
 .. Ensure that the network is defined in the `metalsmith.yaml` for the CephStorageNodes:
 +
@@ -62,14 +62,14 @@ Warning: Permanently added '192.168.24.14' (ED25519) to the list of known hosts.
 
 .Procedure
 
-. To migrate mon(s) and mgr(s) on the two existing Red Hat Ceph Storage nodes, create a Red Hat Ceph Storage spec based on the default roles with the mon/mgr on the controller nodes.
+. To migrate mon(s) and mgr(s) on the two existing {Ceph} nodes, create a {Ceph} spec based on the default roles with the mon/mgr on the controller nodes.
 +
 ----
 openstack overcloud ceph spec -o ceph_spec.yaml -y  \
    --stack overcloud-0     overcloud-baremetal-deployed-0.yaml
 ----
 
-. Deploy the Red Hat Ceph Storage cluster:
+. Deploy the {CephCluster} cluster:
 +
 ----
  openstack overcloud ceph deploy overcloud-baremetal-deployed-0.yaml \
@@ -79,10 +79,10 @@ openstack overcloud ceph spec -o ceph_spec.yaml -y  \
 ----
 +
 [NOTE]
-The `ceph_spec.yaml`, which is the OSP-generated description of the Red Hat Ceph Storage cluster,
+The `ceph_spec.yaml`, which is the OSP-generated description of the {CephCluster} cluster,
 will be used, later in the process, as the basic template required by cephadm to update the status/info of the daemons.
 
-. Check the status of the cluster:
+. Check the status of the {CephCluster} cluster:
 +
 ----
 [ceph: root@oc0-controller-0 /]# ceph -s
@@ -348,7 +348,7 @@ osd.default_drive_group               8  2m ago     69s  oc0-ceph-0;oc0-ceph-1
 ceph mgr fail oc0-controller-0.xzgtvo
 ----
 +
-At this point the cluster is clean:
+At this point the {CephCluster} cluster is clean:
 +
 ----
 [ceph: root@oc0-controller-0 specs]# ceph -s
@@ -368,7 +368,7 @@ At this point the cluster is clean:
     pgs:     1 active+clean
 ----
 +
-The `oc0-controller-1` is removed and powered off without leaving traces on the Red Hat Ceph Storage cluster.
+The `oc0-controller-1` is removed and powered off without leaving traces on the {CephCluster} cluster.
 
 . Repeat this procedure for additional Controller nodes in your environment until you have migrated all the Ceph Mon and Ceph Manager daemons to the target nodes.
 
