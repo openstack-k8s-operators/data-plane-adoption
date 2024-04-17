@@ -54,8 +54,8 @@
         else
             echo "There is/are $number_of_certs certificates to stop being tracked on $i. Stopping to track certificates..."
         fi
-        while IFS= read -r cert; do
+        for cert in $certs_to_stop; do
             echo "Stopping to track $cert..."
             ${SSH_CMD} rm -f $certs_directory/$cert
-        done <<< "$certs_to_stop"
+        done
     done
