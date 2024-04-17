@@ -9,7 +9,7 @@ _Disclaimer: the below steps were reproduced on a FreeIPA 4.10.1 server. The loc
 == Prerequisites
 
 * Check that the source deployment is using TLS Everywhere, skip this step if it's not.
-* Make sure the previous Adoption steps have been performed successfully.
+* Make sure the previous Adoption steps (if any) have been performed successfully.
 * Make sure the backend services on the new deployment are not started yet.
 
 == Variables
@@ -30,7 +30,6 @@ IPA_SSH="ssh -i <path_to_ssh_key> root@<freeipa-server-ip-address>"
 endif::[]
 
 Define the map of compute node name, IP pairs.
-The values are just illustrative and refer to a single node standalone director deployment, use values that are correct for your environment:
 
 [subs=+quotes]
 ----

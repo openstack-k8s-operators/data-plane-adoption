@@ -27,7 +27,7 @@ endif::[]
 For production environments, the deployment method will likely be
 different.
 
-* Since TLS Everywhere is enabled by default, the `tls` root CA on the source environment must copied over to the cert-manager issuer.
+* If TLS Everywhere is enabled on the source environment, the `tls` root CA from the source environment must be copied over to the rootca-internal issuer.
 
 * There are free PVs available to be claimed (for MariaDB and RabbitMQ).
 ifeval::["{build}" != "downstream"]
