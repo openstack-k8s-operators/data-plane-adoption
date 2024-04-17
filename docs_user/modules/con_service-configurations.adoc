@@ -65,7 +65,7 @@ spec:
 In OpenShift it is not recommended to store sensitive information like the
 credentials to the Block Storage service storage array in the CRs, so most OpenStack operators
 have a mechanism to use OpenShift's `Secrets` for sensitive configuration
-parameters of the services and then use then by reference in the
+parameters of the services and then use them by reference in the
 `customServiceConfigSecrets` section which is analogous to the
 `customServiceConfig`.
 
