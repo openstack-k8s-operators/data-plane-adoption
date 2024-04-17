@@ -18,8 +18,6 @@ include::assemblies/assembly_migrating-databases-to-the-control-plane.adoc[level
 
 include::assemblies/assembly_adopting-openstack-control-plane-services.adoc[leveloffset=+1]
 
-include::assemblies/openstack_adoption.adoc[leveloffset=+1]
-
-include::assemblies/ceph_migration.adoc[leveloffset=+1]
+include::assemblies/assembly_migrating-ceph-rbd.adoc[leveloffset=+1]
 
 include::assemblies/swift_migration.adoc[leveloffset=+1]

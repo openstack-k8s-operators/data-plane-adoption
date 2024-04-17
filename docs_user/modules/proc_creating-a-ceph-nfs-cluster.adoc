@@ -1,6 +1,6 @@
 [id="creating-a-ceph-nfs-cluster_{context}"]
 
-= Creating a Ceph NFS cluster
+= Creating a NFS Ganesha cluster
 
 If you use the Ceph via NFS backend with {rhos_component_storage_file_first_ref}, prior to adoption, you must create a new clustered NFS service on the Ceph cluster. This service will replace the standalone, pacemaker-controlled `ceph-nfs` service that was used on {rhos_prev_long} {rhos_prev_ver}.
 

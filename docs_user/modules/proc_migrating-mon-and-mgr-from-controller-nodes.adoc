@@ -1,52 +1,24 @@
-[id="migrating-ceph-rbd_{context}"]
+[id="migrating-mon-and-mgr-from-controller-nodes_{context}"]
 
-//:context: migrating-ceph-rbd
-//kgilliga: This module might be converted to an assembly.
+= Migrating Ceph Monitor and Ceph Manager daemons to Red Hat Ceph Storage nodes
+//kgilliga: I'm trying to understand the purpose of this procedure. Is this procedure a prescriptive way for customers to migrate Ceph Monitor and Ceph manager daemons from controller nodes to Red Hat Ceph Storage nodes? Or are we recommending that customers create a proof of concept before doing the actual migration? And are oc0-controller-1 and oc0-ceph-0 just examples of the names of nodes for the purposes of this procedure? Note: The SME addressed these questions in the PR. This procedure needs more work. It should not be a POC.
+Migrate your Ceph Monitor daemons, Ceph Manager daemons, and object storage daemons (OSDs) from your {rhos_prev_long} Controller nodes to existing Red Hat Ceph Storage nodes. During the migration,ensure that you can do the following actions:
 
-= Migrating Ceph RBD
+* Keep the mon IP addresses by moving them to the Red Hat Ceph Storage nodes.
+* Drain the existing Controller nodes and shut them down.
+* Deploy additional monitors to the existing nodes, and promote them as
+_admin nodes that administrators can use to manage the Red Hat Ceph Storage cluster and perform day 2 operations against it.
+* Keep the cluster operational during the migration.
 
-In this scenario, assuming Ceph is already >= 5, either for HCI or dedicated
-Storage nodes, the daemons living in the OpenStack control plane should be
-moved/migrated into the existing external RHEL nodes (typically the compute
-nodes for an HCI environment or dedicated storage nodes in all the remaining
-use cases).
+The following procedure shows an example migration from a Controller node (`oc0-controller-1`) and a Red Hat Ceph Storage node (`oc0-ceph-0`). Use the names of the nodes in your environment. 
 
-== Requirements
+.Prerequisites
 
-* Ceph is >= 5 and managed by cephadm/orchestrator.
-* Ceph NFS (ganesha) migrated from a https://bugzilla.redhat.com/show_bug.cgi?id=2044910[TripleO based deployment to cephadm].
-* Both the Ceph public and cluster networks are propagated, via TripleO, to the target nodes.
-* Ceph Mons need to keep their IPs (to avoid cold migration).
+* Configure the Storage nodes to have both storage and storage_mgmt
+network to ensure that you can use both Red Hat Ceph Storage public and cluster networks. This step requires you to interact with {OpenStackPreviousInstaller}. From {rhos_prev_long} {rhos_prev_ver} and later you do not have to run a stack update. However, there are commands that you must perform to run `os-net-config` on the bare metal node and configure additional networks.
 
-== Scenario: Migrate mon and mgr from controller nodes
-
-The goal of the first POC is to prove that you are able to successfully drain a
-controller node, in terms of ceph daemons, and move them to a different node.
-The initial target of the POC is RBD only, which means you are going to move only
-mon and mgr daemons. For the purposes of this POC, you will deploy a ceph cluster
-with only mon, mgrs, and osds to simulate the environment a customer will be in
-before starting the migration.
-The goal of the first POC is to ensure that:
-
-* You can keep the mon IP addresses moving them to the Ceph Storage nodes.
-* You can drain the existing controller nodes and shut them down.
-* You can deploy additional monitors to the existing nodes, promoting them as
-_admin nodes that can be used by administrators to manage the Ceph cluster
-and perform day2 operations against it.
-* You can keep the cluster operational during the migration.
-
-=== Prerequisites
-
-The Storage Nodes should be configured to have both *storage* and *storage_mgmt*
-network to make sure that you can use both Ceph public and cluster networks.
-
-This step is the only one where the interaction with TripleO is required. From
-17+ you do not have to run any stack update. However, there are commands that you
-should perform to run os-net-config on the bare-metal node and configure
-additional networks.
-
-Make sure the network is defined in metalsmith.yaml for the CephStorageNodes:
-
+.. Ensure that the network is defined in the `metalsmith.yaml` for the CephStorageNodes:
++
 [source,yaml]
 ----
   - name: CephStorage
@@ -68,16 +40,16 @@ Make sure the network is defined in metalsmith.yaml for the CephStorageNodes:
         template: templates/single_nic_vlans/single_nic_vlans_storage.j2
 ----
 
-Then run:
-
+.. Run the following command:
++
 ----
 openstack overcloud node provision \
   -o overcloud-baremetal-deployed-0.yaml --stack overcloud-0 \
   --network-config -y --concurrency 2 /home/stack/metalsmith-0.yam
 ----
 
-Verify that the storage network is running on the node:
-
+.. Verify that the storage network is running on the node:
++
 ----
 (undercloud) [CentOS-9 - stack@undercloud ~]$ ssh heat-admin@192.168.24.14 ip -o -4 a
 Warning: Permanently added '192.168.24.14' (ED25519) to the list of known hosts.
@@ -88,33 +60,30 @@ Warning: Permanently added '192.168.24.14' (ED25519) to the list of known hosts.
 8: vlan12    inet 172.16.12.46/24 brd 172.16.12.255 scope global vlan12\       valid_lft forever preferred_lft forever
 ----
 
-=== Migrate mon(s) and mgr(s) on the two existing CephStorage nodes
+.Procedure
 
-Create a ceph spec based on the default roles with the mon/mgr on the
-controller nodes.
-
+. To migrate mon(s) and mgr(s) on the two existing Red Hat Ceph Storage nodes, create a Red Hat Ceph Storage spec based on the default roles with the mon/mgr on the controller nodes.
++
 ----
 openstack overcloud ceph spec -o ceph_spec.yaml -y  \
    --stack overcloud-0     overcloud-baremetal-deployed-0.yaml
 ----
 
-Deploy the Ceph cluster:
-
+. Deploy the Red Hat Ceph Storage cluster:
++
 ----
  openstack overcloud ceph deploy overcloud-baremetal-deployed-0.yaml \
     --stack overcloud-0 -o deployed_ceph.yaml \
     --network-data ~/oc0-network-data.yaml \
     --ceph-spec ~/ceph_spec.yaml
 ----
++
+[NOTE]
+The `ceph_spec.yaml`, which is the OSP-generated description of the Red Hat Ceph Storage cluster,
+will be used, later in the process, as the basic template required by cephadm to update the status/info of the daemons.
 
-*Note*:
-
-The ceph_spec.yaml, which is the OSP-generated description of the ceph cluster,
-will be used, later in the process, as the basic template required by cephadm
-to update the status/info of the daemons.
-
-Check the status of the cluster:
-
+. Check the status of the cluster:
++
 ----
 [ceph: root@oc0-controller-0 /]# ceph -s
   cluster:
@@ -132,7 +101,7 @@ Check the status of the cluster:
     usage:   43 MiB used, 400 GiB / 400 GiB avail
     pgs:     1 active+clean
 ----
-
++
 ----
 [ceph: root@oc0-controller-0 /]# ceph orch host ls
 HOST              ADDR           LABELS          STATUS
@@ -143,40 +112,36 @@ oc0-controller-1  192.168.24.23  _admin mgr mon
 oc0-controller-2  192.168.24.13  _admin mgr mon
 ----
 
-The goal of the next section is to migrate the oc0-controller-{1,2} daemons
-into oc0-ceph-{0,1} as the very basic scenario that demonstrates that you can
-actually make this kind of migration using cephadm.
-
-=== Migrate oc0-controller-1 into oc0-ceph-0
-
-ssh into controller-0, then
-
+. Log in to the `controller-0` node, then 
+//kgilliga: Need more description of what is happening in this step.
++
 ----
 cephadm shell -v /home/ceph-admin/specs:/specs
 ----
 
-ssh into ceph-0, then
-
+. Log in to the `ceph-0` node, then
+//kgilliga: Need more description of what is happening in this step.
++
 ----
 sudo “watch podman ps”  # watch the new mon/mgr being deployed here
 ----
 
-(optional) if mgr is active in the source node, then:
-
+. Optional: If mgr is active in the source node, then:
++
 ----
 ceph mgr fail <mgr instance>
 ----
 
-From the cephadm shell, remove the labels on oc0-controller-1
-
+. From the cephadm shell, remove the labels on `oc0-controller-1`:
++
 ----
     for label in mon mgr _admin; do
            ceph orch host rm label oc0-controller-1 $label;
     done
 ----
 
-Add the missing labels to oc0-ceph-0
-
+. Add the missing labels to `oc0-ceph-0`:
++
 ----
 [ceph: root@oc0-controller-0 /]#
 > for label in mon mgr _admin; do ceph orch host label add oc0-ceph-0 $label; done
@@ -185,8 +150,8 @@ Added label mgr to host oc0-ceph-0
 Added label _admin to host oc0-ceph-0
 ----
 
-Drain and force-remove the oc0-controller-1 node
-
+. Drain and force-remove the `oc0-controller-1` node:
++
 ----
 [ceph: root@oc0-controller-0 /]# ceph orch host drain oc0-controller-1
 Scheduled to remove the following daemons from host 'oc0-controller-1'
@@ -196,7 +161,7 @@ mon                  oc0-controller-1
 mgr                  oc0-controller-1.mtxohd
 crash                oc0-controller-1
 ----
-
++
 ----
 [ceph: root@oc0-controller-0 /]# ceph orch host rm oc0-controller-1 --force
 Removed  host 'oc0-controller-1'
@@ -209,10 +174,10 @@ oc0-controller-0  192.168.24.15  mgr mon _admin
 oc0-controller-2  192.168.24.13  _admin mgr mon
 ----
 
-If you have only 3 mon nodes, and the drain of the node doesn't work as
-expected (the containers are still there), then SSH to controller-1 and
+. If you have only 3 mon nodes, and the drain of the node doesn't work as
+expected (the containers are still there), then log in to controller-1 and
 force-purge the containers in the node:
-
++
 ----
 [root@oc0-controller-1 ~]# sudo podman ps
 CONTAINER ID  IMAGE                                                                                        COMMAND               CREATED         STATUS             PORTS       NAMES
@@ -230,13 +195,14 @@ endif::[]
 [root@oc0-controller-1 ~]# sudo podman ps
 CONTAINER ID  IMAGE       COMMAND     CREATED     STATUS      PORTS       NAMES
 ----
-
-NOTE: Cephadm rm-cluster on a node that is not part of the cluster anymore has the
++
+[NOTE]
+Cephadm rm-cluster on a node that is not part of the cluster anymore has the
 effect of removing all the containers and doing some cleanup on the filesystem.
 
-Before shutting the oc0-controller-1 down, move the IP address (on the same
+. Before shutting the oc0-controller-1 down, move the IP address (on the same
 network) to the oc0-ceph-0 node:
-
++
 ----
 mon_host = [v2:172.16.11.54:3300/0,v1:172.16.11.54:6789/0] [v2:172.16.11.121:3300/0,v1:172.16.11.121:6789/0] [v2:172.16.11.205:3300/0,v1:172.16.11.205:6789/0]
 
@@ -252,8 +218,14 @@ mon_host = [v2:172.16.11.54:3300/0,v1:172.16.11.54:6789/0] [v2:172.16.11.121:330
 12: vlan14    inet 172.16.14.223/24 brd 172.16.14.255 scope global vlan14\       valid_lft forever preferred_lft forever
 ----
 
-On the oc0-ceph-0:
-
+. On the oc0-ceph-0, add the IP address of the mon that has been deleted from `controller-0`, and verify that the IP address has been assigned and can be reached: 
+//kgilliga: Revisit this step. Do we need the [heat-admin @oc0-ceph-0 ~]$ ip -o -4 a] code block? Is that code block an example of the output?
++
+----
+$ sudo ip a add 172.16.11.121 dev vlan11
+$ ip -o -4 a
+----
++
 ----
 [heat-admin@oc0-ceph-0 ~]$ ip -o -4 a
 1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
@@ -271,17 +243,18 @@ On the oc0-ceph-0:
 8: vlan12    inet 172.16.12.46/24 brd 172.16.12.255 scope global vlan12\       valid_lft forever preferred_lft forever
 ----
 
-Poweroff oc0-controller-1.
+. Optional: Power off oc0-controller-1.
+//kgilliga: What is the reason for powering off the controller (or not)?
 
-Add the new mon on oc0-ceph-0 using the old IP address:
-
+. Add the new mon on oc0-ceph-0 using the old IP address:
++
 ----
 [ceph: root@oc0-controller-0 /]# ceph orch daemon add mon oc0-ceph-0:172.16.11.121
 Deployed mon.oc0-ceph-0 on host 'oc0-ceph-0'
 ----
 
-Check the new container in the oc0-ceph-0 node:
-
+. Check the new container in the oc0-ceph-0 node:
++
 ----
 ifeval::["{build}" != "downstream"]
 b581dc8bbb78  quay.io/ceph/daemon@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mon.oc0-ceph-0...  24 seconds ago  Up 24 seconds ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mon-oc0-ceph-0
@@ -291,9 +264,9 @@ b581dc8bbb78  registry.redhat.io/ceph/rhceph@sha256:320c364dcc8fc8120e2a42f54eb3
 endif::[]
 ----
 
-On the cephadm shell, backup the existing ceph_spec.yaml, edit the spec
+. On the cephadm shell, backup the existing ceph_spec.yaml, edit the spec
 removing any oc0-controller-1 entry, and replacing it with oc0-ceph-0:
-
++
 ----
 cp ceph_spec.yaml ceph_spec.yaml.bkp # backup the ceph_spec.yaml file
 
@@ -337,8 +310,8 @@ cp ceph_spec.yaml ceph_spec.yaml.bkp # backup the ceph_spec.yaml file
  service_type: mgr
 ----
 
-Apply the resulting spec:
-
+. Apply the resulting spec:
++
 ----
 ceph orch apply -i ceph_spec.yaml
 
@@ -369,14 +342,14 @@ osd.default_drive_group               8  2m ago     69s  oc0-ceph-0;oc0-ceph-1
     pgs:     1 active+clean
 ----
 
-Fix the warning by refreshing the mgr:
-
+. Fix the warning by refreshing the mgr:
++
 ----
 ceph mgr fail oc0-controller-0.xzgtvo
 ----
-
-And at this point the cluster is clean:
-
++
+At this point the cluster is clean:
++
 ----
 [ceph: root@oc0-controller-0 specs]# ceph -s
   cluster:
@@ -394,17 +367,10 @@ And at this point the cluster is clean:
     usage:   43 MiB used, 400 GiB / 400 GiB avail
     pgs:     1 active+clean
 ----
++
+The `oc0-controller-1` is removed and powered off without leaving traces on the Red Hat Ceph Storage cluster.
 
-oc0-controller-1 has been removed and powered off without leaving traces on the ceph cluster.
+. Repeat this procedure for additional Controller nodes in your environment until you have migrated all the Ceph Mon and Ceph Manager daemons to the target nodes.
 
-The same approach and the same steps can be applied to migrate oc0-controller-2 to oc0-ceph-1.
 
-=== Screen Recording:
 
-* https://asciinema.org/a/508174[Externalize a TripleO deployed Ceph cluster]
-
-//== What's next
-
-== Useful resources
-
-* https://docs.ceph.com/en/pacific/cephadm/services/mon/#deploy-additional-monitors[cephadm - deploy additional mon(s)]
