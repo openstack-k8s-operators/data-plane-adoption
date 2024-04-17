@@ -109,7 +109,6 @@ spec:
         nodeSelector:
           node: non-existing-node-name
       ovnNorthd:
-        networkAttachment: internalapi
         replicas: 0
       ovnDBCluster:
         ovndbcluster-nb:

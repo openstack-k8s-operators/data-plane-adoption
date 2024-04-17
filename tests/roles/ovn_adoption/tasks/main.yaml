@@ -180,7 +180,6 @@
         enabled: true
         template:
           ovnNorthd:
-            networkAttachment: internalapi
             replicas: 1
     '
 
