@@ -4,27 +4,14 @@
 
 = Migrating Red Hat Ceph Storage RBD
 
-For hyperconverged infrastructure (HCI) or dedicated Storage nodes that are running version 5 or later, you must migrate the daemons that are included in the {rhos_prev_long} control plane into the existing external RHEL nodes. The external RHEL nodes typically include the Compute nodes for an HCI environment or dedicated storage nodes.
-//kgilliga: SMEs, please check the accuracy of the second sentence.^
+For hyperconverged infrastructure (HCI) or dedicated Storage nodes that are running version 6 or later, you must migrate the daemons that are included in the {rhos_prev_long} control plane into the existing external RHEL nodes. The external RHEL nodes typically include the Compute nodes for an HCI environment or dedicated storage nodes.
+
 To migrate Red Hat Ceph Storage Rados Block Device (RBD), your environment must meet the following requirements:
 
-* Red Hat Ceph Storage is running version 5 or later and is managed by cephadm/orchestrator.
-* Ceph NFS (ganesha) is migrated from a https://bugzilla.redhat.com/show_bug.cgi?id=2044910[TripleO based deployment to cephadm].
-//kgilliga: Can we say "Ceph NFS (ganesha) is migrated from a TripleO based deployment to cephadm" without the BZ link? The BZ is closed-migrated. Should I link to "Configuring a Ceph backend"?
+* Red Hat Ceph Storage is running version 6 or later and is managed by cephadm/orchestrator.
+* NFS (ganesha) is migrated from a {OpenStackPreviousInstaller}-based deployment to cephadm.For more information, see xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a NFS Ganesha cluster]. 
 * Both the Red Hat Ceph Storage public and cluster networks are propagated, with {OpenStackPreviousInstaller}, to the target nodes.
 * Ceph Monitors need to keep their IPs to avoid cold migration.
 
 include::../modules/proc_migrating-mon-and-mgr-from-controller-nodes.adoc[leveloffset=+1]
 
-
-//=== Screen Recording:
-
-//* https://asciinema.org/a/508174[Externalize a TripleO deployed Ceph cluster]
-
-//== What's next
-
-//== Useful resources
-
-//* https://docs.ceph.com/en/pacific/cephadm/services/mon/#deploy-additional-monitors[cephadm - deploy additional mon(s)]
-
-//kgilliga: I commented out the screen recording and useful resources headings because I'm not sure if we need them in the downstream documentation.

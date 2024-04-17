@@ -1,19 +1,16 @@
 [id="migrating-mon-and-mgr-from-controller-nodes_{context}"]
 
 = Migrating Ceph Monitor and Ceph Manager daemons to Red Hat Ceph Storage nodes
-//kgilliga: I'm trying to understand the purpose of this procedure. Is this procedure a prescriptive way for customers to migrate Ceph Monitor and Ceph manager daemons from controller nodes to Red Hat Ceph Storage nodes? Or are we recommending that customers create a proof of concept before doing the actual migration? And are oc0-controller-1 and oc0-ceph-0 just examples of the names of nodes for the purposes of this procedure?
-The goal of the first POC is to prove that you are able to successfully drain a
-controller node, in terms of Red Hat Ceph Storage daemons, and move them to a different node.
-The initial target of the POC is RBD only, which means you are going to move only mon and mgr daemons. For the purposes of this POC, you will deploy a Red Hat Ceph Storage cluster with only mon, mgrs, and osds to simulate the environment a customer will be in before starting the migration.
-The goal of the first POC is to ensure that:
+//kgilliga: I'm trying to understand the purpose of this procedure. Is this procedure a prescriptive way for customers to migrate Ceph Monitor and Ceph manager daemons from controller nodes to Red Hat Ceph Storage nodes? Or are we recommending that customers create a proof of concept before doing the actual migration? And are oc0-controller-1 and oc0-ceph-0 just examples of the names of nodes for the purposes of this procedure? Note: The SME addressed these questions in the PR. This procedure needs more work. It should not be a POC.
+Migrate your Ceph Monitor daemons, Ceph Manager daemons, and object storage daemons (OSDs) from your {rhos_prev_long} Controller nodes to existing Red Hat Ceph Storage nodes. During the migration,ensure that you can do the following actions:
 
-* You can keep the mon IP addresses by moving them to the Red Hat Ceph Storage nodes.
-* You can drain the existing controller nodes and shut them down.
-* You can deploy additional monitors to the existing nodes, and promote them as
+* Keep the mon IP addresses by moving them to the Red Hat Ceph Storage nodes.
+* Drain the existing Controller nodes and shut them down.
+* Deploy additional monitors to the existing nodes, and promote them as
 _admin nodes that administrators can use to manage the Red Hat Ceph Storage cluster and perform day 2 operations against it.
-* You can keep the cluster operational during the migration.
+* Keep the cluster operational during the migration.
 
-//Note to self: Keeping this here in case I rewrite it and use it in the intro: The goal of the next section is to migrate the oc0-controller-{1,2} daemons into oc0-ceph-{0,1} as the very basic scenario that demonstrates that you can actually make this kind of migration using cephadm.
+The following procedure shows an example migration from a Controller node (`oc0-controller-1`) and a Red Hat Ceph Storage node (`oc0-ceph-0`). Use the names of the nodes in your environment. 
 
 .Prerequisites
 
@@ -115,13 +112,15 @@ oc0-controller-1  192.168.24.23  _admin mgr mon
 oc0-controller-2  192.168.24.13  _admin mgr mon
 ----
 
-. Log in to the `controller-0` node, then
+. Log in to the `controller-0` node, then 
+//kgilliga: Need more description of what is happening in this step.
 +
 ----
 cephadm shell -v /home/ceph-admin/specs:/specs
 ----
 
 . Log in to the `ceph-0` node, then
+//kgilliga: Need more description of what is happening in this step.
 +
 ----
 sudo “watch podman ps”  # watch the new mon/mgr being deployed here
@@ -219,8 +218,13 @@ mon_host = [v2:172.16.11.54:3300/0,v1:172.16.11.54:6789/0] [v2:172.16.11.121:330
 12: vlan14    inet 172.16.14.223/24 brd 172.16.14.255 scope global vlan14\       valid_lft forever preferred_lft forever
 ----
 
-. On the oc0-ceph-0: 
-//kgilliga: What is happening in this step?
+. On the oc0-ceph-0, add the IP address of the mon that has been deleted from `controller-0`, and verify that the IP address has been assigned and can be reached: 
+//kgilliga: Revisit this step. Do we need the [heat-admin @oc0-ceph-0 ~]$ ip -o -4 a] code block? Is that code block an example of the output?
++
+----
+$ sudo ip a add 172.16.11.121 dev vlan11
+$ ip -o -4 a
+----
 +
 ----
 [heat-admin@oc0-ceph-0 ~]$ ip -o -4 a
@@ -239,8 +243,8 @@ mon_host = [v2:172.16.11.54:3300/0,v1:172.16.11.54:6789/0] [v2:172.16.11.121:330
 8: vlan12    inet 172.16.12.46/24 brd 172.16.12.255 scope global vlan12\       valid_lft forever preferred_lft forever
 ----
 
-. Power off oc0-controller-1.
-//kgilliga: Is this something that customers just know how to do?
+. Optional: Power off oc0-controller-1.
+//kgilliga: What is the reason for powering off the controller (or not)?
 
 . Add the new mon on oc0-ceph-0 using the old IP address:
 +
@@ -365,7 +369,8 @@ At this point the cluster is clean:
 ----
 +
 The `oc0-controller-1` is removed and powered off without leaving traces on the Red Hat Ceph Storage cluster.
-+
-The same approach and the same steps can be applied to migrate oc0-controller-2 to oc0-ceph-1.
-//kgilliga: Are "oc0-controller-2 to oc0-ceph-1" generic names? Can we say something like: "Repeat this procedure for additional controller and Red Hat Ceph Storage nodes in your environment?"
+
+. Repeat this procedure for additional Controller nodes in your environment until you have migrated all the Ceph Mon and Ceph Manager daemons to the target nodes.
+
+
 
