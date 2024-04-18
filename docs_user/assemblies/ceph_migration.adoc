@@ -9,7 +9,6 @@ ifdef::context[:parent-context: {context}]
 :toc: left
 :toclevels: 3
 
-include::../modules/ceph-rbd_migration.adoc[leveloffset=+1]
 include::../modules/ceph-rgw_migration.adoc[leveloffset=+1]
 include::../modules/ceph-mds_migration.adoc[leveloffset=+1]
 include::../modules/ceph-monitoring_migration.adoc[leveloffset=+1]

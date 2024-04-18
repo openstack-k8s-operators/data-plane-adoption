@@ -1,0 +1,20 @@
+[id="adopting-data-plane_{context}"]
+
+:context: adopting-data-plane
+
+= Adopting the data plane
+
+Adopting the {rhos_long} data plane involves the following steps:
+
+. Stopping any remaining services on the {rhos_prev_long} ({OpenStackShort}) control plane.
+. Deploying the required custom resources.
+. If applicable, performing a fast-forward upgrade on Compute services from {OpenStackShort} {rhos_prev_ver} to {rhos_acro} {rhos_curr_ver}.
+
+[WARNING]
+After the {rhos_acro} control plane is managing the newly deployed data plane, you must not re-enable services on the {OpenStackShort} {rhos_prev_ver} control plane and data plane. Re-enabling services causes workloads to be managed by two control planes or two data planes, resulting in data corruption, loss of control of existing workloads, inability to start new workloads, or other issues.
+
+include::../modules/proc_stopping-infrastructure-management-and-compute-services.adoc[leveloffset=+1]
+
+include::../modules/proc_adopting-compute-services-to-the-data-plane.adoc[leveloffset=+1]
+
+include::../modules/proc_performing-a-fast-forward-upgrade-on-compute-services.adoc[leveloffset=+1]
