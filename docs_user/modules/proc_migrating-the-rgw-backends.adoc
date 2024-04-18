@@ -4,6 +4,8 @@
 
 To match the cardinality diagram, you use cephadm labels to refer to a group of nodes where a given daemon type should be deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_{context}[{Ceph} daemon cardinality].
 
+//kgilliga: Should each instance of "CephStorage" node be changed to "Red Hat Ceph Storage node" (downstream) and "Ceph Storage node" (upstream)?
+
 .Procedure
 
 . Add the RGW label to the {Ceph} nodes:
@@ -81,7 +83,7 @@ spec:
   rgw_realm: default
   rgw_zone: default
 ----
-
++
 (*) https://github.com/ceph/ceph/blob/main/src/cephadm/cephadm.py#L1423-L1446[cephadm_check_port]
 //kgilliga: Can I remove this link?
 
@@ -111,8 +113,8 @@ rgw.rgw.cephstorage-2.krycit  cephstorage-2  172.17.3.81:8090  running (13s)
 ----
 
 . Ensure that the new RGW backends are reachable on
-the new ports, because you are going to enable an *IngressDaemon* on port *8080*
-later in the process. For this reason, log in to each RGW node (the _CephStorage_
+the new ports, because you are going to enable an IngressDaemon on port 8080
+later in the process. For this reason, log in to each RGW node (the CephStorage
 nodes) and add the iptables rule to allow connections to both 8080 and 8090
 ports in the CephStorage nodes.
 +
