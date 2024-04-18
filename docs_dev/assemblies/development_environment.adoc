@@ -148,7 +148,7 @@ make openstack
 === Convenience steps
 
 To make our life easier we can copy the deployment passwords we'll be using
-in the https://openstack-k8s-operators.github.io/data-plane-adoption/openstack/backend_services_deployment/[backend services deployment phase of the data plane adoption].
+in the https://openstack-k8s-operators.github.io/data-plane-adoption/user/#deploying-backend-services_migrating-databases[backend services deployment phase of the data plane adoption].
 
 [,bash]
 ----
@@ -212,7 +212,7 @@ Similar snapshot could be done for the CRC virtual machine, but the
 developer environment reset on CRC side can be done sufficiently via
 the install_yamls `*_cleanup` targets. This is further detailed in
 the section:
-https://openstack-k8s-operators.github.io/data-plane-adoption/contributing/development_environment/#reset-the-environment-to-pre-adoption-state[Reset the environment to pre-adoption state]
+https://openstack-k8s-operators.github.io/data-plane-adoption/dev/#_reset_the_environment_to_pre_adoption_state[Reset the environment to pre-adoption state]
 
 === Create a workload to adopt
 
@@ -557,7 +557,7 @@ We should now have:
 * Each service has their own independent database
 
 An environment above is assumed to be available in the
-https://openstack-k8s-operators.github.io/data-plane-adoption/openstack/glance_adoption[Glance Adoption documentation]. You
+https://openstack-k8s-operators.github.io/data-plane-adoption/user/#adopting-the-image-service_adopt-control-plane[Glance Adoption documentation]. You
 may now follow other Data Plane Adoption procedures described in the
 https://openstack-k8s-operators.github.io/data-plane-adoption[documentation].
 The same pattern can be applied to other services.
