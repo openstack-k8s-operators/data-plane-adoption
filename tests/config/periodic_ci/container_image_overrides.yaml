@@ -94,7 +94,6 @@ spec:
           storageRequest: 10G
           networkAttachment: internalapi
       ovnNorthd:
-        networkAttachment: internalapi
         replicas: 0
       ovnController:
         networkAttachment: tenant

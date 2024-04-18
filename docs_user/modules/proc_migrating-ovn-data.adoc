@@ -124,7 +124,6 @@ spec:
           networkAttachment: internalapi
       ovnNorthd:
         replicas: 0
-        networkAttachment: internalapi
       ovnController:
         networkAttachment: tenant
         nodeSelector:
@@ -177,7 +176,6 @@ spec:
     enabled: true
     template:
       ovnNorthd:
-        networkAttachment: internalapi
         replicas: 1
 '
 ----
