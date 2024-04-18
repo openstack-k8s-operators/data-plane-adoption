@@ -511,10 +511,6 @@ spec:
 EOF
 ----
 
-[NOTE]
-`Neutron-ovn-metadata-agent` running on the data plane nodes does not require any additional actions or configuration during adoption.
-When the `OpenStackDataPlaneDeployment` and `OpenStackDataPlaneNodeSet` CRs are ready, `neutron-ovn-metadata-agent` is up and running on the data plane nodes.
-
 .Verification
 
 . Confirm that all the Ansible EE pods reach a `Completed` status:
