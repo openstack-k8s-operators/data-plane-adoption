@@ -4,11 +4,11 @@
 
 //Check xrefs
 
-.Variables
+.Prerequisites
 
-Define the shell variables used in the steps below. The values are
+* Define the shell variables used in the steps below. The values are
 just illustrative, use values that are correct for your environment:
-
++
 ----
 CONTROLLER_SSH="ssh -F ~/director_standalone/vagrant_ssh_config vagrant@standalone"
 ifeval::["{build}" != "downstream"]
