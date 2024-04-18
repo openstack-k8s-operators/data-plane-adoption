@@ -77,7 +77,7 @@ EOF
 ----
 +
 * When `neutron-sriov-nic-agent` is running on the existing Compute nodes, check the physical device mappings and ensure that they match the values that are defined in the `OpenStackDataPlaneNodeSet` custom resource (CR). For more information, see xref:reviewing-the-openstack-control-plane-configuration_adopt-control-plane[Reviewing the {rhos_prev_long} control plane configuration].
-* Define the shell variables necessary to run the script that runs the Fast-forward upgrade:
+* Define the shell variables necessary to run the script that runs the fast-forward upgrade:
 ----
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
 
@@ -94,8 +94,8 @@ export computes=(
 
 .Procedure
 
-* _Temporary fix_ until the OSP 17 https://code.engineering.redhat.com/gerrit/q/topic:stable-compute-uuid[backport of the stable compute UUID feature]
-lands. 
+//* _Temporary fix_ until the OSP 17 https://code.engineering.redhat.com/gerrit/q/topic:stable-compute-uuid[backport of the stable compute UUID feature]
+//lands. 
 //kgilliga: Revisit this step after 17.1.3 is on the CDN.
 . For each Compute node, write the UUID of the Compute service to the stable `compute_id` file in `/var/lib/nova/` directory:
 +
@@ -213,10 +213,9 @@ data:
   password: <base64 encoded registry password>
 EOF
 ----
-+
 endif::[]
 
-. Deploy the `OpenStackDataPlaneNodeSet` CR. Ensure that the bridge mappings are set as "datacentre:br-ctlplane".
+. Deploy the `OpenStackDataPlaneNodeSet` CR:
 +
 [source,yaml]
 ----
@@ -331,7 +330,7 @@ endif::[]
         edpm_nodes_validation_validate_gateway_icmp: false
 
         # edpm ovn-controller configuration
-        edpm_ovn_bridge_mappings: ['datacentre:br-ctlplane']
+        edpm_ovn_bridge_mappings: <bridge_mappings>
         edpm_ovn_bridge: br-int
         edpm_ovn_encap_type: geneve
         ovn_match_northd_version: false
@@ -393,15 +392,19 @@ endif::[]
         - openvswitch3.1
 EOF
 ----
++
+* Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
 
-. Ensure that the ovn-controller settings that are configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the Compute nodes before adoption. This configuration is stored in the "external_ids" column in the "Open_vSwitch" table in ovsdb:
+. Ensure that the `ovn-controller` settings that are configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the Compute nodes before adoption. This configuration is stored in the `external_ids`` column in the `Open_vSwitch` table in the Open vSwitch database:
 +
 ----
 ovs-vsctl list Open .
 ...
-external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings="datacentre:br-ctlplane", ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
+external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings=<bridge_mappings>, ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
 ...
 ----
++
+* Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
 
 . Optional: Enable `neutron-sriov-nic-agent` in the `OpenStackDataPlaneNodeSet` CR:
 +
@@ -455,6 +458,7 @@ spec:
   playbook: osp.edpm.pre_adoption_validation
 EOF
 ----
+
 .. Create a `OpenStackDataPlaneDeployment` CR that runs the validation only:
 +
 [source,yaml]

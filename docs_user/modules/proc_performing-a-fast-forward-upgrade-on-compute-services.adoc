@@ -9,9 +9,9 @@ is done independently of each other, by configuring
 `[upgrade_levels]compute=auto` for Compute services. Compute control plane
 services apply the change right after custom resource (CR) is patched. Compute data plane services will catch up the same config change with ansible deployment later on.
 
-[NOTE] 
-Additional orchestration happening around the FFU workarounds
-configuration for Compute data plane service is a subject of future changes.
+//[NOTE] 
+//Additional orchestration happening around the FFU workarounds
+//configuration for Compute data plane service is a subject of future changes. kgilliga: We don't comment on future changes downstream.
 
 .Procedure
 
@@ -24,7 +24,7 @@ oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_RO
 +
 The above query should return an empty result as a completion criterion.
 
-. Remove pre-FFU workarounds for Compute control plane services:
+. Remove pre-fast-forward upgrade workarounds for Compute control plane services:
 +
 [source,yaml]
 ----
@@ -68,7 +68,7 @@ spec:
 oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 
-. Remove pre-FFU workarounds for Compute data plane services:
+. Remove pre-fast-forward upgrade workarounds for Compute data plane services:
 +
 [source,yaml]
 ----
@@ -102,7 +102,7 @@ EOF
 oc wait --for condition=Ready openstackdataplanedeployment/openstack-nova-compute-ffu --timeout=5m
 ----
 
-. Run Compute database online migrations to complete FFU:
+. Run Compute database online migrations to complete the fast-forward upgrade:
 +
 ----
 oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
