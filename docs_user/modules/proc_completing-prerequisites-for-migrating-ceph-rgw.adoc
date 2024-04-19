@@ -63,15 +63,15 @@ Full List of Resources:
 ----
 +
 * vlan30 represents the Storage Network, where the new RGW instances should be
-started on the CephStorage nodes.
+started on the {CephCluster} nodes.
 * br-ex represents the External Network, which is where in the current
 environment, haproxy has the frontend VIP assigned.
 
 . Identify the network that you previously had in haproxy and propagate it through
-{OpenStackPreviousInstaller} to the CephStorage nodes. This network is used to reserve a new VIP
+{OpenStackPreviousInstaller} to the {CephCluster} nodes. This network is used to reserve a new VIP
 that is owned by {Ceph} and used as the entry point for the RGW service.
 
-.. Log into `controller-0` and check the current HaProxy configuration until you
+.. Log into `controller-0` and check the current HAProxy configuration until you
 find `ceph_rgw` section:
 +
 ----
@@ -95,7 +95,7 @@ listen ceph_rgw
   server controller-2.storage.redhat.local 172.17.3.156:8080 check fall 5 inter 2000 rise 2
 ----
 
-.. Confirm that the network is used as an HaProxy frontend:
+.. Confirm that the network is used as an HAProxy frontend:
 +
 ----
 [controller-0]$ ip -o -4 a
@@ -105,13 +105,12 @@ listen ceph_rgw
 ...
 ----
 +
-This example shows that controller-0 is exposing the services using the external network, which is not present in
+This example shows that `controller-0` is exposing the services by using the external network, which is not present in
 the {Ceph} nodes, and you need to propagate it through {OpenStackPreviousInstaller}.
-//kgilliga: Can you confirm that this sentence is accurate? ^
 
-. Propagate the HaProxy frontend network to CephStorage nodes.
+. Propagate the HAProxy frontend network to {CephCluster} nodes.
 
-.. Change the NIC template used to define the ceph-storage network interfaces and add the new config section:
+.. Change the NIC template used to define the `ceph-storage` network interfaces and add the new config section:
 +
 [source,yaml]
 ----
@@ -154,7 +153,7 @@ network_config:
     primary: true
 ----
 
-.. In addition, add the *External* Network to the `baremetal.yaml` file used by
+.. In addition, add the External Network to the `baremetal.yaml` file used by
 metalsmith:
 +
 [source,yaml]
@@ -193,8 +192,8 @@ openstack overcloud node provision
   $PWD/network/baremetal_deployment.yaml
 ----
 
-.. Check the new network on the `CephStorage` nodes:
-
+.. Check the new network on the {CephCluster} nodes:
++
 ----
 [root@cephstorage-0 ~]# ip -o -4 a
 
