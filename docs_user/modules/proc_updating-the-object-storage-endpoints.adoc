@@ -27,7 +27,7 @@ The object-storage endpoints still point to the original virtual IP address (VIP
 | e6d0599c5bf24a0fb1ddf6ecac00de2d | regionOne | swift    	| object-store   | True	| admin 	| http://172.17.3.79:8080/swift/v1/AUTH_%(project_id)s |
 ----
 +
-Repeat this step for both internal and admin.
+Repeat this step for both internal and admin endpoints.
 
 . Test the migrated service:
 +

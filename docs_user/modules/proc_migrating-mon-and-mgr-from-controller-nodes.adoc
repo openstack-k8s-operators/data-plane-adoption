@@ -1,7 +1,7 @@
 [id="migrating-mon-and-mgr-from-controller-nodes_{context}"]
 
 = Migrating Ceph Monitor and Ceph Manager daemons to {Ceph} nodes
-//kgilliga: I'm trying to understand the purpose of this procedure. Is this procedure a prescriptive way for customers to migrate Ceph Monitor and Ceph manager daemons from controller nodes to Red Hat Ceph Storage nodes? Or are we recommending that customers create a proof of concept before doing the actual migration? And are oc0-controller-1 and oc0-ceph-0 just examples of the names of nodes for the purposes of this procedure? Note: The SME addressed these questions in the PR. This procedure needs more work. It should not be a POC.
+//kgilliga: This procedure needs to be revisited. It should not be a POC.
 Migrate your Ceph Monitor daemons, Ceph Manager daemons, and object storage daemons (OSDs) from your {rhos_prev_long} Controller nodes to existing {Ceph} nodes. During the migration, ensure that you can do the following actions:
 
 * Keep the mon IP addresses by moving them to the {Ceph} nodes.

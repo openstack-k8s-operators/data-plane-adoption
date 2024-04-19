@@ -4,8 +4,6 @@
 
 To match the cardinality diagram, you use cephadm labels to refer to a group of nodes where a given daemon type should be deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_{context}[{Ceph} daemon cardinality].
 
-//kgilliga: Should each instance of "CephStorage" node be changed to "Red Hat Ceph Storage node" (downstream) and "Ceph Storage node" (upstream)?
-
 .Procedure
 
 . Add the RGW label to the {Ceph} nodes:
@@ -40,13 +38,19 @@ controller-2   192.168.24.38  _admin mon mgr
 6 hosts in cluster
 ----
 
-. During the overcloud deployment, RGW is applied at step2
+ifeval::["{build}" != "downstream"]
+. During the overcloud deployment, RGW is applied at step 2
 (external_deployment_steps), and a cephadm compatible spec is generated in
 `/home/ceph-admin/specs/rgw` from the https://github.com/openstack/tripleo-ansible/blob/master/tripleo_ansible/ansible_plugins/modules/ceph_mkspec.py[ceph_mkspec] ansible module.
 Find and patch the RGW spec, specifying the right placement using the labels
 approach, and change the rgw backend port to 8090 to avoid conflicts
 with the https://github.com/openstack/tripleo-ansible/blob/master/tripleo_ansible/roles/tripleo_cephadm/tasks/rgw.yaml#L26-L30[Ceph Ingress Daemon] (*)
-//kgilliga: This step needs to be rewritten. We shouldn't link to github in the downstream docs. And are the "external_deployment_steps" pending?
+endif::[]
+ifeval::["{build}" != "upstream"]
+. During the overcloud deployment, RGW is applied at step 2
+(external_deployment_steps), and a cephadm compatible spec is generated in
+`/home/ceph-admin/specs/rgw` from director. Find the RGW spec:
+endif::[]
 +
 ----
 [root@controller-0 heat-admin]# cat rgw
@@ -67,7 +71,9 @@ spec:
   rgw_zone: default
 ----
 
-. Patch the spec replacing controller nodes with the label key:
+. In the `placement` section, replace the following values:
+* Replace the controller nodes with the `label: rgw` label. 
+* Change the ` rgw_frontend_port` value to `8090` to avoid conflicts with the Ceph ingress daemon.
 +
 ----
 ---
@@ -83,11 +89,8 @@ spec:
   rgw_realm: default
   rgw_zone: default
 ----
-+
-(*) https://github.com/ceph/ceph/blob/main/src/cephadm/cephadm.py#L1423-L1446[cephadm_check_port]
-//kgilliga: Can I remove this link?
 
-. Apply the new RGW spec using the orchestrator CLI:
+. Apply the new RGW spec by using the orchestrator CLI:
 +
 ----
 $ cephadm shell -m /home/ceph-admin/specs/rgw
@@ -114,9 +117,9 @@ rgw.rgw.cephstorage-2.krycit  cephstorage-2  172.17.3.81:8090  running (13s)
 
 . Ensure that the new RGW backends are reachable on
 the new ports, because you are going to enable an IngressDaemon on port 8080
-later in the process. For this reason, log in to each RGW node (the CephStorage
+later in the process. For this reason, log in to each RGW node (the {CephCluster}
 nodes) and add the iptables rule to allow connections to both 8080 and 8090
-ports in the CephStorage nodes.
+ports in the {CephCluster} nodes.
 +
 ----
 iptables -I INPUT -p tcp -m tcp --dport 8080 -m conntrack --ctstate NEW -m comment --comment "ceph rgw ingress" -j ACCEPT

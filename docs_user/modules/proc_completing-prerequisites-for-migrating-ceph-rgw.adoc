@@ -65,7 +65,7 @@ Full List of Resources:
 * vlan30 represents the Storage Network, where the new RGW instances should be
 started on the {CephCluster} nodes.
 * br-ex represents the External Network, which is where in the current
-environment, haproxy has the frontend VIP assigned.
+environment, haproxy has the frontend Virtual IP (VIP) assigned.
 
 . Identify the network that you previously had in haproxy and propagate it through
 {OpenStackPreviousInstaller} to the {CephCluster} nodes. This network is used to reserve a new VIP
