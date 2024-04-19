@@ -63,3 +63,7 @@ it or doing it quick and dirty. There is no difference in how {block_storage} op
 include::../modules/proc_preparing-block-storage-service-by-customizing-configuration.adoc[leveloffset=+1]
 
 include::../modules/proc_preparing-block-storage-service-by-using-agnostic-config-file.adoc[leveloffset=+1]
+
+ifeval::["{build}" != "downstream"]
+include::../modules/con_block-storage-service-config-generation-helper-tool.adoc[leveloffset=+1]
+endif::[]
