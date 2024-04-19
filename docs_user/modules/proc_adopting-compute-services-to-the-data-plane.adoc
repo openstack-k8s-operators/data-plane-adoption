@@ -158,6 +158,20 @@ cd -
 
 . Create a `nova-compute-extra-config` service:
 +
+. If TLS Everywhere is enabled, append the following to the OpenStackDataPlaneService spec:
++
+[source,yaml]
+----
+  tlsCert:
+    contents:
+      - dnsnames
+      - ips
+    networks:
+      - ctlplane
+    issuer: osp-rootca-issuer-internal
+  caCerts: combined-ca-bundle
+----
++
 [source,yaml]
 ----
 oc apply -f - <<EOF
@@ -216,6 +230,8 @@ EOF
 endif::[]
 
 . Deploy the `OpenStackDataPlaneNodeSet` CR:
++
+. If TLS Everywhere is enabled, change spec:tlsEnabled to true
 +
 [source,yaml]
 ----
