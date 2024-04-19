@@ -1,0 +1,48 @@
+[id="ceph-daemon-cardinality_{context}"]
+
+= {Ceph} daemon cardinality
+
+{Ceph} 6 and later applies strict constraints in the way daemons can be colocated within the same node. 
+ifeval::["{build}" != "upstream"]
+For more information, see link:https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations]. 
+endif::[]
+The resulting topology depends on the available hardware, as well as the amount of {Ceph} services present in the Controller nodes which are going to be retired. 
+ifeval::["{build}" != "upstream"]
+For more information about the procedure that is required to migrate the RGW component and keep an HA model using the Ceph ingress daemon, see link:{defaultCephURL}/object_gateway_guide/index#high-availability-for-the-ceph-object-gateway[High availability for the Ceph Object Gateway] in _Object Gateway Guide_. 
+endif::[]
+ifeval::["{build}" != "downstream"] 
+The following document describes the procedure required to migrate the RGW component (and keep an HA model using the https://docs.ceph.com/en/latest/cephadm/services/rgw/#high-availability-service-for-rgw[Ceph Ingress daemon] in a common {OpenStackPreviousInstaller} scenario where Controller nodes represent the
+https://github.com/openstack/tripleo-ansible/blob/master/tripleo_ansible/roles/tripleo_cephadm/tasks/rgw.yaml#L26-L30[spec placement] where the service is deployed.
+endif::[] 
+As a general rule, the number of services that can be migrated depends on the number of available nodes in the cluster. The following diagrams cover the distribution of the {Ceph} daemons on the {Ceph} nodes where at least three nodes are required in a scenario that sees only RGW and RBD, without the {dashboard_first_ref}:
+
+----
+|    |                     |             |
+|----|---------------------|-------------|
+| osd | mon/mgr/crash      | rgw/ingress |
+| osd | mon/mgr/crash      | rgw/ingress |
+| osd | mon/mgr/crash      | rgw/ingress |
+----
+
+With the {dashboard}, and without {rhos_component_storage_file_first_ref} at least four nodes are required. The {dashboard} has no failover:
+
+----
+|     |                     |             |
+|-----|---------------------|-------------|
+| osd | mon/mgr/crash | rgw/ingress       |
+| osd | mon/mgr/crash | rgw/ingress       |
+| osd | mon/mgr/crash | dashboard/grafana |
+| osd | rgw/ingress   | (free)            |
+----
+
+With the {dashboard} and the {rhos_component_storage_file}, 5 nodes minimum are required, and the {dashboard} has no failover:
+
+----
+|     |                     |                         |
+|-----|---------------------|-------------------------|
+| osd | mon/mgr/crash       | rgw/ingress             |
+| osd | mon/mgr/crash       | rgw/ingress             |
+| osd | mon/mgr/crash       | mds/ganesha/ingress     |
+| osd | rgw/ingress         | mds/ganesha/ingress     |
+| osd | mds/ganesha/ingress | dashboard/grafana       |
+----

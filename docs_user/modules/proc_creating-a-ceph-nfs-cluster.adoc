@@ -18,7 +18,7 @@ deployed via {OpenStackPreviousInstaller}.
 .. Identify the node definition file used in the environment. This is
 the input file associated with the `openstack overcloud node provision`
 command. For example, this file may be called `overcloud-baremetal-deploy.yaml`
-.. Edit the networks associated with the `CephStorage` nodes to include the
+.. Edit the networks associated with the {CephCluster} nodes to include the
 `StorageNFS` network:
 +
 [source,yaml]
@@ -45,7 +45,7 @@ command. For example, this file may be called `overcloud-baremetal-deploy.yaml`
     - network: storage_mgmt
     - network: storage_nfs
 ----
-.. Edit the network configuration template file for the `CephStorage` nodes
+.. Edit the network configuration template file for the {CephCluster} nodes
 to include an interface connecting to the `StorageNFS` network. In the
 example above, the path to the network configuration template file is
 `/home/stack/network/nic-configs/ceph-storage.j2`. This file is modified
@@ -61,7 +61,7 @@ to include the following NIC template:
   routes: {{ storage_nfs_host_routes }}
 ----
 .. Re-run the `openstack overcloud node provision` command to update the
-`CephStorage` nodes.
+{CephCluster} nodes.
 +
 ----
 openstack overcloud node provision \
@@ -72,7 +72,7 @@ openstack overcloud node provision \
     /home/stack/network/baremetal_deployment.yaml
 ----
 +
-When the update is complete, ensure that the `CephStorage` nodes have a
+When the update is complete, ensure that the {CephCluster} nodes have a
 new interface created and tagged with the appropriate VLAN associated with
 `StorageNFS`.
 

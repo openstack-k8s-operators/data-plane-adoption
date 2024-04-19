@@ -1,0 +1,83 @@
+[id="updating-the-object-storage-endpoints_{context}"]
+
+= Updating the object-store endpoints
+
+The object-storage endpoints still point to the original virtual IP address (VIP) that is owned by pacemaker. You must update the object-store endpoints because other services stll use the original VIP, and you reserved a new VIP on the same network.
+
+.Procedure
+
+. List the current endpoints:
++
+----
+(overcloud) [stack@undercloud-0 ~]$ openstack endpoint list | grep object
+
+| 1326241fb6b6494282a86768311f48d1 | regionOne | swift    	| object-store   | True	| internal  | http://172.17.3.68:8080/swift/v1/AUTH_%(project_id)s |
+| 8a34817a9d3443e2af55e108d63bb02b | regionOne | swift    	| object-store   | True	| public	| http://10.0.0.103:8080/swift/v1/AUTH_%(project_id)s  |
+| fa72f8b8b24e448a8d4d1caaeaa7ac58 | regionOne | swift    	| object-store   | True	| admin 	| http://172.17.3.68:8080/swift/v1/AUTH_%(project_id)s |
+----
+
+. Update the endpoints that are pointing to the Ingress VIP:
++
+----
+(overcloud) [stack@undercloud-0 ~]$ openstack endpoint set --url "http://10.0.0.89:8080/swift/v1/AUTH_%(project_id)s" 95596a2d92c74c15b83325a11a4f07a3
+
+(overcloud) [stack@undercloud-0 ~]$ openstack endpoint list | grep object-store
+| 6c7244cc8928448d88ebfad864fdd5ca | regionOne | swift    	| object-store   | True	| internal  | http://172.17.3.79:8080/swift/v1/AUTH_%(project_id)s |
+| 95596a2d92c74c15b83325a11a4f07a3 | regionOne | swift    	| object-store   | True	| public	| http://10.0.0.89:8080/swift/v1/AUTH_%(project_id)s   |
+| e6d0599c5bf24a0fb1ddf6ecac00de2d | regionOne | swift    	| object-store   | True	| admin 	| http://172.17.3.79:8080/swift/v1/AUTH_%(project_id)s |
+----
++
+Repeat this step for both internal and admin endpoints.
+
+. Test the migrated service:
++
+----
+(overcloud) [stack@undercloud-0 ~]$ swift list --debug
+
+DEBUG:swiftclient:Versionless auth_url - using http://10.0.0.115:5000/v3 as endpoint
+DEBUG:keystoneclient.auth.identity.v3.base:Making authentication request to http://10.0.0.115:5000/v3/auth/tokens
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): 10.0.0.115:5000
+DEBUG:urllib3.connectionpool:http://10.0.0.115:5000 "POST /v3/auth/tokens HTTP/1.1" 201 7795
+DEBUG:keystoneclient.auth.identity.v3.base:{"token": {"methods": ["password"], "user": {"domain": {"id": "default", "name": "Default"}, "id": "6f87c7ffdddf463bbc633980cfd02bb3", "name": "admin", "password_expires_at": null},
+
+
+...
+...
+...
+
+DEBUG:swiftclient:REQ: curl -i http://10.0.0.89:8080/swift/v1/AUTH_852f24425bb54fa896476af48cbe35d3?format=json -X GET -H "X-Auth-Token: gAAAAABj7KHdjZ95syP4c8v5a2zfXckPwxFQZYg0pgWR42JnUs83CcKhYGY6PFNF5Cg5g2WuiYwMIXHm8xftyWf08zwTycJLLMeEwoxLkcByXPZr7kT92ApT-36wTfpi-zbYXd1tI5R00xtAzDjO3RH1kmeLXDgIQEVp0jMRAxoVH4zb-DVHUos" -H "Accept-Encoding: gzip"
+DEBUG:swiftclient:RESP STATUS: 200 OK
+DEBUG:swiftclient:RESP HEADERS: {'content-length': '2', 'x-timestamp': '1676452317.72866', 'x-account-container-count': '0', 'x-account-object-count': '0', 'x-account-bytes-used': '0', 'x-account-bytes-used-actual': '0', 'x-account-storage-policy-default-placement-container-count': '0', 'x-account-storage-policy-default-placement-object-count': '0', 'x-account-storage-policy-default-placement-bytes-used': '0', 'x-account-storage-policy-default-placement-bytes-used-actual': '0', 'x-trans-id': 'tx00000765c4b04f1130018-0063eca1dd-1dcba-default', 'x-openstack-request-id': 'tx00000765c4b04f1130018-0063eca1dd-1dcba-default', 'accept-ranges': 'bytes', 'content-type': 'application/json; charset=utf-8', 'date': 'Wed, 15 Feb 2023 09:11:57 GMT'}
+DEBUG:swiftclient:RESP BODY: b'[]'
+----
+
+. Run tempest tests against object-storage:
++
+----
+(overcloud) [stack@undercloud-0 tempest-dir]$  tempest run --regex tempest.api.object_storage
+...
+...
+...
+======
+Totals
+======
+Ran: 141 tests in 606.5579 sec.
+ - Passed: 128
+ - Skipped: 13
+ - Expected Fail: 0
+ - Unexpected Success: 0
+ - Failed: 0
+Sum of execute time for each test: 657.5183 sec.
+
+==============
+Worker Balance
+==============
+ - Worker 0 (1 tests) => 0:10:03.400561
+ - Worker 1 (2 tests) => 0:00:24.531916
+ - Worker 2 (4 tests) => 0:00:10.249889
+ - Worker 3 (30 tests) => 0:00:32.730095
+ - Worker 4 (51 tests) => 0:00:26.246044
+ - Worker 5 (6 tests) => 0:00:20.114803
+ - Worker 6 (20 tests) => 0:00:16.290323
+ - Worker 7 (27 tests) => 0:00:17.103827
+----

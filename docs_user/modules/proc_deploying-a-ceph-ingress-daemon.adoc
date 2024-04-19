@@ -1,0 +1,134 @@
+[id="deploying-a-ceph-ingress-daemon_{context}"]
+
+= Deploying a {Ceph} ingress daemon
+
+To match the cardinality diagram, you use cephadm labels to refer to a group of nodes where a given daemon type should be deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_{context}[{Ceph} daemon cardinality].
+`HAProxy` is managed by {OpenStackPreviousInstaller} through `Pacemaker`: the three running instances at this point will point to the old RGW backends, resulting in a broken configuration. 
+ifeval::["{build}" != "upstream"]
+Since you are going to deploy the Ceph ingress daemon, the first thing to do is remove the existing `ceph_rgw` config, clean up the config created by {OpenStackPreviousInstaller} and restart the service to make sure other services are not affected by this change.
+endif::[]
+ifeval::["{build}" != "downstream"] 
+Since you are going to deploy the https://github.com/openstack-archive/tripleo-ansible/blob/stable/wallaby/tripleo_ansible/ansible_plugins/modules/ceph_mkspec.py[Ceph ingress daemon], the first thing to do is remove the existing `ceph_rgw` config, clean up the config created by {OpenStackPreviousInstaller} and restart the service to make sure other services are not affected by this change.
+endif::[]
+After you complete this procedure, you can reach the RGW backend from the ingress daemon and use RGW through the {object_storage} command line interface (CLI).
+//kgilliga: I will rewrite this intro for GA.
+
+.Procedure
+
+. Log in to each Controller node and remove the following configuration from the `/var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg` file:
++
+----
+listen ceph_rgw
+  bind 10.0.0.103:8080 transparent
+  mode http
+  balance leastconn
+  http-request set-header X-Forwarded-Proto https if { ssl_fc }
+  http-request set-header X-Forwarded-Proto http if !{ ssl_fc }
+  http-request set-header X-Forwarded-Port %[dst_port]
+  option httpchk GET /swift/healthcheck
+  option httplog
+  option forwardfor
+   server controller-0.storage.redhat.local 172.17.3.73:8080 check fall 5 inter 2000 rise 2
+  server controller-1.storage.redhat.local 172.17.3.146:8080 check fall 5 inter 2000 rise 2
+  server controller-2.storage.redhat.local 172.17.3.156:8080 check fall 5 inter 2000 rise 2
+----
+
+. Restart `haproxy-bundle` and ensure it is started:
++
+----
+[root@controller-0 ~]# sudo pcs resource restart haproxy-bundle
+haproxy-bundle successfully restarted
+
+
+[root@controller-0 ~]# sudo pcs status | grep haproxy
+
+  * Container bundle set: haproxy-bundle [undercloud-0.ctlplane.redhat.local:8787/rh-osbs/rhosp17-openstack-haproxy:pcmklatest]:
+    * haproxy-bundle-podman-0   (ocf:heartbeat:podman):  Started controller-0
+    * haproxy-bundle-podman-1   (ocf:heartbeat:podman):  Started controller-1
+    * haproxy-bundle-podman-2   (ocf:heartbeat:podman):  Started controller-2
+----
+
+. Confirm that no process is bound to 8080:
++
+----
+[root@controller-0 ~]# ss -antop | grep 8080
+[root@controller-0 ~]#
+----
++
+The {object_storage_first_ref} CLI fails at this point:
++
+----
+(overcloud) [root@cephstorage-0 ~]# swift list
+
+HTTPConnectionPool(host='10.0.0.103', port=8080): Max retries exceeded with url: /swift/v1/AUTH_852f24425bb54fa896476af48cbe35d3?format=json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7fc41beb0430>: Failed to establish a new connection: [Errno 111] Connection refused'))
+----
+
+. Set the required images for both HAProxy and Keepalived: 
++ 
+----
+ifeval::["{build}" != "downstream"]
+[ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_haproxy quay.io/ceph/haproxy:2.3
+[ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_keepalived quay.io/ceph/keepalived:2.1.5
+endif::[]
+ifeval::["{build}" == "downstream"]
+[ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_haproxy registry.redhat.io/rhceph/rhceph-haproxy-rhel9:latest
+[ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_keepalived registry.redhat.io/rhceph/keepalived-rhel9:latest
+endif::[]
+----
+
+. Create a file called `rgw_ingress` in the `/home/ceph-admin/specs/` directory in `controller-0`:
++
+----
+$ sudo vim /home/ceph-admin/specs/rgw_ingress
+----
+
+. Paste the following content in to the `rgw_ingress` file:
++
+[source,yaml]
+----
+---
+service_type: ingress
+service_id: rgw.rgw
+placement:
+  label: rgw
+spec:
+  backend_service: rgw.rgw
+  virtual_ip: 10.0.0.89/24
+  frontend_port: 8080
+  monitor_port: 8898
+  virtual_interface_networks:
+    - <external_network>
+----
++
+* Replace `<external_network>` with your external network, for example, `10.0.0.0/24`. For more information, see xref:completing-prerequisites-for-migrating-ceph-rgw_{context}[Completing prerequisites for migrating {Ceph} RGW].
+
+. Apply the `rgw_ingress` spec by using the Ceph orchestrator CLI:
++
+----
+$ cephadm shell -m /home/ceph-admin/specs/rgw_ingress
+$ cephadm shell -- ceph orch apply -i /mnt/rgw_ingress
+----
+
+. Wait until the ingress is deployed and query the resulting endpoint:
++
+----
+[ceph: root@controller-0 /]# ceph orch ls
+
+NAME                 	PORTS            	RUNNING  REFRESHED  AGE  PLACEMENT
+crash                                         	6/6  6m ago 	3d   *
+ingress.rgw.rgw      	10.0.0.89:8080,8898  	6/6  37s ago	60s  label:rgw
+mds.mds                   3/3  6m ago 	3d   controller-0;controller-1;controller-2
+mgr                       3/3  6m ago 	3d   controller-0;controller-1;controller-2
+mon                       3/3  6m ago 	3d   controller-0;controller-1;controller-2
+osd.default_drive_group   15  37s ago	3d   cephstorage-0;cephstorage-1;cephstorage-2
+rgw.rgw   ?:8090          3/3  37s ago	4m   label:rgw
+----
++
+----
+[ceph: root@controller-0 /]# curl  10.0.0.89:8080
+
+---
+<?xml version="1.0" encoding="UTF-8"?><ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>anonymous</ID><DisplayName></DisplayName></Owner><Buckets></Buckets></ListAllMyBucketsResult>[ceph: root@controller-0 /]#
+—
+----
+
