@@ -14,6 +14,7 @@ ifeval::["{build}" == "upstream"]
 :OpenStackPreviousInstaller: TripleO
 :Ceph: Ceph
 :CephCluster: Ceph Storage
+:CephRelease: Reef
 
 //Components and services
 
@@ -78,6 +79,7 @@ ifeval::["{build}" == "downstream"]
 :OpenStackPreviousInstaller: director
 :Ceph: Red Hat Ceph Storage 
 :CephCluster: Red Hat Ceph Storage 
+:CephRelease: 7
 
 //Components and services
 
