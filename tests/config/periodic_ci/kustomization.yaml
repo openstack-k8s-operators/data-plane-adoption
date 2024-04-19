@@ -1,4 +1,5 @@
 bases:
 - ../base
 patchesStrategicMerge:
+- ../base/tls_overrides.yaml
 - container_image_overrides.yaml

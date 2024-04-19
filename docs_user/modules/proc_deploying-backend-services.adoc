@@ -27,6 +27,8 @@ endif::[]
 For production environments, the deployment method will likely be
 different.
 
+* If TLS Everywhere is enabled on the source environment, the `tls` root CA from the source environment must be copied over to the rootca-internal issuer.
+
 * There are free PVs available to be claimed (for MariaDB and RabbitMQ).
 ifeval::["{build}" != "downstream"]
 +
@@ -128,6 +130,33 @@ oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 . Deploy `OpenStackControlPlane`. Make sure to only enable DNS,
 MariaDB, Memcached, and RabbitMQ services. All other services must
 be disabled.
+
+. If the source environment enables TLS Everywhere, modify
+spec:tls section with the following override before applying it:
+
++
+[source,yaml]
+----
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+spec:
+  tls:
+    podLevel:
+      enabled: true
+      internal:
+        ca:
+          customIssuer: rootca-internal
+      ovn:
+        ca:
+          customIssuer: rootca-internal
+    ingress:
+      ca:
+        customIssuer: rootca-internal
+      enabled: true
+----
+
 +
 [source,yaml]
 ----

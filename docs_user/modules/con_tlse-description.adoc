@@ -1,0 +1,18 @@
+[id="con_tlse-description_{context}"]
+
+= TLS Everywhere
+
+Note: The assumption is, that the new deployment will adopt the settings from the
+old deployment, so in case TLS Everywhere is disabled, it won't be enabled on
+the new deployment.
+
+If the Director deployment was deployed with TLS Everywhere, FreeIPA (IdM) is used
+to issue certificates for the OpenStack services. Certmonger, a client process which
+is installed on all hosts, interacts with FreeIPA (IdM) to request, install, track
+and renew these certificates.
+
+The new Operator based deployment uses the cert-manager operator to issue, track
+and renew the certificates.
+
+Because the same root CA is used to generate new certificates, the currently used chain
+of trust doesn't have to be modified.

@@ -52,6 +52,13 @@
         oc set data secret/osp-secret "SwiftPassword={{ swift_password }}"
     {% endif %}
 
+- name: template out the tls override for deployment
+  ansible.builtin.template:
+    src: tls_overrides.j2
+    dest: "../config/base/tls_overrides.yaml"
+    mode: '644'
+    force: true
+
 - name: when not a periodic CI job use the base deployment
   when: not periodic|default(false)
   ansible.builtin.shell: |

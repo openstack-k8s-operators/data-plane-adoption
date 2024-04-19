@@ -1,0 +1,187 @@
+[id="migrating-tls-everywhere_{context}"]
+
+//:context: tls
+
+= TLS Everywhere
+
+_Disclaimer: the below steps were reproduced on a FreeIPA 4.10.1 server. The location of files and directories may slightly change on different versions._
+
+== Prerequisites
+
+* Check that the source deployment is using TLS Everywhere, skip this step if it's not.
+* Make sure the previous Adoption steps (if any) have been performed successfully.
+* Make sure the backend services on the new deployment are not started yet.
+
+== Variables
+
+Define the shell variables used in the following steps. The values are illustrative and refer to a single node standalone director deployment. Use values that are correct for your environment:
+
+ifeval::["{build}" != "downstream"]
+----
+IPA_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 podman exec -ti freeipa-server-container"
+----
+
+In this example the FreeIPA instance is running on a separate host, in a container.
+endif::[]
+ifeval::["{build}" == "downstream"]
+----
+IPA_SSH="ssh -i <path_to_ssh_key> root@<freeipa-server-ip-address>"
+----
+endif::[]
+
+Define the map of compute node name, IP pairs.
+
+[subs=+quotes]
+----
+declare -A computes
+computes=(
+  ["standalone.localdomain"]="192.168.122.100"
+  # ...
+)
+----
+
+== Procedure - transfer the CA
+
+These instructions explain how to extract the CA signing certificate from the FreeIPA instance that is used to provide the certificates in the source environment and import it into certmanager for use in the target environment. In this way, disruption on the compute nodes can be minimized because a new chain of trust need not be installed.
+
+It is expected that the old FreeIPA node will then be decommissioned and no longer used to issue certificates, This may not be possible if the IPA server is used to issue certificates for non-Openstack systems.
+
+This procedure will also need to be modified if the signing keys are stored in an HSM (hardware security module) instead of an NSSDB. In that case, if the key is retrievable, special HSM utilities may be required.
+
+.Exporting from FreeIPA
+
+You will need to interact with the database located in the `/etc/pki/pki-tomcat/alias` directory ("*db" files).
+
+.Locating the CA certificate and key
+
+List all the certificates inside your NSSDB:
+
+----
+$IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
+----
+
+The `-L` option lists all certificates, and `-d` specifies where they are stored. This will produce some output like this:
+
+----
+Certificate Nickname                                         Trust Attributes
+                                                             SSL,S/MIME,JAR/XPI
+
+caSigningCert cert-pki-ca                                    CTu,Cu,Cu
+ocspSigningCert cert-pki-ca                                  u,u,u
+Server-Cert cert-pki-ca                                      u,u,u
+subsystemCert cert-pki-ca                                    u,u,u
+auditSigningCert cert-pki-ca                                 u,u,Pu
+----
+
+The item you need to consider is the first one: `caSigningCert cert-pki-ca`.
+
+
+.Exporting the certificate and key
+
+The command below generates a P12 file with both, the certificate and the key. The `/etc/pki/pki-tomcat/alias/pwdfile.txt` file contains the password that protects the key. You can use it to both, extract the key and generate the new file, `/tmp/freeipa.p12`. You can also choose another password. Should you choose to apply a different password for the new file, simply replace the parameter of the `-w` option, or alternatively use the `-W` (capital W) option followed by the password (in clear text).
+
+----
+$IPA_SSH pk12util -o /tmp/freeipa.p12 -n 'caSigningCert\ cert-pki-ca' -d /etc/pki/pki-tomcat/alias -k /etc/pki/pki-tomcat/alias/pwdfile.txt -w /etc/pki/pki-tomcat/alias/pwdfile.txt
+----
+
+With that file on hand, we can separately get the certificate and the key, using the openssl pkcs12 command.
+
+
+.Importing the certificate and key
+
+Create the secret that will contain the root CA
+
+----
+oc create secret generic rootca-internal
+----
+
+Import the certificate and the key from FreeIPA:
+
+----
+oc patch secret rootca-internal -n openstack -p="{\"data\":{\"ca.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
+
+oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
+
+oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.key\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl rsa | base64 -w 0`\"}}"
+----
+
+Now create the cert-manager Issuer, referencing the created secret:
+
+[source, yaml]
+----
+oc apply -f - <<EOF
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: rootca-internal
+  namespace: openstack
+  labels:
+    osp-rootca-issuer-public: ""
+    osp-rootca-issuer-internal: ""
+    osp-rootca-issuer-ovn: ""
+spec:
+  ca:
+    secretName: rootca-internal
+EOF
+----
+
+Delete the p12 files created during the previous steps
+
+----
+$IPA_SSH rm /tmp/freeipa.p12
+----
+
+
+== Post-checks
+
+You can check the created resources with the commands below:
+
+----
+oc get issuers -n openstack
+----
+
+----
+oc get secret rootca-internal -n openstack -o yaml
+----
+
+== Stop and disable certmonger
+
+The final step on this activity is to stop and disable the certmonger service on all EDPM nodes, and stop tracking all certificates managed by it. The code below accomplishes this task:
+
+[source, bash]
+----
+#!/bin/bash
+
+for i in "${!computes[@]}"; do
+    SSH_CMD="ssh -i $EDPM_PRIVATEKEY_PATH root@${computes[$i]}"
+    if ${SSH_CMD} sudo systemctl is-active certmonger.service; then
+        echo "Stopping certmonger on $i..."
+        ${SSH_CMD} sudo systemctl stop certmonger.service
+        echo "Disabling certmonger on $i..."
+        ${SSH_CMD} sudo systemctl disable --now certmonger.service
+        ${SSH_CMD} test -f /etc/systemd/system/certmonger.service '||' sudo systemctl mask certmonger.service
+    fi
+    # If necessary, adjust the directory below accordingly.
+    certs_directory=/var/lib/certmonger/requests
+    certs_to_stop=$(${SSH_CMD} ls -1 $certs_directory)
+    number_of_certs=$(${SSH_CMD} ls -1 $certs_directory | wc -l)
+    if [ $? != 0 ] || [ $number_of_certs = 0 ]; then
+        echo "No certificates to stop tracking on $i."
+    else
+        echo "There is/are $number_of_certs certificates to stop being tracked on $i. Stopping to track certificates..."
+    fi
+
+    for cert in $certs_to_stop; do
+        echo "Stopping to track $cert..."
+        ${SSH_CMD} rm -f $certs_directory/$cert
+    done
+
+done
+----
+
+== Steps after adoption
+
+After the adoption procedure is finished, the cert-manager operator will be responsible for issuing and refreshing new certificates when they expire.
+
+However, since compute services are not restarted during adoption, you will need to eventually restart the EDPM (compute) nodes.
+This must be done before the certificates expire. Please, check the expiration dates of all certificates and plan accordingly.

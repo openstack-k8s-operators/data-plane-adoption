@@ -21,6 +21,8 @@ include::../modules/con_about-node-selector.adoc[leveloffset=+1]
 
 include::../modules/con_about-machine-configs.adoc[leveloffset=+1]
 
+include::../modules/con_tlse-description.adoc[leveloffset=+1]
+
 include::../modules/con_key-manager-service-support-for-crypto-plugins.adoc[leveloffset=+1]
 
 //include::../modules/con_identity-service-authentication.adoc[leveloffset=+1]
