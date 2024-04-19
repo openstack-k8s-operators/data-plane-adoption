@@ -6,6 +6,8 @@
 
 Adopt your {rhos_prev_long} {rhos_prev_ver} control plane services to deploy them in the {rhos_long} {rhos_curr_ver} control plane.
 
+include::../modules/proc_retrieving-services-topology-specific-configuration.adoc[leveloffset=+1]
+
 include::../modules/proc_adopting-the-identity-service.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-key-manager-service.adoc[leveloffset=+1]
