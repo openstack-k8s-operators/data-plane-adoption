@@ -1,0 +1,176 @@
+[id="migrating-existing-daemons-to-target-nodes_{context}"]
+
+= Scenario 1: Migrating the existing daemons to the target nodes
+
+Assuming we have 3 {CephCluster} nodes or ComputeHCI, this scenario extends the
+“monitoring” labels to all the {CephCluster} (or ComputeHCI) nodes that are part
+of the cluster. This means that we keep the count: 3 placements for the target
+nodes.
+//kgilliga: Note to self: This intro will be rewritten for GA.
+
+.Procedure
+
+. Add the monitoring label to all the {CephCluster} (or ComputeHCI) nodes in the cluster:
+//kgilliga: Please verify that my description of the step is accurate.
++
+----
+for item in $(sudo cephadm shell --  ceph orch host ls --format json | jq -r '.[].hostname'); do
+    sudo cephadm shell -- ceph orch host label add  $item monitoring;
+done
+----
+
+. Verify that all the (three) hosts have the monitoring label:
++
+----
+[tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls
+
+HOST                        ADDR           LABELS
+cephstorage-0.redhat.local  192.168.24.11  osd monitoring
+cephstorage-1.redhat.local  192.168.24.12  osd monitoring
+cephstorage-2.redhat.local  192.168.24.47  osd monitoring
+controller-0.redhat.local   192.168.24.35  _admin mon mgr monitoring
+controller-1.redhat.local   192.168.24.53  mon _admin mgr monitoring
+controller-2.redhat.local   192.168.24.10  mon _admin mgr monitoring
+----
+
+. Remove the labels from the Controller nodes:
++
+----
+$ for i in 0 1 2; do ceph orch host label rm "controller-$i.redhat.local" monitoring; done
+
+Removed label monitoring from host controller-0.redhat.local
+Removed label monitoring from host controller-1.redhat.local
+Removed label monitoring from host controller-2.redhat.local
+----
+
+. Dump the current monitoring stack spec:
++
+----
+function export_spec {
+    local component="$1"
+    local target_dir="$2"
+    sudo cephadm shell -- ceph orch ls --export "$component" > "$target_dir/$component"
+}
+
+SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+for m in grafana prometheus alertmanager; do
+    export_spec "$m" "$SPEC_DIR"
+done
+----
+
+. For each daemon, edit the current spec and replace the placement/hosts section
+with the placement/label section, for example:
++
+[source,yaml]
+----
+service_type: grafana
+service_name: grafana
+placement:
+  label: monitoring
+networks:
+- 172.17.3.0/24
+spec:
+  port: 3100
+----
++
+The same procedure applies to Prometheus and Alertmanager specs.
+
+. Apply the new monitoring spec to relocate the monitoring stack daemons:
++
+----
+SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+function migrate_daemon {
+    local component="$1"
+    local target_dir="$2"
+    sudo cephadm shell -m "$target_dir" -- ceph orch apply -i /mnt/ceph_specs/$component
+}
+for m in grafana prometheus alertmanager; do
+    migrate_daemon  "$m" "$SPEC_DIR"
+done
+----
+
+. Verify that the daemons are deployed on the expected nodes:
++
+----
+[ceph: root@controller-0 /]# ceph orch ps | grep -iE "(prome|alert|grafa)"
+alertmanager.cephstorage-2  cephstorage-2.redhat.local  172.17.3.144:9093,9094
+grafana.cephstorage-0       cephstorage-0.redhat.local  172.17.3.83:3100
+prometheus.cephstorage-1    cephstorage-1.redhat.local  172.17.3.53:9092
+----
+
+[NOTE]
+With the procedure described above we lose High Availability: the monitoring
+stack daemons have no VIP and haproxy anymore; Node exporters are still
+running on all the nodes: instead of using labels we keep the current approach
+as we want to not reduce the monitoring space covered.
+
+
+. Update the Ceph Dashboard Manager config:
+
+An important aspect that should be considered at this point is to replace and
+verify that the {Ceph} config is aligned with the relocation we just made. Run
+the `ceph config dump` command and review the current config.
+In particular we focus on the following config entries:
+
+----
+mgr  advanced  mgr/dashboard/ALERTMANAGER_API_HOST  http://172.17.3.83:9093
+mgr  advanced  mgr/dashboard/GRAFANA_API_URL        https://172.17.3.144:3100
+mgr  advanced  mgr/dashboard/PROMETHEUS_API_HOST    http://172.17.3.83:9092
+mgr  advanced  mgr/dashboard/controller-0.ycokob/server_addr  172.17.3.33
+mgr  advanced  mgr/dashboard/controller-1.lmzpuc/server_addr  172.17.3.147
+mgr  advanced  mgr/dashboard/controller-2.xpdgfl/server_addr  172.17.3.138
+----
+
+. Verify that `grafana`, `alertmanager` and `prometheus` `API_HOST/URL` point to
+the IP addresses (on the storage network) of the node where each daemon has been
+relocated. This should be automatically addressed by cephadm and it shouldn’t
+require any manual action.
++
+----
+[ceph: root@controller-0 /]# ceph orch ps | grep -iE "(prome|alert|grafa)"
+alertmanager.cephstorage-0  cephstorage-0.redhat.local  172.17.3.83:9093,9094
+alertmanager.cephstorage-1  cephstorage-1.redhat.local  172.17.3.53:9093,9094
+alertmanager.cephstorage-2  cephstorage-2.redhat.local  172.17.3.144:9093,9094
+grafana.cephstorage-0       cephstorage-0.redhat.local  172.17.3.83:3100
+grafana.cephstorage-1       cephstorage-1.redhat.local  172.17.3.53:3100
+grafana.cephstorage-2       cephstorage-2.redhat.local  172.17.3.144:3100
+prometheus.cephstorage-0    cephstorage-0.redhat.local  172.17.3.83:9092
+prometheus.cephstorage-1    cephstorage-1.redhat.local  172.17.3.53:9092
+prometheus.cephstorage-2    cephstorage-2.redhat.local  172.17.3.144:9092
+----
++
+----
+[ceph: root@controller-0 /]# ceph config dump
+...
+...
+mgr  advanced  mgr/dashboard/ALERTMANAGER_API_HOST   http://172.17.3.83:9093
+mgr  advanced  mgr/dashboard/PROMETHEUS_API_HOST     http://172.17.3.83:9092
+mgr  advanced  mgr/dashboard/GRAFANA_API_URL         https://172.17.3.144:3100
+----
+
+[NOTE]
+The Ceph Dashboard (mgr module plugin) has not been impacted at all by this
+relocation. The service is provided by the Ceph Manager daemon, hence we might
+experience an impact when the active mgr is migrated or is force-failed.
+However, having three replicas definition allows to redirect requests to a
+different instance (it’s still an A/P model), hence the impact should be
+limited. When the RBD migration is over, the following {Ceph} config keys must
+be regenerated to point to the right mgr container:
+
+----
+mgr    advanced  mgr/dashboard/controller-0.ycokob/server_addr  172.17.3.33
+mgr    advanced  mgr/dashboard/controller-1.lmzpuc/server_addr  172.17.3.147
+mgr    advanced  mgr/dashboard/controller-2.xpdgfl/server_addr  172.17.3.138
+----
+
+----
+$ sudo cephadm shell
+$ ceph orch ps | awk '/mgr./ {print $1}'
+----
+
+And for each retrieved mgr, update the entry in the {Ceph} config:
+
+----
+$ ceph config set mgr mgr/dashboard/<>/server_addr/<ip addr>
+----
+

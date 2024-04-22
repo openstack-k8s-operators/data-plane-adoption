@@ -1,0 +1,82 @@
+[id="completing-prerequisites-for-migrating-ceph-monitoring-stack_{context}"]
+
+= Completing prerequisites for a {Ceph} cluster with monitoring stack components
+
+You must complete the following prerequisites before you migrate a {Ceph} cluster with monitoring stack components.
+
+.Procedure
+
+. Gather the current status of the monitoring stack. Verify that
+the hosts have no `monitoring` label (or `grafana`, `prometheus`, `alertmanager`
+in case of a per daemons placement evaluation) associated: 
+[NOTE]
+The entire relocation process is driven by cephadm and relies on labels to be
+assigned to the target nodes, where the daemons are scheduled. Review the https://access.redhat.com/articles/1548993[cardinality matrix] before assigning labels and choose carefully the nodes where the monitoring
+stack components should be scheduled on.
+//kgilliga: Should this "cardinality matrix" article be available only downstream?
++
+----
+[tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls
+
+HOST                    	ADDR       	LABELS                 	STATUS
+cephstorage-0.redhat.local  192.168.24.11  osd mds
+cephstorage-1.redhat.local  192.168.24.12  osd mds
+cephstorage-2.redhat.local  192.168.24.47  osd mds
+controller-0.redhat.local   192.168.24.35  _admin mon mgr
+controller-1.redhat.local   192.168.24.53  mon _admin mgr
+controller-2.redhat.local   192.168.24.10  mon _admin mgr
+6 hosts in cluster
+----
++
+Confirm that the cluster is healthy and both `ceph orch ls` and
+`ceph orch ps` return the expected number of deployed daemons.
+
+. Review and update the container image registry. If the {Ceph} externalization procedure is executed after the {rhos_prev_long} control
+plane has been migrated, it’s important to consider updating the container
+images referenced in the {CephCluster} cluster config. The current container images point to the undercloud registry, and it might be no longer available. As the undercloud won’t be available in the future, replace the undercloud provided
+images with an alternative registry.
+ifeval::["{build}" != "downstream"] 
+In case the desired option is to rely on the https://github.com/ceph/ceph/blob/reef/src/cephadm/cephadm.py#L48[default images]
+shipped by cephadm, remove the following config options from the {CephCluster} cluster.
+endif::[]
++
+----
+$ ceph config dump
+...
+...
+ifeval::["{build}" != "downstream"]
+mgr   advanced  mgr/cephadm/container_image_alertmanager    undercloud-0.ctlplane.redhat.local:8787/ceph/alertmanager:v0.25.0
+mgr   advanced  mgr/cephadm/container_image_base            undercloud-0.ctlplane.redhat.local:8787/ceph/ceph:v18
+mgr   advanced  mgr/cephadm/container_image_grafana         undercloud-0.ctlplane.redhat.local:8787/ceph/ceph-grafana:9.4.7
+mgr   advanced  mgr/cephadm/container_image_node_exporter   undercloud-0.ctlplane.redhat.local:8787/ceph/node-exporter:v1.5.0
+mgr   advanced  mgr/cephadm/container_image_prometheus      undercloud-0.ctlplane.redhat.local:8787/ceph/prometheus:v2.43.0
+endif::[]
+ifeval::["{build}" == "downstream"]
+mgr   advanced  mgr/cephadm/container_image_alertmanager    undercloud-0.ctlplane.redhat.local:8787/rh-osbs/openshift-ose-prometheus-alertmanager:v4.10
+mgr   advanced  mgr/cephadm/container_image_base            undercloud-0.ctlplane.redhat.local:8787/rh-osbs/rhceph
+mgr   advanced  mgr/cephadm/container_image_grafana         undercloud-0.ctlplane.redhat.local:8787/rh-osbs/grafana:latest
+mgr   advanced  mgr/cephadm/container_image_node_exporter   undercloud-0.ctlplane.redhat.local:8787/rh-osbs/openshift-ose-prometheus-node-exporter:v4.10
+mgr   advanced  mgr/cephadm/container_image_prometheus      undercloud-0.ctlplane.redhat.local:8787/rh-osbs/openshift-ose-prometheus:v4.10
+endif::[]
+----
+
+. Remove the undercloud container images:
++
+----
+# remove the base image
+cephadm shell -- ceph config rm mgr mgr/cephadm/container_image_base
+# remove the undercloud images associated to the monitoring
+# stack components
+for i in prometheus grafana alertmanager node_exporter; do
+    cephadm shell -- ceph config rm mgr mgr/cephadm/container_image_$i
+done
+----
+
+[NOTE]
+In the example above, in addition to the monitoring stack related
+container images, we update the config entry related to the
+container_image_base. This has an impact on all the {Ceph} daemons that rely on
+the undercloud images.
+New daemons will be deployed using the new/default {Ceph} image.
+
+

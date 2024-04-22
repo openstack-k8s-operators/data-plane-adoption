@@ -106,7 +106,7 @@ Ordinarily, a blocklisted client may not reconnect to the servers: it must be un
 .Procedure
 
 . The MDS migration is performed by cephadm, and as done for the other daemons, the general idea is to move the daemons placement from a "hosts" based approach to a "label" based one. This ensures that the human operator can easily visualize the status of the cluster and where daemons are placed using the `ceph orch host` command, and have a general view of how the daemons are co-located within a given host, according to the https://access.redhat.com/articles/1548993[cardinality matrix] described in the associated article. 
-//kgilliga: Is this a step? Can we rewrite it to something like: "Check the status of the Ceph cluster and export the MDS metadata"?
+//kgilliga: Is this a step? Can we rewrite it to something like: "Check the status of the Ceph cluster and export the MDS metadata"? Should this "cardinality matrix" article be available only downstream?
 +
 ----
 [ceph: root@controller-0 /]# ceph orch host ls

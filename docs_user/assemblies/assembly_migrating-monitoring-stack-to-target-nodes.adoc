@@ -1,0 +1,34 @@
+[id="migrating-monitoring-stack-to-target-nodes_{context}"]
+
+:context: migrating-monitoring-stack
+
+= Migrating the monitoring stack to the target nodes
+
+The migration procedure relies on nodes re-labeling: this kind of action,
+combined with an update in the existing spec, results in the daemons'
+relocation on the target nodes.
+
+Before start this process, a few considerations are required:
+
+* There’s no need to migrate node exporters: these daemons are deployed across
+the nodes that are part of the {CephCluster} cluster (placement is ‘*’), and  we’re going to lose metrics as long as the Controller nodes are not part of the {CephCluster} cluster anymore
+* Each monitoring stack component is bound to specific ports that TripleO is
+supposed to open beforehand; make sure to double check the firewall rules are
+in place and the ports are opened for a given monitoring stack service
+
+Depending on the target nodes and the number of deployed/active daemons, it is
+possible to either relocate the existing containers to the target nodes, or
+select a subset of nodes that are supposed to host the monitoring stack
+daemons. As we mentioned in the previous section, HA is not supported, hence
+reducing the placement with `count: 1` is a reasonable solution and allows to
+successfully migrate the existing daemons in an HCI (or HW limited) scenario
+without impacting other services.
+However, it is still possible to put in place a dedicated HA solution and
+realize a component that is consistent with the TripleO model to reach HA.
+Building and deployment such HA model is out of scope for this procedure.
+
+//kgilliga: I combined the "Extend the monitoring label to the target nodes" section with "Migrating the monitoring stack to the target nodes". Is this structure okay?
+
+include::../modules/proc_migrating-existing-daemons-to-target-nodes.adoc[leveloffset=+1]
+
+include::../modules/proc_relocating-one-instance-of-a-monitoring-stack-to-migrate-daemons-to-target-nodes.adoc[leveloffset=+1]
