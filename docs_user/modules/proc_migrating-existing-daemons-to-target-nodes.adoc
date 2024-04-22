@@ -97,22 +97,22 @@ alertmanager.cephstorage-2  cephstorage-2.redhat.local  172.17.3.144:9093,9094
 grafana.cephstorage-0       cephstorage-0.redhat.local  172.17.3.83:3100
 prometheus.cephstorage-1    cephstorage-1.redhat.local  172.17.3.53:9092
 ----
-
++
 [NOTE]
 With the procedure described above we lose High Availability: the monitoring
 stack daemons have no VIP and haproxy anymore; Node exporters are still
 running on all the nodes: instead of using labels we keep the current approach
 as we want to not reduce the monitoring space covered.
+//kgilliga: Same question here: What does "the procedure described above" refer to?
 
-
-. Update the Ceph Dashboard Manager config:
-
-An important aspect that should be considered at this point is to replace and
-verify that the {Ceph} config is aligned with the relocation we just made. Run
-the `ceph config dump` command and review the current config.
-In particular we focus on the following config entries:
-
+. Update the Ceph Dashboard Manager configuration. An important aspect that should be considered at this point is to replace and
+verify that the {Ceph} configuration is aligned with the relocation you just made. Run the `ceph config dump` command and review the current config.
+In particular, focus on the following configuration entries:
+//kgilliga: If we're saying that customers should consider this aspect, is this step optional?
++
 ----
+[ceph: root@controller-0 /]# ceph config dump
+...
 mgr  advanced  mgr/dashboard/ALERTMANAGER_API_HOST  http://172.17.3.83:9093
 mgr  advanced  mgr/dashboard/GRAFANA_API_URL        https://172.17.3.144:3100
 mgr  advanced  mgr/dashboard/PROMETHEUS_API_HOST    http://172.17.3.83:9092
@@ -148,28 +148,28 @@ mgr  advanced  mgr/dashboard/PROMETHEUS_API_HOST     http://172.17.3.83:9092
 mgr  advanced  mgr/dashboard/GRAFANA_API_URL         https://172.17.3.144:3100
 ----
 
-[NOTE]
-The Ceph Dashboard (mgr module plugin) has not been impacted at all by this
+. The Ceph Dashboard (mgr module plugin) has not been impacted at all by this
 relocation. The service is provided by the Ceph Manager daemon, hence we might
 experience an impact when the active mgr is migrated or is force-failed.
 However, having three replicas definition allows to redirect requests to a
 different instance (it’s still an A/P model), hence the impact should be
-limited. When the RBD migration is over, the following {Ceph} config keys must
+limited. 
+.. When the RBD migration is over, the following {Ceph} config keys must
 be regenerated to point to the right mgr container:
-
++
 ----
 mgr    advanced  mgr/dashboard/controller-0.ycokob/server_addr  172.17.3.33
 mgr    advanced  mgr/dashboard/controller-1.lmzpuc/server_addr  172.17.3.147
 mgr    advanced  mgr/dashboard/controller-2.xpdgfl/server_addr  172.17.3.138
 ----
-
++
 ----
 $ sudo cephadm shell
 $ ceph orch ps | awk '/mgr./ {print $1}'
 ----
 
-And for each retrieved mgr, update the entry in the {Ceph} config:
-
+.. For each retrieved mgr, update the entry in the {Ceph} configuration:
++
 ----
 $ ceph config set mgr mgr/dashboard/<>/server_addr/<ip addr>
 ----
