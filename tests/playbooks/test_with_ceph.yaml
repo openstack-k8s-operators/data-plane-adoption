@@ -16,19 +16,15 @@
     - role: development_environment
       tags:
         - development_environment
-    - role: tls_adoption
-      tags:
-        - tls_adoption
-      when: enable_tlse|default(false)
     - role: backend_services
       tags:
         - backend_services
     - role: ceph_backend_configuration
       tags:
         - ceph_backend_configuration
-    - role: pull_openstack_configuration
+    - role: get_services_configuration
       tags:
-        - pull_openstack_configuration
+        - get_services_configuration
     - role: stop_openstack_services
       tags:
         - stop_openstack_services
@@ -71,6 +67,9 @@
     - role: stop_remaining_services
       tags:
         - stop_remaining_services
+    - role: pull_openstack_configuration
+      tags:
+        - pull_openstack_configuration
     - role: dataplane_adoption
       tags:
         - dataplane_adoption

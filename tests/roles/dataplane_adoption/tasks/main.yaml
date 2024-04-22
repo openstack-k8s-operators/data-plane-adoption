@@ -154,29 +154,19 @@
         - nova-cell1-compute-config
         - nova-migration-ssh-key
       playbook: osp.edpm.nova
-    {% if enable_tlse %}
-      tlsCert:
-        contents:
-          - dnsnames
-          - ips
-        networks:
-          - ctlplane
-        issuer: osp-rootca-issuer-internal
-      caCerts: combined-ca-bundle
-    {% endif %}
     EOF
 
 - name: Create OpenStackDataPlaneNodeSet
+  no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
-    {{ oc_header }}
-    oc apply -f - <<EOF
+    cat <<EOF > edpm-crd.yaml
     apiVersion: dataplane.openstack.org/v1beta1
     kind: OpenStackDataPlaneNodeSet
     metadata:
       name: openstack
     spec:
-      tlsEnabled: {{ enable_tlse }}
+      tlsEnabled: false
       networkAttachments:
         - ctlplane
       preProvisioned: true
@@ -278,6 +268,20 @@
             edpm_ovn_remote_probe_interval: 60000
             edpm_ovn_ofctrl_wait_before_clear: 8000
     EOF
+
+
+- name: check ovs external-ids with os-diff before deployment
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ os_diff_dir }}/os-diff diff {{ os_diff_data_dir }}/tripleo/ovs_external_ids/standalone/ovs_external_ids.json edpm-crd.yaml --crd --service ovs_external_ids -f ${PWD}/{{ os_diff_dir }}/config.yaml
+
+- name: deploy dataplane
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    cat edpm-crd.yaml | oc apply -f -
+
 
 - name: set neutron-sriov-nic-agent configuration in the OpenStackDataPlaneNodeSet CR
   no_log: "{{ use_no_log }}"
