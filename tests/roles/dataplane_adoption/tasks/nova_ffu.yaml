@@ -114,7 +114,7 @@
     echo "Run out of retries"
     exit 2
 
-- name: run Nova DB migrations to complete Wallaby->antelope FFU
+- name: run Nova DB online migrations to complete FFU
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -124,3 +124,9 @@
   until: nova_exec_result is success
   retries: 10
   delay: 6
+
+- name: discover Nova compute hosts in the cell
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc rsh nova-cell0-conductor-0 nova-manage cell_v2 discover_hosts --verbose

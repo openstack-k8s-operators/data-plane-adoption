@@ -1,1 +1,3 @@
 ironic_adoption: false
+# Libvirt backends: ceph or local
+nova_libvirt_backend: local
