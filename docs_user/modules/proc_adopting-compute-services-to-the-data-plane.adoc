@@ -7,8 +7,9 @@
 .Prerequisites
 
 * Remaining source cloud xref:stopping-infrastructure-management-and-compute-services_{context}[Stopping infrastructure management and Compute services] on Compute hosts.
-* Make sure the IPAM is configured:
-+
+* Ceph backend for Nova/Libvirt is configured xref:configuring-a-ceph-backend_{context}[Configuring a Ceph backend].
+* Make sure the IPAM is configured
+
 ----
 oc apply -f - <<EOF
 apiVersion: network.openstack.org/v1beta1
@@ -77,9 +78,10 @@ EOF
 ----
 +
 * When `neutron-sriov-nic-agent` is running on the existing Compute nodes, check the physical device mappings and ensure that they match the values that are defined in the `OpenStackDataPlaneNodeSet` custom resource (CR). For more information, see xref:reviewing-the-openstack-control-plane-configuration_adopt-control-plane[Reviewing the {rhos_prev_long} control plane configuration].
-* Define the shell variables necessary to run the script that runs the fast-forward upgrade:
+* Define the shell variables necessary to run the script that runs the fast-forward upgrade. Omit setting `CEPH_FSID`, if the local storage backend is going to be configured by Nova for Libvirt. The storage backend cannot be changed during adoption, and must match the one used on the source cloud:
 ----
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //'
 
 alias openstack="oc exec -t openstackclient -- openstack"
 FIP=192.168.122.20
@@ -156,7 +158,7 @@ rm -f id*
 cd -
 ----
 
-. Create a `nova-compute-extra-config` service:
+. Create a `nova-compute-extra-config` service (with local storage backend for lbivrt):
 +
 . If TLS Everywhere is enabled, append the following to the OpenStackDataPlaneService spec:
 +
@@ -203,6 +205,63 @@ EOF
 +
 The secret `nova-cell<X>-compute-config` is auto-generated for each
 `cell<X>`. You must specify `nova-cell<X>-compute-config` and `nova-migration-ssh-key` for each custom `OpenStackDataPlaneService` related to the Compute service.
+
+That service removes pre-FFU workarounds and configures Nova compute
+services for local storage backend.
+
+* Or, create a `nova-compute-extra-config` service (with Ceph backend for libvirt):
++
+[source,yaml]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nova-compute-extraconfig
+  namespace: openstack
+data:
+  19-nova-compute-cell1-workarounds.conf: |
+    [workarounds]
+    disable_compute_service_check_for_ffu=true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ceph-nova
+  namespace: openstack
+data:
+  03-ceph-nova.conf: |
+    [libvirt]
+    images_type=rbd
+    images_rbd_pool=vms
+    images_rbd_ceph_conf=/etc/ceph/ceph.conf
+    images_rbd_glance_store_name=default_backend
+    images_rbd_glance_copy_poll_interval=15
+    images_rbd_glance_copy_timeout=600
+    rbd_user=openstack
+    rbd_secret_uuid=$CEPH_FSID
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: nova-compute-extraconfig
+  namespace: openstack
+spec:
+  label: nova.compute.extraconfig
+  configMaps:
+    - nova-compute-extraconfig
+    - ceph-nova
+  secrets:
+    - nova-cell1-compute-config
+    - nova-migration-ssh-key
+  playbook: osp.edpm.nova
+EOF
+----
++
+That service removes pre-FFU workarounds and configures Nova compute
+services for Ceph storage backend.
+Provided above resources should contain a cell-specific configurations.
+For multi-cell, config maps and OpenStack dataplane services should be named like `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`.
 
 ifeval::["{build}" == "downstream"]
 . Create a secret for the subscription manager and a secret for the Red Hat registry:
@@ -409,6 +468,41 @@ endif::[]
 EOF
 ----
 +
+* Prepare adopted EDPM workloads to use Ceph backend for Cinder, if configured so
++
+[source,yaml]
+----
+oc patch osdpns/openstack --type=merge --patch "
+spec:
+  services:
+    - repo-setup
+    - download-cache
+    - bootstrap
+    - configure-network
+    - validate-network
+    - install-os
+    - configure-os
+    - run-os
+    - install-certs
+    - ceph-client
+    - libvirt
+    - nova-compute-extraconfig
+    - ovn
+    - neutron-metadata
+  nodeTemplate:
+    extraMounts:
+    - extraVolType: Ceph
+      volumes:
+      - name: ceph
+        secret:
+          secretName: ceph-conf-files
+      mounts:
+      - name: ceph
+        mountPath: "/etc/ceph"
+        readOnly: true
+"
+----
++
 * Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
 
 . Ensure that the `ovn-controller` settings that are configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the Compute nodes before adoption. This configuration is stored in the `external_ids`` column in the `Open_vSwitch` table in the Open vSwitch database:
@@ -419,6 +513,10 @@ ovs-vsctl list Open .
 external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings=<bridge_mappings>, ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
 ...
 ----
+
+Note that you should retain the original `OpenStackDataPlaneNodeSet` services
+composition, except the inserted `ceph-client` service.
+
 +
 * Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
 

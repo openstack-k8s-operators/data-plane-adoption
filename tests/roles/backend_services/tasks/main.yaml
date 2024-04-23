@@ -59,8 +59,29 @@
     mode: '644'
     force: true
 
-- name: when not a periodic CI job use the base deployment
-  when: not periodic|default(false)
+- name: when periodic, create OpenStackVersion CR with container overrides
+  when:
+    - periodic|default(false)
+    - container_registry is defined
+    - container_tag is defined
+    - container_namespace is defined
+  block:
+    - name: template out the OpenStackVersion deployment with container overrides
+      ansible.builtin.template:
+        src: openstack_version.j2
+        dest: "../config/openstack_version_overrides.yaml"
+        mode: '644'
+        force: true
+
+    - name: Apply OpenStackVersion with container overrides to environment
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc apply -f openstack_version_overrides.yaml
+      args:
+        chdir: "../config"
+
+- name: Deploy the podified control plane
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -69,30 +90,6 @@
     oc apply -f tmp/test_deployment.yaml
   args:
     chdir: "../config"
-
-- name: when periodic, create kustomize container_images_overrides.yaml
-  when:
-    - periodic|default(false)
-    - container_registry is defined
-    - container_tag is defined
-    - container_namespace is defined
-  block:
-    - name: template out the override deployment
-      ansible.builtin.template:
-        src: container_overrides.j2
-        dest: "../config/periodic_ci/container_image_overrides.yaml"
-        mode: '644'
-        force: true
-
-    - name: run kustomize and create controlplane with container overrides
-      ansible.builtin.shell: |
-        {{ shell_header }}
-        {{ oc_header }}
-        mkdir -p tmp
-        oc kustomize periodic_ci > tmp/test_deployment.yaml
-        oc apply -f tmp/test_deployment.yaml
-      args:
-        chdir: "../config"
 
 - name: wait for mariadb to start up
   ansible.builtin.shell: |

@@ -2,6 +2,21 @@ set -e
 
 alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=standalone openstack"
 
+function wait_for_status() {
+    local time=0
+    local msg="Waiting for $2"
+    local status="${3:-available}"
+    local result
+    while [ $time -le 30 ] ; do
+        result=$(${BASH_ALIASES[openstack]} $1 -f json)
+        echo $result | jq -r ".status" | grep -q $status && break
+        echo "result=$result"
+        echo "$msg"
+        time=$(( time + 5 ))
+        sleep 5
+    done
+}
+
 # Create Image
 IMG=cirros-0.5.2-x86_64-disk.img
 URL=http://download.cirros-cloud.net/0.5.2/$IMG
@@ -52,15 +67,23 @@ export FIP=192.168.122.20
 # check connectivity via FIP
 ping -c4 ${FIP}
 
-# FIXME: Invalid volume: Volume xxx status must be available, but current status is: backing-up
-# Create a Cinder volume, a backup from it, and snapshot it.
-#${BASH_ALIASES[openstack]} volume show disk || \
-#    ${BASH_ALIASES[openstack]} volume create --image cirros --bootable --size 1 disk
-#${BASH_ALIASES[openstack]} volume backup show backup || \
-#    ${BASH_ALIASES[openstack]} volume backup create --name backup disk
-#${BASH_ALIASES[openstack]} volume snapshot show snapshot || \
-#    ${BASH_ALIASES[openstack]} volume snapshot create --volume disk snapshot
+if ! ${BASH_ALIASES[openstack]} volume show disk ; then
+    ${BASH_ALIASES[openstack]} volume create --image cirros --bootable --size 1 disk
+    wait_for_status "volume show disk" "test volume 'disk' creation"
+fi
 
-# TODO: Add volume to the test VM, after tripleo wallaby (osp 17) isolnet network adoption implemented for storage networks
-#${BASH_ALIASES[openstack]} volume show disk -f json | jq -r '.status' | grep -q available && \
-#    ${BASH_ALIASES[openstack]} server add volume test disk
+if ! ${BASH_ALIASES[openstack]} volume backup show backup; then
+    ${BASH_ALIASES[openstack]} volume backup create --name backup disk
+    wait_for_status "volume backup show backup" "test volume 'disk' backup completion"
+fi
+
+if ! ${BASH_ALIASES[openstack]} volume snapshot show snapshot ; then
+    ${BASH_ALIASES[openstack]} volume snapshot create --volume disk snapshot
+    wait_for_status "volume snapshot show snapshot" "test volume 'disk' backup snapshot availability"
+fi
+
+# Add volume to the test VM
+if ${BASH_ALIASES[openstack]} volume show disk -f json | jq -r '.status' | grep -q available ; then
+    ${BASH_ALIASES[openstack]} server add volume test disk
+fi
+
