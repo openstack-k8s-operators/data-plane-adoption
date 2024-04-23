@@ -16,6 +16,10 @@
     - role: development_environment
       tags:
         - development_environment
+    - role: tls_adoption
+      tags:
+        - tls_adoption
+      when: enable_tlse|default(false)
     - role: backend_services
       tags:
         - backend_services
