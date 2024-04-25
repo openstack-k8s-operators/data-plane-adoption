@@ -2,8 +2,7 @@
 
 :context: migrating-ceph-monitoring
 
-= Migrating a {Ceph} cluster with monitoring stack components
-//kgilliga: SMEs, what do you think of the title? ^
+= Migrating the monitoring stack component to new nodes within an existing {Ceph} cluster 
 
 In the context of data plane adoption, where the {rhos_prev_long} ({OpenStackShort}) services are
 redeployed in {OpenShift}, a {OpenStackPreviousInstaller}-deployed {CephCluster} cluster will undergo a migration in a process we are calling “externalizing” the {CephCluster} cluster.
@@ -20,9 +19,7 @@ With {OpenStackPreviousInstaller}-deployed {Ceph} this component is enabled as p
 - Node exporter
 
 The Ceph Dashboard containers are included through `tripleo-container-image-prepare` parameters and the high availability relies on `Haproxy` and `Pacemaker` deployed on the {OpenStackShort} front.
-For an external {CephCluster} cluster, High availability is not supported and the work
-is tracked in the https://bugzilla.redhat.com/show_bug.cgi?id=1902212[associated RHCS bugzilla].
-//kgilliga: Do we want the link to this BZ in the downstream docs?
+For an external {CephCluster} cluster, high availability is not supported.
 The goal of this procedure is to migrate and relocate the Ceph Monitoring
 components to free Controller nodes.
 

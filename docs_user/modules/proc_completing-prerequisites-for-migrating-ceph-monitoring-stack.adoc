@@ -11,9 +11,11 @@ the hosts have no `monitoring` label (or `grafana`, `prometheus`, `alertmanager`
 in case of a per daemons placement evaluation) associated: 
 [NOTE]
 The entire relocation process is driven by cephadm and relies on labels to be
-assigned to the target nodes, where the daemons are scheduled. Review the https://access.redhat.com/articles/1548993[cardinality matrix] before assigning labels and choose carefully the nodes where the monitoring
+assigned to the target nodes, where the daemons are scheduled. 
+ifeval::["{build}" != "upstream"]
+Review the https://access.redhat.com/articles/1548993[cardinality matrix] before assigning labels and choose carefully the nodes where the monitoring
 stack components should be scheduled on.
-//kgilliga: Should this "cardinality matrix" article be available only downstream?
+endif::[]
 +
 ----
 [tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls
