@@ -9,7 +9,6 @@ particular node.
 .Procedure
 
 . Set each of your nodes to host a particular daemon instance, for example, if you have three target nodes:
-//kgilliga: Please confirm that the description in this step is accurate.
 +
 ----
 [tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls | grep -i cephstorage

@@ -2,7 +2,7 @@
 
 :context: migrate-object-storage-service
 
-= Migrating the {object_storage} to {rhos_long} nodes
+= Migrating the {object_storage_first_ref} to {rhos_long} nodes
 This section only applies if you are using {rhos_prev_long} {object_storage_first_ref} as Object Storage
 service. If you are using the Object Storage *API* of Ceph Object Gateway (RGW), you can skip this section.
 

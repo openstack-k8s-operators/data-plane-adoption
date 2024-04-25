@@ -1,6 +1,6 @@
 [id="troubleshooting-object-storage-migration_{context}"]
 
-= Troubleshooting the {object_storage} migration
+= Troubleshooting the {object_storage_first_ref} migration
 
 You can troubleshoot issues with the {object_storage_first_ref} migration.
 

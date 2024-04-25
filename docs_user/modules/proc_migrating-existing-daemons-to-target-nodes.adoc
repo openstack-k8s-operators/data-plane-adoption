@@ -11,7 +11,6 @@ nodes.
 .Procedure
 
 . Add the monitoring label to all the {CephCluster} (or ComputeHCI) nodes in the cluster:
-//kgilliga: Please verify that my description of the step is accurate.
 +
 ----
 for item in $(sudo cephadm shell --  ceph orch host ls --format json | jq -r '.[].hostname'); do
@@ -99,16 +98,12 @@ prometheus.cephstorage-1    cephstorage-1.redhat.local  172.17.3.53:9092
 ----
 +
 [NOTE]
-With the procedure described above we lose High Availability: the monitoring
-stack daemons have no VIP and haproxy anymore; Node exporters are still
-running on all the nodes: instead of using labels we keep the current approach
-as we want to not reduce the monitoring space covered.
-//kgilliga: Same question here: What does "the procedure described above" refer to?
+After you migrate the monitoring stack, you lose High Availability: the monitoring stack daemons have no VIP and HAproxy anymore; Node exporters are still running on all the nodes: instead of using labels we keep the current approach as we want to not reduce the monitoring space covered.
 
-. Update the Ceph Dashboard Manager configuration. An important aspect that should be considered at this point is to replace and
-verify that the {Ceph} configuration is aligned with the relocation you just made. Run the `ceph config dump` command and review the current config.
-In particular, focus on the following configuration entries:
-//kgilliga: If we're saying that customers should consider this aspect, is this step optional?
+//kgilliga: Note to self: Revisit this note (placement and wording).
+
+. You must review the {Ceph}configuration to ensure that it is aligned with the relocation you just made. In particular, focus on the following configuration entries:
+//kgilliga: Note to self: Revisit the wording of this step.
 +
 ----
 [ceph: root@controller-0 /]# ceph config dump

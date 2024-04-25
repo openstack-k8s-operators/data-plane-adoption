@@ -27,8 +27,8 @@ However, it is still possible to put in place a dedicated HA solution and
 realize a component that is consistent with the TripleO model to reach HA.
 Building and deployment such HA model is out of scope for this procedure.
 
-//kgilliga: I combined the "Extend the monitoring label to the target nodes" section with "Migrating the monitoring stack to the target nodes". Is this structure okay?
-
 include::../modules/proc_migrating-existing-daemons-to-target-nodes.adoc[leveloffset=+1]
 
+ifeval::["{build}" != "downstream"]
 include::../modules/proc_relocating-one-instance-of-a-monitoring-stack-to-migrate-daemons-to-target-nodes.adoc[leveloffset=+1]
+endif::[]

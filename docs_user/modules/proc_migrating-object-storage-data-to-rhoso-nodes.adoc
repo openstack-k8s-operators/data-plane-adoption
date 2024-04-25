@@ -1,6 +1,6 @@
 [id="migrating-object-storage-data-to-rhoso-nodes_{context}"]
 
-= Migrating the {object_storage} data from {OpenStackShort} to {rhos_long} nodes
+= Migrating the {object_storage_first_ref} data from {OpenStackShort} to {rhos_long} nodes
 
 To ensure availability during the {object_storage_first_ref} migration, you perform the following steps:
 
