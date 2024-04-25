@@ -25,3 +25,21 @@
       - ^docs_dev/.*$
       - ^docs_user/.*$
       - Gemfile
+
+- job:
+    name: data-plane-adoption-osp-17-to-extracted-crc-ironic
+    parent: data-plane-adoption-osp-17-to-extracted-crc
+    vars:
+      use_ceph: "false"
+      dpa_test_suite: "test-with-ironic"
+    irrelevant-files:
+      - ^.*\.md$
+      - ^.*\.rst$
+      - ^docs/.*$
+      - .github/workflows
+      - mkdocs.yml
+      - .gitignore
+      - LICENSE
+      - ^docs_dev/.*$
+      - ^docs_user/.*$
+      - Gemfile
