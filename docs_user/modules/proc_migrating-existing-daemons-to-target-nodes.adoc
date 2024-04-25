@@ -6,7 +6,7 @@ Assuming we have 3 {CephCluster} nodes or ComputeHCI, this scenario extends the
 “monitoring” labels to all the {CephCluster} (or ComputeHCI) nodes that are part
 of the cluster. This means that we keep the count: 3 placements for the target
 nodes.
-//kgilliga: Note to self: This intro will be rewritten for GA.
+//kgilliga: Note to self: This intro will be rewritten for GA. Revisit note in step 7 (placement and wording).
 
 .Procedure
 
@@ -98,9 +98,7 @@ prometheus.cephstorage-1    cephstorage-1.redhat.local  172.17.3.53:9092
 ----
 +
 [NOTE]
-After you migrate the monitoring stack, you lose High Availability: the monitoring stack daemons have no VIP and HAproxy anymore; Node exporters are still running on all the nodes: instead of using labels we keep the current approach as we want to not reduce the monitoring space covered.
-
-//kgilliga: Note to self: Revisit this note (placement and wording).
+After you migrate the monitoring stack, you lose High Availability: the monitoring stack daemons have no VIP and HAproxy anymore; Node exporters are still running on all the nodes: instead of using labels we keep the current approach as we want to not reduce the monitoring space covered. 
 
 . You must review the {Ceph}configuration to ensure that it is aligned with the relocation you just made. In particular, focus on the following configuration entries:
 //kgilliga: Note to self: Revisit the wording of this step.
