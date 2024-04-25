@@ -1,39 +1,29 @@
 [id="migrating-ceph-mds_{context}"]
 
-//:context: migrating-ceph-mds
-//kgilliga: This module might be converted to an assembly.
+= Migrating {Ceph} MDS to new nodes within the existing cluster
 
-= Migrating Ceph MDS
+In the context of data plane adoption, where the {rhos_prev_long} ({OpenStackShort}) services are
+redeployed in {OpenShift}, a {OpenStackPreviousInstaller}-deployed {CephCluster} cluster will undergo a migration in a process we are calling “externalizing” the {CephCluster} cluster.
+There are two deployment topologies, broadly, that include an “internal” {CephCluster} cluster today: one is where {OpenStackShort} includes dedicated {CephCluster} nodes to host object storage daemons (OSDs), and the other is Hyperconverged Infrastructure (HCI) where Compute nodes double up as {CephCluster} nodes. In either scenario, there are some {Ceph} processes that are deployed on {OpenStackShort} Controller nodes: {Ceph} monitors, Ceph Object Gateway (RGW), Rados Block Device (RBD), Ceph Metadata Server (MDS), Ceph Dashboard, and NFS Ganesha.
+This document describes how to migrate the MDS daemon in case {rhos_component_storage_file_first_ref} (deployed with either a cephfs-native or ceph-nfs backend) is part of the overcloud deployment. The MDS migration is performed by cephadm, and as done for the other daemons, the general idea is to move the daemons placement from a "hosts" based approach to a "label" based one. 
+ifeval::["{build}" != "upstream"]
+This ensures that the human operator can easily visualize the status of the cluster and where daemons are placed using the `ceph orch host` command, and have a general view of how the daemons are co-located within a given host, according to the https://access.redhat.com/articles/1548993[cardinality matrix].
+endif::[]
+ifeval::["{build}" != "downstream"]
+This ensures that the human operator can easily visualize the status of the cluster and where daemons are placed using the `ceph orch host` command, and have a general view of how the daemons are co-located within a given host.
+endif::[]
+//kgilliga: Note to self/SMEs: This intro will be rewritten for GA, so the text might not flow very well right now.
 
-In the context of data plane adoption, where the OpenStack services are
-redeployed in OpenShift, a TripleO-deployed Ceph cluster will undergo a
-migration in a process we are calling “externalizing” the Ceph cluster.
-There are two deployment topologies, broadly, that include an “internal” Ceph
-cluster today: one is where OpenStack includes dedicated Storage nodes to host
-OSDs, and the other is Hyperconverged Infrastructure (HCI) where Compute nodes
-double up as Storage nodes. In either scenario, there are some Ceph processes
-that are deployed on OpenStack Controller nodes: Ceph monitors, rgw, rdb, mds,
-ceph dashboard and nfs-ganesha.
-This document describes how to migrate the MDS daemon in case Manila (deployed
-with either a cephfs-native or ceph-nfs backend) is part of the overcloud
-deployment.
-
-== Requirements
-
-For this procedure, we assume that we are beginning with a OpenStack based on
-Wallaby and a Ceph Reef deployment managed by TripleO.
+For this procedure, we assume that we are beginning with a {OpenStackShort} based on {rhos_prev_ver} and a {Ceph} {CephRelease} deployment managed by {OpenStackPreviousInstaller}.
 We assume that:
 
-* Ceph has been upgraded to Reef and is managed by cephadm/orchestrator
-* Both the Ceph public and cluster networks are propagated, via TripleO, to the
-  target nodes
+* {Ceph} is upgraded to {Ceph} {CephRelease} and is managed by cephadm/orchestrator.
+* Both the {Ceph} public and cluster networks are propagated, through{OpenStackPreviousInstaller}, to the target nodes.
 
-== Gather the current status of the MDS daemon
+.Prerequisites
 
-Before starting the MDS migration, verify the Ceph cluster is healthy and gather
-some information of the MDS status.
+* Verify that the {CephCluster} cluster is healthy and check the MDS status:
 
-[source,bash]
 ----
 [ceph: root@controller-0 /]# ceph fs ls
 name: cephfs, metadata pool: manila_metadata, data pools: [manila_data ]
@@ -56,10 +46,8 @@ mds.controller-1.cwzhog
 MDS version: ceph version 17.2.6-100.el9cp (ea4e3ef8df2cf26540aae06479df031dcfc80343) quincy (stable)
 ----
 
-Eventually, using the `ceph fs dump` command, we can retrieve more detailed
-information of the cephfs MDS status:
+* Retrieve more detailed information on the Ceph File System (CephFS) MDS status:
 
-[source,bash]
 ----
 [ceph: root@controller-0 /]# ceph fs dump
 
@@ -104,20 +92,8 @@ Standby daemons:
 dumped fsmap epoch 8
 ----
 
-== Check the OSD blocklist
+* Check the OSD blocklist and clean up the client list:
 
-When a file system client is unresponsive or misbehaving, it may happen that
-the access to the file system is forcibly terminated. This process is called
-eviction. Evicting a CephFS client prevents it from communicating further with
-MDS daemons and OSD daemons.
-Ordinarily, a blocklisted client may not reconnect to the servers: it must be
-unmounted and then remounted. However, in some situations it may be useful to
-permit a client that was evicted to attempt to reconnect. Because CephFS
-uses the RADOS OSD blocklist to control client eviction, CephFS clients can be
-permitted to reconnect by removing them from the blocklist.
-Check the current OSD blocklist and clean up the client list:
-
-[source,bash]
 ----
 [ceph: root@controller-0 /]# ceph osd blocklist ls
 ..
@@ -127,17 +103,16 @@ for item in $(ceph osd blocklist ls | awk '{print $0}'); do
 done
 ----
 
-== Migrate MDS to the target nodes
+[NOTE]
+When a file system client is unresponsive or misbehaving, it may happen that
+the access to the file system is forcibly terminated. This process is called
+eviction. Evicting a CephFS client prevents it from communicating further with MDS daemons and OSD daemons.
+Ordinarily, a blocklisted client may not reconnect to the servers: it must be unmounted and then remounted. However, in some situations it may be useful to permit a client that was evicted to attempt to reconnect. Because CephFS uses the RADOS OSD blocklist to control client eviction, CephFS clients can be permitted to reconnect by removing them from the blocklist.
 
-The MDS migration is performed by cephadm, and as done for the other daemons,
-the general idea is to move the daemons placement from a "hosts" based approach
-to a "label" based one. This ensures that the human operator can easily visualize
-the status of the cluster and where daemons are placed using the `ceph orch host`
-command, and have a general view of how the daemons are co-located within a
-given host, according to the https://access.redhat.com/articles/1548993[cardinality matrix]
-described in the associated article.
+.Procedure
 
-[source,bash]
+. Get the hosts that are currently part of the {Ceph} cluster:
++
 ----
 [ceph: root@controller-0 /]# ceph orch host ls
 HOST                        ADDR           LABELS          STATUS
@@ -160,18 +135,16 @@ placement:
   - controller-2.redhat.local
 ----
 
-Extend the MDS labels to the target nodes:
-
-[source,bash]
+. Extend the MDS labels to the target nodes:
++
 ----
 for item in $(sudo cephadm shell --  ceph orch host ls --format json | jq -r '.[].hostname'); do
     sudo cephadm shell -- ceph orch host label add  $item mds;
 done
 ----
 
-Verify all the hosts have the MDS label:
-
-[source,bash]
+. Verify all the hosts have the MDS label:
++
 ----
 [tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls
 
@@ -184,17 +157,15 @@ controller-1.redhat.local   192.168.24.53  mon _admin mgr mds
 controller-2.redhat.local   192.168.24.10  mon _admin mgr mds
 ----
 
-Dump the current MDS spec:
-
-[source,bash]
+. Dump the current MDS spec:
++
 ----
 [ceph: root@controller-0 /]# ceph orch ls --export mds > mds.yaml
 ----
 
-Edit the retrieved spec and replace the `placement.hosts` section with
+. Edit the retrieved spec and replace the `placement.hosts` section with
 `placement.label`:
-
-[source,bash]
++
 ----
 service_type: mds
 service_id: mds
@@ -203,18 +174,16 @@ placement:
   label: mds
 ----
 
-Use the `ceph orchestrator` to apply the new MDS spec: it results in an
+. Use the `ceph orchestrator` to apply the new MDS spec: it results in an
 increased number of mds daemons:
-
-[source,bash]
++
 ----
 $ sudo cephadm shell -m mds.yaml -- ceph orch apply -i /mnt/mds.yaml
 Scheduling new mds deployment …
 ----
 
-Check the new standby daemons temporarily added to the cephfs fs:
-
-[source,bash]
+. Check the new standby daemons temporarily added to the cephfs fs:
++
 ----
 $ ceph fs dump
 
@@ -233,25 +202,21 @@ Standby daemons:
 [mds.mds.controller-1.tyiziq{-1:499136} state up:standby seq 1 addr [v2:172.17.3.43:6800/3615018301,v1:172.17.3.43:6801/3615018301] compat {c=[1],r=[1],i=[7ff]}]
 ----
 
-It is possible to elect as "active" a dedicated MDS for a particular file system.
-To configure this preference, `CephFS` provides a configuration option for MDS
-called `mds_join_fs` which enforces this affinity.
-When failing over MDS daemons, a cluster’s monitors will prefer standby daemons
-with `mds_join_fs` equal to the file system name with the failed rank. If no
-standby exists with `mds_join_fs` equal to the file system name, it will choose
-an unqualified standby as a replacement.
-To properly drive the migration to the right nodes, set the MDS affinity that
-manages the MDS failover:
-
-[source,bash]
+. To migrate MDS to the right nodes, set the MDS affinity that manages the MDS failover: 
+ifeval::["{build}" != "downstream"]
+[NOTE]
+It is possible to elect as "active" a dedicated MDS for a particular file system. To configure this preference, `CephFS` provides a configuration option for MDS called `mds_join_fs` which enforces this affinity.
+When failing over MDS daemons, a cluster’s monitors will prefer standby daemons with `mds_join_fs` equal to the file system name with the failed rank. If no standby exists with `mds_join_fs` equal to the file system name, it will choose an unqualified standby as a replacement.
+//kgilliga: We might want to discuss what info is really necessary downstream.
+endif::[]
++
 ----
 ceph config set mds.mds.cephstorage-0.fqcshx mds_join_fs cephfs
 ----
 
-Remove the labels from controller nodes and force the MDS failover to the
+. Remove the labels from Controller nodes and force the MDS failover to the
 target node:
-
-[source,bash]
++
 ----
 $ for i in 0 1 2; do ceph orch host label rm "controller-$i.redhat.local" mds; done
 
@@ -259,13 +224,12 @@ Removed label mds from host controller-0.redhat.local
 Removed label mds from host controller-1.redhat.local
 Removed label mds from host controller-2.redhat.local
 ----
-
++
 The switch happens behind the scenes, and the new active MDS is the one that
-has been set through the `mds_join_fs` command.
-Check the result of the failover and the new deployed daemons:
+you set through the `mds_join_fs` command.
 
-
-[source,bash]
+. Check the result of the failover and the new deployed daemons:
++
 ----
 $ ceph fs dump
 …
@@ -295,8 +259,10 @@ mds.mds.cephstorage-1.jkvomp  cephstorage-1.redhat.local                     run
 mds.mds.cephstorage-2.gnfhfe  cephstorage-2.redhat.local                     running (79m)     3m ago  79m    24.2M        -  17.2.6-100.el9cp  1af7b794f353  f3cb859e2a15
 ----
 
-
-== Useful resources
+ifeval::["{build}" != "downstream"]
+.Useful resources
 
 * https://docs.ceph.com/en/reef/cephfs/eviction[cephfs - eviction]
+
 * https://docs.ceph.com/en/reef/cephfs/standby/#configuring-mds-file-system-affinity[ceph mds - affinity]
+endif::[]
