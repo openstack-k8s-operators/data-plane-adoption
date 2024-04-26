@@ -18,11 +18,10 @@ stopped and the service databases must already be imported into the control plan
 ----
 $CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/cinder/etc/cinder/cinder.conf > cinder.conf
 ----
-
-.Variables
-
-No new environmental variables need to be defined, though you use the
-`CONTROLLER1_SSH` that was defined in a previous step for the pre-checks.
+//No new environmental variables need to be defined, though you use the
+//`CONTROLLER1_SSH` that was defined in a previous step for the pre-checks.
+//kgilliga: I commented this out for now because I'm not sure why "use the
+//`CONTROLLER1_SSH` that was defined in a previous step for the pre-checks" is relevant.
 
 .Procedure
 

@@ -33,11 +33,7 @@ ceph auth caps client.openstack \
 .Prerequisites
 
 * The `OpenStackControlPlane` custom resource (CR) must already exist.
-
-.Variables
-
-Define the shell variables used in the steps below. The values are
-just illustrative, use values that are correct for your environment:
+* Define the following shell variables. The values are illustrative. Use values that are correct for your environment: 
 
 [subs=+quotes]
 ----

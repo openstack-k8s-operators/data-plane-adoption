@@ -17,10 +17,6 @@ Additional backends are available, such as PKCS11 and DogTag, however they are n
 * Previous Adoption steps completed. Notably, MariaDB, RabbitMQ and Keystone.
 should be already adopted.
 
-.Variables
-
-No shell variables are necessary currently.
-
 .Procedure
 
 . Add the kek secret. In this case we are updating and using `osp-secret`,

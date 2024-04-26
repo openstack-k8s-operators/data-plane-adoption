@@ -4,9 +4,10 @@
 
 = Preparing the {block_storage} configurations for adoption
 
-As described in xref:planning-the-new-deployment_planning[Planning the new deployment], {block_storage_first_ref} is configured using
+The {block_storage_first_ref} is configured using
 configuration snippets instead of using configuration parameters
-defined by the installer.
+defined by the installer. For more information, see xref:planning-the-new-deployment_planning[Planning the new deployment].
+//kgilliga: Note to self: This xref does not work in the preview. Need to revisit.
 
 The recommended way to deploy {block_storage} volume backends has changed to remove old
 limitations, add flexibility, and improve operations.

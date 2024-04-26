@@ -59,7 +59,7 @@ pushd os-diff
 ./os-diff cdiff --service aodh -c /tmp/collect_tripleo_configs/aodh/etc/aodh/aodh.conf -o aodh_patch.yaml
 ----
 +
-For more information, see xref:pulling-the-openstack-configuration_{context}[Reviewing the {rhos_prev_long} control plane configuration].
+For more information, see xref:reviewing-the-openstack-control-plane-configuration_{context}[Reviewing the {rhos_prev_long} control plane configuration].
 
 . Patch the `OpenStackControlPlane` CR to deploy Aodh services:
 +

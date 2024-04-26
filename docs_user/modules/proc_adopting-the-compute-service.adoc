@@ -1,6 +1,6 @@
 [id="adopting-the-compute-service_{context}"]
 
-//Check xref contexts.
+//kgilliga: Note to self: "Adopting the data plane" xrefs do not work. Need to revisit.
 
 = Adopting the {compute_service}
 
@@ -21,15 +21,12 @@ must already be imported into the control plane MariaDB;
  ** the xref:adopting-the-image-service_{context}[Adopting the Image service] needs to be imported;
  ** the xref:migrating-ovn-data_migrating-databases[Migrating OVN data] need to be imported;
  ** the xref:adopting-the-networking-service_{context}[Adopting the Networking service] needs to be imported;
- ** the xref:adopting-the-bare-metal-provisioning-service_{context}[Adopting the Openstack Baremetal service] needs to be imported;
+ ** the xref:adopting-the-bare-metal-provisioning-service_{context}[Adopting the Openstack Baremetal service] needs to be imported; 
+//kgilliga:Need to revist this xref. Might rewrite this section anyway.
  ** Required services specific topology
-xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
-//kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
+xref:proc_retrieving-services-topology-specific-configuration_{context}[Retrieving services from a topology specific-configuration].
  ** {rhos_prev_long} services have been stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
-
-.Variables
-
-Define the shell variables and aliases used in the steps below. The values are just illustrative, use values that are correct for your environment:
+* Define the shell variables and aliases used in the steps below. The values are just illustrative, use values that are correct for your environment:
 ----
 alias openstack="oc exec -t openstackclient -- openstack"
 ----
@@ -135,7 +132,7 @@ oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 +
 The local Conductor services will be started for each cell, while the superconductor runs in `cell0`.
-Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Nova services, until the external data plane is imported, and until Nova Compute services fast-forward upgraded. For more information, see xref:adopting-dataplane_{context}[Data Plane Adoption].
+Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Nova services, until the external data plane is imported, and until Nova Compute services fast-forward upgraded. For more information, see xref:adopting-data-plane_data-plane[Adopting the data plane].
 
 .Verification 
 
@@ -147,7 +144,7 @@ $ openstack endpoint list | grep nova
 $ openstack server list
 ----
 
-Compare the following outputs with the topology specific configuration in xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
+Compare the following outputs with the topology specific configuration in xref:proc_retrieving-services-topology-specific-configuration_{context}[Retrieving services from a topology specific-configuration].
 
 * Query the superconductor for cell1 existance and compare it to pre-adoption values:
 +
@@ -164,4 +161,4 @@ The expected changes to happen:
  ** RabbitMQ transport URL no longer uses `guest`.
 
 [NOTE]
-At this point, the {compute_service} control plane services have yet taken control over existing {compute_service} compute workloads. That would become possible to verify only after the data plane adoption is completed. For more information, see xref:adopting-dataplane_{context}[Data Plane Adoption].
+At this point, the {compute_service} control plane services have yet taken control over existing {compute_service} compute workloads. That would become possible to verify only after the data plane adoption is completed. For more information, see xref:adopting-data-plane_data-plane[Adopting the data plane].

@@ -25,11 +25,10 @@ Note that you should not stop the infrastructure management services yet, such a
 
 .Prerequisites
 
-You can stop {OpenStackShort} services at any moment, but you might leave your environment in an undesired state. However, you should confirm that there are no long running operations that require other services.
-
-Ensure that there are no ongoing instance live migrations, volume migrations (online or offline), volume creation, backup restore, attaching, detaching,
+* You can stop {OpenStackShort} services at any moment, but you might leave your environment in an undesired state. However, you should confirm that there are no long running operations that require other services.
+* Ensure that there are no ongoing instance live migrations, volume migrations (online or offline), volume creation, backup restore, attaching, detaching,
 etc.
-
++
 ----
 openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
 openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
@@ -37,14 +36,10 @@ openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \
 openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
 openstack image list -c ID -c Status |grep -E '\| .+ing \|'
 ----
-
-Also collect the services topology specific configuration before stopping services required to gather it live. You will need it to compare it with the post-adoption values later on. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the OpenStack configuration].
-//kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
-
-.Variables
-
-Define the shell variables used in the following steps. The values are illustrative and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Use values that are correct for your environment:
-
+* Also collect the services topology specific configuration before stopping services required to gather it live. You will need it to compare it with the post-adoption values later on. For more information, see xref:proc_retrieving-services-topology-specific-configuration_adopt-control-plane[Retrieving services from a topology specific-configuration].
+//kgilliga: Question for Mathieu and Jiri: Should the "Retrieving services from a topology specific-configuration" module be moved to the beginning of the "Migrating databases to the control plane chapter?".
+* Define the following shell variables. The values are illustrative and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Use values that are correct for your environment:
++
 [subs=+quotes]
 ----
 ifeval::["{build}" != "downstream"]

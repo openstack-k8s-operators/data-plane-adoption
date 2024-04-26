@@ -1,6 +1,6 @@
 [id="adopting-data-plane_{context}"]
 
-:context: adopting-data-plane
+:context: data-plane
 
 = Adopting the data plane
 

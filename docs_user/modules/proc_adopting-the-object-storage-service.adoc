@@ -10,10 +10,9 @@ This section only applies if you are using OpenStack Swift as {object_storage_fi
 * The {object_storage} storage backend services must still be running.
 * Storage network has been properly configured on the {OpenShift} cluster.
 
-.Variables
-
-No new environmental variables need to be defined, though you use the
-`CONTROLLER1_SSH` alias that was defined in a previous step.
+//No new environmental variables need to be defined, though you use the
+//`CONTROLLER1_SSH` alias that was defined in a previous step.
+//kgilliga: I commented this part out because I need to understand why "`CONTROLLER1_SSH` alias that was defined in a previous step" is significant for customers to know downstream.
 
 .Procedure
 
