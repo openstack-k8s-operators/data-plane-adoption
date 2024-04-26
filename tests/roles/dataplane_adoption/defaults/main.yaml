@@ -123,3 +123,5 @@ neutron_public_interface_name: "{{ dataplane_public_iface | default('eth0') }}"
 edpm_sshd_allowed_ranges: "{{ ['192.168.122.0/24'] if dataplane_os_net_config_set_route|default(true)|bool else ['0.0.0.0/0'] }}"
 edpm_neutron_sriov_agent_enabled: true
 edpm_neutron_dhcp_agent_enabled: true
+
+nova_libvirt_backend: local

@@ -4,5 +4,5 @@
     github-check:
       jobs:
         - data-plane-adoption-osp-17-to-extracted-crc
-        - data-plane-adoption-osp-17-to-extracted-crc-minimal-no-ceph
+        - data-plane-adoption-osp-17-to-extracted-crc-minimal-no-ceph-rdojobs
         - adoption-docs-preview

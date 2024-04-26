@@ -1,0 +1,40 @@
+[id="troubleshooting-object-storage-migration_{context}"]
+
+= Troubleshooting the {object_storage_first_ref} migration
+
+You can troubleshoot issues with the {object_storage_first_ref} migration.
+
+* The following command might be helpful to debug if the replication is not working and the `swift-dispersion-report` is not back to 100% availability.
++
+----
+CONTROLLER1_SSH tail /var/log/containers/swift/swift.log | grep object-server
+----
++
+This should show the replicator progress, for example:
++
+----
+Mar 14 06:05:30 standalone object-server[652216]: <f+++++++++ 4e2/9cbea55c47e243994b0b10d8957184e2/1710395823.58025.data
+Mar 14 06:05:30 standalone object-server[652216]: Successful rsync of /srv/node/vdd/objects/626/4e2 to swift-storage-1.swift-storage.openstack.svc::object/d1/objects/626 (0.094)
+Mar 14 06:05:30 standalone object-server[652216]: Removing partition: /srv/node/vdd/objects/626
+Mar 14 06:05:31 standalone object-server[652216]: <f+++++++++ 85f/cf53b5a048e5b19049e05a548cde185f/1710395796.70868.data
+Mar 14 06:05:31 standalone object-server[652216]: Successful rsync of /srv/node/vdb/objects/829/85f to swift-storage-2.swift-storage.openstack.svc::object/d1/objects/829 (0.095)
+Mar 14 06:05:31 standalone object-server[652216]: Removing partition: /srv/node/vdb/objects/829
+----
+
+* You can also check the ring consistency and replicator status:
++
+----
+oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-recon -r --md5'
+----
++
+Note that the output might show a md5 mismatch until approx. 2 minutes after pushing new rings. Eventually it looks similar to the following example:
++
+----
+[...]
+Oldest completion was 2024-03-14 16:53:27 (3 minutes ago) by 172.20.0.100:6000.
+Most recent completion was 2024-03-14 16:56:38 (12 seconds ago) by swift-storage-0.swift-storage.openstack.svc:6200.
+===============================================================================
+[2024-03-14 16:56:50] Checking ring md5sums
+4/4 hosts matched, 0 error[s] while checking hosts.
+[...]
+----

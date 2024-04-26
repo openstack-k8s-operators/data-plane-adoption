@@ -4,7 +4,10 @@
   environment:
     INSTALL_YAMLS_PATH: "{{ install_yamls_path }}"
     EDPM_PRIVATEKEY_PATH: "{{ edpm_privatekey_path }}"
+    OS_CLOUD_IP: "{{ standalone_ip | default(edpm_node_ip) }}"
+    OS_CLOUD_NAME: "{{ os_cloud_name }}"
   ansible.builtin.shell:
     cmd: |
-      alias openstack="ssh -i {{ edpm_privatekey_path }} root@{{ edpm_node_ip }} OS_CLOUD=standalone openstack"
+      {{ shell_header }}
+      alias openstack="ssh -i {{ edpm_privatekey_path }} root@${OS_CLOUD_IP} OS_CLOUD=${OS_CLOUD_NAME} openstack"
       {{ lookup('ansible.builtin.file', prelaunch_test_instance_script) }}

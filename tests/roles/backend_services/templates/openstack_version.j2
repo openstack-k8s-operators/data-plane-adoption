@@ -69,6 +69,6 @@ spec:
     swiftObjectImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-object:{{ container_tag }}
     swiftProxyImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-proxy-server:{{ container_tag }}
     cinderVolumeImages:
-      default: {{ container_registry }}/{{ container_namespace }}/openstack-cinder-volume:{{ container_tag }}
+      volume1: {{ container_registry }}/{{ container_namespace }}/openstack-cinder-volume:{{ container_tag }}
     manilaShareImages:
-      default: {{ container_registry }}/{{ container_namespace }}/openstack-manila-share:{{ container_tag }}
+      share1: {{ container_registry }}/{{ container_namespace }}/openstack-manila-share:{{ container_tag }}

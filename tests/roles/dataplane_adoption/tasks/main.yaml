@@ -1,3 +1,11 @@
+- name: set shell vars for edpm adoption
+  no_log: "{{ use_no_log }}"
+  when:
+    - ('ceph' in [nova_libvirt_backend])
+  ansible.builtin.set_fact:
+    ceph_backend_configuration_fsid_shell_vars: |
+      CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //')
+
 - name: Save ansibleee-operator pod name to be able to wait for the rollout of the new pod
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -125,7 +133,9 @@
     rm -f id*
     cd -
 
-- name: create a Nova Compute Extra Config service
+- name: create a Nova Compute Extra Config service (no ceph backend in use)
+  when:
+    - ('ceph' not in [nova_libvirt_backend])
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -164,6 +174,58 @@
         issuer: osp-rootca-issuer-internal
       caCerts: combined-ca-bundle
     {% endif %}
+    EOF
+
+- name: create a Nova Compute Extra Config service (with ceph backend)
+  when:
+    - ('ceph' in [nova_libvirt_backend])
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ceph_backend_configuration_fsid_shell_vars }}
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nova-compute-extraconfig
+      namespace: openstack
+    data:
+      19-nova-compute-cell1-workarounds.conf: |
+        [workarounds]
+        disable_compute_service_check_for_ffu=true
+    ---
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: ceph-nova
+      namespace: openstack
+    data:
+      03-ceph-nova.conf: |
+        [libvirt]
+        images_type=rbd
+        images_rbd_pool=vms
+        images_rbd_ceph_conf=/etc/ceph/ceph.conf
+        images_rbd_glance_store_name=default_backend
+        images_rbd_glance_copy_poll_interval=15
+        images_rbd_glance_copy_timeout=600
+        rbd_user=openstack
+        rbd_secret_uuid=$CEPH_FSID
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: nova-compute-extraconfig
+      namespace: openstack
+    spec:
+      label: nova.compute.extraconfig
+      configMaps:
+        - nova-compute-extraconfig
+        - ceph-nova
+      secrets:
+        - nova-cell1-compute-config
+        - nova-migration-ssh-key
+      playbook: osp.edpm.nova
     EOF
 
 - name: Create OpenStackDataPlaneNodeSet
@@ -270,7 +332,7 @@
             - openvswitch3.1
 
             # ovn-controller settings
-            edpm_ovn_bridge_mappings: ['datacentre:br-ctlplane']
+            edpm_ovn_bridge_mappings: ["datacentre:{{ neutron_physical_bridge_name }}"]
             edpm_ovn_bridge: br-int
             edpm_ovn_encap_type: geneve
             ovn_match_northd_version: false
@@ -278,6 +340,42 @@
             edpm_ovn_remote_probe_interval: 60000
             edpm_ovn_ofctrl_wait_before_clear: 8000
     EOF
+
+# TODO: Apply the ceph backend config for Cinder in the original openstack CR, via kustomize
+- name: prepare adopted EDPM workloads to use Ceph backend for Cinder, if configured so
+  no_log: "{{ use_no_log }}"
+  when: cinder_volume_backend == "ceph" or cinder_backup_backend == "ceph"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch osdpns/openstack --type=merge --patch "
+    spec:
+      services:
+        - bootstrap
+        - download-cache
+        - configure-network
+        - validate-network
+        - install-os
+        - configure-os
+        - run-os
+        - install-certs
+        - ceph-client
+        - libvirt
+        - nova-compute-extraconfig
+        - ovn
+        - neutron-metadata
+      nodeTemplate:
+        extraMounts:
+        - extraVolType: Ceph
+          volumes:
+          - name: ceph
+            secret:
+              secretName: ceph-conf-files
+          mounts:
+          - name: ceph
+            mountPath: "/etc/ceph"
+            readOnly: true
+    "
 
 - name: set neutron-sriov-nic-agent configuration in the OpenStackDataPlaneNodeSet CR
   no_log: "{{ use_no_log }}"
