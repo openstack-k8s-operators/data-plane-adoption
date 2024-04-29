@@ -2,7 +2,7 @@
 
 :context: reviewing-configuration
 
-= Reviewing the {rhos_prev_long} control plane configruation
+= Reviewing the {rhos_prev_long} control plane configuration
 
 Before starting the adoption workflow, pull the configuration from the {rhos_prev_long} services and {OpenStackPreviousInstaller} on your file system to back up the configuration files. You can then use the files later, during the configuration of the adopted services, and for the record to compare and make sure nothing has been missed or misconfigured.
 

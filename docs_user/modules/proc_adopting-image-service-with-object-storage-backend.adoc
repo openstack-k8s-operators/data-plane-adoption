@@ -1,0 +1,89 @@
+[id="adopting-image-service-with-object-storage-backend_{context}"]
+
+= Adopting the {image_service} that is deployed with a {object_storage} backend
+
+Adopt the {image_service_first_ref} that you deployed with an {object_storage_first_ref} backend. When {image_service} is deployed with {object_storage_first_ref} as a backend in the {rhos_prev_long} environment based on {OpenStackPreviousInstaller}, the control plane `glanceAPI` instance is deployed with the following configuration:
+
+----
+..
+spec
+  glance:
+   ...
+      customServiceConfig: |
+          [DEFAULT]
+          enabled_backends = default_backend:swift
+          [glance_store]
+          default_backend = default_backend
+          [default_backend]
+          swift_store_create_container_on_put = True
+          swift_store_auth_version = 3
+          swift_store_auth_address = {{ .KeystoneInternalURL }}
+          swift_store_endpoint_type = internalURL
+          swift_store_user = service:glance
+          swift_store_key = {{ .ServicePassword }}
+----
+
+.Prerequisites
+
+* Previous Adoption steps completed. Notably, MariaDB, Keystone and Barbican
+should be already adopted.
+
+.Procedure
+
+. Write the patch manifest into a file, for example `glance_swift.patch`.
+For example:
++
+----
+spec:
+  glance:
+    enabled: true
+    apiOverride:
+      route: {}
+    template:
+      databaseInstance: openstack
+      storageClass: "local-storage"
+      storageRequest: 10G
+      customServiceConfig: |
+          [DEFAULT]
+          enabled_backends = default_backend:swift
+          [glance_store]
+          default_backend = default_backend
+          [default_backend]
+          swift_store_create_container_on_put = True
+          swift_store_auth_version = 3
+          swift_store_auth_address = {{ .KeystoneInternalURL }}
+          swift_store_endpoint_type = internalURL
+          swift_store_user = service:glance
+          swift_store_key = {{ .ServicePassword }}
+      glanceAPIs:
+        default:
+          replicas: 1
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+          networkAttachments:
+            - storage
+----
++
+Having {object_storage} as a backend establishes a dependency between the two services, and any deployed `GlanceAPI` instance would not work if {image_service} is configured with {object_storage} that is still not available in the `OpenStackControlPlane`.
+Once {object_storage}, and in particular `SwiftProxy`, has been adopted through the procedure described in <<adopting-object-storage-service>>, it is possible to proceed with the `GlanceAPI` adoption.
+
+. Verify that `SwiftProxy` is available:
++
+----
+$ oc get pod -l component=swift-proxy | grep Running
+swift-proxy-75cb47f65-92rxq   3/3     Running   0
+----
+
+. Patch the `GlanceAPI` service deployed in the control plane context:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file=glance_swift.patch
+----
