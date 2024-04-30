@@ -6,22 +6,3 @@
       asciidoc_available: true
       # This var is specific to ci-framework docs directory using sphinx
       doc_available: false
-
-- job:
-    name: data-plane-adoption-osp-17-to-extracted-crc-minimal-no-ceph
-    parent: data-plane-adoption-osp-17-to-extracted-crc
-    vars:
-      use_ceph: "false"
-      dpa_test_suite: "test-minimal"
-    # don't trigger job for docs changes
-    irrelevant-files:
-      - ^.*\.md$
-      - ^.*\.rst$
-      - ^docs/.*$
-      - .github/workflows
-      - mkdocs.yml
-      - .gitignore
-      - LICENSE
-      - ^docs_dev/.*$
-      - ^docs_user/.*$
-      - Gemfile

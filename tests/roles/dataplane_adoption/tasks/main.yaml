@@ -332,7 +332,7 @@
             - openvswitch3.1
 
             # ovn-controller settings
-            edpm_ovn_bridge_mappings: ['datacentre:br-ctlplane']
+            edpm_ovn_bridge_mappings: ["datacentre:{{ neutron_physical_bridge_name }}"]
             edpm_ovn_bridge: br-int
             edpm_ovn_encap_type: geneve
             ovn_match_northd_version: false

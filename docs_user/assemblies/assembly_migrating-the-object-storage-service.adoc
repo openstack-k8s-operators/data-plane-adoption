@@ -1,0 +1,15 @@
+[id="migrating-the-object-storage-service_{context}"]
+
+:context: migrate-object-storage-service
+
+= Migrating the {object_storage_first_ref} to {rhos_long} nodes
+This section only applies if you are using {rhos_prev_long} {object_storage_first_ref} as Object Storage
+service. If you are using the Object Storage *API* of Ceph Object Gateway (RGW), you can skip this section.
+
+Data migration to the new deployment might be a long running process that runs mostly in the background. The {object_storage} replicators will take care of moving data from old to new nodes, but depending on the amount of used storage this might take a very long time. You can still use the old nodes as long as they are running and continue with adopting other services in the meantime, reducing the amount of downtime. Note that performance might be decreased to the amount of replication traffic in the network.
+
+Migration of the data happens replica by replica. Assuming you start with 3 replicas, only 1 one them is being moved at any time, ensuring the remaining 2 replicas are still available and the {object_storage} is usable during the migration.
+
+include::../modules/proc_migrating-object-storage-data-to-rhoso-nodes.adoc[leveloffset=+1]
+
+include::../modules/con_troubleshooting-object-storage-migration.adoc[leveloffset=+1]
