@@ -23,7 +23,7 @@ here this time).
 //kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
  ** {OpenStackShort} services have been stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping {rhos_prev_long} services].
  ** There must be network routability between the original MariaDB and the MariaDB for the control plane.
-* Define the following shell variables. The values are illustrative. Use values that are correct for your environment:
+* Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
 +
 ----
 PODIFIED_MARIADB_IP=$(oc get svc --selector "mariadb/name=openstack" -ojsonpath='{.items[0].spec.clusterIP}')

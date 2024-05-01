@@ -26,7 +26,7 @@ This procedure will also need to be modified if the signing keys are stored in a
 * Your {OpenStackShort} deployment is using TLS-e.
 * Make sure the previous Adoption steps (if any) have been performed successfully.
 * Make sure the backend services on the new deployment are not started yet.
-* Define the shell variables used in the following steps. The values are illustrative and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Use values that are correct for your environment:
+* Define the following shell variables. The values that are used are examples and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Replace these example values with values that are correct for your environment:
 +
 ifeval::["{build}" != "downstream"]
 ----

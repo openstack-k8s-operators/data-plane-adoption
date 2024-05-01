@@ -25,9 +25,9 @@ Note that you should not stop the infrastructure management services yet, such a
 
 .Prerequisites
 
-* You can stop {OpenStackShort} services at any moment, but you might leave your environment in an undesired state. However, you should confirm that there are no long running operations that require other services.
+* Confirm that there no long-running operations that require the services you plan to stop. 
 * Ensure that there are no ongoing instance live migrations, volume migrations (online or offline), volume creation, backup restore, attaching, detaching,
-etc.
+and so on.
 +
 ----
 openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
@@ -36,9 +36,9 @@ openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \
 openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
 openstack image list -c ID -c Status |grep -E '\| .+ing \|'
 ----
-* Also collect the services topology specific configuration before stopping services required to gather it live. You will need it to compare it with the post-adoption values later on. For more information, see xref:proc_retrieving-services-topology-specific-configuration_adopt-control-plane[Retrieving services from a topology specific-configuration].
+* Collect the services topology-specific configuration before stopping services required to gather it live. You need it to compare it with the post-adoption values later on. For more information, see xref:proc_retrieving-services-topology-specific-configuration_adopt-control-plane[Retrieving services from a topology specific-configuration].
 //kgilliga: Question for Mathieu and Jiri: Should the "Retrieving services from a topology specific-configuration" module be moved to the beginning of the "Migrating databases to the control plane chapter?".
-* Define the following shell variables. The values are illustrative and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Use values that are correct for your environment:
+* Define the following shell variables. The values that are used are examples and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Replace these example values with values that are correct for your environment:
 +
 [subs=+quotes]
 ----

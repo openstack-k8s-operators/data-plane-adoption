@@ -18,7 +18,7 @@ defined. Specifically, `openstack/internalapi` network is defined.
  ** There must be network routability between:
   *** The adoption host and the original OVN.
   *** The adoption host and the control plane OVN.
-* Define the following shell variables. The values are illustrative. Use values that are correct for your environment:
+* Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
 +
 ----
 STORAGE_CLASS_NAME=crc-csi-hostpath-provisioner
@@ -31,7 +31,7 @@ endif::[]
 SOURCE_OVSDB_IP=172.17.1.49
 ----
 +
-You can get the real value of the `SOURCE_OVSDB_IP` from the puppet generated configurations:
+You can get the value to set `SOURCE_OVSDB_IP` by querying the puppet-generated configurations:
 +
 ----
 grep -rI 'ovn_[ns]b_conn' /var/lib/config-data/puppet-generated/
