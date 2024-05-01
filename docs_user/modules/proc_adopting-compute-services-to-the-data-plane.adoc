@@ -136,10 +136,10 @@ metadata:
 data:
     ssh-privatekey: |
 ifeval::["{build}" != "downstream"]
-$(cat ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa | base64 | sed 's/^/        /')
+$(cat ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa | base64 | sed \'s/^/        /')
 endif::[]
 ifeval::["{build}" == "downstream"]
-$(cat *<path to SSH key>* | base64 | sed 's/^/        /')
+$(cat *<path to SSH key>* | base64 | sed \'s/^/        /')
 endif::[]
 EOF
 ----
