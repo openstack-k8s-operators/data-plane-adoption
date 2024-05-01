@@ -231,7 +231,6 @@
             edpm_ovn_bridge_mappings: ["datacentre:{{ neutron_physical_bridge_name }}"]
             edpm_ovn_bridge: br-int
             edpm_ovn_encap_type: geneve
-            ovn_match_northd_version: false
             ovn_monitor_all: true
             edpm_ovn_remote_probe_interval: 60000
             edpm_ovn_ofctrl_wait_before_clear: 8000
