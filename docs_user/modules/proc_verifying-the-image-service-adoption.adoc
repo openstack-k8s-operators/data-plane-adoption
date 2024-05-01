@@ -3,7 +3,6 @@
 = Verifying the {image_service} adoption
 
 Verify that you successfully adopted your {image_service_first_ref} to the {rhos_long} {rhos_curr_ver} deployment.
-//kgilliga: Does this procedure apply to all backends, or do some verification steps only apply to specific backends?
 
 .Procedure
 
@@ -15,8 +14,7 @@ Verify that you successfully adopted your {image_service_first_ref} to the {rhos
 +
 If no line appears, then the configuration is correctly done.
 
-. Inspect the resulting glance pods and ensure that Ceph secrets are properly mounted:
-//kgilliga: Does this step only apply to customers who are using a Ceph backend?
+. Inspect the resulting glance pods:
 +
 ----
 GLANCE_POD=`oc get pod |grep glance-default-external-0 | cut -f 1 -d' '`
@@ -31,7 +29,11 @@ rbd_store_ceph_conf=/etc/ceph/ceph.conf
 rbd_store_user=openstack
 rbd_store_pool=images
 store_description=Ceph glance store backend.
+----
 
+. If you use a Ceph backend, ensure that the Ceph secrets are properly mounted:
++
+----
 oc exec -t $GLANCE_POD -c glance-api -- ls /etc/ceph
 ceph.client.openstack.keyring
 ceph.conf
@@ -61,7 +63,7 @@ ceph.conf
 | c3158cad-d50b-452f-bec1-f250562f5c1f | cirros | active |
 +--------------------------------------+--------+--------+
 ----
-
+ifeval::["{build}" != "downstream"]
 . Test that an image can be created on the adopted service:
 +
 ----
@@ -126,3 +128,4 @@ sh-4.4$ rbd -p images ls
 46a3eac1-7224-40bc-9083-f2f0cd122ba4
 c3158cad-d50b-452f-bec1-f250562f5c1f
 ----
+endif::[]
