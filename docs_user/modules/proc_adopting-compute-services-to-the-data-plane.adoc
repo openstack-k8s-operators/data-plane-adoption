@@ -462,7 +462,7 @@ endif::[]
         # SELinux module
         edpm_selinux_mode: enforcing
 
-        # Do not attempt OVS 3.2 major upgrades here
+        # Do not attempt OVS major upgrades here
         edpm_ovs_packages:
         - openvswitch3.1
 EOF
