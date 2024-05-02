@@ -28,20 +28,33 @@
 - name: Set ssh command for Tripleo standalone in os-diff.cfg
   ansible.builtin.lineinfile:
     path: "{{ os_diff_dir }}/os-diff.cfg"
-    regex: "ssh -F ssh.config standalone"
-    value: "ssh_cmd=ssh -i {{ standalone_private_key | default('~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa') }} root@{{ source_os_diff_config_ip }}"
+    regex: "ssh -F ssh.config"
+    value: "ssh_cmd=ssh -F {{ playbook_dir }}/{{ os_diff_dir }}/ssh.config"
+
+- name: Update ssh key in ssh.config
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/{{ os_diff_dir }}/ssh.config"
+    regex: "IdentityFile ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa"
+    value: "    IdentityFile {{ controller1_ssh.split(' ')[2] }}"
+
+- name: Set standalone IP in ssh.config file
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/{{ os_diff_dir }}/ssh.config"
+    regex: "Hostname standalone"
+    value: "    Hostname {{ source_os_diff_config_ip }}"
 
 - name: Set Tripleo config path in os-diff.cfg
   ansible.builtin.lineinfile:
+    firstmatch: true
     path: "{{ os_diff_dir }}/os-diff.cfg"
     regex: "local_config_path=/tmp/"
-    value: "local_config_path={{ os_diff_data_dir }}/tripleo"
+    value: "local_config_path={{ os_diff_data_dir }}"
 
 - name: Set OCP config path in os-diff.cfg
   ansible.builtin.lineinfile:
     path: "{{ os_diff_dir }}/os-diff.cfg"
     regex: "ocp_local_config_path=/tmp/ocp"
-    value: "ocp_local_config_path={{ os_diff_data_dir }}/ocp"
+    value: "ocp_local_config_path={{ os_diff_data_dir }}"
 
 - name: Set config path in os-diff.cfg
   ansible.builtin.lineinfile:
@@ -49,7 +62,9 @@
     regex: "local_config_dir=/tmp/"
     value: "local_config_dir={{ os_diff_data_dir }}"
 
+- name: Cp os-diff.cfg to the current location
+  ansible.builtin.shell: cp {{ os_diff_dir }}/os-diff.cfg .
+
 - name: Pull config from Tripleo os-diff
   ansible.builtin.shell: |
-    cd {{ os_diff_dir }}
-    ./os-diff pull
+    {{ os_diff_dir }}/os-diff pull --update -s {{ os_diff_dir }}/config.yaml

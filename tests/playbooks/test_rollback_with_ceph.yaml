@@ -23,9 +23,9 @@
     - role: ceph_backend_configuration
       tags:
         - ceph_backend_configuration
-    - role: pull_openstack_configuration
+    - role: get_services_configuration
       tags:
-        - pull_openstack_configuration
+        - get_services_configuration
     - role: stop_openstack_services
       tags:
         - stop_openstack_services
@@ -68,7 +68,9 @@
     - role: stop_remaining_services
       tags:
         - stop_remaining_services
-
+    - role: pull_openstack_configuration
+      tags:
+        - pull_openstack_configuration
     - role: control_plane_rollback
       tags:
         - control_plane_rollback
