@@ -1,5 +1,8 @@
 - name: Run os_diff pull config tasks
-  ansible.builtin.include_tasks: os_diff_pull_config.yaml
+  ansible.builtin.include_tasks: "{{ item }}"
+  loop:
+   - os_diff_pull_config.yaml
+   - os_diff_keystone_config.yaml
 
 # Pull nova configuration steps
 - name: set shell vars pull openstack configuration ssh commands
