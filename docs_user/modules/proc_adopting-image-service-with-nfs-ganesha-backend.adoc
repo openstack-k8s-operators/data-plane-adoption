@@ -1,0 +1,192 @@
+[id="adopting-image-service-with-nfs-ganesha-backend_{context}"]
+
+= Adopting the {image_service} that is deployed with an NFS Ganesha backend
+
+Adopt the {image_service_first_ref} that you deployed with an NFS Ganesha backend. The following steps assume that:
+
+. The Storage network has been propagated to the {OpenStackShort} control plane.
+. The {image_service} is able to reach the Storage network and connect to the nfs-server through the port `2049`.
+
+.Prerequisites
+
+* Previous Adoption steps completed. Notably, MariaDB, Keystone and Barbican
+should be already adopted.
+* In the source cloud, verify the NFS Ganesha parameters used by the overcloud to configure the {image_service} backend.
+In particular, find among the TripleO heat templates the following variables that are usually an override of the default content provided by
+`/usr/share/openstack-tripleo-heat-templates/environments/storage/glance-nfs.yaml`[glance-nfs.yaml]:
++
+----
+
+**GlanceBackend**: file
+
+**GlanceNfsEnabled**: true
+
+**GlanceNfsShare**: 192.168.24.1:/var/nfs
+
+----
++
+In the example above, as the first variable shows, the {image_service} has no notion of NFS Ganesha backend: the `File` driver is used in this scenario, and behind the scenes, the `filesystem_store_datadir` which usually points to `/var/lib/glance/images/` is mapped to the export value provided by the `GlanceNfsShare` variable.
+If the `GlanceNfsShare` is not exported through a network that is supposed to be propagated to the adopted {rhos_prev_long} control plane, an extra action is required by the human administrator, who must stop the `nfs-server` and remap the export to the `storage` network. This action usually happens when the {image_service} is stopped in the source Controller nodes.
+ifeval::["{build}" != "downstream"] 
+In the control plane, as per the (https://github.com/openstack-k8s-operators/docs/blob/main/images/network_diagram.jpg)[network isolation diagram],
+the {image_service} is attached to the Storage network, propagated via the associated `NetworkAttachmentsDefinition` custom resource, and the resulting Pods have already the right permissions to handle the {image_service} traffic through this network.
+endif::[]
+ifeval::["{build}" != "upstream"]
+In the control plane, the {image_service} is attached to the Storage network, propagated via the associated `NetworkAttachmentsDefinition` custom resource, and the resulting Pods have already the right permissions to handle the {image_service} traffic through this network.
+endif::[]
+In a deployed {OpenStackShort} control plane, you can verify that the network mapping matches with what has been deployed in the {OpenStackPreviousInstaller}-based environment by checking both the `NodeNetworkConfigPolicy` (`nncp`) and the `NetworkAttachmentDefinition` (`net-attach-def`):
++
+----
+$ oc get nncp
+NAME                        STATUS      REASON
+enp6s0-crc-8cf2w-master-0   Available   SuccessfullyConfigured
+
+$ oc get net-attach-def
+NAME
+ctlplane
+internalapi
+storage
+tenant
+
+$ oc get ipaddresspool -n metallb-system
+NAME          AUTO ASSIGN   AVOID BUGGY IPS   ADDRESSES
+ctlplane      true          false             ["192.168.122.80-192.168.122.90"]
+internalapi   true          false             ["172.17.0.80-172.17.0.90"]
+storage       true          false             ["172.18.0.80-172.18.0.90"]
+tenant        true          false             ["172.19.0.80-172.19.0.90"]
+----
++
+The above represents an example of the output that should be checked in the
+{OpenShift} environment to make sure there are no issues with the propagated
+networks.
+
+.Procedure
+
+. Adopt the {image_service} and create a new `default` `GlanceAPI` instance connected with the existing NFS Ganesha share.
++
+----
+cat << EOF > glance_nfs_patch.yaml
+
+spec:
+  extraMounts:
+  - extraVol:
+    - extraVolType: Nfs
+      mounts:
+      - mountPath: /var/lib/glance/images
+        name: nfs
+      propagation:
+      - Glance
+      volumes:
+      - name: nfs
+        nfs:
+          path: /var/nfs
+          server: 172.17.3.20
+    name: r1
+    region: r1
+  glance:
+    enabled: true
+    template:
+      databaseInstance: openstack
+      customServiceConfig: |
+         [DEFAULT]
+         enabled_backends = default_backend:file
+         [glance_store]
+         default_backend = default_backend
+         [default_backend]
+         filesystem_store_datadir = /var/lib/glance/images/
+      storageClass: "local-storage"
+      storageRequest: 10G
+      glanceAPIs:
+        default:
+          replicas: 1
+          type: single
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+          networkAttachments:
+          - storage
+EOF
+----
++
+[NOTE]
+Replace in `glance_nfs_patch.yaml` the `nfs/server` IP address with the IP used
+to reach the `nfs-server` and make sure the `nfs/path` points to the exported
+path in the `nfs-server`.
+
+. Patch `OpenStackControlPlane` to deploy {image_service} with a NFS Ganesha backend:
++ 
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_nfs_patch.yaml
+----
+
+.Verification
+
+* When GlanceAPI is active, you can see a single API instance:
++
+----
+$ oc get pods -l service=glance
+NAME                      READY   STATUS    RESTARTS
+glance-default-single-0   3/3     Running   0
+```
+----
+and the description of the pod must report:
+
+----
+Mounts:
+...
+  nfs:
+    Type:      NFS (an NFS mount that lasts the lifetime of a pod)
+    Server:    {{ server ip address }}
+    Path:      {{ nfs export path }}
+    ReadOnly:  false
+...
+----
+
+* Check the mountpoint:
++
+----
+oc rsh -c glance-api glance-default-single-0
+
+sh-5.1# mount
+...
+...
+{{ ip address }}:/var/nfs on /var/lib/glance/images type nfs4 (rw,relatime,vers=4.2,rsize=1048576,wsize=1048576,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=172.18.0.5,local_lock=none,addr=172.18.0.5)
+...
+...
+----
+
+* Confirm that the UUID has been created in the exported directory on the NFS Ganesha node. For example:
++
+----
+$ oc rsh openstackclient
+$ openstack image list
+
+sh-5.1$  curl -L -o /tmp/cirros-0.5.2-x86_64-disk.img http://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
+...
+...
+
+sh-5.1$ openstack image create --container-format bare --disk-format raw --file /tmp/cirros-0.5.2-x86_64-disk.img cirros
+...
+...
+
+sh-5.1$ openstack image list
++--------------------------------------+--------+--------+
+| ID                                   | Name   | Status |
++--------------------------------------+--------+--------+
+| 634482ca-4002-4a6d-b1d5-64502ad02630 | cirros | active |
++--------------------------------------+--------+--------+
+----
+
+* On the nfs-server node, the same `uuid` is in the exported `/var/nfs`:
++
+----
+$ ls /var/nfs/
+634482ca-4002-4a6d-b1d5-64502ad02630
+----

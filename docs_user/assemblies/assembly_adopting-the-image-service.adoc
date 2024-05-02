@@ -1,0 +1,34 @@
+[id="adopting-the-image-service_{context}"]
+
+:context: image-service
+//Check xref context."Reviewing the OpenStack configuration" xref does not work.
+
+= Adopting the {image_service}
+
+Adopting {image_service_first_ref} means that an existing `OpenStackControlPlane` custom resource (CR), where {image_service}
+is supposed to be disabled, should be patched to start the service with the
+configuration parameters provided by the source environment.
+
+When the procedure is over, the expectation is to see the `GlanceAPI` service
+up and running: the {identity_service} endpoints are updated and the same backend of the source Cloud is available. If the conditions above are met, the adoption is considered concluded.
+
+This guide also assumes that: 
+
+* A `TripleO` environment (the source Cloud) is running on one side.
+* A `SNO` / `CodeReadyContainers` is running on the other side.
+* (optional) An internal/external `Ceph` cluster is reachable by both `crc` and `TripleO`.
+
+ifeval::["{build}" != "downstream"]
+//This link goes to a 404. Do we need this text downstream? 
+As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Glance Adoption follows the same pattern.
+endif::[]
+
+include::../modules/proc_adopting-image-service-with-object-storage-backend.adoc[leveloffset=+1]
+
+include::../modules/proc_adopting-image-service-with-block-storage-backend.adoc[leveloffset=+1]
+
+include::../modules/proc_adopting-image-service-with-nfs-ganesha-backend.adoc[leveloffset=+1]
+
+include::../modules/proc_adopting-image-service-with-ceph-backend.adoc[leveloffset=+1]
+
+include::../modules/proc_verifying-the-image-service-adoption.adoc[leveloffset=+1]
