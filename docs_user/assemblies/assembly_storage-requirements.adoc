@@ -14,4 +14,6 @@ you can deploy the services.
 
 //*TODO: Galera, RabbitMQ, Swift, Glance, etc.*
 
+include::../modules/con_storage-driver-certification.adoc[leveloffset=+1]
+
 include::../modules/con_block-storage-service-requirements.adoc[leveloffset=+1]
