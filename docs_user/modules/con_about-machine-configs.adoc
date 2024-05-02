@@ -45,5 +45,5 @@ metadata:
 
 Refer to the https://docs.openshift.com/container-platform/4.13/post_installation_configuration/machine-configuration-tasks.html[OpenShift documentation for additional information on `MachineConfig` and `MachineConfigPools`]
 
-*WARNING:* Applying a `MachineConfig` to an OpenShift node will make the node
-reboot.
+[WARNING]
+Applying a `MachineConfig` to an {OpenShift} node makes the node reboot.
