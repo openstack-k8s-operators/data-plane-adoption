@@ -19,4 +19,4 @@ will correspond to the new clustered Ceph NFS service in contrast to other
 non-preferred export paths that continue to be displayed until the old
 isolated, standalone NFS service is decommissioned.
 
-See xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a Ceph NFS cluster] for instructions on setting up a clustered NFS service.
+See xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a NFS Ganesha cluster] for instructions on setting up a clustered NFS service.

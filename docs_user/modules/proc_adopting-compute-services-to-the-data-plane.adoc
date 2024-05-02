@@ -1,13 +1,11 @@
 [id="adopting-compute-services-to-the-data-plane_{context}"]
 
-//check xrefs.
-
 = Adopting Compute services to the {rhos_acro} data plane
 
 .Prerequisites
 
 * Remaining source cloud xref:stopping-infrastructure-management-and-compute-services_{context}[Stopping infrastructure management and Compute services] on Compute hosts.
-* Ceph backend for Nova/Libvirt is configured xref:configuring-a-ceph-backend_{context}[Configuring a Ceph backend].
+* Ceph backend for Nova/Libvirt is configured xref:configuring-a-ceph-backend_migrating-databases[Configuring a Ceph backend].
 * Make sure the IPAM is configured
 
 ----

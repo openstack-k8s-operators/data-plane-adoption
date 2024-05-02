@@ -35,9 +35,6 @@ ifeval::["{build}" != "downstream"]
 For developer/CI environments driven by install_yamls, make sure
 you've run `make crc_storage`.
 endif::[]
-
-.Variables
-
 * Set the desired admin password for the control plane deployment. This can
 be the original deployment's admin password or something else.
 +
@@ -50,7 +47,6 @@ To use the existing {OpenStackShort} deployment password:
 ----
 ADMIN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
 ----
-
 * Set service password variables to match the original deployment.
 Database passwords can differ in the control plane environment, but
 synchronizing the service account passwords is a required step.

@@ -25,10 +25,6 @@ type: Opaque
 EOF
 ----
 
-.Variables
-
-No shell variables are necessary currently.
-
 .Procedure
 
 . Patch `OpenStackControlPlane` to deploy {identity_service}:

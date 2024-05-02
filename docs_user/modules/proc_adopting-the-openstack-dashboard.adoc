@@ -7,10 +7,6 @@
 * Previous Adoption steps completed. Notably, Memcached and
 {identity_service_first_ref} should be already adopted.
 
-.Variables
-
-No shell variables are necessary currently.
-
 .Procedure
 
 * Patch `OpenStackControlPlane` to deploy the {dashboard}:

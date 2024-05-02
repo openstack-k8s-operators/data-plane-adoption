@@ -27,11 +27,8 @@ It is critical that this configuration file comes from one of the controllers an
 //kgilliga: What is meant by "overcloud Ironic deployment? Can this be changed to the "RHOSP Bare Metal Provisioning service deployment"?
 
 * If adopting the Ironic Inspector service you need the value of the `IronicInspectorSubnets` {OpenStackPreviousInstaller} parameter. Use the same values to populate the `dhcpRanges` parameter in the target environment.
-
-.Variables
-
-Define the shell variables and aliases used in the steps below. The values are just illustrative, use values that are correct for your environment:
-
+* Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
++
 ----
 alias openstack="oc exec -t openstackclient -- openstack"
 ----

@@ -40,7 +40,7 @@ Specifically,
   **existing** deployment or, depending on IP address availability in the
   existing allocation pools, **new** ranges will be defined to be used for the
   new control plane services. If so, **IP routing** will be configured between
-  the old and new ranges. For more information, see xref:planning-your-ipam-configuration_ipam-configuration[Planning your IPAM configuration].
+  the old and new ranges. For more information, see xref:planning-your-ipam-configuration_configuring-network[Planning your IPAM configuration].
 * VLAN tags will be reused from the existing deployment.
 
 include::../modules/proc_retrieving-network-information-from-your-existing-deployment.adoc[leveloffset=+1]

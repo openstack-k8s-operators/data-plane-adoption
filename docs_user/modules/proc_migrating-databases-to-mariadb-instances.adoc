@@ -23,12 +23,8 @@ here this time).
 //kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
  ** {OpenStackShort} services have been stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping {rhos_prev_long} services].
  ** There must be network routability between the original MariaDB and the MariaDB for the control plane.
-
-.Variables
-
-Define the shell variables used in the steps below. The values are
-just illustrative, use values that are correct for your environment:
-
+* Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
++
 ----
 PODIFIED_MARIADB_IP=$(oc get svc --selector "mariadb/name=openstack" -ojsonpath='{.items[0].spec.clusterIP}')
 PODIFIED_CELL1_MARIADB_IP=$(oc get svc --selector "mariadb/name=openstack-cell1" -ojsonpath='{.items[0].spec.clusterIP}')
@@ -65,6 +61,7 @@ SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' Mysql
 mkdir ~/adoption-db
 cd ~/adoption-db
 ----
++
 [source,yaml]
 ----
 oc apply -f - <<EOF
@@ -113,7 +110,7 @@ EOF
 ----
 
 * Wait for the pod to come up
-
++
 ----
 oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
 ----
