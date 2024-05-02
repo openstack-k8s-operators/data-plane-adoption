@@ -347,6 +347,12 @@
     {{ shell_header }}
     {{ os_diff_dir }}/os-diff diff {{ os_diff_data_dir }}/tripleo/ovs_external_ids/standalone/ovs_external_ids.json edpm-crd.yaml --crd --service ovs_external_ids -f ${PWD}/{{ os_diff_dir }}/config.yaml
 
+- name: deploy dataplane
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    cat edpm-crd.yaml | oc apply -f -
+
 # TODO: Apply the ceph backend config for Cinder in the original openstack CR, via kustomize
 - name: prepare adopted EDPM workloads to use Ceph backend for Cinder, if configured so
   no_log: "{{ use_no_log }}"
