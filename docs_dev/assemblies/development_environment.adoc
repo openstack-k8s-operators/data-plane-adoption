@@ -156,25 +156,6 @@ make input
 make openstack
 ----
 
-=== Convenience steps
-
-To make our life easier we can copy the deployment passwords we'll be using
-in the https://openstack-k8s-operators.github.io/data-plane-adoption/user/#deploying-backend-services_migrating-databases[backend services deployment phase of the data plane adoption].
-
-[,bash]
-----
-scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100:/root/tripleo-standalone-passwords.yaml ~/
-----
-
-If we want to be able to easily run `openstack` commands from the host without
-actually installing the package and copying the configuration file from the VM
-we can create a simple alias:
-
-[,bash]
-----
-alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=standalone openstack"
-----
-
 === Route networks
 
 Route VLAN20 to have access to the MariaDB cluster:
@@ -225,9 +206,15 @@ the install_yamls `*_cleanup` targets. This is further detailed in
 the section:
 https://openstack-k8s-operators.github.io/data-plane-adoption/dev/#_reset_the_environment_to_pre_adoption_state[Reset the environment to pre-adoption state]
 
-=== Create a workload to adopt
+=== Creating a workload to adopt
 
-'''
+To run `openstack` commands from the host without 
+installing the package and copying the configuration file from the virtual machine, create an alias:
+
+[,bash]
+----
+alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=standalone openstack"
+----
 
 ==== Ironic Steps
 
@@ -330,7 +317,17 @@ Create a Barbican secret
 openstack secret store --name testSecret --payload 'TestPayload'
 ```
 
-== Performing the Data Plane Adoption
+== Performing the adoption procedure
+
+To simplify the adoption procedure, copy the deployment passwords that
+you use in copy the deployment passwords that you use in the
+https://openstack-k8s-operators.github.io/data-plane-adoption/user/#deploying-backend-services_migrating-databases[backend
+services deployment phase of the data plane adoption].
+
+[,bash]
+----
+scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100:/root/tripleo-standalone-passwords.yaml ~/
+----
 
 The development environment is now set up, you can go to the https://openstack-k8s-operators.github.io/data-plane-adoption/[Adoption
 documentation]
@@ -338,7 +335,7 @@ and perform adoption manually, or run the https://openstack-k8s-operators.github
 suite]
 against your environment.
 
-== Reset the environment to pre-adoption state
+== Resetting the environment to pre-adoption state
 
 The development environment must be rolled back in case we want to execute another Adoption run.
 
