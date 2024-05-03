@@ -9,12 +9,9 @@ it is important to plan it carefully. The general network requirements for the
 OpenStack services are not much different from the ones in a {OpenStackPreviousInstaller} deployment, but the way you handle them is.
 
 [NOTE]
-More details about the network architecture and configuration can be
-found in the
-https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/18.0-dev-preview/html/deploying_red_hat_openstack_platform_18.0_development_preview_3_on_red_hat_openshift_container_platform/assembly_preparing-rhocp-for-rhosp#doc-wrapper[general
-OpenStack documentation] as well as
-https://docs.openshift.com/container-platform/4.14/networking/about-networking.html[OpenShift
-Networking guide]. This document will address concerns specific to adoption.
+For more information about the network architecture and configuration, see
+link:https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/18.0-dev-preview/html/deploying_red_hat_openstack_platform_18.0_development_preview_3_on_red_hat_openshift_container_platform/assembly_preparing-rhocp-for-rhosp[_Deploying Red Hat OpenStack Platform 18.0 Development Preview 3 on Red Hat OpenShift Container Platform_] and link:https://docs.openshift.com/container-platform/4.15/networking/about-networking.html[About
+networking] in _OpenShift Container Platform 4.15 Documentation_. This document will address concerns specific to adoption.
 
 // TODO: update the openstack link with the final documentation
 
