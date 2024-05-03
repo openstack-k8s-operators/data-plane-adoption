@@ -74,6 +74,7 @@ metadata:
   name: ovn-copy-data
   annotations:
     openshift.io/scc: anyuid
+    k8s.v1.cni.cncf.io/networks: internalapi
   labels:
     app: adoption
 spec:
