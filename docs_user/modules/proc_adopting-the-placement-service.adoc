@@ -9,7 +9,7 @@
 * Previous Adoption steps completed. Notably,
  ** the xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances]
 must already be imported into the control plane MariaDB.
- ** the xref:adopting-the-identity-service_{context}[Adopting the Identity service] needs to be imported.
+ ** the xref:adopting-the-identity-service_adopt-control-plane[Adopting the Identity service] needs to be imported.
  ** the Memcached operator needs to be deployed (nothing to import for it from
 the source environment).
 
