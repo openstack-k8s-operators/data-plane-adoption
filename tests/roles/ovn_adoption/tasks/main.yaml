@@ -265,3 +265,18 @@
     oc exec ovsdbserver-sb-0 ovn-sbctl show
 
   register: ovn_show_responding_result
+
+- name: stop old ovn ovsdb services
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    $CONTROLLER1_SSH sudo systemctl stop tripleo_ovn_cluster_north_db_server.service
+    $CONTROLLER2_SSH sudo systemctl stop tripleo_ovn_cluster_north_db_server.service
+    $CONTROLLER3_SSH sudo systemctl stop tripleo_ovn_cluster_north_db_server.service
+
+    $CONTROLLER1_SSH sudo systemctl stop tripleo_ovn_cluster_south_db_server.service
+    $CONTROLLER2_SSH sudo systemctl stop tripleo_ovn_cluster_south_db_server.service
+    $CONTROLLER3_SSH sudo systemctl stop tripleo_ovn_cluster_south_db_server.service

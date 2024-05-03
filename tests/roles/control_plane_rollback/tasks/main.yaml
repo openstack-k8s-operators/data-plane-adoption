@@ -42,6 +42,8 @@
                      "tripleo_ceilometer_agent_compute.service"
                      "tripleo_ceilometer_agent_ipmi.service"
                      "tripleo_ceilometer_agent_notification.service"
+                     "tripleo_ovn_cluster_north_db_server.service"
+                     "tripleo_ovn_cluster_south_db_server.service"
                      "tripleo_ovn_cluster_northd.service")
 
     PacemakerResourcesToStart=("galera-bundle"

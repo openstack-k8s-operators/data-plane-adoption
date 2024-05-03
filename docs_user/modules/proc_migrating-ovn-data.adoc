@@ -228,3 +228,37 @@ oc patch openstackcontrolplane openstack --type=json -p="[{'op': 'remove', 'path
 oc delete pod ovn-copy-data
 oc delete pvc ovn-data
 ----
+
+. Stop old OVN database servers.
++
+----
+ServicesToStop=("tripleo_ovn_cluster_north_db_server.service"
+                "tripleo_ovn_cluster_south_db_server.service")
+
+echo "Stopping systemd OpenStack services"
+for service in ${ServicesToStop[*]}; do
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+        if [ ! -z "${!SSH_CMD}" ]; then
+            echo "Stopping the $service in controller $i"
+            if ${!SSH_CMD} sudo systemctl is-active $service; then
+                ${!SSH_CMD} sudo systemctl stop $service
+            fi
+        fi
+    done
+done
+
+echo "Checking systemd OpenStack services"
+for service in ${ServicesToStop[*]}; do
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+        if [ ! -z "${!SSH_CMD}" ]; then
+            if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
+                echo "ERROR: Service $service still running on controller $i"
+            else
+                echo "OK: Service $service is not running on controller $i"
+            fi
+        fi
+    done
+done
+----
