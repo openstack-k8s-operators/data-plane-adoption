@@ -1,0 +1,26 @@
+# The problem might be having a different size in the number of controller
+# nodes (that should be decommissioned, and the number of target nodes: we
+# need to establish rules and block the process if it's not possible to
+# complete the migration (either because of cardinality of just because we
+# don't have enough nodes).
+
+- name: Setup a Ceph client to the first node
+  block:
+    - ansible.builtin.include_tasks: network.yaml
+      vars:
+        cur_mon: "{{ decomm_nodes | list | sort | first }}"
+      tags:
+        - ceph_network
+
+# we need to serially migrate mons, so we loop over the nodes and run the
+# procedure provided by mon.yaml
+- name: Migrate RBD node
+  ansible.builtin.include_tasks: mon.yaml
+  vars:
+    #cur_mon: "{{ item.0 }}"
+    #target_node: "{{ item.1 }}"
+    cur_mon: controller-0
+    target_node: cephstorage-0
+  # This condition might be a different one
+  #loop: "{{ decomm_nodes|zip(hostmap.keys() | difference(decomm_nodes)) | list }}"
+

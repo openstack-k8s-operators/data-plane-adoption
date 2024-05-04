@@ -1,0 +1,23 @@
+---
+# defaults file for ceph_migrate
+ceph_daemons_layout:
+  rbd: true
+  rgw: true
+  mds: true
+  monitoring: true
+
+ceph_container_ns: quay.io/ceph
+ceph_container_image: ceph
+ceph_container_tag: v18
+ceph_container: "{{ ceph_container_ns }}/{{ceph_container_image}}:{{ceph_container_tag}}"
+ceph_config_home: "/home/tripleo-admin/ceph_client"
+
+ceph_spec_render_dir: "/tmp"
+ceph_container_cli: "podman"
+ceph_container_options: "--net=host --ipc=host"
+ceph_keystone_ep: "keystone-internal.openstack.svc:5000"
+# ceph_cli: "cephadm shell -- ceph"
+ceph_rgw_virtual_ips_list: []
+ceph_storage_net_prefix: "172.17.3."
+ceph_client_ip: "172.17.3.254"
+os_net_conf_path: "/etc/os-net-config/config.yaml"

@@ -1,0 +1,10 @@
+DEVICE={{ ceph_mon_network_template.device }}
+ONBOOT=yes
+HOTPLUG=no
+NM_CONTROLLED=no
+PEERDNS=no
+VLAN=yes
+PHYSDEV={{ ceph_mon_network_template.physdev }}
+BOOTPROTO=static
+IPADDR0={{ mon_ipaddr }}
+NETMASK0={{ ceph_mon_network_template.netmask }}

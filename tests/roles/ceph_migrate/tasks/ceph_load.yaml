@@ -1,0 +1,126 @@
+# CEPH HEALTH
+- name: Ceph Health
+  block:
+    - name: Get Ceph Health
+      # cephadm runs w/ root privileges
+      become: true
+      ansible.builtin.shell: |
+        cephadm shell -- ceph -s -f json
+      register: ceph
+    - name: Load ceph data
+      ansible.builtin.set_fact:
+        ceph: "{{ ceph.stdout | from_json }}"
+
+
+# CEPH SERVICE MAP
+- name: Ceph Service Map
+  block:
+    - name: Get Ceph Orch ServiceMap
+      # cephadm runs w/ root privileges
+      become: true
+      ansible.builtin.shell: |
+        cephadm shell -- ceph orch ls -f json
+      register: smap
+    - name: Load Service Map
+      ansible.builtin.set_fact:
+        servicemap: "{{ smap.stdout | from_json }}"
+    - name: Print Service Map
+      when: debug | default(false)
+      ansible.builtin.debug:
+        msg: "{{ item.service_type }} - {{ item.placement }}"
+      loop: "{{ servicemap | flatten(levels=1) }}"
+
+# CEPH CONFIG DUMP
+- name: Ceph Config Dump
+  block:
+    - name: Get Ceph config
+      # cephadm runs w/ root privileges
+      become: true
+      ansible.builtin.shell: |
+        cephadm shell -- ceph config dump -f json
+      register: ceph_conf
+    - name: Print Ceph config dump
+      when: debug | default(false)
+      ansible.builtin.debug:
+        msg: "{{ item.name }} - {{ item.value }}"
+      loop: "{{ ceph_confdump | flatten(levels=1) }}"
+
+
+# CEPH HOSTMAP LIST
+- name: Ceph Host List
+  block:
+    - name: Get Ceph Orch Host Map
+      # cephadm runs w/ root privileges
+      become: true
+      ansible.builtin.shell: |
+        cephadm shell -- ceph orch host ls -f json
+      register: hosts
+    - ansible.builtin.set_fact:
+        hosts: "{{ hosts.stdout | from_json }}"
+    - name: Load hostmap List
+      ansible.builtin.set_fact:
+        hostmap: |-
+          {% set hm = {} %}
+          {% for h in hosts %}
+          {%     set _ = hm.__setitem__(h.hostname,h.labels) %}
+          {% endfor %}
+          {{ hm }}
+    - name: Print Host Map
+      when: debug | default(false)
+      ansible.builtin.debug:
+        msg: "{{ item }}"
+      loop: "{{ hostmap | flatten(levels=1) }}"
+
+# CEPH MON DUMP
+- name: Ceph Mon dump
+  block:
+    - name: Get Ceph monmap and load data
+      become: true
+      ansible.builtin.shell:
+        cephadm shell -- ceph mon dump -f json
+      register: mons
+    - ansible.builtin.set_fact:
+        mon_dump: "{{ mons.stdout | from_json }}"
+
+# We assume that nodes to decommission are where the mon label is present, and
+# the target_nodes are already enrolled in the Ceph cluster: this way we can
+# get them as difference between the current "mon" nodes and the rest of the
+# hosts of the Ceph cluster
+- name: Load nodes to decommission
+  ansible.builtin.set_fact:
+    decomm_nodes: |-
+      {% set ctl = [] %}
+      {% for h in hostmap.keys() %}
+      {% if 'mon' in hostmap.get(h) %}
+      {%     set _ = ctl.append(h) %}
+      {% endif %}
+      {% endfor %}
+      {{ ctl }}
+
+- name: Load target nodes
+  ansible.builtin.set_fact:
+    target_nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
+
+- name: Print Ceph cluster nodes
+  when: debug|default(false)
+  block:
+    - name: Print target nodes
+      ansible.builtin.debug:
+        msg: "{{ target_nodes }}"
+    - name: Print decomm_nodes
+      ansible.builtin.debug:
+        msg: "{{ decomm_nodes }}"
+
+# CEPH CONTAINER IMAGE
+#- name: Set Ceph container images
+#  ansible.builtin.set_fact:
+#    ceph_container_image: |-
+#      {% for item in ceph_confdump %}
+#      {%   if item.name == "container_images" %}
+#      {{ item.value}}
+#      {%   endif %}
+#      {%   endfor %}
+
+#- name: Container Image
+#  ansible.builtin.debug:
+#    msg: "{{ ceph_container }}"

@@ -1,0 +1,65 @@
+# - Expand labels to the whole hostmap
+- name: Apply Monitoring label to the overcloud nodes
+  import_tasks: labels.yaml
+  vars:
+    nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
+    action: "add"
+    labels:
+      - "monitoring"
+
+- name: MONITORING - Load Spec from the orchestrator
+  ansible.builtin.set_fact:
+    monitoring_stack: "{{ monitoring }}"
+  vars:
+    monitoring: |-
+      {% set monitoring_stack = {} %}
+      {% for item in servicemap %}
+      {%   if (item.service_type == 'grafana') or (item.service_type == 'prometheus') or (item.service_type == 'alertmanager') %}
+      {%     set cur = {} %}
+      {%     set _ = cur.__setitem__('service_type',item.service_type) %}
+      {%     set _ = cur.__setitem__('service_name',item.service_name) %}
+      {%     set _ = cur.__setitem__('networks', item.networks) %}
+      {%     set _ = cur.__setitem__('spec', item.spec) %}
+      {%     set _ = monitoring_stack.__setitem__(item.service_type, cur) %}
+      {%   endif %}
+      {% endfor %}
+      {{ monitoring_stack }}
+
+- name: Print the loaded data
+  when: debug | default(false)
+  ansible.builtin.debug:
+    msg: "{{ monitoring_stack }}"
+
+# Update and apply the spec: it will update the Monitoring Stack deployment,
+# and place daemons on the target nodes
+- name: Update the Monitoring Stack spec definition
+  # root privileges required to run cephadm
+  # and apply the new spec
+  become: true
+  ceph_mkspec:
+    service_type: "{% set st = item.get('service_type') %}{{ st }}"
+    service_id: "{% set id = item.get('service_id') %}{{ id }}"
+    service_name: "{% set nm = item.get('service_name') %}{{ nm }}"
+    cluster: ceph
+    apply: true
+    label: "monitoring"
+    render_path: "{{ ceph_spec_render_dir }}"
+    networks: "{%  set nw = item.get('networks') %}{{ nw }}"
+    spec: "{% set pt = item.get('spec') %}{{ pt }}"
+  register: spc
+  environment:
+    CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
+    CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
+  loop:
+    - "{{ grafana }}"
+    - "{{ prometheus }}"
+    - "{{ alertmanager }}"
+  vars:
+    - grafana: "{% set grf = monitoring_stack.get('grafana') %}{{ grf }}"
+    - prometheus: "{% set prom = monitoring_stack.get('prometheus') %}{{ prom }}"
+    - alertmanager: "{% set alm = monitoring_stack.get('alertmanager') %}{{ alm }}"
+
+- name: Print the resulting spec
+  ansible.builtin.debug:
+    msg: "{{ spc }}"
+  when: debug | default(true)

@@ -1,0 +1,101 @@
+# Check if all the required data are present
+- name: Fail if RGW VIPs are not defined
+  fail:
+    msg: "No RGW VIPs have been selected"
+  when:
+    - ceph_rgw_virtual_ips_list | length == 0
+  tags:
+    - ceph_rgw_ingress
+
+# - Expand labels to the target nodes
+- name: Apply RGW label to the target nodes
+  import_tasks: labels.yaml
+  vars:
+    nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
+    action: "add"
+    labels:
+      - "rgw"
+
+- name: RGW - Load Spec from the orchestrator
+  ansible.builtin.set_fact:
+    rgw_spec: "{{ rgw }}"
+  vars:
+    rgw: |-
+      {% set rgw = {} %}
+      {% for item in servicemap %}
+      {%   if item.service_type == 'rgw' %}
+      {%     set _ = rgw.__setitem__('service_type',item.service_type) %}
+      {%     set _ = rgw.__setitem__('service_name',item.service_name) %}
+      {%     set _ = rgw.__setitem__('networks', item.networks) %}
+      {%     set _ = item.spec.__setitem__('rgw_frontend_port', 8090)  %}
+      {%     set _ = rgw.__setitem__('spec', item.spec) %}
+      {%   endif %}
+      {% endfor %}
+      {{ rgw }}
+
+- name: Print the loaded data
+  when: debug | default(true)
+  ansible.builtin.debug:
+    msg: "{{ rgw_spec }}"
+
+#- name: Apply ceph rgw keystone config
+#  #become: true
+#  ansible.builtin.command: |
+#    echo "{{ ceph_cli }} config set global rgw_keystone_url {{ ceph_keystone_ep }}"
+#  changed_when: false
+#  when:
+#    - ceph_keystone_ep is defined
+#    - ceph_keystone_ep | length > 0
+
+# Update and apply the spec: it will update the Monitoring Stack deployment,
+# and place daemons on the target nodes
+- name: Update the RGW spec definition
+  # root privileges required to run cephadm
+  # and apply the new spec
+  become: true
+  ceph_mkspec:
+    service_type: "{% set st = rgw_spec.get('service_type') %}{{ st }}"
+    service_id: "{% set id = rgw_spec.get('service_id') %}{{ id }}"
+    service_name: "{% set nm = rgw_spec.get('service_name') %}{{ nm }}"
+    cluster: ceph
+    apply: true
+    label: "rgw"
+    render_path: "{{ ceph_spec_render_dir }}"
+    networks: "{%  set nw = rgw_spec.get('networks') %}{{ nw }}"
+    spec: "{% set pt = rgw_spec.get('spec') %}{{ pt }}"
+  register: spc
+  environment:
+    CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
+    CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
+
+- name: Print the resulting spec
+  ansible.builtin.debug:
+    msg: "{{ spc }}"
+  when: debug | default(true)
+
+- name: Create the Ingress Daemon spec definition for RGW
+  become: true
+  ceph_mkspec:
+    service_type: ingress
+    cluster: ceph
+    apply: false
+    label: "rgw"
+    render_path: "{{ ceph_spec_render_dir }}"
+    spec:
+      backend_service: "{% set st = rgw_spec.get('service_type') %}{{ st }}.{{ st }}"
+      frontend_port: 8080
+      monitor_port: 8989
+      virtual_ips_list: "{{ ceph_rgw_virtual_ips_list }}"
+  register: spc
+  environment:
+    CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
+    CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
+  tags:
+    - ceph_rgw_ingress
+
+- name: Print the resulting spec
+  ansible.builtin.debug:
+    msg: "{{ spc }}"
+  when: debug | default(true)
+  tags:
+    - ceph_rgw_ingress

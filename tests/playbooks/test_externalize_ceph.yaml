@@ -1,0 +1,69 @@
+- name: Externalize Ceph
+  hosts: "{{ groups['overcloud'][0] | default([]) }}"
+  #hosts: localhost
+  gather_facts: false
+  vars:
+    ceph_daemons_layout:
+      # rbd is used to group mon/mgr migration that
+      # happens within the same flow
+      rbd: true
+      rgw: true
+      mds: true
+      monitoring: true
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  tasks:
+    # Load src Ceph cluster data
+    - name: Load Ceph data
+      ansible.builtin.import_role:
+        name: ceph_migrate
+        tasks_from: ceph_load_mock
+      tags:
+        - ceph_load
+        - always
+
+    # Verify the status of the src Ceph cluster
+    - name: Validations
+      ansible.builtin.import_role:
+        name: ceph_migrate
+        tasks_from: ceph_validate
+      tags:
+        - ceph_validate
+        - always
+
+    # Monitoring Stack migration
+    - name: Monitoring
+      when: ceph_daemons_layout.monitoring | default(true) | bool
+      ansible.builtin.import_role:
+        name: ceph_migrate
+        tasks_from: monitoring
+      tags:
+        - ceph_monitoring
+
+    # MDS migration
+    - name: MDS
+      when: ceph_daemons_layout.mds | default(true) | bool
+      ansible.builtin.import_role:
+        name: ceph_migrate
+        tasks_from: mds
+      tags:
+        - ceph_mds
+
+    # RGW migration
+    - name: RGW
+      when: ceph_daemons_layout.rgw | default(true) | bool
+      ansible.builtin.import_role:
+        name: ceph_migrate
+        tasks_from: rgw
+      tags:
+        - ceph_rgw
+
+    # Migrate Ceph RBD
+    - name: RBD
+      when: ceph_daemons_layout.rbd | default(true) | bool
+      ansible.builtin.import_role:
+        name: ceph_migrate
+        tasks_from: rbd
+      tags:
+        - ceph_rbd

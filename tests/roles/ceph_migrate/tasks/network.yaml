@@ -1,0 +1,68 @@
+- name: Setup a tmp client ip address on the src node
+  become: true
+  block:
+    - name: Get current mon IP address
+      ansible.builtin.set_fact:
+        mon_ipaddr: "{{ mon_ip | split(':') | first | ansible.utils.ipaddr }}"
+      vars:
+        mon_ip: |-
+          {% for mon in mon_dump.mons %}
+          {%   if mon.name == cur_mon %}
+          {{ mon.addr }}
+          {%   endif %}
+          {% endfor %}
+    - name: Patch os-net-config config and setup a tmp client IP
+      delegate_to: "{{ cur_mon }}.ctlplane"
+      lineinfile:
+        dest: "{{ os_net_conf_path }}"
+        insertafter: '{{ mon_ipaddr }}/24'
+        line: "    - ip_netmask: {{ ceph_client_ip }}/24"
+        backup: yes
+
+    - name: Refresh os-net-config
+      ansible.builtin.shell:
+        "os-net-config -c /etc/os-net-config/config.yaml"
+
+    #- name: debug
+    #  when:
+    #    - action == "add"
+    #  ansible.builtin.debug:
+    #    msg: "ADDING IP {{ mon_ipaddr }} to node {{ cur_mon }}"
+
+    #- name: Get current mon IP address
+    #  delegate_to: "{{ target_node }}.ctlplane"
+    #  when:
+    #    - action is defined
+    #    - action == "add"
+    #  ansible.builtin.set_fact:
+    #    mon_ipaddr: "{{ mon_ip | split(':') | first | ansible.utils.ipaddr }}"
+    #  vars:
+    #    mon_ip: |-
+    #      {% for mon in mon_dump.mons %}
+    #      {%   if mon.name == cur_mon %}
+    #      {{ mon.addr }}
+    #      {%   endif %}
+    #      {% endfor %}
+
+    #- name: Patch os-net-config config and add the mon IP
+    #  delegate_to: "{{ target_node }}.ctlplane"
+    #  when:
+    #    - action is defined
+    #    - action == "add"
+    #  lineinfile:
+    #    dest: "{{ os_net_conf_path }}"
+    #    insertafter: "{{ ceph_storage_net_prefix }}"
+    #    line: "  - ip_netmask: {{ mon_ipaddr }}/24"
+    #    backup: yes
+
+    #- name: Patch os-net-config config and remove the current mon IP address
+    #  delegate_to: "{{ cur_mon }}.ctlplane"
+    #  when:
+    #    - action is defined
+    #    - action == "rm"
+    #  lineinfile:
+    #    path: "{{ os_net_conf_path }}"
+    #    state: absent
+    #    regexp: '{{ mon_ipaddr }}/24'
+    #    backup: yes
+
