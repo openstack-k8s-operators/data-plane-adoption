@@ -1,6 +1,5 @@
 - name: Externalize Ceph
   hosts: "{{ groups['overcloud'][0] | default([]) }}"
-  #hosts: localhost
   gather_facts: false
   vars:
     ceph_daemons_layout:

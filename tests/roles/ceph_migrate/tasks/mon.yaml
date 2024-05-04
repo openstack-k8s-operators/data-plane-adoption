@@ -4,6 +4,7 @@
     msg: "Migrate mon: {{ cur_mon }} to node: {{ target_node }}"
 
 - name: Backup data for client purposes
+  delegate_to: "{{ cur_mon }}.ctlplane"
   block:
     - name: Ensure backup directory exists
       ansible.builtin.file:
@@ -29,7 +30,6 @@
 # Before draining the current node, migrate the active mgr on a different
 # _admin host
 - name: Migrate Ceph mgr from the current node if required
-  when: debug | default(false)
   block:
     - name: Get the current mgrmap dump
       become: true
@@ -69,7 +69,6 @@
 
 # Drain and rm the cur_mon from the Ceph cluster
 - name: Drain and rm --force the cur_mon host
-  when: debug | default(false)
   block:
     - name: Drain the cur_mon host
       become: true
@@ -112,32 +111,49 @@
     - name: Refresh os-net-config
       delegate_to: "{{ cur_mon }}.ctlplane"
       ansible.builtin.shell:
-        "os-net-config -c /etc/os-net-config/config.yaml"
+        "os-net-config -c {{ os_net_conf_path }}"
 
     - name: Patch os-net-config config and add the mon IP
       delegate_to: "{{ target_node }}.ctlplane"
-      when:
-        - action is defined
-        - action == "add"
       lineinfile:
         dest: "{{ os_net_conf_path }}"
         insertafter: "{{ ceph_storage_net_prefix }}"
         line: "  - ip_netmask: {{ mon_ipaddr }}/24"
         backup: yes
+
+    - name: Refresh os-net-config
+      delegate_to: "{{ target_node }}.ctlplane"
+      ansible.builtin.shell:
+        "os-net-config -c {{ os_net_conf_path }}"
+
     - name: ping ip address to see if is reachable on the target node
       ansible.builtin.shell:
         "ping -W1 -c 3 {{ mon_ipaddr }}"
-      delegate_to: "{{ cur_mon }}.ctlplane"
+      delegate_to: "{{ target_node }}.ctlplane"
       register: ping_target_ip
 
+    - name: Fail if the IP address is not active in the target node
+      when: ping_target_ip.rc != 0
+      fail:
+        msg: "Can't reach the mon IP on the target node"
+
+# The IP Address is available on the target node, redeploy the mon
 - name: Redeploy mon on the target node
-  when: debug | default(true)
   block:
     - name: Print the command that redeploys the mon
+      when: debug | default(false)
       ansible.builtin.debug:
         msg: "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
 
+    - name: Check if a mon already exist
+      command: |
+        {{ ceph_container_cli }} ps -a -f 'name=ceph-?(.*)-mon.*' --format \{\{\.Command\}\} --no-trunc
+      register: ceph_mon
+      become: true
+      delegate_to: "{{ target_node }}.ctlplane"
+
     - name: Redeploy mon on {{ target_node }}
+      when: ceph_mon.stdout | length == 0
       ansible.builtin.shell:
         "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
 

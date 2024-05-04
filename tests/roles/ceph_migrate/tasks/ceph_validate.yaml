@@ -59,8 +59,8 @@
 
     - name: Fail if Mons are not in quorum
       fail:
-        msg: "{{ Mons: ceph.monmap.num_mons }}"
-      when: ceph.monmap.num_mons != groups['overcloud']|length
+        msg: "Mons: {{ ceph.monmap.num_mons }}"
+      when: ceph.monmap.num_mons != decomm_nodes | length
 
 - name: Mgr is active
   block:
