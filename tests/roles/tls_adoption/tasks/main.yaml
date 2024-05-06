@@ -22,6 +22,7 @@
       labels:
         osp-rootca-issuer-public: ""
         osp-rootca-issuer-internal: ""
+        osp-rootca-issuer-libvirt: ""
         osp-rootca-issuer-ovn: ""
     spec:
       ca:
