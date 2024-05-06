@@ -1,14 +1,14 @@
 - name: Migrate mon
   when: debug | default(true)
   ansible.builtin.debug:
-    msg: "Migrate mon: {{ cur_mon }} to node: {{ target_node }}"
+    msg: "Migrate mon: {{ cur_mon.split('.')[0] }} to node: {{ target_node }}"
 
 - name: Backup data for client purposes
-  delegate_to: "{{ cur_mon }}.ctlplane"
+  delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
   block:
     - name: Ensure backup directory exists
       ansible.builtin.file:
-        path: "{{ ceph_config_home }}"
+        path: "{{ ceph_config_tmp_client_home }}"
         state: directory
 
     - name: Backup ceph client data
@@ -16,7 +16,7 @@
       copy:
         remote_src: true
         src: "/etc/ceph/{{ item }}"
-        dest: "{{ ceph_config_home }}"
+        dest: "{{ ceph_config_tmp_client_home }}"
       loop:
         - ceph.conf
         - ceph.client.admin.keyring
@@ -24,6 +24,7 @@
 - name: Get ceph_cli
   include_tasks: ceph_cli.yaml
   vars:
+    ceph_config_home: "{{ ceph_config_tmp_client_home }}"
     ceph_fsid: "{{ mon_dump.fsid }}"
     ceph_cluster: ceph
 
@@ -88,7 +89,7 @@
   vars:
     mon_ip: |-
       {% for mon in mon_dump.mons %}
-      {%   if mon.name == cur_mon %}
+      {%   if mon.name == cur_mon.split('.')[0] %}
       {{ mon.addr }}
       {%   endif %}
       {% endfor %}
@@ -97,24 +98,27 @@
   become: true
   block:
     - name: Get current mon IP address
-      when: debug | default(false)
+      when: debug | default(true)
       ansible.builtin.debug:
         msg: "{{ mon_ipaddr }}"
 
     - name: Patch os-net-config config and REMOVE the current mon IP address
-      delegate_to: "{{ cur_mon }}.ctlplane"
+      #delegate_to: "{{ cur_mon }}.ctlplane"
+      delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
       lineinfile:
         path: "{{ os_net_conf_path }}"
         state: absent
         regexp: '{{ mon_ipaddr }}/24'
         backup: yes
     - name: Refresh os-net-config
-      delegate_to: "{{ cur_mon }}.ctlplane"
+      #delegate_to: "{{ cur_mon }}.ctlplane"
+      delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
       ansible.builtin.shell:
         "os-net-config -c {{ os_net_conf_path }}"
 
     - name: Patch os-net-config config and add the mon IP
-      delegate_to: "{{ target_node }}.ctlplane"
+      #delegate_to: "{{ target_node }}.ctlplane"
+      delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
       lineinfile:
         dest: "{{ os_net_conf_path }}"
         insertafter: "{{ ceph_storage_net_prefix }}"
@@ -122,14 +126,16 @@
         backup: yes
 
     - name: Refresh os-net-config
-      delegate_to: "{{ target_node }}.ctlplane"
+      #delegate_to: "{{ target_node }}.ctlplane"
+      delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
       ansible.builtin.shell:
         "os-net-config -c {{ os_net_conf_path }}"
 
     - name: ping ip address to see if is reachable on the target node
       ansible.builtin.shell:
         "ping -W1 -c 3 {{ mon_ipaddr }}"
-      delegate_to: "{{ target_node }}.ctlplane"
+      # delegate_to: "{{ target_node }}.ctlplane"
+      delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
       register: ping_target_ip
 
     - name: Fail if the IP address is not active in the target node
@@ -150,10 +156,25 @@
         {{ ceph_container_cli }} ps -a -f 'name=ceph-?(.*)-mon.*' --format \{\{\.Command\}\} --no-trunc
       register: ceph_mon
       become: true
-      delegate_to: "{{ target_node }}.ctlplane"
+      # delegate_to: "{{ target_node }}.ctlplane"
+      delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
 
     - name: Redeploy mon on {{ target_node }}
       when: ceph_mon.stdout | length == 0
       ansible.builtin.shell:
         "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
+
+- name: check mons quorum
+  become: true
+  ansible.builtin.shell: "{{ ceph_cli }} -s -f json"
+  register: monmap
+  become: true
+  retries: 10
+  delay: 2
+  until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
+  loop_control:
+    label: "check mons quorum"
+
+- name: refresh cephadm info - fail ceph mgr --force
+  ansible.builtin.shell: "{{ ceph_cli }} mgr fail"
 

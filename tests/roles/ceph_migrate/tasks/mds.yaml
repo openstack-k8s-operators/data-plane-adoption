@@ -1,3 +1,9 @@
+- name: Get ceph_cli
+  include_tasks: ceph_cli.yaml
+  vars:
+    ceph_fsid: "{{ mon_dump.fsid }}"
+    ceph_cluster: ceph
+
 - name: MDS - Load Spec from the orchestrator
   ansible.builtin.set_fact:
     mds_spec: "{{ mds }}"
@@ -53,8 +59,8 @@
   become: true
   block:
     - name: Reload the updated mdsmap
-      ansible.builtin.shell: |
-        cephadm shell -- ceph fs status cephfs -f json
+      ansible.builtin.command:
+        "{{ ceph_cli }} fs status cephfs -f json"
       register: mds
     - name: Get MDS Daemons
       ansible.builtin.set_fact:
@@ -89,8 +95,8 @@
       when: mds_aff_daemon | default('') | length > 0
       # cephadm runs w/ root privileges
       become: true
-      ansible.builtin.shell: |
-        {{ ceph_cli }} config set {{ mds_aff_daemon.name }} mds_join_fs cephfs
+      ansible.builtin.shell:
+        "{{ ceph_cli }} config set {{ mds_aff_daemon.name }} mds_join_fs cephfs"
 
 # Remove labels from the controller nodes: it will force a failover and migrate
 # the existing active MDS daemon to the target node

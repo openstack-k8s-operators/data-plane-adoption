@@ -12,11 +12,17 @@
       tags:
         - ceph_network
 
+# Extend mgr deployment to help with failover
+- name: MGR - Migrate RBD node
+  ansible.builtin.include_tasks: mgr.yaml
+
 # we need to serially migrate mons, so we loop over the nodes and run the
 # procedure provided by mon.yaml
-- name: Migrate RBD node
+- name: MON - Migrate RBD node
   ansible.builtin.include_tasks: mon.yaml
   vars:
+    #cur_mon: controller-2.redhat.local
+    #target_node: cephstorage-2.redhat.local
     cur_mon: "{{ node.0 }}"
     target_node: "{{ node.1 }}"
   # This condition might be a different one

@@ -25,7 +25,7 @@
       ansible.builtin.set_fact:
         servicemap: "{{ smap.stdout | from_json }}"
     - name: Print Service Map
-      when: debug | default(false)
+      when: debug | default(true)
       ansible.builtin.debug:
         msg: "{{ item.service_type }} - {{ item.placement }}"
       loop: "{{ servicemap | flatten(levels=1) }}"
@@ -81,6 +81,10 @@
       register: mons
     - ansible.builtin.set_fact:
         mon_dump: "{{ mons.stdout | from_json }}"
+    - name: Print monmap
+      when: debug | default(false)
+      ansible.builtin.debug:
+        msg: "{{ mons.stdout | from_json }}"
 
 # We assume that nodes to decommission are where the mon label is present, and
 # the target_nodes are already enrolled in the Ceph cluster: this way we can
@@ -102,7 +106,7 @@
     target_nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
 
 - name: Print Ceph cluster nodes
-  when: debug|default(false)
+  when: debug|default(true)
   block:
     - name: Print target nodes
       ansible.builtin.debug:
@@ -110,17 +114,3 @@
     - name: Print decomm_nodes
       ansible.builtin.debug:
         msg: "{{ decomm_nodes }}"
-
-# CEPH CONTAINER IMAGE
-#- name: Set Ceph container images
-#  ansible.builtin.set_fact:
-#    ceph_container_image: |-
-#      {% for item in ceph_confdump %}
-#      {%   if item.name == "container_images" %}
-#      {{ item.value}}
-#      {%   endif %}
-#      {%   endfor %}
-
-#- name: Container Image
-#  ansible.builtin.debug:
-#    msg: "{{ ceph_container }}"

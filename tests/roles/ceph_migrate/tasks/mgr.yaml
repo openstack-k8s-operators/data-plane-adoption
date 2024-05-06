@@ -1,0 +1,51 @@
+- name: Get ceph_cli
+  include_tasks: ceph_cli.yaml
+  vars:
+    ceph_fsid: "{{ mon_dump.fsid }}"
+    ceph_cluster: ceph
+
+# Extend mgr labels to the target nodes to not fail during the mgr failover
+- name: Setup Mon/Mgr label to the target node
+  ansible.builtin.include_tasks: labels.yaml
+  vars:
+    nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
+    action: "add"
+    labels:
+      - "mgr"
+
+- name: MGR - Load Spec from the orchestrator
+  ansible.builtin.set_fact:
+    mgr_spec: "{{ mgr }}"
+  vars:
+    mgr: |-
+      {% set mgr = {} %}
+      {% for item in servicemap %}
+      {%   if item.service_type == 'mgr' %}
+      {%     set _ = mgr.__setitem__('service_type',item.service_type) %}
+      {%     set _ = mgr.__setitem__('service_name',item.service_name) %}
+      {%     set _ = mgr.__setitem__('spec', {}) %}
+      {%   endif %}
+      {% endfor %}
+      {{ mgr }}
+
+# Update and apply the spec: it will deploy standby mgr daemons on the target
+# nodes
+- name: Update the MGR Daemon spec definition
+  # root privileges required to run cephadm
+  # and apply the new spec
+  become: true
+  ceph_mkspec:
+    service_type: "{% set st = mgr_spec.get('service_type', 'mgr') %}{{ st }}"
+    cluster: ceph
+    apply: true
+    label: "mgr"
+    render_path: "{{ ceph_spec_render_dir }}"
+  register: spc
+  environment:
+    CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
+    CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
+
+- name: Print the resulting spec
+  ansible.builtin.debug:
+    msg: "{{ spc }}"
+  when: debug | default(false)

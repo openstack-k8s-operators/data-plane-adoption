@@ -5,10 +5,10 @@
     ceph_daemons_layout:
       # rbd is used to group mon/mgr migration that
       # happens within the same flow
-      rbd: true
+      rbd: false
       rgw: true
       mds: true
-      monitoring: true
+      monitoring: false
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash
@@ -17,7 +17,7 @@
     - name: Load Ceph data
       ansible.builtin.import_role:
         name: ceph_migrate
-        tasks_from: ceph_load_mock
+        tasks_from: ceph_load
       tags:
         - ceph_load
         - always
@@ -29,6 +29,15 @@
         tasks_from: ceph_validate
       tags:
         - ceph_validate
+        - always
+
+    # Check that the required container images are in place
+    - name: Containers
+      ansible.builtin.import_role:
+        name: ceph_migrate
+        tasks_from: ceph_containers
+      tags:
+        - ceph_containers
         - always
 
     # Monitoring Stack migration

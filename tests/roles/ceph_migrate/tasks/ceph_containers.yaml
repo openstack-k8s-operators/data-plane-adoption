@@ -14,6 +14,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+- name: Get ceph_cli
+  include_tasks: ceph_cli.yaml
+  vars:
+    ceph_fsid: "{{ mon_dump.fsid }}"
+    ceph_cluster: ceph
+
 - name: set container image base in ceph configuration
   command: |
     {{ ceph_cli }} config set mgr mgr/cephadm/container_image_base {{ ceph_container }}
@@ -21,8 +27,7 @@
   become: true
 
 - name: set dashboard container image in ceph mgr configuration
-  #when:
-  #  - cephadm_dashboard_enabled | bool
+  when: ceph_daemons_layout.monitoring | default(true) | bool
   become: true
   block:
     - name: set alertmanager container image in ceph configuration
