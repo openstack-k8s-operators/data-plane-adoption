@@ -2,15 +2,13 @@
 
 = Configuring the networking for control plane services
 
-//== Pod connectivity to isolated networks
-//Heading 2s are commented out until I rewrite this file for GA.
-
 Once NMState operator created the desired hypervisor network configuration for
 isolated networks, we need to configure OpenStack services to use configured
 interfaces. This is achieved by defining `NetworkAttachmentDefinition` custom resources (CRs) for
-each isolated network. (In some clusters, these CRs are managed by
-https://docs.openshift.com/container-platform/4.14/networking/cluster-network-operator.html[Cluster
-Network Operator], in which case `Network` CRs should be used instead.)
+each isolated network. (In some clusters, these CRs are managed by the Cluster
+Network Operator in which case `Network` CRs should be used instead. For more information, see
+link:https://docs.openshift.com/container-platform/4.15/networking/cluster-network-operator.html[Cluster
+Network Operator] in _OpenShift Container Platform 4.15 Documentation_.)
 
 For example,
 

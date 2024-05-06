@@ -26,7 +26,9 @@ trying to adopt {orchestration}.
 
 .Procedure
 //kgilliga: I get an error when I click this link. Do we need it in the downstream docs?
+ifeval::["{build}" != "downstream"] 
 As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Heat Adoption follows a similar pattern.
+endif::[]
 
 . Patch the `osp-secret` to update the `HeatAuthEncryptionKey` and `HeatPassword`. This needs to match what you have configured in the existing {OpenStackPreviousInstaller} {orchestration} configuration.
 You can retrieve and verify the existing `auth_encryption_key` and `service` passwords via:

@@ -19,8 +19,7 @@ here this time).
 * Make sure the previous Adoption steps have been performed successfully.
  ** The `OpenStackControlPlane` resource must be already created.
  ** The control plane MariaDB and RabbitMQ are running. No other control plane services are running.
- ** Required services specific topology. For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the {rhos_prev_long} configuration].
-//kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.
+ ** Required services specific topology. For more information, see xref:proc_retrieving-services-topology-specific-configuration_adopt-control-plane[Retrieving services from a topology specific-configuration].
  ** {OpenStackShort} services have been stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping {rhos_prev_long} services].
  ** There must be network routability between the original MariaDB and the MariaDB for the control plane.
 * Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
@@ -228,8 +227,7 @@ EOF
 .Verification
 
 Compare the following outputs with the topology specific configuration.
-For more information, see xref:pulling-the-openstack-configuration_{context}[Pulling the {rhos_prev_long} configuration].
-//kgilliga: this xref should specifically point to the Get services topology specific configuration module when it's ready.:
+For more information, see xref:proc_retrieving-services-topology-specific-configuration_adopt-control-plane[Retrieving services from a topology specific-configuration].
 
 . Check that the databases were imported correctly:
 +

@@ -16,9 +16,7 @@ You either label the OpenShift nodes or use existing labels, and then use those 
 `nodeSelector` field.
 
 The `nodeSelector` field in the OpenStack manifests follows the standard
-OpenShift `nodeSelector` field, please refer to https://docs.openshift.com/container-platform/4.13/nodes/scheduling/nodes-scheduler-node-selectors.html[the OpenShift documentation on
-the matter]
-additional information.
+OpenShift `nodeSelector` field. For more information, see link:https://docs.openshift.com/container-platform/4.15/nodes/scheduling/nodes-scheduler-node-selectors.html[About node selectors] in _OpenShift Container Platform 4.15 Documentation_.
 
 This field is present at all the different levels of the OpenStack manifests:
 
@@ -92,6 +90,5 @@ The Block Storage service operator does not currently have the possibility of de
 the `nodeSelector` in `cinderVolumes`, so you need to specify it on each of the
 backends.
 
-It's possible to leverage labels added by https://docs.openshift.com/container-platform/4.13/hardware_enablement/psap-node-feature-discovery-operator.html[the node feature discovery
-operator]
-to place OpenStack services.
+It is possible to leverage labels added by the  Node Feature Discovery (NFD) Operator to place OpenStack services. For more information, see link:https://docs.openshift.com/container-platform/4.13/hardware_enablement/psap-node-feature-discovery-operator.html[Node Feature Discovery Operator] in _OpenShift Container Platform 4.15 Documentation_.
+
