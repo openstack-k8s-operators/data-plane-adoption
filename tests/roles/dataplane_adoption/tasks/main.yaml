@@ -560,3 +560,66 @@
 - name: Adopted Neutron and OVN agents post-checks
   ansible.builtin.include_tasks:
     file: neutron_verify.yaml
+
+- name: Remove leftover OOO services
+  block:
+    - name: Create OpenStackDataPlaneService/tripleo-cleanup
+      no_log: "{{ use_no_log }}"
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc apply -f - <<EOF
+        apiVersion: dataplane.openstack.org/v1beta1
+        kind: OpenStackDataPlaneService
+        metadata:
+          name: tripleo-cleanup
+        spec:
+          playbook: osp.edpm.tripleo_cleanup
+        EOF
+
+    - name: Create OpenStackDataPlaneDeployment to run cleanup
+      no_log: "{{ use_no_log }}"
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc apply -f - <<EOF
+        apiVersion: dataplane.openstack.org/v1beta1
+        kind: OpenStackDataPlaneDeployment
+        metadata:
+          name: tripleo-cleanup
+        spec:
+          nodeSets:
+          - openstack
+          servicesOverride:
+          - tripleo-cleanup
+        EOF
+
+    - name: Wait for the deployment to finish
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+
+        DEPLOYMENT_NAME=tripleo-cleanup
+        TRIES=180
+        DELAY=10
+        ALLOWED_JOB_RETRIES=1
+
+        for i in $(seq $TRIES)
+        do
+            ready=$(oc get osdpd/$DEPLOYMENT_NAME -o jsonpath='{.status.conditions[0].status}')
+            if [ "$ready" == "True" ]; then
+                echo "Pre adoption validation Deployment is Ready"
+                exit 0
+            else
+                failed=$(oc get jobs -l openstackdataplanedeployment=$DEPLOYMENT_NAME -o jsonpath="{.items[?(@.status.failed > $ALLOWED_JOB_RETRIES)].metadata.name}")
+                if [ ! -z "${failed}" ]; then
+                    echo "There are failed AnsibleEE jobs: $failed"
+                    exit 1
+                fi
+            fi
+
+        sleep $DELAY
+        done
+
+        echo "Run out of retries"
+        exit 2
