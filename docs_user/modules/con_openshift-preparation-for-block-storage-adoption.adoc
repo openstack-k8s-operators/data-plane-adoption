@@ -1,7 +1,5 @@
 [id="openshift-preparation-for-block-storage-adoption_{context}"]
 
-//kgilliga: There are some external links that need to be revisited.
-
 = {OpenShift} preparation for {block_storage} adoption
 
 As explained in xref:planning-the-new-deployment_planning[Planning the new deployment], before deploying {rhos_prev_long} {OpenStackShort} in {OpenShift}, you must ensure that the networks are ready, that you have decided the node selection, and also make sure any necessary changes to the {OpenShiftShort} nodes have been made. For {block_storage_first_ref} volume and backup services all these 3 must be carefully considered.
@@ -184,9 +182,15 @@ If you are using a single node deployment to test the process,replace `worker` w
 You are only loading the `nvme-fabrics` module because it takes care of loading
 the transport specific modules (tcp, rdma, fc) as needed.
 +
+ifeval::["{build}" != "downstream"]
 For production deployments using NVMe-oF volumes it is recommended that you use
 multipathing. For NVMe-oF volumes {OpenStackShort} uses native multipathing, called
 https://nvmexpress.org/faq-items/what-is-ana-nvme-multipathing/[ANA].
+endif::[]
+ifeval::["{build}" != "upstream"]
+For production deployments using NVMe-oF volumes it is recommended that you use
+multipathing. For NVMe-oF volumes {OpenStackShort} uses native multipathing, called ANA.
+endif::[]
 +
 Once the {OpenShiftShort} nodes have rebooted and are loading the `nvme-fabrics` module
 you can confirm that the Operating System is configured and supports ANA by

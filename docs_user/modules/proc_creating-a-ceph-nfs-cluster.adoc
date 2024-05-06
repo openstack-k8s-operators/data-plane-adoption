@@ -10,10 +10,14 @@ If you use the Ceph via NFS backend with {rhos_component_storage_file_first_ref}
 it is easier for clients to mount their existing shares through the new NFS
 export locations.
 . You must propagate the `StorageNFS` network to the target nodes
-where the `ceph-nfs` service will be deployed. See link:https://docs.openstack.org/project-deploy-guide/tripleo-docs/wallaby/features/network_isolation.html#deploying-the-overcloud-with-network-isolation[Deploying
+where the `ceph-nfs` service will be deployed. 
+ifeval::["{build}" != "downstream"]
+See link:https://docs.openstack.org/project-deploy-guide/tripleo-docs/wallaby/features/network_isolation.html#deploying-the-overcloud-with-network-isolation[Deploying
 an Overcloud with Network Isolation with TripleO] and link:https://docs.openstack.org/project-deploy-guide/tripleo-docs/wallaby/post_deployment/updating_network_configuration_post_deployment.html[Applying
 network configuration changes after deployment] for the background to these
-tasks. The following steps will be relevant if the Ceph Storage nodes were
+tasks. 
+endif::[]
+The following steps will be relevant if the Ceph Storage nodes were
 deployed via {OpenStackPreviousInstaller}.
 .. Identify the node definition file used in the environment. This is
 the input file associated with the `openstack overcloud node provision`

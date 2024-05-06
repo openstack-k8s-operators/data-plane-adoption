@@ -1,6 +1,5 @@
 [id="migrating-databases-to-mariadb-instances_{context}"]
 
-//Check xref contexts.
 //kgilliga: Find out if the steps in the Variables and pre-checks sections can go in the main procedure or if they have to be done before.
 
 = Migrating databases to MariaDB instances
@@ -279,3 +278,4 @@ oc delete pod mariadb-copy-data
 oc delete pvc mariadb-data
 ----
 For more information, see https://learn.redhat.com/t5/DO280-Red-Hat-OpenShift/About-pod-security-standards-and-warnings/m-p/32502[About pod security standards and warnings].
+//kgilliga: Should this link to "About pod security standards and warnings" appear downstream only?

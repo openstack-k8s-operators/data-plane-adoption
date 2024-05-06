@@ -9,7 +9,7 @@ addresses for the new control plane services.
 The general idea here is to define new IP ranges for control plane services
 that belong to a different subnet that was not used in the existing cluster.
 Then, configure link local IP routing between the old and new subnets to allow
-old and new service deployments to communicate. This involves using TripleO
+old and new service deployments to communicate. This involves using {OpenStackPreviousInstaller}
 mechanism on pre-adopted cluster to configure additional link local routes
 there. This will allow EDP deployment to reach out to adopted nodes using their
 old subnet addresses.
@@ -58,7 +58,7 @@ Once done, run `tripleo deploy` to apply the new configuration.
 
 Note that network configuration changes are not applied by default to avoid
 risk of network disruption. You will have to enforce the changes by setting the
-`StandaloneNetworkConfigUpdate: true` in the TripleO configuration files.
+`StandaloneNetworkConfigUpdate: true` in the {OpenStackPreviousInstaller} configuration files.
 
 Once `tripleo deploy` is complete, you should see new link local routes to the
 new subnet on each node. For example,
@@ -78,7 +78,7 @@ The next step is to configure similar routes for the old subnet for control plan
         next-hop-interface: ospbr
 ```
 
-Once applied, you should eventually see the following route added to your OCP nodes.
+Once applied, you should eventually see the following route added to your {OpenShift} ({OpenShiftShort}) nodes.
 
 ```bash
 # ip route | grep 192
@@ -87,7 +87,7 @@ Once applied, you should eventually see the following route added to your OCP no
 
 ---
 
-At this point, you should be able to ping the adopted nodes from OCP nodes
+At this point, you should be able to ping the adopted nodes from {OpenShiftShort} nodes
 using their old subnet addresses; and vice versa.
 
 ---
