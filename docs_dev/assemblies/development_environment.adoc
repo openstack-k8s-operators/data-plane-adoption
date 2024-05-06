@@ -7,6 +7,13 @@ Wallaby (or OSP 17.1) OpenStack in Standalone configuration.
 
 == Environment prep
 
+Install https://pre-commit.com/[pre-commit hooks] before contributing:
+[,bash]
+----
+pip install pre-commit
+pre-commit install
+----
+
 Get dataplane adoption repo:
 [,bash]
 ----
@@ -208,7 +215,7 @@ https://openstack-k8s-operators.github.io/data-plane-adoption/dev/#_reset_the_en
 
 === Creating a workload to adopt
 
-To run `openstack` commands from the host without 
+To run `openstack` commands from the host without
 installing the package and copying the configuration file from the virtual machine, create an alias:
 
 [,bash]

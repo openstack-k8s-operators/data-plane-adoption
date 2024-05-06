@@ -12,7 +12,7 @@ This guide also assumes that:
 .Prerequisites
 
 * Previous Adoption steps completed. MariaDB, the {identity_service_first_ref}, the {orchestration_first_ref}, and Telemetry
-should be already adopted. 
+should be already adopted.
 //kgilliga: Should this procedure be moved to after the data plane adoption chapter?
 
 .Procedure
@@ -73,7 +73,7 @@ AODH_POD=`oc get pods -l service=aodh | tail -n 1 | cut -f 1 -d' '`
 oc exec -t $AODH_POD -c aodh-api -- cat /etc/aodh/aodh.conf
 ----
 
-. Check whether Aodh API service is registered in {identity_service}: 
+. Check whether Aodh API service is registered in {identity_service}:
 +
 ----
 openstack endpoint list | grep aodh

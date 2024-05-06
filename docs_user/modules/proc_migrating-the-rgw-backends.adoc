@@ -72,7 +72,7 @@ spec:
 ----
 
 . In the `placement` section, replace the following values:
-* Replace the controller nodes with the `label: rgw` label. 
+* Replace the controller nodes with the `label: rgw` label.
 * Change the ` rgw_frontend_port` value to `8090` to avoid conflicts with the Ceph ingress daemon.
 +
 ----

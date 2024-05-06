@@ -5,4 +5,3 @@
 When you adopt a {OpenStackPreviousInstaller} {rhos_prev_long} ({OpenStackShort}) deployment, users authenticate to the Identity service (keystone) by using Secure RBAC (SRBAC). There is no change to how you perform operations if SRBAC is enabled. If SRBAC is not enabled, then adopting a {OpenStackPreviousInstaller} {OpenStackShort} deployment changes how you perform operations, such as adding roles to users. If you have custom policies enabled, contact support before adopting a {OpenStackPreviousInstaller} {OpenStackShort} deployment.
 
 // For more information on SRBAC see [link].
-

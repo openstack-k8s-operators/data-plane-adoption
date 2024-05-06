@@ -91,4 +91,3 @@ the `nodeSelector` in `cinderVolumes`, so you need to specify it on each of the
 backends.
 
 It is possible to leverage labels added by the  Node Feature Discovery (NFD) Operator to place {OpenStackShort} services. For more information, see link:https://docs.openshift.com/container-platform/4.13/hardware_enablement/psap-node-feature-discovery-operator.html[Node Feature Discovery Operator] in _OpenShift Container Platform 4.15 Documentation_.
-

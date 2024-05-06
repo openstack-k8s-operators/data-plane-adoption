@@ -8,10 +8,10 @@ You must complete the following prerequisites before you migrate a {Ceph} cluste
 
 . Gather the current status of the monitoring stack. Verify that
 the hosts have no `monitoring` label (or `grafana`, `prometheus`, `alertmanager`
-in case of a per daemons placement evaluation) associated: 
+in case of a per daemons placement evaluation) associated:
 [NOTE]
 The entire relocation process is driven by cephadm and relies on labels to be
-assigned to the target nodes, where the daemons are scheduled. 
+assigned to the target nodes, where the daemons are scheduled.
 ifeval::["{build}" != "upstream"]
 Review the https://access.redhat.com/articles/1548993[cardinality matrix] before assigning labels and choose carefully the nodes where the monitoring
 stack components should be scheduled on.
@@ -37,7 +37,7 @@ Confirm that the cluster is healthy and both `ceph orch ls` and
 plane has been migrated, it’s important to consider updating the container
 images referenced in the {CephCluster} cluster config. The current container images point to the undercloud registry, and it might be no longer available. As the undercloud won’t be available in the future, replace the undercloud provided
 images with an alternative registry.
-ifeval::["{build}" != "downstream"] 
+ifeval::["{build}" != "downstream"]
 In case the desired option is to rely on the https://github.com/ceph/ceph/blob/reef/src/cephadm/cephadm.py#L48[default images]
 shipped by cephadm, remove the following config options from the {CephCluster} cluster.
 endif::[]
@@ -80,5 +80,3 @@ container images, we update the config entry related to the
 container_image_base. This has an impact on all the {Ceph} daemons that rely on
 the undercloud images.
 New daemons will be deployed using the new/default {Ceph} image.
-
-

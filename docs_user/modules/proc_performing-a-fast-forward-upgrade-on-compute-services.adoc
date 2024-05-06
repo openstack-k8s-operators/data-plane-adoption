@@ -9,7 +9,7 @@ is done independently of each other, by configuring
 `[upgrade_levels]compute=auto` for Compute services. Compute control plane
 services apply the change right after custom resource (CR) is patched. Compute data plane services will catch up the same config change with ansible deployment later on.
 
-//[NOTE] 
+//[NOTE]
 //Additional orchestration happening around the FFU workarounds
 //configuration for Compute data plane service is a subject of future changes. kgilliga: We don't comment on future changes downstream.
 

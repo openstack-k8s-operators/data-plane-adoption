@@ -5,4 +5,3 @@
 Before you adopt your {rhos_prev_long} {rhos_prev_ver} deployment to a {rhos_long} {rhos_curr_ver} deployment, confirm that your deployed storage drivers are certified for use with {rhos_acro} {rhos_curr_ver}.
 
 //kgilliga: Note to self: I need to add a link to the certified software website for GA. The website currently does not include RHOSO 18.0 certified software.
-

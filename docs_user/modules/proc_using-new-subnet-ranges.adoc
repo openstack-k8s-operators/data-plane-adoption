@@ -148,4 +148,3 @@ setting `edpm_network_config_update: true` to enforce the changes.
 
 Note that the examples above are incomplete and should be incorporated into
 your general configuration.
-

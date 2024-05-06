@@ -14,4 +14,3 @@ nodes, is not currently being documented in this process.
 * Support for {block_storage} backends that require kernel modules not included in RHEL
 has not been tested in Operator deployed {rhos_prev_long}.
 * Adoption of DCN/Edge deployment is not currently described in this guide.
-

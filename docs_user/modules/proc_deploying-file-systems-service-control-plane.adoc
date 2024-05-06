@@ -53,9 +53,9 @@ all of these can be ignored.
 {OpenShift} routes and ingress.
 * Pay attention to policy overrides. In {rhos_acro} {rhos_curr_ver}, the {rhos_component_storage_file} ships with a secure
 default RBAC, and overrides may not be necessary.
-ifeval::["{build}" != "downstream"] 
+ifeval::["{build}" != "downstream"]
 Please review RBAC defaults by using the https://docs.openstack.org/oslo.policy/latest/cli/oslopolicy-policy-generator.html[Oslo policy generator]
-tool. 
+tool.
 endif::[]
 If a custom policy is necessary, you must provide it as a
 `ConfigMap`. The following sample spec illustrates how a
@@ -103,7 +103,7 @@ you will need to split them up when deploying {rhos_acro} {rhos_curr_ver}. Each 
 backend driver needs to use its own instance of the `manila-share`
 service.
 * If a storage backend driver needs a custom container image, find it on the
-https://catalog.redhat.com/software/containers/search?gs&q=manila[RHOSP Ecosystem Catalog] 
+https://catalog.redhat.com/software/containers/search?gs&q=manila[RHOSP Ecosystem Catalog]
 and set `manila: template: manilaShares: <custom name> : containerImage`
 value. The following example illustrates multiple storage backend drivers,
 using custom container images.

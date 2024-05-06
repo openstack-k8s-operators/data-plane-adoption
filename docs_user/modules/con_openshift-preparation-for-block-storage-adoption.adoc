@@ -253,14 +253,14 @@ spec:
 +
 If you are using labels to restrict the nodes where Block Storage
 services are running you need to use a `MachineConfigPool` as described in
-the xref:about-node-selector_planning[About node selector] to limit the effects of the 
+the xref:about-node-selector_planning[About node selector] to limit the effects of the
 `MachineConfig` to only the nodes where your services may run.
 +
 If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
 +
 To configure the Block Storage services to use multipathing, enable the
 `use_multipath_for_image_xfer` configuration option in all the backend sections
-and in the `[DEFAULT]` section for the backup service. This is the default in control plane deployments. Multipathing works as long as the service is running on the {OpenShiftShort} host. Do not override this option by setting `use_multipath_for_image_xfer = false`. 
+and in the `[DEFAULT]` section for the backup service. This is the default in control plane deployments. Multipathing works as long as the service is running on the {OpenShiftShort} host. Do not override this option by setting `use_multipath_for_image_xfer = false`.
 
 //*TODO:* Add, or at least mention, the Nova eDPM side for Multipathing once
 //it's implemented.

@@ -98,7 +98,7 @@ prometheus.cephstorage-1    cephstorage-1.redhat.local  172.17.3.53:9092
 ----
 +
 [NOTE]
-After you migrate the monitoring stack, you lose High Availability: the monitoring stack daemons have no VIP and HAproxy anymore; Node exporters are still running on all the nodes: instead of using labels we keep the current approach as we want to not reduce the monitoring space covered. 
+After you migrate the monitoring stack, you lose High Availability: the monitoring stack daemons have no VIP and HAproxy anymore; Node exporters are still running on all the nodes: instead of using labels we keep the current approach as we want to not reduce the monitoring space covered.
 
 . You must review the {Ceph}configuration to ensure that it is aligned with the relocation you just made. In particular, focus on the following configuration entries:
 //kgilliga: Note to self: Revisit the wording of this step.
@@ -146,7 +146,7 @@ relocation. The service is provided by the Ceph Manager daemon, hence we might
 experience an impact when the active mgr is migrated or is force-failed.
 However, having three replicas definition allows to redirect requests to a
 different instance (it’s still an A/P model), hence the impact should be
-limited. 
+limited.
 .. When the RBD migration is over, the following {Ceph} config keys must
 be regenerated to point to the right mgr container:
 +
@@ -166,4 +166,3 @@ $ ceph orch ps | awk '/mgr./ {print $1}'
 ----
 $ ceph config set mgr mgr/dashboard/<>/server_addr/<ip addr>
 ----
-

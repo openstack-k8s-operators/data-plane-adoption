@@ -123,4 +123,3 @@ spec:
                     - key: policy
                       path: policy.yaml
 ----
-

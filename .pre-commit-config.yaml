@@ -1,0 +1,36 @@
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+      - id: fix-byte-order-marker
+      - id: check-executables-have-shebangs
+        exclude: ".*.bash" # TODO Enable when scripts are consistent
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: debug-statements
+      - id: check-yaml
+        files: .*\.(yaml|yml)$
+        args: [--allow-multiple-documents]
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v6.22.1
+    hooks:
+      - id: ansible-lint
+        entry: env ANSIBLE_ROLES_PATH=./tests/roles:$ANSIBLE_ROLES_PATH ansible-lint
+  - repo: https://github.com/openstack-dev/bashate.git
+    rev: 2.1.1
+    hooks:
+      - id: bashate
+        entry: bashate --error . --ignore=E006,E040
+        verbose: false
+        exclude: ".*.bash" # TODO Enable when scripts are consistent
+        # Run bashate check for all bash scripts
+        # Ignores the following rules:
+        # E006: Line longer than 79 columns (as many scripts use jinja
+        #       templating, this is very difficult)
+        # E040: Syntax error determined using `bash -n` (as many scripts
+        #       use jinja templating, this will often fail and the syntax
+        #       error will be discovered in execution anyway)

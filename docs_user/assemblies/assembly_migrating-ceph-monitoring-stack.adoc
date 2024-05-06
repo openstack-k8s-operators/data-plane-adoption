@@ -2,7 +2,7 @@
 
 :context: migrating-ceph-monitoring
 
-= Migrating the monitoring stack component to new nodes within an existing {Ceph} cluster 
+= Migrating the monitoring stack component to new nodes within an existing {Ceph} cluster
 
 In the context of data plane adoption, where the {rhos_prev_long} ({OpenStackShort}) services are
 redeployed in {OpenShift}, a {OpenStackPreviousInstaller}-deployed {CephCluster} cluster will undergo a migration in a process we are calling “externalizing” the {CephCluster} cluster.
@@ -32,5 +32,3 @@ We assume that:
 include::../modules/proc_completing-prerequisites-for-migrating-ceph-monitoring-stack.adoc[leveloffset=+1]
 
 include::../assemblies/assembly_migrating-monitoring-stack-to-target-nodes.adoc[leveloffset=+1]
-
-

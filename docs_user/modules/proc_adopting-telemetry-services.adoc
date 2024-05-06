@@ -11,7 +11,7 @@ This guide also assumes that:
 
 .Prerequisites
 
-* Previous Adoption steps completed. MariaDB, the {identity_service_first_ref} and the data plane should be already adopted. 
+* Previous Adoption steps completed. MariaDB, the {identity_service_first_ref} and the data plane should be already adopted.
 //kgilliga:Should this procedure be moved after the "Adopting the data plane" chapter?
 
 .Procedure

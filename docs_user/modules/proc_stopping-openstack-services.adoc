@@ -23,7 +23,7 @@ Note that you should not stop the infrastructure management services yet, such a
 
 .Prerequisites
 
-* Confirm that there no long-running operations that require the services you plan to stop. 
+* Confirm that there no long-running operations that require the services you plan to stop.
 * Ensure that there are no ongoing instance live migrations, volume migrations (online or offline), volume creation, backup restore, attaching, detaching,
 and so on.
 +

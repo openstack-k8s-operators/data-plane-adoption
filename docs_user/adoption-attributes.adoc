@@ -81,8 +81,8 @@ ifeval::["{build}" == "downstream"]
 :OpenShift: Red Hat OpenShift Container Platform
 :OpenShiftShort: RHOCP
 :OpenStackPreviousInstaller: director
-:Ceph: Red Hat Ceph Storage 
-:CephCluster: Red Hat Ceph Storage 
+:Ceph: Red Hat Ceph Storage
+:CephCluster: Red Hat Ceph Storage
 :CephRelease: 7
 
 //Components and services

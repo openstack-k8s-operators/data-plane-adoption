@@ -17,7 +17,7 @@ became far simpler and hence, more became more secure with {rhos_acro} {rhos_cur
 * It is simpler to create a common ceph secret (keyring and ceph config
 file) and propagate the secret to all services that need it.
 
-[TIP] 
+[TIP]
 To run `ceph` commands, you must use SSH to connect to a Ceph
 storage node and run `sudo cephadm shell`. This brings up a ceph orchestrator
 container that allows you to run administrative commands against the ceph
@@ -33,7 +33,7 @@ ceph auth caps client.openstack \
 .Prerequisites
 
 * The `OpenStackControlPlane` custom resource (CR) must already exist.
-* Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment: 
+* Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
 
 [subs=+quotes]
 ----
@@ -115,5 +115,3 @@ spec:
             readOnly: true
 '
 ----
-
-
