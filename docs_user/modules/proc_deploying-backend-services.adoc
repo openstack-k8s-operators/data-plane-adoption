@@ -144,6 +144,9 @@ spec:
       internal:
         ca:
           customIssuer: rootca-internal
+      libvirt:
+        ca:
+          customIssuer: rootca-internal
       ovn:
         ca:
           customIssuer: rootca-internal
