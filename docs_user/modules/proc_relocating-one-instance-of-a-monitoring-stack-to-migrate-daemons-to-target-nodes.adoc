@@ -104,6 +104,7 @@ With the procedure described above we lose High Availability: the monitoring
 stack daemons have no VIP and haproxy anymore; Node exporters are still
 running on all the nodes: instead of using labels we keep the current approach
 as we want to not reduce the monitoring space covered.
+
 //kgilliga: What does "the procedure described above" refer to?
 
 . Update the Ceph Dashboard Manager configuration. An important aspect that should be considered at this point is to replace and

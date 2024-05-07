@@ -1,7 +1,5 @@
 [id="adopting-the-placement-service_{context}"]
 
-//Check xref contexts.
-
 = Adopting the Placement service
 
 .Prerequisites

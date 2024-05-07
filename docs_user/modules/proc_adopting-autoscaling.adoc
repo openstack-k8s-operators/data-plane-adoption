@@ -1,7 +1,5 @@
 [id="adopting-autoscaling_{context}"]
 
-//Check xref contexts.
-
 = Adopting autoscaling
 
 Adopting autoscaling means that an existing `OpenStackControlPlane` custom resource (CR), where Aodh services are supposed to be disabled, should be patched to start the service with the configuration parameters provided by the source environment.

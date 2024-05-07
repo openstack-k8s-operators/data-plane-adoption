@@ -1,5 +1,5 @@
 [id="adopting-the-object-storage-service_{context}"]
-//check xref
+
 = Adopting the Object Storage service
 
 This section only applies if you are using OpenStack Swift as {object_storage_first_ref}. If you are using the Object Storage API of Ceph RGW this section can be skipped.

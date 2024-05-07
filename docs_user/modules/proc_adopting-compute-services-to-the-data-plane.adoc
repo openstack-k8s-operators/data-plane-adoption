@@ -122,7 +122,7 @@ done
 ----
 ifeval::["{build}" != "downstream"]
 . Create a https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets[ssh authentication secret] for the data plane nodes: 
-//kgilliga: We probably shouldn't link to an external site. I need to check if we will document this in Red Hat docs.
+//kgilliga:I need to check if we will document this in Red Hat docs.
 endif::[]
 ifeval::["{build}" != "upstream"]
 . Create a ssh authentication secret for the data plane nodes: 

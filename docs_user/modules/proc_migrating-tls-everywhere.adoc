@@ -78,7 +78,6 @@ The item you need to consider is the first one: `caSigningCert cert-pki-ca`.
 
 
 . Export the certificate and key from the `/etc/pki/pki-tomcat/alias` directory:
-//kgilliga: SMEs, Please confirm that this step is accurate. ^
 +
 ----
 $IPA_SSH pk12util -o /tmp/freeipa.p12 -n 'caSigningCert\ cert-pki-ca' -d /etc/pki/pki-tomcat/alias -k /etc/pki/pki-tomcat/alias/pwdfile.txt -w /etc/pki/pki-tomcat/alias/pwdfile.txt

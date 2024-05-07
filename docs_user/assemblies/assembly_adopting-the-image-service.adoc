@@ -1,7 +1,6 @@
 [id="adopting-the-image-service_{context}"]
 
 :context: image-service
-//Check xref context."Reviewing the OpenStack configuration" xref does not work.
 
 = Adopting the {image_service}
 
