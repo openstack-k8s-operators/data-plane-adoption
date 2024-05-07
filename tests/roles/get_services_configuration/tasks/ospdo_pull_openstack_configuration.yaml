@@ -1,0 +1,66 @@
+- name: Fetch OVN databases, cp into helper pod
+  block:
+  - name: get mysql adaption scripts ready on ctrl0
+    delegate_to: "{{ adoption_ospdo_host }}"
+    vars:
+      repo: "{{ dpa_repo }}"
+    ansible.builtin.shell: |
+      {{ controller1_ssh }} git clone {{ repo }}
+    ignore_errors: true
+
+  # TODO# remove dpa_mysql_script usage and use the dedicated mysql_data-copy_pod
+  - name: test connection to the original DB
+    delegate_to: "{{ adoption_ospdo_host }}"
+    ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ controller2_ssh }} {{ dpa_mysql_script }} show_db
+    register: _databases_check
+
+  - name: run mysqlcheck on the original DB to look for things that are not OK
+    delegate_to: "{{ adoption_ospdo_host }}"
+    no_log: "{{ use_no_log }}"
+    ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ controller2_ssh }} {{ dpa_mysql_script }} mysqlcheck
+    failed_when: _mysqlnok_check.stdout != ''
+    register: _mysqlnok_check
+
+  - name: get Nova cells mappings from database
+    delegate_to: "{{ adoption_ospdo_host }}"
+    ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ controller2_ssh }} {{ dpa_mysql_script }} cell_map
+    register: _novadb_mapped_cells_check
+
+  - name: get the host names of the registered Nova compute services
+    delegate_to: "{{ adoption_ospdo_host }}"
+    ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ controller2_ssh }} {{ dpa_mysql_script }} nova_host_names
+    register: _nova_compute_hostnames_check
+
+  - name: get the list of mapped Nova cells
+    delegate_to: "{{ adoption_ospdo_host }}"
+    ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ controller2_ssh }} {{ dpa_mysql_script }} list_nova_cells
+    register: _nova_cell_mappings_check
+
+  - name: store exported variables for future use
+    no_log: "{{ use_no_log }}"
+    ansible.builtin.blockinfile:
+      path: ~/.source_cloud_exported_variables
+      block: |
+        {{ shell_header }}
+        {{ _databases_check }}
+        {{ _mysqlnok_check }}
+        {{ _novadb_mapped_cells_check }}
+        {{ _nova_cell_mappings_check }}
+
+  - name: Fetch file from delegate host
+    delegate_to: "{{ adoption_ospdo_host }}"
+    fetch:
+      src: ~/.source_cloud_exported_variables
+      dest: ~/.source_cloud_exported_variables
+      flat: yes
+  when: fetch_osp_conf| default(false) | bool

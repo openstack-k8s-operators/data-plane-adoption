@@ -61,3 +61,6 @@ compute_adoption: true
 
 # Where perform or not telemetry installation during adoption
 telemetry_adoption: true
+# Whether source env is OSPD Director Operator
+# i.e. https://github.com/openstack-k8s-operators/osp-director-operator
+ospdo_src: false
