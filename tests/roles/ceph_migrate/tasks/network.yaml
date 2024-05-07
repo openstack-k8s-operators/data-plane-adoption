@@ -1,5 +1,6 @@
 - name: Setup a tmp client ip address on the src node
   become: true
+  delegate_to: "{{ cur_mon }}.ctlplane"
   block:
     - name: Get current mon IP address
       ansible.builtin.set_fact:
@@ -20,5 +21,6 @@
         backup: yes
 
     - name: Refresh os-net-config
+      delegate_to: "{{ cur_mon }}.ctlplane"
       ansible.builtin.shell:
         "os-net-config -c {{ os_net_conf_path }}"

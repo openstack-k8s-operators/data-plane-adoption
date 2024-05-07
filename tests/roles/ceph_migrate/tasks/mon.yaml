@@ -21,6 +21,17 @@
         - ceph.conf
         - ceph.client.admin.keyring
 
+- name: Update firewall rules on the target nodes
+  ansible.builtin.include_tasks: firewall.yaml
+  vars:
+    ifports:
+      - 3300
+      - 6789
+    node: "{{ n }}"
+  loop: "{{ target_nodes }}"
+  loop_control:
+    loop_var: n
+
 - name: Get ceph_cli
   include_tasks: ceph_cli.yaml
   vars:
@@ -160,6 +171,7 @@
       delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
 
     - name: Redeploy mon on {{ target_node }}
+      become: true
       when: ceph_mon.stdout | length == 0
       ansible.builtin.shell:
         "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
@@ -176,5 +188,6 @@
     label: "check mons quorum"
 
 - name: refresh cephadm info - fail ceph mgr --force
+  delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
   ansible.builtin.shell: "{{ ceph_cli }} mgr fail"
 

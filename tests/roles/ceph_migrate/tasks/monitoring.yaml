@@ -1,11 +1,28 @@
 # - Expand labels to the whole hostmap
 - name: Apply Monitoring label to the overcloud nodes
-  import_tasks: labels.yaml
+  ansible.builtin.import_tasks: labels.yaml
   vars:
     nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
     action: "add"
     labels:
       - "monitoring"
+
+- name: Update firewall rules on the target nodes
+  ansible.builtin.include_tasks: firewall.yaml
+  vars:
+    node: "{{ n }}"
+    ifports:
+      - 3100
+      - 8444
+      - 9090
+      - 9092
+      - 9093
+      - 9094
+      - 9100
+      - 9283
+  loop: "{{ target_nodes }}"
+  loop_control:
+    loop_var: n
 
 - name: MONITORING - Load Spec from the orchestrator
   ansible.builtin.set_fact:

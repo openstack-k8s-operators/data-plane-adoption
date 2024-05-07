@@ -1,0 +1,58 @@
+# TRIPLEO CEPHSTORAGE NODES MIGHT HAVE IPTABLES FROM TRIPLEO
+#
+# This set of tasks are supposed to manage the firewall using
+# iptables: adopted nodes still manage firewall this way
+- name: Firewall add block
+  delegate_to: "{{ node }}.ctlplane"
+  become: true
+  block:
+    - name: Ensure firewall is enabled/started
+      systemd:
+        name: iptables
+        state: started
+        enabled: true
+
+- name: Update firewall rules
+  delegate_to: "{{ node }}.ctlplane"
+  become: true
+  block:
+    - name: Update rules - List
+      when: ifports | default([]) | length > 0
+      ansible.builtin.iptables:
+        chain: INPUT
+        ctstate: NEW
+        protocol: tcp
+        destination_port: "{{ item }}"
+        action: insert
+        jump: ACCEPT
+      loop: "{{ ifports }}"
+
+    - name: Update rules - Range
+      when: ifports_range | default("") | length > 0
+      ansible.builtin.iptables:
+        chain: INPUT
+        ctstate: NEW
+        protocol: tcp
+        destination_port: "{{ ifports_range }}"
+        action: insert
+        jump: ACCEPT
+
+- name: Firewall save block
+  delegate_to: "{{ node }}.ctlplane"
+  become: true
+  block:
+    - name: Save firewall rules ipv4
+      command: /usr/libexec/iptables/iptables.init save
+
+    - name: Save firewall rules ipv6
+      command: /usr/libexec/iptables/ip6tables.init save
+
+    - name: Reload iptables service
+      systemd:
+        daemon_reload: true
+        enabled: true
+        name: "{{ item }}"
+        state: started
+      loop:
+        - iptables.service
+        - ip6tables.service

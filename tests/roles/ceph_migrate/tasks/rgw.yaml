@@ -7,6 +7,17 @@
   tags:
     - ceph_rgw_ingress
 
+- name: Update firewall rules on the target nodes
+  ansible.builtin.include_tasks: firewall.yaml
+  vars:
+    node: "{{ n }}"
+    ifports:
+      - 8080
+      - 8090
+  loop: "{{ target_nodes }}"
+  loop_control:
+    loop_var: n
+
 - name: Get ceph_cli
   include_tasks: ceph_cli.yaml
   vars:
