@@ -1,6 +1,8 @@
 #!/bin/bash
 {{ shell_header }}
-{{ oc_header }}
+if [[ "$ospdo_src" != "true" ]]; then
+    {{ oc_header }}
+fi
 {{ mariadb_copy_shell_vars_src }}
 
 # Note Filter the information and performance schema tables
