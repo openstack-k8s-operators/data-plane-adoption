@@ -1,8 +1,8 @@
 [id="configuring-openshift-worker-nodes_{context}"]
 
-= Configuring OpenShift worker nodes
+= Configuring {OpenShift} worker nodes
 
-OCP worker nodes that run OpenStack services need a way to connect the service
+{OpenShift} worker nodes that run {rhos_prev_long} services need a way to connect the service
 pods to isolated networks. This requires physical network configuration on the
 hypervisor.
 

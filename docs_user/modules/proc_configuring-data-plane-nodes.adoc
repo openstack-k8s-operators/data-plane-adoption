@@ -2,9 +2,9 @@
 
 = Configuring data plane nodes
 
-A complete OpenStack cluster consists of OpenShift nodes and data plane nodes. The
+A complete {rhos_prev_long} ({OpenStackShort}) cluster consists of {OpenShift} ({OpenShiftShort}) nodes and data plane nodes. The
 former use `NodeNetworkConfigurationPolicy` custom resource (CR) to configure physical
-interfaces. Since data plane nodes are not OpenShift nodes, a different approach to
+interfaces. Since data plane nodes are not {OpenShiftShort} nodes, a different approach to
 configure their network connectivity is used.
 
 Instead, data plane nodes are configured by `dataplane-operator` and its CRs. The CRs
@@ -22,8 +22,8 @@ To make sure the latest network configuration is used during the data plane adop
 should also set `edpm_network_config_update: true` in the `nodeTemplate`.
 
 You will proceed with <<adopting-dataplane_openstack-adoption,Data Plane Adoption
-process>> once the OpenStack control plane is deployed in the
-OpenShift cluster. When doing so, you will configure `NetConfig` and
+process>> once the {OpenShiftShort} control plane is deployed in the
+{OpenShiftShort} cluster. When doing so, you will configure `NetConfig` and
 `OpenstackDataplaneNodeSet` CRs, using the same VLAN tags and IPAM
 configuration as determined in the previous steps.
 

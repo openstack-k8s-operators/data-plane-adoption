@@ -10,7 +10,7 @@ you would like to replicate in the new environment.
 Before proceeding, you should have a list of the following IP address
 allocations to be used for the new control plane services:
 
-* 1 IP address, per isolated network, per OpenShift worker node. (These
+* 1 IP address, per isolated network, per {OpenShift} worker node. (These
   addresses will <<_configure_openshift_worker_nodes,translate>> to
   `NodeNetworkConfigurationPolicy` custom resources (CRs).)
 * IP range, per isolated network, for the data plane nodes. (These ranges will
@@ -31,7 +31,7 @@ listed below should reflect the actual adopted environment. The number of
 isolated networks may differ from the example below. IPAM scheme may differ.
 Only relevant parts of the configuration are shown. Examples are incomplete and
 should be incorporated into the general configuration for the new deployment,
-as described in the general OpenStack documentation.
+as described in the general {rhos_prev_long} documentation.
 
 include::../modules/proc_configuring-openshift-worker-nodes.adoc[leveloffset=+1]
 

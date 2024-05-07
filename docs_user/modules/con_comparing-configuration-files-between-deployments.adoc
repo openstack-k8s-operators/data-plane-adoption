@@ -2,12 +2,11 @@
 
 = Comparing configuration files between deployments
 
-In order to help users to handle the configuration for the TripleO and OpenStack
+In order to help users to handle the configuration for the {OpenStackPreviousInstaller} and {rhos_prev_long}
 services the tool: https://github.com/openstack-k8s-operators/os-diff has been
-develop to compare the configuration files between the TripleO deployment and
-the next gen cloud.
+develop to compare the configuration files between the {OpenStackPreviousInstaller} deployment and the next gen cloud.
 Make sure Golang is installed and configured on your env:
-
+//kgilliga: Do we want to link to "https://github.com/openstack-k8s-operators/os-diff" downstream?
 ----
 git clone https://github.com/openstack-k8s-operators/os-diff
 pushd os-diff

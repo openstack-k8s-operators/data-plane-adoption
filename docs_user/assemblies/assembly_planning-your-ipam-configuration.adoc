@@ -5,8 +5,8 @@
 = Planning your IPAM configuration
 
 The new deployment model puts additional burden on the size of IP allocation
-pools available for OpenStack services. This is because each service deployed
-on OpenShift worker nodes will now require an IP address from the IPAM pool (in
+pools available for {rhos_prev_long} ({OpenStackShort}) services. This is because each service deployed
+on {OpenShift} ({OpenShiftShort}) worker nodes will now require an IP address from the IPAM pool (in
 the previous deployment model, all services hosted on a controller node shared
 the same IP address.)
 
@@ -19,7 +19,7 @@ your particular case.
 The total number of IP addresses required for the new control plane services,
 in each isolated network, is calculated as a sum of the following:
 
-* The number of OpenShift worker nodes. (Each node will require 1 IP address in
+* The number of {OpenShiftShort} worker nodes. (Each node will require 1 IP address in
   `NodeNetworkConfigurationPolicy` custom resources (CRs).)
 * The number of IP addresses required for the data plane nodes. (Each node will require
   an IP address from `NetConfig` CRs.)
@@ -29,7 +29,7 @@ in each isolated network, is calculated as a sum of the following:
 * The number of IP addresses required for load balancer IP addresses. (Each
   service will require a VIP address from `IPAddressPool` CRs.)
 
-As of the time of writing, the simplest single worker node OpenShift deployment
+As of the time of writing, the simplest single worker node {OpenShiftShort} deployment
 (CRC) has the following IP ranges defined (for the `internalapi` network):
 
 * 1 IP address for the single worker node;
@@ -44,11 +44,11 @@ allocation pools.
 
 // TODO: update the numbers above for a more realistic multinode cluster.
 
-The exact requirements may differ depending on the list of OpenStack services
-to be deployed, their replica numbers, as well as the number of OpenShift
+The exact requirements may differ depending on the list of {OpenStackShort} services
+to be deployed, their replica numbers, as well as the number of {OpenShiftShort}
 worker nodes and data plane nodes.
 
-Additional IP addresses may be required in future OpenStack releases, so it is
+Additional IP addresses may be required in future {OpenStackShort} releases, so it is
 advised to plan for some extra capacity, for each of the allocation pools used
 in the new environment.
 

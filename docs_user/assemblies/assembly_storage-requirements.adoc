@@ -4,12 +4,12 @@
 
 = Storage requirements
 
-When looking into the storage in an OpenStack deployment you can differentiate
+When looking into the storage in an {rhos_prev_long} ({OpenStackShort}) deployment you can differentiate
 two kinds, the storage requirements of the services themselves and the
-storage used for the OpenStack users that the services will manage.
+storage used for the {OpenStackShort} users that the services will manage.
 
-These requirements may drive your OpenShift node selection, as mentioned above,
-and may require you to do some preparations on the OpenShift nodes before
+These requirements may drive your {OpenShift} ({OpenShiftShort}) node selection, as mentioned above,
+and may require you to do some preparations on the {OpenShiftShort} nodes before
 you can deploy the services.
 
 //*TODO: Galera, RabbitMQ, Swift, Glance, etc.*

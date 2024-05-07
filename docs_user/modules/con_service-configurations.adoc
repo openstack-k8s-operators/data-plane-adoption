@@ -2,19 +2,18 @@
 
 = Service configurations
 
-There is a fundamental difference between the director and operator deployments
+There is a fundamental difference between the {OpenStackPreviousInstaller} and operator deployments
 regarding the configuration of the services.
 
-In director deployments many of the service configurations are abstracted by
-director-specific configuration options. A single director option may trigger
+In {OpenStackPreviousInstaller} deployments many of the service configurations are abstracted by
+{OpenStackPreviousInstaller}-specific configuration options. A single {OpenStackPreviousInstaller} option may trigger
 changes for multiple services and support for drivers, for example, the Block Storage service (cinder), that
-require patches to the director code base.
+require patches to the {OpenStackPreviousInstaller} code base.
 
-In operator deployments this approach has changed: reduce the installer specific knowledge and leverage OpenShift and
-OpenStack service specific knowledge whenever possible.
+In operator deployments this approach has changed: reduce the installer specific knowledge and leverage {OpenShift} ({OpenShiftShort}) and
+{rhos_prev_long} ({OpenStackShort}) service specific knowledge whenever possible.
 
-To this effect OpenStack services will have sensible defaults for OpenShift
-deployments and human operators will provide configuration snippets to provide
+To this effect {OpenStackShort} services will have sensible defaults for {OpenShiftShort} deployments and human operators will provide configuration snippets to provide
 necessary configuration, such as the Block Storage service backend configuration, or to override
 the defaults.
 
@@ -62,9 +61,9 @@ spec:
 < . . . >
 ----
 
-In OpenShift it is not recommended to store sensitive information like the
-credentials to the Block Storage service storage array in the CRs, so most OpenStack operators
-have a mechanism to use OpenShift's `Secrets` for sensitive configuration
+In {OpenShift} it is not recommended to store sensitive information like the
+credentials to the Block Storage service storage array in the CRs, so most {OpenStackShort} operators
+have a mechanism to use the {OpenShift} `Secrets` for sensitive configuration
 parameters of the services and then use them by reference in the
 `customServiceConfigSecrets` section which is analogous to the
 `customServiceConfig`.

@@ -26,10 +26,14 @@ adopting the Shared File Systems services.
 ensure that neutron has been deployed prior to adopting Shared File Systems services.
 
 .Procedure
-
+ifeval::["{build}" != "downstream"]
 . Define the `CONTROLLER1_SSH` environment variable, if it link:stop_openstack_services.md#variables[hasn't been
-defined] already. Then copy the configuration file from {OpenStackShort} {rhos_prev_ver} for
-reference.
+defined] already. Then copy the configuration file from {OpenStackShort} {rhos_prev_ver} for reference.
+endif::[]
+ifeval::["{build}" != "upstream"]
+. Define the `CONTROLLER1_SSH` environment variable, if it hasn't been
+defined already. Then copy the configuration file from {OpenStackShort} {rhos_prev_ver} for reference.
+endif::[]
 +
 ----
 $CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/manila/etc/manila/manila.conf | awk '!/^ *#/ && NF' > ~/manila.conf
@@ -48,9 +52,12 @@ all of these can be ignored.
 * Ignore the `osapi_share_listen` configuration. In {rhos_long} {rhos_curr_ver}, you rely on
 {OpenShift} routes and ingress.
 * Pay attention to policy overrides. In {rhos_acro} {rhos_curr_ver}, the {rhos_component_storage_file} ships with a secure
-default RBAC, and overrides may not be necessary. Please review RBAC
-defaults by using the https://docs.openstack.org/oslo.policy/latest/cli/oslopolicy-policy-generator.html[Oslo policy generator]
-tool. If a custom policy is necessary, you must provide it as a
+default RBAC, and overrides may not be necessary.
+ifeval::["{build}" != "downstream"] 
+Please review RBAC defaults by using the https://docs.openstack.org/oslo.policy/latest/cli/oslopolicy-policy-generator.html[Oslo policy generator]
+tool. 
+endif::[]
+If a custom policy is necessary, you must provide it as a
 `ConfigMap`. The following sample spec illustrates how a
 `ConfigMap` called `manila-policy` can be set up with the contents of a
 file called `policy.yaml`.
@@ -96,7 +103,8 @@ you will need to split them up when deploying {rhos_acro} {rhos_curr_ver}. Each 
 backend driver needs to use its own instance of the `manila-share`
 service.
 * If a storage backend driver needs a custom container image, find it on the
-https://catalog.redhat.com/software/containers/search?gs&q=manila[RHOSP Ecosystem Catalog]
+https://catalog.redhat.com/software/containers/search?gs&q=manila[RHOSP Ecosystem Catalog] 
+//kgilliga: Should this link to the RH Ecosystem Catalog appear downstream only?
 and set `manila: template: manilaShares: <custom name> : containerImage`
 value. The following example illustrates multiple storage backend drivers,
 using custom container images.

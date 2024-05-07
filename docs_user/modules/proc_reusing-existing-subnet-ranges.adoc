@@ -18,8 +18,7 @@ instead. For more information, see xref:planning-your-ipam-configuration_configu
 
 No special routing configuration is required in this scenario; the only thing
 to pay attention to is to make sure that already consumed IP addresses don't
-overlap with the new allocation pools configured for OpenStack control plane
-services.
+overlap with the new allocation pools configured for {rhos_prev_long} control plane services.
 
 If you are especially constrained by the size of the existing subnet, you may
 have to apply elaborate exclusion rules when defining allocation pools for the

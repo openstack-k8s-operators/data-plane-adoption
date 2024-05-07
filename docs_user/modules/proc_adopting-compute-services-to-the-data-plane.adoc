@@ -120,9 +120,13 @@ endif::[]
       "grep -qF $uuid /var/lib/nova/compute_id || (echo $uuid | sudo tee /var/lib/nova/compute_id && sudo chown 42436:42436 /var/lib/nova/compute_id && sudo chcon -t container_file_t /var/lib/nova/compute_id)"
 done
 ----
-
+ifeval::["{build}" != "downstream"]
 . Create a https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets[ssh authentication secret] for the data plane nodes: 
 //kgilliga: We probably shouldn't link to an external site. I need to check if we will document this in Red Hat docs.
+endif::[]
+ifeval::["{build}" != "upstream"]
+. Create a ssh authentication secret for the data plane nodes: 
+endif::[]
 +
 [subs=+quotes]
 ----
@@ -260,7 +264,7 @@ EOF
 That service removes pre-FFU workarounds and configures Nova compute
 services for Ceph storage backend.
 Provided above resources should contain a cell-specific configurations.
-For multi-cell, config maps and OpenStack dataplane services should be named like `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`.
+For multi-cell, config maps and {rhos_prev_long} data plane services should be named like `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`.
 
 ifeval::["{build}" == "downstream"]
 . Create a secret for the subscription manager and a secret for the Red Hat registry:

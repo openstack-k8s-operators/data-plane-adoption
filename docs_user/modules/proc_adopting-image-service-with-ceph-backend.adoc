@@ -52,7 +52,7 @@ EOF
 [NOTE]
 ====
 If you have previously backed up your {OpenStackShort} services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct.
-For more information, see xref:reviewing-the-openstack-control-plane-configuration_adopt-control-plane[Reviewing the OpenStack control plane configuration]. 
+For more information, see xref:reviewing-the-openstack-control-plane-configuration_adopt-control-plane[Reviewing the {rhos_prev_long} control plane configuration]. 
 
 ----
 pushd os-diff
