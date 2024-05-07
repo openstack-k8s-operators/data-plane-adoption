@@ -2,8 +2,7 @@
 
 = {OpenShift} preparation for {block_storage} adoption
 
-As explained in xref:planning-the-new-deployment_planning[Planning the new deployment], before deploying {rhos_prev_long} {OpenStackShort} in {OpenShift}, you must ensure that the networks are ready, that you have decided the node selection, and also make sure any necessary changes to the {OpenShiftShort} nodes have been made. For {block_storage_first_ref} volume and backup services all these 3 must be carefully considered.
-//kgilliga: Note to self: xref for planning the new deployment does not work in preview. need to revisit.
+Before deploying {rhos_prev_long} ({OpenStackShort}) in {OpenShift}, you must ensure that the networks are ready, that you have decided the node selection, and also make sure any necessary changes to the {OpenShiftShort} nodes have been made. For {block_storage_first_ref} volume and backup services all these 3 must be carefully considered.
 
 Node Selection::
 You might need, or want, to restrict the {OpenShiftShort} nodes where {block_storage} volume and

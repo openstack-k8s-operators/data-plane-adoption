@@ -21,5 +21,5 @@ RBD, iSCSI, FC, NFS, NVMe-oF, etc.
 Once you know all the transport protocols that you are using, you can make
 sure that you are taking them into consideration when placing the Block Storage services (as mentioned above in the Node Roles section) and the right storage transport related binaries are running on the {OpenShift} nodes.
 
-Detailed information about the specifics for each storage transport protocol can be found in the xref:adopting-the-block-storage-service_adopt-control-plane[Adopting the {block_storage}].
+Detailed information about the specifics for each storage transport protocol can be found in the xref:openshift-preparation-for-block-storage-adoption_adopting-block-storage[{OpenShift} preparation for {block_storage} adoption].
 

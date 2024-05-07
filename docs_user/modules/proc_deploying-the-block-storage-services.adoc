@@ -3,7 +3,7 @@
 = Deploying the Block Storage services
 
 Assuming you have already stopped {block_storage_first_ref} services, prepared the {OpenShift} nodes,
-deployed the {rhos_prev_long} {OpenStackShort} operators and a bare {OpenStackShort} manifest, and migrated the
+deployed the {rhos_prev_long} ({OpenStackShort}) operators and a bare {OpenStackShort} manifest, and migrated the
 database, and prepared the patch manifest with the {block_storage} configuration,
 you must apply the patch and wait for the operator to apply the changes and deploy the Block Storage services.
 
