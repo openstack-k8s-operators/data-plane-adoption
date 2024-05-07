@@ -16,6 +16,11 @@
       namespace: openstack
     type: Opaque
     EOF
+  when: not ospdo_src| bool
+
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.include_tasks: ospdo_keystone_adoption.yaml
+  when: ospdo_src| bool
 
 - name: deploy podified Keystone
   ansible.builtin.shell: |
