@@ -14,5 +14,5 @@ links:
 * [Contributing to documentation](https://openstack-k8s-operators.github.io/data-plane-adoption/dev/#_contributing_to_documentation ) -
   how to build docs locally, docs patterns and tips.
 
-* [Tests](https://openstack-k8s-operators.github.io/data-plane-adoption/dev/tests/#_tests) -
+* [Tests](https://openstack-k8s-operators.github.io/data-plane-adoption/dev/#_tests) -
   information about the test suite, and how to run it.
