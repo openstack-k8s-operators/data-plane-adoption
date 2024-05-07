@@ -6,7 +6,7 @@ Adopting Telemetry means that an existing `OpenStackControlPlane` custom resourc
 
 This guide also assumes that:
 
-. A `TripleO` environment (the source Cloud) is running on one side;
+. A {OpenStackPreviousInstaller} environment (the source Cloud) is running on one side;
 . A `SNO` / `CodeReadyContainers` is running on the other side.
 
 .Prerequisites

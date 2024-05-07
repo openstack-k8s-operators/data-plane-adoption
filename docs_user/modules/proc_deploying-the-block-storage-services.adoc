@@ -185,8 +185,7 @@ openstack volume backup list
 
 To confirm that the configuration is working, the following basic operations are recommended:
 
-. Create a volume from an image to check that the connection to glance is
-working.
+. Create a volume from an image to check that the connection to {image_service_first_ref} is working.
 +
 ----
 openstack volume create --image cirros --bootable --size 1 disk_new

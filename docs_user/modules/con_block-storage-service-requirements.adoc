@@ -4,7 +4,7 @@
 
 The Block Storage service (cinder) has both local storage used by the service and {rhos_prev_long} ({OpenStackShort}) user requirements.
 
-Local storage is used for example when downloading a glance image for the create volume from image operation, which can become considerable when having
+Local storage is used for example when downloading a {image_service_first_ref} image for the create volume from image operation, which can become considerable when having
 concurrent operations and not using the Block Storage service volume cache.
 
 In the Operator deployed {OpenStackShort}, there is a way to configure the
