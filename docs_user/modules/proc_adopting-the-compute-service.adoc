@@ -142,7 +142,7 @@ $ openstack endpoint list | grep nova
 $ openstack server list
 ----
 
-Compare the following outputs with the topology specific configuration in xref:proc_retrieving-services-topology-specific-configuration_{context}[Retrieving services from a topology specific-configuration].
+Compare the following outputs with the topology specific configuration in xref:proc_retrieving-services-topology-specific-configuration_adopt-control-plane[Retrieving services from a topology specific-configuration].
 
 * Query the superconductor for cell1 existance and compare it to pre-adoption values:
 +

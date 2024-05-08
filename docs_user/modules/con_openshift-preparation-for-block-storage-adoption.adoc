@@ -199,11 +199,8 @@ checking on the host:
 cat /sys/module/nvme_core/parameters/multipath
 ----
 +
-IMPORTANT: ANA doesn't use the Linux Multipathing Device Mapper, but the
-*current {OpenStackShort}
-code requires `multipathd` on compute nodes to be running for {compute_service_first_ref} to be able to
-use multipathing, so please remember to follow the multipathing part for compute
-nodes on the <<multipathing,multipathing section>>.
+IMPORTANT: ANA does not use the Linux Multipathing Device Mapper, but the
+current {OpenStackShort} code requires `multipathd` on Compute nodes to be running for {compute_service_first_ref} to be able to use multipathing.
 
 //*TODO:* Add, or at least mention, the Nova eDPM side for NVMe-oF.
 

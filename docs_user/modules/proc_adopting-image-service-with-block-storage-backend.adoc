@@ -77,7 +77,7 @@ spec:
 ----
 +
 Having {block_storage} as a backend establishes a dependency between the two services, and any deployed `GlanceAPI` instance would not work if the {image_service} is configured with {block_storage} that is still not available in the `OpenStackControlPlane`.
-Once {block_storage}, and in particular `CinderVolume`, has been adopted through the procedure described in <<adopting-the-block-storage-service>>, it is possible to proceed with the `GlanceAPI` adoption.
+Once {block_storage}, and in particular `CinderVolume`, has been adopted, it is possible to proceed with the `GlanceAPI` adoption.
 
 . Verify that `CinderVolume` is available:
 +
