@@ -32,7 +32,7 @@ high disk and network usage since many of its operations are in the data path
 the cinder-backup service which has high memory, network, and CPU (to compress
 data) requirements.
 
-The {image_service_first_ref} and Swift components are in the data path, as well as RabbitMQ and Galera services.
+The {image_service_first_ref} and {object_storage_first_ref} components are in the data path, as well as RabbitMQ and Galera services.
 
 Given these requirements it may be preferable not to let these services wander
 all over your {OpenShiftShort} worker nodes with the possibility of impacting other

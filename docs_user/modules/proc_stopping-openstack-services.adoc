@@ -17,9 +17,9 @@ Note that you should not stop the infrastructure management services yet, such a
 * RabbitMQ
 * HAProxy Load Balancer
 * ceph-nfs
-* Nova compute service
+* Compute service
 * containerized modular libvirt daemons
-* Swift storage backend services
+* {object_storage_first_ref} backend services
 
 .Prerequisites
 

@@ -14,7 +14,7 @@ Additional backends are available, such as PKCS11 and DogTag, however they are n
 
 .Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB, RabbitMQ and Keystone.
+* Previous Adoption steps completed. Notably, MariaDB, RabbitMQ, and {identity_service_first_ref}.
 should be already adopted.
 
 .Procedure

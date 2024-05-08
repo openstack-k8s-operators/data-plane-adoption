@@ -11,7 +11,7 @@ you must apply the patch and wait for the operator to apply the changes and depl
 
 * Previous Adoption steps completed. Notably, {block_storage} must have been
 stopped and the service databases must already be imported into the control plane MariaDB.
-* Keystone and Barbican should be already adopted.
+* {identity_service_first_ref} and {key_manager_first_ref} should be already adopted.
 * Storage network has been properly configured on the {OpenShiftShort} cluster.
 * You need the contents of `cinder.conf` file. Download the file so that you can access it locally:
 +
@@ -198,5 +198,5 @@ openstack --os-volume-api-version 3.47 volume create --backup backup restored
 ----
 
 [NOTE]
-You do not boot a nova instance using the new volume from image or try to detach the old volume because nova and the {block_storage} are still not connected.
+You do not boot a {compute_service_first_ref} instance using the new volume from image or try to detach the old volume because {compute_service} and the {block_storage} are still not connected.
 

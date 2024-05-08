@@ -6,7 +6,7 @@ Adopt the {image_service_first_ref} that you deployed with a {Ceph} backend. Use
 
 .Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB, Keystone and Barbican
+* Previous Adoption steps completed. Notably, MariaDB, {identity_service_first_ref} and {key_manager_first_ref}
 should be already adopted.
 * Make sure the Ceph-related secret (`ceph-conf-files`) was created in
 the `openstack` namespace and that the `extraMounts` property of the

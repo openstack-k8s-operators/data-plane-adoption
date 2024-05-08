@@ -20,10 +20,10 @@ can reach the management network that the storage system is in.
 a new clustered Ceph NFS service is deployed on the Ceph cluster with the help
 of Ceph orchestrator. For more information, see
 xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a Ceph NFS cluster].
-* Ensure that services such as keystone and memcached are available prior to
+* Ensure that services such as {identity_service_first_ref} and memcached are available prior to
 adopting the Shared File Systems services.
 * If tenant-driven networking was enabled (`driver_handles_share_servers=True`),
-ensure that neutron has been deployed prior to adopting Shared File Systems services.
+ensure that {networking_first_ref} has been deployed prior to adopting Shared File Systems services.
 
 .Procedure
 ifeval::["{build}" != "downstream"]

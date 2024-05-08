@@ -25,7 +25,7 @@ spec
 
 .Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB, Keystone and Barbican
+* Previous Adoption steps completed. Notably, MariaDB, {identity_service_first_ref} and {key_manager_first_ref}
 should be already adopted.
 
 .Procedure
