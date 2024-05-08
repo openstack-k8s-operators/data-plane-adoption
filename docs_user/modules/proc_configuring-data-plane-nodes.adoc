@@ -21,8 +21,7 @@ per-node).
 To make sure the latest network configuration is used during the data plane adoption, you
 should also set `edpm_network_config_update: true` in the `nodeTemplate`.
 
-You will proceed with <<adopting-dataplane_openstack-adoption,Data Plane Adoption
-process>> once the {OpenShiftShort} control plane is deployed in the
+You will proceed with the data plane adoption once the {OpenShiftShort} control plane is deployed in the
 {OpenShiftShort} cluster. When doing so, you will configure `NetConfig` and
 `OpenstackDataplaneNodeSet` CRs, using the same VLAN tags and IPAM
 configuration as determined in the previous steps.
