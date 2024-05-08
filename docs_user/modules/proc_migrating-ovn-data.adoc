@@ -4,7 +4,7 @@
 
 This document describes how to move OVN northbound and southbound databases
 from the original {rhos_prev_long} deployment to `ovsdb-server` instances running in the {OpenShift} cluster.
-While it may be argued that the control plane Neutron ML2/OVN driver and OVN northd service will reconstruct the databases on startup, the reconstruction may be time consuming on large existing clusters. The procedure below allows to speed up data migration and avoid unnecessary data plane disruptions due to incomplete OpenFlow table contents.
+While it may be argued that the control plane {networking_first_ref} ML2/OVN driver and OVN northd service will reconstruct the databases on startup, the reconstruction may be time consuming on large existing clusters. The procedure below allows to speed up data migration and avoid unnecessary data plane disruptions due to incomplete OpenFlow table contents.
 
 .Prerequisites
 
@@ -12,7 +12,7 @@ While it may be argued that the control plane Neutron ML2/OVN driver and OVN nor
  ** The `OpenStackControlPlane` resource must be already created at this point.
  ** NetworkAttachmentDefinition custom resource definitions (CRDs) for the original cluster are already
 defined. Specifically, `openstack/internalapi` network is defined.
- ** Control plane MariaDB and RabbitMQ may already run. Neutron and OVN are not running yet.
+ ** Control plane MariaDB and RabbitMQ may already run. The {networking} and OVN are not running yet.
  ** Original OVN is older or equal to the control plane version.
  ** Original Neutron Server and OVN northd services are stopped.
  ** There must be network routability between:

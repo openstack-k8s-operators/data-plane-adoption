@@ -32,7 +32,7 @@ alias openstack="oc exec -t openstackclient -- openstack"
 .Procedure
 
 [NOTE]
-This procedure assumes that Nova Metadata is deployed on the top level and not on each cell level, so this example imports it the same way. If the source deployment has a per cell metadata deployment, adjust the given below patch as needed. Metadata service cannot be run in `cell0`.
+This procedure assumes that {compute_service} Metadata is deployed on the top level and not on each cell level, so this example imports it the same way. If the source deployment has a per cell metadata deployment, adjust the given below patch as needed. Metadata service cannot be run in `cell0`.
 
 
 . Patch `OpenStackControlPlane` to deploy the {compute_service}:
@@ -107,7 +107,7 @@ spec:
 '
 ----
 
-* If adopting nova with the Baremetal service (`ironic`), append the following `novaComputeTemplates` in the `cell1` section of the Nova CR patch:
+* If adopting {compute_service_first_ref} with the Baremetal service (`ironic`), append the following `novaComputeTemplates` in the `cell1` section of the {compute_service} CR patch:
 +
 *NOTE*: Set the `[DEFAULT]host` configuration option to match the hostname of the node running the `ironic` compute driver in the source cloud.
 +

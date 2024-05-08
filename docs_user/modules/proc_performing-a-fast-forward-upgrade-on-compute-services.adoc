@@ -109,7 +109,7 @@ oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
 oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
 ----
 
-. Discover Nova compute hosts in the cell:
+. Discover Compute hosts in the cell:
 +
 ----
 oc rsh nova-cell0-conductor-0 nova-manage cell_v2 discover_hosts --verbose

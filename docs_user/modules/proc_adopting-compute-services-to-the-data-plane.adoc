@@ -209,7 +209,7 @@ EOF
 The secret `nova-cell<X>-compute-config` is auto-generated for each
 `cell<X>`. You must specify `nova-cell<X>-compute-config` and `nova-migration-ssh-key` for each custom `OpenStackDataPlaneService` related to the Compute service.
 
-That service removes pre-FFU workarounds and configures Nova compute
+That service removes pre-FFU workarounds and configures Compute
 services for local storage backend.
 
 * Or, create a `nova-compute-extra-config` service (with Ceph backend for libvirt):
@@ -261,7 +261,7 @@ spec:
 EOF
 ----
 +
-That service removes pre-FFU workarounds and configures Nova compute
+That service removes pre-FFU workarounds and configures Compute
 services for Ceph storage backend.
 Provided above resources should contain a cell-specific configurations.
 For multi-cell, config maps and {rhos_prev_long} data plane services should be named like `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`.
@@ -471,7 +471,7 @@ endif::[]
 EOF
 ----
 +
-* Prepare adopted EDPM workloads to use Ceph backend for Cinder, if configured so
+* Prepare adopted EDPM workloads to use Ceph backend for Block Storage service (cinder), if configured so
 +
 [source,yaml]
 ----
@@ -648,7 +648,7 @@ oc logs -l app=openstackansibleee -f --max-log-requests 20
 oc wait --for condition=Ready osdpns/openstack --timeout=30m
 ----
 
-. Verify that neutron agents are alive:
+. Verify that {networking_first_ref} agents are alive:
 +
 ----
 oc exec openstackclient -- openstack network agent list
