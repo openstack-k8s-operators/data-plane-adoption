@@ -83,12 +83,17 @@ options:
         type: str
     networks:
         description:
-          - The list of networks on the host where the daemon is bound.
+          - The list of networks on the host where the daemon is bound
         required: false
         type: list
+    count:
+        description:
+          - The total number of instances that should be deployed
+        required: false
+        type: int
     label:
         description:
-          - The label used to apply the daemon on the Ceph custer nodes.
+          - The label used to apply the daemon on the Ceph custer nodes
         required: false
         type: str
     spec:
@@ -121,6 +126,7 @@ EXAMPLES = '''
     service_id: mds
     service_name: mds
     render_path: '/home/ceph-admin/specs'
+    count: 2
     hosts:
       - host1
       - host2
@@ -142,6 +148,7 @@ EXAMPLES = '''
     service_name: mds
     render_path: '/home/ceph-admin/specs'
     label: "controller"
+    count: 1
     apply: true
 - name: create the Ceph RGW daemon spec
   ceph_mkspec:
@@ -153,6 +160,7 @@ EXAMPLES = '''
       - 4.5.6.0/24
     render_path: '/home/ceph-admin/specs'
     label: "controller"
+    count: 2
     apply: true
 '''
 
@@ -209,6 +217,7 @@ def run_module():
     host_pattern = module.params.get('host_pattern')
     networks = module.params.get('networks')
     label = module.params.get('label')
+    count = module.params.get('count')
     spec = module.params.get('spec')
     extra = module.params.get('extra')
     apply = module.params.get('apply')
@@ -250,8 +259,14 @@ def run_module():
     if networks is None:
         networks = []
 
+    # no count is defined, -1 is used to not limit to a particular
+    # number
+    if count is None:
+        count = -1
+
     d = ceph_spec.CephDaemonSpec(service_type, service_id, service_name,
-                                 hosts, host_pattern, networks, spec, label, **extra)
+                                 hosts, host_pattern, networks, spec, label,
+                                 count, **extra)
 
     render('{}/{}'.format(render_path, service_type), d.make_daemon_spec())
     if apply:

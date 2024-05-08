@@ -23,14 +23,14 @@
 - name: Print INPUT
   when: debug | default(true)
   block:
-    - name: Set labels
+    - name: Set/Unset labels - {{ action }}
       ansible.builtin.debug:
         msg: "{{ labels }}"
     - name: Print nodes
       ansible.builtin.debug:
         msg: "{{ nodes }}"
 
-- name: Set labels
+- name: Set/Unset labels - {{ action }}
   become: true
   ansible.builtin.command:
     "{{ ceph_cli }} orch host label {{ action }} {{ item.0 }} {{ item.1 }}"

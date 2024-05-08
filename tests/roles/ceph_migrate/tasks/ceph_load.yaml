@@ -25,7 +25,7 @@
       ansible.builtin.set_fact:
         servicemap: "{{ smap.stdout | from_json }}"
     - name: Print Service Map
-      when: debug | default(true)
+      when: debug | default(false)
       ansible.builtin.debug:
         msg: "{{ item.service_type }} - {{ item.placement }}"
       loop: "{{ servicemap | flatten(levels=1) }}"
@@ -106,7 +106,7 @@
     target_nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
 
 - name: Print Ceph cluster nodes
-  when: debug|default(true)
+  when: debug|default(false)
   block:
     - name: Print target nodes
       ansible.builtin.debug:

@@ -16,6 +16,8 @@
 # Extend mgr deployment to help with failover
 - name: MGR - Migrate RBD node
   ansible.builtin.include_tasks: mgr.yaml
+  tags:
+    - ceph_mgr
 
 # Update the firewall on the target nodes
 - name: Update firewall rules on the target nodes
@@ -28,6 +30,8 @@
   loop: "{{ target_nodes }}"
   loop_control:
     loop_var: n
+  tags:
+    - ceph_firewall
 
 # Normalize the mon spec to use labels instead of hosts as placement
 - name: MON - Load Spec from the orchestrator
@@ -63,9 +67,6 @@
 # we need to serially migrate mons, so we loop over the nodes and run the
 # procedure provided by mon.yaml
 - name: MON - Migrate RBD node
-  when:
-    - cur_mon in decomm_nodes
-    - '"controller" in cur_mon'
   ansible.builtin.include_tasks: mon.yaml
   vars:
     cur_mon: controller-2 #.redhat.local

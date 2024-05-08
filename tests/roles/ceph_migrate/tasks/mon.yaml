@@ -37,7 +37,7 @@
   block:
     - name: Get the current mgrmap dump
       become: true
-      ansible.builtin.shell:
+      ansible.builtin.command:
         "{{ ceph_cli }} mgr dump -f json"
       register: mgr
 
@@ -52,7 +52,7 @@
 
     - name: Fail mgr if active in the current node
       become: true
-      ansible.builtin.shell:
+      ansible.builtin.command:
         "{{ ceph_cli }} mgr fail {{ mgr.active_name }}"
       when:
         - mgr.active_name | length > 0
@@ -63,6 +63,15 @@
   ansible.builtin.include_tasks: drain.yaml
   vars:
     node: "{{ cur_mon }}"
+  tags:
+    - ceph_drain
+
+- name: Get ceph_cli
+  include_tasks: ceph_cli.yaml
+  vars:
+    ceph_config_home: "{{ ceph_config_tmp_client_home }}"
+    ceph_fsid: "{{ mon_dump.fsid }}"
+    ceph_cluster: ceph
 
 # The node should be empty at this point, let's remove it from the Ceph
 # cluster
@@ -70,6 +79,7 @@
   become: true
   ansible.builtin.command:
     "{{ ceph_cli }} orch host rm {{ cur_mon }} --force"
+  ignore_errors: true
   # let's ignore this for now (for idempotency purposes)
 
 - name: MON - Get current mon IP address
@@ -116,7 +126,7 @@
 
     - name: MON - Refresh os-net-config
       delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
-      ansible.builtin.shell:
+      ansible.builtin.command:
         "os-net-config -c {{ os_net_conf_path }}"
 
     - name: MON - ping ip address to see if is reachable on the target node
@@ -148,27 +158,15 @@
     - name: MON - Redeploy mon on {{ target_node }}
       become: true
       when: ceph_mon.stdout | length == 0
-      ansible.builtin.shell:
+      ansible.builtin.command:
         "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
-
-    # Add label to the target node
-    - name: MON - Setup Mon/Mgr label to the target node
-      ansible.builtin.include_tasks: labels.yaml
-      vars:
-        nodes:
-          - "{{ target_node }}"
-        action: "add"
-        labels:
-          - "mon"
-          - "mgr"
-          - "_admin"
 
 - name: MON - check mons quorum
   become: true
-  ansible.builtin.shell: "{{ ceph_cli }} -s -f json"
+  ansible.builtin.command: "{{ ceph_cli }} -s -f json"
   register: monmap
   become: true
-  retries: 10
+  retries: 20
   delay: 2
   # >= is related to the fact that the current monmap might still have references
   # to the old mon daemon coming from the drained node
@@ -176,9 +174,20 @@
   loop_control:
     label: "check mons quorum"
 
+# Add label to the target node
+- name: MON - Setup Mon/Mgr label to the target node
+  ansible.builtin.include_tasks: labels.yaml
+  vars:
+    nodes:
+      - "{{ target_node }}"
+    action: "add"
+    labels:
+      - "mon"
+      - "mgr"
+      - "_admin"
+
 # Post actions: refresh mgr data, reconfigure osds
 - name: MON - refresh cephadm info - fail ceph mgr and refresh osd config
-  delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
   become: true
   block:
     - name: force-fail ceph mgr

@@ -20,11 +20,11 @@
       delegate_to: "{{ cur_mon }}.ctlplane"
       lineinfile:
         dest: "{{ os_net_conf_path }}"
-        insertafter: '{{ mon_ipaddr }}/24'
+        insertafter: "{{ ceph_storage_net_prefix }}"
         line: "    - ip_netmask: {{ ceph_client_ip }}/24"
         backup: yes
 
     - name: TMP_CLIENT - Refresh os-net-config
       delegate_to: "{{ cur_mon }}.ctlplane"
-      ansible.builtin.shell:
+      ansible.builtin.command:
         "os-net-config -c {{ os_net_conf_path }}"

@@ -97,6 +97,7 @@
     cluster: ceph
     apply: true
     label: "rgw"
+    count: 2
     render_path: "{{ ceph_spec_render_dir }}"
     spec:
       backend_service: "{% set st = rgw_spec.get('service_type') %}{{ st }}.{{ st }}"

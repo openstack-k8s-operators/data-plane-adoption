@@ -24,7 +24,7 @@ ALLOWED_DAEMONS = ['host', 'mon', 'mgr', 'mds', 'nfs', 'osd', 'rgw', 'grafana',
                    'crash', 'prometheus', 'alertmanager', 'node-exporter',
                    'ingress']
 
-ALLOWED_HOST_PLACEMENT_MODE = ['hosts', 'host_pattern', 'label']
+ALLOWED_HOST_PLACEMENT_MODE = ['hosts', 'host_pattern', 'label', 'count']
 
 CRUSH_ALLOWED_LOCATION = ['osd', 'host', 'chassis', 'rack', 'row', 'pdu',
                           'pod', 'room', 'datacenter', 'zone', 'region',
@@ -67,13 +67,11 @@ class CephPlacementSpec(object):
 
         if len(label) > 0:
             self.label = label
-        if count > 0:
-            self.count = count
         if host_pattern is not None and len(host_pattern) > 0:
             self.host_pattern = host_pattern
-
         if hosts is not None and len(hosts) > 0:
             self.hosts = hosts
+        self.count = count
 
     def __setattr__(self, key, value):
         self.__dict__[key] = value
@@ -103,6 +101,9 @@ class CephPlacementSpec(object):
             }
         else:
             spec_template = {}
+
+        if self.count > 0:
+            spec_template.get('placement')['count'] = self.count
 
         return spec_template
 
@@ -166,6 +167,7 @@ class CephDaemonSpec(object):
                  networks: list,
                  spec: dict,
                  label: str,
+                 count: int,
                  **kwargs: dict):
 
         self.daemon_name = daemon_name
@@ -174,6 +176,7 @@ class CephDaemonSpec(object):
         self.hosts = hosts
         self.placement = placement_pattern
         self.label = label
+        self.count = count
 
         # network list where the current daemon should be bound
         if not networks:
@@ -210,7 +213,8 @@ class CephDaemonSpec(object):
         # the spec dict
         sp = {}
 
-        place = CephPlacementSpec(self.hosts, self.placement, 0, self.label)
+        place = CephPlacementSpec(self.hosts, self.placement, self.count,
+                                  self.label)
         pl = place.make_spec()
 
         # the spec daemon header
