@@ -25,7 +25,6 @@ such as {networking_first_ref}, {compute_service_first_ref}, {object_storage_fir
 trying to adopt {orchestration}.
 
 .Procedure
-//kgilliga: I get an error when I click this link. Do we need it in the downstream docs?
 ifeval::["{build}" != "downstream"] 
 As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Heat Adoption follows a similar pattern.
 endif::[]

@@ -3,10 +3,10 @@
 = Configuring a Ceph backend
 
 If the original deployment uses a Ceph storage backend for any service
-(e.g. Glance, Cinder, Nova, Manila), the same backend must be used in the
+(e.g. {image_service_first_ref}, {block_storage_first_ref}, {compute_service_first_ref}, {rhos_component_storage_file_first_ref}), the same backend must be used in the
 adopted deployment and custom resources (CRs) must be configured accordingly.
 
-If you use {rhos_component_storage_file_first_ref}, on TripleO environments, the CephFS driver in {rhos_component_storage_file} is configured to use
+If you use {rhos_component_storage_file_first_ref}, on {OpenStackPreviousInstaller} environments, the CephFS driver in {rhos_component_storage_file} is configured to use
 its own keypair. For convenience, modify the `openstack` user so that you
 can use it across all {rhos_prev_long} services.
 

@@ -1,5 +1,5 @@
 [id="adopting-the-object-storage-service_{context}"]
-//check xref
+
 = Adopting the Object Storage service
 
 This section only applies if you are using OpenStack Swift as {object_storage_first_ref}. If you are using the Object Storage API of Ceph RGW this section can be skipped.
@@ -135,4 +135,4 @@ Hello World!
 
 [NOTE] 
 At this point data is still stored on the previously existing nodes. For more information about migrating the actual data from the old
-to the new deployment, see xref:migrating-the-object-storage-service_migrate-object-storage-service[Migrating the {object_storage_first_ref} to {rhos_long} nodes].
+to the new deployment, see xref:migrating-object-storage-data-to-rhoso-nodes_migrate-object-storage-service[Migrating the {object_storage_first_ref} data from {OpenStackShort} to {rhos_long} nodes].

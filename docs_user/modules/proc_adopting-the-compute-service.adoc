@@ -1,7 +1,5 @@
 [id="adopting-the-compute-service_{context}"]
 
-//kgilliga: Note to self: "Adopting the data plane" xrefs do not work. Need to revisit.
-
 = Adopting the {compute_service}
 
 [NOTE]
@@ -21,8 +19,8 @@ must already be imported into the control plane MariaDB;
  ** the xref:adopting-the-image-service_adopt-control-plane[Adopting the Image service] needs to be imported;
  ** the xref:migrating-ovn-data_migrating-databases[Migrating OVN data] need to be imported;
  ** the xref:adopting-the-networking-service_adopt-control-plane[Adopting the Networking service] needs to be imported;
- ** the xref:adopting-the-bare-metal-provisioning-service_{context}[Adopting the Openstack Baremetal service] needs to be imported; 
-//kgilliga:Need to revist this xref. Might rewrite this section anyway.
+** the {bare_metal} needs to be imported; 
+//kgilliga:I removed the link because it did not work. I might rewrite this section anyway.
  ** Required services specific topology
 xref:proc_retrieving-services-topology-specific-configuration_adopt-control-plane[Retrieving services from a topology specific-configuration].
  ** {rhos_prev_long} services have been stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
@@ -132,7 +130,7 @@ oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 +
 The local Conductor services will be started for each cell, while the superconductor runs in `cell0`.
-Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Nova services, until the external data plane is imported, and until Nova Compute services fast-forward upgraded. For more information, see xref:adopting-data-plane_data-plane[Adopting the data plane].
+Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Nova services, until the external data plane is imported, and until Nova Compute services fast-forward upgraded. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane] and xref:performing-a-fast-forward-upgrade-on-compute-services_data-plane[Performing a fast-forward upgrade on Compute services].
 
 .Verification 
 
@@ -161,4 +159,4 @@ The expected changes to happen:
  ** RabbitMQ transport URL no longer uses `guest`.
 
 [NOTE]
-At this point, the {compute_service} control plane services do not control the existing {compute_service} Compute workloads. The control plane manages the data plane only after the data adoption process is successfully completed. For more information, see xref:adopting-data-plane_data-plane[Adopting the data plane].
+At this point, the {compute_service} control plane services do not control the existing {compute_service} Compute workloads. The control plane manages the data plane only after the data adoption process is successfully completed. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].

@@ -104,7 +104,6 @@ backend driver needs to use its own instance of the `manila-share`
 service.
 * If a storage backend driver needs a custom container image, find it on the
 https://catalog.redhat.com/software/containers/search?gs&q=manila[RHOSP Ecosystem Catalog] 
-//kgilliga: Should this link to the RH Ecosystem Catalog appear downstream only?
 and set `manila: template: manilaShares: <custom name> : containerImage`
 value. The following example illustrates multiple storage backend drivers,
 using custom container images.

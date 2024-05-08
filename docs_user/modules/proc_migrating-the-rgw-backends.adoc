@@ -49,7 +49,7 @@ endif::[]
 ifeval::["{build}" != "upstream"]
 . During the overcloud deployment, RGW is applied at step 2
 (external_deployment_steps), and a cephadm compatible spec is generated in
-`/home/ceph-admin/specs/rgw` from director. Find the RGW spec:
+`/home/ceph-admin/specs/rgw` from {OpenStackPreviousInstaller}. Find the RGW spec:
 endif::[]
 +
 ----

@@ -1,7 +1,6 @@
 [id="adopting-the-image-service_{context}"]
 
 :context: image-service
-//Check xref context."Reviewing the OpenStack configuration" xref does not work.
 
 = Adopting the {image_service}
 
@@ -14,9 +13,9 @@ up and running: the {identity_service} endpoints are updated and the same backen
 
 This guide also assumes that: 
 
-* A `TripleO` environment (the source Cloud) is running on one side.
+* A {OpenStackPreviousInstaller} environment (the source Cloud) is running on one side.
 * A `SNO` / `CodeReadyContainers` is running on the other side.
-* (optional) An internal/external `Ceph` cluster is reachable by both `crc` and `TripleO`.
+* (optional) An internal/external `Ceph` cluster is reachable by both `crc` and {OpenStackPreviousInstaller}.
 
 ifeval::["{build}" != "downstream"]
 //This link goes to a 404. Do we need this text downstream? 

@@ -278,4 +278,4 @@ oc delete pod mariadb-copy-data
 oc delete pvc mariadb-data
 ----
 For more information, see https://learn.redhat.com/t5/DO280-Red-Hat-OpenShift/About-pod-security-standards-and-warnings/m-p/32502[About pod security standards and warnings].
-//kgilliga: Should this link to "About pod security standards and warnings" appear downstream only?
+

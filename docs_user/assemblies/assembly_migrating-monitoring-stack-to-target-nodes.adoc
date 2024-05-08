@@ -12,7 +12,7 @@ Before start this process, a few considerations are required:
 
 * There’s no need to migrate node exporters: these daemons are deployed across
 the nodes that are part of the {CephCluster} cluster (placement is ‘*’), and  we’re going to lose metrics as long as the Controller nodes are not part of the {CephCluster} cluster anymore
-* Each monitoring stack component is bound to specific ports that TripleO is
+* Each monitoring stack component is bound to specific ports that {OpenStackPreviousInstaller} is
 supposed to open beforehand; make sure to double check the firewall rules are
 in place and the ports are opened for a given monitoring stack service
 
@@ -24,7 +24,7 @@ reducing the placement with `count: 1` is a reasonable solution and allows to
 successfully migrate the existing daemons in an HCI (or HW limited) scenario
 without impacting other services.
 However, it is still possible to put in place a dedicated HA solution and
-realize a component that is consistent with the TripleO model to reach HA.
+realize a component that is consistent with the {OpenStackPreviousInstaller} model to reach HA.
 Building and deployment such HA model is out of scope for this procedure.
 
 include::../modules/proc_migrating-existing-daemons-to-target-nodes.adoc[leveloffset=+1]
