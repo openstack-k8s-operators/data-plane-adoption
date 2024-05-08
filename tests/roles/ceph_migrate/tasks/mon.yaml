@@ -4,6 +4,9 @@
     msg: "Migrate mon: {{ cur_mon.split('.')[0] }} to node: {{ target_node }}"
 
 - name: Backup data for client purposes
+  # do not fail on next runs (for idempotency purposes)
+  # TODO: stat /etc/ceph and eventually ignore the backup
+  ignore_errors: true
   delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
   block:
     - name: Ensure backup directory exists
@@ -20,17 +23,6 @@
       loop:
         - ceph.conf
         - ceph.client.admin.keyring
-
-- name: Update firewall rules on the target nodes
-  ansible.builtin.include_tasks: firewall.yaml
-  vars:
-    ifports:
-      - 3300
-      - 6789
-    node: "{{ n }}"
-  loop: "{{ target_nodes }}"
-  loop_control:
-    loop_var: n
 
 - name: Get ceph_cli
   include_tasks: ceph_cli.yaml
@@ -66,35 +58,21 @@
         - mgr.active_name | length > 0
         - mgr.active_name | regex_search(cur_mon)
 
-# Swap labels between the current node and the target node (that is going to
-# host the mon)
-- name: Setup Mon/Mgr label to the target node
-  ansible.builtin.include_tasks: labels.yaml
-  vars:
-    nodes:
-      - "{{ target_node }}"
-    action: "add"
-    labels:
-      - "mon"
-      - "mgr"
-      - "_admin"
-
 # Drain and rm the cur_mon from the Ceph cluster
-- name: Drain and rm --force the cur_mon host
-  block:
-    - name: Drain the cur_mon host
-      become: true
-      ansible.builtin.shell:
-        "{{ ceph_cli }} orch host drain {{ cur_mon }}"
+- name: MON - Drain and rm --force the cur_mon host
+  ansible.builtin.include_tasks: drain.yaml
+  vars:
+    node: "{{ cur_mon }}"
 
-    - name: rm the cur_mon host from the Ceph cluster
-      become: true
-      ansible.builtin.shell:
-        "{{ ceph_cli }} orch host rm {{ cur_mon }} --force"
-      # let's ignore this for now (for idempotency purposes)
-      ignore_errors: true
+# The node should be empty at this point, let's remove it from the Ceph
+# cluster
+- name: MON - rm the cur_mon host from the Ceph cluster
+  become: true
+  ansible.builtin.command:
+    "{{ ceph_cli }} orch host rm {{ cur_mon }} --force"
+  # let's ignore this for now (for idempotency purposes)
 
-- name: Get current mon IP address
+- name: MON - Get current mon IP address
   ansible.builtin.set_fact:
     mon_ipaddr: "{{ mon_ip | split(':') | first | ansible.utils.ipaddr }}"
   vars:
@@ -105,30 +83,30 @@
       {%   endif %}
       {% endfor %}
 
-- name: Move the mon IP Address from {{ cur_mon }} to {{ target_node }}
+- name: MON - Move the mon IP Address from {{ cur_mon }} to {{ target_node }}
   become: true
+  # if no mon addr, this variable is False and the whole block is skipped
+  # because there's no network related action that should be performed
+  when: mon_ipaddr | default('')
   block:
-    - name: Get current mon IP address
+    - name: MON - Get current mon IP address
       when: debug | default(true)
       ansible.builtin.debug:
         msg: "{{ mon_ipaddr }}"
 
-    - name: Patch os-net-config config and REMOVE the current mon IP address
-      #delegate_to: "{{ cur_mon }}.ctlplane"
+    - name: MON - Patch os-net-config config and REMOVE the current mon IP address
       delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
       lineinfile:
         path: "{{ os_net_conf_path }}"
         state: absent
         regexp: '{{ mon_ipaddr }}/24'
         backup: yes
-    - name: Refresh os-net-config
-      #delegate_to: "{{ cur_mon }}.ctlplane"
+    - name: MON - Refresh os-net-config
       delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
       ansible.builtin.shell:
         "os-net-config -c {{ os_net_conf_path }}"
 
-    - name: Patch os-net-config config and add the mon IP
-      #delegate_to: "{{ target_node }}.ctlplane"
+    - name: MON - Patch os-net-config config and add the mon IP
       delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
       lineinfile:
         dest: "{{ os_net_conf_path }}"
@@ -136,58 +114,74 @@
         line: "  - ip_netmask: {{ mon_ipaddr }}/24"
         backup: yes
 
-    - name: Refresh os-net-config
-      #delegate_to: "{{ target_node }}.ctlplane"
+    - name: MON - Refresh os-net-config
       delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
       ansible.builtin.shell:
         "os-net-config -c {{ os_net_conf_path }}"
 
-    - name: ping ip address to see if is reachable on the target node
-      ansible.builtin.shell:
+    - name: MON - ping ip address to see if is reachable on the target node
+      ansible.builtin.command:
         "ping -W1 -c 3 {{ mon_ipaddr }}"
-      # delegate_to: "{{ target_node }}.ctlplane"
       delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
       register: ping_target_ip
 
-    - name: Fail if the IP address is not active in the target node
+    - name: MON - Fail if the IP address is not active in the target node
       when: ping_target_ip.rc != 0
       fail:
         msg: "Can't reach the mon IP on the target node"
 
 # The IP Address is available on the target node, redeploy the mon
-- name: Redeploy mon on the target node
+- name: MON - Redeploy mon on the target node
   block:
-    - name: Print the command that redeploys the mon
+    - name: MON - Print the command that redeploys the mon
       when: debug | default(false)
       ansible.builtin.debug:
         msg: "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
 
-    - name: Check if a mon already exist
+    - name: MON - Check if a mon already exist
       command: |
         {{ ceph_container_cli }} ps -a -f 'name=ceph-?(.*)-mon.*' --format \{\{\.Command\}\} --no-trunc
       register: ceph_mon
       become: true
-      # delegate_to: "{{ target_node }}.ctlplane"
       delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
 
-    - name: Redeploy mon on {{ target_node }}
+    - name: MON - Redeploy mon on {{ target_node }}
       become: true
       when: ceph_mon.stdout | length == 0
       ansible.builtin.shell:
         "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
 
-- name: check mons quorum
+    # Add label to the target node
+    - name: MON - Setup Mon/Mgr label to the target node
+      ansible.builtin.include_tasks: labels.yaml
+      vars:
+        nodes:
+          - "{{ target_node }}"
+        action: "add"
+        labels:
+          - "mon"
+          - "mgr"
+          - "_admin"
+
+- name: MON - check mons quorum
   become: true
   ansible.builtin.shell: "{{ ceph_cli }} -s -f json"
   register: monmap
   become: true
   retries: 10
   delay: 2
+  # >= is related to the fact that the current monmap might still have references
+  # to the old mon daemon coming from the drained node
   until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
   loop_control:
     label: "check mons quorum"
 
-- name: refresh cephadm info - fail ceph mgr --force
-  delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
-  ansible.builtin.shell: "{{ ceph_cli }} mgr fail"
-
+# Post actions: refresh mgr data, reconfigure osds
+- name: MON - refresh cephadm info - fail ceph mgr and refresh osd config
+  delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
+  become: true
+  block:
+    - name: force-fail ceph mgr
+      ansible.builtin.command: "{{ ceph_cli }} mgr fail"
+    - name: reconfig osds
+      ansible.builtin.command: "{{ ceph_cli }} orch reconfig osd.default_drive_group "

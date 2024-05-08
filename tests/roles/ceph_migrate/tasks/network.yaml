@@ -1,18 +1,22 @@
-- name: Setup a tmp client ip address on the src node
+- name: TMP_CLIENT - Get current mon IP address
+  ansible.builtin.set_fact:
+    mon_ipaddr: "{{ mon_ip | split(':') | first | ansible.utils.ipaddr }}"
+  vars:
+    mon_ip: |-
+      {% for mon in mon_dump.mons %}
+      {%   if mon.name == cur_mon %}
+      {{ mon.addr }}
+      {%   endif %}
+      {% endfor %}
+
+- name: TMP_CLIENT - Setup a tmp client ip address on the src node
+  when:
+    - ceph_client_ip is defined
+    - mon_ipaddr | default('')
   become: true
   delegate_to: "{{ cur_mon }}.ctlplane"
   block:
-    - name: Get current mon IP address
-      ansible.builtin.set_fact:
-        mon_ipaddr: "{{ mon_ip | split(':') | first | ansible.utils.ipaddr }}"
-      vars:
-        mon_ip: |-
-          {% for mon in mon_dump.mons %}
-          {%   if mon.name == cur_mon %}
-          {{ mon.addr }}
-          {%   endif %}
-          {% endfor %}
-    - name: Patch os-net-config config and setup a tmp client IP
+    - name: TMP_CLIENT - Patch os-net-config config and setup a tmp client IP
       delegate_to: "{{ cur_mon }}.ctlplane"
       lineinfile:
         dest: "{{ os_net_conf_path }}"
@@ -20,7 +24,7 @@
         line: "    - ip_netmask: {{ ceph_client_ip }}/24"
         backup: yes
 
-    - name: Refresh os-net-config
+    - name: TMP_CLIENT - Refresh os-net-config
       delegate_to: "{{ cur_mon }}.ctlplane"
       ansible.builtin.shell:
         "os-net-config -c {{ os_net_conf_path }}"

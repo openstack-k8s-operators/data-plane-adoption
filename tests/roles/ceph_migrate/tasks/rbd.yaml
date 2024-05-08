@@ -17,13 +17,59 @@
 - name: MGR - Migrate RBD node
   ansible.builtin.include_tasks: mgr.yaml
 
+# Update the firewall on the target nodes
+- name: Update firewall rules on the target nodes
+  ansible.builtin.include_tasks: firewall.yaml
+  vars:
+    ifports:
+      - 3300
+      - 6789
+    node: "{{ n }}"
+  loop: "{{ target_nodes }}"
+  loop_control:
+    loop_var: n
+
+# Normalize the mon spec to use labels instead of hosts as placement
+- name: MON - Load Spec from the orchestrator
+  ansible.builtin.set_fact:
+    mon_spec: "{{ mon }}"
+  vars:
+    mon: |-
+      {% set mon = {} %}
+      {% for item in servicemap %}
+      {%   if item.service_type == 'mon' %}
+      {%     set _ = mon.__setitem__('service_type',item.service_type) %}
+      {%     set _ = mon.__setitem__('service_name',item.service_name) %}
+      {%     set _ = mon.__setitem__('spec', {}) %}
+      {%   endif %}
+      {% endfor %}
+      {{ mon }}
+
+- name: Normalize the mon spec to use labels
+  # root privileges required to run cephadm
+  # and apply the new spec
+  become: true
+  ceph_mkspec:
+    service_type: "{% set st = mon_spec.get('service_type', 'mon') %}{{ st }}"
+    cluster: ceph
+    apply: true
+    label: "mon"
+    render_path: "{{ ceph_spec_render_dir }}"
+  register: spc
+  environment:
+    CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
+    CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
+
 # we need to serially migrate mons, so we loop over the nodes and run the
 # procedure provided by mon.yaml
 - name: MON - Migrate RBD node
+  when:
+    - cur_mon in decomm_nodes
+    - '"controller" in cur_mon'
   ansible.builtin.include_tasks: mon.yaml
   vars:
-    cur_mon: controller-0 #.redhat.local
-    target_node: cephstorage-0 #.redhat.local
+    cur_mon: controller-2 #.redhat.local
+    target_node: cephstorage-2 #.redhat.local
     #cur_mon: "{{ node.0 }}"
     #target_node: "{{ node.1 }}"
   # This condition might be a different one

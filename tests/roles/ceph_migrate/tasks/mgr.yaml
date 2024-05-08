@@ -4,7 +4,7 @@
     ceph_fsid: "{{ mon_dump.fsid }}"
     ceph_cluster: ceph
 
-- name: Update firewall rules on the target nodes
+- name: MGR - Update firewall rules on the target nodes
   ansible.builtin.include_tasks: firewall.yaml
   vars:
     ifports_range: "6800:7300"
@@ -14,7 +14,7 @@
     loop_var: n
 
 # Extend mgr labels to the target nodes to not fail during the mgr failover
-- name: Setup Mon/Mgr label to the target node
+- name: MGR - Setup Mon/Mgr label to the target node
   ansible.builtin.include_tasks: labels.yaml
   vars:
     nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
