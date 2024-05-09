@@ -6,8 +6,7 @@
 
 The {block_storage_first_ref} is configured using
 configuration snippets instead of using configuration parameters
-defined by the installer. For more information, see xref:planning-the-new-deployment_planning[Planning the new deployment].
-//kgilliga: Note to self: This xref does not work in the preview. Need to revisit.
+defined by the installer. For more information, see xref:service-configurations_planning[Service configurations].
 
 The recommended way to deploy {block_storage} volume backends has changed to remove old
 limitations, add flexibility, and improve operations.

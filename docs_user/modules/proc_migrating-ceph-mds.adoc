@@ -207,7 +207,6 @@ ifeval::["{build}" != "downstream"]
 [NOTE]
 It is possible to elect as "active" a dedicated MDS for a particular file system. To configure this preference, `CephFS` provides a configuration option for MDS called `mds_join_fs` which enforces this affinity.
 When failing over MDS daemons, a cluster’s monitors will prefer standby daemons with `mds_join_fs` equal to the file system name with the failed rank. If no standby exists with `mds_join_fs` equal to the file system name, it will choose an unqualified standby as a replacement.
-//kgilliga: We might want to discuss what info is really necessary downstream.
 endif::[]
 +
 ----

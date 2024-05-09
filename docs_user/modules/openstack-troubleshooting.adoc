@@ -1,7 +1,6 @@
 [id="troubleshooting-adoption_{context}"]
 
 //:context: troubleshooting-adoption
-//kgilliga: This module might be converted to an assembly.
 
 = Troubleshooting adoption
 

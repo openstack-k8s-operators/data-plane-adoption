@@ -51,7 +51,7 @@ ADMIN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AdminPassword:
 Database passwords can differ in the control plane environment, but
 synchronizing the service account passwords is a required step.
 +
-For example, in developer environments with TripleO Standalone, the
+For example, in developer environments with {OpenStackPreviousInstaller} Standalone, the
 passwords can be extracted like this:
 +
 ----

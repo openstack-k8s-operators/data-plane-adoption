@@ -9,10 +9,10 @@ Adopt the {image_service_first_ref} that you deployed with an NFS Ganesha backen
 
 .Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB, Keystone and Barbican
+* Previous Adoption steps completed. Notably, MariaDB, {identity_service_first_ref} and {key_manager_first_ref}
 should be already adopted.
 * In the source cloud, verify the NFS Ganesha parameters used by the overcloud to configure the {image_service} backend.
-In particular, find among the TripleO heat templates the following variables that are usually an override of the default content provided by
+In particular, find among the {OpenStackPreviousInstaller} heat templates the following variables that are usually an override of the default content provided by
 `/usr/share/openstack-tripleo-heat-templates/environments/storage/glance-nfs.yaml`[glance-nfs.yaml]:
 +
 ----

@@ -151,10 +151,10 @@ oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
 ----
 +
 [NOTE]
-You need to transition Nova services imported later on into a
+You need to transition {compute_service_first_ref} services imported later on into a
 superconductor architecture. For that, delete the old service records in
 cells DBs, starting from the cell1. New records will be registered with
-different hostnames provided by the Nova service operator. All Nova
+different hostnames provided by the {compute_service} service operator. All {compute_service}
 services, except the compute agent, have no internal state, and its service
 records can be safely deleted. You also need to rename the former `default` cell
 to `cell1`.
@@ -261,7 +261,7 @@ default=$(grep -E ' default$' <<<$left_behind)
 test $(grep -Ec ' \S+$' <<<$changed) -eq 1
 grep -qE " $(awk '{print $1}' <<<$default) cell1$" <<<$changed
 
-# ensure the registered Nova compute service name has not changed
+# ensure the registered Compute service name has not changed
 novadb_svc_records=$(oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" \
   nova_cell1 -e "select host from services where services.binary='nova-compute' order by host asc;")
 diff -Z <(echo $novadb_svc_records) <(echo $PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES)
@@ -278,4 +278,4 @@ oc delete pod mariadb-copy-data
 oc delete pvc mariadb-data
 ----
 For more information, see https://learn.redhat.com/t5/DO280-Red-Hat-OpenShift/About-pod-security-standards-and-warnings/m-p/32502[About pod security standards and warnings].
-//kgilliga: Should this link to "About pod security standards and warnings" appear downstream only?
+

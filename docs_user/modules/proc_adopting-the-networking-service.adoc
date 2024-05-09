@@ -10,12 +10,12 @@ When the procedure is over, the expectation is to see the `NeutronAPI` service i
 
 This guide also assumes that:
 
-. A `TripleO` environment (the source Cloud) is running on one side;
+. A {OpenStackPreviousInstaller} environment (the source Cloud) is running on one side;
 . A `SNO` / `CodeReadyContainers` is running on the other side.
 
 .Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB and Keystone and xref:migrating-ovn-data_migrating-databases[Migrating OVN data]
+* Previous Adoption steps completed. Notably, MariaDB,{identity_service_first_ref}, and xref:migrating-ovn-data_migrating-databases[Migrating OVN data]
 should be already adopted.
 
 .Procedure

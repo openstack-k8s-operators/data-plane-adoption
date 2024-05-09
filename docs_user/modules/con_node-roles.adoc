@@ -32,7 +32,7 @@ high disk and network usage since many of its operations are in the data path
 the cinder-backup service which has high memory, network, and CPU (to compress
 data) requirements.
 
-The Glance and Swift components are in the data path, as well as RabbitMQ and Galera services.
+The {image_service_first_ref} and {object_storage_first_ref} components are in the data path, as well as RabbitMQ and Galera services.
 
 Given these requirements it may be preferable not to let these services wander
 all over your {OpenShiftShort} worker nodes with the possibility of impacting other
@@ -41,7 +41,7 @@ want to pin down the heavy ones to a set of infrastructure nodes.
 
 There are also hardware restrictions to take into consideration, because if you
 are using a Fibre Channel (FC) Block Storage service backend you need the cinder-volume,
-cinder-backup, and maybe even the glance (if it's using the Block Storage service as a backend)
+cinder-backup, and maybe even the {image_service_first_ref} (if it's using the Block Storage service as a backend)
 services to run on a {OpenShiftShort} host that has an HBA.
 
 The {OpenStackShort} Operators allow a great deal of flexibility on where to run the

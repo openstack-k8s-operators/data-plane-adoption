@@ -1,7 +1,5 @@
 [id="stopping-openstack-services_{context}"]
 
-//Check xref context.
-
 = Stopping {rhos_prev_long} services
 
 Before you start the adoption, you must stop the {rhos_prev_long} ({OpenStackShort}) services.
@@ -19,9 +17,9 @@ Note that you should not stop the infrastructure management services yet, such a
 * RabbitMQ
 * HAProxy Load Balancer
 * ceph-nfs
-* Nova compute service
+* Compute service
 * containerized modular libvirt daemons
-* Swift storage backend services
+* {object_storage_first_ref} backend services
 
 .Prerequisites
 
