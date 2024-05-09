@@ -1,8 +1,16 @@
 [id="preparing-block-storage-by-customizing-configuration_{context}"]
 
+ifeval::["{build}" == "downstream"]
+= Preparing the {block_storage} configuration
+
+Creating the Cinder configuration entails:
+endif::[]
+
+ifeval::["{build}" != "downstream"]
 = Preparing the {block_storage} by customizing the configuration
 
 The high level explanation of the tailor-made approach is:
+endif::[]
 
 .Procedure
 . Determine what part of the configuration is generic for all the {block_storage_first_ref}

@@ -57,13 +57,16 @@ Check that all configuration options are still valid for the new
 removed, or added. This applies to both backend driver specific configuration
 options and other generic options.
 
+ifeval::["{build}" != "downstream"]
 There are 2 ways to prepare a {block_storage} configuration for adoption, tailor-making
 it or doing it quick and dirty. There is no difference in how {block_storage} operates with both methods, though tailor-making it is recommended whenever possible.
+endif::[]
 
 include::../modules/proc_preparing-block-storage-service-by-customizing-configuration.adoc[leveloffset=+1]
 
-include::../modules/proc_preparing-block-storage-service-by-using-agnostic-config-file.adoc[leveloffset=+1]
 
 ifeval::["{build}" != "downstream"]
+include::../modules/proc_preparing-block-storage-service-by-using-agnostic-config-file.adoc[leveloffset=+1]
+
 include::../modules/con_block-storage-service-config-generation-helper-tool.adoc[leveloffset=+1]
 endif::[]
