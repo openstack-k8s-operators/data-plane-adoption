@@ -14,6 +14,7 @@
     ifports:
       - 8080
       - 8090
+      - 8989
   loop: "{{ target_nodes }}"
   loop_control:
     loop_var: n
@@ -51,7 +52,7 @@
       {{ rgw }}
 
 - name: Print the loaded data
-  when: debug | default(true)
+  when: debug | default(false)
   ansible.builtin.debug:
     msg: "{{ rgw_spec }}"
 
@@ -90,6 +91,7 @@
   ansible.builtin.debug:
     msg: "{{ spc }}"
 
+# https://docs.ceph.com/en/latest/cephadm/services/rgw/#high-availability-service-for-rgw
 - name: Create the Ingress Daemon spec definition for RGW
   become: true
   ceph_mkspec:

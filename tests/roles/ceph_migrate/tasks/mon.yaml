@@ -79,8 +79,8 @@
   become: true
   ansible.builtin.command:
     "{{ ceph_cli }} orch host rm {{ cur_mon }} --force"
-  ignore_errors: true
   # let's ignore this for now (for idempotency purposes)
+  ignore_errors: true
 
 - name: MON - Get current mon IP address
   ansible.builtin.set_fact:
@@ -111,6 +111,7 @@
         state: absent
         regexp: '{{ mon_ipaddr }}/24'
         backup: yes
+
     - name: MON - Refresh os-net-config
       delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
       ansible.builtin.shell:
@@ -140,26 +141,48 @@
       fail:
         msg: "Can't reach the mon IP on the target node"
 
-# The IP Address is available on the target node, redeploy the mon
-- name: MON - Redeploy mon on the target node
-  block:
-    - name: MON - Print the command that redeploys the mon
-      when: debug | default(false)
-      ansible.builtin.debug:
-        msg: "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
+# The IP Address is available on the target node, prepare the node to deploy
+# a mon by adding the right labels
+- name: MON - Setup Mon/Mgr label to the target node
+  ansible.builtin.include_tasks: labels.yaml
+  vars:
+    nodes:
+      - "{{ target_node }}"
+    action: "add"
+    labels:
+      - "mon"
+      - "mgr"
+      - "_admin"
 
-    - name: MON - Check if a mon already exist
-      command: |
-        {{ ceph_container_cli }} ps -a -f 'name=ceph-?(.*)-mon.*' --format \{\{\.Command\}\} --no-trunc
-      register: ceph_mon
+- name: Redeploy MON
+  block:
+    # when a label is added, if we're not fast enough, a mon is automatically
+    # added on the storage network. However, in case the node has multiple ip
+    # addresses, it might happen that the mon is deployed using the right IP.
+    # For this reason we need to redeploy it by rm + add (as redeploy does not
+    # accept an IP as input
+    - name: MON - wait for mon
       become: true
-      delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
+      ansible.builtin.command: "{{ ceph_cli }} mon stat -f json"
+      register: monstat
+      become: true
+      retries: 20
+      delay: 2
+      until: "'cephstorage-0' in monstat.stdout | from_json | community.general.json_query('quorum[*].name') | default([]) | list"
+      loop_control:
+        label: "MON - wait for mon"
+
+    - name: MON - Delete the running mon
+      become: true
+      ansible.builtin.command:
+        "{{ ceph_cli }} orch daemon rm mon.{{ target_node.split('.')[0] }} --force"
+      ignore_errors: true
 
     - name: MON - Redeploy mon on {{ target_node }}
       become: true
-      when: ceph_mon.stdout | length == 0
+      #when: ceph_mon.stdout | length == 0
       ansible.builtin.command:
-        "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
+        "{{ ceph_cli }} orch daemon add mon {{ target_node.split('.')[0] }}:{{ mon_ipaddr }}"
 
 - name: MON - check mons quorum
   become: true
@@ -173,18 +196,6 @@
   until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
   loop_control:
     label: "check mons quorum"
-
-# Add label to the target node
-- name: MON - Setup Mon/Mgr label to the target node
-  ansible.builtin.include_tasks: labels.yaml
-  vars:
-    nodes:
-      - "{{ target_node }}"
-    action: "add"
-    labels:
-      - "mon"
-      - "mgr"
-      - "_admin"
 
 # Post actions: refresh mgr data, reconfigure osds
 - name: MON - refresh cephadm info - fail ceph mgr and refresh osd config

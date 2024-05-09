@@ -8,6 +8,8 @@
   block:
     - ansible.builtin.include_tasks: network.yaml
       vars:
+        # NOTE: It won't work on a second run if we already decommissioned
+        # the first node!
         #cur_mon: "{{ decomm_nodes | list | sort | first }}"
         cur_mon: controller-0
       tags:
