@@ -1,0 +1,29 @@
+- name: ospdo get mariadb DBs
+  block  :
+    #The following execute the db extarction
+  - name: run get dbs script on galera container
+    delegate_to: "{{ adoption_ospdo_host }}"
+    ansible.builtin.shell: |
+      export ospdo_src=true
+      {{ lookup('ansible.builtin.template', 'dump_dbs.bash') }}
+
+  - name: Copy DB dumps openstackclient to BM
+    delegate_to: "{{ adoption_ospdo_host }}"
+    ansible.builtin.shell: |
+      oc rsync openstack/mariadb-copy-data:/backup /tmp/
+
+  - name: Fetch file from delegate host
+    delegate_to: "{{ adoption_ospdo_host }}"
+    fetch:
+      src: /tmp/backup
+      dest: /tmp/backup
+      flat: yes
+
+  - name: Copy DB dumps openstackclient to BM
+    delegate_to: "{{ adoption_ospdo_host }}"
+    ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ oc_header }}
+      {{ mariadb_copy_shell_vars_src }}
+
+      oc rsync /tmp/backup/ openstack/mariadb-copy-data:/backup

@@ -1,11 +1,17 @@
-# TODO: go over this and check updated version
-
 # Pull nova configuration steps
 - name: set shell vars pull openstack configuration ssh commands
   no_log: "{{ use_no_log }}"
   ansible.builtin.set_fact:
     pull_openstack_configuration_ssh_shell_vars: |
       CONTROLLER1_SSH="{{ controller1_ssh }}"
+
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.include_role:
+    name: mariadb_copy
+    tasks_from: ospdo_create_mariadb_client_pod.yaml
+    vars:
+      mariadb_clnt_pod_name: mariadb-client
+  when: ospdo_src| bool
 
 - name: get src database service environment variables
   ansible.builtin.include_role:
@@ -15,8 +21,6 @@
 - name: execute alternative tasks when source env is ODPdO
   ansible.builtin.include_tasks: ospdo_pull_openstack_configuration.yaml
   when: ospdo_src| bool
-  vars:
-    fetch_osp_conf : True
 
 # NOTE(bogdando): env variables must be used to keep this consistent with documentation,
 # where the stored values need to be compared with post-adoption ones w/o using ansible specifics
@@ -58,7 +62,6 @@
           'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')
         echo "$PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS"
       register: _novadb_mapped_cells_check
-      when: not ospdo_src| bool
 
     - name: get the host names of the registered Nova compute services
       ansible.builtin.shell: |
@@ -70,7 +73,6 @@
           "select host from nova.services where services.binary='nova-compute';")
         echo "$PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES"
       register: _nova_compute_hostnames_check
-      when: not ospdo_src| bool
 
     - name: get the list of mapped Nova cells
       ansible.builtin.shell: |
@@ -79,7 +81,7 @@
         export PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS=$($CONTROLLER1_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)
         echo "$PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS"
       register: _nova_cell_mappings_check
-      when: not ospdo_src| bool
+  when: not ospdo_src| bool
 
 - name: set cached fact for pulled openstack services configuration shell headers
   no_log: "{{ use_no_log }}"
@@ -90,6 +92,8 @@
       PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="{{ _novadb_mapped_cells_check.stdout_lines | join(' ') }}"
       PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES="{{ _nova_compute_hostnames_check.stdout_lines | join(' ') }}"
       PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="{{ _nova_cell_mappings_check.stdout_lines | join(' ') }}"
+  when: not ospdo_src| bool
+
 
 - name: store exported variables for future use
   no_log: "{{ use_no_log }}"

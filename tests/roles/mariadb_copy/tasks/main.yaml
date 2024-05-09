@@ -145,10 +145,8 @@
   when: not ospdo_src| bool
 
 - name: execute alternative tasks when source env is ODPdO
-  ansible.builtin.include_tasks: ospdo_mariadb_copy.yaml
+  ansible.builtin.include_tasks: ospdo_mariadb_get_dbs_vars.yaml
   when: ospdo_src| bool
-  vars:
-    env_vars_pre_tasks: True
 
 - name: Get the count of not-OK source databases
   no_log: "{{ use_no_log }}"
@@ -175,10 +173,8 @@
   when: not ospdo_src| bool
 
 - name: execute alternative tasks when source env is ODPdO
-  ansible.builtin.include_tasks: ospdo_mariadb_copy.yaml
+  ansible.builtin.  : ospdo_mariadb_get_dbs.yaml
   when: ospdo_src| bool
-  vars:
-    ospdo_get_dbs: True
 
 - name: restore databases
   no_log: "{{ use_no_log }}"

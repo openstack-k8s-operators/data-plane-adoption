@@ -1,17 +1,5 @@
-- name: set shell vars for stopping other services
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.set_fact:
-    stop_other_services_shell_vars: |
-      CONTROLLER1_SSH="{{ controller1_ssh }}"
-      CONTROLLER2_SSH="{{ controller2_ssh }}"
-      CONTROLLER3_SSH="{{ controller3_ssh }}"
-      EDPM_PRIVATEKEY_PATH="{{ edpm_privatekey_path }}"
-      declare -A computes
-      computes=(
-        {{ edpm_computes }}
-      )
-
 - name: stop pacemaker services
+  delegate_to: "{{ adoption_ospdo_host }}"
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -36,7 +24,3 @@
         fi
     done
   when: not ospdo_src| bool
-
-- name: execute alternative tasks when source env is ODPdO
-  ansible.builtin.include_tasks: ospdo_stop_remaining_services.yaml
-  when: ospdo_src| bool
