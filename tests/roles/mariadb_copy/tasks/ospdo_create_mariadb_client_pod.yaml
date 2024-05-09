@@ -1,3 +1,6 @@
+# This is needed since it creates a mysql-client pod on the source OSPDO env,
+# which has access to the internal-api and can query the OSPDO mariadb,
+# otherwise not accesible.
 - name: set OSPdO env vars
   block:
   - name: register source_mariadb_ip
@@ -38,7 +41,7 @@
       apiVersion: v1
       kind: PersistentVolumeClaim
       metadata:
-        name: mariadb-client
+        name: {{ mariadb_clnt_pod_name }}
         namespace: openstack
       spec:
         storageClassName: $STORAGE_CLASS
@@ -51,11 +54,11 @@
       apiVersion: v1
       kind: Pod
       metadata:
-        name: mariadb-client
+        name: {{ mariadb_clnt_pod_name }}
         namespace: openstack
         annotations:
           k8s.v1.cni.cncf.io/networks: '[{"name": "internalapi-static", "namespace": "openstack",
-              "ips": ["{{ mariadb_copy_pod_ip }}"]}]'
+              "ips": ["{{ mariadb_clnt_pod_ip }}"]}]'
           openshift.io/scc: anyuid
         labels:
           app: adoption
@@ -80,7 +83,7 @@
         volumes:
         - name: mariadb-data
           persistentVolumeClaim:
-            claimName: mariadb-client
+            claimName: {{ mariadb_clnt_pod_name }}
 
       EOF
 
@@ -90,7 +93,7 @@
     ansible.builtin.shell: |
       {{ shell_header }}
       {{ oc_header }}
-      oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
+      oc wait --for condition=Ready pod/{{ mariadb_clnt_pod_name }} --timeout=30s
     register: mariadb_data_pod_result
     until: mariadb_data_pod_result is success
     retries: 5
@@ -104,7 +107,7 @@
       {{ mariadb_copy_shell_vars_src }}
       for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
         echo "Checking for the database node $i WSREP status Synced"
-        oc rsh mariadb-copy-data mysql \
+        oc rsh {{ mariadb_clnt_pod_name }} mysql \
           -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" \
           -e "show global status like 'wsrep_local_state_comment'" | \
           grep -qE "\bSynced\b"
