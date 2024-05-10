@@ -141,12 +141,12 @@ services:
 . Pull the configuration:
 +
 
-This command will pull all the configuration files described in the /etc/os-diff/config.yaml file.
-Os-diff can update this file automaticaly according to your running environment with the command --update or --update-only.
-This option will set the Podman informations into the config.yaml for all running containers.
-It can be useful later, when all the Openstack services will be turned off.
+This command will pull all the configuration files that are described in the `/etc/os-diff/config.yaml` file.
+Os-diff can update this file automatically according to your running environment with the command `--update` or `--update-only`.
+This option sets the podman information into the `config.yaml` for all running containers.
+It can be useful later, when all the {rhos_prev_long} services are turned off.
 
-Note that when the config.yaml is populate automaticaly you have to provide the configuration paths manually for each services.
+Note that when the `config.yaml` file is populated automatically you must provide the configuration paths manually for each service.
 
 ----
 # will only update the /etc/os-diff/config.yaml
