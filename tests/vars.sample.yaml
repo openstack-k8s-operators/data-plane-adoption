@@ -4,6 +4,18 @@ install_yamls_path: ~/install_yamls #CUSTOMIZE_THIS
 # This flag signifies if TLS Everywhere is enabled on the source cloud
 enable_tlse: false
 
+# Source MariaDB Galera cluster members {name:IP} pairs of addresses on internal_api network (also in additional cells) for pre-adoption checks.
+# Defaults provided for a single-cell case. Complete the lists for an HA multi-cell adoption.
+source_galera_members:
+  default:
+    - name: standalone.localdomain
+      ip: 172.17.0.100 #CUSTOMIZE_THIS
+
+# Source MariaDB Galera cluster VIP(s) on internal_api network for DB exports of all cells
+# Defaults provided for a single-cell case.
+source_mariadb_ip:
+  default: 172.17.0.2 #CUSTOMIZE_THIS
+
 # To enable TLS-E, the standalone hostname must be set to standalone.ooo.test
 edpm_node_hostname: standalone.localdomain
 # TODO: There is no reason to change the domain depending on the type of
@@ -30,14 +42,20 @@ storage_reclaim_policy: delete # or retain
 oc_header: |
   eval $(crc oc-env)
 
-# Source MariaDB Galera cluster VIP for DB exports.
-source_mariadb_ip: 172.17.0.2 #CUSTOMIZE_THIS
+# Source cloud Nova compute v2 cells to adopt (all must be listed, cannot adopt cells partially)
+cells:
+  - default
+
+# A cell name for the 'default' cell to take after adoption.
+# Must be renamed for a single-cell deployment. Can remain 'default' for a multi-cell one.
+# Defaults provided for a single-cell case. For a mult-cell, use the latest 'cells' element index + 1
+default_cell_name: cell1
 
 # Source OS diff config ip for Tripleo
 source_os_diff_config_ip: 192.168.122.100
 
-# Source OVN DB IP for DB exports.
-source_ovndb_ip: 192.168.122.100 #CUSTOMIZE_THIS
+# Source OVN DB IP for DB exports on internal_api network.
+source_ovndb_ip: 172.17.0.100 #CUSTOMIZE_THIS
 
 # EDPM node IP
 edpm_node_ip: 192.168.122.100 #CUSTOMIZE_THIS
@@ -55,6 +73,10 @@ ironic_adoption: false
 
 # Run pre-adoption validation before the deploying
 run_pre_adoption_validation: true
+
+# Adopt source cloud with additional compute cells v2.
+# Defaults provided for a single-cell case. Enable for a multi-cell adoption.
+multi_cell: false
 
 # Supported storage backends for Cinder
 supported_volume_backends: #CUSTOMIZE_THIS

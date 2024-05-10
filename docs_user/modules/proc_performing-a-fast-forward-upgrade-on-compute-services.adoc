@@ -8,13 +8,31 @@ You must upgrade the Compute services from {rhos_prev_long} {rhos_prev_ver} to {
 * Remove pre-fast-forward upgrade workarounds from the Compute control plane services and Compute data plane services.
 * Run Compute database online migrations to update live data.
 
+. Prerequisites
+
+* Define the shell variables necessary to apply the fast-forward upgrade commands, for each Nova Compute cell.
++
+----
+DEFAULT_CELL_NAME="cell1"
+RENAMED_CELLS="$DEFAULT_CELL_NAME"
+
+NAMESPACE="openstack"
+
+declare -A PODIFIED_DB_ROOT_PASSWORD
+for CELL in $(echo "super $RENAMED_CELLS"); do
+  PODIFIED_DB_ROOT_PASSWORD[$CELL]=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+done
+----
+
 .Procedure
 
 . Wait for cell1 Compute data plane services version to update:
 +
 ----
-$ oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
-    -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
+$ for CELL in $(echo $RENAMED_CELLS); do
+  oc exec openstack-$CELL-galera-0 -n $NAMESPACE -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
+    -e "select a.version from nova_${CELL}.services a join nova_${CELL}.services b where a.version!=b.version and a.binary='nova-compute';"
+done
 ----
 +
 [NOTE]

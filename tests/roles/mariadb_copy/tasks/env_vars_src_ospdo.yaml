@@ -23,12 +23,14 @@
         mariadb_copy_shell_vars_src: |
           MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
           STORAGE_CLASS=host-nfs-storageclass
-          SOURCE_MARIADB_IP={{ source_mariadb_ip.stdout }}
-          declare -A SOURCE_GALERA_MEMBERS
-          SOURCE_GALERA_MEMBERS=(
-          ["standalone.localdomain"]={{ source_mariadb_ip.stdout }}
+          declare -A SOURCE_MARIADB_IP
+          SOURCE_MARIADB_IP['default']={{ source_mariadb_ip.stdout }}
+          declare -A SOURCE_GALERA_MEMBERS_DEFAULT
+          SOURCE_GALERA_MEMBERS_DEFAULT=(
+          ['standalone.localdomain']='{{ source_mariadb_ip.stdout }}'
           )
-          SOURCE_DB_ROOT_PASSWORD={{ source_db_root_pass.stdout }}
+          declare -A SOURCE_DB_ROOT_PASSWORD
+          SOURCE_DB_ROOT_PASSWORD['default']={{ source_db_root_pass.stdout }}
           MARIADB_CLIENT_ANNOTATIONS="-n {{ org_namespace }}"
           CONTROLLER_NODE={{ controller_node.stdout }}
 

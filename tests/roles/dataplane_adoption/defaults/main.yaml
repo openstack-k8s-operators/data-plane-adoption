@@ -163,7 +163,7 @@ dataplane_cr: |
   apiVersion: dataplane.openstack.org/v1beta1
   kind: OpenStackDataPlaneNodeSet
   metadata:
-    name: openstack
+    name: openstack-cell1
   spec:
     tlsEnabled: {{ enable_tlse }}
     networkAttachments:
@@ -200,7 +200,7 @@ dataplane_cr: |
         value: "-C -o ControlMaster=auto -o ControlPersist=80s"
       - name: ANSIBLE_VERBOSITY
         value: "{{ dataplane_verbosity | default ('1') }}"
-    nodes: {{ edpm_nodes }}
+    nodes: {{ edpm_nodes["cell1"] | default(edpm_nodes) }}
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
       ansible:
