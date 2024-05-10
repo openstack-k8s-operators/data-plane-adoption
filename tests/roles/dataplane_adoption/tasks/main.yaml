@@ -14,6 +14,14 @@
     oc get -n openstack-operators pod -l app.kubernetes.io/name=openstack-ansibleee-operator -o name
   register: old_ansibleee_operator_pod
 
+- name: Get ansibleee-operator csv name
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get csv -n openstack-operators -o name | grep ansibleee-operator
+  register: _ansibleee_csv_name
+
 - name: use ansible-runner image built from source or latest if none is defined
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -21,7 +29,7 @@
     {{ oc_header }}
     {{ oc_login_command }}
     # openstack-operator catalog pins the sha256, which might differ from latest with time
-    oc patch csv -n openstack-operators openstack-ansibleee-operator.v0.0.1 \
+    oc patch -n openstack-operators "{{ _ansibleee_csv_name.stdout }}" \
       --type='json' -p='[{
       "op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0",
       "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "{{ ansibleee_runner_img | default('quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest')}}"}}]'
