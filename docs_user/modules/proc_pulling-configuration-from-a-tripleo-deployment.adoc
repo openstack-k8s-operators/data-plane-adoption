@@ -119,16 +119,15 @@ Then you can provide a mapping between in this case the EDPM CRD, and the ovs-vs
             ovn-ofctrl-wait-before-clear: edpm_ovn_ofctrl_wait_before_clear
             ovn-remote-probe-interval: edpm_ovn_remote_probe_interval
 ----
-
-Then you can use this command to compare the values:
-
++
+Then you can use the following command to compare the values:
++
 ----
 os-diff diff ovs_external_ids.json edpm.crd --crd --service ovs_external_ids
 ----
-
-Lets take the example of checking the /etc/yum.conf on every hosts, you will have to put this statement in the config.yaml,
-lets call it yum_config:
-
++
+For example, to check the `/etc/yum.conf` on every host, you must put the following statement in the `config.yaml` file. The following example uses a file called `yum_config`:
++
 ----
 services:
   yum_config:
