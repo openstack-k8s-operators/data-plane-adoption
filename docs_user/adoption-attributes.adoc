@@ -11,6 +11,8 @@ ifeval::["{build}" == "upstream"]
 :OpenShiftShort: OCP
 :rhos_curr_ver: Antelope
 :rhos_prev_ver: Wallaby
+:rhel_curr_ver: 9.4
+:rhel_prev_ver: 9.2
 :OpenStackPreviousInstaller: TripleO
 :Ceph: Ceph
 :CephCluster: Ceph Storage
@@ -74,6 +76,8 @@ ifeval::["{build}" == "downstream"]
 :OpenStackShort: RHOSP
 :rhos_curr_ver: 18.0
 :rhos_prev_ver: 17.1
+:rhel_curr_ver: 9.4
+:rhel_prev_ver: 9.2
 :OpenShift: Red Hat OpenShift Container Platform
 :OpenShiftShort: RHOCP
 :OpenStackPreviousInstaller: director
