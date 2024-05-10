@@ -139,9 +139,9 @@
     {{ oc_header }}
     {{ ovn_copy_shell_vars }}
 
-    $CONTROLLER1_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
-    $CONTROLLER2_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
-    $CONTROLLER3_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
+    $CONTROLLER1_SSH if sudo systemctl is-active tripleo_ovn_cluster_northd.service ';' then sudo systemctl stop tripleo_ovn_cluster_northd.service ';' fi
+    $CONTROLLER2_SSH if sudo systemctl is-active tripleo_ovn_cluster_northd.service ';' then sudo systemctl stop tripleo_ovn_cluster_northd.service ';' fi
+    $CONTROLLER3_SSH if sudo systemctl is-active tripleo_ovn_cluster_northd.service ';' then sudo systemctl stop tripleo_ovn_cluster_northd.service ';' fi
 
 - name: dump OVN databases using tcp connection
   no_log: "{{ use_no_log }}"
@@ -245,10 +245,10 @@
     {{ oc_header }}
     {{ ovn_copy_shell_vars }}
 
-    $CONTROLLER1_SSH sudo systemctl stop tripleo_ovn_cluster_north_db_server.service
-    $CONTROLLER2_SSH sudo systemctl stop tripleo_ovn_cluster_north_db_server.service
-    $CONTROLLER3_SSH sudo systemctl stop tripleo_ovn_cluster_north_db_server.service
+    $CONTROLLER1_SSH if sudo systemctl is-active tripleo_ovn_cluster_north_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_north_db_server.service ';' fi
+    $CONTROLLER2_SSH if sudo systemctl is-active tripleo_ovn_cluster_north_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_north_db_server.service ';' fi
+    $CONTROLLER3_SSH if sudo systemctl is-active tripleo_ovn_cluster_north_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_north_db_server.service ';' fi
 
-    $CONTROLLER1_SSH sudo systemctl stop tripleo_ovn_cluster_south_db_server.service
-    $CONTROLLER2_SSH sudo systemctl stop tripleo_ovn_cluster_south_db_server.service
-    $CONTROLLER3_SSH sudo systemctl stop tripleo_ovn_cluster_south_db_server.service
+    $CONTROLLER1_SSH if sudo systemctl is-active tripleo_ovn_cluster_south_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_south_db_server.service ';' fi
+    $CONTROLLER2_SSH if sudo systemctl is-active tripleo_ovn_cluster_south_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_south_db_server.service ';' fi
+    $CONTROLLER3_SSH if sudo systemctl is-active tripleo_ovn_cluster_south_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_south_db_server.service ';' fi

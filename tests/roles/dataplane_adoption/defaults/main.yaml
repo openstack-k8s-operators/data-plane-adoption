@@ -61,28 +61,29 @@ image_tag: "current-podified"
 ansible_ssh_private_key_secret: dataplane-adoption-secret
 default_timesync_ntp_servers:
   - hostname: pool.ntp.org
+# FIXME(bogdando): adapt for mult-cell or single-cell
 edpm_node_hostname: standalone.localdomain
+edpm_node_ip: 192.168.122.100
 edpm_user: root
 edpm_nodes:
-  standalone:
-    hostName: "{{ edpm_node_hostname }}"
-    ansible:
-      ansibleHost: "{{ edpm_node_ip }}"
-    networks:
-      - defaultRoute: true
-        fixedIP: "{{ edpm_node_ip }}"
-        name: ctlplane
-        subnetName: subnet1
-      - name: internalapi
-        subnetName: subnet1
-      - name: storage
-        subnetName: subnet1
-      - name: tenant
-        subnetName: subnet1
-      - name: storagemgmt
-        subnetName: subnet1
-edpm_computes: |-
-  ["{{ edpm_node_hostname }}"]="{{ edpm_node_ip }}"
+  default:
+    standalone:
+      hostName: "{{ edpm_node_hostname }}"
+      ansible:
+        ansibleHost: "{{ edpm_node_ip }}"
+      networks:
+        - defaultRoute: true
+          fixedIP: "{{ edpm_node_ip }}"
+          name: ctlplane
+          subnetName: subnet1
+        - name: internalapi
+          subnetName: subnet1
+        - name: storage
+          subnetName: subnet1
+        - name: tenant
+          subnetName: subnet1
+        - name: storagemgmt
+          subnetName: subnet1
 # The variables inside edpm_network_config_template are evaluated based
 # on the OpenstackDataplaneNodeSet inventory. For adding a variable to the invetory,
 # please add it to OpenstackDataplaneNodeSet.nodeTemplate.ansibleVars
@@ -154,11 +155,12 @@ os_diff_data_dir: tmp/os-diff
 prelaunch_test_instance: true
 telemetry_adoption: true
 
+# nodes data will be templated in as a separate
 dataplane_cr: |
   apiVersion: dataplane.openstack.org/v1beta1
   kind: OpenStackDataPlaneNodeSet
   metadata:
-    name: openstack
+    name: openstack-$CELL
   spec:
     tlsEnabled: {{ enable_tlse }}
     networkAttachments:
@@ -171,7 +173,7 @@ dataplane_cr: |
       - validate-network
       - install-os
       - configure-os
-      - ssh-known-hosts
+      $GLOBAL
       - run-os
       - reboot-os
       - install-certs
@@ -179,7 +181,7 @@ dataplane_cr: |
       - neutron-metadata
       {%+ if compute_adoption|bool +%}
       - libvirt
-      - nova
+      - nova-$CELL
       {%+ endif +%}
       {% if telemetry_adoption|bool +%}
       - telemetry
@@ -191,7 +193,6 @@ dataplane_cr: |
         value: "True"
       - name: ANSIBLE_VERBOSITY
         value: "{{ dataplane_verbosity | default ('3') }}"
-    nodes: {{ edpm_nodes }}
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
       ansible:
@@ -268,3 +269,4 @@ dataplane_cr: |
           ovn_monitor_all: true
           edpm_ovn_remote_probe_interval: 60000
           edpm_ovn_ofctrl_wait_before_clear: 8000
+    nodes:

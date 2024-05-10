@@ -39,46 +39,45 @@ netconfig_networks:
 edpm_node_hostname: compute-0.redhat.local
 edpm_node2_hostname: compute-1.redhat.local
 edpm_user: stack
+# Overrides nodes for a single cell1 setup
 edpm_nodes:
-  compute-0:
-    hostName: "{{ edpm_node_hostname }}"
-    ansible:
-      ansibleHost: "{{ edpm_node_ip }}"
-    networks:
-      - defaultRoute: true
-        fixedIP: "{{ edpm_node_ip }}"
-        name: ctlplane
-        subnetName: subnet1
-      - name: internalapi
-        fixedIP: 172.15.2.10
-        subnetName: subnet1
-      - name: tenant
-        fixedIP: 172.15.0.10
-        subnetName: subnet1
-      - name: External
-        fixedIP: 10.4.0.10
-        subnetName: subnet1
-  compute-1:
-    hostName: "{{ edpm_node2_hostname }}"
-    ansible:
-      ansibleHost: "{{ edpm_node2_ip }}"
-    networks:
-      - defaultRoute: true
-        fixedIP: "{{ edpm_node2_ip }}"
-        name: ctlplane
-        subnetName: subnet1
-      - name: internalapi
-        fixedIP: 172.15.2.11
-        subnetName: subnet1
-      - name: tenant
-        fixedIP: 172.15.0.11
-        subnetName: subnet1
-      - name: External
-        fixedIP: 10.4.0.11
-        subnetName: subnet1
-edpm_computes: |-
-  ["{{ edpm_node_hostname }}"]="{{ edpm_node_ip }}"
-  ["{{ edpm_node2_hostname }}"]="{{ edpm_node2_ip }}"
+  cell1:
+    compute-0:
+      hostName: "{{ edpm_node_hostname }}"
+      ansible:
+        ansibleHost: "{{ edpm_node_ip }}"
+      networks:
+        - defaultRoute: true
+          fixedIP: "{{ edpm_node_ip }}"
+          name: ctlplane
+          subnetName: subnet1
+        - name: internalapi
+          fixedIP: 172.15.2.10
+          subnetName: subnet1
+        - name: tenant
+          fixedIP: 172.15.0.10
+          subnetName: subnet1
+        - name: External
+          fixedIP: 10.4.0.10
+          subnetName: subnet1
+    compute-1:
+      hostName: "{{ edpm_node2_hostname }}"
+      ansible:
+        ansibleHost: "{{ edpm_node2_ip }}"
+      networks:
+        - defaultRoute: true
+          fixedIP: "{{ edpm_node2_ip }}"
+          name: ctlplane
+          subnetName: subnet1
+        - name: internalapi
+          fixedIP: 172.15.2.11
+          subnetName: subnet1
+        - name: tenant
+          fixedIP: 172.15.0.11
+          subnetName: subnet1
+        - name: External
+          fixedIP: 10.4.0.11
+          subnetName: subnet1
 # The variables inside edpm_network_config_template are evaluated based
 # on the OpenstackDataplaneNodeSet inventory. For adding a variable to the invetory,
 # please add it to OpenstackDataplaneNodeSet.nodeTemplate.ansibleVars

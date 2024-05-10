@@ -77,11 +77,20 @@ spec:
       openstack:
         secret: osp-secret
         replicas: 1
-        storageRequest: 500M
+        storageRequest: 250M
       openstack-cell1:
         secret: osp-secret
         replicas: 1
-        storageRequest: 500M
+        storageRequest: 250M
+      # TODO(bogdando): iterate based on renamed_cells value in kustomization.yaml
+      openstack-cell2:
+        secret: osp-secret
+        replicas: 1
+        storageRequest: 250M
+      openstack-cell3:
+        secret: osp-secret
+        replicas: 1
+        storageRequest: 250M
 
   memcached:
     enabled: true
@@ -121,6 +130,8 @@ spec:
   rabbitmq:
     templates:
       rabbitmq:
+        persistence:
+          storage: 200M
         override:
           service:
             metadata:
@@ -130,6 +141,8 @@ spec:
             spec:
               type: LoadBalancer
       rabbitmq-cell1:
+        persistence:
+          storage: 200M
         override:
           service:
             metadata:
@@ -138,7 +151,29 @@ spec:
                 metallb.universe.tf/loadBalancerIPs: 172.17.0.86
             spec:
               type: LoadBalancer
-
+      # TODO(bogdando): iterate based on renamed_cells value in kustomization.yaml
+      rabbitmq-cell2:
+        persistence:
+          storage: 200M
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.87
+            spec:
+              type: LoadBalancer
+      rabbitmq-cell3:
+        persistence:
+          storage: 200M
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.88
+            spec:
+              type: LoadBalancer
   telemetry:
     enabled: false
 
