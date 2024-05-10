@@ -109,7 +109,8 @@ The following command can help you generate this SSH config file from your Ansib
 os-diff configure -i tripleo-ansible-inventory.yaml -o ssh.config --yaml
 ----
 
-Note: You will have to set the IdentityFile key in the file in order to get full working access:
+[NOTE]
+You must set the `IdentityFile` key in the file to get full working access:
 
 ----
 Host standalone
