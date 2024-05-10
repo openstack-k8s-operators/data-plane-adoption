@@ -24,7 +24,7 @@ Make sure the ssh command you provide in `ssh_cmd` parameter is correct and with
 
 . Enable or disable the services you want in /etc/os-diff/config.yaml:
 
-Make sure you have the correct rights to edit the file example:
+Make sure you have the correct rights to edit the file, for example:
 
 ---
 chown ospng:ospng /etc/os-diff/config.yaml
@@ -91,7 +91,7 @@ It's important to correctly configure an SSH config file or equivalent for non s
 The ovs_external_ids is not a service which runs in a container and the ovs data is stored
 on each host of our cloud: controller_1/controller_2/...
 
-The hosts key in the config.yaml will allow os-diff to loop over all hosts specified the output of the command, or the file or data that you need to pull from our deployment in order to compare it later:
+With the `hosts` key, os-diff will loop on each host provided and execute the command in `service_command` key:
 
 ----
     ovs_external_ids:
@@ -146,7 +146,7 @@ services:
 . Pull the configuration:
 +
 
-This command will pull all the configuration files describe into the /etc/os-diff/config.yaml file.
+This command will pull all the configuration files describeb in the /etc/os-diff/config.yaml file.
 Os-diff can update this file automaticaly according to your running environment with the command --update or --update-only.
 This option will set the Podman informations into the config.yaml for all running containers.
 It can be useful later, when all the Openstack services will be turned off.
