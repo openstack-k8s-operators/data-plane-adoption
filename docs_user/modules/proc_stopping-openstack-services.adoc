@@ -34,8 +34,7 @@ openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \
 openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
 openstack image list -c ID -c Status |grep -E '\| .+ing \|'
 ----
-* Collect the services topology-specific configuration before stopping services required to gather it live. You need it to compare it with the post-adoption values later on. For more information, see xref:proc_retrieving-services-topology-specific-configuration_adopt-control-plane[Retrieving services from a topology specific-configuration].
-//kgilliga: Question for Mathieu and Jiri: Should the "Retrieving services from a topology specific-configuration" module be moved to the beginning of the "Migrating databases to the control plane chapter?".
+* Collect the services topology-specific configuration before stopping services required to gather it live. The topology-specific configuration is necessary for migrating the databases. For more information, see xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
 * Define the following shell variables. The values that are used are examples and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Replace these example values with values that are correct for your environment:
 +
 [subs=+quotes]

@@ -1,6 +1,6 @@
-[id="proc_retrieving-services-topology-specific-configuration_{context}"]
+[id="proc_retrieving-topology-specific-service-configuration_{context}"]
 
-= Retrieving services from a topology specific-configuration
+= Retrieving topology-specific service configuration
 
 .Prerequisites
 

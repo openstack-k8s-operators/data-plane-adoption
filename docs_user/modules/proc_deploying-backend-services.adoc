@@ -11,9 +11,8 @@ In subsequent steps, you import the original databases and then add
 
 * The cloud that you want to adopt is up and running, and it is on the
 {OpenStackShort} {rhos_prev_ver} release.
-* A VM instance named `test` is running on the source cloud and its
-floating IP is set into `FIP` env var. You can use a helper script to create that test VM.
-//xref:../docs_dev/assemblies/development_environment.adoc#virtual-machine-steps[helper script] kgilliga: Engineers, do we want this link here? It points to dev docs.
+* All control plane and data plane hosts of the source cloud are up
+and running, and continue to run throughout the adoption procedure.
 * The `openstack-operator` is deployed, but `OpenStackControlPlane` is
 not deployed.
 ifeval::["{build}" != "downstream"]

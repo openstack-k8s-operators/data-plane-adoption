@@ -6,6 +6,8 @@
 
 To begin creating the control plane, enable backend services and import the databases from your original {rhos_prev_long} {rhos_prev_ver} deployment.
 
+include::../modules/proc_retrieving-topology-specific-service-configuration.adoc[leveloffset=+1]
+
 include::../modules/proc_deploying-backend-services.adoc[leveloffset=+1]
 
 include::../modules/proc_configuring-a-ceph-backend.adoc[leveloffset=+1]
