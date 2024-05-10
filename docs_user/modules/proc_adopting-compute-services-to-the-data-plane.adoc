@@ -252,7 +252,7 @@ $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneNodeSet
 metadata:
-  name: openstack
+  name: openstack-cell1
 spec:
   tlsEnabled: false <1>
   networkAttachments:

@@ -20,7 +20,7 @@
     {% if pulled_openstack_configuration_shell_headers is defined %}
     {{ pulled_openstack_configuration_shell_headers }}
     {% else %}
-    . ~/.source_cloud_exported_variables
+    . ~/.source_cloud_exported_variables_default
     {% endif %}
 
     echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS
