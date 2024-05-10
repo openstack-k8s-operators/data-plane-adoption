@@ -48,4 +48,9 @@
     {{ oc_header }}
     cd {{ install_yamls_path }}
     for i in {1..3}; do make crc_storage_cleanup crc_storage && break || sleep 5; done
+    {{ cells_env }}
+    for CELL in $(echo $RENAMED_CELLS); do
+      oc delete pvc mysql-db-openstack-$CELL-galera-0 --ignore-not-found=true
+      oc delete pvc persistence-rabbitmq-$CELL-server-0 --ignore-not-found=true
+    done
   when: reset_crc_storage|bool
