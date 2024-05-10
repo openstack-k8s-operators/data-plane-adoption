@@ -64,7 +64,7 @@ ssh_cmd=ssh -i /home/user/.ssh/id_rsa stack@
 director_host=my.undercloud.local
 ----
 
-Note that the result of ssh_cmd + director_host should be a "successful ssh access".
+Note that the result of using `ssh_cmd` and `director_host` should be a "successful ssh access".
 
 Configure or generate ssh.config file from inventory or hosts file, for example:
 
