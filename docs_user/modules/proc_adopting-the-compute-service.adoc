@@ -25,15 +25,26 @@ must already be imported into the control plane MariaDB;
 xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
  ** {rhos_prev_long} services have been stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
 * Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
++
 ----
 alias openstack="oc exec -t openstackclient -- openstack"
+
+DEFAULT_CELL_NAME="cell3"
+RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
 ----
++
+The `default` cell takes a new name from `DEFAULT_CELL_NAME`.
+In a multi-cell adoption scenario, it may retain its original 'default' name as well.
+
+A standalone TripleO only creates a 'default' cell, which should be the only `CELLS` value for such a case
+(and `DEFAULT_CELL_NAME` should be `cell1`).
 
 .Procedure
 
 [NOTE]
 This procedure assumes that {compute_service} Metadata is deployed on the top level and not on each cell level, so this example imports it the same way. If the source deployment has a per cell metadata deployment, adjust the given below patch as needed. Metadata service cannot be run in `cell0`.
-
+To enable local cells metadata services, set `spec.nova.template.cellTemplates.cell*.metadataServiceTemplate.enable`
+in `OpenStackControlPlane` CR.
 
 . Patch `OpenStackControlPlane` to deploy the {compute_service}:
 +
@@ -85,7 +96,7 @@ spec:
             customServiceConfig: |
               [workarounds]
               disable_compute_service_check_for_ffu=true
-        cell1:
+        cell1: # Copy this data into new sections defining the needed cells!
           metadataServiceTemplate:
             enabled: false # enable here to run it in a cell instead
             override:
@@ -104,12 +115,16 @@ spec:
             customServiceConfig: |
               [workarounds]
               disable_compute_service_check_for_ffu=true
+        # cell2: ...
 '
 ----
++
+Copy `cellTemplates.cell1` data into new sections defining the needed cells.
 
 * If adopting {compute_service_first_ref} with the Baremetal service (`ironic`), append the following `novaComputeTemplates` in the `cell1` section of the {compute_service} CR patch:
 +
-*NOTE*: Set the `[DEFAULT]host` configuration option to match the hostname of the node running the `ironic` compute driver in the source cloud.
+*NOTE*: Set the `[DEFAULT]host` configuration option to match the hostname of the node(s) running the `ironic` compute driver in the source cloud, depending on a deployed topology.
+For an example single-cell standalone deployment:
 +
 [source,yaml]
 ----
@@ -121,6 +136,7 @@ spec:
                 host = standalone.localdomain
                 [workarounds]
                 disable_compute_service_check_for_ffu=true
+              computeDriver: ironic.IronicDriver
 ----
 
 . Wait for {compute_service} control plane services' custom resources (CRs) to become ready:
@@ -144,19 +160,26 @@ $ openstack server list
 
 Compare the following outputs with the topology specific configuration in xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
 
-* Query the superconductor for cell1 existance and compare it to pre-adoption values:
+* Query the superconductor for renamed cells existance, and compare it to pre-adoption values:
 +
 ----
 . ~/.source_cloud_exported_variables
-echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS
-oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 |'
+for CELL in $(echo $CELLS); do
+  RCELL=$CELL
+  [ "$CELL" = "default" ] && RCELL=$DEFAULT_CELL_NAME
+
+  echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS[$CELL]
+  oc rsh nova-${RCELL}-conductor-0 nova-manage cell_v2 list_cells | grep -F '| $RCELL |'
+done
 ----
 +
 The expected changes to happen:
 
- ** cell1's `nova` DB and user name become `nova_cell1`.
- ** Default cell is renamed to `cell1` (in a multi-cell setup, it should become indexed as the last cell instead).
+ ** The `cellX` cell's `nova` DB and user name should change to `nova_cellX`.
+ ** The `default` cell should become renamed to `DEFAULT_CELL_NAME` (it may contain the original name, if there are multiple cells).
  ** RabbitMQ transport URL no longer uses `guest`.
 
 [NOTE]
+====
 At this point, the {compute_service} control plane services do not control the existing {compute_service} Compute workloads. The control plane manages the data plane only after the data adoption process is successfully completed. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].
+====

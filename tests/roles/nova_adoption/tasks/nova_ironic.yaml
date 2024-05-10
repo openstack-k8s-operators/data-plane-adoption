@@ -48,16 +48,19 @@
                 customServiceConfig: |
                   [workarounds]
                   disable_compute_service_check_for_ffu=true
-            cell1:
+            {%+ for cell in renamed_cells +%}
+            {{ cell }}:
               conductorServiceTemplate:
                 customServiceConfig: |
                   [workarounds]
                   disable_compute_service_check_for_ffu=true
+              {%+ if ironic_adoption|bool and cell in source_ironic_nodes %+}
               novaComputeTemplates:
-                standalone:
+                {%+ for n in source_ironic_nodes[cell] +%}
+                {{ n.template }}:
                   customServiceConfig: |
                     [DEFAULT]
-                    host = standalone.localdomain
+                    host = {{ n.name }}
                     [workarounds]
                     disable_compute_service_check_for_ffu=true
                   replicas: 1
@@ -65,6 +68,9 @@
                   computeDriver: ironic.IronicDriver
                   networkAttachments:
                     - internalapi
+                {%+ endfor +%}
+              {%+ endif +%}
+            {%+ endfor +%}
     '
 
 - name: wait for Nova control plane services' CRs to become ready
@@ -97,18 +103,29 @@
                 customServiceConfig: |
                   [workarounds]
                   disable_compute_service_check_for_ffu=false
-            cell1:
+            {%+ for cell in renamed_cells +%}
+            {{ cell }}:
               conductorServiceTemplate:
                 customServiceConfig: |
                   [workarounds]
                   disable_compute_service_check_for_ffu=false
+              {%+ if ironic_adoption|bool and cell in source_ironic_nodes %+}
               novaComputeTemplates:
-                standalone:
+                {%+ for n in source_ironic_nodes[cell] +%}
+                {{ n.template }}:
                   customServiceConfig: |
                     [DEFAULT]
-                    host = standalone.localdomain
+                    host = {{ n.name }}
                     [workarounds]
-                    disable_compute_service_check_for_ffu=false
+                    disable_compute_service_check_for_ffu=true
+                  replicas: 1
+                  resources: {}
+                  computeDriver: ironic.IronicDriver
+                  networkAttachments:
+                    - internalapi
+                {%+ endfor +%}
+              {%+ endif +%}
+            {%+ endfor +%}
     '
 
 - name: wait for Nova control plane services' CRs to become ready
