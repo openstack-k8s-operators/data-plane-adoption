@@ -37,9 +37,9 @@ connection=local
 ssh_cmd=""
 ----
 
-The ssh_cmd will be used by os-diff to access your TripleO Undercloud/Director host via SSH,
+Os-diff uses `ssh_cmd` to access your {OpenStackPreviousInstaller} host via SSH,
 or the host where your cloud is accessible and the podman/docker binary is installed
-and allowed to interract with the running containers. This option could have different form:
+and allowed to interact with the running containers. This option could have a different form:
 
 ----
 ssh_cmd=ssh -F ssh.config standalone
