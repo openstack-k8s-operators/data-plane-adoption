@@ -124,6 +124,7 @@ edpm_sshd_allowed_ranges: "{{ ['192.168.122.0/24'] if dataplane_os_net_config_se
 edpm_neutron_sriov_agent_enabled: true
 edpm_neutron_dhcp_agent_enabled: true
 nova_libvirt_backend: local
+skip_patching_ansibleee_csv: false
 # OS Diff automation steps
 os_diff_dir: tmp/os-diff
 os_diff_data_dir: tmp/os-diff
