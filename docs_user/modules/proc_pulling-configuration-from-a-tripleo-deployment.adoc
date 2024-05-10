@@ -63,8 +63,8 @@ services:
 +
 Repeat this step for each {OpenStackShort} service that you want to disable or enable.
 
-Os-diff can pull configuration or command output from non-containerized servies such as the ovs-external-ids:
-
+. If you are using non-containerized services, such as the `ovs-external-ids`, os-diff can pull configuration or command output:
++
 ----
 services:
   ovs_external_ids:
