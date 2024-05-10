@@ -102,8 +102,8 @@ Host crc
     UserKnownHostsFile=/dev/null
 ----
 
-os-diff can use an ssh.config file for getting access to your TripleO/OSP environment.
-A command can help you to generate this SSH config file from your Ansible inventory (like tripleo-ansible-inventory.yaml file):
+Os-diff can use an `ssh.config` file for getting access to your {rhos_prev_long} environment.
+The following command can help you generate this SSH config file from your Ansible inventory, for example, `tripleo-ansible-inventory.yaml` file:
 
 ----
 os-diff configure -i tripleo-ansible-inventory.yaml -o ssh.config --yaml
