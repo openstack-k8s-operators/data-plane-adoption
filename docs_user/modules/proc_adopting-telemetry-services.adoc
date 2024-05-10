@@ -55,8 +55,7 @@ EOF
 . Optional: If you previously backed up your {OpenStackShort} services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct. This will produce the difference between both ini configuration files:
 +
 ----
-pushd os-diff
-./os-diff cdiff --service ceilometer -c /tmp/collect_tripleo_configs/ceilometer/etc/ceilometer/ceilometer.conf -o ceilometer_patch.yaml
+os-diff diff /tmp/collect_tripleo_configs/ceilometer/etc/ceilometer/ceilometer.conf ceilometer_patch.yaml --crd
 ----
 +
 For more information, see xref:reviewing-the-openstack-control-plane-configuration_{context}[Reviewing the {rhos_prev_long} control plane configuration].
