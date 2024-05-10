@@ -11,6 +11,8 @@ In subsequent steps, you import the original databases and then add
 
 * The cloud that you want to adopt is up and running, and it is on the
 {OpenStackShort} {rhos_prev_ver} release.
+* All control plane and data plane hosts of the source cloud are up
+and running, and continue to run throughout the adoption procedure.
 * The `openstack-operator` is deployed, but `OpenStackControlPlane` is
 not deployed.
 ifeval::["{build}" != "downstream"]
