@@ -158,9 +158,7 @@ os-diff pull --update
 os-diff pull
 ----
 
-+
 The configuration will be pulled and stored by default:
-+
 ----
 /tmp/tripleo/
 ----
