@@ -1,35 +1,66 @@
-- name: Migrate mon
-  when: debug | default(true)
-  ansible.builtin.debug:
-    msg: "Migrate mon: {{ cur_mon.split('.')[0] }} to node: {{ target_node }}"
-
-- name: Backup data for client purposes
-  # do not fail on next runs (for idempotency purposes)
-  # TODO: stat /etc/ceph and eventually ignore the backup
-  ignore_errors: true
-  delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
-  block:
-    - name: Ensure backup directory exists
-      ansible.builtin.file:
-        path: "{{ ceph_config_tmp_client_home }}"
-        state: directory
-
-    - name: Backup ceph client data
-      become: true
-      copy:
-        remote_src: true
-        src: "/etc/ceph/{{ item }}"
-        dest: "{{ ceph_config_tmp_client_home }}"
-      loop:
-        - ceph.conf
-        - ceph.client.admin.keyring
-
+# Get a client using -v /home/tripleo-admin/ceph_config:/etc/ceph:z as input
 - name: Get ceph_cli
   include_tasks: ceph_cli.yaml
   vars:
     ceph_config_home: "{{ ceph_config_tmp_client_home }}"
     ceph_fsid: "{{ mon_dump.fsid }}"
     ceph_cluster: ceph
+
+- name: Migrate mon
+  when: debug | default(true)
+  ansible.builtin.debug:
+    msg: "Migrate mon: {{ cur_mon.split('.')[0] }} to node: {{ target_node }}"
+
+# We add labels in advance to the target node to make sure we are able to
+# deploy a tmp mon that will be replaced with the right one (on the desired
+# network). By adding an additional mon at this stage we can ensure we always
+# have quorum and at least 3 active mons while migrating the src daemon to the
+# target node.
+- name: MON - Setup Mon/Mgr label to the target node
+  ansible.builtin.include_tasks: labels.yaml
+  vars:
+    nodes:
+      - "{{ target_node }}"
+    action: "add"
+    labels:
+      - "mon"
+      - "mgr"
+      - "_admin"
+
+- name: MON - check mons quorum
+  become: true
+  ansible.builtin.command: "{{ ceph_cli }} -s -f json"
+  register: monmap
+  retries: 20
+  delay: 2
+  # >= is related to the fact that the current monmap might still have
+  # references to the old mon daemon coming from the drained node
+  until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
+  loop_control:
+    label: "check mons quorum"
+
+- name: Backup data for client purposes
+  delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
+  block:
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: "{{ ceph_config_tmp_client_home }}"
+        state: directory
+    - name: Check file in the src directory
+      ansible.builtin.find:
+        paths: /etc/ceph
+        patterns: "*"
+      register: dir_ceph_files
+    - name: Backup ceph client data
+      when: dir_ceph_files.files | length > 0
+      become: true
+      ansible.builtin.copy:
+        remote_src: true
+        src: "/etc/ceph/{{ item }}"
+        dest: "{{ ceph_config_tmp_client_home }}"
+      loop:
+        - ceph.conf
+        - ceph.client.admin.keyring
 
 # Before draining the current node, migrate the active mgr on a different
 # _admin host
@@ -60,29 +91,27 @@
 
 # Drain and rm the cur_mon from the Ceph cluster
 - name: MON - Drain and rm --force the cur_mon host
+  when: cur_mon in decomm_nodes
   ansible.builtin.include_tasks: drain.yaml
   vars:
     node: "{{ cur_mon }}"
   tags:
     - ceph_drain
 
-- name: Get ceph_cli
-  include_tasks: ceph_cli.yaml
-  vars:
-    ceph_config_home: "{{ ceph_config_tmp_client_home }}"
-    ceph_fsid: "{{ mon_dump.fsid }}"
-    ceph_cluster: ceph
-
 # The node should be empty at this point, let's remove it from the Ceph
 # cluster
 - name: MON - rm the cur_mon host from the Ceph cluster
+  when: cur_mon in decomm_nodes
   become: true
   ansible.builtin.command:
     "{{ ceph_cli }} orch host rm {{ cur_mon }} --force"
   # let's ignore this for now (for idempotency purposes)
   ignore_errors: true
+  tags:
+    - ceph_drain
 
 - name: MON - Get current mon IP address
+  when: cur_mon in decomm_nodes
   ansible.builtin.set_fact:
     mon_ipaddr: "{{ mon_ip | split(':') | first | ansible.utils.ipaddr }}"
   vars:
@@ -97,7 +126,9 @@
   become: true
   # if no mon addr, this variable is False and the whole block is skipped
   # because there's no network related action that should be performed
-  when: mon_ipaddr | default('')
+  when:
+    #- cur_mon in decomm_nodes
+    - mon_ipaddr | default('')
   block:
     - name: MON - Get current mon IP address
       when: debug | default(true)
@@ -141,19 +172,6 @@
       fail:
         msg: "Can't reach the mon IP on the target node"
 
-# The IP Address is available on the target node, prepare the node to deploy
-# a mon by adding the right labels
-- name: MON - Setup Mon/Mgr label to the target node
-  ansible.builtin.include_tasks: labels.yaml
-  vars:
-    nodes:
-      - "{{ target_node }}"
-    action: "add"
-    labels:
-      - "mon"
-      - "mgr"
-      - "_admin"
-
 - name: Redeploy MON
   block:
     # when a label is added, if we're not fast enough, a mon is automatically
@@ -165,10 +183,9 @@
       become: true
       ansible.builtin.command: "{{ ceph_cli }} mon stat -f json"
       register: monstat
-      become: true
       retries: 20
-      delay: 2
-      until: "'cephstorage-0' in monstat.stdout | from_json | community.general.json_query('quorum[*].name') | default([]) | list"
+      delay: 3
+      until: "'{{ target_node.split('.')[0] }}' in monstat.stdout | from_json | community.general.json_query('quorum[*].name') | default([]) | list"
       loop_control:
         label: "MON - wait for mon"
 
@@ -180,7 +197,6 @@
 
     - name: MON - Redeploy mon on {{ target_node }}
       become: true
-      #when: ceph_mon.stdout | length == 0
       ansible.builtin.command:
         "{{ ceph_cli }} orch daemon add mon {{ target_node.split('.')[0] }}:{{ mon_ipaddr }}"
 
@@ -188,11 +204,10 @@
   become: true
   ansible.builtin.command: "{{ ceph_cli }} -s -f json"
   register: monmap
-  become: true
   retries: 20
   delay: 2
-  # >= is related to the fact that the current monmap might still have references
-  # to the old mon daemon coming from the drained node
+  # >= is related to the fact that the current monmap might still have
+  # references to the old mon daemon coming from the drained node
   until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
   loop_control:
     label: "check mons quorum"

@@ -1,3 +1,10 @@
+# Get a fresh ceph_cli
+- name: Get ceph_cli
+  include_tasks: ceph_cli.yaml
+  vars:
+    ceph_fsid: "{{ mon_dump.fsid }}"
+    ceph_cluster: ceph
+
 # - Expand labels to the whole hostmap
 - name: Apply Monitoring label to the overcloud nodes
   ansible.builtin.import_tasks: labels.yaml
@@ -50,6 +57,7 @@
 # Update and apply the spec: it will update the Monitoring Stack deployment,
 # and place daemons on the target nodes
 - name: Update the Monitoring Stack spec definition
+  when: target_nodes | length > 0
   # root privileges required to run cephadm
   # and apply the new spec
   become: true
@@ -60,6 +68,7 @@
     cluster: ceph
     apply: true
     label: "monitoring"
+    count: 1
     render_path: "{{ ceph_spec_render_dir }}"
     networks: "{%  set nw = item.get('networks') %}{{ nw }}"
     spec: "{% set pt = item.get('spec') %}{{ pt }}"

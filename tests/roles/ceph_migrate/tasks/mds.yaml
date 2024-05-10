@@ -1,3 +1,10 @@
+# Get a fresh ceph_cli
+- name: Get ceph_cli
+  include_tasks: ceph_cli.yaml
+  vars:
+    ceph_fsid: "{{ mon_dump.fsid }}"
+    ceph_cluster: ceph
+
 - name: Update firewall rules on the target nodes
   ansible.builtin.include_tasks: firewall.yaml
   vars:
@@ -6,12 +13,6 @@
   loop: "{{ target_nodes }}"
   loop_control:
     loop_var: n
-
-- name: Get ceph_cli
-  include_tasks: ceph_cli.yaml
-  vars:
-    ceph_fsid: "{{ mon_dump.fsid }}"
-    ceph_cluster: ceph
 
 - name: MDS - Load Spec from the orchestrator
   ansible.builtin.set_fact:

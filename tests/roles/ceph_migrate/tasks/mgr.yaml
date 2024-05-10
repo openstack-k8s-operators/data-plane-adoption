@@ -1,3 +1,4 @@
+# Get a fresh ceph_cli
 - name: Get ceph_cli
   include_tasks: ceph_cli.yaml
   vars:

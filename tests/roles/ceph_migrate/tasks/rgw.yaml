@@ -1,3 +1,10 @@
+# Get a fresh ceph_cli
+- name: Get ceph_cli
+  include_tasks: ceph_cli.yaml
+  vars:
+    ceph_fsid: "{{ mon_dump.fsid }}"
+    ceph_cluster: ceph
+
 # Check if all the required data are present
 - name: Fail if RGW VIPs are not defined
   fail:
@@ -18,12 +25,6 @@
   loop: "{{ target_nodes }}"
   loop_control:
     loop_var: n
-
-- name: Get ceph_cli
-  include_tasks: ceph_cli.yaml
-  vars:
-    ceph_fsid: "{{ mon_dump.fsid }}"
-    ceph_cluster: ceph
 
 # - Expand labels to the target nodes
 - name: Apply RGW label to the target nodes

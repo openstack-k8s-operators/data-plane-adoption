@@ -3,23 +3,24 @@
 # need to establish rules and block the process if it's not possible to
 # complete the migration (either because of cardinality of just because we
 # don't have enough nodes).
-
 - name: Setup a Ceph client to the first node
   block:
-    - ansible.builtin.include_tasks: network.yaml
+    - ansible.builtin.include_tasks: ceph_client.yaml
       vars:
-        # NOTE: It won't work on a second run if we already decommissioned
-        # the first node!
-        #cur_mon: "{{ decomm_nodes | list | sort | first }}"
-        cur_mon: controller-0
+        # Use the inventory as source of truth to make sure we **always**
+        # select mon[0] as client. If we stick on decomm_nodes nodes we
+        # might end up selecting a different node on multiple runs.
+        cur_mon: "{{ groups['mon'][0] | default(decomm_nodes | list | sort | first) }}"
       tags:
-        - ceph_network
+        - ceph_client
+        - ceph_rbd
 
 # Extend mgr deployment to help with failover
 - name: MGR - Migrate RBD node
   ansible.builtin.include_tasks: mgr.yaml
   tags:
     - ceph_mgr
+    - ceph_rbd
 
 # Update the firewall on the target nodes
 - name: Update firewall rules on the target nodes
@@ -34,6 +35,7 @@
     loop_var: n
   tags:
     - ceph_firewall
+    - ceph_rbd
 
 # Normalize the mon spec to use labels instead of hosts as placement
 - name: MON - Load Spec from the orchestrator
@@ -50,6 +52,8 @@
       {%   endif %}
       {% endfor %}
       {{ mon }}
+  tags:
+    - ceph_rbd
 
 - name: Normalize the mon spec to use labels
   # root privileges required to run cephadm
@@ -65,18 +69,31 @@
   environment:
     CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
     CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
+  tags:
+    - ceph_rbd
 
 # we need to serially migrate mons, so we loop over the nodes and run the
 # procedure provided by mon.yaml
 - name: MON - Migrate RBD node
-  ansible.builtin.include_tasks: mon.yaml
-  vars:
-    cur_mon: controller-2 #.redhat.local
-    target_node: cephstorage-2 #.redhat.local
-    #cur_mon: "{{ node.0 }}"
-    #target_node: "{{ node.1 }}"
-  # This condition might be a different one
-  #loop: "{{ decomm_nodes|zip(hostmap.keys() | difference(decomm_nodes) | sort) | list }}"
-  #loop_control:
-  #  loop_var: node
+  block:
+    - name: MON - Migrate RBD node
+      ansible.builtin.include_tasks: mon.yaml
+      vars:
+        #cur_mon: controller-2 #.redhat.local
+        #target_node: cephstorage-2 #.redhat.local
+        cur_mon: "{{ node.0 }}"
+        target_node: "{{ node.1 }}"
+      # This condition might be a different one
+      loop: "{{ decomm_nodes|zip(hostmap.keys() | difference(decomm_nodes) | sort) | list }}"
+      loop_control:
+        loop_var: node
+
+    # Sleep before moving to the next mon: this ensures that we give time to
+    # cephadm to converge to a state that sees the new data. We can replace
+    # this check later in time with a dynamic wait() based on cephadm
+    - name: Sleep before moving to the next mon
+      pause:
+        seconds: "{{ ceph_timeout }}"
+  tags:
+    - ceph_rbd
 

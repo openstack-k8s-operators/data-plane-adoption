@@ -1,10 +1,31 @@
+# Restore client (useful for multiple runs) files in /etc/ceph to allow
+# running `cephadm shell` and load fresh data from the cluster
+- name: Restore client
+  become: true
+  block:
+    - name: Check file in the src directory
+      ansible.builtin.find:
+        paths: "{{ ceph_config_tmp_client_home }}"
+        patterns: "*"
+      register: dir_ceph_files
+
+    - name: Restore files
+      when: dir_ceph_files.files | length > 0
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ ceph_config_tmp_client_home }}/{{ item }}"
+        dest: "/etc/ceph"
+      loop:
+        - ceph.conf
+        - ceph.client.admin.keyring
+
 # CEPH HEALTH
 - name: Ceph Health
   block:
     - name: Get Ceph Health
       # cephadm runs w/ root privileges
       become: true
-      ansible.builtin.shell: |
+      ansible.builtin.command: |
         cephadm shell -- ceph -s -f json
       register: ceph
     - name: Load ceph data
@@ -18,7 +39,7 @@
     - name: Get Ceph Orch ServiceMap
       # cephadm runs w/ root privileges
       become: true
-      ansible.builtin.shell: |
+      ansible.builtin.command: |
         cephadm shell -- ceph orch ls -f json
       register: smap
     - name: Load Service Map
@@ -36,7 +57,7 @@
     - name: Get Ceph config
       # cephadm runs w/ root privileges
       become: true
-      ansible.builtin.shell: |
+      ansible.builtin.command: |
         cephadm shell -- ceph config dump -f json
       register: ceph_conf
     - name: Print Ceph config dump
@@ -52,7 +73,7 @@
     - name: Get Ceph Orch Host Map
       # cephadm runs w/ root privileges
       become: true
-      ansible.builtin.shell: |
+      ansible.builtin.command: |
         cephadm shell -- ceph orch host ls -f json
       register: hosts
     - ansible.builtin.set_fact:
@@ -76,7 +97,7 @@
   block:
     - name: Get Ceph monmap and load data
       become: true
-      ansible.builtin.shell:
+      ansible.builtin.command:
         cephadm shell -- ceph mon dump -f json
       register: mons
     - ansible.builtin.set_fact:

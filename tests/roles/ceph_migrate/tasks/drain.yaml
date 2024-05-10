@@ -1,22 +1,10 @@
+# Refresh the client to point to a diff config-home
 - name: Get ceph_cli
   include_tasks: ceph_cli.yaml
   vars:
     ceph_config_home: "{{ ceph_config_tmp_client_home }}"
     ceph_fsid: "{{ mon_dump.fsid }}"
     ceph_cluster: ceph
-
-- name: DRAIN - Delete the mon running on the current controller node
-  delegate_to: "{{ node.split('.')[0] }}.ctlplane"
-  become: true
-  ansible.builtin.command:
-    "{{ ceph_cli }} orch daemon rm mon.{{ node.split('.')[0] }} --force"
-  ignore_errors: true
-
-- name: DRAIN - Drain the node host
-  become: true
-  delegate_to: "{{ node.split('.')[0] }}.ctlplane"
-  ansible.builtin.command:
-    "{{ ceph_cli }} orch host drain {{ node }}"
 
 # Remove labels from the src node
 - name: DRAIN - remove label from the src node
@@ -29,6 +17,24 @@
       - "mon"
       - "mgr"
       - "_admin"
+
+- name: DRAIN - Delete the mon running on the current controller node
+  delegate_to: "{{ node.split('.')[0] }}.ctlplane"
+  become: true
+  ansible.builtin.command:
+    "{{ ceph_cli }} orch daemon rm mon.{{ node.split('.')[0] }} --force"
+  ignore_errors: true
+
+# Sleep before moving to the next mon
+- name: Pause
+  pause:
+    seconds: "{{ ceph_timeout }}"
+
+- name: DRAIN - Drain the node host
+  become: true
+  delegate_to: "{{ node.split('.')[0] }}.ctlplane"
+  ansible.builtin.command:
+    "{{ ceph_cli }} orch host drain {{ node }}"
 
 # Cleanup leftovers from the controller node
 - name: DRAIN - cleanup the node

@@ -15,7 +15,7 @@
 # under the License.
 
 - name: Set ceph CLI
-  set_fact:
+  ansible.builtin.set_fact:
     ceph_cli: >-
       {{ ceph_container_cli }} run --rm {{ ceph_container_options }}
       --volume {{ ceph_config_home }}:/etc/ceph:z
