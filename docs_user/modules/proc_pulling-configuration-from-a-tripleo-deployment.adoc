@@ -83,10 +83,8 @@ services:
       ovn-remote-probe-interval: edpm_ovn_remote_probe_interval
       ovn-ofctrl-wait-before-clear: edpm_ovn_ofctrl_wait_before_clear
 ----
-
-This service is not an Openstack service executed in a container, so the description and the behavior is different.
-It's important to correctly configure an SSH config file or equivalent for non standard services such as OVS.
-The ovs_external_ids is not a service which runs in a container and the ovs data is stored
++
+This service is not an {rhos_prev_long} service executed in a container, so the description and the behavior is different. It is important to correctly configure an SSH config file or equivalent for non-standard services such as OVS. The `ovs_external_ids` does not run in a container, and the ovs data is stored
 on each host of our cloud: controller_1/controller_2/...
 +
 With the `hosts` key, os-diff loops on each host and runs the command in the `service_command` key:
