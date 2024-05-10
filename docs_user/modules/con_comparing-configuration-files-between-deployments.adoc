@@ -66,7 +66,7 @@ director_host=my.undercloud.local
 
 Note that the result of using `ssh_cmd` and `director_host` should be a "successful ssh access".
 
-Configure or generate ssh.config file from inventory or hosts file, for example:
+Configure or generate the `ssh.config` file from inventory or hosts file, for example:
 
 [source,yaml]
 [subs=+quotes]
