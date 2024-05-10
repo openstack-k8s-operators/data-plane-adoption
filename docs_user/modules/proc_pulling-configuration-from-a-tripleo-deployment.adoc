@@ -29,7 +29,7 @@ chown ospng:ospng /etc/os-diff/config.yaml
 ----
 
 Example with default {identity_service_first_ref}:
-+
+
 [source,yaml]
 ----
 # service name and file location
