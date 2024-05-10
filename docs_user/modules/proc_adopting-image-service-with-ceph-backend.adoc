@@ -55,8 +55,7 @@ If you have previously backed up your {OpenStackShort} services configuration fi
 For more information, see xref:pulling-configuration-from-tripleo-deployment_reviewing-configuration[Pulling the configuration from a {OpenStackPreviousInstaller} deployment]. 
 
 ----
-pushd os-diff
-./os-diff cdiff --service glance -c /tmp/collect_tripleo_configs/glance/etc/glance/glance-api.conf -o glance_patch.yaml
+os-diff diff /tmp/collect_tripleo_configs/glance/etc/glance/glance-api.conf glance_patch.yaml --crd
 ----
 
 This produces the difference between both ini configuration files.

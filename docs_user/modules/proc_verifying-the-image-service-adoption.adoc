@@ -9,7 +9,7 @@ Verify that you successfully adopted your {image_service_first_ref} to the {rhos
 . Test the {image_service_first_ref} from the {rhos_prev_long} CLI. You can compare and make sure the configuration has been correctly applied to the {image_service} pods:
 +
 ----
-./os-diff cdiff --service glance -c /etc/glance/glance.conf.d/02-config.conf  -o glance_patch.yaml --frompod -p glance-api
+os-diff diff /etc/glance/glance.conf.d/02-config.conf glance_patch.yaml --frompod -p glance-api
 ----
 +
 If no line appears, then the configuration is correctly done.
