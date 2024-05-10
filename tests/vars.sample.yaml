@@ -4,18 +4,78 @@ install_yamls_path: ~/install_yamls #CUSTOMIZE_THIS
 # This flag signifies if TLS Everywhere is enabled on the source cloud
 enable_tlse: false
 
+# Source MariaDB Galera cluster members {name:IP} pairs (also in additional cells) for pre-adoption checks.
+# Defaults provided for a single-cell case. Complete the lists for an HA multi-cell adoption.
+source_galera_members:
+  default:
+    - name: standalone.localdomain
+      ip: 172.17.0.100 #CUSTOMIZE_THIS
+
+# Source MariaDB Galera cluster VIP(s) for DB exports of all cells
+# Defaults provided for a single-cell case.
+source_mariadb_ip:
+  default: 172.17.0.2 #CUSTOMIZE_THIS
+
+# EDPM nodes info, for each cell compute (omitting dedicated cell controllers) on the destination cloud.
 # To enable TLS-E, the standalone hostname must be set to standalone.ooo.test
-edpm_node_hostname: standalone.localdomain
+# Defaults provided for a single-cell case.
+# Provide for each cell on the target cloud, considering default_cell_name value.
+# The defined 'networks' connections must match netconfig_networks which manages NetConfig CR
+edpm_nodes:
+  cell1:
+    standalone:
+      hostName: standalone.localdomain
+      ansible:
+        ansibleHost: 192.168.122.100
+      networks:
+        - defaultRoute: true
+          fixedIP: 192.168.122.100
+          name: ctlplane
+          subnetName: subnet1
+        - name: internalapi
+          subnetName: subnet2
+        - name: storage
+          subnetName: subnet3
+        - name: tenant
+          subnetName: subnet4
+        - name: storagemgmt
+          subnetName: subnet5
 # TODO: There is no reason to change the domain depending on the type of
 # deployment, but we are doing this to keep the CI green when TLS-E is merged.
 # This setting should at some point be switched in the CI to standalone.ooo.test
 # for all types of jobs and removed entirely afterwards.
+
+# For a local libvirt setup outside of CI-framework, enable EDPM net config, and define netconfig_networks
+# That is required to update DNS config in resolv.conf at very least, so that edpm can reach out OCP pods.
+dataplane_os_net_config_set_route: false #CUSTOMIZE_THIS
+netconfig_networks: #CUSTOMIZE_THIS
+  - name: ctlplane
+    dnsDomain: ctlplane.example.com
+    subnets:
+      - name: subnet1
+  - name: internalapi
+    dnsDomain: internalapi.example.com
+    subnets:
+      - name: subnet2
+  - name: storage
+    dnsDomain: storage.example.com
+    subnets:
+      - name: subnet3
+  - name: tenant
+    dnsDomain: tenant.example.com
+    subnets:
+      - name: subnet4
+  - name: storagemgmt
+    dnsDomain: storagemgmt.example.com
+    subnets:
+      - name: subnet5
 
 # If 'true', this flag will create a Barbican secret before the adoption runs
 # and after the adoption it'll be verified with the secret tills exists with
 # the same payload. For this flag to work with 'true' value, Barbican should be
 # available before the adoption
 prelaunch_barbican_secret: false
+
 
 # Whether to use 'make crc_storage_cleanup; make crc_storage' before the test
 reset_crc_storage: true
@@ -30,17 +90,20 @@ storage_reclaim_policy: delete # or retain
 oc_header: |
   eval $(crc oc-env)
 
-# Source MariaDB Galera cluster VIP for DB exports.
-source_mariadb_ip: 172.17.0.2 #CUSTOMIZE_THIS
+# Source cloud Nova compute v2 cells to adopt (all must be listed, cannot adopt cells partially)
+cells:
+  - default
+
+# A cell name for the 'default' cell to take after adoption.
+# Must be renamed for a single-cell deployment. Can remain 'default' for a multi-cell one.
+# Defaults provided for a single-cell case. For a mult-cell, use the latest 'cells' element index + 1
+default_cell_name: cell1
 
 # Source OS diff config ip for Tripleo
 source_os_diff_config_ip: 192.168.122.100
 
 # Source OVN DB IP for DB exports.
 source_ovndb_ip: 192.168.122.100 #CUSTOMIZE_THIS
-
-# EDPM node IP
-edpm_node_ip: 192.168.122.100 #CUSTOMIZE_THIS
 
 # NTP servers list
 timesync_ntp_servers:
@@ -52,12 +115,24 @@ auth_url: http://keystone-public-openstack.apps-crc.testing
 
 # Set this to true if adopting the ironic services (ironic + ironic-inspector + nova w/compute-ironic)
 ironic_adoption: false
+# provide the source cloud Ironic topology, for any cells with Ironic services
+source_ironic_nodes:
+  default:
+    - name: standalone.localdomain
+      template: standalone
 
 # Run pre-adoption validation before the deploying
 run_pre_adoption_validation: true
 
+# Adopt source cloud with additional compute cells v2.
+# Defaults provided for a single-cell case. Enable for a multi-cell adoption.
+multi_cell: false
+
 # Whether the adopted node will host compute services
 compute_adoption: true
+
+# For a multi-node, should be 'overcloud'
+os_cloud_name: standalone
 
 # Where perform or not telemetry installation during adoption
 telemetry_adoption: true

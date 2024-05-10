@@ -1,14 +1,5 @@
-- name: get the source database service environment variables
-  ansible.builtin.include_tasks:
-    file: env_vars_src.yaml
-
-- name: get the destination database service environment variables
-  ansible.builtin.include_tasks:
-    file: env_vars_dst.yaml
-
 - name: start an adoption mariadb helper pod
   ansible.builtin.shell: |-
-    {{ shell_header }}
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
 
@@ -68,30 +59,32 @@
   retries: 25
   delay: 2
 
-- name: check that the Galera database cluster members are online and synced
+- name: check that the Galera database cluster(s) members are online and synced, for all cells
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
-    {{ shell_header }}
     {{ oc_header }}
+    {{ mariadb_members_env }}
     {{ mariadb_copy_shell_vars_src }}
-    for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
-      echo "Checking for the database node $i WSREP status Synced"
-      oc rsh mariadb-copy-data mysql \
-        -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" \
-        -e "show global status like 'wsrep_local_state_comment'" | \
-        grep -qE "\bSynced\b"
+    for CELL in $(echo $CELLS); do
+      MEMBERS=SOURCE_GALERA_MEMBERS_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')[@]
+      for i in "${!MEMBERS}"; do
+        echo "Checking for the database node $i WSREP status Synced"
+        oc rsh mariadb-copy-data mysql \
+          -h "$i" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" \
+          -e "show global status like 'wsrep_local_state_comment'" | \
+          grep -qE "\bSynced\b"
+      done
     done
 
 - name: Get the count of not-OK source databases
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
-    {% if pulled_openstack_configuration_shell_headers is defined %}
-    {{ pulled_openstack_configuration_shell_headers }}
-    {% else %}
-    . ~/.source_cloud_exported_variables
-    {% endif %}
-
-    test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ] && echo "OK" || echo "CHECK FAILED"
+    for CELL in $(echo $CELLS); do
+    set +u
+      . ~/.source_cloud_exported_variables_$CELL
+    set -u
+    done
+    test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "x$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = "x " ] && echo "OK" || echo "CHECK FAILED"
   register: result
   failed_when: result.rc != 0 or 'CHECK FAILED' in result.stdout
 

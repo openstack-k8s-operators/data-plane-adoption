@@ -2,7 +2,8 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '{{ nova_libvirt_patch }}'
+    {{ nova_libvirt_patch }}
+    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch-file=oscp-patch.yaml
 
 - name: wait for Nova control plane services' CRs to become ready
   ansible.builtin.include_tasks:
@@ -13,15 +14,19 @@
     file: check_endpoints.yaml
 
 # TODO(bogdando): provide automated checks for 'The expected changes to happen'
-- name: query the superconductor for cell1 existance and compare it to pre-adoption values
+- name: query the superconductor to check that the expected cells exist, and compare it to pre-adoption values
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    {% if pulled_openstack_configuration_shell_headers is defined %}
-    {{ pulled_openstack_configuration_shell_headers }}
-    {% else %}
-    . ~/.source_cloud_exported_variables
-    {% endif %}
+    {{ cells_env }}
+    for CELL in $(echo $CELLS); do
+      set +u
+      . ~/.source_cloud_exported_variables_$CELL
+      set -u
+      RCELL=$CELL
+      [ "$CELL" = "default" ] && RCELL=$DEFAULT_CELL_NAME
 
-    echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS
-    oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 |'
+      echo "comparing $CELL to $RCELL"
+      echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS | grep -F "| $CELL |"
+      oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F "| $RCELL |"
+    done
