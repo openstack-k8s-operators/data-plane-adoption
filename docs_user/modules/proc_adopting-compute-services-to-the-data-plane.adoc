@@ -252,7 +252,7 @@ $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneNodeSet
 metadata:
-  name: openstack
+  name: openstack-cell1
 spec:
   tlsEnabled: false <1>
   networkAttachments:
@@ -434,7 +434,7 @@ external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-b
 +
 [source,yaml]
 ----
-$ oc patch osdpns/openstack --type=merge --patch "
+$ oc patch osdpns/openstack-cell1 --type=merge --patch "
 spec:
   services:
     - bootstrap
@@ -474,7 +474,7 @@ Ensure that you use the same list of services from the original `OpenStackDataPl
 +
 [source,yaml]
 ----
-$ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
+$ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
@@ -499,7 +499,7 @@ $ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
 +
 [source,yaml]
 ----
-$ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
+$ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
@@ -654,7 +654,7 @@ $ oc logs -l app=openstackansibleee -f --max-log-requests 20
 . Wait for the data plane node set to reach the `Ready` status:
 +
 ----
-$ oc wait --for condition=Ready osdpns/openstack --timeout=30m
+$ oc wait --for condition=Ready osdpns/openstack-cell1 --timeout=30m
 ----
 
 . Verify that the {networking_first_ref} agents are running:

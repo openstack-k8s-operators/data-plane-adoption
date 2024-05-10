@@ -1,8 +1,3 @@
-- name: get dst database service environment variables
-  ansible.builtin.include_role:
-    name: mariadb_copy
-    tasks_from: env_vars_dst.yaml
-
 - name: wait for cell1 Nova compute EDPM services version updated
   ansible.builtin.shell: |
     {{ shell_header }}
