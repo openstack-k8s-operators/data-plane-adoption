@@ -132,7 +132,5 @@ ${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |' && \
 ----
 
 [NOTE]
-After the data plane adoption, the hosts continue to run RHEL
-{rhel_prev_ver}. In order to take advantage of RHEL {rhel_curr_ver},
-perform a minor update procedure after finishing the adoption
-procedure.
+After the data plane adoption, the hosts continue to run Red Hat Enterprise Linux (RHEL)
+{rhel_prev_ver}. To take advantage of RHEL {rhel_curr_ver}, perform a minor update procedure after finishing the adoption procedure.
