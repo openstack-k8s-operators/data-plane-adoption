@@ -96,7 +96,7 @@ export computes=(
 .Procedure
 
 //* _Temporary fix_ until the OSP 17 https://code.engineering.redhat.com/gerrit/q/topic:stable-compute-uuid[backport of the stable compute UUID feature]
-//lands. 
+//lands.
 //kgilliga: Revisit this step after 17.1.3 is on the CDN.
 . For each Compute node, write the UUID of the Compute service to the stable `compute_id` file in `/var/lib/nova/` directory:
 +
@@ -121,11 +121,11 @@ endif::[]
 done
 ----
 ifeval::["{build}" != "downstream"]
-. Create a https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets[ssh authentication secret] for the data plane nodes: 
+. Create a https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets[ssh authentication secret] for the data plane nodes:
 //kgilliga:I need to check if we will document this in Red Hat docs.
 endif::[]
 ifeval::["{build}" != "upstream"]
-. Create a ssh authentication secret for the data plane nodes: 
+. Create a ssh authentication secret for the data plane nodes:
 endif::[]
 +
 [subs=+quotes]
@@ -612,6 +612,22 @@ oc logs -l app=openstackansibleee -f --max-log-requests 20
 ----
 oc wait --for condition=Ready openstackdataplanedeployment/openstack-pre-adoption --timeout=10m
 ----
+
+. If any openstack-pre-adoption validations fail, you must first determine
+which ones were unsuccessful based on the ansible logs and then follow the
+instructions below for each case:
+
+* if the hostname validation failed then check that the hostname of the EDPM
+node is correctly listed in the `OpenStackDataPlaneNodeSet`
+
+* if the kernel argument check failed then make sure that the
+`OpenStackDataPlaneNodeSet` has the same kernel argument configuration in
+`edpm_kernel_args` and `edpm_kernel_hugepages` variables than what is used in
+the 17 node.
+
+* if the tuned profile check failed then make sure that the
+`edpm_tuned_profile` variable in the `OpenStackDataPlaneNodeSet` is configured
+to use the same profile as set on the (source) OSP 17 node.
 
 . Deploy the `OpenStackDataPlaneDeployment` CR:
 +
