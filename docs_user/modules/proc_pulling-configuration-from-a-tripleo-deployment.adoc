@@ -22,13 +22,11 @@ remote_config_path=/tmp/tripleo
 +
 Make sure the ssh command you provide in `ssh_cmd` parameter is correct and with key authentication.
 
-. Enable or disable the services you want in /etc/os-diff/config.yaml:
-
-Make sure you have the correct rights to edit the file, for example:
-
----
+. Enable or disable the services that you want in the `/etc/os-diff/config.yaml` file. Make sure that you have the correct rights to edit the file, for example:
++
+----
 chown ospng:ospng /etc/os-diff/config.yaml
----
+----
 
 Example with default {identity_service_first_ref}:
 +
