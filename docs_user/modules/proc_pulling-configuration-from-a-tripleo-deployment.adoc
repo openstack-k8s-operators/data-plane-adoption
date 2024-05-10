@@ -96,13 +96,9 @@ With the `hosts` key, os-diff loops on each host and runs the command in the `se
         hosts:
             - standalone
 ----
-
-The service_command is the command which provides the required information.
-It could be a simple cat from a config file. cat_output should be set to true
-if you want os-diff to get the output of the command and store the output in a file specified by the key path
-
-Then you can provide a mapping between in this case the EDPM CRD, and the ovs-vsctl output with config_mapping
-
++
+The `service_command`  provides the required information. It could be a simple cat from a config file. If you want os-diff to get the output of the command and store the output in a file specified by the key path, set `cat_output` to true. Then you can provide a mapping between in this case the EDPM CRD, and the ovs-vsctl output with config_mapping:
++
 ----
         service_command: 'ovs-vsctl list Open_vSwitch . | grep external_ids | awk -F '': '' ''{ print $2; }'''
         cat_output: true
