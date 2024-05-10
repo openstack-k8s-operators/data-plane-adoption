@@ -60,7 +60,6 @@ services:
       - /etc/keystone/keystone.conf
       - /etc/keystone/logging.conf
 ----
-+
 Repeat this step for each {OpenStackShort} service that you want to disable or enable.
 
 . If you are using non-containerized services, such as the `ovs-external-ids`, os-diff can pull configuration or command output:
