@@ -83,14 +83,12 @@ PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRoo
 CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //'
 
 alias openstack="oc exec -t openstackclient -- openstack"
-FIP=192.168.122.20
 declare -A computes
 export computes=(
   ["standalone.localdomain"]="192.168.122.100"
   # ...
 )
 ----
-** Replace the value for `FIP` with the floating IP address of the test instance that you created on the source cloud.
 ** Replace `["standalone.localdomain"]="192.168.122.100"` with the name of the Compute node and its IP address.
 
 .Procedure
