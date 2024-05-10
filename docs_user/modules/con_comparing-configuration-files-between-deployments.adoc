@@ -11,10 +11,7 @@ Make sure Golang is installed and configured on your environment:
 dnf install -y golang-github-openstack-k8s-operators-os-diff
 ----
 
-Then configure /etc/os-diff/os-diff.cfg and /etc/os-diff/ssh.config file according to your environment:
-
-In order to allow os-diff to connect to your clouds and pull files from the services you describe in the config.yaml
-file you need to properly set the option in the os-diff.cfg:
+Then configure the `/etc/os-diff/os-diff.cfg` file and the `/etc/os-diff/ssh.config` file according to your environment. To allow os-diff to connect to your clouds and pull files from the services that you describe in the `config.yaml` file you need to properly set the option in the `os-diff.cfg` file:
 
 [source,yaml]
 [subs=+quotes]
