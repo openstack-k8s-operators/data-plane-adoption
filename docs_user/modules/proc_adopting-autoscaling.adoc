@@ -53,8 +53,7 @@ EOF
 . Optional: If you have previously backed up your {OpenStackShort} services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct. This will producre the difference between both ini configuration files:
 +
 ----
-pushd os-diff
-./os-diff cdiff --service aodh -c /tmp/collect_tripleo_configs/aodh/etc/aodh/aodh.conf -o aodh_patch.yaml
+os-diff diff /tmp/collect_tripleo_configs/aodh/etc/aodh/aodh.conf aodh_patch.yaml --crd
 ----
 +
 For more information, see xref:reviewing-the-openstack-control-plane-configuration_{context}[Reviewing the {rhos_prev_long} control plane configuration].

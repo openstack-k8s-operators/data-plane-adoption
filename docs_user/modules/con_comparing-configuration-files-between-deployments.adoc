@@ -6,14 +6,70 @@ In order to help users to handle the configuration for the {OpenStackPreviousIns
 services the tool: https://github.com/openstack-k8s-operators/os-diff has been
 develop to compare the configuration files between the {OpenStackPreviousInstaller} deployment and the {rhos_long} cloud.
 Make sure Golang is installed and configured on your env:
-//kgilliga: Do we want to link to "https://github.com/openstack-k8s-operators/os-diff" downstream?
+
 ----
-git clone https://github.com/openstack-k8s-operators/os-diff
-pushd os-diff
-make build
+dnf install -y golang-github-openstack-k8s-operators-os-diff
 ----
 
-Then configure ansible.cfg and ssh-config file according to your environment:
+Then configure /etc/os-diff/os-diff.cfg and /etc/os-diff/ssh.config file according to your environment:
+
+In order to allow os-diff to connect to your clouds and pull files from the services you describe in the config.yaml
+file you need to properly set the option in the os-diff.cfg:
+
+[source,yaml]
+[subs=+quotes]
+----
+[Default]
+
+local_config_dir=/tmp/
+service_config_file=config.yaml
+
+[Tripleo]
+
+ssh_cmd=ssh -F ssh.config
+director_host=standalone
+container_engine=podman
+connection=ssh
+remote_config_path=/tmp/tripleo
+local_config_path=/tmp/
+
+[Openshift]
+
+ocp_local_config_path=/tmp/ocp
+connection=local
+ssh_cmd=""
+----
+
+The ssh_cmd will be used by os-diff to access your TripleO Undercloud/Director host via SSH,
+or the host where your cloud is accessible and the podman/docker binary is installed
+and allowed to interract with the running containers. This option could have different form:
+
+----
+ssh_cmd=ssh -F ssh.config standalone
+director_host=
+----
+
+----
+ssh_cmd=ssh -F ssh.config
+director_host=standalone
+----
+
+or without an SSH config file:
+
+----
+ssh_cmd=ssh -i /home/user/.ssh/id_rsa stack@my.undercloud.local
+director_host=
+----
+
+or
+----
+ssh_cmd=ssh -i /home/user/.ssh/id_rsa stack@
+director_host=my.undercloud.local
+----
+
+Note that the result of ssh_cmd + director_host should be a "successful ssh access".
+
+Configure or generate ssh.config file from inventory or hosts file
 
 [source,yaml]
 [subs=+quotes]
@@ -48,6 +104,32 @@ Host crc
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null
 ----
+
+os-diff can use an ssh.config file for getting access to your TripleO/OSP environment.
+A command can help you to generate this SSH config file from your Ansible inventory (like tripleo-ansible-inventory.yaml file):
+
+----
+os-diff configure -i tripleo-ansible-inventory.yaml -o ssh.config --yaml
+----
+
+Note: You will have to set the IdentityFile key in the file in order to get full working access:
+
+----
+Host standalone
+  HostName standalone
+  User root
+  IdentityFile ~/.ssh/id_rsa
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+Host undercloud
+  HostName undercloud
+  User root
+  IdentityFile ~/.ssh/id_rsa
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+----
+
 
 And test your connection:
 
