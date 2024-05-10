@@ -163,7 +163,7 @@ dataplane_cr: |
   apiVersion: dataplane.openstack.org/v1beta1
   kind: OpenStackDataPlaneNodeSet
   metadata:
-    name: openstack
+    name: openstack-cell1
   spec:
     tlsEnabled: {{ enable_tlse }}
     networkAttachments:
