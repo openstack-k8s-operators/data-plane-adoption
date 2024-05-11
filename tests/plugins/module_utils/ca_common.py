@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 OpenStack Foundation
 # All Rights Reserved.
@@ -15,21 +16,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 # Included from: https://github.com/ceph/ceph-ansible/blob/master/module_utils/ca_common.py
+#
+
 import os
 import datetime
 
-
 def generate_ceph_cmd(sub_cmd, args, spec_path, user_key=None, cluster='ceph',
-                      user='client.admin', container_image=None, interactive=False):
+                      user='client.admin', container_image=None,
+                      interactive=False):
     '''
     Generate 'ceph' command line to execute
     '''
-
+    ceph_config_path = '/etc/ceph'
     if not user_key:
-        user_key = '/etc/ceph/{}.{}.keyring'.format(cluster, user)
+        user_key = '{}/{}.{}.keyring'.format(ceph_config_path, cluster, user)
 
-    cmd = pre_generate_ceph_cmd(container_image=container_image, interactive=interactive, spec_path=spec_path)
-
+    cmd = pre_generate_ceph_cmd(container_image=container_image,
+                                interactive=interactive,
+                                spec_path=spec_path)
     base_cmd = [
         '-n',
         user,
@@ -59,6 +63,8 @@ def container_exec(binary, container_image, spec_path=None, interactive=False):
     if 'CEPH_FSID' in os.environ:
         fsid = os.getenv('CEPH_FSID')
     ceph_config_path = '/etc/ceph'
+    if 'CEPH_CONF' in os.environ:
+        ceph_config_path = os.getenv('CEPH_CONF')
     if fsid:
         path = '/var/lib/ceph/{}/config'.format(fsid)
         if os.path.exists(path):

@@ -91,6 +91,12 @@ options:
           - The total number of instances that should be deployed
         required: false
         type: int
+    unmanaged:
+        description:
+          - The unmanaged field is used to avoid cephadm to take over the daemon
+            type and redeploy them
+        required: false
+        type: bool
     label:
         description:
           - The label used to apply the daemon on the Ceph custer nodes
@@ -162,6 +168,16 @@ EXAMPLES = '''
     label: "controller"
     count: 2
     apply: true
+- name: create the Ceph RGW daemon spec
+  ceph_mkspec:
+    service_type: mon
+    service_id: mon
+    service_name: mon
+    render_path: '/home/ceph-admin/specs'
+    label: "mon"
+    count: 2
+    apply: true
+    unmanaged: true
 '''
 
 RETURN = '''#  '''
@@ -218,6 +234,7 @@ def run_module():
     networks = module.params.get('networks')
     label = module.params.get('label')
     count = module.params.get('count')
+    unmanaged = module.params.get('unmanaged')
     spec = module.params.get('spec')
     extra = module.params.get('extra')
     apply = module.params.get('apply')
@@ -264,9 +281,12 @@ def run_module():
     if count is None:
         count = -1
 
+    if unmanaged is None:
+        unmanaged = False
+
     d = ceph_spec.CephDaemonSpec(service_type, service_id, service_name,
                                  hosts, host_pattern, networks, spec, label,
-                                 count, **extra)
+                                 count, unmanaged, **extra)
 
     render('{}/{}'.format(render_path, service_type), d.make_daemon_spec())
     if apply:

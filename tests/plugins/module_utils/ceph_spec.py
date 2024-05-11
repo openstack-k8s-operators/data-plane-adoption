@@ -168,6 +168,7 @@ class CephDaemonSpec(object):
                  spec: dict,
                  label: str,
                  count: int,
+                 unmanaged: bool,
                  **kwargs: dict):
 
         self.daemon_name = daemon_name
@@ -177,6 +178,7 @@ class CephDaemonSpec(object):
         self.placement = placement_pattern
         self.label = label
         self.count = count
+        self.unmanaged = unmanaged
 
         # network list where the current daemon should be bound
         if not networks:
@@ -234,17 +236,22 @@ class CephDaemonSpec(object):
 
         # process extra parameters if present
         if not self.validate_keys(self.extra.keys(), ALLOWED_EXTRA_KEYS):
-            raise Exception("Fatal: the spec should be composed by only allowed keywords")
+            raise Exception("Fatal: the spec should be composed by only \
+                    allowed keywords")
 
         # append the spec if provided
         if len(self.spec.keys()) > 0:
             if self.validate_keys(self.spec.keys(), ALLOWED_SPEC_KEYS):
                 sp = {'spec': self.normalize_spec(self.filter_spec(self.spec))}
             else:
-                raise Exception("Fatal: the spec should be composed by only allowed keywords")
+                raise Exception("Fatal: the spec should be composed by only \
+                        allowed keywords")
 
+        unmgd = {
+            'unmanaged': self.unmanaged,
+        }
         # build the resulting daemon template
-        spec_template = {**spec_template, **ntw, **self.extra, **pl, **sp}
+        spec_template = {**spec_template, **ntw, **unmgd, **self.extra, **pl, **sp}
         return spec_template
 
     def normalize_spec(self, spec):

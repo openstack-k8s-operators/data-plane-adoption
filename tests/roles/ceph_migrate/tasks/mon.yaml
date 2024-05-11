@@ -38,6 +38,8 @@
   until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
   loop_control:
     label: "check mons quorum"
+  tags:
+    - ceph_mon_quorum
 
 - name: Backup data for client purposes
   delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
@@ -189,16 +191,64 @@
       loop_control:
         label: "MON - wait for mon"
 
+    # Even though we explicitly redeploy a given mon using the host:ip format,
+    # it is possible that the orchestrator (who owns the process and the spec)
+    # takes initiative to redeploy a mon, on an arbitrary ip address (if many)
+    # between the `ceph orch rm ...` command and the `ceph orch daemon add ...`
+    # one. For this reason, the deamon redeploy follows this flow:
+    # 1. update and unmanage the spec
+    # 2. redeploy on the right network as per the official doc:
+    #    https://docs.ceph.com/en/quincy/cephadm/services/mon/
+    # 3. manage the spec
+    # Note: a pause between the steps is required to allow the orchestrator to
+    #       process the spec and update the daemons ref
+    - name: Unmanage mons
+      # root privileges required to run cephadm
+      # and apply the new spec
+      become: true
+      ceph_mkspec:
+        service_type: mon
+        cluster: ceph
+        apply: true
+        label: "mon"
+        render_path: "{{ ceph_spec_render_dir }}"
+        unmanaged: true
+      register: spc
+      environment:
+        CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
+        CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
+        CEPH_CONF: "{{ ceph_config_tmp_client_home }}"
+
+    - name: Print the resulting spec
+      when: debug | default(true)
+      ansible.builtin.debug:
+        msg: "{{ spc }}"
+
     - name: MON - Delete the running mon
       become: true
       ansible.builtin.command:
         "{{ ceph_cli }} orch daemon rm mon.{{ target_node.split('.')[0] }} --force"
       ignore_errors: true
 
+    - name: Wait for the spec to be updated
+      pause:
+        seconds: "{{ ceph_wait_mon_timeout }}"
+
+    - name: MON - Redeploy mon on {{ target_node }} - Print command
+      when: debug | default(true)
+      ansible.builtin.debug:
+        msg: "{{ ceph_cli }} orch daemon add mon {{ target_node.split('.')[0] }}:{{ mon_ipaddr }}"
+
     - name: MON - Redeploy mon on {{ target_node }}
       become: true
+      when:
+        - mon_ipaddr | default('')
       ansible.builtin.command:
         "{{ ceph_cli }} orch daemon add mon {{ target_node.split('.')[0] }}:{{ mon_ipaddr }}"
+
+    - name: Wait for the spec to be updated
+      pause:
+        seconds: "{{ ceph_wait_mon_timeout }}"
 
 - name: MON - check mons quorum
   become: true
@@ -211,6 +261,8 @@
   until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
   loop_control:
     label: "check mons quorum"
+  tags:
+    - ceph_mon_quorum
 
 # Post actions: refresh mgr data, reconfigure osds
 - name: MON - refresh cephadm info - fail ceph mgr and refresh osd config
@@ -220,6 +272,22 @@
       ansible.builtin.command: "{{ ceph_cli }} mgr fail"
     - name: reconfig osds
       ansible.builtin.command: "{{ ceph_cli }} orch reconfig osd.default_drive_group "
+
+- name: Manage mons
+  # root privileges required to run cephadm
+  # and apply the new spec
+  become: true
+  ceph_mkspec:
+    service_type: mon
+    cluster: ceph
+    apply: true
+    label: "mon"
+    render_path: "{{ ceph_spec_render_dir }}"
+    unmanaged: false
+  environment:
+    CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
+    CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
+    CEPH_CONF: "{{ ceph_config_tmp_client_home }}"
 
 # Wait for the redeploy to finish before moving to the next stage
 - ansible.builtin.include_tasks: wait_daemons.yaml
