@@ -91,17 +91,17 @@
 
 # Drain and rm the cur_mon from the Ceph cluster
 - name: MON - Drain and rm --force the cur_mon host
-  when: cur_mon in decomm_nodes
+  #when: cur_mon in decomm_nodes
   ansible.builtin.include_tasks: drain.yaml
   vars:
-    node: "{{ cur_mon }}"
+    host: "{{ cur_mon }}"
   tags:
     - ceph_drain
 
 # The node should be empty at this point, let's remove it from the Ceph
 # cluster
 - name: MON - rm the cur_mon host from the Ceph cluster
-  when: cur_mon in decomm_nodes
+  #when: cur_mon in decomm_nodes
   become: true
   ansible.builtin.command:
     "{{ ceph_cli }} orch host rm {{ cur_mon }} --force"
@@ -111,7 +111,7 @@
     - ceph_drain
 
 - name: MON - Get current mon IP address
-  when: cur_mon in decomm_nodes
+  #when: cur_mon in decomm_nodes
   ansible.builtin.set_fact:
     mon_ipaddr: "{{ mon_ip | split(':') | first | ansible.utils.ipaddr }}"
   vars:
@@ -220,3 +220,9 @@
       ansible.builtin.command: "{{ ceph_cli }} mgr fail"
     - name: reconfig osds
       ansible.builtin.command: "{{ ceph_cli }} orch reconfig osd.default_drive_group "
+
+# Wait for the redeploy to finish before moving to the next stage
+- ansible.builtin.include_tasks: wait_daemons.yaml
+  vars:
+    daemon: mon
+    daemon_id: "{{ target_node.split('.')[0] }}"

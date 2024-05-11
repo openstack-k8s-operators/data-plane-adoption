@@ -23,4 +23,4 @@ ceph_rgw_virtual_ips_list: []
 ceph_storage_net_prefix: "172.17.3."
 ceph_client_ip: "172.17.3.254"
 os_net_conf_path: "/etc/os-net-config/config.yaml"
-ceph_timeout: 20
+ceph_timeout: 30

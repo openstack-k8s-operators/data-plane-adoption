@@ -120,3 +120,13 @@
     msg: "{{ spc }}"
   tags:
     - ceph_rgw_ingress
+
+- name: Wait for cephadm to redeploy
+  pause:
+    seconds: "{{ ceph_timeout }}"
+
+# Wait for the redeploy to finish before moving to the next stage
+- ansible.builtin.include_tasks: wait_daemons.yaml
+  vars:
+    daemon: rgw
+    daemon_id:

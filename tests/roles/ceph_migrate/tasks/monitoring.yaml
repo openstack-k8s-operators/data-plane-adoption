@@ -89,3 +89,13 @@
   ansible.builtin.debug:
     msg: "{{ spc }}"
   when: debug | default(true)
+
+# Wait for the redeploy to finish before moving to the next stage
+- ansible.builtin.include_tasks: wait_daemons.yaml
+  vars:
+    daemon: "{{ item }}"
+    daemon_id:
+  loop:
+    - grafana
+    - prometheus
+    - alertmanager

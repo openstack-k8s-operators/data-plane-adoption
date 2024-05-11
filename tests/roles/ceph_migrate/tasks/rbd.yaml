@@ -84,7 +84,8 @@
         cur_mon: "{{ node.0 }}"
         target_node: "{{ node.1 }}"
       # This condition might be a different one
-      loop: "{{ decomm_nodes|zip(hostmap.keys() | difference(decomm_nodes) | sort) | list }}"
+      loop: "{{ decomm_nodes| zip(target_nodes) }}"
+      ##loop: "{{ decomm_nodes|zip(hostmap.keys() | difference(decomm_nodes) | sort) | list }}"
       loop_control:
         loop_var: node
 

@@ -1,0 +1,28 @@
+- name: print command
+  when: debug | default(true)
+  ansible.builtin.debug:
+    msg: "Checking daemon: {{ d_id }}"
+  vars:
+    d_id: |-
+      {% set did = "" %}
+      {% if daemon_id != None %}
+      --daemon_id {{ daemon_id  }}
+      {% endif %}
+      {{ did }}
+
+- name: wait for {{ daemon }}
+  become: true
+  ansible.builtin.command: "{{ ceph_cli }} orch ps --daemon_type {{ daemon }} {{ d_id }} -f json"
+  register: daemonstat
+  retries: 20
+  delay: 3
+  until: "'running' in daemonstat.stdout | from_json | community.general.json_query('[*].status_desc') | default([]) | list"
+  loop_control:
+    label: "wait for {{ daemon }}"
+  vars:
+    d_id: |-
+      {% set did = "" %}
+      {% if daemon_id != None %}
+      --daemon_id {{ daemon_id  }}
+      {% endif %}
+      {{ did }}

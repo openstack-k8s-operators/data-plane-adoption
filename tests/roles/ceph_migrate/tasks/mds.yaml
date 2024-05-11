@@ -117,3 +117,9 @@
     action: "rm"
     labels:
       - "mds"
+
+# Wait for the redeploy to finish before moving to the next stage
+- ansible.builtin.include_tasks: wait_daemons.yaml
+  vars:
+    daemon: mds
+    daemon_id:

@@ -11,7 +11,7 @@
   ansible.builtin.include_tasks: labels.yaml
   vars:
     nodes:
-      - "{{ node }}"
+      - "{{ host }}"
     action: "rm"
     labels:
       - "mon"
@@ -19,10 +19,10 @@
       - "_admin"
 
 - name: DRAIN - Delete the mon running on the current controller node
-  delegate_to: "{{ node.split('.')[0] }}.ctlplane"
+  delegate_to: "{{ host.split('.')[0] }}.ctlplane"
   become: true
   ansible.builtin.command:
-    "{{ ceph_cli }} orch daemon rm mon.{{ node.split('.')[0] }} --force"
+    "{{ ceph_cli }} orch daemon rm mon.{{ host.split('.')[0] }} --force"
   ignore_errors: true
 
 # Sleep before moving to the next mon
@@ -30,15 +30,15 @@
   pause:
     seconds: "{{ ceph_timeout }}"
 
-- name: DRAIN - Drain the node host
+- name: DRAIN - Drain the host
   become: true
-  delegate_to: "{{ node.split('.')[0] }}.ctlplane"
+  delegate_to: "{{ host.split('.')[0] }}.ctlplane"
   ansible.builtin.command:
-    "{{ ceph_cli }} orch host drain {{ node }}"
+    "{{ ceph_cli }} orch host drain {{ host }}"
 
 # Cleanup leftovers from the controller node
-- name: DRAIN - cleanup the node
-  delegate_to: "{{ node.split('.')[0] }}.ctlplane"
+- name: DRAIN - cleanup the host
+  delegate_to: "{{ host.split('.')[0] }}.ctlplane"
   become: true
   ansible.builtin.command:
     "cephadm rm-cluster --fsid {{ ceph_fsid }} --force"
