@@ -6,9 +6,8 @@
 
 Before starting the adoption workflow, pull the configuration from the {rhos_prev_long} services and {OpenStackPreviousInstaller} on your file system to back up the configuration files. You can then use the files later, during the configuration of the adopted services, and for the record to compare and make sure nothing has been missed or misconfigured.
 
-Make sure you have pull the os-diff repository and configure according to your environment:
-link:planning.md#Configuration tooling[Configure os-diff] 
-//kgilliga: Should we use this link in the downstream guide?
+Make sure you installed and configured the os-diff tool. For more information, see
+xref:comparing-configuration-files-between-deployments_storage-requirements[Comparing configuration files between deployments].
 
 include::../modules/proc_pulling-configuration-from-a-tripleo-deployment.adoc[leveloffset=+1]
 
