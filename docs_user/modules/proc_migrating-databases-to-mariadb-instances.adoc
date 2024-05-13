@@ -43,10 +43,10 @@ STORAGE_CLASS=local-storage
 MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
 endif::[]
 # Replace with your environment's MariaDB Galera cluster VIP and backend IPs:
-SOURCE_MARIADB_IP=192.168.122.99
+SOURCE_MARIADB_IP=172.17.0.2
 declare -A SOURCE_GALERA_MEMBERS
 SOURCE_GALERA_MEMBERS=(
-  ["standalone.localdomain"]=192.168.122.100
+  ["standalone.localdomain"]=172.17.0.100
   # ...
 )
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
