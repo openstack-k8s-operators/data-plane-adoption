@@ -359,6 +359,7 @@ while oc get pod | grep openstack-galera-0; do
 done
 
 oc delete --wait=false pod ovn-copy-data || true
+oc delete --wait=false pod mariadb-copy-data || true
 oc delete secret osp-secret || true
 ----
 
