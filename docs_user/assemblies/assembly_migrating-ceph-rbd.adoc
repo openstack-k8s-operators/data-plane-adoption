@@ -11,6 +11,16 @@ To migrate Red Hat Ceph Storage Rados Block Device (RBD), your environment must 
 * {Ceph} is running version 6 or later and is managed by cephadm/orchestrator.
 * NFS (ganesha) is migrated from a {OpenStackPreviousInstaller}-based deployment to cephadm. For more information, see xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a NFS Ganesha cluster].
 * Both the {Ceph} public and cluster networks are propagated, with {OpenStackPreviousInstaller}, to the target nodes.
-* Ceph Monitors need to keep their IPs to avoid cold migration.
+* Ceph MDS, Ceph Monitoring stack, Ceph MDS, Ceph RGW and other services have been migrated already to the target nodes;
+ifeval::["{build}" != "upstream"]
+* The daemons distribution follows the cardinality constraints described in the doc link:https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations]
+endif::[]
+* The Ceph cluster is healthy, and the `ceph -s` command returns `HEALTH_OK`
+* The procedure keeps the mon IP addresses by moving them to the {Ceph} nodes
+* Drain the existing Controller nodes
+* Deploy additional monitors to the existing nodes, and promote them as
+_admin nodes that administrators can use to manage the {CephCluster} cluster and perform day 2 operations against it.
 
-include::../modules/proc_migrating-mon-and-mgr-from-controller-nodes.adoc[leveloffset=+1]
+include::../modules/proc_migrating-mgr-from-controller-nodes.adoc[leveloffset=+1]
+
+include::../modules/proc_migrating-mon-from-controller-nodes.adoc[leveloffset=+1]
