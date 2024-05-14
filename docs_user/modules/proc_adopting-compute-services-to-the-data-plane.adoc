@@ -316,6 +316,7 @@ spec:
     - configure-os
     - ssh-known-hosts
     - run-os
+    - reboot-os
     - install-certs
     - libvirt
     - nova-compute-extraconfig
@@ -486,6 +487,7 @@ spec:
     - install-os
     - configure-os
     - run-os
+    - reboot-os
     - install-certs
     - ceph-client
     - libvirt

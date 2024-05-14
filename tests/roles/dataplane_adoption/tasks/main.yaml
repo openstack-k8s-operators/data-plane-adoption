@@ -235,6 +235,7 @@
         - configure-os
         - ssh-known-hosts
         - run-os
+        - reboot-os
         - install-certs
         - libvirt
         - nova-compute-extraconfig
@@ -340,6 +341,7 @@
         - install-os
         - configure-os
         - run-os
+        - reboot-os
         - install-certs
         - ceph-hci-pre
         - ceph-client
