@@ -1,12 +1,12 @@
-- name: print command
-  when: debug | default(true)
+- name: print daemon id option
+  when: debug | default(false)
   ansible.builtin.debug:
-    msg: "Checking daemon: {{ d_id }}"
+    msg: "daemon id: {{ d_id }}"
   vars:
     d_id: |-
       {% set did = "" %}
       {% if daemon_id != None %}
-      --daemon_id {{ daemon_id  }}
+      --daemon_id {{ daemon_id }}
       {% endif %}
       {{ did }}
 
@@ -23,6 +23,6 @@
     d_id: |-
       {% set did = "" %}
       {% if daemon_id != None %}
-      --daemon_id {{ daemon_id  }}
+      --daemon_id {{ daemon_id }}
       {% endif %}
       {{ did }}

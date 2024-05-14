@@ -9,7 +9,7 @@ ceph_daemons_layout:
 ceph_container_ns: quay.io/ceph
 ceph_container_image: ceph
 ceph_container_tag: v18
-ceph_container: "{{ ceph_container_ns }}/{{ceph_container_image}}:{{ceph_container_tag}}"
+ceph_container: "{{ ceph_container_ns }}/{{ ceph_container_image }}:{{ ceph_container_tag }}"
 # ceph_config_tmp_client_home is used to get a tmp ceph_cli that can be run
 # from a mon (usually controller-0) to connect to a Ceph cluster after the
 # node is drained and removed

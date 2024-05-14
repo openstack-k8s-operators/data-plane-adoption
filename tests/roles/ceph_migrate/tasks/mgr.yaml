@@ -1,6 +1,6 @@
 # Get a fresh ceph_cli
 - name: Get ceph_cli
-  include_tasks: ceph_cli.yaml
+  ansible.builtin.include_tasks: ceph_cli.yaml
   vars:
     ceph_fsid: "{{ mon_dump.fsid }}"
     ceph_cluster: ceph
@@ -19,7 +19,7 @@
   ansible.builtin.include_tasks: labels.yaml
   vars:
     nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
-    action: "add"
+    act: "add"
     labels:
       - "mgr"
 
@@ -31,8 +31,8 @@
       {% set mgr = {} %}
       {% for item in servicemap %}
       {%   if item.service_type == 'mgr' %}
-      {%     set _ = mgr.__setitem__('service_type',item.service_type) %}
-      {%     set _ = mgr.__setitem__('service_name',item.service_name) %}
+      {%     set _ = mgr.__setitem__('service_type', item.service_type) %}
+      {%     set _ = mgr.__setitem__('service_name', item.service_name) %}
       {%     set _ = mgr.__setitem__('spec', {}) %}
       {%   endif %}
       {% endfor %}
@@ -61,7 +61,8 @@
   when: debug | default(false)
 
 # Wait for the redeploy to finish before moving to the next stage
-- ansible.builtin.include_tasks: wait_daemons.yaml
+- name: MGR - wait daemons
+  ansible.builtin.include_tasks: wait_daemons.yaml
   vars:
     daemon: mgr
     daemon_id:

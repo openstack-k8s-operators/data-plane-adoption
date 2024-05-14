@@ -1,86 +1,101 @@
-- name: Fail if input is not provided
-  fail:
+- name: ansible.builtin.fail if input is not provided
+  ansible.builtin.fail:
     msg: "Input not ready"
   when: ceph is undefined or ceph | length == 0
 
 - name: Validate SRC Ceph Cluster HEALTH
+  tags:
+    - ceph_health
   block:
-    - ansible.builtin.debug:
+    - name: Get cluster health
+      ansible.builtin.debug:
         msg: "{{ ceph.health.status }}"
       when: debug | default(false)
 
-    - name: Fail if health is HEALTH_WARN || HEALTH_ERR
-      fail:
+    - name: ansible.builtin.fail if health is HEALTH_WARN || HEALTH_ERR
+      ansible.builtin.fail:
         msg: Ceph is in {{ ceph.health.status }} state.
       when:
         - ceph.health.status == 'HEALTH_WARN' or
           ceph.health.status == 'HEALTH_ERR'
 
 - name: Validate SRC Ceph Cluster PGMAP
+  when: ceph.pgmap is defined
+  vars:
+    pgstate: "{{ ceph | community.general.json_query('pgmap.pgs_by_state[0].state_name') }}"
   block:
-    - ansible.builtin.debug:
-        msg: "{{ ceph.pgmap.pgs_by_state[0].state_name }}"
+    - name: PgMap
       when: debug | default(false)
+      ansible.builtin.debug:
+        msg: "PGs State is: {{ pgstate }}"
 
-    - name: Fail if PGs are not in active+clean state
-      fail:
-        msg: "{{ PGs State is: ceph.pgmap.pgs_by_state[0].state_name }}"
-      when: ceph.pgmap.pgs_by_state[0].state_name != 'active+clean'
+    - name: ansible.builtin.fail if PGs are not in active+clean state
+      when: pgstate != 'active+clean'
+      ansible.builtin.fail:
+        msg: "PGs State is: {{ pgstate }}"
 
 - name: Validate SRC Ceph Cluster OSDMAP
+  when: ceph.osdmap is defined
+  vars:
+    num_up_osds: "{{ ceph | community.general.json_query('osdmap.num_up_osds') | default(0) }}"
+    num_osds: "{{ ceph | community.general.json_query('osdmap.num_osds') | default(1) }}"
+    pct: "{{ (num_up_osds | float | default(0.0) / num_osds | float | default(1.0)) * 100 }}"
   block:
-    - ansible.builtin.debug:
-        msg: "{{ ceph.osdmap.num_up_osds | default(0) / ceph.osdmap.num_osds | default(0) }}"
-      when: debug | default(false)
+    - name: OSDMap
+      ansible.builtin.debug:
+        msg: "{{ pct }}"
+      when: debug | default(true)
 
-    - name: Fail if there is an unacceptable OSDs number
-      fail:
-        msg: "{{ ceph.osdmap.num_up_osds|default(0) }} / {{ ceph.osdmap.num_osds|default(0) }} OSDs available"
-      when: osds | float < 1.0
-      vars:
-        osds: "{{ ceph.osdmap.num_osds / ceph.osdmap.num_up_osds }}"
+    - name: ansible.builtin.fail if there is an unacceptable OSDs number
+      ansible.builtin.fail:
+        msg: "{{ pct }} % OSDs available"
+      when: pct | float < 100
 
 - name: Validate the Ceph Cluster release
   block:
-    - ansible.builtin.debug:
+    - name: MonMap
+      ansible.builtin.debug:
         msg: "{{ ceph.monmap.min_mon_release_name }}"
       when: debug | default(false)
 
-    - name: Fail if Ceph <= Quincy
-      fail:
-        msg: "{{ Ceph version is <= Reef }}"
+    - name: ansible.builtin.fail if Ceph <= Quincy
+      ansible.builtin.fail:
+        msg: "Ceph version is <= Reef"
       when: ceph.monmap.min_mon_release_name != "quincy"
 
 - name: Mons are in quorum
   block:
-    - ansible.builtin.debug:
+    - name: Mons in quorum
+      ansible.builtin.debug:
         msg: "{{ ceph.monmap.num_mons }}"
       when: debug | default(false)
 
-    - name: Fail if Mons are not in quorum
-      fail:
+    - name: ansible.builtin.fail if Mons are not in quorum
+      ansible.builtin.fail:
         msg: "Mons: {{ ceph.monmap.num_mons }}"
       when: ceph.monmap.num_mons != decomm_nodes | length
 
 - name: Mgr is active
   block:
-    - ansible.builtin.debug:
+    - name: is Ceph Mgr available
+      ansible.builtin.debug:
         msg: "{{ ceph.mgrmap.available }}"
       when: debug | default(false)
 
-    - name: Fail if Mgr is not available
-      fail:
+    - name: ansible.builtin.fail if Mgr is not available
+      ansible.builtin.fail:
         msg: "{{ ceph.mgrmap.available }}"
       when: not ceph.mgrmap.available | bool | default(false)
 
 - name: No event in progress
   block:
-    - ansible.builtin.debug:
+    - name: in progress events
+      ansible.builtin.debug:
         msg: "{{ ceph.progress_events | length }}"
       when: debug | default(false)
 
-    - name: Fail if there are in progress events
-      fail:
+    - name: ansible.builtin.fail if there are in progress events
+      ansible.builtin.fail:
         msg: "{{ ceph.progress_events }}"
       when: ceph.progress_events | length > 0
 

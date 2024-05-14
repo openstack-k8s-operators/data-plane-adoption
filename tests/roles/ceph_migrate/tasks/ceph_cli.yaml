@@ -19,16 +19,15 @@
     ceph_cli: >-
       {{ ceph_container_cli }} run --rm {{ ceph_container_options }}
       --volume {{ ceph_config_home }}:/etc/ceph:z
-      {% if admin_daemon|default(false) %}
+      {% if admin_daemon | default(false) %}
       --volume /var/run/ceph/{{ ceph_fsid }}:/var/run/ceph:z
       {% endif %}
       --entrypoint {{ ceph_command | default('ceph') }}
       {{ ceph_container }}
-      {% if ceph_command|default('ceph') == 'ceph' or ceph_command|default('ceph') == 'rados' or ceph_command|default('ceph') == 'rbd' -%}
-        {% if not admin_daemon|default(false) -%}
-        --fsid {{ ceph_fsid }} -c /etc/ceph/{{ ceph_cluster }}.conf -k /etc/ceph/{{ ceph_cluster }}.client.{{ select_keyring| default('admin') }}.keyring
-        {%- endif %}
-        {% if external_cluster|default(false) -%}
-        -n client.{{ select_keyring }}
-        {%- endif %}
+      {% if ceph_command | default('ceph') == 'ceph' or ceph_command | default('ceph') == 'rados' or ceph_command | default('ceph') == 'rbd' -%}
+        {% if not admin_daemon | default(false) -%}
+        --fsid {{ ceph_fsid }} -c /etc/ceph/{{ ceph_cluster }}.conf -k /etc/ceph/{{ ceph_cluster }}.client.{{ select_keyring | default('admin') }}.keyring
       {%- endif %}
+        {% if external_cluster | default(false) -%}
+        -n client.{{ select_keyring }}
+      {%- endif %}{%- endif %}

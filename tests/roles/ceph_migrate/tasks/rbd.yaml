@@ -4,16 +4,15 @@
 # complete the migration (either because of cardinality of just because we
 # don't have enough nodes).
 - name: Setup a Ceph client to the first node
-  block:
-    - ansible.builtin.include_tasks: ceph_client.yaml
-      vars:
-        # Use the inventory as source of truth to make sure we **always**
-        # select mon[0] as client. If we stick on decomm_nodes nodes we
-        # might end up selecting a different node on multiple runs.
-        cur_mon: "{{ groups['mon'][0] | default(decomm_nodes | list | sort | first) }}"
-      tags:
-        - ceph_client
-        - ceph_rbd
+  ansible.builtin.include_tasks: ceph_client.yaml
+  vars:
+    # Use the inventory as source of truth to make sure we **always**
+    # select mon[0] as client. If we stick on decomm_nodes nodes we
+    # might end up selecting a different node on multiple runs.
+    cur_mon: "{{ groups['mon'][0] | default(decomm_nodes | list | sort | first) }}"
+  tags:
+    - ceph_client
+    - ceph_rbd
 
 # Extend mgr deployment to help with failover
 - name: MGR - Migrate RBD node
@@ -46,8 +45,8 @@
       {% set mon = {} %}
       {% for item in servicemap %}
       {%   if item.service_type == 'mon' %}
-      {%     set _ = mon.__setitem__('service_type',item.service_type) %}
-      {%     set _ = mon.__setitem__('service_name',item.service_name) %}
+      {%     set _ = mon.__setitem__('service_type', item.service_type) %}
+      {%     set _ = mon.__setitem__('service_name', item.service_name) %}
       {%     set _ = mon.__setitem__('spec', {}) %}
       {%   endif %}
       {% endfor %}
@@ -75,6 +74,8 @@
 # we need to serially migrate mons, so we loop over the nodes and run the
 # procedure provided by mon.yaml
 - name: MON - Migrate RBD node
+  tags:
+    - ceph_rbd
   block:
     - name: MON - Migrate RBD node
       ansible.builtin.include_tasks: mon.yaml
@@ -82,8 +83,8 @@
         cur_mon: "{{ node.0 }}"
         target_node: "{{ node.1 }}"
       # This condition might be a different one
-      loop: "{{ decomm_nodes| zip(target_nodes) }}"
-      #loop: "{{ decomm_nodes|zip(hostmap.keys() | difference(decomm_nodes) | sort) | list }}"
+      loop: "{{ decomm_nodes | zip(target_nodes) }}"
+      # loop: "{{ decomm_nodes|zip(hostmap.keys() | difference(decomm_nodes) | sort) | list }}"
       loop_control:
         loop_var: node
 
@@ -91,8 +92,5 @@
     # cephadm to converge to a state that sees the new data. We can replace
     # this check later in time with a dynamic wait() based on cephadm
     - name: Sleep before moving to the next mon
-      pause:
+      ansible.builtin.pause:
         seconds: "{{ ceph_timeout }}"
-  tags:
-    - ceph_rbd
-

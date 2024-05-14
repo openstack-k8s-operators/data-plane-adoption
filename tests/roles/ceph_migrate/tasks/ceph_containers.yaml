@@ -15,13 +15,13 @@
 # under the License.
 
 - name: Get ceph_cli
-  include_tasks: ceph_cli.yaml
+  ansible.builtin.include_tasks: ceph_cli.yaml
   vars:
     ceph_fsid: "{{ mon_dump.fsid }}"
     ceph_cluster: ceph
 
 - name: set container image base in ceph configuration
-  command: |
+  ansible.builtin.command: |
     {{ ceph_cli }} config set mgr mgr/cephadm/container_image_base {{ ceph_container }}
   changed_when: false
   become: true
@@ -31,25 +31,25 @@
   become: true
   block:
     - name: set alertmanager container image in ceph configuration
-      command: |
+      ansible.builtin.command: |
         {{ ceph_cli }} config set mgr mgr/cephadm/container_image_alertmanager \
         {{ ceph_alertmanager_container_image }}
       changed_when: false
 
     - name: set grafana container image in ceph configuration
-      command: |
+      ansible.builtin.command: |
         {{ ceph_cli }} config set mgr mgr/cephadm/container_image_grafana \
         {{ ceph_grafana_container_image }}
       changed_when: false
 
     - name: set node-exporter container image in ceph configuration
-      command: |
+      ansible.builtin.command: |
         {{ ceph_cli }} config set mgr mgr/cephadm/container_image_node_exporter \
         {{ ceph_node_exporter_container_image }}
       changed_when: false
 
     - name: set prometheus container image in ceph configuration
-      command: |
+      ansible.builtin.command: |
         {{ ceph_cli }} config set mgr mgr/cephadm/container_image_prometheus \
         {{ ceph_prometheus_container_image }}
       changed_when: false

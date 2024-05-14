@@ -1,13 +1,13 @@
 # Get a fresh ceph_cli
 - name: Get ceph_cli
-  include_tasks: ceph_cli.yaml
+  ansible.builtin.include_tasks: ceph_cli.yaml
   vars:
     ceph_fsid: "{{ mon_dump.fsid }}"
     ceph_cluster: ceph
 
 # Check if all the required data are present
 - name: Fail if RGW VIPs are not defined
-  fail:
+  ansible.builtin.fail:
     msg: "No RGW VIPs have been selected"
   when:
     - ceph_rgw_virtual_ips_list | length == 0
@@ -28,10 +28,10 @@
 
 # - Expand labels to the target nodes
 - name: Apply RGW label to the target nodes
-  import_tasks: labels.yaml
+  ansible.builtin.import_tasks: labels.yaml
   vars:
     nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
-    action: "add"
+    act: "add"
     labels:
       - "rgw"
 
@@ -43,10 +43,10 @@
       {% set rgw = {} %}
       {% for item in servicemap %}
       {%   if item.service_type == 'rgw' %}
-      {%     set _ = rgw.__setitem__('service_type',item.service_type) %}
-      {%     set _ = rgw.__setitem__('service_name',item.service_name) %}
+      {%     set _ = rgw.__setitem__('service_type', item.service_type) %}
+      {%     set _ = rgw.__setitem__('service_name', item.service_name) %}
       {%     set _ = rgw.__setitem__('networks', item.networks) %}
-      {%     set _ = item.spec.__setitem__('rgw_frontend_port', 8090)  %}
+      {%     set _ = item.spec.__setitem__('rgw_frontend_port', 8090) %}
       {%     set _ = rgw.__setitem__('spec', item.spec) %}
       {%   endif %}
       {% endfor %}
@@ -57,14 +57,14 @@
   ansible.builtin.debug:
     msg: "{{ rgw_spec }}"
 
-#- name: Apply ceph rgw keystone config
-#  #become: true
-#  ansible.builtin.command: |
-#    echo "{{ ceph_cli }} config set global rgw_keystone_url {{ ceph_keystone_ep }}"
-#  changed_when: false
-#  when:
-#    - ceph_keystone_ep is defined
-#    - ceph_keystone_ep | length > 0
+# - name: Apply ceph rgw keystone config
+#   #become: true
+#   ansible.builtin.command: |
+#     echo "{{ ceph_cli }} config set global rgw_keystone_url {{ ceph_keystone_ep }}"
+#   changed_when: false
+#   when:
+#     - ceph_keystone_ep is defined
+#     - ceph_keystone_ep | length > 0
 
 # Update and apply the spec: it will update the Monitoring Stack deployment,
 # and place daemons on the target nodes
@@ -122,11 +122,12 @@
     - ceph_rgw_ingress
 
 - name: Wait for cephadm to redeploy
-  pause:
+  ansible.builtin.pause:
     seconds: "{{ ceph_timeout }}"
 
 # Wait for the redeploy to finish before moving to the next stage
-- ansible.builtin.include_tasks: wait_daemons.yaml
+- name: RGW - wait daemons
+  ansible.builtin.include_tasks: wait_daemons.yaml
   vars:
     daemon: rgw
     daemon_id:

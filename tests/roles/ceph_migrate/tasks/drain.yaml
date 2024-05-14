@@ -1,6 +1,6 @@
 # Refresh the client to point to a diff config-home
 - name: Get ceph_cli
-  include_tasks: ceph_cli.yaml
+  ansible.builtin.include_tasks: ceph_cli.yaml
   vars:
     ceph_config_home: "{{ ceph_config_tmp_client_home }}"
     ceph_fsid: "{{ mon_dump.fsid }}"
@@ -12,7 +12,7 @@
   vars:
     nodes:
       - "{{ host }}"
-    action: "rm"
+    act: "rm"
     labels:
       - "mon"
       - "mgr"
@@ -23,11 +23,11 @@
   become: true
   ansible.builtin.command:
     "{{ ceph_cli }} orch daemon rm mon.{{ host.split('.')[0] }} --force"
-  ignore_errors: true
+  # ignore_errors: true
 
 # Sleep before moving to the next mon
 - name: Pause
-  pause:
+  ansible.builtin.pause:
     seconds: "{{ ceph_timeout }}"
 
 - name: DRAIN - Drain the host

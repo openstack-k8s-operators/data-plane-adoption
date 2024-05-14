@@ -1,6 +1,6 @@
 # Get a fresh ceph_cli
 - name: Get ceph_cli
-  include_tasks: ceph_cli.yaml
+  ansible.builtin.include_tasks: ceph_cli.yaml
   vars:
     ceph_fsid: "{{ mon_dump.fsid }}"
     ceph_cluster: ceph
@@ -22,8 +22,8 @@
       {% set mds = {} %}
       {% for item in servicemap %}
       {%   if item.service_type == 'mds' %}
-      {%     set _ = mds.__setitem__('service_type',item.service_type) %}
-      {%     set _ = mds.__setitem__('service_name',item.service_name) %}
+      {%     set _ = mds.__setitem__('service_type', item.service_type) %}
+      {%     set _ = mds.__setitem__('service_name', item.service_name) %}
       {%     set _ = mds.__setitem__('spec', {}) %}
       {%   endif %}
       {% endfor %}
@@ -36,10 +36,10 @@
 
 # - Expand labels to the rest of the hosts
 - name: Expand MDS labels to the overcloud nodes
-  import_tasks: labels.yaml
+  ansible.builtin.import_tasks: labels.yaml
   vars:
     nodes: "{{ hostmap.keys() }}"
-    action: "add"
+    act: "add"
     labels:
       - "mds"
 
@@ -111,15 +111,16 @@
 # Remove labels from the controller nodes: it will force a failover and migrate
 # the existing active MDS daemon to the target node
 - name: Remove MDS label from the overcloud nodes
-  import_tasks: labels.yaml
+  ansible.builtin.import_tasks: labels.yaml
   vars:
     nodes: "{{ decomm_nodes }}"
-    action: "rm"
+    act: "rm"
     labels:
       - "mds"
 
 # Wait for the redeploy to finish before moving to the next stage
-- ansible.builtin.include_tasks: wait_daemons.yaml
+- name: Wait daemons
+  ansible.builtin.include_tasks: wait_daemons.yaml
   vars:
     daemon: mds
     daemon_id:

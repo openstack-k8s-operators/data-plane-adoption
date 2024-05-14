@@ -15,6 +15,7 @@
         remote_src: true
         src: "{{ ceph_config_tmp_client_home }}/{{ item }}"
         dest: "/etc/ceph"
+        mode: '0644'
       loop:
         - ceph.conf
         - ceph.client.admin.keyring
@@ -75,15 +76,16 @@
       become: true
       ansible.builtin.command: |
         cephadm shell -- ceph orch host ls -f json
-      register: hosts
-    - ansible.builtin.set_fact:
-        hosts: "{{ hosts.stdout | from_json }}"
+      register: nds
+    - name: Load nodes
+      ansible.builtin.set_fact:
+        nds: "{{ nds.stdout | from_json }}"
     - name: Load hostmap List
       ansible.builtin.set_fact:
         hostmap: |-
           {% set hm = {} %}
-          {% for h in hosts %}
-          {%     set _ = hm.__setitem__(h.hostname,h.labels) %}
+          {% for h in nds %}
+          {%     set _ = hm.__setitem__(h.hostname, h.labels) %}
           {% endfor %}
           {{ hm }}
     - name: Print Host Map
@@ -100,7 +102,8 @@
       ansible.builtin.command:
         cephadm shell -- ceph mon dump -f json
       register: mons
-    - ansible.builtin.set_fact:
+    - name: Get Monmap
+      ansible.builtin.set_fact:
         mon_dump: "{{ mons.stdout | from_json }}"
     - name: Print monmap
       when: debug | default(false)

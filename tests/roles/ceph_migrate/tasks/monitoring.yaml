@@ -1,6 +1,6 @@
 # Get a fresh ceph_cli
 - name: Get ceph_cli
-  include_tasks: ceph_cli.yaml
+  ansible.builtin.include_tasks: ceph_cli.yaml
   vars:
     ceph_fsid: "{{ mon_dump.fsid }}"
     ceph_cluster: ceph
@@ -10,7 +10,7 @@
   ansible.builtin.import_tasks: labels.yaml
   vars:
     nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
-    action: "add"
+    act: "add"
     labels:
       - "monitoring"
 
@@ -40,8 +40,8 @@
       {% for item in servicemap %}
       {%   if (item.service_type == 'grafana') or (item.service_type == 'prometheus') or (item.service_type == 'alertmanager') %}
       {%     set cur = {} %}
-      {%     set _ = cur.__setitem__('service_type',item.service_type) %}
-      {%     set _ = cur.__setitem__('service_name',item.service_name) %}
+      {%     set _ = cur.__setitem__('service_type', item.service_type) %}
+      {%     set _ = cur.__setitem__('service_name', item.service_name) %}
       {%     set _ = cur.__setitem__('networks', item.networks) %}
       {%     set _ = cur.__setitem__('spec', item.spec) %}
       {%     set _ = monitoring_stack.__setitem__(item.service_type, cur) %}
@@ -81,9 +81,9 @@
     - "{{ prometheus }}"
     - "{{ alertmanager }}"
   vars:
-    - grafana: "{% set grf = monitoring_stack.get('grafana') %}{{ grf }}"
-    - prometheus: "{% set prom = monitoring_stack.get('prometheus') %}{{ prom }}"
-    - alertmanager: "{% set alm = monitoring_stack.get('alertmanager') %}{{ alm }}"
+    grafana: "{% set grf = monitoring_stack.get('grafana') %}{{ grf }}"
+    prometheus: "{% set prom = monitoring_stack.get('prometheus') %}{{ prom }}"
+    alertmanager: "{% set alm = monitoring_stack.get('alertmanager') %}{{ alm }}"
 
 - name: Print the resulting spec
   ansible.builtin.debug:
@@ -91,7 +91,8 @@
   when: debug | default(true)
 
 # Wait for the redeploy to finish before moving to the next stage
-- ansible.builtin.include_tasks: wait_daemons.yaml
+- name: MONITORING - wait daemons
+  ansible.builtin.include_tasks: wait_daemons.yaml
   vars:
     daemon: "{{ item }}"
     daemon_id:

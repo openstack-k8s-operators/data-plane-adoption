@@ -17,7 +17,7 @@
 - name: Print INPUT
   when: debug | default(true)
   block:
-    - name: Set/Unset labels - {{ action }}
+    - name: Set/Unset labels - {{ act }}
       ansible.builtin.debug:
         msg: "{{ labels }}"
 
@@ -25,8 +25,8 @@
       ansible.builtin.debug:
         msg: "{{ nodes }}"
 
-- name: Set/Unset labels - {{ action }}
+- name: Set/Unset labels - {{ act }}
   become: true
   ansible.builtin.command:
-    "{{ ceph_cli }} orch host label {{ action }} {{ item.0 }} {{ item.1 }}"
-  loop: "{{ nodes |default([]) | product(labels|default([])) | list }}"
+    "{{ ceph_cli }} orch host label {{ act }} {{ item.0 }} {{ item.1 }}"
+  loop: "{{ nodes | default([]) | product(labels | default([])) | list }}"
