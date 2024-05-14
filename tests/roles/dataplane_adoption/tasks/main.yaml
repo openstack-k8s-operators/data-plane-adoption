@@ -441,6 +441,20 @@
 - name: Run pre-adoption validation
   when: run_pre_adoption_validation|bool
   block:
+    - name: Create OpenStackDataPlaneService/reboot-strategy
+      no_log: "{{ use_no_log }}"
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc apply -f - <<EOF
+        apiVersion: dataplane.openstack.org/v1beta1
+        kind: OpenStackDataPlaneService
+        metadata:
+          name: reboot-strategy
+        spec:
+          playbook: osp.edpm.reboot
+        EOF
+
     - name: Create OpenStackDataPlaneService/pre-adoption-validation
       no_log: "{{ use_no_log }}"
       ansible.builtin.shell: |
@@ -455,7 +469,7 @@
           playbook: osp.edpm.pre_adoption_validation
         EOF
 
-    - name: Create OpenStackDataPlaneDeployment to run the validation only
+    - name: Create OpenStackDataPlaneDeployment to run the validation and test reboot
       no_log: "{{ use_no_log }}"
       ansible.builtin.shell: |
         {{ shell_header }}
@@ -470,6 +484,7 @@
           - openstack
           servicesOverride:
           - pre-adoption-validation
+          - reboot-strategy
         EOF
 
     - name: Wait for the validation deployment to finish
