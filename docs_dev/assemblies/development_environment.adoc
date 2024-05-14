@@ -141,10 +141,10 @@ make standalone
 To deploy using TLS everywhere enabled, instead run:
 
 [,bash]
----
+----
 cd ~/install_yamls/devsetup
 TLS_ENABLED=true make standalone
----
+----
 
 == Install the openstack-k8s-operators (openstack-operator)
 
