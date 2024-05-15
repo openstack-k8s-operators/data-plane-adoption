@@ -64,6 +64,10 @@
     msg: "{{ spc }}"
   when: debug | default(false)
 
+- name: Wait for the orchestrator to process the spec
+  ansible.builtin.pause:
+    seconds: "{{ ceph_timeout }}"
+
 - name: Reload MdsMap
   # cephadm runs w/ root privileges
   become: true
@@ -124,3 +128,7 @@
   vars:
     daemon: mds
     daemon_id:
+
+- name: Sleep before moving to the next phase
+  ansible.builtin.pause:
+    seconds: "{{ ceph_timeout }}"

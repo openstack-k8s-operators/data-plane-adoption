@@ -19,7 +19,7 @@ repos:
     rev: v6.22.1
     hooks:
       - id: ansible-lint
-        entry: env ANSIBLE_ROLES_PATH=./tests/roles:$ANSIBLE_ROLES_PATH ansible-lint
+        entry: env ANSIBLE_ROLES_PATH=./tests/roles:$ANSIBLE_ROLES_PATH ANSIBLE_LIBRARY=./tests/plugins/modules:$ANSIBLE_LIBRARY ansible-lint
   - repo: https://github.com/openstack-dev/bashate.git
     rev: 2.1.1
     hooks:

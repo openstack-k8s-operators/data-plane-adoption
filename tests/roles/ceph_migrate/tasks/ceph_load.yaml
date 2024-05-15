@@ -20,6 +20,13 @@
         - ceph.conf
         - ceph.client.admin.keyring
 
+- name: Ensure backup directory exists
+  when: dump | default(false)
+  ansible.builtin.file:
+    path: "{{ ceph_config_tmp_client_home }}/logs"
+    state: directory
+    mode: '0755'
+
 # CEPH HEALTH
 - name: Ceph Health
   block:
@@ -32,7 +39,12 @@
     - name: Load ceph data
       ansible.builtin.set_fact:
         ceph: "{{ ceph.stdout | from_json }}"
-
+    - name: Dump ceph -s output to log file
+      when: dump | default(false)
+      ansible.builtin.copy:
+        content: "{{ ceph }}"
+        dest: "{{ ceph_config_tmp_client_home }}/logs/ceph_health.log"
+        mode: '0644'
 
 # CEPH SERVICE MAP
 - name: Ceph Service Map
@@ -43,14 +55,24 @@
       ansible.builtin.command: |
         cephadm shell -- ceph orch ls -f json
       register: smap
+
     - name: Load Service Map
       ansible.builtin.set_fact:
         servicemap: "{{ smap.stdout | from_json }}"
+
     - name: Print Service Map
       when: debug | default(false)
       ansible.builtin.debug:
         msg: "{{ item.service_type }} - {{ item.placement }}"
       loop: "{{ servicemap | flatten(levels=1) }}"
+
+    # Dump config to a log file
+    - name: Dump ceph orch ls output to log file
+      when: dump | default(false)
+      ansible.builtin.copy:
+        content: "{{ servicemap }}"
+        dest: "{{ ceph_config_tmp_client_home }}/logs/ceph_orch_ls.log"
+        mode: '0644'
 
 # CEPH CONFIG DUMP
 - name: Ceph Config Dump
@@ -61,11 +83,19 @@
       ansible.builtin.command: |
         cephadm shell -- ceph config dump -f json
       register: ceph_conf
+
     - name: Print Ceph config dump
       when: debug | default(false)
       ansible.builtin.debug:
-        msg: "{{ item.name }} - {{ item.value }}"
-      loop: "{{ ceph_confdump | flatten(levels=1) }}"
+        msg: "{{ ceph_conf | from_json }}"
+
+    # Dump config to a log file
+    - name: Dump ceph config dump output to log file
+      when: dump | default(false)
+      ansible.builtin.copy:
+        content: "{{ ceph_conf.stdout | from_json }}"
+        dest: "{{ ceph_config_tmp_client_home }}/logs/ceph_config_dump.log"
+        mode: '0644'
 
 
 # CEPH HOSTMAP LIST
@@ -93,6 +123,12 @@
       ansible.builtin.debug:
         msg: "{{ item }}"
       loop: "{{ hostmap | flatten(levels=1) }}"
+    - name: Dump ceph orch host ls output to log file
+      when: dump | default(false)
+      ansible.builtin.copy:
+        content: "{{ hostmap | flatten(levels=1) }}"
+        dest: "{{ ceph_config_tmp_client_home }}/logs/ceph_orch_host_ls.log"
+        mode: '0644'
 
 # CEPH MON DUMP
 - name: Ceph Mon dump
@@ -109,6 +145,12 @@
       when: debug | default(false)
       ansible.builtin.debug:
         msg: "{{ mons.stdout | from_json }}"
+    - name: Dump ceph mon dump output to log file
+      when: dump | default(false)
+      ansible.builtin.copy:
+        content: "{{ mon_dump }}"
+        dest: "{{ ceph_config_tmp_client_home }}/logs/ceph_mon_dump.log"
+        mode: '0644'
 
 # We assume that nodes to decommission are where the mon label is present, and
 # the target_nodes are already enrolled in the Ceph cluster: this way we can

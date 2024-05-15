@@ -37,12 +37,14 @@
   # references to the old mon daemon coming from the drained node
   until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
   loop_control:
-    label: "check mons quorum"
+    label: "MON - check mons quorum"
   tags:
     - ceph_mon_quorum
 
 - name: Backup data for client purposes
   delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
+  tags:
+    - ceph_backup
   block:
     - name: Ensure backup directory exists
       ansible.builtin.file:
@@ -59,12 +61,10 @@
       become: true
       ansible.builtin.copy:
         remote_src: true
-        src: "/etc/ceph/{{ item }}"
+        src: "{{ item.path }}"
         dest: "{{ ceph_config_tmp_client_home }}"
         mode: '0644'
-      loop:
-        - ceph.conf
-        - ceph.client.admin.keyring
+      loop: "{{ dir_ceph_files.files }}"
 
 # Before draining the current node, migrate the active mgr on a different
 # _admin host
@@ -102,21 +102,7 @@
   tags:
     - ceph_drain
 
-# The node should be empty at this point, let's remove it from the Ceph
-# cluster
-- name: MON - rm the cur_mon host from the Ceph cluster
-  # when: cur_mon in decomm_nodes
-  become: true
-  ansible.builtin.command:
-    "{{ ceph_cli }} orch host rm {{ cur_mon }} --force"
-  # let's ignore this for now (for idempotency purposes)
-  # TODO: have a good condition here instead of ignore_errors
-  # ignore_errors: true
-  tags:
-    - ceph_drain
-
 - name: MON - Get current mon IP address
-  # when: cur_mon in decomm_nodes
   ansible.builtin.set_fact:
     mon_ipaddr: "{{ mon_ip | split(':') | first | ansible.utils.ipaddr }}"
   vars:
@@ -132,7 +118,6 @@
   # if no mon addr, this variable is False and the whole block is skipped
   # because there's no network related action that should be performed
   when:
-    # - cur_mon in decomm_nodes
     - mon_ipaddr | default('')
   block:
     - name: MON - Get current mon IP address
@@ -184,7 +169,7 @@
     # addresses, it might happen that the mon is deployed using the right IP.
     # For this reason we need to redeploy it by rm + add (as redeploy does not
     # accept an IP as input
-    - name: MON - wait for mon
+    - name: MON - Check quorum
       become: true
       ansible.builtin.command: "{{ ceph_cli }} mon stat -f json"
       register: monstat
@@ -192,7 +177,7 @@
       delay: 3
       until: "'{{ target_node.split('.')[0] }}' in monstat.stdout | from_json | community.general.json_query('quorum[*].name') | default([]) | list"
       loop_control:
-        label: "MON - wait for mon"
+        label: "MON - Check quorum"
 
     # Even though we explicitly redeploy a given mon using the host:ip format,
     # it is possible that the orchestrator (who owns the process and the spec)
@@ -227,16 +212,34 @@
       ansible.builtin.debug:
         msg: "{{ spc }}"
 
-    - name: MON - Delete the running mon
-      become: true
-      ansible.builtin.command:
-        "{{ ceph_cli }} orch daemon rm mon.{{ target_node.split('.')[0] }} --force"
-      # TODO: replace ignore_errors with a condition
-      # ignore_errors: true
+    # Check if mon even exists before removing it
+    - name: MON - Get tmp mon
+      ansible.builtin.command: "{{ ceph_cli }} orch ps --daemon_type mon --daemon_id {{ daemon_id }} -f json"
+      register: psmon
+      vars:
+        daemon_id: "{{ target_node.split('.')[0] }}"
 
-    - name: Wait for the spec to be updated
+    - name: MON - Delete the running mon
+      when: psmon.stdout | from_json | community.general.json_query('[*].daemon_name') | length > 0
+      become: true
+      ansible.builtin.command: "{{ ceph_cli }} orch daemon rm mon.{{ target_node.split('.')[0] }} --force"
+      until: '"Removed" in rmmon.stdout'
+      register: rmmon
+      retries: 20
+      delay: 3
+      loop_control:
+        label: "MON - Get tmp mon"
+
+    - name: Wait for the current mon to be deleted
       ansible.builtin.pause:
         seconds: "{{ ceph_wait_mon_timeout }}"
+
+    # Check if mon even exists before removing it
+    - name: MON - Check there is no mon on {{ target_node }}
+      ansible.builtin.command: "{{ ceph_cli }} orch ps --daemon_type mon --daemon_id {{ daemon_id }} -f json"
+      register: psmon
+      vars:
+        daemon_id: "{{ target_node.split('.')[0] }}"
 
     - name: MON - Redeploy mon on {{ target_node }}
       when: debug | default(true)
@@ -247,6 +250,7 @@
       become: true
       when:
         - mon_ipaddr | default('')
+        - psmon.stdout | from_json | community.general.json_query('[*].daemon_name') | length == 0
       ansible.builtin.command:
         "{{ ceph_cli }} orch daemon add mon {{ target_node.split('.')[0] }}:{{ mon_ipaddr }}"
 
@@ -264,7 +268,7 @@
   # references to the old mon daemon coming from the drained node
   until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
   loop_control:
-    label: "check mons quorum"
+    label: "MON - check mons quorum"
   tags:
     - ceph_mon_quorum
 

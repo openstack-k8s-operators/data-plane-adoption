@@ -6,8 +6,23 @@
     ceph_fsid: "{{ mon_dump.fsid }}"
     ceph_cluster: ceph
 
+# Check if mon even exists before removing it
+- name: MON - wait daemons
+  ansible.builtin.command: "{{ ceph_cli }} orch ps --daemon_type mon --daemon_id {{ daemon_id }} -f json"
+  register: psm
+  vars:
+    daemon_id: "{{ host.split('.')[0] }}"
+
+- name: DRAIN - Delete the mon running on the current controller node
+  when: psm.stdout | from_json | community.general.json_query('[*].daemon_name') | length > 0
+  delegate_to: "{{ host.split('.')[0] }}.ctlplane"
+  become: true
+  ansible.builtin.command:
+    "{{ ceph_cli }} orch daemon rm mon.{{ host.split('.')[0] }} --force"
+
 # Remove labels from the src node
 - name: DRAIN - remove label from the src node
+  when: psm.stdout | from_json | community.general.json_query('[*].daemon_name') | length > 0
   ansible.builtin.include_tasks: labels.yaml
   vars:
     nodes:
@@ -18,25 +33,27 @@
       - "mgr"
       - "_admin"
 
-- name: DRAIN - Delete the mon running on the current controller node
-  delegate_to: "{{ host.split('.')[0] }}.ctlplane"
-  become: true
-  ansible.builtin.command:
-    "{{ ceph_cli }} orch daemon rm mon.{{ host.split('.')[0] }} --force"
-  # ignore_errors: true
-
-# Sleep before moving to the next mon
+# Sleep before moving to the next task
 - name: Pause
   ansible.builtin.pause:
-    seconds: "{{ ceph_timeout }}"
+    seconds: "{{ ceph_wait_mon_timeout }}"
 
 - name: DRAIN - Drain the host
+  when: psm.stdout | from_json | community.general.json_query('[*].daemon_name') | length > 0
   become: true
   delegate_to: "{{ host.split('.')[0] }}.ctlplane"
   ansible.builtin.command:
     "{{ ceph_cli }} orch host drain {{ host }}"
 
 # Cleanup leftovers from the controller node
+# This task is delegated to the node that is going to be decommissioned, and
+# as per the previous tasks this node has no labels, and /etc/ceph is empty,
+# which means that cephadm can't really reach the Ceph cluster.
+# The rm-cluster represents a shortcut to remove the leftovers from the drain
+# command: instead of deleting containers with podman, and cleaning manually
+# up /var/lib/ceph, we run rm-cluster that does all these actions.
+# This command is not documented, and leftovers on the node don't create any
+# problem.
 - name: DRAIN - cleanup the host
   delegate_to: "{{ host.split('.')[0] }}.ctlplane"
   become: true
@@ -44,3 +61,19 @@
     "cephadm rm-cluster --fsid {{ ceph_fsid }} --force"
   vars:
     ceph_fsid: "{{ mon_dump.fsid }}"
+
+- name: MON - Remove host from the Ceph hostmap
+  block:
+    # Check if mon even exists before removing it
+    - name: MON - check host in hostmap
+      ansible.builtin.command: "{{ ceph_cli }} orch host ls --host_pattern {{ host_id }} -f json"
+      register: lsh
+      vars:
+        host_id: "{{ cur_mon.split('.')[0] }}"
+
+    # The node should be empty at this point, let's remove it from the Ceph cluster
+    - name: MON - rm the cur_mon host from the Ceph cluster
+      when: lsh.stdout | from_json | community.general.json_query('[*].hostname') | length > 0
+      become: true
+      ansible.builtin.command:
+        "{{ ceph_cli }} orch host rm {{ cur_mon }} --force"

@@ -100,3 +100,7 @@
     - grafana
     - prometheus
     - alertmanager
+
+- name: Sleep before moving to the next daemon
+  ansible.builtin.pause:
+    seconds: "{{ ceph_timeout }}"

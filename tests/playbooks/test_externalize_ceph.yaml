@@ -75,3 +75,11 @@
         tasks_from: rbd
       tags:
         - ceph_rbd
+
+    # Dump Ceph Cluster logs to file
+    - name: POST
+      ansible.builtin.import_role:
+        name: ceph_migrate
+        tasks_from: post
+      tags:
+        - ceph_post

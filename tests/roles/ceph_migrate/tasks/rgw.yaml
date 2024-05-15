@@ -57,15 +57,6 @@
   ansible.builtin.debug:
     msg: "{{ rgw_spec }}"
 
-# - name: Apply ceph rgw keystone config
-#   #become: true
-#   ansible.builtin.command: |
-#     echo "{{ ceph_cli }} config set global rgw_keystone_url {{ ceph_keystone_ep }}"
-#   changed_when: false
-#   when:
-#     - ceph_keystone_ep is defined
-#     - ceph_keystone_ep | length > 0
-
 # Update and apply the spec: it will update the Monitoring Stack deployment,
 # and place daemons on the target nodes
 - name: Update the RGW spec definition
