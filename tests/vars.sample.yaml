@@ -25,7 +25,7 @@ oc_header: |
   eval $(crc oc-env)
 
 # Source MariaDB Galera cluster VIP for DB exports.
-source_mariadb_ip: 192.168.122.99 #CUSTOMIZE_THIS
+source_mariadb_ip: 172.17.0.2 #CUSTOMIZE_THIS
 
 # Source OS diff config ip for Tripleo
 source_os_diff_config_ip: 192.168.122.100
