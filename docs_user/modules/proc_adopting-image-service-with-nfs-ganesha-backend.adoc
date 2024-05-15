@@ -27,7 +27,7 @@ In particular, find among the {OpenStackPreviousInstaller} heat templates the fo
 +
 In the example above, as the first variable shows, the {image_service} has no notion of NFS Ganesha backend: the `File` driver is used in this scenario, and behind the scenes, the `filesystem_store_datadir` which usually points to `/var/lib/glance/images/` is mapped to the export value provided by the `GlanceNfsShare` variable.
 If the `GlanceNfsShare` is not exported through a network that is supposed to be propagated to the adopted {rhos_prev_long} control plane, an extra action is required by the human administrator, who must stop the `nfs-server` and remap the export to the `storage` network. This action usually happens when the {image_service} is stopped in the source Controller nodes.
-ifeval::["{build}" != "downstream"] 
+ifeval::["{build}" != "downstream"]
 In the control plane, as per the (https://github.com/openstack-k8s-operators/docs/blob/main/images/network_diagram.jpg)[network isolation diagram],
 the {image_service} is attached to the Storage network, propagated via the associated `NetworkAttachmentsDefinition` custom resource, and the resulting Pods have already the right permissions to handle the {image_service} traffic through this network.
 endif::[]
@@ -121,7 +121,7 @@ to reach the `nfs-server` and make sure the `nfs/path` points to the exported
 path in the `nfs-server`.
 
 . Patch `OpenStackControlPlane` to deploy {image_service} with a NFS Ganesha backend:
-+ 
++
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_nfs_patch.yaml
 ----

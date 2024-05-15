@@ -2,7 +2,7 @@
 
 = Bare Metal Provisioning service configurations
 
-The {bare_metal_first_ref} is configured by using configuration snippets. For more information about the configuration snippets, see xref:service-configurations_planning[Service configurations]. 
+The {bare_metal_first_ref} is configured by using configuration snippets. For more information about the configuration snippets, see xref:service-configurations_planning[Service configurations].
 
 {OpenStackPreviousInstaller} generally took care to not override the defaults of the {bare_metal}, however as with any system of descreet configuration management attempting to provide a cross-version compatability layer, some configuration was certainly defaulted in particular ways. For example, PXE Loader file names were often overridden at intermediate layers, and you will thus want to pay particular attention to the settings you choose to apply in your adopted deployment. The operator attempts to apply reasonable working default configuration, but if you override them with prior configuration, your experience may not be ideal or your new {bare_metal} will fail to operate. Similarly, additional configuration may be necessary, for example
 if your `ironic.conf` has additional hardware types enabled and in use.
@@ -39,5 +39,5 @@ Finally, a parameter which may be important based upon your configuration and ex
 
 As a warning, hardware types set via the `ironic.conf` `enabled_hardware_types` parameter and hardware type driver interfaces starting with `staging-` are not available to be migrated into an adopted configuration.
 
-Furthermore, {OpenStackPreviousInstaller}-based deployments made architectural decisions based upon self-management of services. When adopting deployments, you don't necessarilly need multiple replicas of secondary services such as the Introspection service. Should the host the container is running upon fail, {OpenShift} will restart the container on another host. The short-term transitory loss 
+Furthermore, {OpenStackPreviousInstaller}-based deployments made architectural decisions based upon self-management of services. When adopting deployments, you don't necessarilly need multiple replicas of secondary services such as the Introspection service. Should the host the container is running upon fail, {OpenShift} will restart the container on another host. The short-term transitory loss
 //kgilliga: This last sentence trails off.

@@ -155,9 +155,9 @@ relocation. The service is provided by the Ceph Manager daemon, hence we might
 experience an impact when the active mgr is migrated or is force-failed.
 However, having three replicas definition allows to redirect requests to a
 different instance (it’s still an A/P model), hence the impact should be
-limited. 
+limited.
 .. When the RBD migration is over, the following {Ceph} config keys must
-be regenerated to point to the right mgr container: 
+be regenerated to point to the right mgr container:
 //kgilliga: Is the assumption that customers have already done the RBD migration before doing this procedure? RBD migration comes before this chapter in the adoption guide.
 +
 ----
@@ -176,4 +176,3 @@ $ ceph orch ps | awk '/mgr./ {print $1}'
 ----
 $ ceph config set mgr mgr/dashboard/<>/server_addr/<ip addr>
 ----
-

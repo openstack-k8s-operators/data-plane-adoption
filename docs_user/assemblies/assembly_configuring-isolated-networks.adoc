@@ -23,7 +23,7 @@ allocations to be used for the new control plane services:
 [IMPORTANT]
 Make sure you have the information listed above before proceeding with the next steps.
 
-[NOTE] 
+[NOTE]
 The exact list and configuration of isolated networks in the examples
 listed below should reflect the actual adopted environment. The number of
 isolated networks may differ from the example below. IPAM scheme may differ.

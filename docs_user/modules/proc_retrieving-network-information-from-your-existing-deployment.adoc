@@ -65,7 +65,3 @@ At the end of this process, you should have the following information:
 * A list of existing IP address allocations used in the environment. You will
   later exclude these addresses from allocation pools available for the new
   control plane services.
-
-
-
-

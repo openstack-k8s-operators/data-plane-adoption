@@ -23,7 +23,7 @@ external IP of the DNSMasq service as name server in `/etc/resolv.conf`:
 ----
 oc get service dnsmasq-dns -o jsonpath="{.status.loadBalancer.ingress[0].ip}" | CONTROLLER1_SSH tee /etc/resolv.conf
 ----
-* To track the current status of the replication a tool called `swift-dispersion` is used. It consists of two parts, a population tool to be run before changing the {object_storage} rings and a report tool to run afterwards to gather the current status. Run the `swift-dispersion-populate` command: 
+* To track the current status of the replication a tool called `swift-dispersion` is used. It consists of two parts, a population tool to be run before changing the {object_storage} rings and a report tool to run afterwards to gather the current status. Run the `swift-dispersion-populate` command:
 //kgilliga: Is this a prerequisite?
 +
 ----
@@ -162,5 +162,3 @@ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-t
 ----
 CONTROLLER1_SSH "find /srv/node/ -type f -name '*.db' -o -name '*.data' | wc -l"
 ----
-
-

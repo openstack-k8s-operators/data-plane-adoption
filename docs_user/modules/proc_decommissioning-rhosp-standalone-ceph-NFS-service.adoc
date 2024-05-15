@@ -21,7 +21,7 @@ upgrades, it is recommended that the decommissioning period is short.
 . Once the old NFS service is no longer used, you can adjust the configuration
 for the `manila-share` service to remove the `cephfs_ganesha_server_ip` option.
 Doing this will restart the `manila-share` process and remove the export
-locations that pertained to the old NFS service from all the shares. 
+locations that pertained to the old NFS service from all the shares.
 //kgilliga: Is this 2 separate steps? Remove the `cephfs_ganesha_server_ip` option, and then run oc patch openstackcontrolplane openstack? Or is the following code just an example of what the yaml file should look like?
 +
 [source,yaml]

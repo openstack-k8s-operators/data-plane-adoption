@@ -5,7 +5,7 @@
 In the context of data plane adoption, where the {rhos_prev_long} ({OpenStackShort}) services are
 redeployed in {OpenShift}, a {OpenStackPreviousInstaller}-deployed {CephCluster} cluster will undergo a migration in a process we are calling “externalizing” the {CephCluster} cluster.
 There are two deployment topologies, broadly, that include an “internal” {CephCluster} cluster today: one is where {OpenStackShort} includes dedicated {CephCluster} nodes to host object storage daemons (OSDs), and the other is Hyperconverged Infrastructure (HCI) where Compute nodes double up as {CephCluster} nodes. In either scenario, there are some {Ceph} processes that are deployed on {OpenStackShort} Controller nodes: {Ceph} monitors, Ceph Object Gateway (RGW), Rados Block Device (RBD), Ceph Metadata Server (MDS), Ceph Dashboard, and NFS Ganesha.
-This document describes how to migrate the MDS daemon in case {rhos_component_storage_file_first_ref} (deployed with either a cephfs-native or ceph-nfs backend) is part of the overcloud deployment. The MDS migration is performed by cephadm, and as done for the other daemons, the general idea is to move the daemons placement from a "hosts" based approach to a "label" based one. 
+This document describes how to migrate the MDS daemon in case {rhos_component_storage_file_first_ref} (deployed with either a cephfs-native or ceph-nfs backend) is part of the overcloud deployment. The MDS migration is performed by cephadm, and as done for the other daemons, the general idea is to move the daemons placement from a "hosts" based approach to a "label" based one.
 ifeval::["{build}" != "upstream"]
 This ensures that the human operator can easily visualize the status of the cluster and where daemons are placed using the `ceph orch host` command, and have a general view of how the daemons are co-located within a given host, according to the https://access.redhat.com/articles/1548993[cardinality matrix].
 endif::[]
@@ -202,7 +202,7 @@ Standby daemons:
 [mds.mds.controller-1.tyiziq{-1:499136} state up:standby seq 1 addr [v2:172.17.3.43:6800/3615018301,v1:172.17.3.43:6801/3615018301] compat {c=[1],r=[1],i=[7ff]}]
 ----
 
-. To migrate MDS to the right nodes, set the MDS affinity that manages the MDS failover: 
+. To migrate MDS to the right nodes, set the MDS affinity that manages the MDS failover:
 ifeval::["{build}" != "downstream"]
 [NOTE]
 It is possible to elect as "active" a dedicated MDS for a particular file system. To configure this preference, `CephFS` provides a configuration option for MDS called `mds_join_fs` which enforces this affinity.

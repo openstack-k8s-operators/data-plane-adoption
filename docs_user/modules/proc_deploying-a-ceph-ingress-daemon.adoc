@@ -3,11 +3,11 @@
 = Deploying a {Ceph} ingress daemon
 
 To match the cardinality diagram, you use cephadm labels to refer to a group of nodes where a given daemon type should be deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_{context}[{Ceph} daemon cardinality].
-`HAProxy` is managed by {OpenStackPreviousInstaller} through `Pacemaker`: the three running instances at this point will point to the old RGW backends, resulting in a broken configuration. 
+`HAProxy` is managed by {OpenStackPreviousInstaller} through `Pacemaker`: the three running instances at this point will point to the old RGW backends, resulting in a broken configuration.
 ifeval::["{build}" != "upstream"]
 Since you are going to deploy the Ceph ingress daemon, the first thing to do is remove the existing `ceph_rgw` config, clean up the config created by {OpenStackPreviousInstaller} and restart the service to make sure other services are not affected by this change.
 endif::[]
-ifeval::["{build}" != "downstream"] 
+ifeval::["{build}" != "downstream"]
 Since you are going to deploy the https://github.com/openstack-archive/tripleo-ansible/blob/stable/wallaby/tripleo_ansible/ansible_plugins/modules/ceph_mkspec.py[Ceph ingress daemon], the first thing to do is remove the existing `ceph_rgw` config, clean up the config created by {OpenStackPreviousInstaller} and restart the service to make sure other services are not affected by this change.
 endif::[]
 After you complete this procedure, you can reach the RGW backend from the ingress daemon and use RGW through the {object_storage} command line interface (CLI).
@@ -63,8 +63,8 @@ The {object_storage_first_ref} CLI fails at this point:
 HTTPConnectionPool(host='10.0.0.103', port=8080): Max retries exceeded with url: /swift/v1/AUTH_852f24425bb54fa896476af48cbe35d3?format=json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7fc41beb0430>: Failed to establish a new connection: [Errno 111] Connection refused'))
 ----
 
-. Set the required images for both HAProxy and Keepalived: 
-+ 
+. Set the required images for both HAProxy and Keepalived:
++
 ----
 ifeval::["{build}" != "downstream"]
 [ceph: root@controller-0 /]# ceph config set mgr mgr/cephadm/container_image_haproxy quay.io/ceph/haproxy:2.3
@@ -131,4 +131,3 @@ rgw.rgw   ?:8090          3/3  37s ago	4m   label:rgw
 <?xml version="1.0" encoding="UTF-8"?><ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>anonymous</ID><DisplayName></DisplayName></Owner><Buckets></Buckets></ListAllMyBucketsResult>[ceph: root@controller-0 /]#
 —
 ----
-

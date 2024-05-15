@@ -33,7 +33,7 @@ should be already adopted.
 .Procedure
 
 . Write the patch manifest into a file, for example `glance_cinder.patch`.
-For example: 
+For example:
 +
 ----
 spec:

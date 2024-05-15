@@ -41,7 +41,7 @@ IPA_SSH="ssh -i <path_to_ssh_key> root@<freeipa-server-ip-address>"
 ----
 endif::[]
 
-* Define the map of Compute node name, IP pairs. 
+* Define the map of Compute node name, IP pairs.
 //kgilliga: Is this a separate prerequisite or is this part of "defining shell variables"?
 +
 [subs=+quotes]

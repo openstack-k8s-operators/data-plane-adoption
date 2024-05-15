@@ -7,7 +7,7 @@
 This document describes how to move the databases from the original
 {rhos_prev_long} ({OpenStackShort}) deployment to the MariaDB instances in the {OpenShift} cluster.
 
-[NOTE] 
+[NOTE]
 This example scenario describes a simple single-cell setup. Real
 multi-stack topology recommended for production use results in different
 cells DBs layout, and should be using different naming schemes (not covered
@@ -52,7 +52,7 @@ SOURCE_GALERA_MEMBERS=(
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
-* Prepare MariaDB copy directory and the adoption helper pod 
+* Prepare MariaDB copy directory and the adoption helper pod
 
 * Create a temporary folder to store adoption helper pod (pick storage requests to fit MySQL database size):
 +
@@ -278,4 +278,3 @@ oc delete pod mariadb-copy-data
 oc delete pvc mariadb-data
 ----
 For more information, see https://learn.redhat.com/t5/DO280-Red-Hat-OpenShift/About-pod-security-standards-and-warnings/m-p/32502[About pod security standards and warnings].
-

@@ -10,4 +10,3 @@ Make sure you installed and configured the os-diff tool. For more information, s
 xref:comparing-configuration-files-between-deployments_storage-requirements[Comparing configuration files between deployments].
 
 include::../modules/proc_pulling-configuration-from-a-tripleo-deployment.adoc[leveloffset=+1]
-

@@ -199,4 +199,3 @@ openstack --os-volume-api-version 3.47 volume create --backup backup restored
 
 [NOTE]
 You do not boot a {compute_service_first_ref} instance using the new volume from image or try to detach the old volume because {compute_service} and the {block_storage} are still not connected.
-

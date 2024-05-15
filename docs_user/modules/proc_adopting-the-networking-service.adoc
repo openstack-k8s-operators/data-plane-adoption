@@ -20,7 +20,7 @@ should be already adopted.
 
 .Procedure
 //The following link takes me to a 404. Do we need this text? I think we should start the procedure at "Patch OpenStackControlPlane..."
-ifeval::["{build}" != "downstream"] 
+ifeval::["{build}" != "downstream"]
 As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Neutron Adoption follows the same pattern.
 endif::[]
 
@@ -61,7 +61,7 @@ NEUTRON_API_POD=`oc get pods -l service=neutron | tail -n 1 | cut -f 1 -d' '`
 oc exec -t $NEUTRON_API_POD -c neutron-api -- cat /etc/neutron/neutron.conf
 ----
 
-* Check that the `Neutron API` service is registered in the {identity_service}: 
+* Check that the `Neutron API` service is registered in the {identity_service}:
 +
 ----
 $ openstack service list | grep network

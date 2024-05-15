@@ -20,7 +20,7 @@ SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' Mysql
 
 .Procedure
 
-. Export shell variables for the following outputs to compare it with post-adoption values later on: 
+. Export shell variables for the following outputs to compare it with post-adoption values later on:
 Test connection to the original database:
 //kgilliga: Are these two separate actions, or are both happening in the following command?
 +

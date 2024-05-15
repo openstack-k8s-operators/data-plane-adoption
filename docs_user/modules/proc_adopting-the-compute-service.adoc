@@ -19,7 +19,7 @@ must already be imported into the control plane MariaDB;
  ** the xref:adopting-the-image-service_adopt-control-plane[Adopting the Image service] needs to be imported;
  ** the xref:migrating-ovn-data_migrating-databases[Migrating OVN data] need to be imported;
  ** the xref:adopting-the-networking-service_adopt-control-plane[Adopting the Networking service] needs to be imported;
-** the {bare_metal} needs to be imported; 
+** the {bare_metal} needs to be imported;
 //kgilliga:I removed the link because it did not work. I might rewrite this section anyway.
  ** Required topology-specific service configuration. For more information, see
 xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
@@ -132,7 +132,7 @@ oc wait --for condition=Ready --timeout=300s Nova/nova
 The local Conductor services will be started for each cell, while the superconductor runs in `cell0`.
 Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Nova services, until the external data plane is imported, and until Nova Compute services fast-forward upgraded. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane] and xref:performing-a-fast-forward-upgrade-on-compute-services_data-plane[Performing a fast-forward upgrade on Compute services].
 
-.Verification 
+.Verification
 
 * Check that {compute_service} endpoints are defined and pointing to the
 control plane FQDNs and that Nova API responds.

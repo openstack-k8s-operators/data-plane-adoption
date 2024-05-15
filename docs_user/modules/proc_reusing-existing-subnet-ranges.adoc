@@ -22,5 +22,4 @@ overlap with the new allocation pools configured for {rhos_prev_long} control pl
 
 If you are especially constrained by the size of the existing subnet, you may
 have to apply elaborate exclusion rules when defining allocation pools for the
-new control plane services. For more information, see 
-
+new control plane services. For more information, see

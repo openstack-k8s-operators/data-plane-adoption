@@ -9,7 +9,7 @@ helper tool that can create a draft of the files from a `cinder.conf` file.
 This tool is not meant to be a automation tool. It is mostly to help you get the
 gist of it, maybe point out some potential pitfalls and reminders.
 
-[IMPORTANT] 
+[IMPORTANT]
 The tools requires `PyYAML` Python package to be installed (`pip
 install PyYAML`).
 
@@ -91,4 +91,3 @@ configuration because it has sensitive information (credentials). The
         customServiceConfigSecrets:
         - openstackcinder-volumes-hpe_fc
 ----
-

@@ -27,7 +27,7 @@ You must complete the following prerequisites before you begin the {Ceph} RGW mi
 ----
 
 . Log in to `controller-0` and check the `pacemaker` status to help you
-identify the information that you need before you start the RGW migration. 
+identify the information that you need before you start the RGW migration.
 +
 ----
 Full List of Resources:

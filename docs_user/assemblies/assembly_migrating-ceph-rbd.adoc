@@ -9,9 +9,8 @@ For hyperconverged infrastructure (HCI) or dedicated Storage nodes that are runn
 To migrate Red Hat Ceph Storage Rados Block Device (RBD), your environment must meet the following requirements:
 
 * {Ceph} is running version 6 or later and is managed by cephadm/orchestrator.
-* NFS (ganesha) is migrated from a {OpenStackPreviousInstaller}-based deployment to cephadm. For more information, see xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a NFS Ganesha cluster]. 
+* NFS (ganesha) is migrated from a {OpenStackPreviousInstaller}-based deployment to cephadm. For more information, see xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a NFS Ganesha cluster].
 * Both the {Ceph} public and cluster networks are propagated, with {OpenStackPreviousInstaller}, to the target nodes.
 * Ceph Monitors need to keep their IPs to avoid cold migration.
 
 include::../modules/proc_migrating-mon-and-mgr-from-controller-nodes.adoc[leveloffset=+1]
-

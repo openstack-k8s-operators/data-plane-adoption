@@ -4,7 +4,7 @@
 
 = Migrating {Ceph} RGW to external RHEL nodes
 
-For hyperconverged infrastructure (HCI) or dedicated Storage nodes that are running {Ceph} version 6 or later, you must migrate the RGW daemons that are included in the {rhos_prev_long} Controller nodes into the existing external Red Hat Enterprise Linux (RHEL) nodes. The existing external RHEL nodes typically include the Compute nodes for an HCI environment or {Ceph} nodes. 
+For hyperconverged infrastructure (HCI) or dedicated Storage nodes that are running {Ceph} version 6 or later, you must migrate the RGW daemons that are included in the {rhos_prev_long} Controller nodes into the existing external Red Hat Enterprise Linux (RHEL) nodes. The existing external RHEL nodes typically include the Compute nodes for an HCI environment or {Ceph} nodes.
 
 To migrate Ceph Object Gateway (RGW), your environment must meet the following requirements:
 
@@ -20,4 +20,3 @@ include::../modules/proc_migrating-the-rgw-backends.adoc[leveloffset=+1]
 include::../modules/proc_deploying-a-ceph-ingress-daemon.adoc[leveloffset=+1]
 
 include::../modules/proc_updating-the-object-storage-endpoints.adoc[leveloffset=+1]
-
