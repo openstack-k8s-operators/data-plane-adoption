@@ -4,13 +4,10 @@
 
 = Migrating the monitoring stack component to new nodes within an existing {Ceph} cluster
 
-In the context of data plane adoption, where the {rhos_prev_long} ({OpenStackShort}) services are
-redeployed in {OpenShift}, a {OpenStackPreviousInstaller}-deployed {CephCluster} cluster will undergo a migration in a process we are calling “externalizing” the {CephCluster} cluster.
-There are two deployment topologies, broadly, that include an “internal” {CephCluster} cluster today: one is where {OpenStackShort} includes dedicated {CephCluster} nodes to host object storage daemons (OSDs), and the other is Hyperconverged Infrastructure (HCI) where Compute nodes
-double up as {CephCluster} nodes. In either scenario, there are some {Ceph} processes that are deployed on {OpenStackShort} Controller nodes: {Ceph} monitors, Ceph Object Gateway (RGW), Rados Block Device (RBD), Ceph Metadata Server (MDS), Ceph Dashboard, and NFS Ganesha.
 The Ceph Dashboard module adds web-based monitoring and administration to the
 Ceph Manager.
-With {OpenStackPreviousInstaller}-deployed {Ceph} this component is enabled as part of the overcloud deploy and it’s composed by:
+With {OpenStackPreviousInstaller}-deployed {Ceph}, this component is enabled as
+part of the overcloud deploy and it is composed of the following:
 
 - Ceph Manager module
 - Grafana
@@ -18,16 +15,21 @@ With {OpenStackPreviousInstaller}-deployed {Ceph} this component is enabled as p
 - Alertmanager
 - Node exporter
 
-The Ceph Dashboard containers are included through `tripleo-container-image-prepare` parameters and the high availability relies on `Haproxy` and `Pacemaker` deployed on the {OpenStackShort} front.
-For an external {CephCluster} cluster, high availability is not supported.
-The goal of this procedure is to migrate and relocate the Ceph Monitoring
-components to free Controller nodes.
+The Ceph Dashboard containers are included through
+`tripleo-container-image-prepare` parameters and the high availability relies
+on `Haproxy` and `Pacemaker` deployed on the {OpenStackShort} front. For an
+external {CephCluster} cluster, high availability is not supported. The goal of
+this procedure is to migrate and relocate the Ceph Monitoring components to
+free Controller nodes.
 
-For this procedure, we assume that we are beginning with a {OpenStackShort} based on {rhos_prev_ver} and a {Ceph} {CephRelease} deployment managed by {OpenStackPreviousInstaller}.
-We assume that:
+For this procedure, we assume that we are beginning with a {OpenStackShort}
+based on {rhos_prev_ver} and a {Ceph} {CephRelease} deployment managed by
+{OpenStackPreviousInstaller}. We assume that:
 
-* {Ceph} has been upgraded to {CephRelease} and is managed by cephadm/orchestrator
-* Both the {Ceph} public and cluster networks are propagated, through{OpenStackPreviousInstaller}, to the target nodes
+* {Ceph} has been upgraded to {CephRelease} and is managed by
+  cephadm/orchestrator
+* Both the {Ceph} public and cluster networks are propagated,
+  through {OpenStackPreviousInstaller}, to the target nodes
 
 include::../modules/proc_completing-prerequisites-for-migrating-ceph-monitoring-stack.adoc[leveloffset=+1]
 

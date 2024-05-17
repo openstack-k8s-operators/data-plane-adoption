@@ -3,9 +3,13 @@
 = Migrating Ceph Monitor daemons to {Ceph} nodes
 
 The following section describes how to move Ceph Monitor daemons from the
-OpenStack controller nodes to a set of target nodes. Target nodes might be
-pre-existing {Ceph} nodes, or OpenStack Compute nodes if Ceph is deployed by
-{OpenStackPreviousInstaller} with an HCI topology.
+{rhos_prev_long} Controller nodes to a set of target nodes. Target nodes might
+be pre-existing {Ceph} nodes, or {OpenStackShort} Compute nodes if {Ceph} is
+deployed by {OpenStackPreviousInstaller} with an HCI topology.
+This procedure assumes that some of the steps are run on the source node that
+we want to decommission, while other steps are run on the target node that is
+supposed to host the redeployed daemon.
+
 
 .Prerequisites
 
@@ -17,7 +21,7 @@ you do not have to run a stack update. However, there are commands that you
 must perform to run `os-net-config` on the bare metal node and configure
 additional networks.
 
-.. If target nodes are `CephStorage`, ensure that the network is defined in the
+. If target nodes are `CephStorage`, ensure that the network is defined in the
 `metalsmith.yaml` for the CephStorageNodes:
 +
 [source,yaml]
@@ -41,15 +45,15 @@ additional networks.
         template: templates/single_nic_vlans/single_nic_vlans_storage.j2
 ----
 
-.. Run the following command:
+. Run the provisioning command:
 +
 ----
-openstack overcloud node provision \
+$ openstack overcloud node provision \
   -o overcloud-baremetal-deployed-0.yaml --stack overcloud-0 \
   --network-config -y --concurrency 2 /home/stack/metalsmith-0.yam
 ----
 
-.. Verify that the storage network is configured on the target nodes:
+. Verify that the storage network is configured on the target nodes:
 +
 ----
 (undercloud) [stack@undercloud ~]$ ssh heat-admin@192.168.24.14 ip -o -4 a
@@ -62,34 +66,30 @@ openstack overcloud node provision \
 
 .Procedure
 
-This procedure assumes that some of the steps are run on the source node that
-we want to decommission, while other steps are run on the target node that is
-supposed to host the redeployed daemon.
-
-. Before start the migration, ssh into the target node and enable the firewall
-rules required to reach a Mon service:
+. Ssh into the target node and enable the firewall rules that are required to
+  reach a Mon service:
 +
 ----
-for port in 3300 6789; {
+$ for port in 3300 6789; {
     ssh heat-admin@<target_node> sudo iptables -I INPUT \
     -p tcp -m tcp --dport $port -m conntrack --ctstate NEW \
     -j ACCEPT;
 }
 ----
++
+* Replace `<target_node>` with the hostname of the node that is supposed to
+  host the new mon.
 
-- Replace <target_node> with the hostname of the node that is supposed to host
-the new mon
-
-. Check the rules are properly applied and persist them:
+. Check that the rules are properly applied and persist them:
 +
 ----
 sudo iptables-save
 sudo systemctl restart iptables
 ----
 
-. To migrate the existing Mons to the target {Ceph} nodes, the first step is to
-create the following {Ceph} spec from the first mon (or the first controller)
-and modify the placement based on the appropriate label.
+. To migrate the existing Mons to the target {Ceph} nodes, create the following
+  {Ceph} spec from the first mon (or the first Controller node) and modify the
+  placement based on the appropriate label.
 +
 [source,yaml]
 ----
@@ -99,24 +99,24 @@ placement:
   label: mon
 ----
 
-. Save the spec in /tmp/mon.yaml
-. Apply the spec with cephadm using the orchestrator:
+. Save the spec in the `/tmp/mon.yaml` file.
+. Apply the spec with cephadm by using the orchestrator:
 +
 ----
-sudo cephadm shell -m /tmp/mon.yaml
-ceph orch apply -i /mnt/mon.yaml
+$ sudo cephadm shell -m /tmp/mon.yaml
+$ ceph orch apply -i /mnt/mon.yaml
 ----
 +
 [NOTE]
-The effect of applying the `mon.yaml` spec is to normalize the existng placement
-strategy to use `labels` instead of `hosts`. By doing this any node with the `mon`
-label is able to host a Ceph mon daemon.
-The step above can be executed once, and it shouldn't be repeated in case of
-multiple iterations over this procedure when multiple Ceph Mons are migrated.
+Applying the `mon.yaml` spec allows the existing strategy to use `labels`
+instead of `hosts`. As a result, any node with the `mon` label can host a Ceph
+mon daemon.
+Execute this step once to avoid multiple iterations when multiple Ceph Mons are
+migrated.
 
-. Before moving to the next step, check the status of the {CephCluster} and the
-orchestrator daemons list: make sure the three mons are in quorum and listed by
-the `ceph orch` command:
+. Check the status of the {CephCluster} and the Ceph orchestrator daemons list.
+  Make sure that the three mons are in quorum and listed by the `ceph orch`
+  command:
 +
 ----
 # ceph -s
@@ -146,55 +146,57 @@ oc0-controller-1  192.168.24.23  _admin mgr mon
 oc0-controller-2  192.168.24.13  _admin mgr mon
 ----
 
-. On the source node, backup the `/etc/ceph/` directory: this allows, in case
-of issues, to have the ability to execute cephadm and get a shell to the ceph
-cluster from the source node:
+. On the source node, back up the `/etc/ceph/` directory. The backup allows you
+  to execute cephadm and get a shell to the {Ceph} cluster from the source node:
 +
 ----
-mkdir -p $HOME/ceph_client_backup
-sudo cp -R /etc/ceph $HOME/ceph_client_backup
+$ mkdir -p $HOME/ceph_client_backup
+$ sudo cp -R /etc/ceph $HOME/ceph_client_backup
 ----
 
 . Before draining the source node and relocating the IP address of the storage
-network to to the target node, fail the mgr if is active on the source node:
+  network to the target node, fail the ceph-mgr if it is active on the
+  source node:
 +
 ----
-ceph mgr fail <mgr instance>
+$ ceph mgr fail <mgr instance>
 ----
 
 . Drain the source node and start the mon migration. From the cephadm shell,
-remove the labels on source node:
+  remove the labels on the source node:
 +
 ----
-    for label in mon mgr _admin; do
-           ceph orch host rm label <source_node> $label;
-    done
+for label in mon mgr _admin; do
+    ceph orch host rm label <source_node> $label;
+done
 ----
 
 . Remove the running mon daemon from the source node:
 +
 ----
-cephadm shell -- ceph orch daemon rm mon.<source_node> --force"
+$ cephadm shell -- ceph orch daemon rm mon.<source_node> --force"
 ----
 
 . Run the drain command:
 +
 ----
-cephadm shell -- ceph drain <source_node>
+$ cephadm shell -- ceph drain <source_node>
 ----
 
-. Remove the source_node host from the {CephCluster}:
+. Remove the `<source_node>` host from the {CephCluster} cluster:
 +
 ----
-cephadm shell -- ceph orch host rm <source_node> --force"
+$ cephadm shell -- ceph orch host rm <source_node> --force"
 ----
++
+* Replace `<source_node>` with the hostname of the source node.
++
 
-- Replace <source_node> with the hostname of the source node.
-
-The source node is not part of the cluster anymore, and shouldn't appear in the
-Ceph host list when running `cephadm shell -- ceph orch host ls`.
-However, a `sudo podman ps` in the source node might list both mon and mgr still
-running.
+[NOTE]
+The source node is not part of the cluster anymore, and should not appear in
+the {Ceph} host list when `cephadm shell -- ceph orch host ls` is run.
+However, a `sudo podman ps` in the `<source_node>` might list both mon and mgr
+still up and running.
 
 ----
 [root@oc0-controller-1 ~]# sudo podman ps
@@ -225,10 +227,11 @@ for label in mon mgr _admin; do
     ceph orch host label add <target_node> $label; done
 done
 ----
-
-- Replace <target_node> with the hostname of the host listed in the {CephCluster}
++
+* Replace <target_node> with the hostname of the host listed in the {CephCluster}
   through the `ceph orch host ls` command.
 
+[Note]
 At this point the cluster is running with only two mons, but a third mon appears
 and will be deployed on the target node.
 However, The third mon might be deployed on a different ip address available in
@@ -237,14 +240,14 @@ Even though the mon is deployed on the wrong ip address, it's useful keep the
 quorum to three and it ensures we do not risk to lose the cluster because two
 mons go in split brain.
 
-. Confirm the cluster has three mons and they're in quorum:
+. Confirm that the cluster has three mons and they are in quorum:
 +
 ----
-cephadm shell -- ceph -s
-cephamd shell -- ceph orch ps | grep -i mon
+$ cephadm shell -- ceph -s
+$ cephadm shell -- ceph orch ps | grep -i mon
 ----
 
-It's now possible to migrate the original mon ip address to the target node and
+It is now possible to migrate the original mon IP address to the target node and
 redeploy the existing mon on it.
 The following IP address migration procedure assumes that the target nodes have
 been originally deployed by {OpenStackPreviousInstaller} and the network configuration
@@ -260,7 +263,7 @@ line), for example:
 mon_host = [v2:172.17.3.60:3300/0,v1:172.17.3.60:6789/0] [v2:172.17.3.29:3300/0,v1:172.17.3.29:6789/0] [v2:172.17.3.53:3300/0,v1:172.17.3.53:6789/0]
 ----
 
-. Confirm the mon ip address is present on the source node `os-net-config`
+. Confirm that the mon ip address is present on the source node `os-net-config`
 configuration located in `/etc/os-net-config`:
 +
 ----
@@ -269,36 +272,31 @@ configuration located in `/etc/os-net-config`:
     - ip_netmask: 172.17.3.60/24
 ----
 
-. Edit the config file `/etc/os-net-config/config.yaml` and remove the
-`ip_netmask` line retrieved in the previous step.
+. Edit `/etc/os-net-config/config.yaml` and remove the `ip_netmask` line.
 
-. Save the file and refresh the node network configuration with the following
-command:
+. Save the file and refresh the node network configuration:
 +
 ----
-sudo os-net-config -c /etc/os-net-config/config.yaml
+$ sudo os-net-config -c /etc/os-net-config/config.yaml
 ----
 
 . Verify, using the `ip` command, that the IP address is not present in the source
 node anymore.
 
-ssh into the target node, for example `cephstorage-0`, and add the ip address
-that will be bound to the new mon.
+. Ssh into the target node, for example `cephstorage-0`, and add the IP address
+  for the new mon.
 
-. On the target node, edit the config file `/etc/os-net-config/config.yaml` and
-add the `- ip_netmask: 172.17.3.60` line removed in the source node.
+. On the target node, edit `/etc/os-net-config/config.yaml` and
+add the `- ip_netmask: 172.17.3.60` line that you removed in the source node.
 
-. Save the file and refresh the node network configuration with the following
-command:
+. Save the file and refresh the node network configuration:
 +
 ----
-sudo os-net-config -c /etc/os-net-config/config.yaml
+$ sudo os-net-config -c /etc/os-net-config/config.yaml
 ----
 
 . Verify, using the `ip` command, that the IP address is present in the target
 node.
-
-Get the Ceph spec and set the mon daemons to `unmanaged`:
 
 . Get the ceph mon spec:
 +
@@ -306,7 +304,7 @@ Get the Ceph spec and set the mon daemons to `unmanaged`:
 ceph orch ls --export mon > mon.yaml
 ----
 
-.Edit the retrieved spec and add the `unamanged: true` keyword:
+. Edit the retrieved spec and add the `unmanaged: true` keyword:
 +
 [source,yaml]
 ----
@@ -314,45 +312,44 @@ service_type: mon
 service_id: mon
 placement:
   label: mon
-unamanged: true
+unmanaged: true
 ----
 
-. Save the spec in /tmp/mon.yaml
-. Apply the spec with cephadm using the orchestrator:
+. Save the spec in the `/tmp/mon.yaml` file
+. Apply the spec with cephadm by using the orchestrator:
 +
 ----
-sudo cephadm shell -m /tmp/mon.yaml
-ceph orch apply -i /mnt/mon.yaml
+$ sudo cephadm shell -m /tmp/mon.yaml
+$ ceph orch apply -i /mnt/mon.yaml
 ----
-
-The mon daemons are marked as <unmanaged>, and it's now possible to redeploy
-the existing daemon and bind it to the migrated ip address.
++
+The mon daemons are marked as `<unmanaged>`, and it is now possible to redeploy
+the existing daemon and bind it to the migrated IP address.
 
 . Delete the existing mon on the target node:
 +
 ----
 $ ceph orch daemon add rm mon.<target_node> --force
 ----
-
++
 . Redeploy the new mon on the target using the old IP address:
 +
 ----
-$ ceph orch daemon add mon <target_node>:<ip address>
+$ ceph orch daemon add mon <target_node>:<ip_address>
 ----
++
+* Replace `<target_node>` with the hostname of the target node enrolled in the
+  {Ceph} cluster.
+* Replace `<ip_address>` with the ip address of the migrated address.
 
-- Replace <target_node> with the hostname of the target node enrolled in the Ceph
-cluster
-- Replace <ip address> with the ip address of the migrated address
-
-Get the Ceph spec and set the mon daemons to `unmanaged: false`:
 
 . Get the ceph mon spec:
 +
 ----
-ceph orch ls --export mon > mon.yaml
+$ ceph orch ls --export mon > mon.yaml
 ----
 
-.Edit the retrieved spec and set the `unamanged` keyword to `false`:
+. Edit the retrieved spec and set the `unmanaged` keyword to `false`:
 +
 [source,yaml]
 ----
@@ -360,42 +357,38 @@ service_type: mon
 service_id: mon
 placement:
   label: mon
-unamanged: false
+unmanaged: false
 ----
 
-. Save the spec in /tmp/mon.yaml
-. Apply the spec with cephadm using the orchestrator:
+. Save the spec in `/tmp/mon.yaml` file.
+. Apply the spec with cephadm by using the Ceph Orchestrator:
 +
 ----
-sudo cephadm shell -m /tmp/mon.yaml
-ceph orch apply -i /mnt/mon.yaml
+$ sudo cephadm shell -m /tmp/mon.yaml
+$ ceph orch apply -i /mnt/mon.yaml
 ----
-
++
 The new mon runs on the target node with the original IP address.
-As last step of the mon migration, you need to refresh the cephadm information
-and reconfigure the existing daemons to exchange the map with the updated mon
-references.
 
 . Identify the running `mgr`:
 +
 ----
-sudo cephadm shell -- ceph -s
+$ sudo cephadm shell -- ceph -s
 ----
-
++
 . Refresh the mgr information by force-failing it:
 +
 ----
-ceph mgr fail
+$ ceph mgr fail
 ----
-
++
 . Refresh the `OSD` information:
 +
 ----
-ceph orch reconfig osd.default_drive_group
+$ ceph orch reconfig osd.default_drive_group
 ----
-
 +
-Verify that at this point the {CephCluster} cluster is healthy:
+Verify the {CephCluster} cluster is healthy:
 +
 ----
 [ceph: root@oc0-controller-0 specs]# ceph -s
@@ -406,6 +399,5 @@ Verify that at this point the {CephCluster} cluster is healthy:
 ...
 ----
 
-. Repeat the procedure described in this section for any additional Controller
-node hosting a mon until you have migrated all the Ceph Mon daemons to the
-target nodes.
+. Repeat this procedure for any additional Controller node that hosts a mon
+  until you have migrated all the Ceph Mon daemons to the target nodes.
