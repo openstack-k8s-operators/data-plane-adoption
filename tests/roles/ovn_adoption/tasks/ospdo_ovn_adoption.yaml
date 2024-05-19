@@ -1,0 +1,51 @@
+- name: get OSPdO OVN ovsdb-server IP
+  delegate_to: "{{ adoption_ospdo_host }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    oc get cm -o yaml|grep ovn_dbs_node_ips|tr -d ' '|sed 's/.*ovn_dbs_node_ips:\\n-//g'|sed 's/\\n.*//g'
+  register: source_ovndb_ip
+  when: get_source_ovndb_ip| default(false) | bool
+
+- name: Stop Fetch OVN databases, cp into helper pod
+  block:
+  - name: stop northd service
+    delegate_to: "{{ adoption_ospdo_host }}"
+    no_log: "{{ use_no_log }}"
+    ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ oc_header }}
+      {{ ovn_copy_shell_vars }}
+
+      $CONTROLLER1_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
+      $CONTROLLER2_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
+      $CONTROLLER3_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
+
+  - name: dump OVN databases
+    delegate_to: "{{ adoption_ospdo_host }}"
+    ansible.builtin.shell: |
+      {{ exec_ospdoclnt_pod }} ovsdb-client  backup tcp:{{ source_ovndb_ip.stdout }}:{{ item }}
+    with_items:
+    - 6641 >/tmp/ovs-nb.db
+    - 6642 >/tmp/ovs-sb.db
+
+  - name: Fetch file from adoption_ospdo_host
+    delegate_to: "{{ adoption_ospdo_host }}"
+    fetch:
+      src: "{{ item }}"
+      dest: /tmp/{{item.split('/')[-1]}}
+      flat: yes
+    with_items:
+      - /tmp/ovs-nb.db
+      - /tmp/ovs-sb.db
+
+  - name: put the backup db's in the helper pod
+    ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ oc_header }}
+      oc cp {{ item }} ovn-copy-data:/backup/
+    with_items:
+    - /tmp/ovs-nb.db
+    - /tmp/ovs-sb.db
+  when:
+  - stop_fetch_to_pod_ovndb| default(false) | bool
+  - source_ovndb_ip is defined

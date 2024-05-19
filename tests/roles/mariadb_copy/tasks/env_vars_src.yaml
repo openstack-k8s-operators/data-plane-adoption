@@ -12,3 +12,4 @@
       # ...
       )
       SOURCE_DB_ROOT_PASSWORD="{{ source_db_root_password|default(external_db_root_password) }}"
+  when: not ospdo_src| bool

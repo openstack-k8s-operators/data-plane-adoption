@@ -80,6 +80,11 @@
         -e "show global status like 'wsrep_local_state_comment'" | \
         grep -qE "\bSynced\b"
     done
+  when: not ospdo_src| bool
+
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.include_tasks: ospdo_mariadb_get_dbs_vars.yaml
+  when: ospdo_src| bool
 
 - name: Get the count of not-OK source databases
   no_log: "{{ use_no_log }}"
@@ -101,6 +106,11 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell:
     cmd: "{{ lookup('ansible.builtin.template', 'dump_dbs.bash') }}"
+  when: not ospdo_src| bool
+
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.  : ospdo_mariadb_get_dbs.yaml
+  when: ospdo_src| bool
 
 - name: restore databases
   no_log: "{{ use_no_log }}"
