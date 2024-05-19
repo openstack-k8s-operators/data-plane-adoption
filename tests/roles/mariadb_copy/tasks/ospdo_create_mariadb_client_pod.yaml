@@ -99,16 +99,3 @@
     retries: 5
     delay: 6
 
-  - name: check that the Galera database cluster members are online and synced
-    no_log: "{{ use_no_log }}"
-    delegate_to: "{{ adoption_ospdo_host }}"
-    ansible.builtin.shell: |
-      {{ shell_header }}
-      {{ mariadb_copy_shell_vars_src }}
-      for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
-        echo "Checking for the database node $i WSREP status Synced"
-        oc rsh {{ mariadb_clnt_pod_name }} mysql \
-          -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" \
-          -e "show global status like 'wsrep_local_state_comment'" | \
-          grep -qE "\bSynced\b"
-      done

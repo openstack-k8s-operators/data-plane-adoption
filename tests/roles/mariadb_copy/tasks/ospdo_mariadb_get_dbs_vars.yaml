@@ -12,7 +12,7 @@
     {{ mariadb_copy_shell_vars_src }}
     for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
       echo "Checking for the database node $i WSREP status Synced"
-      oc rsh mariadb-client mysql \
+      oc rsh mariadb-copy-data mysql \
         -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" \
         -e "show global status like 'wsrep_local_state_comment'" | \
         grep -qE "\bSynced\b"
