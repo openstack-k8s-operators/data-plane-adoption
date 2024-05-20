@@ -12,3 +12,4 @@
       # ...
       )
       SOURCE_DB_ROOT_PASSWORD="{{ source_db_root_password|default(external_db_root_password) }}"
+      MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
