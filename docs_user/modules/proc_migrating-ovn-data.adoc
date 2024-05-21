@@ -2,22 +2,17 @@
 
 = Migrating OVN data
 
-This document describes how to move OVN northbound and southbound databases
-from the original {rhos_prev_long} deployment to `ovsdb-server` instances running in the {OpenShift} cluster.
-While it may be argued that the control plane {networking_first_ref} ML2/OVN driver and OVN northd service will reconstruct the databases on startup, the reconstruction may be time consuming on large existing clusters. The procedure below allows to speed up data migration and avoid unnecessary data plane disruptions due to incomplete OpenFlow table contents.
+The next step is to migrate data from OVN databases from the original
+{rhos_prev_long} deployment to `ovsdb-server` instances running in the
+{OpenShift} cluster.
 
 .Prerequisites
 
 * Make sure the previous Adoption steps have been performed successfully.
  ** The `OpenStackControlPlane` resource must be already created at this point.
- ** NetworkAttachmentDefinition custom resource definitions (CRDs) for the original cluster are already
-defined. Specifically, `openstack/internalapi` network is defined.
- ** Control plane MariaDB and RabbitMQ may already run. The {networking} and OVN are not running yet.
- ** Original OVN is older or equal to the control plane version.
- ** Original Neutron Server and OVN northd services are stopped.
- ** There must be network routability between:
-  *** The adoption host and the original OVN.
-  *** The adoption host and the control plane OVN.
+ ** `NetworkAttachmentDefinition` CRDs for the original cluster are already defined. Specifically, `internalapi` network is defined.
+ ** The original {networking} and OVN `northd` are not running.
+ ** There must be network routability between control plane services and the adopted cluster.
 * Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
 +
 ----
@@ -40,7 +35,8 @@ grep -rI 'ovn_[ns]b_conn' /var/lib/config-data/puppet-generated/
 
 .Procedure
 
-. Prepare the OVN DBs copy dir and the adoption helper pod (pick the storage requests to fit the OVN databases sizes)
+. Prepare temporary `PersistentVolume` and the helper pod for OVN backup.
+Please adjust storage requests for a large database, if needed.
 +
 [source,yaml]
 ----
@@ -119,14 +115,14 @@ oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 
 oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
 ----
 
-. Backup OVN databases on a TLS everywhere environment.
+. Alternatively, backup OVN databases on a TLS everywhere environment.
 +
 ----
 oc exec ovn-copy-data -- bash -c "ovsdb-client backup --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
 oc exec ovn-copy-data -- bash -c "ovsdb-client backup --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
 ----
 
-. Start the control plane OVN database services prior to import, keeping `northd/ovn-controller` stopped.
+. Start control plane OVN database services prior to import, while keeping `northd` and `ovn-controller` disabled.
 +
 [source,yaml]
 ----
@@ -153,14 +149,14 @@ spec:
 '
 ----
 
-. Wait for the OVN DB pods reaching the running phase.
+. Wait for OVN database services to reach the `Running` phase.
 +
 ----
 oc wait --for=jsonpath='{.status.phase}'=Running pod --selector=service=ovsdbserver-nb
 oc wait --for=jsonpath='{.status.phase}'=Running pod --selector=service=ovsdbserver-sb
 ----
 
-. Fetch the control plane OVN IP addresses on the clusterIP service network.
+. Fetch OVN database IP addresses on the `clusterIP` service network.
 +
 ----
 PODIFIED_OVSDB_NB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-nb-0" -ojsonpath='{.items[0].spec.clusterIP}')
@@ -174,35 +170,35 @@ oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB
 oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6642 > /backup/ovs-sb.ovsschema && ovsdb-tool convert /backup/ovs-sb.db /backup/ovs-sb.ovsschema"
 ----
 
-. Upgrade database schema for the backup files on a TLS everywhere environment.
+. Alternatively, upgrade database schema for the backup files on a TLS everywhere environment.
 +
 ----
 oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_NB_IP:6641 > /backup/ovs-nb.ovsschema && ovsdb-tool convert /backup/ovs-nb.db /backup/ovs-nb.ovsschema"
 oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_SB_IP:6642 > /backup/ovs-sb.ovsschema && ovsdb-tool convert /backup/ovs-sb.db /backup/ovs-sb.ovsschema"
 ----
 
-. Restore database backup to the control plane OVN database servers on an environment without TLS everywhere.
+. Restore database backup to the new OVN database servers on an environment without TLS everywhere.
 +
 ----
 oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
 oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
 ----
 
-. Restore database backup to control plane OVN database servers on a TLS everywhere environment.
+. Alternatively, restore database backup to the new OVN database servers on a TLS everywhere environment.
 +
 ----
 oc exec ovn-copy-data -- bash -c "ovsdb-client restore --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
 oc exec ovn-copy-data -- bash -c "ovsdb-client restore --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
 ----
 
-. Check that the control plane OVN databases contain objects from backup, for example:
+. Check that data was successfully migrated by issuing some `ovn-nbctl` and `ovn-sbctl` commands against the new database servers, for example:
 +
 ----
 oc exec -it ovsdbserver-nb-0 -- ovn-nbctl show
 oc exec -it ovsdbserver-sb-0 -- ovn-sbctl list Chassis
 ----
 
-. Finally, you can start `ovn-northd` service that will keep OVN northbound and southbound databases in sync.
+. Start the control plane `ovn-northd` service. It will keep both OVN databases in sync.
 +
 [source,yaml]
 ----
@@ -216,21 +212,25 @@ spec:
 '
 ----
 
-. Also enable `ovn-controller`:
+. If you'd like to run OVN gateway services on OCP nodes, also enable the control plane `ovn-controller` service:
 +
 [source,yaml]
 ----
 oc patch openstackcontrolplane openstack --type=json -p="[{'op': 'remove', 'path': '/spec/ovn/template/ovnController/nodeSelector'}]"
 ----
 
-. Delete the `ovn-data` pod and persistent volume claim with OVN databases backup (consider making a snapshot of it, before deleting):
+Note that running OVN gateways on OCP nodes may be prone to dataplane downtime
+during Open vSwitch upgrades. Consider running OVN gateways on dedicated
+`Networker` data plane nodes for production deployments instead.
+
+. Delete the `ovn-data` helper pod and the temporary `PersistentVolumeClaim` used to store OVN database backup files (consider making a snapshot of it before deleting):
 +
 ----
 oc delete pod ovn-copy-data
 oc delete pvc ovn-data
 ----
 
-. Stop old OVN database servers.
+. Stop adopted OVN database servers.
 +
 ----
 ServicesToStop=("tripleo_ovn_cluster_north_db_server.service"

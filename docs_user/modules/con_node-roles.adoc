@@ -2,12 +2,14 @@
 
 = About node roles
 
-In {OpenStackPreviousInstaller} deployments you had 4 different standard roles for the nodes:
-`Controller`, `Compute`, `Ceph Storage`, `Swift Storage`, but in the control plane you make a distinction based on where things are running, in
-{OpenShift} ({OpenShiftShort}) or external to it.
+In {OpenStackPreviousInstaller} deployments you had 5 different standard roles
+for the nodes: `Controller`, `Compute`, `Networker`, `Ceph Storage`, `Swift
+Storage`, but in the control plane you make a distinction based on where things
+are running, in {OpenShift} ({OpenShiftShort}) or external to it.
 
 When adopting a {OpenStackPreviousInstaller} {rhos_prev_long} ({OpenStackShort}) your `Compute` nodes will directly become
 external nodes, so there should not be much additional planning needed there.
+Your `Networker` nodes will also become external nodes.
 
 In many deployments being adopted the `Controller` nodes will require some
 thought because you have many {OpenShiftShort} nodes where the Controller services

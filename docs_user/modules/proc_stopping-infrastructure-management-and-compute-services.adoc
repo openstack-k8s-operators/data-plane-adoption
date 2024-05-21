@@ -4,9 +4,9 @@
 
 The source cloud's control plane can be decomissioned,
 which is taking down only cloud controllers, database and messaging nodes.
-Nodes that must remain functional are those running the Compute, storage,
-or networker roles (in terms of composable roles covered by {OpenStackPreviousInstaller} Heat
-Templates).
+Nodes that must remain functional are those running the `Compute`, `Storage`,
+or `Networker` roles (in terms of composable roles covered by
+{OpenStackPreviousInstaller} Heat Templates).
 
 .Prerequisites
 

@@ -98,12 +98,14 @@ edpm_bootstrap_command: |
   # https://issues.redhat.com/browse/RHOSZUUL-1517
   dnf -y install crypto-policies
   update-crypto-policies --set FIPS:NO-ENFORCE-EMS
+  {%+ if compute_adoption|bool +%}
   # FIXME: perform dnf upgrade for other packages in EDPM ansible
   # here we only ensuring that decontainerized libvirt can start
   ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
   dnf -y upgrade openstack-selinux
   rm -f /run/virtlogd.pid
   rm -rf repo-setup-main
+  {%+ endif +%}
 
 edpm_network_config_template: |
   {%- raw %}

@@ -159,7 +159,7 @@ rm -f id*
 cd -
 ----
 
-. Create a `nova-compute-extra-config` service (with local storage backend for lbivrt):
+. Create a `nova-compute-extra-config` service (with local storage backend for `libvirt`):
 +
 . If TLS Everywhere is enabled, append the following to the OpenStackDataPlaneService spec:
 +
@@ -211,7 +211,7 @@ The secret `nova-cell<X>-compute-config` is auto-generated for each
 That service removes pre-FFU workarounds and configures Compute
 services for local storage backend.
 
-* Or, create a `nova-compute-extra-config` service (with Ceph backend for libvirt):
+* Or, create a `nova-compute-extra-config` service (with Ceph backend for `libvirt`):
 +
 [source,yaml]
 ----
@@ -361,7 +361,7 @@ endif::[]
           nova_libvirt_network: internalapi
 
         # edpm_network_config
-        # Default nic config template for a EDPM compute node
+        # Default nic config template for a EDPM node
         # These vars are edpm_network_config role vars
         edpm_network_config_template: |
            ---
@@ -505,10 +505,10 @@ spec:
         readOnly: true
 "
 ----
-+
-* Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
+Note that you should retain the original `OpenStackDataPlaneNodeSet` services
+composition, except the inserted `ceph-client` service.
 
-. Ensure that the `ovn-controller` settings that are configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the Compute nodes before adoption. This configuration is stored in the `external_ids`` column in the `Open_vSwitch` table in the Open vSwitch database:
++ Ensure that the `ovn-controller` settings that are configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the Compute nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
 +
 ----
 ovs-vsctl list Open .
@@ -516,9 +516,6 @@ ovs-vsctl list Open .
 external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings=<bridge_mappings>, ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
 ...
 ----
-
-Note that you should retain the original `OpenStackDataPlaneNodeSet` services
-composition, except the inserted `ceph-client` service.
 
 +
 * Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
@@ -678,6 +675,13 @@ spec:
   - openstack
 EOF
 ----
+
+Note: if you have other node sets to deploy (e.g. for networker nodes), you may
+add them above in `nodeSets` list, or create separate
+`OpenStackDataPlaneDeployment` CRs later.
+
+Note that once a `OpenStackDataPlaneDeployment` CR is deployed, it's impossible
+to add new node sets to it later.
 
 .Verification
 
