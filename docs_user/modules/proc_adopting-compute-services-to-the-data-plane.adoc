@@ -292,6 +292,7 @@ endif::[]
 . Deploy the `OpenStackDataPlaneNodeSet` CR:
 +
 . If TLS Everywhere is enabled, change spec:tlsEnabled to true
+. If using a custom DNS Domain, modify the spec:nodes:[NODE NAME]:hostName to use fqdn for the node
 +
 [source,yaml]
 ----
