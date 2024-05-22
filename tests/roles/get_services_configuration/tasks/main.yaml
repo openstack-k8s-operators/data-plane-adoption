@@ -18,7 +18,7 @@
     {{ shell_header }}
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
-    export PULL_OPENSTACK_CONFIGURATION_DATABASES=$(oc run mariadb-client -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+    export PULL_OPENSTACK_CONFIGURATION_DATABASES=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
       mysql -rsh "$SOURCE_MARIADB_IP" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" -e 'SHOW databases;')
     echo "$PULL_OPENSTACK_CONFIGURATION_DATABASES"
   register: _databases_check
@@ -29,7 +29,7 @@
     {{ shell_header }}
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
-    export PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc run mariadb-client -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+    export PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
       mysqlcheck --all-databases -h "${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" | grep -v OK)
     echo "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"
   failed_when: _mysqlnok_check.stdout != ''
@@ -43,7 +43,7 @@
         {{ shell_header }}
         {{ oc_header }}
         {{ mariadb_copy_shell_vars_src }}
-        export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+        export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
         mysql -rsh "${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" nova_api -e \
           'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')
         echo "$PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS"
@@ -54,7 +54,7 @@
         {{ shell_header }}
         {{ oc_header }}
         {{ mariadb_copy_shell_vars_src }}
-        export PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES=$(oc run mariadb-client -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+        export PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
         mysql -rsh "$SOURCE_MARIADB_IP" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" nova_api -e \
           "select host from nova.services where services.binary='nova-compute';")
         echo "$PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES"
@@ -85,14 +85,14 @@
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
     cat > ~/.source_cloud_exported_variables << EOF
-    PULL_OPENSTACK_CONFIGURATION_DATABASES="$(oc run mariadb-client -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+    PULL_OPENSTACK_CONFIGURATION_DATABASES="$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
         mysql -rsh $SOURCE_MARIADB_IP -uroot -p$SOURCE_DB_ROOT_PASSWORD -e 'SHOW databases;')"
-    PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK="$(oc run mariadb-client -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+    PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK="$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
         mysqlcheck --all-databases -h $SOURCE_MARIADB_IP -u root -p$SOURCE_DB_ROOT_PASSWORD | grep -v OK)"
-    PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="$(oc run mariadb-client -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+    PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
         mysql -rsh $SOURCE_MARIADB_IP -uroot -p$SOURCE_DB_ROOT_PASSWORD nova_api -e \
         'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')"
-    PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES="$(oc run mariadb-client -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+    PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES="$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
         mysql -rsh $SOURCE_MARIADB_IP -uroot -p$SOURCE_DB_ROOT_PASSWORD nova_api -e \
         "select host from nova.services where services.binary='nova-compute';")"
     PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$($CONTROLLER_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)"
