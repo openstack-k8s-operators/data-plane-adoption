@@ -79,6 +79,8 @@ edpm_nodes:
         subnetName: subnet1
       - name: tenant
         subnetName: subnet1
+      - name: storagemgmt
+        subnetName: subnet1
 edpm_computes: |-
   ["{{ edpm_node_hostname }}"]="{{ edpm_node_ip }}"
 # The variables inside edpm_network_config_template are evaluated based
