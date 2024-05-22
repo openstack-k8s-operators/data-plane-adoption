@@ -46,6 +46,12 @@ endif::[]
 +
 [subs=+quotes]
 ----
+ifeval::["{build}" != "downstream"]
+EDPM_PRIVATEKEY_PATH="~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa"
+endif::[]
+ifeval::["{build}" == "downstream"]
+EDPM_PRIVATEKEY_PATH="*<path to SSH key>*"
+endif::[]
 declare -A computes
 computes=(
   ["standalone.localdomain"]="192.168.122.100"
@@ -90,7 +96,7 @@ With that file, you can also separately get the certificate and the key by using
 . Create the secret that contains the root CA:
 +
 ----
-oc create secret generic rootca-internal
+oc create secret generic rootca-internal -n openstack
 ----
 
 . Import the certificate and the key from FreeIPA:

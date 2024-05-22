@@ -150,8 +150,10 @@ To deploy using TLS everywhere enabled, instead run:
 [,bash]
 ----
 cd ~/install_yamls/devsetup
-TLS_ENABLED=true make standalone
+EDPM_COMPUTE_CEPH_ENABLED=false TLS_ENABLED=true DNS_DOMAIN=ooo.test make standalone
 ----
+
+This will disable the Ceph deployment, as the CI is not deploying with Ceph.
 
 == Install the openstack-k8s-operators (openstack-operator)
 
