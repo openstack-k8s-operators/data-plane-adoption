@@ -116,7 +116,7 @@ oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
 
 .Procedure
 
-. Check that the Galera database cluster members are online and synced:
+. Check that the source Galera database cluster members are online and synced:
 +
 ----
 for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
