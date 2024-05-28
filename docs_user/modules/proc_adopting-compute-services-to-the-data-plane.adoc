@@ -627,6 +627,41 @@ the 17 node.
 `edpm_tuned_profile` variable in the `OpenStackDataPlaneNodeSet` is configured
 to use the same profile as set on the (source) OSP 17 node.
 
+. Remove leftover {OpenStackPreviousInstaller} services
+
+.. Create cleanup data plane service
++
+[source,yaml]
+---
+oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: tripleo-cleanup
+spec:
+  playbook: osp.edpm.tripleo_cleanup
+EOF
+---
+
+.. Create OpenStackDataPlaneDeployment to run cleanup
++
+[source,yaml]
+---
+oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneDeployment
+metadata:
+  name: tripleo-cleanup
+spec:
+  nodeSets:
+  - openstack
+  servicesOverride:
+  - tripleo-cleanup
+EOF
+---
+
+.. Wait for the removal to finish.
+
 . Deploy the `OpenStackDataPlaneDeployment` CR:
 +
 [source,yaml]
