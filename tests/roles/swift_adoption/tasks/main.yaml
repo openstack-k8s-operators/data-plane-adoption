@@ -40,8 +40,6 @@
       swift:
         enabled: true
         template:
-          secret: osp-secret
-          swiftConfSecret: swift-conf
           memcachedInstance: memcached
           swiftRing:
             ringReplicas: 1
