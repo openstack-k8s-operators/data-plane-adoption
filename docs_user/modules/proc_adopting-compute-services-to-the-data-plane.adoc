@@ -173,6 +173,7 @@ cd -
       - ctlplane
     issuer: osp-rootca-issuer-internal
   caCerts: combined-ca-bundle
+  edpmServiceType: nova
 ----
 +
 [source,yaml]
