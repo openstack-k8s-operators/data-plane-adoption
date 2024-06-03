@@ -475,65 +475,6 @@
         echo "Run out of retries"
         exit 2
 
-- name: deploy the dataplane deployment
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc apply -f - <<EOF
-    apiVersion: dataplane.openstack.org/v1beta1
-    kind: OpenStackDataPlaneDeployment
-    metadata:
-      name: openstack
-    spec:
-      nodeSets:
-      - openstack
-    EOF
-
-- name: wait for dataplane node set to be ready
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-
-    DEPLOYMENT_NAME=openstack
-    TRIES=360
-    DELAY=30
-    ALLOWED_JOB_RETRIES=3
-
-    for i in $(seq $TRIES)
-    do
-        ready=$(oc get osdpd/$DEPLOYMENT_NAME -o jsonpath='{.status.conditions[0].status}')
-        if [ "$ready" == "True" ]; then
-            echo "Deployment is Ready"
-            exit 0
-        else
-            failed=$(oc get jobs -l openstackdataplanedeployment=$DEPLOYMENT_NAME -o jsonpath="{.items[?(@.status.failed > $ALLOWED_JOB_RETRIES)].metadata.name}")
-            if [ ! -z "${failed}" ]; then
-                echo "There are failed AnsibleEE jobs: $failed"
-                exit 1
-            fi
-        fi
-
-    sleep $DELAY
-    done
-
-    echo "Run out of retries"
-    exit 2
-
-  register: osdpd_running_result
-
-- name: Complete Nova services Wallaby->Antelope FFU
-  ansible.builtin.include_tasks:
-    file: nova_ffu.yaml
-
-- name: Adopted Nova FFU post-checks
-  ansible.builtin.include_tasks:
-    file: nova_verify.yaml
-
-- name: Adopted Neutron and OVN agents post-checks
-  ansible.builtin.include_tasks:
-    file: neutron_verify.yaml
-
 - name: Remove leftover OOO services
   block:
     - name: Create OpenStackDataPlaneService/tripleo-cleanup
@@ -596,3 +537,62 @@
 
         echo "Run out of retries"
         exit 2
+
+- name: deploy the dataplane deployment
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc apply -f - <<EOF
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneDeployment
+    metadata:
+      name: openstack
+    spec:
+      nodeSets:
+      - openstack
+    EOF
+
+- name: wait for dataplane node set to be ready
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    DEPLOYMENT_NAME=openstack
+    TRIES=360
+    DELAY=30
+    ALLOWED_JOB_RETRIES=3
+
+    for i in $(seq $TRIES)
+    do
+        ready=$(oc get osdpd/$DEPLOYMENT_NAME -o jsonpath='{.status.conditions[0].status}')
+        if [ "$ready" == "True" ]; then
+            echo "Deployment is Ready"
+            exit 0
+        else
+            failed=$(oc get jobs -l openstackdataplanedeployment=$DEPLOYMENT_NAME -o jsonpath="{.items[?(@.status.failed > $ALLOWED_JOB_RETRIES)].metadata.name}")
+            if [ ! -z "${failed}" ]; then
+                echo "There are failed AnsibleEE jobs: $failed"
+                exit 1
+            fi
+        fi
+
+    sleep $DELAY
+    done
+
+    echo "Run out of retries"
+    exit 2
+
+  register: osdpd_running_result
+
+- name: Complete Nova services Wallaby->Antelope FFU
+  ansible.builtin.include_tasks:
+    file: nova_ffu.yaml
+
+- name: Adopted Nova FFU post-checks
+  ansible.builtin.include_tasks:
+    file: nova_verify.yaml
+
+- name: Adopted Neutron and OVN agents post-checks
+  ansible.builtin.include_tasks:
+    file: neutron_verify.yaml
