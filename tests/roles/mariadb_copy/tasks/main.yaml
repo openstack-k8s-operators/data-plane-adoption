@@ -72,6 +72,7 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
+    {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
     for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
       echo "Checking for the database node $i WSREP status Synced"
