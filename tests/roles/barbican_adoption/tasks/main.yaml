@@ -77,9 +77,9 @@
 
     alias openstack="oc exec -t openstackclient -- openstack"
 
-    ${BASH_ALIASES[openstack]} secret get `openstack secret list | grep testSecret | cut -d'|' -f 2 | xargs` --payload -f value
     secret_id=`${BASH_ALIASES[openstack]} secret list | grep testSecret | cut -d'|' -f 2 | xargs`
-      secret_payload=`${BASH_ALIASES[openstack]} secret get $secret_id`
+      secret_payload=`${BASH_ALIASES[openstack]} secret get $secret_id --payload -f value`
+      echo $secret_payload
       if [ "$secret_payload" != "TestPayload" ]
       then
         exit 1
