@@ -45,7 +45,8 @@ spec:
 
   heat:
     enabled: false
-    template: {}
+    template:
+      databaseInstance: openstack
 
   horizon:
     enabled: false
