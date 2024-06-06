@@ -316,11 +316,7 @@ spec:
             spec:
               type: LoadBalancer
 
-  ceilometer:
-    enabled: false
-    template: {}
-
-  autoscaling:
+  telemetry:
     enabled: false
     template: {}
 EOF
