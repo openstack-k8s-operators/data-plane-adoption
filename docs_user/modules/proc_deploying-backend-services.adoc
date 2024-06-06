@@ -319,6 +319,16 @@ spec:
   telemetry:
     enabled: false
     template: {}
+
+  swift:
+    enabled: false
+    template:
+      swiftRing:
+        ringReplicas: 1
+      swiftStorage:
+        replicas: 0
+      swiftProxy:
+        replicas: 1
 EOF
 ----
 
