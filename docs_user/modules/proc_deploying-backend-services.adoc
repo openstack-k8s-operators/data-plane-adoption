@@ -277,21 +277,19 @@ spec:
   ovn:
     enabled: false
     template:
-      ovnDBCluster:
-        ovndbcluster-nb:
-          dbType: NB
-          storageRequest: 10G
-          networkAttachment: internalapi
-        ovndbcluster-sb:
-          dbType: SB
-          storageRequest: 10G
-          networkAttachment: internalapi
-      ovnNorthd:
-        replicas: 0
       ovnController:
         networkAttachment: tenant
         nodeSelector:
           node: non-existing-node-name
+      ovnNorthd:
+        replicas: 0
+      ovnDBCluster:
+        ovndbcluster-nb:
+          dbType: NB
+          networkAttachment: internalapi
+        ovndbcluster-sb:
+          dbType: SB
+          networkAttachment: internalapi
 
   placement:
     enabled: false
