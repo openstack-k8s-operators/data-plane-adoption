@@ -305,7 +305,8 @@ Create a test VM instance with a test volume attachement:
 [,bash]
 ----
 cd ~/data-plane-adoption
-bash tests/roles/development_environment/files/pre_launch.bash
+OS_CLOUD_IP=192.168.122.100 OS_CLOUD_NAME=standalone \
+    bash tests/roles/development_environment/files/pre_launch.bash
 ----
 
 This also creates a test Cinder volume, a backup from it, and a snapshot of it.
