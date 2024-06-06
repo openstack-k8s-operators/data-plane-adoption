@@ -220,6 +220,10 @@ spec:
     template:
       glanceAPIs: {}
 
+  heat:
+    enabled: false
+    template: {}
+
   horizon:
     enabled: false
     template: {}
