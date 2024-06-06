@@ -155,6 +155,22 @@ spec:
       enabled: true
 ----
 
+. If the source environment does not enable TLS Everywhere, modify
+spec:tls section with the following override before applying it:
+
++
+[source,yaml]
+----
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+spec:
+  tls:
+    podLevel:
+      enabled: false
+----
+
 +
 [source,yaml]
 ----
@@ -166,10 +182,6 @@ metadata:
 spec:
   secret: osp-secret
   storageClass: local-storage
-
-  tls:
-    podLevel:
-      enabled: false
 
   barbican:
     enabled: false
