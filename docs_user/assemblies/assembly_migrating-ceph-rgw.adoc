@@ -11,8 +11,6 @@ To migrate Ceph Object Gateway (RGW), your environment must meet the following r
 * {Ceph} is running version 6 or later and is managed by cephadm/orchestrator.
 * An undercloud is still available, and the nodes and networks are managed by {OpenStackPreviousInstaller}.
 
-include::../modules/con_ceph-daemon-cardinality.adoc[leveloffset=+1]
-
 include::../modules/proc_completing-prerequisites-for-migrating-ceph-rgw.adoc[leveloffset=+1]
 
 include::../modules/proc_migrating-the-rgw-backends.adoc[leveloffset=+1]

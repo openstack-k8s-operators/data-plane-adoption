@@ -1,0 +1,44 @@
+ifdef::context[:parent-context: {context}]
+
+[id="ceph-migration_{context}"]
+
+= Migrating the {CephCluster} Cluster
+
+:context: migrating-ceph
+
+:toc: left
+:toclevels: 3
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]
+
+In the context of data plane adoption, where the {rhos_prev_long}
+({OpenStackShort}) services are redeployed in {OpenShift}, you migrate a
+{OpenStackPreviousInstaller}-deployed {CephCluster} cluster by using a process
+called “externalizing” the {CephCluster} cluster.
+
+There are two deployment topologies that include an internal {CephCluster}
+cluster:
+
+* {OpenStackShort} includes dedicated {CephCluster} nodes to host object
+  storage daemons (OSDs)
+
+* Hyperconverged Infrastructure (HCI), where Compute and Storage services are
+  colocated on hyperconverged nodes
+
+In either scenario, there are some {Ceph} processes that are deployed on
+{OpenStackShort} Controller nodes: {Ceph} monitors, Ceph Object Gateway (RGW),
+Rados Block Device (RBD), Ceph Metadata Server (MDS), Ceph Dashboard, and NFS
+Ganesha. To migrate your {CephCluster} cluster, you must decommission the
+Controller nodes and move the {Ceph} daemons to a set of target nodes that are
+already part of the {CephCluster} cluster.
+
+include::../modules/con_ceph-daemon-cardinality.adoc[leveloffset=+1]
+
+include::assembly_migrating-ceph-monitoring-stack.adoc[leveloffset=+1]
+
+include::../modules/proc_migrating-ceph-mds.adoc[leveloffset=+1]
+
+include::assembly_migrating-ceph-rgw.adoc[leveloffset=+1]
+
+include::assembly_migrating-ceph-rbd.adoc[leveloffset=+1]
