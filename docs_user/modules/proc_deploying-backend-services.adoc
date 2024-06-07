@@ -155,6 +155,22 @@ spec:
       enabled: true
 ----
 
+. If the source environment does not enable TLS Everywhere, modify
+spec:tls section with the following override before applying it:
+
++
+[source,yaml]
+----
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+spec:
+  tls:
+    podLevel:
+      enabled: false
+----
+
 +
 [source,yaml]
 ----
@@ -166,10 +182,6 @@ metadata:
 spec:
   secret: osp-secret
   storageClass: local-storage
-
-  tls:
-    podLevel:
-      enabled: false
 
   barbican:
     enabled: false
@@ -207,6 +219,10 @@ spec:
     enabled: false
     template:
       glanceAPIs: {}
+
+  heat:
+    enabled: false
+    template: {}
 
   horizon:
     enabled: false
@@ -261,21 +277,19 @@ spec:
   ovn:
     enabled: false
     template:
-      ovnDBCluster:
-        ovndbcluster-nb:
-          dbType: NB
-          storageRequest: 10G
-          networkAttachment: internalapi
-        ovndbcluster-sb:
-          dbType: SB
-          storageRequest: 10G
-          networkAttachment: internalapi
-      ovnNorthd:
-        replicas: 0
       ovnController:
         networkAttachment: tenant
         nodeSelector:
           node: non-existing-node-name
+      ovnNorthd:
+        replicas: 0
+      ovnDBCluster:
+        ovndbcluster-nb:
+          dbType: NB
+          networkAttachment: internalapi
+        ovndbcluster-sb:
+          dbType: SB
+          networkAttachment: internalapi
 
   placement:
     enabled: false
@@ -302,13 +316,19 @@ spec:
             spec:
               type: LoadBalancer
 
-  ceilometer:
+  telemetry:
     enabled: false
     template: {}
 
-  autoscaling:
+  swift:
     enabled: false
-    template: {}
+    template:
+      swiftRing:
+        ringReplicas: 1
+      swiftStorage:
+        replicas: 0
+      swiftProxy:
+        replicas: 1
 EOF
 ----
 

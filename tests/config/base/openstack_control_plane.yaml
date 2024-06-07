@@ -110,11 +110,9 @@ spec:
         ovndbcluster-nb:
           dbType: NB
           networkAttachment: internalapi
-          containerImage: quay.io/podified-antelope-centos9/openstack-ovn-nb-db-server:current-podified
         ovndbcluster-sb:
           dbType: SB
           networkAttachment: internalapi
-          containerImage: quay.io/podified-antelope-centos9/openstack-ovn-sb-db-server:current-podified
 
   placement:
     enabled: false
