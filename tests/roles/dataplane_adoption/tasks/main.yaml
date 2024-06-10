@@ -261,22 +261,7 @@
               nova_libvirt_network: internalapi
 
             edpm_bootstrap_command: |
-              # This is a hack to deploy RDO Delorean repos to RHEL as if it were Centos 9 Stream
-              set -euxo pipefail
-              curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
-              python3 -m venv ./venv
-              PBR_VERSION=0.0.0 ./venv/bin/pip install ./repo-setup-main
-              # This is required for FIPS enabled until trunk.rdoproject.org
-              # is not being served from a centos7 host, tracked by
-              # https://issues.redhat.com/browse/RHOSZUUL-1517
-              dnf -y install crypto-policies
-              update-crypto-policies --set FIPS:NO-ENFORCE-EMS
-              # FIXME: perform dnf upgrade for other packages in EDPM ansible
-              # here we only ensuring that decontainerized libvirt can start
-              ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
-              dnf -y upgrade openstack-selinux
-              rm -f /run/virtlogd.pid
-              rm -rf repo-setup-main
+              {{ edpm_bootstrap_command| indent(10) }}
 
             # edpm_network_config
             # nic config template for a EDPM compute node
