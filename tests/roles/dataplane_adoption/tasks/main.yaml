@@ -253,6 +253,7 @@
         ansible:
           ansibleUser: {{ edpm_user }}
           ansibleVars:
+            edpm_bootstrap_release_version_package: []
             os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
             os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
             os_net_config_dns: {{ dataplane_os_net_config_dns | default("") }}
