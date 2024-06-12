@@ -1,4 +1,5 @@
 - name: Prelude
+  failed_when: true # marios debug need to short circuit adoption tests
   hosts: local
   gather_facts: false
   module_defaults:
