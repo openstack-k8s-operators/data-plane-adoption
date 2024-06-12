@@ -189,6 +189,8 @@ ifeval::["{build}" != "downstream"]
           # https://issues.redhat.com/browse/RHOSZUUL-1517
           dnf -y install crypto-policies
           update-crypto-policies --set FIPS:NO-ENFORCE-EMS
+          ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
+          rm -rf repo-setup-main
 endif::[]
 ifeval::["{build}" == "downstream"]
         edpm_bootstrap_command: |
