@@ -341,6 +341,7 @@
         - configure-os
         - run-os
         - install-certs
+        - ceph-hci-pre
         - ceph-client
         - libvirt
         - nova-compute-extraconfig
