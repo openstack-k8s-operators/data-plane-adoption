@@ -1,0 +1,26 @@
+# Get a fresh ceph_cli
+- name: Get ceph_cli
+  ansible.builtin.include_tasks: ceph_cli.yaml
+  vars:
+    ceph_fsid: "{{ mon_dump.fsid }}"
+    ceph_cluster: ceph
+
+# Add nfs labels to the target nodes where the cluster should be deployed
+- name: NFS - Setup NFS label to the target node
+  ansible.builtin.include_tasks: labels.yaml
+  vars:
+    nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
+    act: "add"
+    labels:
+      - "nfs"
+# waiting for https://github.com/ceph/ceph/pull/53108
+# to appear in the next Ceph container build
+# disabling this task by default for now
+- name: Create NFS Ganesha Cluster
+  when: ceph_nfs_vip is defined
+  become: true
+  ansible.builtin.command: |
+    {{ ceph_cli }} nfs cluster create {{ cephfs_name | default('cephfs') }} \
+    --ingress --virtual-ip={{ ceph_nfs_vip }} \
+    --ingress-mode=haproxy-protocol '--placement=label=nfs'
+  changed_when: false

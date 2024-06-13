@@ -1,0 +1,7 @@
+# Dump logs of the Ceph cluster daemons
+- name: POST - Dump logs
+  ansible.builtin.include_tasks: ceph_load.yaml
+  vars:
+    dump: true
+  tags:
+    - ceph_dump

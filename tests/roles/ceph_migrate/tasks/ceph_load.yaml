@@ -1,0 +1,182 @@
+# Restore client (useful for multiple runs) files in /etc/ceph to allow
+# running `cephadm shell` and load fresh data from the cluster
+- name: Restore client
+  become: true
+  block:
+    - name: Check file in the src directory
+      ansible.builtin.find:
+        paths: "{{ ceph_config_tmp_client_home }}"
+        patterns: "*"
+      register: dir_ceph_files
+
+    - name: Restore files
+      when: dir_ceph_files.files | length > 0
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ ceph_config_tmp_client_home }}/{{ item }}"
+        dest: "/etc/ceph"
+        mode: '0644'
+      loop:
+        - ceph.conf
+        - ceph.client.admin.keyring
+
+- name: Ensure backup directory exists
+  when: dump | default(false)
+  ansible.builtin.file:
+    path: "{{ ceph_config_tmp_client_home }}/logs"
+    state: directory
+    mode: '0755'
+
+# CEPH HEALTH
+- name: Ceph Health
+  block:
+    - name: Get Ceph Health
+      # cephadm runs w/ root privileges
+      become: true
+      ansible.builtin.command: |
+        cephadm shell -- ceph -s -f json
+      register: ceph
+    - name: Load ceph data
+      ansible.builtin.set_fact:
+        ceph: "{{ ceph.stdout | from_json }}"
+    - name: Dump ceph -s output to log file
+      when: dump | default(false)
+      ansible.builtin.copy:
+        content: "{{ ceph }}"
+        dest: "{{ ceph_config_tmp_client_home }}/logs/ceph_health.log"
+        mode: '0644'
+
+# CEPH SERVICE MAP
+- name: Ceph Service Map
+  block:
+    - name: Get Ceph Orch ServiceMap
+      # cephadm runs w/ root privileges
+      become: true
+      ansible.builtin.command: |
+        cephadm shell -- ceph orch ls -f json
+      register: smap
+
+    - name: Load Service Map
+      ansible.builtin.set_fact:
+        servicemap: "{{ smap.stdout | from_json }}"
+
+    - name: Print Service Map
+      when: debug | default(false)
+      ansible.builtin.debug:
+        msg: "{{ item.service_type }} - {{ item.placement }}"
+      loop: "{{ servicemap | flatten(levels=1) }}"
+
+    # Dump config to a log file
+    - name: Dump ceph orch ls output to log file
+      when: dump | default(false)
+      ansible.builtin.copy:
+        content: "{{ servicemap }}"
+        dest: "{{ ceph_config_tmp_client_home }}/logs/ceph_orch_ls.log"
+        mode: '0644'
+
+# CEPH CONFIG DUMP
+- name: Ceph Config Dump
+  block:
+    - name: Get Ceph config
+      # cephadm runs w/ root privileges
+      become: true
+      ansible.builtin.command: |
+        cephadm shell -- ceph config dump -f json
+      register: ceph_conf
+
+    - name: Print Ceph config dump
+      when: debug | default(false)
+      ansible.builtin.debug:
+        msg: "{{ ceph_conf | from_json }}"
+
+    # Dump config to a log file
+    - name: Dump ceph config dump output to log file
+      when: dump | default(false)
+      ansible.builtin.copy:
+        content: "{{ ceph_conf.stdout | from_json }}"
+        dest: "{{ ceph_config_tmp_client_home }}/logs/ceph_config_dump.log"
+        mode: '0644'
+
+
+# CEPH HOSTMAP LIST
+- name: Ceph Host List
+  block:
+    - name: Get Ceph Orch Host Map
+      # cephadm runs w/ root privileges
+      become: true
+      ansible.builtin.command: |
+        cephadm shell -- ceph orch host ls -f json
+      register: nds
+    - name: Load nodes
+      ansible.builtin.set_fact:
+        nds: "{{ nds.stdout | from_json }}"
+    - name: Load hostmap List
+      ansible.builtin.set_fact:
+        hostmap: |-
+          {% set hm = {} %}
+          {% for h in nds %}
+          {%     set _ = hm.__setitem__(h.hostname, h.labels) %}
+          {% endfor %}
+          {{ hm }}
+    - name: Print Host Map
+      when: debug | default(false)
+      ansible.builtin.debug:
+        msg: "{{ item }}"
+      loop: "{{ hostmap | flatten(levels=1) }}"
+    - name: Dump ceph orch host ls output to log file
+      when: dump | default(false)
+      ansible.builtin.copy:
+        content: "{{ hostmap | flatten(levels=1) }}"
+        dest: "{{ ceph_config_tmp_client_home }}/logs/ceph_orch_host_ls.log"
+        mode: '0644'
+
+# CEPH MON DUMP
+- name: Ceph Mon dump
+  block:
+    - name: Get Ceph monmap and load data
+      become: true
+      ansible.builtin.command:
+        cephadm shell -- ceph mon dump -f json
+      register: mons
+    - name: Get Monmap
+      ansible.builtin.set_fact:
+        mon_dump: "{{ mons.stdout | from_json }}"
+    - name: Print monmap
+      when: debug | default(false)
+      ansible.builtin.debug:
+        msg: "{{ mons.stdout | from_json }}"
+    - name: Dump ceph mon dump output to log file
+      when: dump | default(false)
+      ansible.builtin.copy:
+        content: "{{ mon_dump }}"
+        dest: "{{ ceph_config_tmp_client_home }}/logs/ceph_mon_dump.log"
+        mode: '0644'
+
+# We assume that nodes to decommission are where the mon label is present, and
+# the target_nodes are already enrolled in the Ceph cluster: this way we can
+# get them as difference between the current "mon" nodes and the rest of the
+# hosts of the Ceph cluster
+- name: Load nodes to decommission
+  ansible.builtin.set_fact:
+    decomm_nodes: |-
+      {% set ctl = [] %}
+      {% for h in hostmap.keys() %}
+      {% if 'mon' in hostmap.get(h) %}
+      {%     set _ = ctl.append(h) %}
+      {% endif %}
+      {% endfor %}
+      {{ ctl }}
+
+- name: Load target nodes
+  ansible.builtin.set_fact:
+    target_nodes: "{{ hostmap.keys() | difference(decomm_nodes) }}"
+
+- name: Print Ceph cluster nodes
+  when: debug|default(false)
+  block:
+    - name: Print target nodes
+      ansible.builtin.debug:
+        msg: "{{ target_nodes }}"
+    - name: Print decomm_nodes
+      ansible.builtin.debug:
+        msg: "{{ decomm_nodes }}"
