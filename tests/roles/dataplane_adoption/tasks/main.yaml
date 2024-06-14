@@ -202,6 +202,7 @@
         - configure-os
         - ssh-known-hosts
         - run-os
+        - reboot-os
         - install-certs
         {%+ if compute_adoption|bool +%}
         - libvirt
@@ -317,6 +318,7 @@
         - install-os
         - configure-os
         - run-os
+        - reboot-os
         - install-certs
         - ceph-hci-pre
         - ceph-client
