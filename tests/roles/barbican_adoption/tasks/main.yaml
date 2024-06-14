@@ -3,7 +3,7 @@
     {{ shell_header }}
     {{ oc_header }}
     CONTROLLER1_SSH="{{ controller1_ssh }}"
-    oc set data secret/osp-secret "BarbicanSimpleCryptoKEK=$($CONTROLLER1_SSH "python3 -c \"import configparser; c = configparser.ConfigParser(); c.read('/var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf'); print(c['simple_crypto_plugin']['kek'])\"" | base64 -w 0)"
+    oc set data secret/osp-secret "BarbicanSimpleCryptoKEK=$($CONTROLLER1_SSH "python3 -c \"import configparser; c = configparser.ConfigParser(); c.read('/var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf'); print(c['simple_crypto_plugin']['kek'])\"")"
 
 - name: deploy podified Barbican
   ansible.builtin.shell: |
@@ -69,3 +69,17 @@
   until: barbican_responding_result is success
   retries: 60
   delay: 2
+
+- name: check that Barbican secret payload was migrated successfully
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    secret_id=`${BASH_ALIASES[openstack]} secret list | grep testSecret | cut -d'|' -f 2 | xargs`
+    secret_payload=`${BASH_ALIASES[openstack]} secret get $secret_id --payload -f value`
+    if [ "$secret_payload" != "TestPayload" ]
+    then
+      exit 1
+    fi
