@@ -19,6 +19,7 @@
   delay: 1
 
 - name: get neutron-sriov-nic-agent alive state
+  when: compute_adoption|bool
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ neutron_header }}
@@ -26,6 +27,7 @@
   register: neutron_verify_sriov_nic_agent_result
 
 - name: verify that neutron-sriov-nic-agent is alive
+  when: compute_adoption|bool
   ansible.builtin.assert:
     that:
       - neutron_verify_sriov_nic_agent_result.stdout == 'ALIVE'

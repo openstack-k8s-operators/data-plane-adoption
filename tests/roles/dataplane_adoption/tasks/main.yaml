@@ -55,6 +55,7 @@
 # is released in 17.1.3. note that we use 42436:42436 as the nova user and group may not have
 # been created yet, and we need to ensure the file is owned by the correct user and group
 - name: Temporary fix to ensure stable compute UUID
+  when: compute_adoption|bool
   block:
     - name: ensure SSH key
       ansible.builtin.copy:
@@ -102,6 +103,7 @@
     EOF
 
 - name: generate an ssh key-pair nova-migration-ssh-key secret
+  when: compute_adoption|bool
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -118,6 +120,7 @@
 
 - name: create a Nova Compute Extra Config service (no ceph backend in use)
   when:
+    - compute_adoption|bool
     - ('ceph' not in [nova_libvirt_backend])
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -160,8 +163,9 @@
     {% endif %}
     EOF
 
-- name: create a Nova Compute Extra Config service (with ceph backend)
+- name: create a Nova Compute Extra Config service (ceph backend in use)
   when:
+    - compute_adoption|bool
     - ('ceph' in [nova_libvirt_backend])
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -236,8 +240,10 @@
         - ssh-known-hosts
         - run-os
         - install-certs
+        {%+ if compute_adoption|bool +%}
         - libvirt
         - nova-compute-extraconfig
+        {%+ endif +%}
         - ovn
         - neutron-metadata
       env:
@@ -257,9 +263,12 @@
             os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
             os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
             os_net_config_dns: {{ dataplane_os_net_config_dns | default("") }}
+
+            {%+ if compute_adoption|bool +%}
             service_net_map:
               nova_api_network: internalapi
               nova_libvirt_network: internalapi
+            {%+ endif +%}
 
             edpm_bootstrap_command: |
               {{ edpm_bootstrap_command| indent(10) }}
@@ -309,6 +318,9 @@
             ovn_monitor_all: true
             edpm_ovn_remote_probe_interval: 60000
             edpm_ovn_ofctrl_wait_before_clear: 8000
+
+            # serve as a OVN gateway
+            edpm_enable_chassis_gw: true
     EOF
 
 - name: check ovs external-ids with os-diff before deployment
@@ -326,7 +338,9 @@
 # TODO: Apply the ceph backend config for Cinder in the original openstack CR, via kustomize
 - name: prepare adopted EDPM workloads to use Ceph backend for Cinder, if configured so
   no_log: "{{ use_no_log }}"
-  when: cinder_volume_backend == "ceph" or cinder_backup_backend == "ceph"
+  when:
+    - compute_adoption|bool
+    - cinder_volume_backend == "ceph" or cinder_backup_backend == "ceph"
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -383,7 +397,9 @@
         "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_hypervisors",
         "value": ""
       }]'
-  when: edpm_neutron_sriov_agent_enabled|bool
+  when:
+    - edpm_neutron_sriov_agent_enabled|bool
+    - compute_adoption|bool
 
 - name: set neutron-dhcp configuration in the OpenStackDataPlaneNodeSet CR
   no_log: "{{ use_no_log }}"
@@ -573,10 +589,12 @@
   register: osdpd_running_result
 
 - name: Complete Nova services Wallaby->Antelope FFU
+  when: compute_adoption|bool
   ansible.builtin.include_tasks:
     file: nova_ffu.yaml
 
 - name: Adopted Nova FFU post-checks
+  when: compute_adoption|bool
   ansible.builtin.include_tasks:
     file: nova_verify.yaml
 

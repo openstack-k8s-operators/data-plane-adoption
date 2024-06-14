@@ -1,0 +1,348 @@
+[id="adopting-networker-services-to-the-data-plane_{context}"]
+
+= Adopting Networker services to the {rhos_acro} data plane
+
+If you have `Networker` nodes in your existing {rhos_acro} deployment, you
+should adopt them to the {rhos_acro} data plane too. The procedure is largely
+the same as for `Compute` nodes.
+
+The main difference between `Networker` and `Compute` nodes is that `Networker`
+nodes do not run `nova-compute` and `libvirt` services.
+
+You won't need to run `neutron-sriov` service on `Networker` nodes either. But
+depending on your topology, you might need to run `neutron-metadata` service
+there. Specifically, when you'd like to serve metadata to SR-IOV ports hosted
+on `Compute` nodes.
+
+Assuming you'd like to continue running OVN gateway services on `Networker`
+nodes, you will keep `ovn` service in the list to deploy. (You may later decide
+to deprovision OVN gateway services from `Networker` nodes and run them on OCP
+nodes instead. This is currently not recommended and is out of scope for the
+adoption procedure.)
+
+You may also want to run `neutron-dhcp` service on `Networker` nodes instead of
+`Compute` nodes. (But note that using `neutron-dhcp` with OVN is not generally
+needed.)
+
+Whatever the final list of services you'd like to run on `Networker` nodes, you
+will create a separate `OpenStackDataPlaneNodeSet` CR just for these nodes.
+
+. Define the following shell variable. The value that is used is an example
+and refers to a single node standalone {OpenStackPreviousInstaller} deployment.
+Adjust the value to your environment:
++
+[subs=+quotes]
+----
+declare -A networkers
+networkers=(
+  ["standalone.localdomain"]="192.168.122.100"
+  # ...
+)
+----
++
+** Replace `["standalone.localdomain"]="192.168.122.100"` with the name of the `Networker` node and its IP address.
+
+. Deploy the other `OpenStackDataPlaneNodeSet` CR. For simplicity, you can
+reuse most of the `nodeTemplate` section from the `openstack` CR designated for
+`Compute` nodes, though strictly speaking, some of the variables may be
+unnecessary because of a more limited set of services running on `Networker`
+nodes. Make sure `edpm_enable_chassis_gw: true` is set to run `ovn-controller`
+in gateway mode.
++
+. If TLS Everywhere is enabled, change `spec:tlsEnabled` to `true`.
++
+[source,yaml]
+----
+oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneNodeSet
+metadata:
+  name: openstack-networker
+spec:
+  tlsEnabled: false
+  networkAttachments:
+      - ctlplane
+  preProvisioned: true
+  services:
+    - bootstrap
+    - download-cache
+    - configure-network
+    - validate-network
+    - install-os
+    - configure-os
+    - ssh-known-hosts
+    - run-os
+    - install-certs
+    - ovn
+  env:
+    - name: ANSIBLE_CALLBACKS_ENABLED
+      value: "profile_tasks"
+    - name: ANSIBLE_FORCE_COLOR
+      value: "True"
+  nodes:
+    standalone:
+      hostName: standalone
+      ansible:
+        ansibleHost: ${networkers[standalone.localdomain]}
+      networks:
+      - defaultRoute: true
+        fixedIP: ${networkers[standalone.localdomain]}
+        name: ctlplane
+        subnetName: subnet1
+      - name: internalapi
+        subnetName: subnet1
+      - name: storage
+        subnetName: subnet1
+      - name: tenant
+        subnetName: subnet1
+  nodeTemplate:
+    ansibleSSHPrivateKeySecret: dataplane-adoption-secret
+    ansible:
+      ansibleUser: root
+ifeval::["{build}" == "downstream"]
+      ansibleVarsFrom:
+      - prefix: subscription_manager_
+        secretRef:
+          name: subscription-manager
+      - prefix: registry_
+        secretRef:
+          name: redhat-registry
+endif::[]
+      ansibleVars:
+        # edpm_network_config
+        # Default nic config template for a EDPM node
+        # These vars are edpm_network_config role vars
+        edpm_network_config_template: |
+           ---
+           {% set mtu_list = [ctlplane_mtu] %}
+           {% for network in nodeset_networks %}
+           {{ mtu_list.append(lookup('vars', networks_lower[network] ~ '_mtu')) }}
+           {%- endfor %}
+           {% set min_viable_mtu = mtu_list | max %}
+           network_config:
+           - type: ovs_bridge
+             name: {{ neutron_physical_bridge_name }}
+             mtu: {{ min_viable_mtu }}
+             use_dhcp: false
+             dns_servers: {{ ctlplane_dns_nameservers }}
+             domain: {{ dns_search_domains }}
+             addresses:
+             - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
+             routes: {{ ctlplane_host_routes }}
+             members:
+             - type: interface
+               name: nic1
+               mtu: {{ min_viable_mtu }}
+               # force the MAC address of the bridge to this interface
+               primary: true
+           {% for network in nodeset_networks %}
+             - type: vlan
+               mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
+               vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
+               addresses:
+               - ip_netmask:
+                   {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
+               routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
+           {% endfor %}
+
+        edpm_network_config_hide_sensitive_logs: false
+        #
+        # These vars are for the network config templates themselves and are
+        # considered EDPM network defaults.
+        neutron_physical_bridge_name: br-ctlplane
+        neutron_public_interface_name: eth0
+
+        # edpm_nodes_validation
+        edpm_nodes_validation_validate_controllers_icmp: false
+        edpm_nodes_validation_validate_gateway_icmp: false
+
+        # edpm ovn-controller configuration
+        edpm_ovn_bridge_mappings: <bridge_mappings>
+        edpm_ovn_bridge: br-int
+        edpm_ovn_encap_type: geneve
+        ovn_match_northd_version: false
+        ovn_monitor_all: true
+        edpm_ovn_remote_probe_interval: 60000
+        edpm_ovn_ofctrl_wait_before_clear: 8000
+
+        # serve as a OVN gateway
+        edpm_enable_chassis_gw: true
+
+        timesync_ntp_servers:
+ifeval::["{build}" != "downstream"]
+        - hostname: pool.ntp.org
+endif::[]
+ifeval::["{build}" == "downstream"]
+        - hostname: clock.redhat.com
+        - hostname: clock2.redhat.com
+endif::[]
+
+ifeval::["{build}" != "downstream"]
+        edpm_bootstrap_command: |
+          # This is a hack to deploy RDO Delorean repos to RHEL as if it were Centos 9 Stream
+          set -euxo pipefail
+          curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
+          python3 -m venv ./venv
+          PBR_VERSION=0.0.0 ./venv/bin/pip install ./repo-setup-main
+          # This is required for FIPS enabled until trunk.rdoproject.org
+          # is not being served from a centos7 host, tracked by
+          # https://issues.redhat.com/browse/RHOSZUUL-1517
+          dnf -y install crypto-policies
+          update-crypto-policies --set FIPS:NO-ENFORCE-EMS
+          ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
+          rm -rf repo-setup-main
+endif::[]
+ifeval::["{build}" == "downstream"]
+        edpm_bootstrap_command: |
+          subscription-manager register --username {{ subscription_manager_username }} --password {{ subscription_manager_password }}
+          subscription-manager release --set=9.2
+          subscription-manager repos --disable=*
+          subscription-manager repos --enable=rhel-9-for-x86_64-baseos-eus-rpms --enable=rhel-9-for-x86_64-appstream-eus-rpms --enable=rhel-9-for-x86_64-highavailability-eus-rpms --enable=openstack-17.1-for-rhel-9-x86_64-rpms --enable=fast-datapath-for-rhel-9-x86_64-rpms --enable=openstack-dev-preview-for-rhel-9-x86_64-rpms
+          podman login -u {{ registry_username }} -p {{ registry_password }} registry.redhat.io
+endif::[]
+
+        gather_facts: false
+        enable_debug: false
+        # edpm firewall, change the allowed CIDR if needed
+        edpm_sshd_configure_firewall: true
+        edpm_sshd_allowed_ranges: ['192.168.122.0/24']
+        # SELinux module
+        edpm_selinux_mode: enforcing
+
+        # Do not attempt OVS major upgrades here
+        edpm_ovs_packages:
+        - openvswitch3.1
+EOF
+----
+
+. Ensure that the `ovn-controller` settings that are configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the `Networker` nodes before adoption. This configuration is stored in the `external_ids`` column in the `Open_vSwitch` table in the Open vSwitch database:
++
+----
+ovs-vsctl list Open .
+...
+external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings=<bridge_mappings>, ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-cms-options=enable-chassis-as-gw, ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
+...
+----
+
++
+* Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
+
+. Optional: Enable `neutron-metadata` in the `OpenStackDataPlaneNodeSet` CR:
++
+[source,yaml]
+----
+oc patch openstackdataplanenodeset openstack-networker --type='json' --patch='[
+  {
+    "op": "add",
+    "path": "/spec/services/-",
+    "value": "neutron-metadata"
+  }]'
+----
+
+. Optional: Enable `neutron-dhcp` in the `OpenStackDataPlaneNodeSet` CR:
++
+[source,yaml]
+----
+oc patch openstackdataplanenodeset openstack-networker --type='json' --patch='[
+  {
+    "op": "add",
+    "path": "/spec/services/-",
+    "value": "neutron-dhcp"
+  }]'
+----
+
+. Run pre-adoption validation for `Networker` nodes. This step reuses the
+service that was previously created for `Compute` nodes:
+
+.. Create a `OpenStackDataPlaneDeployment` CR that runs the validation only:
++
+[source,yaml]
+----
+oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneDeployment
+metadata:
+  name: openstack-pre-adoption-networker
+spec:
+  nodeSets:
+  - openstack-networker
+  servicesOverride:
+  - pre-adoption-validation
+EOF
+----
++
+Wait for the validation to finish.
+
+.. Confirm that all the Ansible EE pods reach a `Completed` status:
++
+----
+# watching the pods
+watch oc get pod -l app=openstackansibleee
+----
++
+----
+# following the ansible logs with:
+oc logs -l app=openstackansibleee -f --max-log-requests 20
+----
+
+.. Wait for the deployment to reach the `Ready` status:
++
+----
+oc wait --for condition=Ready openstackdataplanedeployment/openstack-pre-adoption-networker --timeout=10m
+----
+
+. Deploy the `OpenStackDataPlaneDeployment` CR for `Networker` nodes:
++
+[source,yaml]
+----
+oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneDeployment
+metadata:
+  name: openstack-networker
+spec:
+  nodeSets:
+  - openstack-networker
+EOF
+----
+
+Note: alternatively, you could include the `Networker` specific node set in the
+`nodeSets` list when creating the main, `openstack`,
+`OpenStackDataPlaneDeployment` CR.
+
+Note that once a `OpenStackDataPlaneDeployment` CR is deployed, it's impossible
+to add new node sets to it later.
+
+.Verification
+
+. Confirm that all the Ansible EE pods reach a `Completed` status:
++
+----
+# watching the pods
+watch oc get pod -l app=openstackansibleee
+----
++
+----
+# following the ansible logs with:
+oc logs -l app=openstackansibleee -f --max-log-requests 20
+----
+
+. Wait for the data plane node set to reach the `Ready` status:
++
+----
+oc wait --for condition=Ready osdpns/openstack-networker --timeout=30m
+----
+
+. Verify that {networking} agents are alive (the list of agents may
+vary depending on the services you've enabled):
++
+----
+oc exec openstackclient -- openstack network agent list
++--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
+| ID                                   | Agent Type                   | Host                   | Availability Zone | Alive | State | Binary                     |
++--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
+| 174fc099-5cc9-4348-b8fc-59ed44fcfb0e | DHCP agent                   | standalone.localdomain | nova              | :-)   | UP    | neutron-dhcp-agent         |
+| 10482583-2130-5b0d-958f-3430da21b929 | OVN Metadata agent           | standalone.localdomain |                   | :-)   | UP    | neutron-ovn-metadata-agent |
+| a4f1b584-16f1-4937-b2b0-28102a3f6eaa | OVN Controller Gateway agent | standalone.localdomain |                   | :-)   | UP    | ovn-controller             |
++--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
+----

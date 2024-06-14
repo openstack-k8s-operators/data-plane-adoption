@@ -8,3 +8,6 @@ shell_header: |
 # Whether to use no_log on tasks which may output potentially
 # sensitive data.
 use_no_log: false
+
+# Whether the adopted node will host compute services
+compute_adoption: true
