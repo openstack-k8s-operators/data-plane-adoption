@@ -65,7 +65,7 @@
     apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: nova-compute-extraconfig
+      name: nova-extra-config
       namespace: openstack
     data:
       20-nova-compute-cell1-workarounds.conf: |
@@ -81,7 +81,7 @@
       nodeSets:
         - openstack
       servicesOverride:
-        - nova-compute-extraconfig
+        - nova
     EOF
 
 - name: wait for Nova compute EDPM services to become ready
