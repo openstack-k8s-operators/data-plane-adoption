@@ -41,23 +41,6 @@ IPA_SSH="ssh -i <path_to_ssh_key> root@<freeipa-server-ip-address>"
 ----
 endif::[]
 
-* Define the map of Compute node name, IP pairs.
-//kgilliga: Is this a separate prerequisite or is this part of "defining shell variables"?
-+
-[subs=+quotes]
-----
-ifeval::["{build}" != "downstream"]
-EDPM_PRIVATEKEY_PATH="~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa"
-endif::[]
-ifeval::["{build}" == "downstream"]
-EDPM_PRIVATEKEY_PATH="*<path to SSH key>*"
-endif::[]
-declare -A computes
-computes=(
-  ["standalone.localdomain"]="192.168.122.100"
-  # ...
-)
-----
 
 .Procedure
 
@@ -147,37 +130,6 @@ oc get issuers -n openstack
 oc get secret rootca-internal -n openstack -o yaml
 ----
 
-. Stop and disable the certmonger service on all data plane nodes, and stop tracking all certificates managed by the service:
-+
-----
-#!/bin/bash
-
-for i in "${!computes[@]}"; do
-    SSH_CMD="ssh -i $EDPM_PRIVATEKEY_PATH root@${computes[$i]}"
-    if ${SSH_CMD} sudo systemctl is-active certmonger.service; then
-        echo "Stopping certmonger on $i..."
-        ${SSH_CMD} sudo systemctl stop certmonger.service
-        echo "Disabling certmonger on $i..."
-        ${SSH_CMD} sudo systemctl disable --now certmonger.service
-        ${SSH_CMD} test -f /etc/systemd/system/certmonger.service '||' sudo systemctl mask certmonger.service
-    fi
-    # If necessary, adjust the directory below accordingly.
-    certs_directory=/var/lib/certmonger/requests
-    certs_to_stop=$(${SSH_CMD} ls -1 $certs_directory)
-    number_of_certs=$(${SSH_CMD} ls -1 $certs_directory | wc -l)
-    if [ $? != 0 ] || [ $number_of_certs = 0 ]; then
-        echo "No certificates to stop tracking on $i."
-    else
-        echo "There is/are $number_of_certs certificates to stop being tracked on $i. Stopping to track certificates..."
-    fi
-
-    for cert in $certs_to_stop; do
-        echo "Stopping to track $cert..."
-        ${SSH_CMD} rm -f $certs_directory/$cert
-    done
-
-done
-----
 
 [NOTE]
 After the adoption procedure is finished, the cert-manager operator is responsible for issuing and refreshing new certificates when they expire.
