@@ -76,7 +76,7 @@ oc apply -f - <<EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nova-compute-extraconfig
+  name: nova-extra-config
   namespace: openstack
 data:
   20-nova-compute-cell1-workarounds.conf: |
@@ -92,7 +92,7 @@ spec:
   nodeSets:
     - openstack
   servicesOverride:
-    - nova-compute-extraconfig
+    - nova
 EOF
 ----
 

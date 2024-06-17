@@ -93,37 +93,12 @@
     apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: nova-compute-extraconfig
+      name: nova-extra-config
       namespace: openstack
     data:
       19-nova-compute-cell1-workarounds.conf: |
         [workarounds]
         disable_compute_service_check_for_ffu=true
-    ---
-    apiVersion: dataplane.openstack.org/v1beta1
-    kind: OpenStackDataPlaneService
-    metadata:
-      name: nova-compute-extraconfig
-      namespace: openstack
-    spec:
-      label: nova.compute.extraconfig
-      configMaps:
-        - nova-compute-extraconfig
-      secrets:
-        - nova-cell1-compute-config
-        - nova-migration-ssh-key
-      playbook: osp.edpm.nova
-    {% if enable_tlse %}
-      tlsCert:
-        contents:
-          - dnsnames
-          - ips
-        networks:
-          - ctlplane
-        issuer: osp-rootca-issuer-internal
-      caCerts: combined-ca-bundle
-      edpmServiceType: nova
-    {% endif %}
     EOF
 
 - name: create a Nova Compute Extra Config service (ceph backend in use)
@@ -139,19 +114,12 @@
     apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: nova-compute-extraconfig
+      name: nova-extra-config
       namespace: openstack
     data:
       19-nova-compute-cell1-workarounds.conf: |
         [workarounds]
         disable_compute_service_check_for_ffu=true
-    ---
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: ceph-nova
-      namespace: openstack
-    data:
       03-ceph-nova.conf: |
         [libvirt]
         images_type=rbd
@@ -162,21 +130,6 @@
         images_rbd_glance_copy_timeout=600
         rbd_user=openstack
         rbd_secret_uuid=$CEPH_FSID
-    ---
-    apiVersion: dataplane.openstack.org/v1beta1
-    kind: OpenStackDataPlaneService
-    metadata:
-      name: nova-compute-extraconfig
-      namespace: openstack
-    spec:
-      label: nova.compute.extraconfig
-      configMaps:
-        - nova-compute-extraconfig
-        - ceph-nova
-      secrets:
-        - nova-cell1-compute-config
-        - nova-migration-ssh-key
-      playbook: osp.edpm.nova
     EOF
 
 - name: Create OpenStackDataPlaneNodeSet
@@ -206,7 +159,7 @@
         - install-certs
         {%+ if compute_adoption|bool +%}
         - libvirt
-        - nova-compute-extraconfig
+        - nova
         {%+ endif +%}
         - ovn
         - neutron-metadata
@@ -323,7 +276,7 @@
         - ceph-hci-pre
         - ceph-client
         - libvirt
-        - nova-compute-extraconfig
+        - nova
         - ovn
         - neutron-metadata
       nodeTemplate:
