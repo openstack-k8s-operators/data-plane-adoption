@@ -70,7 +70,8 @@
   retries: 60
   delay: 2
 
-  - name: check that Barbican secret payload was migrated successfully
+- name: check that Barbican secret payload was migrated successfully
+  when: prelaunch_barbican_secret|default(false)
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}

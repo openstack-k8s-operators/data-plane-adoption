@@ -11,6 +11,12 @@ edpm_node_hostname: standalone.localdomain
 # This setting should at some point be switched in the CI to standalone.ooo.test
 # for all types of jobs and removed entirely afterwards.
 
+# If 'true', this flag will create a Barbican secret before the adoption runs
+# and after the adoption it'll be verified with the secret tills exists with
+# the same payload. For this flag to work with 'true' value, Barbican should be
+# available before the adoption
+prelaunch_barbican_secret: false
+
 # Whether to use 'make crc_storage_cleanup; make crc_storage' before the test
 reset_crc_storage: true
 
