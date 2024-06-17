@@ -5,7 +5,7 @@ https://github.com/openstack-k8s-operators/install_yamls[install_yamls]
 for CRC VM creation and for creation of the VM that hosts the source
 Wallaby (or OSP 17.1) OpenStack in Standalone configuration.
 
-== Environment prep
+== Preparing the host
 
 Install https://pre-commit.com/[pre-commit hooks] before contributing:
 [,bash]
@@ -35,8 +35,11 @@ cd ~/install_yamls/devsetup
 make download_tools
 ----
 
-== CRC deployment
-=== CRC environment with network isolation
+'''
+
+== Deploying CRC
+
+=== CRC environment for virtual workloads
 
 [,bash]
 ----
@@ -49,9 +52,7 @@ oc login -u kubeadmin -p 12345678 https://api.crc.testing:6443
 make crc_attach_default_interface
 ----
 
-'''
-
-=== CRC environment with Openstack ironic
+=== CRC environment with Openstack Ironic
 
 [IMPORTANT]
 This section is specific to deploying Nova with Ironic backend. Skip
@@ -126,9 +127,11 @@ If `EDPM_COMPUTE_CEPH_ENABLED=false` is set, TripleO configures `Glance` with
 If `EDPM_COMPUTE_CEPH_NOVA=false` is set, TripleO configures `Nova/Libvirt` with
 a local storage backend.
 ===
+
 '''
 
-== Standalone deployment
+== Deploying TripleO Standalone
+
 Use the https://github.com/openstack-k8s-operators/install_yamls/tree/main/devsetup[install_yamls devsetup]
 to create a virtual machine (edpm-compute-0) connected to the isolated networks.
 
@@ -154,39 +157,6 @@ EDPM_COMPUTE_CEPH_ENABLED=false TLS_ENABLED=true DNS_DOMAIN=ooo.test make standa
 ----
 
 This will disable the Ceph deployment, as the CI is not deploying with Ceph.
-
-== Install the openstack-k8s-operators (openstack-operator)
-
-[,bash]
-----
-cd ..  # back to install_yamls
-make crc_storage
-make input
-make openstack
-----
-
-=== Route networks
-
-Route VLAN20 to have access to the MariaDB cluster:
-
-[,bash]
-----
-EDPM_BRIDGE=$(sudo virsh dumpxml edpm-compute-0 | grep -oP "(?<=bridge=').*(?=')")
-sudo ip link add link $EDPM_BRIDGE name vlan20 type vlan id 20
-sudo ip addr add dev vlan20 172.17.0.222/24
-sudo ip link set up dev vlan20
-----
-
-To adopt the Swift service as well, route VLAN23 to have access to the storage
-backend services:
-
-[,bash]
-----
-EDPM_BRIDGE=$(sudo virsh dumpxml edpm-compute-0 | grep -oP "(?<=bridge=').*(?=')")
-sudo ip link add link $EDPM_BRIDGE name vlan23 type vlan id 23
-sudo ip addr add dev vlan23 172.20.0.222/24
-sudo ip link set up dev vlan23
-----
 
 === Snapshot/revert
 
@@ -215,7 +185,34 @@ the install_yamls `*_cleanup` targets. This is further detailed in
 the section:
 https://openstack-k8s-operators.github.io/data-plane-adoption/dev/#_reset_the_environment_to_pre_adoption_state[Reset the environment to pre-adoption state]
 
-=== Creating a workload to adopt
+'''
+
+== Network routing
+
+Route VLAN20 to have access to the MariaDB cluster:
+
+[,bash]
+----
+EDPM_BRIDGE=$(sudo virsh dumpxml edpm-compute-0 | grep -oP "(?<=bridge=').*(?=')")
+sudo ip link add link $EDPM_BRIDGE name vlan20 type vlan id 20
+sudo ip addr add dev vlan20 172.17.0.222/24
+sudo ip link set up dev vlan20
+----
+
+To adopt the Swift service as well, route VLAN23 to have access to the storage
+backend services:
+
+[,bash]
+----
+EDPM_BRIDGE=$(sudo virsh dumpxml edpm-compute-0 | grep -oP "(?<=bridge=').*(?=')")
+sudo ip link add link $EDPM_BRIDGE name vlan23 type vlan id 23
+sudo ip addr add dev vlan23 172.20.0.222/24
+sudo ip link set up dev vlan23
+----
+
+'''
+
+== Creating a workload to adopt
 
 To run `openstack` commands from the host without
 installing the package and copying the configuration file from the virtual machine, create an alias:
@@ -225,7 +222,38 @@ installing the package and copying the configuration file from the virtual machi
 alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=standalone openstack"
 ----
 
-==== Ironic Steps
+=== Virtual machine steps
+
+Create a test VM instance with a test volume attachement:
+
+[,bash]
+----
+cd ~/data-plane-adoption
+OS_CLOUD_IP=192.168.122.100 OS_CLOUD_NAME=standalone \
+    bash tests/roles/development_environment/files/pre_launch.bash
+----
+
+This also creates a test Cinder volume, a backup from it, and a snapshot of it.
+
+Create a Barbican secret:
+
+```
+openstack secret store --name testSecret --payload 'TestPayload'
+```
+
+If using Ceph backend, confirm the image UUID can be seen in Ceph's
+images pool:
+
+[,bash]
+----
+ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 sudo cephadm shell -- rbd -p images ls -l
+----
+
+=== Ironic steps
+
+[IMPORTANT]
+This section is specific to deploying Nova with Ironic backend. Skip
+it if you deployed Nova normally.
 
 [,bash]
 ----
@@ -298,34 +326,17 @@ ping -c 4 $(openstack server show baremetal-test -f json -c addresses | jq -r .a
 
 '''
 
-==== Virtual Machine Steps
-
-Create a test VM instance with a test volume attachement:
+== Installing the OpenStack operators
 
 [,bash]
 ----
-cd ~/data-plane-adoption
-OS_CLOUD_IP=192.168.122.100 OS_CLOUD_NAME=standalone \
-    bash tests/roles/development_environment/files/pre_launch.bash
+cd ..  # back to install_yamls
+make crc_storage
+make input
+make openstack
 ----
-
-This also creates a test Cinder volume, a backup from it, and a snapshot of it.
 
 '''
-
-==== Ceph Storage Steps
-
-Confirm the image UUID can be seen in Ceph's images pool.
-
-[,bash]
-----
-ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 sudo cephadm shell -- rbd -p images ls -l
-----
-
-Create a Barbican secret
-```
-openstack secret store --name testSecret --payload 'TestPayload'
-```
 
 == Performing the adoption procedure
 
@@ -344,6 +355,8 @@ documentation]
 and perform adoption manually, or run the https://openstack-k8s-operators.github.io/data-plane-adoption/dev/#_test_suite_information[test
 suite]
 against your environment.
+
+'''
 
 == Resetting the environment to pre-adoption state
 
@@ -388,6 +401,8 @@ Clean up and initialize the storage PVs in CRC vm
 cd ..
 for i in {1..3}; do make crc_storage_cleanup crc_storage && break || sleep 5; done
 ----
+
+'''
 
 == Experimenting with an additional compute node
 
