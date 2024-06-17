@@ -109,6 +109,7 @@ ifeval::["{build}" == "downstream"]
           name: redhat-registry
 endif::[]
       ansibleVars:
+        edpm_bootstrap_release_version_package: []
         # edpm_network_config
         # Default nic config template for a EDPM node
         # These vars are edpm_network_config role vars
