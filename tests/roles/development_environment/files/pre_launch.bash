@@ -1,6 +1,6 @@
 set -e
 
-alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@${OS_CLOUD_IP} OS_CLOUD=${OS_CLOUD_NAME} openstack"
+alias openstack="ssh -q -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@${OS_CLOUD_IP} OS_CLOUD=${OS_CLOUD_NAME} openstack"
 
 function wait_for_status() {
     local time=0
@@ -86,3 +86,6 @@ fi
 if ${BASH_ALIASES[openstack]} volume show disk -f json | jq -r '.status' | grep -q available ; then
     ${BASH_ALIASES[openstack]} server add volume test disk
 fi
+
+# Create Barbican secret
+${BASH_ALIASES[openstack]} secret store --name testSecret --payload 'TestPayload'
