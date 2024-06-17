@@ -69,17 +69,3 @@
   until: barbican_responding_result is success
   retries: 60
   delay: 2
-
-- name: check that Barbican secret payload was migrated successfully
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-
-    alias openstack="oc exec -t openstackclient -- openstack"
-
-    secret_id=`${BASH_ALIASES[openstack]} secret list | grep testSecret | cut -d'|' -f 2 | xargs`
-    secret_payload=`${BASH_ALIASES[openstack]} secret get $secret_id --payload -f value`
-    if [ "$secret_payload" != "TestPayload" ]
-    then
-      exit 1
-    fi

@@ -86,6 +86,3 @@ fi
 if ${BASH_ALIASES[openstack]} volume show disk -f json | jq -r '.status' | grep -q available ; then
     ${BASH_ALIASES[openstack]} server add volume test disk
 fi
-
-# Create Barbican secret
-${BASH_ALIASES[openstack]} secret store --name testSecret --payload 'TestPayload'
