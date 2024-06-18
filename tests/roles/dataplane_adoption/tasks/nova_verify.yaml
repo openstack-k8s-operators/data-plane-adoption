@@ -4,6 +4,27 @@
     nova_header: |
       alias openstack="oc exec -t openstackclient -- openstack"
 
+- name: DEBUG ARNAU list VMs
+  when: prelaunch_test_instance|bool
+  ansible.builtin.shell: |
+    {{ nova_header }}
+    ${BASH_ALIASES[openstack]} server list
+  ignore_errors: true
+
+- name: DEBUG ARNAU show test VMs
+  when: prelaunch_test_instance|bool
+  ansible.builtin.shell: |
+    {{ nova_header }}
+    ${BASH_ALIASES[openstack]} server show test
+  ignore_errors: true
+
+- name: DEBUG ARNAU show diagnostics
+  when: prelaunch_test_instance|bool
+  ansible.builtin.shell: |
+    {{ nova_header }}
+    ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test
+  ignore_errors: true
+
 # NOTE(bogdando): do not use 'set -o pipefail' for these verifications
 - name: verify if Nova services can stop the existing test VM instance
   when: prelaunch_test_instance|bool
