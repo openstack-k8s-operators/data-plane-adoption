@@ -2,7 +2,7 @@
 :context: assembly
 :build: downstream
 
-ifeval::["{build}" == "upstream"]
+ifeval::["{build}" != "downstream"]
 :OpenShift: OpenShift
 :rhos_long: OpenStack
 :rhos_prev_long: OpenStack
