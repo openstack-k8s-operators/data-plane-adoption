@@ -180,13 +180,6 @@
             os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
             os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
             os_net_config_dns: {{ dataplane_os_net_config_dns | default("") }}
-
-            {%+ if compute_adoption|bool +%}
-            service_net_map:
-              nova_api_network: internalapi
-              nova_libvirt_network: internalapi
-            {%+ endif +%}
-
             edpm_bootstrap_command: |
               {{ edpm_bootstrap_command| indent(10) }}
 
@@ -216,12 +209,9 @@
             edpm_ovn_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
 
             gather_facts: false
-            enable_debug: false
             # edpm firewall, change the allowed CIDR if needed
             edpm_sshd_configure_firewall: true
             edpm_sshd_allowed_ranges: {{ edpm_sshd_allowed_ranges }}
-            # SELinux module
-            edpm_selinux_mode: enforcing
 
             # Do not attempt OVS major upgrades here
             edpm_ovs_packages:
