@@ -7,7 +7,7 @@ former use `NodeNetworkConfigurationPolicy` custom resource (CR) to configure ph
 interfaces. Since data plane nodes are not {OpenShiftShort} nodes, a different approach to
 configure their network connectivity is used.
 
-Instead, data plane nodes are configured by `dataplane-operator` and its CRs. The CRs
+Instead, data plane nodes are configured by `openstack-operator` and its CRs. The CRs
 define desired network configuration for the nodes.
 
 In case of adoption, the configuration should reflect the existing network

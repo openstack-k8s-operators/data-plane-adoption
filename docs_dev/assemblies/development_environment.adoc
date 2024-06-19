@@ -531,7 +531,7 @@ but understand the implications of the above example.
 edpm-compute-0 is not available as a standard EDPM system to be
 managed by https://openstack-k8s-operators.github.io/edpm-ansible[edpm-ansible]
 or
-https://openstack-k8s-operators.github.io/dataplane-operator[dataplane-operator]
+https://openstack-k8s-operators.github.io/openstack-operator/dataplane[openstack-operator]
 because it hosts the wallaby deployment which will be adopted
 and after adoption it will only host the Ceph server.
 
