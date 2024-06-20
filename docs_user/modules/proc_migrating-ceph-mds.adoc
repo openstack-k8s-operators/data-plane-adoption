@@ -14,10 +14,10 @@ This ensures that the human operator can easily visualize the status of the clus
 endif::[]
 //kgilliga: Note to self/SMEs: This intro will be rewritten for GA, so the text might not flow very well right now.
 
-For this procedure, we assume that we are beginning with a {OpenStackShort} based on {rhos_prev_ver} and a {Ceph} {CephRelease} deployment managed by {OpenStackPreviousInstaller}.
+For this procedure, we assume that we are beginning with a {OpenStackShort} based on {rhos_prev_ver} and a {Ceph} {CephVernum} deployment managed by {OpenStackPreviousInstaller}.
 We assume that:
 
-* {Ceph} is upgraded to {Ceph} {CephRelease} and is managed by cephadm/orchestrator.
+* {Ceph} is upgraded to {Ceph} {CephVernum} and is managed by cephadm/orchestrator.
 * Both the {Ceph} public and cluster networks are propagated, through{OpenStackPreviousInstaller}, to the target nodes.
 
 .Prerequisites
