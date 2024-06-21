@@ -2,34 +2,29 @@
 
 = Adopting the {key_manager}
 
-Adopting {key_manager_first_ref} means that an existing `OpenStackControlPlane` custom resource (CR), where {key_manager}
-is initialy disabled, should be patched to start the service with the configuration parameters provided by the source environment.
+To adopt the {key_manager_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where {key_manager} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
 
-When the procedure is over, the expectation is to see the `BarbicanAPI`, `BarbicanWorker`, `BarbicanKeystoneListener` services are up and running.
-`Keystone endpoints` should also be updated and the same crypto plugin of the source Cloud will be available. If the conditions above are met, the adoption is considered concluded.
+The {key_manager} adoption is complete if you see the following results: 
+
+* The `BarbicanAPI`, `BarbicanWorker`, and `BarbicanKeystoneListener` services are up and running.
+* Keystone endpoints are updated, and the same crypto plugin of the source Cloud is available.
 
 [NOTE]
-This procedure configures the {key_manager} to use the `simple_crypto` backend.
-Additional backends are available, such as PKCS11 and DogTag, however they are not supported in this release.
-
-.Prerequisites
-
-* Previous Adoption steps completed. Notably, MariaDB, RabbitMQ, and {identity_service_first_ref}.
-should be already adopted.
+This procedure configures the {key_manager} to use the `simple_crypto` backend. Additional backends, such as PKCS11 and DogTag, are currently not supported in {rhos_long}.
 
 .Procedure
 
-. Add the kek secret. In this case we are updating and using `osp-secret`,
-which contains other service passwords:
+. Add the kek secret. The following example updates `osp-secret`,
+which includes other service passwords:
 +
 ----
-oc set data secret/osp-secret "BarbicanSimpleCryptoKEK=$($CONTROLLER1_SSH "python3 -c \"import configparser; c = configparser.ConfigParser(); c.read('/var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf'); print(c['simple_crypto_plugin']['kek'])\"")"
+$ oc set data secret/osp-secret "BarbicanSimpleCryptoKEK=$($CONTROLLER1_SSH "python3 -c \"import configparser; c = configparser.ConfigParser(); c.read('/var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf'); print(c['simple_crypto_plugin']['kek'])\"")"
 ----
 
-. Patch `OpenStackControlPlane` to deploy the {key_manager}:
+. Patch the `OpenStackControlPlane` CR to deploy the {key_manager}:
 +
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   barbican:
     enabled: true
@@ -75,7 +70,7 @@ spec:
 $ openstack endpoint list | grep key-manager
 ----
 
-* Check that Barbican API service is registered in {identity_service}:
+* Check that Barbican API service is registered in the {identity_service}:
 +
 ----
 $ openstack service list | grep key-manager
@@ -85,7 +80,7 @@ $ openstack service list | grep key-manager
 $ openstack endpoint list | grep key-manager
 ----
 
-* List secrets:
+* List the secrets:
 +
 ----
 $ openstack secret list

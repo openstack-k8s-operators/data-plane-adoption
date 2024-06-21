@@ -2,15 +2,14 @@
 
 = Adopting the {identity_service}
 
+To adopt the {identity_service_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {identity_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
+
 .Prerequisites
 
-* Previous Adoption steps completed. Notably,
- the xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances]
-must already be imported into the control plane MariaDB.
-* Ensure that you copy the fernet keys. Create the `keystone` secret, containing fernet keys:
+* Ensure that you copy the fernet keys. Create the keystone secret, containing fernet keys:
 +
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: v1
 data:
   CredentialKeys0: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/credential-keys/0 | base64 -w 0)
@@ -27,10 +26,10 @@ EOF
 
 .Procedure
 
-. Patch `OpenStackControlPlane` to deploy {identity_service}:
+. Patch the `OpenStackControlPlane` CR to deploy the {identity_service}:
 +
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   keystone:
     enabled: true
@@ -52,13 +51,13 @@ spec:
 '
 ----
 
-. Create an alias to use `openstack` command in the adopted deployment:
+. Create an alias to use the `openstack` command in the {rhos_long} deployment:
 +
 ----
 $ alias openstack="oc exec -t openstackclient -- openstack"
 ----
 
-. Clean up old services and endpoints that still point to the old
+. Remove services and endpoints that still point to the {OpenStackShort}
 control plane, excluding the {identity_service} and its endpoints:
 +
 ----
@@ -71,7 +70,7 @@ done
 
 .Verification
 
-* See that {identity_service} endpoints are defined and pointing to the control plane FQDNs:
+* Confirm that the {identity_service} endpoints are defined and are pointing to the control plane FQDNs:
 +
 ----
 $ openstack endpoint list | grep keystone
