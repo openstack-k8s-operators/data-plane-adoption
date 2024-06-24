@@ -14,8 +14,7 @@ This procedure configures the {key_manager} to use the `simple_crypto` backend. 
 
 .Procedure
 
-. Add the kek secret. The following example updates `osp-secret`,
-which includes other service passwords:
+. Add the kek secret:
 +
 ----
 $ oc set data secret/osp-secret "BarbicanSimpleCryptoKEK=$($CONTROLLER1_SSH "python3 -c \"import configparser; c = configparser.ConfigParser(); c.read('/var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf'); print(c['simple_crypto_plugin']['kek'])\"")"

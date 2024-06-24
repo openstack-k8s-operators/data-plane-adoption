@@ -6,7 +6,7 @@ To adopt the {identity_service_first_ref}, you patch an existing `OpenStackContr
 
 .Prerequisites
 
-* Ensure that you copy the fernet keys. Create the keystone secret, containing fernet keys:
+* Create the keystone secret that includes the fernet keys that were copied from the {OpenStackShort} environment:
 +
 ----
 $ oc apply -f - <<EOF
