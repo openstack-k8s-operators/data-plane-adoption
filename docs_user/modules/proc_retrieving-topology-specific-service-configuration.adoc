@@ -7,11 +7,12 @@
 * Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
 +
 ----
-CONTROLLER_SSH="ssh -F ~/director_standalone/vagrant_ssh_config vagrant@standalone"
 ifeval::["{build}" != "downstream"]
+CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 endif::[]
 ifeval::["{build}" == "downstream"]
+CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
 MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
 endif::[]
 SOURCE_MARIADB_IP=172.17.0.2
@@ -62,7 +63,7 @@ echo "$PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES"
 . Get the list of mapped the {compute_service} cells:
 +
 ----
-export PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS=$($CONTROLLER_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)
+export PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS=$($CONTROLLER1_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)
 echo "$PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS"
 ----
 +
@@ -84,7 +85,7 @@ PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="$(oc run mariadb-client ${MARI
 PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES="$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
     mysql -rsh $SOURCE_MARIADB_IP -uroot -p$SOURCE_DB_ROOT_PASSWORD nova_api -e \
     "select host from nova.services where services.binary='nova-compute';")"
-PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$($CONTROLLER_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)"
+PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$($CONTROLLER1_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)"
 EOF
 chmod 0600 ~/.source_cloud_exported_variables
 ----
