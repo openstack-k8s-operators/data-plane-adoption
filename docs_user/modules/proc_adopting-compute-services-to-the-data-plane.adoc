@@ -248,7 +248,6 @@ spec:
   preProvisioned: true
   services:
     - bootstrap
-    - download-cache
     - configure-network
     - validate-network
     - install-os
@@ -412,7 +411,6 @@ oc patch osdpns/openstack --type=merge --patch "
 spec:
   services:
     - repo-setup
-    - download-cache
     - bootstrap
     - configure-network
     - validate-network

@@ -148,7 +148,6 @@
       preProvisioned: true
       services:
         - bootstrap
-        - download-cache
         - configure-network
         - validate-network
         - install-os
@@ -254,7 +253,6 @@
     spec:
       services:
         - bootstrap
-        - download-cache
         - configure-network
         - validate-network
         - install-os
