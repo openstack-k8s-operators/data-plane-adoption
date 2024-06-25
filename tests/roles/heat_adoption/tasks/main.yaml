@@ -27,7 +27,6 @@
           memcachedInstance: memcached
           passwordSelectors:
             authEncryptionKey: HeatAuthEncryptionKey
-            database: HeatDatabasePassword
             service: HeatPassword
     '
 
