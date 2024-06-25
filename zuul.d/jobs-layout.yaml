@@ -5,4 +5,5 @@
       jobs:
         - data-plane-adoption-osp-17-to-extracted-crc
         - data-plane-adoption-osp-17-to-extracted-crc-minimal-no-ceph
-        - adoption-docs-preview
+        # - adoption-docs-preview
+        # TODO(jpodivin) until version of go is updated to 1.22 to match Centos
