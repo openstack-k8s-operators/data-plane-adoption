@@ -6,8 +6,9 @@ spec:
         route: {}
     template:
       databaseInstance: openstack
-      storageClass: "local-storage"
-      storageRequest: 10G
+      storage:
+        storageClass: "local-storage"
+        storageRequest: 10G
       customServiceConfig: |
         [DEFAULT]
         enabled_backends = default_backend:swift

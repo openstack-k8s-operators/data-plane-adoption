@@ -29,8 +29,9 @@ spec:
         rbd_store_user=openstack
         rbd_store_pool=images
         store_description=Ceph glance store backend.
-      storageClass: "local-storage"
-      storageRequest: 10G
+      storage:
+        storageClass: "local-storage"
+        storageRequest: 10G
       glanceAPIs:
         default:
           replicas: 1
@@ -42,8 +43,8 @@ spec:
                     metallb.universe.tf/address-pool: internalapi
                     metallb.universe.tf/allow-shared-ip: internalapi
                     metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-              spec:
-                type: LoadBalancer
+                spec:
+                  type: LoadBalancer
           networkAttachments:
           - storage
 EOF

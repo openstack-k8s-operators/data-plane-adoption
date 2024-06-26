@@ -41,20 +41,21 @@ spec:
       route: {}
     template:
       databaseInstance: openstack
-      storageClass: "local-storage"
-      storageRequest: 10G
+      storage:
+        storageClass: "local-storage"
+        storageRequest: 10G
       customServiceConfig: |
-          [DEFAULT]
-          enabled_backends = default_backend:swift
-          [glance_store]
-          default_backend = default_backend
-          [default_backend]
-          swift_store_create_container_on_put = True
-          swift_store_auth_version = 3
-          swift_store_auth_address = {{ .KeystoneInternalURL }}
-          swift_store_endpoint_type = internalURL
-          swift_store_user = service:glance
-          swift_store_key = {{ .ServicePassword }}
+        [DEFAULT]
+        enabled_backends = default_backend:swift
+        [glance_store]
+        default_backend = default_backend
+        [default_backend]
+        swift_store_create_container_on_put = True
+        swift_store_auth_version = 3
+        swift_store_auth_address = {{ .KeystoneInternalURL }}
+        swift_store_endpoint_type = internalURL
+        swift_store_user = service:glance
+        swift_store_key = {{ .ServicePassword }}
       glanceAPIs:
         default:
           replicas: 1
@@ -66,8 +67,8 @@ spec:
                     metallb.universe.tf/address-pool: internalapi
                     metallb.universe.tf/allow-shared-ip: internalapi
                     metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-              spec:
-                type: LoadBalancer
+                spec:
+                  type: LoadBalancer
           networkAttachments:
             - storage
 ----
