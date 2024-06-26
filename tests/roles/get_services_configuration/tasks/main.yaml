@@ -3,7 +3,7 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.set_fact:
     pull_openstack_configuration_ssh_shell_vars: |
-      CONTROLLER_SSH="{{ controller1_ssh }}"
+      CONTROLLER1_SSH="{{ controller1_ssh }}"
 
 - name: get src database service environment variables
   ansible.builtin.include_role:
@@ -64,7 +64,7 @@
       ansible.builtin.shell: |
         {{ shell_header }}
         {{ pull_openstack_configuration_ssh_shell_vars }}
-        export PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS=$($CONTROLLER_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)
+        export PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS=$($CONTROLLER1_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)
         echo "$PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS"
       register: _nova_cell_mappings_check
 
@@ -95,6 +95,6 @@
     PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES="$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
         mysql -rsh $SOURCE_MARIADB_IP -uroot -p$SOURCE_DB_ROOT_PASSWORD nova_api -e \
         "select host from nova.services where services.binary='nova-compute';")"
-    PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$($CONTROLLER_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)"
+    PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$($CONTROLLER1_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)"
     EOF
     chmod 0600 ~/.source_cloud_exported_variables
