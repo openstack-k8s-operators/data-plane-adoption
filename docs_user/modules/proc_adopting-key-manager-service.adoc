@@ -7,10 +7,10 @@ To adopt the {key_manager_first_ref}, you patch an existing `OpenStackControlPla
 The {key_manager} adoption is complete if you see the following results: 
 
 * The `BarbicanAPI`, `BarbicanWorker`, and `BarbicanKeystoneListener` services are up and running.
-* Keystone endpoints are updated, and the same crypto plugin of the source Cloud is available.
+* Keystone endpoints are updated, and the same crypto plugin of the source cloud is available.
 
 [NOTE]
-This procedure configures the {key_manager} to use the `simple_crypto` backend. Additional backends, such as PKCS11 and DogTag, are currently not supported in {rhos_long}.
+This procedure configures the {key_manager} to use the `simple_crypto` back end. Additional back ends, such as PKCS11 and DogTag, are currently not supported in {rhos_long}.
 
 .Procedure
 
@@ -63,13 +63,13 @@ spec:
 
 .Verification
 
-* Check that the {identity_service_first_ref} endpoints are defined and pointing to the control plane FQDNs:
+* Ensure that the {identity_service_first_ref} endpoints are defined and are pointing to the control plane FQDNs:
 +
 ----
 $ openstack endpoint list | grep key-manager
 ----
 
-* Check that Barbican API service is registered in the {identity_service}:
+* Ensure that Barbican API service is registered in the {identity_service}:
 +
 ----
 $ openstack service list | grep key-manager
