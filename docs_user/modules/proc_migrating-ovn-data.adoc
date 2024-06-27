@@ -11,7 +11,7 @@ The next step is to migrate data from OVN databases from the original
 * Make sure the previous Adoption steps have been performed successfully.
  ** The `OpenStackControlPlane` resource must be already created at this point.
  ** `NetworkAttachmentDefinition` CRDs for the original cluster are already defined. Specifically, `internalapi` network is defined.
- ** The original {networking} and OVN `northd` are not running.
+ ** The original {networking_service} and OVN `northd` are not running.
  ** There must be network routability between control plane services and the adopted cluster.
 * Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
 +
