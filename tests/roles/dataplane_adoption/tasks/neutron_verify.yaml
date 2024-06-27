@@ -49,5 +49,6 @@
     success_msg: "neutron-dhcp-agent is ALIVE after adoption"
 
 - name: verify connectivity to the existing test VM instance using Floating IP
+  when: prelaunch_test_instance|bool
   ansible.builtin.shell: |
       ping -c4 {{ lookup('env', 'FIP') | default('192.168.122.20', True) }}
