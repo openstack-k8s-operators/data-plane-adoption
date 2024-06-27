@@ -4,7 +4,7 @@
 
 = Migrating databases to the control plane
 
-To begin creating the control plane, enable backend services and import the databases from your original {rhos_prev_long} {rhos_prev_ver} deployment.
+To begin creating the control plane, enable back-end services and import the databases from your original {rhos_prev_long} {rhos_prev_ver} deployment.
 
 include::../modules/proc_retrieving-topology-specific-service-configuration.adoc[leveloffset=+1]
 
