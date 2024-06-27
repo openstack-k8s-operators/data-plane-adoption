@@ -24,7 +24,7 @@ nodes are required in a scenario that includes only RGW and RBD, without the
 | osd | mon/mgr/crash      | rgw/ingress |
 ----
 
-With the {dashboard}, and without {rhos_component_storage_file_first_ref}, at
+With the {dashboard_service}, and without {rhos_component_storage_file_first_ref}, at
 least 4 nodes are required. The {Ceph} dashboard has no failover:
 
 ----

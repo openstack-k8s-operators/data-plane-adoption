@@ -16,7 +16,7 @@ ifeval::["{build}" != "downstream"]
 :OpenStackPreviousInstaller: TripleO
 :Ceph: Ceph
 :CephCluster: Ceph Storage
-:CephRelease: Reef
+:CephVernum: Reef
 
 //Components and services
 
@@ -34,7 +34,7 @@ ifeval::["{build}" != "downstream"]
 
 //OpenStack Networking service (neutron)
 :networking_first_ref: Networking service (neutron)
-:networking: Networking service
+:networking_service: Networking service
 
 //Object Storage service (swift)
 :object_storage_first_ref: Object Storage service (swift)
@@ -54,7 +54,7 @@ ifeval::["{build}" != "downstream"]
 
 //Dashboard service (horizon)
 :dashboard_first_ref: Dashboard service (horizon)
-:dashboard: Dashboard service
+:dashboard_service: Dashboard service
 
 //Bare Metal Provisioning service (ironic)
 :bare_metal_first_ref: Bare Metal Provisioning service (ironic)
@@ -83,7 +83,7 @@ ifeval::["{build}" == "downstream"]
 :OpenStackPreviousInstaller: director
 :Ceph: Red Hat Ceph Storage
 :CephCluster: Red Hat Ceph Storage
-:CephRelease: 7
+:CephVernum: 7
 
 //Components and services
 
@@ -101,7 +101,7 @@ ifeval::["{build}" == "downstream"]
 
 //OpenStack Networking service (neutron)
 :networking_first_ref: Networking service (neutron)
-:networking: Networking service
+:networking_service: Networking service
 
 //Object Storage service (swift)
 :object_storage_first_ref: Object Storage service (swift)
@@ -121,7 +121,7 @@ ifeval::["{build}" == "downstream"]
 
 //Dashboard service (horizon)
 :dashboard_first_ref: Dashboard service (horizon)
-:dashboard: Dashboard service
+:dashboard_service: Dashboard service
 
 //Bare Metal Provisioning service (ironic)
 :bare_metal_first_ref: Bare Metal Provisioning service (ironic)

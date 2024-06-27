@@ -29,7 +29,7 @@
 
 // Ceph version attributes
 
-:CephVernum: 6.1
+:CephVernum: 7
 
 // Common URLs. Do not override. Do not delete.
 
