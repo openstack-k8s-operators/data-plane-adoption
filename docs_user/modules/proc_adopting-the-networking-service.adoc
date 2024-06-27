@@ -1,8 +1,8 @@
 [id="adopting-the-networking-service_{context}"]
 
-= Adopting the {networking}
+= Adopting the {networking_service}
 
-Adopting {networking_first_ref} means that an existing `OpenStackControlPlane` custom resource (CR), where the {networking}
+Adopting {networking_first_ref} means that an existing `OpenStackControlPlane` custom resource (CR), where the {networking_service}
 is supposed to be disabled, should be patched to start the service with the
 configuration parameters provided by the source environment.
 
@@ -24,7 +24,7 @@ ifeval::["{build}" != "downstream"]
 As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Neutron Adoption follows the same pattern.
 endif::[]
 
-* Patch `OpenStackControlPlane` to deploy {networking}:
+* Patch `OpenStackControlPlane` to deploy {networking_service}:
 +
 ----
 oc patch openstackcontrolplane openstack --type=merge --patch '
@@ -54,7 +54,7 @@ spec:
 
 .Verification
 
-* Inspect the resulting {networking} pods:
+* Inspect the resulting {networking_service} pods:
 +
 ----
 NEUTRON_API_POD=`oc get pods -l service=neutron | tail -n 1 | cut -f 1 -d' '`

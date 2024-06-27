@@ -23,10 +23,10 @@ this procedure is to migrate and relocate the Ceph Monitoring components to
 free Controller nodes.
 
 For this procedure, we assume that we are beginning with a {OpenStackShort}
-based on {rhos_prev_ver} and a {Ceph} {CephRelease} deployment managed by
+based on {rhos_prev_ver} and a {Ceph} {CephVernum} deployment managed by
 {OpenStackPreviousInstaller}. We assume that:
 
-* {Ceph} has been upgraded to {CephRelease} and is managed by
+* {Ceph} has been upgraded to {CephVernum} and is managed by
   cephadm/orchestrator
 * Both the {Ceph} public and cluster networks are propagated,
   through {OpenStackPreviousInstaller}, to the target nodes

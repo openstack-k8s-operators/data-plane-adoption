@@ -333,7 +333,7 @@ oc logs -l app=openstackansibleee -f --max-log-requests 20
 oc wait --for condition=Ready osdpns/openstack-networker --timeout=30m
 ----
 
-. Verify that {networking} agents are alive (the list of agents may
+. Verify that {networking_service} agents are alive (the list of agents may
 vary depending on the services you've enabled):
 +
 ----
