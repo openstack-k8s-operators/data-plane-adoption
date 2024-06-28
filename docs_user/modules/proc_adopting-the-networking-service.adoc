@@ -2,11 +2,14 @@
 
 = Adopting the {networking_service}
 
-Adopting {networking_first_ref} means that an existing `OpenStackControlPlane` custom resource (CR), where the {networking_service}
-is supposed to be disabled, should be patched to start the service with the
-configuration parameters provided by the source environment.
+To adopt the {networking_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR), where the {networking_service}
+is disabled. The patch starts the service with the
+configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
 
-When the procedure is over, the expectation is to see the `NeutronAPI` service is running: the {identity_service_first_ref} endpoints should be updated and the same backend of the source Cloud will be available. If the conditions above are met, the adoption is considered concluded.
+The {networking_service} adoption is complete if you see the following results:
+
+* The `NeutronAPI` service is running.
+* The {identity_service_first_ref} endpoints are updated, and the same back end of the source cloud is available.
 
 This guide also assumes that:
 
@@ -15,8 +18,9 @@ This guide also assumes that:
 
 .Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB,{identity_service_first_ref}, and xref:migrating-ovn-data_migrating-databases[Migrating OVN data]
-should be already adopted.
+* Adopt the {identity_service}. For more information, see xref:adopting-the-identity-service_adopt-control-plane[Adopting the {identity_service}]. 
+* Migrate your OVN databases to `ovsdb-server` instances that run in the {OpenShift} cluster. For more information, see xref:migrating-ovn-data_migrating-databases[Migrating OVN data].
+
 
 .Procedure
 //The following link takes me to a 404. Do we need this text? I think we should start the procedure at "Patch OpenStackControlPlane..."
@@ -24,10 +28,10 @@ ifeval::["{build}" != "downstream"]
 As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Neutron Adoption follows the same pattern.
 endif::[]
 
-* Patch `OpenStackControlPlane` to deploy {networking_service}:
+* Patch the `OpenStackControlPlane` CR to deploy the {networking_service}:
 +
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   neutron:
     enabled: true
@@ -61,7 +65,7 @@ NEUTRON_API_POD=`oc get pods -l service=neutron | tail -n 1 | cut -f 1 -d' '`
 oc exec -t $NEUTRON_API_POD -c neutron-api -- cat /etc/neutron/neutron.conf
 ----
 
-* Check that the `Neutron API` service is registered in the {identity_service}:
+* Ensure that the `Neutron API` service is registered in the {identity_service}:
 +
 ----
 $ openstack service list | grep network
@@ -75,7 +79,7 @@ $ openstack endpoint list | grep network
 | f97f2b8f7559476bb7a5eafe3d33cee7 | regionOne | neutron      | network      | True    | admin     | http://192.168.122.99:9696                        |
 ----
 
-* Create sample resources. You can test whether the user can create networks, subnets, ports, or routers.
+* Create sample resources so that you can test whether the user can create networks, subnets, ports, or routers:
 +
 ----
 $ openstack network create net
