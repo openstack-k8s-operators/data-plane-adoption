@@ -18,12 +18,11 @@ This guide also assumes that:
 
 .Prerequisites
 
-* Adopt the {identity_service}. For more information, see xref:adopting-the-identity-service_adopt-control-plane[Adopting the {identity_service}]. 
+* Adopt the {identity_service}. For more information, see xref:adopting-the-identity-service_adopt-control-plane[Adopting the {identity_service}].
 * Migrate your OVN databases to `ovsdb-server` instances that run in the {OpenShift} cluster. For more information, see xref:migrating-ovn-data_migrating-databases[Migrating OVN data].
 
 
 .Procedure
-//The following link takes me to a 404. Do we need this text? I think we should start the procedure at "Patch OpenStackControlPlane..."
 ifeval::["{build}" != "downstream"]
 As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Neutron Adoption follows the same pattern.
 endif::[]
@@ -86,5 +85,3 @@ $ openstack network create net
 $ openstack subnet create --network net --subnet-range 10.0.0.0/24 subnet
 $ openstack router create router
 ----
-
-//NOTE: this page should be expanded to include information on SR-IOV adoption.
