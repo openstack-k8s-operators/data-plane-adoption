@@ -57,6 +57,12 @@
     - role: heat_adoption
       tags:
         - heat_adoption
+    - role: telemetry_adoption
+      tags:
+        - telemetry_adoption
+    - role: autoscaling_adoption
+      tags:
+        - autoscaling_adoption
     - role: stop_remaining_services
       tags:
         - stop_remaining_services

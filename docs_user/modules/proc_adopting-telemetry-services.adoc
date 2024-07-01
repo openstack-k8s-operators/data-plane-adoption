@@ -20,35 +20,19 @@ This guide also assumes that:
 // TODO(jistr): There are still some quay.io images in the downstream build.
 +
 ----
-cat << EOF > ceilometer_patch.yaml
+oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
-  ceilometer:
+  telemetry:
     enabled: true
     template:
-ifeval::["{build}" != "downstream"]
-      centralImage: quay.io/podified-antelope-centos9/openstack-ceilometer-central:current-podified
-      computeImage: quay.io/podified-antelope-centos9/openstack-ceilometer-compute:current-podified
-      customServiceConfig: |
-        [DEFAULT]
-        debug=true
-      ipmiImage: quay.io/podified-antelope-centos9/openstack-ceilometer-ipmi:current-podified
-      nodeExporterImage: quay.io/prometheus/node-exporter:v1.5.0
-      notificationImage: quay.io/podified-antelope-centos9/openstack-ceilometer-notification:current-podified
-      secret: osp-secret
-      sgCoreImage: quay.io/infrawatch/sg-core:v5.1.1
-endif::[]
-ifeval::["{build}" == "downstream"]
-      centralImage: registry.redhat.io/rhosp-dev-preview/openstack-ceilometer-central-rhel9:18.0
-      computeImage: registry.redhat.io/rhosp-dev-preview/openstack-ceilometer-compute-rhel9:18.0
-      customServiceConfig: |
-        [DEFAULT]
-        debug=true
-      ipmiImage: registry.redhat.io/rhosp-dev-preview/openstack-ceilometer-ipmi-rhel9:18.0
-      nodeExporterImage: quay.io/prometheus/node-exporter:v1.5.0
-      notificationImage: registry.redhat.io/rhosp-dev-preview/openstack-ceilometer-notification-rhel9:18.0
-      secret: osp-secret
-      sgCoreImage: quay.io/infrawatch/sg-core:v5.1.1
-endif::[]
+      ceilometer:
+        enabled: true
+        passwordSelector:
+          aodhService: AodhPassword
+          ceilometerService: CeilometerPassword
+        rabbitMqClusterName: rabbitmq
+        secret: osp-secret
+        serviceUser: ceilometer
 EOF
 ----
 
@@ -60,11 +44,6 @@ os-diff diff /tmp/collect_tripleo_configs/ceilometer/etc/ceilometer/ceilometer.c
 +
 For more information, see xref:reviewing-the-openstack-control-plane-configuration_{context}[Reviewing the {rhos_prev_long} control plane configuration].
 
-. Patch the `OpenStackControlPlane` CR to deploy Ceilometer services:
-+
-----
-oc patch openstackcontrolplane openstack --type=merge --patch-file ceilometer_patch.yaml
-----
 
 .Verification
 
@@ -99,8 +78,12 @@ sources:
         - volume.size
         - image.size
         - cpu
-        - memory
+        - memory.usage
 EOF
+----
 
+. Update ceilometer configuration with new pollsters:
++
+----
 oc patch secret ceilometer-config-data  --patch="{\"data\": { \"polling.yaml\": \"$(base64 -w0 polling.yaml)\"}}"
 ----

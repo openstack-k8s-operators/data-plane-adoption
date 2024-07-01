@@ -318,7 +318,19 @@ spec:
 
   telemetry:
     enabled: false
-    template: {}
+    template:
+      ceilometer:
+        enabled: false
+        template: {}
+      autoscaling:
+        enabled: false
+        template: {}
+      metricStorage:
+        enabled: false
+        template: {}
+      logging:
+        enabled: false
+        template: {}
 
   swift:
     enabled: false
