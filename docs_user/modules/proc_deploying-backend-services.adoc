@@ -1,18 +1,11 @@
 [id="deploying-backend-services_{context}"]
 
-= Deploying backend services
+= Deploying back-end services
 
-Create the `OpenStackControlPlane` custom resource (CR) with basic backend services deployed, and all the {rhos_prev_long} ({OpenStackShort}) services disabled. This will be the foundation of the control plane.
-
-In subsequent steps, you import the original databases and then add
-{OpenStackShort} control plane services.
+Create the `OpenStackControlPlane` custom resource (CR) with the basic back-end services deployed, and disable all the {rhos_prev_long} ({OpenStackShort}) services. This CR is the foundation of the control plane.
 
 .Prerequisites
 
-* The cloud that you want to adopt is up and running, and it is on the
-{OpenStackShort} {rhos_prev_ver} release.
-* All control plane and data plane hosts of the source cloud are up
-and running, and continue to run throughout the adoption procedure.
 * The `openstack-operator` is deployed, but `OpenStackControlPlane` is
 not deployed.
 ifeval::["{build}" != "downstream"]
@@ -26,7 +19,7 @@ endif::[]
 For production environments, the deployment method will likely be
 different.
 
-* If TLS Everywhere is enabled on the source environment, the `tls` root CA from the source environment must be copied over to the rootca-internal issuer.
+* If you enabled TLS Everywhere on the {OpenStackShort} environment, you must copy the `tls` root CA from the {OpenStackShort} environment to the `rootca-internal` issuer.
 
 * There are free PVs available to be claimed (for MariaDB and RabbitMQ).
 ifeval::["{build}" != "downstream"]
@@ -35,7 +28,7 @@ For developer/CI environments driven by install_yamls, make sure
 you've run `make crc_storage`.
 endif::[]
 * Set the desired admin password for the control plane deployment. This can
-be the original deployment's admin password or something else.
+be the admin password from your original deployment or a different password:
 +
 ----
 ADMIN_PASSWORD=SomePassword
@@ -46,12 +39,11 @@ To use the existing {OpenStackShort} deployment password:
 ----
 ADMIN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
 ----
-* Set service password variables to match the original deployment.
+* Set the service password variables to match the original deployment.
 Database passwords can differ in the control plane environment, but
-synchronizing the service account passwords is a required step.
+synchronizing the service account passwords is required.
 +
-For example, in developer environments with {OpenStackPreviousInstaller} Standalone, the
-passwords can be extracted like this:
+For example, in developer environments with {OpenStackPreviousInstaller} Standalone, the passwords can be extracted:
 +
 ----
 AODH_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AodhPassword:' | awk -F ': ' '{ print $2; }')
@@ -73,14 +65,14 @@ SWIFT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' SwiftPassword:
 
 .Procedure
 
-. Make sure you are using the {OpenShift} namespace where you want the
-control plane deployed:
+. Ensure that you are using the {OpenShift} namespace where you want the
+control plane to be deployed:
 +
 ----
-oc project openstack
+$ oc project openstack
 ----
 
-. Create OSP secret.
+. Create the OSP secret.
 ifeval::["{build}" != "downstream"]
 +
 The procedure for this will vary, but in developer/CI environments
@@ -92,19 +84,18 @@ make input
 ----
 endif::[]
 
-. If the `$ADMIN_PASSWORD` is different than the already set password
-in `osp-secret`, amend the `AdminPassword` key in the `osp-secret`
-correspondingly:
+. If the `$ADMIN_PASSWORD` is different than the password you set
+in `osp-secret`, amend the `AdminPassword` key in the `osp-secret`:
 +
 ----
-oc set data secret/osp-secret "AdminPassword=$ADMIN_PASSWORD"
+$ oc set data secret/osp-secret "AdminPassword=$ADMIN_PASSWORD"
 ----
 
 . Set service account passwords in `osp-secret` to match the service
 account passwords from the original deployment:
 +
 ----
-oc set data secret/osp-secret "AodhPassword=$AODH_PASSWORD"
+$ oc set data secret/osp-secret "AodhPassword=$AODH_PASSWORD"
 oc set data secret/osp-secret "BarbicanPassword=$BARBICAN_PASSWORD"
 oc set data secret/osp-secret "CeilometerMeteringSecret=$CEILOMETER_METERING_SECRET"
 oc set data secret/osp-secret "CeilometerPassword=$CEILOMETER_PASSWORD"
@@ -122,12 +113,11 @@ oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
 oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 ----
 
-. Deploy `OpenStackControlPlane`. Make sure to only enable DNS,
+. Deploy the `OpenStackControlPlane` CR. Ensure that you only enable the DNS,
 MariaDB, Memcached, and RabbitMQ services. All other services must
 be disabled.
 
-. If the source environment enables TLS Everywhere, modify
-spec:tls section with the following override before applying it:
+. If you enabled TLS Everywhere in your {OpenStackShort} environment, modify the `spec:tls` section with the following override before applying it:
 
 +
 [source,yaml]
