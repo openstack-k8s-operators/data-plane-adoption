@@ -544,6 +544,26 @@ oc logs -l app=openstackansibleee -f --max-log-requests 20
 oc wait --for condition=Ready openstackdataplanedeployment/openstack-pre-adoption --timeout=10m
 ----
 
+.. Optional: Create a OpenStackDataPlaneDeployment CR that runs the reboot service in check-mode only.
+Reboot service is going to check if there is any reboot to be performed.:
++
+[source,yaml]
+----
+oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneDeployment
+metadata:
+  name: openstack-pre-adoption-reboot-check
+spec:
+  nodeSets:
+  - openstack
+  servicesOverride:
+  - reboot-os
+  ansibleExtraVars:
+  - edpm_reboot_strategy: never
+EOF
+----
+
 . If any openstack-pre-adoption validations fail, you must first determine
 which ones were unsuccessful based on the ansible logs and then follow the
 instructions below for each case:
@@ -559,6 +579,9 @@ the 17 node.
 * if the tuned profile check failed then make sure that the
 `edpm_tuned_profile` variable in the `OpenStackDataPlaneNodeSet` is configured
 to use the same profile as set on the (source) OSP 17 node.
+
+* if reboot check returned that reboot is required then make sure that the
+ (source) OSP 17 nodes are rebooted before adoption.
 
 . Remove leftover {OpenStackPreviousInstaller} services
 
