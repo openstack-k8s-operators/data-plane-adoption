@@ -1,0 +1,56 @@
+spec:
+  manila:
+    enabled: true
+    apiOverride:
+      route: {}
+    template:
+      databaseInstance: openstack
+      databaseAccount: manila
+      manilaAPI:
+        customServiceConfig: |
+          [DEFAULT]
+          {% if manila_backend == "cephnfs" -%}
+          enabled_share_protocols=nfs
+          {% else -%}
+          enabled_share_protocols=cephfs
+          {%- endif %}
+
+        replicas: 1
+        networkAttachments:
+          - internalapi
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+      manilaScheduler:
+        replicas: 1
+      manilaShares:
+        share1:
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_share_backends=cephfs
+            host = hostgroup
+
+            [cephfs]
+            driver_handles_share_servers=False
+            share_backend_name=cephfs
+            share_driver=manila.share.drivers.cephfs.driver.CephFSDriver
+            cephfs_conf_path=/etc/ceph/ceph.conf
+            cephfs_auth_id=openstack
+            cephfs_cluster_name=ceph
+            cephfs_volume_mode=0755
+            cephfs_protocol_helper_type= {{ (manila_backend == "cephfs") | ternary('CEPHFS', 'NFS') }}
+            {% if manila_backend == "cephnfs" -%}
+            cephfs_nfs_cluster_id=cephfs
+            cephfs_ganesha_server_ip= {{ cephnfs_vip | default("") }}
+            {%- endif %}
+
+          replicas: 1
+          networkAttachments:
+            - storage
