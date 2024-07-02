@@ -400,7 +400,12 @@ endif::[]
 
         # Do not attempt OVS major upgrades here
         edpm_ovs_packages:
-        - openvswitch3.1
+ifeval::["{build}" == "downstream"]
+        - rhoso-openvswitch-3.1
+endif::[]
+ifeval::["{build}" != "downstream"]
+        - rdo-openvswitch-3.1
+endif::[]
 EOF
 ----
 +
