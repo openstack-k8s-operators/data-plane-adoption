@@ -2,8 +2,7 @@
 
 = Adopting the {networking_service}
 
-To adopt the {networking_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR), where the {networking_service}
-is disabled. The patch starts the service with the
+To adopt the {networking_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) that has the {networking_service} disabled. The patch starts the service with the
 configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
 
 The {networking_service} adoption is complete if you see the following results:
@@ -20,7 +19,7 @@ The {networking_service} adoption is complete if you see the following results:
 
 .Procedure
 ifeval::["{build}" != "downstream"]
-As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Neutron Adoption follows the same pattern.
+The {networking_service} adoption follows a similar pattern to https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone].
 endif::[]
 
 * Patch the `OpenStackControlPlane` CR to deploy the {networking_service}:
