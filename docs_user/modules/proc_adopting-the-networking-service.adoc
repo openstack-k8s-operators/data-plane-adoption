@@ -11,13 +11,9 @@ The {networking_service} adoption is complete if you see the following results:
 * The `NeutronAPI` service is running.
 * The {identity_service_first_ref} endpoints are updated, and the same back end of the source cloud is available.
 
-This guide also assumes that:
-
-. A {OpenStackPreviousInstaller} environment (the source Cloud) is running on one side;
-. A `SNO` / `CodeReadyContainers` is running on the other side.
-
 .Prerequisites
 
+* Ensure that Single Node OpenShift or OpenShift Local is running in the {OpenShift} cluster.
 * Adopt the {identity_service}. For more information, see xref:adopting-the-identity-service_adopt-control-plane[Adopting the {identity_service}].
 * Migrate your OVN databases to `ovsdb-server` instances that run in the {OpenShift} cluster. For more information, see xref:migrating-ovn-data_migrating-databases[Migrating OVN data].
 
