@@ -9,7 +9,7 @@
 - name: Migrate mon
   when: debug | default(true)
   ansible.builtin.debug:
-    msg: "Migrate mon: {{ cur_mon.split('.')[0] }} to node: {{ target_node }}"
+    msg: "Migrate mon: {{ cur_mon }} to node: {{ target_node }}"
 
 # We add labels in advance to the target node to make sure we are able to
 # deploy a tmp mon that will be replaced with the right one (on the desired
@@ -42,7 +42,7 @@
     - ceph_mon_quorum
 
 - name: Backup data for client purposes
-  delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
+  delegate_to: "{{ cur_mon }}"
   tags:
     - ceph_backup
   block:
@@ -126,35 +126,39 @@
         msg: "{{ mon_ipaddr }}"
 
     - name: MON - Patch os-net-config config and REMOVE the current mon IP address
-      delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
+      delegate_to: "{{ cur_mon }}"
       ansible.builtin.lineinfile:
         path: "{{ os_net_conf_path }}"
         state: absent
         regexp: '{{ mon_ipaddr }}/24'
         backup: true
+      vars:
+        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
 
     - name: MON - Refresh os-net-config
-      delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
+      delegate_to: "{{ cur_mon }}"
       ansible.builtin.shell:
         "os-net-config -c {{ os_net_conf_path }}"
+      vars:
+        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
 
     - name: MON - Patch os-net-config config and add the mon IP
-      delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
+      delegate_to: "{{ target_node }}"
       ansible.builtin.lineinfile:
         dest: "{{ os_net_conf_path }}"
         insertafter: "{{ ceph_storage_net_prefix }}"
-        line: "  - ip_netmask: {{ mon_ipaddr }}/24"
+        line: "    - ip_netmask: {{ mon_ipaddr }}/24"
         backup: true
 
     - name: MON - Refresh os-net-config
-      delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
+      delegate_to: "{{ target_node }}"
       ansible.builtin.command:
         "os-net-config -c {{ os_net_conf_path }}"
 
     - name: MON - ping ip address to see if is reachable on the target node
       ansible.builtin.command:
         "ping -W1 -c 3 {{ mon_ipaddr }}"
-      delegate_to: "{{ target_node.split('.')[0] }}.ctlplane"
+      delegate_to: "{{ target_node }}"
       register: ping_target_ip
 
     - name: MON - Fail if the IP address is not active in the target node
@@ -163,6 +167,7 @@
         msg: "Can't reach the mon IP on the target node"
 
 - name: Redeploy MON
+  become: true
   block:
     # when a label is added, if we're not fast enough, a mon is automatically
     # added on the storage network. However, in case the node has multiple ip
@@ -170,7 +175,6 @@
     # For this reason we need to redeploy it by rm + add (as redeploy does not
     # accept an IP as input
     - name: MON - Check quorum
-      become: true
       ansible.builtin.command: "{{ ceph_cli }} mon stat -f json"
       register: monstat
       retries: 20
@@ -193,7 +197,6 @@
     - name: Unmanage mons
       # root privileges required to run cephadm
       # and apply the new spec
-      become: true
       ceph_mkspec:
         service_type: mon
         cluster: ceph
@@ -221,7 +224,6 @@
 
     - name: MON - Delete the running mon
       when: psmon.stdout | from_json | community.general.json_query('[*].daemon_name') | length > 0
-      become: true
       ansible.builtin.command: "{{ ceph_cli }} orch daemon rm mon.{{ target_node.split('.')[0] }} --force"
       until: '"Removed" in rmmon.stdout'
       register: rmmon
@@ -244,15 +246,14 @@
     - name: MON - Redeploy mon on {{ target_node }}
       when: debug | default(true)
       ansible.builtin.debug:
-        msg: "{{ ceph_cli }} orch daemon add mon {{ target_node.split('.')[0] }}:{{ mon_ipaddr }}"
+        msg: "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
 
     - name: MON - Redeploy mon on {{ target_node }}
-      become: true
       when:
         - mon_ipaddr | default('')
         - psmon.stdout | from_json | community.general.json_query('[*].daemon_name') | length == 0
       ansible.builtin.command:
-        "{{ ceph_cli }} orch daemon add mon {{ target_node.split('.')[0] }}:{{ mon_ipaddr }}"
+        "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
 
     - name: Wait for the spec to be updated
       ansible.builtin.pause:
