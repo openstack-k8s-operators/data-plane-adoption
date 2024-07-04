@@ -14,56 +14,80 @@ This guide also assumes that:
 * Previous Adoption steps completed. MariaDB, the {identity_service_first_ref} and the data plane should be already adopted.
 //kgilliga:Should this procedure be moved after the "Adopting the data plane" chapter?
 
-.Procedure
-
-. Patch the `OpenStackControlPlane` CR to deploy Ceilometer services:
-// TODO(jistr): There are still some quay.io images in the downstream build.
+* Patch the `OpenStackControlPlane` CR to deploy `cluster-observability-operator`:
 +
 ----
-cat << EOF > ceilometer_patch.yaml
+oc create -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: cluster-observability-operator
+  namespace: openshift-operators
 spec:
-  ceilometer:
-    enabled: true
-    template:
-ifeval::["{build}" != "downstream"]
-      centralImage: quay.io/podified-antelope-centos9/openstack-ceilometer-central:current-podified
-      computeImage: quay.io/podified-antelope-centos9/openstack-ceilometer-compute:current-podified
-      customServiceConfig: |
-        [DEFAULT]
-        debug=true
-      ipmiImage: quay.io/podified-antelope-centos9/openstack-ceilometer-ipmi:current-podified
-      nodeExporterImage: quay.io/prometheus/node-exporter:v1.5.0
-      notificationImage: quay.io/podified-antelope-centos9/openstack-ceilometer-notification:current-podified
-      secret: osp-secret
-      sgCoreImage: quay.io/infrawatch/sg-core:v5.1.1
-endif::[]
-ifeval::["{build}" == "downstream"]
-      centralImage: registry.redhat.io/rhosp-dev-preview/openstack-ceilometer-central-rhel9:18.0
-      computeImage: registry.redhat.io/rhosp-dev-preview/openstack-ceilometer-compute-rhel9:18.0
-      customServiceConfig: |
-        [DEFAULT]
-        debug=true
-      ipmiImage: registry.redhat.io/rhosp-dev-preview/openstack-ceilometer-ipmi-rhel9:18.0
-      nodeExporterImage: quay.io/prometheus/node-exporter:v1.5.0
-      notificationImage: registry.redhat.io/rhosp-dev-preview/openstack-ceilometer-notification-rhel9:18.0
-      secret: osp-secret
-      sgCoreImage: quay.io/infrawatch/sg-core:v5.1.1
-endif::[]
+  channel: development
+  installPlanApproval: Automatic
+  name: cluster-observability-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
 EOF
 ----
 
-. Optional: If you previously backed up your {OpenStackShort} services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct. This will produce the difference between both ini configuration files:
+* Wait for the installation to succeed
 +
 ----
-os-diff diff /tmp/collect_tripleo_configs/ceilometer/etc/ceilometer/ceilometer.conf ceilometer_patch.yaml --crd
+oc wait --for jsonpath="{.status.phase}"=Succeeded csv --namespace=openshift-operators -l operators.coreos.com/cluster-observability-operator.openshift-operators
 ----
-+
-For more information, see xref:reviewing-the-openstack-control-plane-configuration_{context}[Reviewing the {rhos_prev_long} control plane configuration].
 
-. Patch the `OpenStackControlPlane` CR to deploy Ceilometer services:
+* Enable metrics storage backend
 +
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch-file ceilometer_patch.yaml
+oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  telemetry:
+    template:
+      metricStorage:
+        enabled: true
+        monitoringStack:
+          alertingEnabled: true
+          scrapeInterval: 30s
+          storage:
+            strategy: persistent
+            retention: 24h
+            persistent:
+              pvcStorageRequest: 20G
+'
+----
+
+* Verify that `alertmanager` and `prometheus` pods are available
++
+----
+oc get pods -l alertmanager=metric-storage -n openstack
+NAME                            READY   STATUS    RESTARTS   AGE
+alertmanager-metric-storage-0   2/2     Running   0          46s
+alertmanager-metric-storage-1   2/2     Running   0          46s
+
+oc get pods -l prometheus=metric-storage -n openstack
+NAME                          READY   STATUS    RESTARTS   AGE
+prometheus-metric-storage-0   3/3     Running   0          46s
+----
+
+.Procedure
+
+* Patch the `OpenStackControlPlane` CR to deploy Ceilometer services:
++
+----
+oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  telemetry:
+    enabled: true
+    template:
+      ceilometer:
+        passwordSelector:
+          ceilometerService: CeilometerPassword
+        enabled: true
+        secret: osp-secret
+        serviceUser: ceilometer
+'
 ----
 
 .Verification
@@ -71,36 +95,49 @@ oc patch openstackcontrolplane openstack --type=merge --patch-file ceilometer_pa
 . Inspect the resulting Ceilometer pods:
 +
 ----
-CEILOMETETR_POD=`oc get pods -l service=ceilometer | tail -n 1 | cut -f 1 -d' '`
+CEILOMETETR_POD=`oc get pods -l service=ceilometer -n openstack | tail -n 1 | cut -f 1 -d' '`
 oc exec -t $CEILOMETETR_POD -c ceilometer-central-agent -- cat /etc/ceilometer/ceilometer.conf
-----
-
-. Inspect the resulting Ceilometer IPMI agent pod on data plane nodes:
-+
-----
-podman ps | grep ceilometer-ipmi
 ----
 
 . Inspect enabled pollsters:
 +
 ----
-oc get secret ceilometer-config-data -o jsonpath="{.data['polling\.yaml']}"  | base64 -d
+oc get secret ceilometer-config-data -o jsonpath="{.data['polling\.yaml\.j2']}"  | base64 -d
 ----
 
-. Enable pollsters according to requirements:
+. Optional: Override default pollsters according to requirements:
 +
 ----
-cat << EOF > polling.yaml
----
-sources:
-    - name: pollsters
-      interval: 300
-      meters:
-        - volume.size
-        - image.size
-        - cpu
-        - memory
-EOF
+oc patch openstackcontrolplane controlplane --type=merge --patch '
+spec:
+  telemetry:
+    template:
+      ceilometer:
+          defaultConfigOverwrite:
+            polling.yaml.j2: |
+              ---
+              sources:
+                - name: pollsters
+                  interval: 100
+                  meters:
+                    - volume.*
+                    - image.size
+          enabled: true
+          secret: osp-secret
+'
+----
 
-oc patch secret ceilometer-config-data  --patch="{\"data\": { \"polling.yaml\": \"$(base64 -w0 polling.yaml)\"}}"
+* Patch the `OpenStackControlPlane` CR to include `logging`
++
+----
+oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  telemetry:
+    template:
+      logging:
+      enabled: false
+      ipaddr: 172.17.0.80
+      port: 10514
+      cloNamespace: openshift-logging
+'
 ----

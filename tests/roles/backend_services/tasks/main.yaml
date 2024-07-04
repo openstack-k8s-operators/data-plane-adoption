@@ -16,8 +16,14 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
+    {% if aodh_password %}
+        oc set data secret/osp-secret "AodhPassword={{ aodh_password }}"
+    {% endif %}
     {% if barbican_password %}
         oc set data secret/osp-secret "BarbicanPassword={{ barbican_password }}"
+    {% endif %}
+    {% if ceilometer_password %}
+        oc set data secret/osp-secret "CeilometerPassword={{ ceilometer_password }}"
     {% endif %}
     {% if cinder_password %}
         oc set data secret/osp-secret "CinderPassword={{ cinder_password }}"
