@@ -87,7 +87,7 @@
     - name: Print Ceph config dump
       when: debug | default(false)
       ansible.builtin.debug:
-        msg: "{{ ceph_conf | from_json }}"
+        msg: "{{ ceph_conf.stdout | from_json }}"
 
     # Dump config to a log file
     - name: Dump ceph config dump output to log file

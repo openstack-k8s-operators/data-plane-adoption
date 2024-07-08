@@ -3,7 +3,7 @@
 # This set of tasks are supposed to manage the firewall using
 # iptables: adopted nodes still manage firewall this way
 - name: Firewall add block
-  delegate_to: "{{ node }}.ctlplane"
+  delegate_to: "{{ node }}"
   become: true
   block:
     - name: Ensure firewall is enabled/started
@@ -13,7 +13,7 @@
         enabled: true
 
 - name: Update firewall rules
-  delegate_to: "{{ node }}.ctlplane"
+  delegate_to: "{{ node }}"
   become: true
   block:
     - name: Update rules - List
@@ -38,7 +38,7 @@
         jump: ACCEPT
 
 - name: Firewall save block
-  delegate_to: "{{ node }}.ctlplane"
+  delegate_to: "{{ node }}"
   become: true
   block:
     - name: Save firewall rules ipv4

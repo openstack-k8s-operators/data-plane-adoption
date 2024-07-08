@@ -28,3 +28,11 @@ ceph_timeout: 30
 # wait for mon to be deployed and the orch spec to be
 # updated
 ceph_wait_mon_timeout: 10
+
+# DEFAULT Ceph Reef container images
+ceph_haproxy_container_image: "quay.io/ceph/haproxy:2.3"
+ceph_keepalived_container_image: "quay.io/ceph/keepalived:2.1.5"
+ceph_alertmanager_container_image: "quay.io/prometheus/alertmanager:v0.25.0"
+ceph_grafana_container_image: "quay.io/ceph/ceph-grafana:9.4.7"
+ceph_node_exporter_container_image: "quay.io/prometheus/node-exporter:v1.5.0"
+ceph_prometheus_container_image: "quay.io/prometheus/prometheus:v2.43.0"

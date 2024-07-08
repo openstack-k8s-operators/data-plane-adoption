@@ -8,6 +8,7 @@
 
 # Check if mon even exists before removing it
 - name: MON - wait daemons
+  become: true
   ansible.builtin.command: "{{ ceph_cli }} orch ps --daemon_type mon --daemon_id {{ daemon_id }} -f json"
   register: psm
   vars:
@@ -15,7 +16,7 @@
 
 - name: DRAIN - Delete the mon running on the current controller node
   when: psm.stdout | from_json | community.general.json_query('[*].daemon_name') | length > 0
-  delegate_to: "{{ host.split('.')[0] }}.ctlplane"
+  delegate_to: "{{ host }}"
   become: true
   ansible.builtin.command:
     "{{ ceph_cli }} orch daemon rm mon.{{ host.split('.')[0] }} --force"
@@ -41,7 +42,7 @@
 - name: DRAIN - Drain the host
   when: psm.stdout | from_json | community.general.json_query('[*].daemon_name') | length > 0
   become: true
-  delegate_to: "{{ host.split('.')[0] }}.ctlplane"
+  delegate_to: "{{ host }}"
   ansible.builtin.command:
     "{{ ceph_cli }} orch host drain {{ host }}"
 
@@ -55,7 +56,10 @@
 # This command is not documented, and leftovers on the node don't create any
 # problem.
 - name: DRAIN - cleanup the host
-  delegate_to: "{{ host.split('.')[0] }}.ctlplane"
+  delegate_to: "{{ host }}"
+  # instead of using ignore_errors, we disable
+  # this task in CI.
+  when: force_clean | default(false)
   become: true
   ansible.builtin.command:
     "cephadm rm-cluster --fsid {{ ceph_fsid }} --force"
@@ -69,7 +73,7 @@
       ansible.builtin.command: "{{ ceph_cli }} orch host ls --host_pattern {{ host_id }} -f json"
       register: lsh
       vars:
-        host_id: "{{ cur_mon.split('.')[0] }}"
+        host_id: "{{ cur_mon }}"
 
     # The node should be empty at this point, let's remove it from the Ceph cluster
     - name: MON - rm the cur_mon host from the Ceph cluster
