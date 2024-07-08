@@ -10,8 +10,8 @@ include::../modules/proc_adopting-the-identity-service.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-key-manager-service.adoc[leveloffset=+1]
 
-include::../modules/proc_adopting-the-networking-service.adoc[leveloffset=+1]
-
+//include::../modules/proc_adopting-the-networking-service.adoc[leveloffset=+1]
+//Networking is targeted for FP1.
 include::../modules/proc_adopting-the-object-storage-service.adoc[leveloffset=+1]
 
 include::../assemblies/assembly_adopting-the-image-service.adoc[leveloffset=+1]

@@ -2,12 +2,12 @@
 
 = Adopting the {object_storage}
 
-If you are using OpenStack Swift as the {object_storage_first_ref}, adopt the {object_storage} to the {rhos_long} environment. If you are using the Object Storage API of the Ceph Object Gateway (RGW), skip this procedure.
+If you are using OpenStack Swift as an {object_storage}, adopt the {object_storage} to the {rhos_long} environment. If you are using the Object Storage API of the Ceph Object Gateway (RGW), skip this procedure.
 
 .Prerequisites
 
 * Ensure that the {object_storage} storage back-end services are running.
-* Ensure that the storage network is properly configured on the {OpenShift} cluster.
+* Ensure that the storage network is properly configured on the {OpenShift} cluster. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0-beta/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhocp-for-rhoso#proc_configuring-the-data-plane-network_preparing[Configuring the data plane network] in _Deploying Red Hat OpenStack Services on OpenShift_.
 
 //No new environmental variables need to be defined, though you use the
 //`CONTROLLER1_SSH` alias that was defined in a previous step.
