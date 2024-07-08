@@ -19,7 +19,7 @@ endif::[]
 For production environments, the deployment method will likely be
 different.
 
-* If you enabled TLS Everywhere on the {OpenStackShort} environment, you must copy the `tls` root CA from the {OpenStackShort} environment to the `rootca-internal` issuer.
+* If you enabled TLS everywhere (TLS-e) on the {OpenStackShort} environment, you must copy the `tls` root CA from the {OpenStackShort} environment to the `rootca-internal` issuer.
 
 * There are free PVs available to be claimed (for MariaDB and RabbitMQ).
 ifeval::["{build}" != "downstream"]
@@ -117,8 +117,7 @@ oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 MariaDB, Memcached, and RabbitMQ services. All other services must
 be disabled.
 
-. If you enabled TLS Everywhere in your {OpenStackShort} environment, modify the `spec:tls` section with the following override before applying it:
-
+. If you enabled TLS-e in your {OpenStackShort} environment, in the `spec:tls` section, set the `enabled` parameter to `true`:
 +
 [source,yaml]
 ----
@@ -145,9 +144,8 @@ spec:
       enabled: true
 ----
 
-. If the source environment does not enable TLS Everywhere, modify
-spec:tls section with the following override before applying it:
-
+. If the source environment does not enable TLS-e, in the
+`spec:tls`` section, set the `enabled` parameter to `false`:
 +
 [source,yaml]
 ----
@@ -323,9 +321,9 @@ EOF
 
 .Verification
 
-* Check that MariaDB is running.
+* Ensure that MariaDB is running:
 +
 ----
-oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}'
-oc get pod openstack-cell1-galera-0 -o jsonpath='{.status.phase}{"\n"}'
+$ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}'
+$ oc get pod openstack-cell1-galera-0 -o jsonpath='{.status.phase}{"\n"}'
 ----
