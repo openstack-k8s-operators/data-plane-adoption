@@ -1,5 +1,6 @@
 TEST_INVENTORY ?= tests/inventory.yaml
 TEST_VARS ?= tests/vars.yaml
+TEST_CEPH_OVERRIDES ?= tests/ceph_overrides.yaml
 TEST_SECRETS ?= tests/secrets.yaml
 TEST_CONFIG ?= tests/ansible.cfg
 TEST_ARGS ?=
@@ -32,6 +33,11 @@ test-with-ceph: TEST_OUTFILE := tests/logs/test_with_ceph_out_$(shell date +%FT%
 test-with-ceph:  ## Launch test suite with ceph
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
+
+test-ceph-migration: TEST_OUTFILE := tests/logs/test_ceph_migration_out_$(shell date +%FT%T%Z).log
+test-ceph-migration:  ## Launch test suite related to the ceph migration
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_CEPH_OVERRIDES) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_externalize_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 test-swift-migration: TEST_OUTFILE := tests/logs/test_swift_migration_out_$(shell date +%FT%T%Z).log
 test-swift-migration:

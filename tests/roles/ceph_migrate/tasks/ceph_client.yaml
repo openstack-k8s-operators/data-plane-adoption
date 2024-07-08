@@ -14,7 +14,7 @@
     - ceph_client_ip is defined
     - mon_ipaddr | default('')
   become: true
-  delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
+  delegate_to: "{{ cur_mon }}"
   block:
     - name: TMP_CLIENT - Patch os-net-config config and setup a tmp client IP
       ansible.builtin.lineinfile:
@@ -29,7 +29,7 @@
         "os-net-config -c {{ os_net_conf_path }}"
 
 - name: Backup data for client purposes
-  delegate_to: "{{ cur_mon.split('.')[0] }}.ctlplane"
+  delegate_to: "{{ cur_mon }}"
   when:
     - ceph_client_ip is defined
     - mon_ipaddr | default('')

@@ -140,7 +140,7 @@ cd -
 +
 [source,yaml]
 ----
-  tlsCert:
+  tlsCerts:
     contents:
       - dnsnames
       - ips

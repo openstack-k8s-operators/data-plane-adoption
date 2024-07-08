@@ -13,6 +13,8 @@
   loop: "{{ target_nodes }}"
   loop_control:
     loop_var: n
+  tags:
+    - ceph_firewall
 
 - name: MDS - Load Spec from the orchestrator
   ansible.builtin.set_fact:

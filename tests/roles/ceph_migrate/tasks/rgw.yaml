@@ -25,6 +25,8 @@
   loop: "{{ target_nodes }}"
   loop_control:
     loop_var: n
+  tags:
+    - ceph_firewall
 
 # - Expand labels to the target nodes
 - name: Apply RGW label to the target nodes
