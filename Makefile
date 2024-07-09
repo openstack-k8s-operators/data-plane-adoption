@@ -37,7 +37,7 @@ test-with-ceph:  ## Launch test suite with ceph
 test-ceph-migration: TEST_OUTFILE := tests/logs/test_ceph_migration_out_$(shell date +%FT%T%Z).log
 test-ceph-migration:  ## Launch test suite related to the ceph migration
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_CEPH_OVERRIDES) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_externalize_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_CEPH_OVERRIDES) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_externalize_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 test-swift-migration: TEST_OUTFILE := tests/logs/test_swift_migration_out_$(shell date +%FT%T%Z).log
 test-swift-migration:

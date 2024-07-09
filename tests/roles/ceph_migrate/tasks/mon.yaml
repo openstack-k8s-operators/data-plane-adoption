@@ -11,22 +11,6 @@
   ansible.builtin.debug:
     msg: "Migrate mon: {{ cur_mon }} to node: {{ target_node }}"
 
-# We add labels in advance to the target node to make sure we are able to
-# deploy a tmp mon that will be replaced with the right one (on the desired
-# network). By adding an additional mon at this stage we can ensure we always
-# have quorum and at least 3 active mons while migrating the src daemon to the
-# target node.
-- name: MON - Setup Mon/Mgr label to the target node
-  ansible.builtin.include_tasks: labels.yaml
-  vars:
-    nodes:
-      - "{{ target_node }}"
-    act: "add"
-    labels:
-      - "mon"
-      - "mgr"
-      - "_admin"
-
 - name: MON - check mons quorum
   become: true
   ansible.builtin.command: "{{ ceph_cli }} -s -f json"
@@ -81,7 +65,7 @@
         mgr: "{{ mgr.stdout | from_json }}"
 
     - name: Print active mgr
-      when: debug | default(true)
+      when: debug | default(false)
       ansible.builtin.debug:
         msg: "Active mgr: {{ mgr.active_name }}"
 
@@ -121,7 +105,7 @@
     - mon_ipaddr | default('')
   block:
     - name: MON - Get current mon IP address
-      when: debug | default(true)
+      when: debug | default(false)
       ansible.builtin.debug:
         msg: "{{ mon_ipaddr }}"
 
@@ -149,11 +133,17 @@
         insertafter: "{{ ceph_storage_net_prefix }}"
         line: "    - ip_netmask: {{ mon_ipaddr }}/24"
         backup: true
+      # (NOTE): TMP WORKAROUND TO TEST THE PLAYBOK W/O ADOPTION
+      vars:
+        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
 
     - name: MON - Refresh os-net-config
       delegate_to: "{{ target_node }}"
       ansible.builtin.command:
         "os-net-config -c {{ os_net_conf_path }}"
+      # (NOTE): TMP WORKAROUND TO TEST THE PLAYBOK W/O ADOPTION
+      vars:
+        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
 
     - name: MON - ping ip address to see if is reachable on the target node
       ansible.builtin.command:
@@ -174,16 +164,16 @@
     # addresses, it might happen that the mon is deployed using the right IP.
     # For this reason we need to redeploy it by rm + add (as redeploy does not
     # accept an IP as input
-    - name: MON - Check quorum
-      ansible.builtin.command: "{{ ceph_cli }} mon stat -f json"
-      register: monstat
-      retries: 20
-      delay: 3
-      until: "'{{ target_node.split('.')[0] }}' in monstat.stdout | from_json | community.general.json_query('quorum[*].name') | default([]) | list"
-      loop_control:
-        label: "MON - Check quorum"
+    # - name: MON - Check quorum
+    #   ansible.builtin.command: "{{ ceph_cli }} mon stat -f json"
+    #   register: monstat
+    #   retries: 20
+    #   delay: 3
+    #   until: "'{{ target_node.split('.')[0] }}' in monstat.stdout | from_json | community.general.json_query('quorum[*].name') | default([]) | list"
+    #   loop_control:
+    #     label: "MON - Check quorum"
 
-    # Even though we explicitly redeploy a given mon using the host:ip format,
+    ## Even though we explicitly redeploy a given mon using the host:ip format,
     # it is possible that the orchestrator (who owns the process and the spec)
     # takes initiative to redeploy a mon, on an arbitrary ip address (if many)
     # between the `ceph orch rm ...` command and the `ceph orch daemon add ...`
@@ -211,11 +201,27 @@
         CEPH_CONF: "{{ ceph_config_tmp_client_home }}"
 
     - name: Print the resulting spec
-      when: debug | default(true)
+      when: debug | default(false)
       ansible.builtin.debug:
         msg: "{{ spc }}"
 
-    # Check if mon even exists before removing it
+    # We add labels in advance to the target node to make sure we are able to
+    # deploy a tmp mon that will be replaced with the right one (on the desired
+    # network). By adding an additional mon at this stage we can ensure we always
+    # have quorum and at least 3 active mons while migrating the src daemon to the
+    # target node.
+    - name: MON - Setup Mon/Mgr label to the target node
+      ansible.builtin.include_tasks: labels.yaml
+      vars:
+        nodes:
+          - "{{ target_node }}"
+        act: "add"
+        labels:
+          - "mon"
+          - "mgr"
+          - "_admin"
+
+    # Check if a mon exists in the target node and remove it
     - name: MON - Get tmp mon
       ansible.builtin.command: "{{ ceph_cli }} orch ps --daemon_type mon --daemon_id {{ daemon_id }} -f json"
       register: psmon
@@ -227,8 +233,8 @@
       ansible.builtin.command: "{{ ceph_cli }} orch daemon rm mon.{{ target_node.split('.')[0] }} --force"
       until: '"Removed" in rmmon.stdout'
       register: rmmon
-      retries: 20
-      delay: 3
+      retries: 30
+      delay: 4
       loop_control:
         label: "MON - Get tmp mon"
 
@@ -237,14 +243,14 @@
         seconds: "{{ ceph_wait_mon_timeout }}"
 
     # Check if mon even exists before removing it
-    - name: MON - Check there is no mon on {{ target_node }}
-      ansible.builtin.command: "{{ ceph_cli }} orch ps --daemon_type mon --daemon_id {{ daemon_id }} -f json"
-      register: psmon
-      vars:
-        daemon_id: "{{ target_node.split('.')[0] }}"
+    # - name: MON - Check there is no mon on {{ target_node }}
+    #   ansible.builtin.command: "{{ ceph_cli }} orch ps --daemon_type mon --daemon_id {{ daemon_id }} -f json"
+    #   register: psmon
+    #   vars:
+    #     daemon_id: "{{ target_node.split('.')[0] }}"
 
     - name: MON - Redeploy mon on {{ target_node }}
-      when: debug | default(true)
+      when: debug | default(false)
       ansible.builtin.debug:
         msg: "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
 
@@ -263,8 +269,8 @@
   become: true
   ansible.builtin.command: "{{ ceph_cli }} -s -f json"
   register: monmap
-  retries: 20
-  delay: 2
+  retries: 30
+  delay: 4
   # >= is related to the fact that the current monmap might still have
   # references to the old mon daemon coming from the drained node
   until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
