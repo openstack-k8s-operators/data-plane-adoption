@@ -91,7 +91,7 @@ spec:
 $ oc get pods -l component=swift-proxy
 ----
 
-* Verify that the Object Storage proxy service is registered in the {identity_service}:
+* Verify that the Object Storage proxy service is registered in the {identity_service_first_ref}:
 +
 ----
 $ openstack service list | grep swift
