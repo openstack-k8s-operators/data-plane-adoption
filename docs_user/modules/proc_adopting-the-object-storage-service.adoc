@@ -127,4 +127,4 @@ Hello World!
 ----
 
 [NOTE]
-The Object Storage data is still stored on the existing {OpenStackShort} nodes. For more information about migrating the actual data from the {OpenStackShort} deployment to the {rhos_long} deployment, see xref:migrating-object-storage-data-to-rhoso-nodes_migrate-object-storage-service[Migrating the {object_storage_first_ref} data from {OpenStackShort} to {rhos_long} nodes].
+The Object Storage data is still stored on the existing {OpenStackShort} nodes. For more information about migrating the actual data from the {OpenStackShort} deployment to the {rhos_acro} deployment, see xref:migrating-object-storage-data-to-rhoso-nodes_migrate-object-storage-service[Migrating the {object_storage_first_ref} data from {OpenStackShort} to {rhos_long} nodes].
