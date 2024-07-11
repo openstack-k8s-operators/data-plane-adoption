@@ -19,7 +19,8 @@ and outputs files to the current directory (unless `--out-dir` option is used).
 
 In the output directory you always get a `cinder.patch` file with the Cinder
 specific configuration patch to apply to the `OpenStackControlPlane` custom resource but you might also get an additional file called `cinder-prereq.yaml` file with some
-`Secrets` and `MachineConfigs`.
+`Secrets` and `MachineConfigs`, and an `openstackversion.yaml` file with the
+`OpenStackVersion` sample.
 
 Example of an invocation setting input and output explicitly to the defaults for
 a Ceph backend:
@@ -67,15 +68,24 @@ In this case there are additional messages. The following list provides an expla
 dependencies so the standard container image will not work. Unfortunately this
 image is still not available, so an older image is used in the output patch file
 for reference. You can then replace this image with one that you build or
-with a Red Hat official image once the image is available. In this case you can see in your `cinder.patch` file:
+with a Red Hat official image once the image is available. In this case you can
+see in your `cinder.patch` file that has an `OpenStackVersion` object:
 +
 [source,yaml]
 ----
-      cinderVolumes:
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackVersion
+metadata:
+  name: openstack
+spec:
+  customContainerImages:
+    cinderVolumeImages:
       hpe-fc:
         containerImage: registry.connect.redhat.com/hpe3parcinder/openstack-cinder-volume-hpe3parcinder17-0
 ----
 +
+The name of the `OpenStackVersion` must match the name of your `OpenStackControlPlane`, so in your case it may be other than `openstack`.
+
 * The FC message reminds you that this transport protocol requires specific HBA
 cards to be present on the nodes where Block Storage services are running.
 * In this case it has created the `cinder-prereq.yaml` file and within the file

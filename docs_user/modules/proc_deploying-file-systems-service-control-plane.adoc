@@ -104,9 +104,12 @@ backend driver needs to use its own instance of the `manila-share`
 service.
 * If a storage backend driver needs a custom container image, find it on the
 https://catalog.redhat.com/software/containers/search?gs&q=manila[RHOSP Ecosystem Catalog]
-and set `manila: template: manilaShares: <custom name> : containerImage`
-value. The following example illustrates multiple storage backend drivers,
-using custom container images.
+and create or modify an `OpenStackVersion` manifest to specify the custom image
+using the same `<custom name>`.
++
+In the following example that illustrates multiple storage backend drivers,
+where only one is using a custom container image, we have the manila spec from
+`OpenStackControlPlane`:
 +
 [source,yaml]
 ----
@@ -147,9 +150,24 @@ using custom container images.
              share_driver = manila.share.drivers.purestorage.flashblade.FlashBladeShareDriver
              flashblade_mgmt_vip = 203.0.113.15
              flashblade_data_vip = 203.0.10.14
-            containerImage: registry.connect.redhat.com/purestorage/openstack-manila-share-pure-rhosp-18-0
             replicas: 1
 ----
++
+And then we have the `OpenStackVersion` to define the custom container image:
++
+[source,yaml]
+----
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackVersion
+metadata:
+  name: openstack
+spec:
+  customContainerImages:
+    cinderVolumeImages:
+      pure: registry.connect.redhat.com/purestorage/openstack-manila-share-pure-rhosp-18-0
+----
++
+The name of the `OpenStackVersion` must match the name of your `OpenStackControlPlane`, so in your case it may be other than `openstack`.
 
 . If providing sensitive information, such as passwords, hostnames and
 usernames, it is recommended to use {OpenShift} secrets, and the

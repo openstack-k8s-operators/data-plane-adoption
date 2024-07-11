@@ -19,6 +19,7 @@ import yaml
 LOG = logging
 PATCH_FILE = 'cinder.patch'
 PREREQ_FILE = 'cinder-prereq.yaml'
+VERSION_FILE = 'openstackversion.yaml'
 
 CINDER_TEMPLATE = """
 spec:
@@ -226,6 +227,7 @@ class CinderTransformer(object):
         self._secrets = {}
         self._machineconfigs = []
         self._extra_volumes = []
+        self._custom_images = {}
 
         self.parse_config()
         self.sanity_checks()
@@ -333,13 +335,27 @@ class CinderTransformer(object):
                 LOG.warning('Ignoring backends %s that are missing a '
                             'section.\n', missing)
 
+        backends_custom_image = []
+        outdated_images = []
         for backend in self.backends:
             image, outdated = self.get_image(self.get(backend))
-            if outdated:
-                LOG.error('Backend %s requires a vendor container image, but '
-                          'there is no certified image available yet. Patch '
-                          'will use the last known image for reference, but '
-                          'IT WILL NOT WORK\n', backend)
+            if image:
+                backends_custom_image.append(backend)
+                if outdated:
+                    outdated_images.append(backend)
+
+        if backends_custom_image:
+            LOG.warning('There are backends (%s) that requires a vendor '
+                        'container image, existing OpenStackVersion CR needs '
+                        'to be modified, please look at %s file for the '
+                        'contents.\n',
+                        ', '.join(backends_custom_image), VERSION_FILE)
+
+            if outdated_images:
+                LOG.error('Images in %s for some backends (%s) are just '
+                          'templates, as there is no certified image '
+                          'available yet. THEY WILL NOT WORK\n',
+                          VERSION_FILE, ', '.join(outdated_images))
 
         if any('RBDDriver' == self.get_driver(b) for b in self.backends):
             LOG.warning('Deployment uses Ceph, so make sure the Ceph '
@@ -481,6 +497,14 @@ class CinderTransformer(object):
             return IMAGES[image_name]
         return (None, None)
 
+    def get_custom_images_manifest(self):
+        template = {'apiVersion': 'core.openstack.org/v1beta1',
+                    'kind': 'OpenStackVersion',
+                    'metadata': {'name': 'openstack'},
+                    'spec': { 'customContainerImages': {
+                      'cinderVolumeImages': self._custom_images.copy()} } }
+        return template
+
     def generate_patch(self):
         res = yaml.safe_load(CINDER_TEMPLATE)
         template = res['spec']['cinder']['template']
@@ -520,7 +544,7 @@ class CinderTransformer(object):
 
             image = self.get_image(config[backend])[0]
             if image:
-                backend_data['containerImage'] = image
+                self._custom_images[backend] = image
         return res
 
     def generate_manifest(self):
@@ -555,6 +579,16 @@ class CinderTransformer(object):
             manifest += '---\n'
         output_file.write(manifest)
         return bool(data)
+
+    def write_version(self, filename):
+        if not self._custom_images:
+            return False
+
+        version = self.get_custom_images_manifest()
+        manifest = yaml.dump(version)
+        with open(filename, 'wt') as f:
+            f.write(manifest)
+        return True
 
     def write_patch(self, output_file):
         if not self.processed:
@@ -752,14 +786,16 @@ if __name__ == '__main__':
     LOG.basicConfig(level=LOG_LEVELS[min(args.verbose, 2)])
     transformer = CinderTransformer(args.config, args.no_machineconfig,
                                     args.only_backends, args.name)
+    file_names = ['cinder.patch']
     with open(os.path.join(args.out_dir, PATCH_FILE), 'wt') as f:
         transformer.write_patch(f)
     with open(os.path.join(args.out_dir, PREREQ_FILE), 'wt') as f:
         wrote_manifests = transformer.write_manifest(f)
-    LOG.warning(WARNING_MSG)
-    file_names = ['cinder.patch']
     if wrote_manifests:
         file_names.append(PREREQ_FILE)
     else:
         os.remove(PREREQ_FILE)
+    if transformer.write_version(os.path.join(args.out_dir, VERSION_FILE)):
+        file_names.append(VERSION_FILE)
+    LOG.warning(WARNING_MSG)
     print(f'Output written at {args.out_dir}: {", ".join(file_names)}')
