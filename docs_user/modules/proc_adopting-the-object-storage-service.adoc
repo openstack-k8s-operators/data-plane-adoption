@@ -2,16 +2,12 @@
 
 = Adopting the {object_storage}
 
-If you are using OpenStack Swift as an {object_storage}, adopt the {object_storage} to the {rhos_long} environment. If you are using the Object Storage API of the Ceph Object Gateway (RGW), skip this procedure.
+If you are using Object Storage as a service, adopt the {object_storage_first_ref} to the {rhos_long} environment. If you are using the Object Storage API of the Ceph Object Gateway (RGW), skip the following procedure.
 
 .Prerequisites
 
 * Ensure that the {object_storage} storage back-end services are running.
 * Ensure that the storage network is properly configured on the {OpenShift} cluster. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0-beta/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhocp-for-rhoso#proc_configuring-the-data-plane-network_preparing[Configuring the data plane network] in _Deploying Red Hat OpenStack Services on OpenShift_.
-
-//No new environmental variables need to be defined, though you use the
-//`CONTROLLER1_SSH` alias that was defined in a previous step.
-//kgilliga: I commented this part out because I need to understand why "`CONTROLLER1_SSH` alias that was defined in a previous step" is significant for customers to know downstream.
 
 .Procedure
 
@@ -95,7 +91,7 @@ spec:
 $ oc get pods -l component=swift-proxy
 ----
 
-* Ensure that the Object Storage proxy service is registered in the {identity_service}:
+* Verify that the Object Storage proxy service is registered in the {identity_service}:
 +
 ----
 $ openstack service list | grep swift
@@ -108,7 +104,7 @@ $ openstack endpoint list | grep swift
 | db4b8547d3ae4e7999154b203c6a5bed | regionOne | swift        | object-store | True    | internal  | http://swift-internal.openstack.svc:8080/v1/AUTH_%(tenant_id)s        |
 ----
 
-* Confirm that you are able to upload and download objects:
+* Verify that you are able to upload and download objects:
 +
 ----
 $ echo "Hello World!" > obj
