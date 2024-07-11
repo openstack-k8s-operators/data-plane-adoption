@@ -21,7 +21,7 @@ different.
 
 * If you enabled TLS everywhere (TLS-e) on the {OpenStackShort} environment, you must copy the `tls` root CA from the {OpenStackShort} environment to the `rootca-internal` issuer.
 
-* There are free PVs available to be claimed (for MariaDB and RabbitMQ).
+* There are free PVs available for MariaDB and RabbitMQ.
 ifeval::["{build}" != "downstream"]
 +
 For developer/CI environments driven by install_yamls, make sure
@@ -72,7 +72,7 @@ control plane to be deployed:
 $ oc project openstack
 ----
 
-. Create the OSP secret.
+. Create the {OpenStackShort} secret.
 ifeval::["{build}" != "downstream"]
 +
 The procedure for this will vary, but in developer/CI environments
@@ -96,21 +96,21 @@ account passwords from the original deployment:
 +
 ----
 $ oc set data secret/osp-secret "AodhPassword=$AODH_PASSWORD"
-oc set data secret/osp-secret "BarbicanPassword=$BARBICAN_PASSWORD"
-oc set data secret/osp-secret "CeilometerMeteringSecret=$CEILOMETER_METERING_SECRET"
-oc set data secret/osp-secret "CeilometerPassword=$CEILOMETER_PASSWORD"
-oc set data secret/osp-secret "CinderPassword=$CINDER_PASSWORD"
-oc set data secret/osp-secret "GlancePassword=$GLANCE_PASSWORD"
-oc set data secret/osp-secret "HeatAuthEncryptionKey=$HEAT_AUTH_ENCRYPTION_KEY"
-oc set data secret/osp-secret "HeatPassword=$HEAT_PASSWORD"
-oc set data secret/osp-secret "IronicPassword=$IRONIC_PASSWORD"
-oc set data secret/osp-secret "IronicInspectorPassword=$IRONIC_PASSWORD"
-oc set data secret/osp-secret "ManilaPassword=$MANILA_PASSWORD"
-oc set data secret/osp-secret "NeutronPassword=$NEUTRON_PASSWORD"
-oc set data secret/osp-secret "NovaPassword=$NOVA_PASSWORD"
-oc set data secret/osp-secret "OctaviaPassword=$OCTAVIA_PASSWORD"
-oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
-oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
+$ oc set data secret/osp-secret "BarbicanPassword=$BARBICAN_PASSWORD"
+$ oc set data secret/osp-secret "CeilometerMeteringSecret=$CEILOMETER_METERING_SECRET"
+$ oc set data secret/osp-secret "CeilometerPassword=$CEILOMETER_PASSWORD"
+$ oc set data secret/osp-secret "CinderPassword=$CINDER_PASSWORD"
+$ oc set data secret/osp-secret "GlancePassword=$GLANCE_PASSWORD"
+$ oc set data secret/osp-secret "HeatAuthEncryptionKey=$HEAT_AUTH_ENCRYPTION_KEY"
+$ oc set data secret/osp-secret "HeatPassword=$HEAT_PASSWORD"
+$ oc set data secret/osp-secret "IronicPassword=$IRONIC_PASSWORD"
+$ oc set data secret/osp-secret "IronicInspectorPassword=$IRONIC_PASSWORD"
+$ oc set data secret/osp-secret "ManilaPassword=$MANILA_PASSWORD"
+$ oc set data secret/osp-secret "NeutronPassword=$NEUTRON_PASSWORD"
+$ oc set data secret/osp-secret "NovaPassword=$NOVA_PASSWORD"
+$ oc set data secret/osp-secret "OctaviaPassword=$OCTAVIA_PASSWORD"
+$ oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
+$ oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 ----
 
 . Deploy the `OpenStackControlPlane` CR. Ensure that you only enable the DNS,
@@ -144,7 +144,7 @@ spec:
       enabled: true
 ----
 
-. If the source environment does not enable TLS-e, in the
+. If your {OpenStackShort} environment does not enable TLS-e, in the
 `spec:tls`` section, set the `enabled` parameter to `false`:
 +
 [source,yaml]
@@ -241,18 +241,18 @@ spec:
     templates:
       openstack:
         secret: osp-secret
-        replicas: 1
+        replicas: 3
         storageRequest: 500M
       openstack-cell1:
         secret: osp-secret
-        replicas: 1
+        replicas: 3
         storageRequest: 500M
 
   memcached:
     enabled: true
     templates:
       memcached:
-        replicas: 1
+        replicas: 3
 
   neutron:
     enabled: false
@@ -313,7 +313,7 @@ spec:
       swiftRing:
         ringReplicas: 1
       swiftStorage:
-        replicas: 0
+        replicas: 1
       swiftProxy:
         replicas: 1
 EOF
@@ -321,7 +321,7 @@ EOF
 
 .Verification
 
-* Ensure that MariaDB is running:
+* Verify that MariaDB is running:
 +
 ----
 $ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}'
