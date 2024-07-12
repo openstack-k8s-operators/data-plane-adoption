@@ -141,7 +141,6 @@ spec:
 
   telemetry:
     enabled: false
-    template: {}
 
   swift:
     enabled: false
