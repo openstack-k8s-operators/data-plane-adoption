@@ -1,9 +1,23 @@
 - name: deploy podified Glance with local backend
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch-file={{ role_path }}/files/glance_local.yaml
-  when: glance_backend == 'local'
+  when: glance_backend == 'nfs'
+  block:
+    - name: Fail if no nfs_server_addr/nfs_server_path are definied
+      when:
+        - nfs_server_addr is not defined
+        - nfs_server_path is not defined
+      ansible.builtin.fail:
+        msg:
+          - 'nfs_server_addr/nfs_server_path must be defined'
+    - name: Generate the glance CR config spec based on the selected backend
+      ansible.builtin.template:
+        src: templates/glance_nfs.yaml.j2
+        dst: /tmp/glance_nfs.yaml
+        mode: "0600"
+    - name: Deploy GlanceAPI with NFS backend
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/glance_nfs.yaml
 
 - name: deploy podified Glance with Ceph backend
   ansible.builtin.shell: |
