@@ -41,8 +41,10 @@ image. If they do, find the location of the image in the vendor's instruction
 available in the https://catalog.redhat.com/software/search?target_platforms=Red%20Hat%20OpenStack%20Platform&p=1&functionalCategories=Data%20storage[{rhos_prev_long} {block_storage} ecosystem
 page]
 //kgilliga: Shouldn't this link be this instead? https://catalog.redhat.com/software/search?target_platforms=Red%20Hat%20OpenStack%20Platform&p=1&functionalCategories=Data%20storage&certified_plugin_types=Block%20Storage%20(Cinder)
-and add it under the specific's driver section using the `containerImage` key.
-The following example shows a CRD for a Pure Storage array with a certified driver:
+and create or modify an `OpenStackVersion` manifest to specify the custom
+image using the key from the `cinderVolumes` section.
++
+For example, if we had this configuration:
 +
 [source,yaml]
 ----
@@ -52,11 +54,27 @@ spec:
     template:
       cinderVolume:
         pure:
-          containerImage: registry.connect.redhat.com/purestorage/openstack-cinder-volume-pure-rhosp-18-0'
           customServiceConfigSecrets:
             - openstack-cinder-pure-cfg
 < . . . >
 ----
++
+Then the `OpenStackVersion` describing the container image for that backend
+would look like this:
++
+[source,yaml]
+----
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackVersion
+metadata:
+  name: openstack
+spec:
+  customContainerImages:
+    cinderVolumeImages:
+      pure: registry.connect.redhat.com/purestorage/openstack-cinder-volume-pure-rhosp-18-0'
+----
++
+The name of the `OpenStackVersion` must match the name of your `OpenStackControlPlane`, so in your case it may be other than `openstack`.
 
 . External files: Block Storage services sometimes use external files, for example for
 a custom policy, or to store credentials, or SSL CA bundles to connect to a
