@@ -163,4 +163,3 @@ done
 ----
 +
 If the status of each service is `OK`, then the services stopped successfully.
-
