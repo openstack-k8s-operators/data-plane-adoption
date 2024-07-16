@@ -2,11 +2,11 @@
 
 = Adopting the {compute_service}
 
-To adopt the {compute_service_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {compute_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
+To adopt the {compute_service_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {compute_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment. The following procedure describes a single-cell setup.
 
-[NOTE]
-The following example scenario describes a single-cell setup. Real
-multi-stack topology that is recommended for production use results in cells having a different database layout, and should use different naming schemes.
+//[NOTE]
+//The following example scenario describes a single-cell setup. Real
+//multi-stack topology that is recommended for production use results in cells having a different database layout, and should use different naming schemes. kgilliga: We might reinstate this note after multi-cell is finished in Feature Release 1.
 
 .Prerequisites
 
@@ -127,7 +127,7 @@ $ openstack endpoint list | grep nova
 $ openstack server list
 ----
 +
-Compare the outputs with the topology-specific configuration in xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
+** Compare the outputs with the topology-specific configuration in xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
 
 * Query the superconductor for cell1 existance and compare it to pre-adoption values:
 +
@@ -138,10 +138,10 @@ oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 
 ----
 +
 The following changes are expected:
-
-* The cell1 `nova` database and username become `nova_cell1`.
-* The default cell is renamed to `cell1`. In a multi-cell setup, it should become indexed as the last cell instead.
-* RabbitMQ transport URL no longer uses `guest`.
++
+** The cell1 `nova` database and username become `nova_cell1`.
+** The default cell is renamed to `cell1`.
+** RabbitMQ transport URL no longer uses `guest`.
 
 [NOTE]
 At this point, the {compute_service} control plane services do not control the existing {compute_service} workloads. The control plane manages the data plane only after the data adoption process is completed. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].
