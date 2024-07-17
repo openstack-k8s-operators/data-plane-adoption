@@ -6,6 +6,8 @@ Create the `OpenStackControlPlane` custom resource (CR) with the basic back-end 
 
 .Prerequisites
 
+* The cloud that you want to adopt is running, and it is on the {OpenStackShort} {rhos_prev_ver} release.
+* All control plane and data plane hosts of the source cloud are running, and continue to run throughout the adoption procedure.
 * The `openstack-operator` is deployed, but `OpenStackControlPlane` is
 not deployed.
 ifeval::["{build}" != "downstream"]
@@ -15,9 +17,12 @@ by running `make openstack` inside
 https://github.com/openstack-k8s-operators/install_yamls[install_yamls]
 repo.
 +
-endif::[]
 For production environments, the deployment method will likely be
 different.
+endif::[]
+ifeval::["{build}" == "downstream"]
+* Install the OpenStack Operators. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/{rhos_curr_ver}/html-single/deploying_red_hat_openstack_services_on_openshift/index#assembly_installing-and-preparing-the-Operators[Installing and preparing the Operators] in _Deploying Red Hat OpenStack Services on OpenShift_.
+endif::[]
 
 * If you enabled TLS everywhere (TLS-e) on the {OpenStackShort} environment, you must copy the `tls` root CA from the {OpenStackShort} environment to the `rootca-internal` issuer.
 
@@ -72,8 +77,8 @@ control plane to be deployed:
 $ oc project openstack
 ----
 
-. Create the {OpenStackShort} secret.
 ifeval::["{build}" != "downstream"]
+. Create the {OpenStackShort} secret.
 +
 The procedure for this will vary, but in developer/CI environments
 you use `install_yamls`:
@@ -82,6 +87,9 @@ you use `install_yamls`:
 # in install_yamls
 make input
 ----
+endif::[]
+ifeval::["{build}" == "downstream"]
+. Create the {OpenStackShort} secret. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/{rhos_curr_ver}/html-single/deploying_red_hat_openstack_services_on_openshift/index#proc_providing-secure-access-to-the-RHOSO-services_preparing[Providing secure access to the Red Hat OpenStack Services on OpenShift services] in _Deploying Red Hat OpenStack Services on OpenShift_.
 endif::[]
 
 . If the `$ADMIN_PASSWORD` is different than the password you set
@@ -113,11 +121,7 @@ $ oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
 $ oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 ----
 
-. Deploy the `OpenStackControlPlane` CR. Ensure that you only enable the DNS,
-MariaDB, Memcached, and RabbitMQ services. All other services must
-be disabled.
-
-. If you enabled TLS-e in your {OpenStackShort} environment, in the `spec:tls` section, set the `enabled` parameter to `true`:
+. If you enabled TLS-e in your {OpenStackShort} environment, in the `spec:tls` section, set the `enabled` parameter to `true`: 
 +
 [source,yaml]
 ----
@@ -159,6 +163,8 @@ spec:
       enabled: false
 ----
 
+. Deploy the `OpenStackControlPlane` CR. Ensure that you only enable the DNS, MariaDB, Memcached, and RabbitMQ services. All other services must
+be disabled: 
 +
 [source,yaml]
 ----
@@ -313,7 +319,7 @@ spec:
       swiftRing:
         ringReplicas: 1
       swiftStorage:
-        replicas: 1
+        replicas: 0
       swiftProxy:
         replicas: 1
 EOF
