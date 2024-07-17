@@ -121,7 +121,7 @@ $ oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
 $ oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 ----
 
-. If you enabled TLS-e in your {OpenStackShort} environment, in the `spec:tls` section, set the `enabled` parameter to `true`: 
+. If you enabled TLS-e in your {OpenStackShort} environment, in the `spec:tls` section, set the `enabled` parameter to `true`:
 +
 [source,yaml]
 ----
@@ -164,7 +164,7 @@ spec:
 ----
 
 . Deploy the `OpenStackControlPlane` CR. Ensure that you only enable the DNS, MariaDB, Memcached, and RabbitMQ services. All other services must
-be disabled: 
+be disabled:
 +
 [source,yaml]
 ----
