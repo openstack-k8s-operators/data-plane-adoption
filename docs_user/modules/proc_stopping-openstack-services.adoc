@@ -16,8 +16,7 @@ You should not stop the infrastructure management services yet, such as:
 
 .Prerequisites
 
-* Confirm that there no long-running operations that require the services you plan to stop.
-* Ensure that there are no ongoing instance live migrations, volume migrations (online or offline), volume creation, backup and restore, attaching, detaching, and so on:
+* Ensure that there no long-running tasks that require the services that you plan to stop, such as instance live migrations, volume migrations, volume creation, backup and restore, attaching, detaching, and other similar operations:
 +
 ----
 openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
@@ -43,7 +42,7 @@ CONTROLLER3_SSH=""
 
 .Procedure
 
-. If your deployment enables CephFS through NFS as a back end for {rhos_component_storage_file_first_ref}, remove the following Pacemaker ordering and co-location constraints that govern the Virtual IP address that is assigned to the `ceph-nfs` service and the `manila-share` service:
+. If your deployment enables CephFS through NFS as a back end for {rhos_component_storage_file_first_ref}, remove the following Pacemaker ordering and co-location constraints that govern the Virtual IP address of the `ceph-nfs` service and the `manila-share` service:
 +
 ----
 # check the co-location and ordering constraints concerning "manila-share"
