@@ -81,8 +81,3 @@ if ! ${BASH_ALIASES[openstack]} volume snapshot show snapshot ; then
     ${BASH_ALIASES[openstack]} volume snapshot create --volume disk snapshot
     wait_for_status "volume snapshot show snapshot" "test volume 'disk' backup snapshot availability"
 fi
-
-# Add volume to the test VM
-if ${BASH_ALIASES[openstack]} volume show disk -f json | jq -r '.status' | grep -q available ; then
-    ${BASH_ALIASES[openstack]} server add volume test disk
-fi
