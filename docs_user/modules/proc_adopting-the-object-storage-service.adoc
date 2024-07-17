@@ -107,7 +107,6 @@ $ openstack endpoint list | grep swift
 * Verify that you are able to upload and download objects:
 +
 ----
-$ echo "Hello World!" > obj
 openstack container create test
 +---------------------------------------+-----------+------------------------------------+
 | account                               | container | x-trans-id                         |
@@ -115,7 +114,7 @@ openstack container create test
 | AUTH_4d9be0a9193e4577820d187acdd2714a | test      | txe5f9a10ce21e4cddad473-0065ce41b9 |
 +---------------------------------------+-----------+------------------------------------+
 
-openstack object create test obj
+openstack object create test --name obj <(echo "Hello World!")
 +--------+-----------+----------------------------------+
 | object | container | etag                             |
 +--------+-----------+----------------------------------+
