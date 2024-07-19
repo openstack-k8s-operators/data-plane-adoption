@@ -9,9 +9,13 @@ upgrade/migration to the control plane requires planning various aspects
 of the environment such as node roles, planning your network topology, and
 storage.
 
-This document covers some of this planning, but it is recommended to read
-the whole adoption guide before actually starting the process to be sure that
-there is a global understanding of the whole process.
+[IMPORTANT]
+This section contains considerations for adoption planning, but it is
+important to read the whole adoption guide before actually starting
+the process. You should form an understanding of the procedure,
+prepare the necessary configuration snippets for each service ahead of
+time, and test the procedure in a representative test environment
+before adopting your main environment.
 
 include::../modules/con_service-configurations.adoc[leveloffset=+1]
 
