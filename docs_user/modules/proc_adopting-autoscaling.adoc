@@ -44,7 +44,7 @@ ifeval::["{build}" == "downstream"]
       listenerImage: "registry.redhat.io/rhosp-dev-preview/openstack-aodh-listener-rhel9:18.0"
 endif::[]
       passwordSelectors:
-      databaseUser: aodh
+      databaseAccount: aodh
       databaseInstance: openstack
       memcachedInstance: memcached
 EOF

@@ -4,7 +4,7 @@
 
 Compute services rolling upgrade cannot be done during adoption,
 there is in a lock-step with Compute control plane services, because those are managed independently by data plane ansible and Kubernetes Operators.
-Compute service operator and Dataplane Operator ensure upgrading
+The Compute service operator and OpenStack Operator ensure upgrading
 is done independently of each other, by configuring
 `[upgrade_levels]compute=auto` for Compute services. Compute control plane
 services apply the change right after custom resource (CR) is patched. Compute data plane services will catch up the same config change with ansible deployment later on.
