@@ -1,0 +1,12 @@
+[id="fips-support_{context}"]
+
+= FIPS support
+
+
+There is a major difference with how FIPS was configured in {OpenStackPreviousInstaller} and how it is enabled and enforced in operator deployments.
+
+In {OpenStackPreviousInstaller} FIPS is enabled as part of it's configuration.
+
+In operator deployments there is no specific FIPS configuration at the operator level. If your deployment has FIPS compliance requirements, the whole {OpenShift} ({OpenShiftShort}) cluster must be installed with FIPS being enabled. This will have happened before proceeding with this guide and installing {OpenStackShort}.
+
+Please refer to the link:https://docs.openshift.com/container-platform/latest/installing/installing-fips.html[Support for FIPS cryptography] in _OpenShift Container Platform Documentation_.
