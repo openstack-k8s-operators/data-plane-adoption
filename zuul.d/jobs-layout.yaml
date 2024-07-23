@@ -3,6 +3,6 @@
     name: openstack-k8s-operators/data-plane-adoption
     github-check:
       jobs:
-        - data-plane-adoption-osp-17-to-extracted-crc
-        - data-plane-adoption-osp-17-to-extracted-crc-minimal-no-ceph
+        - adoption-standalone-to-crc-ceph
+        - adoption-standalone-to-crc-no-ceph
         - adoption-docs-preview
