@@ -10,7 +10,8 @@ To adopt the {compute_service_first_ref}, you patch an existing `OpenStackContro
 
 .Prerequisites
 
-* Define the following shell variables. Replace the following example values with the values that are correct for your environment:
+* You have completed the previous adoption steps.
+* You have defined the following shell variables. Replace the following example values with the values that are correct for your environment:
 ----
 $ alias openstack="oc exec -t openstackclient -- openstack"
 ----
@@ -20,7 +21,7 @@ $ alias openstack="oc exec -t openstackclient -- openstack"
 . Patch the `OpenStackControlPlane` CR to deploy the {compute_service}:
 +
 [NOTE]
-This procedure assumes that {compute_service} metadata is deployed on the top level and not on each cell level. If the {OpenStackShort} deployment has a per-cell metadata deployment, adjust the following patch as needed. Metadata service cannot be run in `cell0`.
+This procedure assumes that {compute_service} metadata is deployed on the top level and not on each cell level. If the {OpenStackShort} deployment has a per-cell metadata deployment, adjust the following patch as needed. You cannot run the metadata service in `cell0`.
 +
 [source,yaml]
 ----
@@ -114,6 +115,7 @@ spec:
 $ oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 +
+[NOTE]
 The local Conductor services are started for each cell, while the superconductor runs in `cell0`.
 Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Compute services until the external data plane is imported, and until Compute services are fast-forward upgraded. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane] and xref:performing-a-fast-forward-upgrade-on-compute-services_data-plane[Performing a fast-forward upgrade on Compute services].
 
@@ -129,7 +131,7 @@ $ openstack server list
 +
 ** Compare the outputs with the topology-specific configuration in xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
 
-* Query the superconductor for cell1 existance and compare it to pre-adoption values:
+* Query the superconductor to check that `cell1` exists, and compare it to pre-adoption values:
 +
 ----
 . ~/.source_cloud_exported_variables
@@ -139,7 +141,7 @@ oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 
 +
 The following changes are expected:
 +
-** The cell1 `nova` database and username become `nova_cell1`.
+** The `cell1` `nova` database and username become `nova_cell1`.
 ** The default cell is renamed to `cell1`.
 ** RabbitMQ transport URL no longer uses `guest`.
 
