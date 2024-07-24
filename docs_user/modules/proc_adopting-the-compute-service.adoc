@@ -2,44 +2,30 @@
 
 = Adopting the {compute_service}
 
-[NOTE]
-This example scenario describes a simple single-cell setup. Real
-multi-stack topology recommended for production use results in different
-cells DBs layout, and should be using different naming schemes (not covered
-here this time).
+To adopt the {compute_service_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {compute_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment. The following procedure describes a single-cell setup.
+
+//[NOTE]
+//The following example scenario describes a single-cell setup. Real
+//multi-stack topology that is recommended for production use results in cells having a different database layout, and should use different naming schemes. kgilliga: We might reinstate this note after multi-cell is finished in Feature Release 1.
 
 .Prerequisites
 
-* Previous Adoption steps completed. Notably,
- ** the xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances]
-must already be imported into the control plane MariaDB;
- ** the xref:adopting-the-identity-service_adopt-control-plane[Adopting the Identity service] needs to be imported;
- ** the xref:adopting-the-key-manager-service_adopt-control-plane[Adopting the Key Manager service] needs to be imported;
- ** the xref:adopting-the-placement-service_{context}[Adopting the Placement service] needs to be imported;
- ** the xref:adopting-the-image-service_adopt-control-plane[Adopting the Image service] needs to be imported;
- ** the xref:migrating-ovn-data_migrating-databases[Migrating OVN data] need to be imported;
- ** the xref:adopting-the-networking-service_adopt-control-plane[Adopting the Networking service] needs to be imported;
-** the {bare_metal} needs to be imported;
-//kgilliga:I removed the link because it did not work. I might rewrite this section anyway.
- ** Required topology-specific service configuration. For more information, see
-xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
- ** {rhos_prev_long} services have been stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
-* Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
+* You have completed the previous adoption steps.
+* You have defined the following shell variables. Replace the following example values with the values that are correct for your environment:
 ----
-alias openstack="oc exec -t openstackclient -- openstack"
+$ alias openstack="oc exec -t openstackclient -- openstack"
 ----
 
 .Procedure
 
+. Patch the `OpenStackControlPlane` CR to deploy the {compute_service}:
++
 [NOTE]
-This procedure assumes that {compute_service} Metadata is deployed on the top level and not on each cell level, so this example imports it the same way. If the source deployment has a per cell metadata deployment, adjust the given below patch as needed. Metadata service cannot be run in `cell0`.
-
-
-. Patch `OpenStackControlPlane` to deploy the {compute_service}:
+This procedure assumes that {compute_service} metadata is deployed on the top level and not on each cell level. If the {OpenStackShort} deployment has a per-cell metadata deployment, adjust the following patch as needed. You cannot run the metadata service in `cell0`.
 +
 [source,yaml]
 ----
-oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
 spec:
   nova:
     enabled: true
@@ -107,9 +93,7 @@ spec:
 '
 ----
 
-* If adopting {compute_service_first_ref} with the Baremetal service (`ironic`), append the following `novaComputeTemplates` in the `cell1` section of the {compute_service} CR patch:
-+
-*NOTE*: Set the `[DEFAULT]host` configuration option to match the hostname of the node running the `ironic` compute driver in the source cloud.
+. If you are adopting the {compute_service} with the {bare_metal_first_ref}, append the following `novaComputeTemplates` in the `cell1` section of the {compute_service} CR patch:
 +
 [source,yaml]
 ----
@@ -118,33 +102,36 @@ spec:
             standalone:
               customServiceConfig: |
                 [DEFAULT]
-                host = standalone.localdomain
+                host = <hostname>
                 [workarounds]
                 disable_compute_service_check_for_ffu=true
 ----
++
+* Replace <hostname> with the hostname of the node that is running the `ironic` Compute driver in the source cloud.
 
-. Wait for {compute_service} control plane services' custom resources (CRs) to become ready:
+. Wait for the CRs for the Compute control plane services to be ready:
 +
 ----
-oc wait --for condition=Ready --timeout=300s Nova/nova
+$ oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 +
-The local Conductor services will be started for each cell, while the superconductor runs in `cell0`.
-Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Nova services, until the external data plane is imported, and until Nova Compute services fast-forward upgraded. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane] and xref:performing-a-fast-forward-upgrade-on-compute-services_data-plane[Performing a fast-forward upgrade on Compute services].
+[NOTE]
+The local Conductor services are started for each cell, while the superconductor runs in `cell0`.
+Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Compute services until the external data plane is imported, and until Compute services are fast-forward upgraded. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane] and xref:performing-a-fast-forward-upgrade-on-compute-services_data-plane[Performing a fast-forward upgrade on Compute services].
 
 .Verification
 
 * Check that {compute_service} endpoints are defined and pointing to the
-control plane FQDNs and that Nova API responds.
+control plane FQDNs, and that the Nova API responds:
 +
 ----
 $ openstack endpoint list | grep nova
 $ openstack server list
 ----
++
+** Compare the outputs with the topology-specific configuration in xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
 
-Compare the following outputs with the topology specific configuration in xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
-
-* Query the superconductor for cell1 existance and compare it to pre-adoption values:
+* Query the superconductor to check that `cell1` exists, and compare it to pre-adoption values:
 +
 ----
 . ~/.source_cloud_exported_variables
@@ -152,11 +139,11 @@ echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS
 oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 |'
 ----
 +
-The expected changes to happen:
-
- ** cell1's `nova` DB and user name become `nova_cell1`.
- ** Default cell is renamed to `cell1` (in a multi-cell setup, it should become indexed as the last cell instead).
- ** RabbitMQ transport URL no longer uses `guest`.
+The following changes are expected:
++
+** The `cell1` `nova` database and username become `nova_cell1`.
+** The default cell is renamed to `cell1`.
+** RabbitMQ transport URL no longer uses `guest`.
 
 [NOTE]
-At this point, the {compute_service} control plane services do not control the existing {compute_service} Compute workloads. The control plane manages the data plane only after the data adoption process is successfully completed. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].
+At this point, the {compute_service} control plane services do not control the existing {compute_service} workloads. The control plane manages the data plane only after the data adoption process is completed. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].
