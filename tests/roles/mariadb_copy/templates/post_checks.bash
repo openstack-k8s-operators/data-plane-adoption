@@ -1,11 +1,8 @@
-{{ shell_header }}
-{{ oc_header }}
 {{ mariadb_copy_shell_vars_dst }}
-{% if pulled_openstack_configuration_shell_headers is defined %}
-{{ pulled_openstack_configuration_shell_headers }}
-{% else %}
+
+# FIXME: no longer appropriate for mult-cell arrays
+# Check that the databases were imported correctly
 . ~/.source_cloud_exported_variables
-{% endif %}
 
 # use 'oc exec' and 'mysql -rs' to maintain formatting
 dbs=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;')
@@ -13,7 +10,7 @@ echo $dbs | grep -Eq '\bkeystone\b'
 
 # ensure neutron db is renamed from ovs_neutron
 echo $dbs | grep -Eq '\bneutron\b'
-echo $PULL_OPENSTACK_CONFIGURATION_DATABASES | grep -Eq '\bovs_neutron\b'
+echo $PULL_OPENSTACK_CONFIGURATION_DATABASES[@] | grep -Eq '\bovs_neutron\b'
 
 # ensure nova cell1 db is extracted to a separate db server and renamed from nova to nova_cell1
 c1dbs=$(oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;')
@@ -37,4 +34,4 @@ grep -qE " $(awk '{print $1}' <<<$default) cell1$" <<<$changed
 # ensure the registered Nova compute service name has not changed
 novadb_svc_records=$(oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" \
   nova_cell1 -e "select host from services where services.binary='nova-compute' order by host asc;")
-diff -Z <(echo $novadb_svc_records) <(echo $PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES)
+diff -Z <(echo $novadb_svc_records) <(echo $PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES['cell1'])

@@ -6,6 +6,7 @@
     ceph_backend_configuration_fsid_shell_vars: |
       CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //')
 
+# FIXME: missing docs coverage?
 - name: Patch openstackversion to use image built from source or latest if none is defined
   when: not skip_patching_ansibleee_csv | bool
   no_log: "{{ use_no_log }}"
@@ -81,7 +82,7 @@
     rm -f id*
     cd -
 
-- name: create a Nova Compute Extra Config service (no ceph backend in use)
+- name: create a common for all cells nova-ceph-extra-config configmap (no ceph backend in use)
   when:
     - compute_adoption|bool
     - ('ceph' not in [nova_libvirt_backend])
@@ -93,7 +94,7 @@
     apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: nova-extra-config
+      name: nova-ceph-extra-config
       namespace: openstack
     data:
       19-nova-compute-cell1-workarounds.conf: |
@@ -101,7 +102,7 @@
         disable_compute_service_check_for_ffu=true
     EOF
 
-- name: create a Nova Compute Extra Config service (ceph backend in use)
+- name: create a nova-allcells-extra-config configmap, which configures a Ceph storage backend
   when:
     - compute_adoption|bool
     - ('ceph' in [nova_libvirt_backend])
@@ -114,7 +115,7 @@
     apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: nova-extra-config
+      name: nova-ceph-extra-config
       namespace: openstack
     data:
       19-nova-compute-cell1-workarounds.conf: |
@@ -132,15 +133,99 @@
         rbd_secret_uuid=$CEPH_FSID
     EOF
 
-- name: Create OpenStackDataPlaneNodeSet
+- name: create a custom dataplane service for each additional cell
+  when:
+    - compute_adoption|bool
+    - ('ceph' in [nova_libvirt_backend])
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
-    cat <<EOF > edpm-crd.yaml
+    {{ oc_header }}
+    {{ cells_env }}
+
+    for CELL in $(echo $RENAMED_CELLS); do
+      if [ "$CELL" = "cell1" ]; then
+        # Example: NOVA_EDPM_SERVICE="nova-cell1-custom"
+        continue
+      else
+        NOVA_EDPM_SERVICE="nova-$CELL"
+      fi
+      oc apply -f - <<EOF
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: $NOVA_EDPM_SERVICE
+    spec:
+      dataSources:
+        - secretRef:
+            name: ${NOVA_EDPM_SERVICE}-compute-config
+        - secretRef:
+            name: nova-migration-ssh-key
+        - configMapRef:
+            name: nova-ceph-extra-config
+            optional: true
+      playbook: osp.edpm.nova
+      caCerts: combined-ca-bundle
+      edpmServiceType: nova
+      containerImageFields:
+      - NovaComputeImage
+      - EdpmIscsidImage
+    EOF
+    done
+
+- name: Create the OpenStackDataPlaneNodeSet CRs for each Nova compute cell
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ nodesets_env }}
+    {{ edpm_computes_shell_vars_src }}
+
+    for CELL in $(echo $RENAMED_CELLS); do
+      if [ "$CELL" = "cell1" ]; then
+        # Example: NOVA_EDPM_SERVICE="nova-cell1-custom"
+        NOVA_EDPM_SERVICE="nova"
+        OSDPNS="openstack"
+      else
+        NOVA_EDPM_SERVICE="nova-$CELL"
+        OSDPNS="openstack-$CELL"
+      fi
+
+      computes=COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')[@]
+      for compute in $computes; do
+        ip=COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')[compute]
+        rm -f computes
+        cat >> computes << EOF
+        {%+ if edpm_nodes is defined +%}
+        {{ edpm_nodes }}
+        {%+ else +%}
+        ${compute}:
+          hostName: $compute
+          ansible:
+            ansibleHost: $compute
+          networks:
+          - defaultRoute: true
+            fixedIP: ${!ip}
+            name: ctlplane
+            subnetName: subnet1
+          - name: internalapi
+            subnetName: subnet1
+          - name: storage
+            subnetName: subnet1
+          - name: tenant
+            subnetName: subnet1
+        {%+ endif +%}
+        EOF
+        {%+ if edpm_nodes is defined +%}
+        break
+        {%+ endif +%}
+      done
+
+      cat > nodeset-${CELL}.yaml <<EOF
     apiVersion: dataplane.openstack.org/v1beta1
     kind: OpenStackDataPlaneNodeSet
     metadata:
-      name: openstack
+      name: $OSDPNS
     spec:
       tlsEnabled: {{ enable_tlse }}
       networkAttachments:
@@ -170,7 +255,6 @@
           value: "True"
         - name: ANSIBLE_VERBOSITY
           value: "{{ dataplane_verbosity | default ('3') }}"
-      nodes: {{ edpm_nodes }}
       nodeTemplate:
         ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
         ansible:
@@ -227,19 +311,28 @@
 
             # serve as a OVN gateway
             edpm_enable_chassis_gw: true
+      nodes:
     EOF
+      # complete the generated nodes lists
+      cat computes >> nodeset-${CELL}.yaml
+    done
 
+# FIXME: missing docs coverage
 - name: check ovs external-ids with os-diff before deployment
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ os_diff_dir }}/os-diff diff {{ os_diff_data_dir }}/tripleo/ovs_external_ids/standalone/ovs_external_ids.json edpm-crd.yaml --crd --service ovs_external_ids -f ${PWD}/{{ os_diff_dir }}/config.yaml
 
-- name: deploy dataplane
+- name: deploy the OpenStackDataPlaneNodeSet CRs for each Nova compute cell
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    cat edpm-crd.yaml | oc apply -f -
+    {{ cells_env }}
+
+    for CELL in $(echo $RENAMED_CELLS); do
+      oc apply -f nodeset-${CELL}.yaml
+    done
 
 # TODO: Apply the ceph backend config for Cinder in the original openstack CR, via kustomize
 - name: prepare adopted EDPM workloads to use Ceph backend for Cinder, if configured so
@@ -250,36 +343,49 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch osdpns/openstack --type=merge --patch "
-    spec:
-      services:
-        - bootstrap
-        - download-cache
-        - configure-network
-        - validate-network
-        - install-os
-        - configure-os
-        - run-os
-        - reboot-os
-        - install-certs
-        - ceph-hci-pre
-        - ceph-client
-        - libvirt
-        - nova
-        - ovn
-        - neutron-metadata
-      nodeTemplate:
-        extraMounts:
-        - extraVolType: Ceph
-          volumes:
-          - name: ceph
-            secret:
-              secretName: ceph-conf-files
-          mounts:
-          - name: ceph
-            mountPath: "/etc/ceph"
-            readOnly: true
-    "
+    {{ cells_env }}
+
+    for CELL in $(echo $RENAMED_CELLS); do
+      if [ "$CELL" = "cell1" ]; then
+        # Example: NOVA_EDPM_SERVICE="nova-cell1-custom"
+        NOVA_EDPM_SERVICE="nova"
+        OSDPNS="openstack"
+      else
+        NOVA_EDPM_SERVICE="nova-$CELL"
+        OSDPNS="openstack-$CELL"
+      fi
+
+      oc patch osdpns/$OSDPNS --type=merge --patch "
+      spec:
+        services:
+          - repo-setup
+          - download-cache
+          - bootstrap
+          - configure-network
+          - validate-network
+          - install-os
+          - configure-os
+          - run-os
+          - reboot-os
+          - install-certs
+          - ceph-client
+          - libvirt
+          - $NOVA_EDPM_SERVICE
+          - ovn
+          - neutron-metadata
+        nodeTemplate:
+          extraMounts:
+          - extraVolType: Ceph
+            volumes:
+            - name: ceph
+              secret:
+                secretName: ceph-conf-files
+            mounts:
+            - name: ceph
+              mountPath: "/etc/ceph"
+              readOnly: true
+      "
+    done
 
 - name: set neutron-sriov-nic-agent configuration in the OpenStackDataPlaneNodeSet CR
   no_log: "{{ use_no_log }}"
@@ -343,14 +449,15 @@
       ansible.builtin.shell: |
         {{ shell_header }}
         {{ oc_header }}
+        {{ nodesets_env }}
+
         oc apply -f - <<EOF
         apiVersion: dataplane.openstack.org/v1beta1
         kind: OpenStackDataPlaneDeployment
         metadata:
           name: openstack-pre-adoption
         spec:
-          nodeSets:
-          - openstack
+          nodeSets: $NODESETS
           servicesOverride:
           - pre-adoption-validation
         EOF
@@ -406,14 +513,15 @@
       ansible.builtin.shell: |
         {{ shell_header }}
         {{ oc_header }}
+        {{ nodesets_env }}
+
         oc apply -f - <<EOF
         apiVersion: dataplane.openstack.org/v1beta1
         kind: OpenStackDataPlaneDeployment
         metadata:
           name: tripleo-cleanup
         spec:
-          nodeSets:
-          - openstack
+          nodeSets: $NODESETS
           servicesOverride:
           - tripleo-cleanup
         EOF
@@ -453,14 +561,15 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
+    {{ nodesets_env }}
+
     oc apply -f - <<EOF
     apiVersion: dataplane.openstack.org/v1beta1
     kind: OpenStackDataPlaneDeployment
     metadata:
       name: openstack
     spec:
-      nodeSets:
-      - openstack
+      nodeSets: $NODESETS
     EOF
 
 - name: wait for dataplane node set to be ready

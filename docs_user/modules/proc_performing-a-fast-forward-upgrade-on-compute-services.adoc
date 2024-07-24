@@ -4,7 +4,7 @@
 
 Compute services rolling upgrade cannot be done during adoption,
 there is in a lock-step with Compute control plane services, because those are managed independently by data plane ansible and Kubernetes Operators.
-The Compute service operator and OpenStack Operator ensure upgrading
+{compute_service_first_ref} operator and OpenStack Operator ensure upgrading
 is done independently of each other, by configuring
 `[upgrade_levels]compute=auto` for Compute services. Compute control plane
 services apply the change right after custom resource (CR) is patched. Compute data plane services will catch up the same config change with ansible deployment later on.
@@ -13,13 +13,37 @@ services apply the change right after custom resource (CR) is patched. Compute d
 //Additional orchestration happening around the FFU workarounds
 //configuration for Compute data plane service is a subject of future changes. kgilliga: We don't comment on future changes downstream.
 
-.Procedure
+. Prerequisites
 
-. Wait for cell1 Compute data plane services version updated (it may take some time):
+* Define the shell variables necessary to apply the fast-forward upgrade commands, for each Nova compute cell.
 +
 ----
-oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
+DEFAULT_CELL_NAME="cell3"
+RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
+
+declare -A PODIFIED_DB_ROOT_PASSWORD
+for CELL in $(echo $RENAMED_CELLS); do
+  PODIFIED_DB_ROOT_PASSWORD[$CELL]=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+done
+----
++
+The `default` cell takes a new name from `DEFAULT_CELL_NAME`.
+In a multi-cell adoption scenario, it may retain its original 'default' name as well.
+
+A standalone TripleO only creates a 'default' cell, which should be the only `CELLS` value for such a case
+(and `DEFAULT_CELL_NAME` should be `cell1`).
+
+Note that in this guide, the cells databases are using the same password defined in `osp-secret`.
+
+.Procedure
+
+. Wait for Compute data plane services version updated for all cells (it may take some time):
++
+----
+for CELL in $(echo $RENAMED_CELLS); do
+  oc exec openstack-${CELL}-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD[$CELL] \
     -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
+done
 ----
 +
 The above query should return an empty result as a completion criterion.
@@ -38,7 +62,7 @@ spec:
             customServiceConfig: |
               [workarounds]
               disable_compute_service_check_for_ffu=false
-        cell1:
+        cell1: # Copy this data into new sections defining the needed cells!
           metadataServiceTemplate:
             customServiceConfig: |
               [workarounds]
@@ -47,6 +71,7 @@ spec:
             customServiceConfig: |
               [workarounds]
               disable_compute_service_check_for_ffu=false
+        # cell2: ...
       apiServiceTemplate:
         customServiceConfig: |
           [workarounds]
@@ -61,6 +86,8 @@ spec:
           disable_compute_service_check_for_ffu=false
 '
 ----
++
+Copy `cellTemplates.cell1` data into new sections defining the needed cells.
 
 . Wait for Compute control plane services' CRs to be ready:
 +
@@ -96,7 +123,7 @@ spec:
 EOF
 ----
 
-. Wait for Compute data plane service to be ready:
+. Wait for Compute data plane services to be ready for all cells:
 +
 ----
 oc wait --for condition=Ready openstackdataplanedeployment/openstack-nova-compute-ffu --timeout=5m
@@ -132,5 +159,7 @@ ${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |' && \
 ----
 
 [NOTE]
+====
 After the data plane adoption, the hosts continue to run Red Hat Enterprise Linux (RHEL)
 {rhel_prev_ver}. To take advantage of RHEL {rhel_curr_ver}, perform a minor update procedure after finishing the adoption procedure.
+====

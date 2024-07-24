@@ -1,4 +1,2 @@
 edpm_node_hostname: standalone.localdomain
 mariadb_copy_tmp_dir: tmp/mariadb
-source_galera_members: |-
-  ["{{ edpm_node_hostname }}"]={{ source_mariadb_ip|default(external_mariadb_ip) }}
