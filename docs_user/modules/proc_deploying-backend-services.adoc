@@ -46,7 +46,7 @@ ADMIN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AdminPassword:
 ----
 * Set the service password variables to match the original deployment.
 Database passwords can differ in the control plane environment, but
-synchronizing the service account passwords is required.
+you must synchronize the service account passwords.
 +
 For example, in developer environments with {OpenStackPreviousInstaller} Standalone, the passwords can be extracted:
 +
@@ -148,8 +148,7 @@ spec:
       enabled: true
 ----
 
-. If your {OpenStackShort} environment does not enable TLS-e, in the
-`spec:tls`` section, set the `enabled` parameter to `false`:
+. If you did not enable TLS-e, in the `spec:tls`` section, set the `enabled` parameter to `false`:
 +
 [source,yaml]
 ----
