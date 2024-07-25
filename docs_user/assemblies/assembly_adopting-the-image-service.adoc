@@ -8,8 +8,8 @@ To adopt the {image_service_first_ref} you patch an existing `OpenStackControlPl
 
 The {image_service} adoption is complete if you see the following results:
 
-* The `GlanceAPI` service up and running. 
-* The {identity_service} endpoints are updated, and the same back end of the source cloud is available. 
+* The `GlanceAPI` service up and running.
+* The {identity_service} endpoints are updated, and the same back end of the source cloud is available.
 
 .Prerequisites
 
