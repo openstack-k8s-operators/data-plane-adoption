@@ -47,14 +47,9 @@ SOURCE_GALERA_MEMBERS=(
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
-* Prepare the MariaDB copy directory and the adoption helper pod:
+* Prepare the MariaDB adoption helper pod:
 
-. Create a temporary folder to store the adoption helper pod. Choose storage requests that fit the MySQL database size:
-+
-----
-$ mkdir ~/adoption-db
-$ cd ~/adoption-db
-----
+. Create a temporary volume claim and a pod for the database data copy. Edit the volume claim storage request if necessary, to give it enough space for the overcloud databases:
 +
 [source,yaml]
 ----
