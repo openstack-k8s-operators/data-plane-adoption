@@ -80,3 +80,12 @@
     OS_TOKEN={{ before_adoption_token.stdout }}
     alias openstack="oc exec -t openstackclient -- openstack"
     ${BASH_ALIASES[openstack]} endpoint list
+
+- name: Verify that pre-adoption credential stills the same
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+    ${BASH_ALIASES[openstack]} credential show {{ before_adoption_credential.stdout }} -f value -c blob
+  register: after_adoption_credential
+  failed_when: after_adoption_credential.stdout != 'test'
