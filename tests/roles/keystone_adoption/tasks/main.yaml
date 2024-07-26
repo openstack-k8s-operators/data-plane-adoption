@@ -108,4 +108,3 @@
     ${BASH_ALIASES[openstack]} credential show {{ before_adoption_credential.stdout }} -f value -c blob
   register: after_adoption_credential
   failed_when: after_adoption_credential.stdout != 'test'
-
