@@ -2,7 +2,7 @@
 
 = Adopting the {image_service} that is deployed with an NFS Ganesha back end
 
-Adopt the {image_service_first_ref} that you deployed with an NFS Ganesha back end. To complete the following procedure, ensure that your environment meets the following criteria: 
+Adopt the {image_service_first_ref} that you deployed with an NFS Ganesha back end. To complete the following procedure, ensure that your environment meets the following criteria:
 
 * The Storage network is propagated to the {rhos_prev_long} ({OpenStackShort}) control plane.
 * The {image_service} can reach the Storage network and connect to the nfs-server through the port `2049`.
@@ -10,7 +10,7 @@ Adopt the {image_service_first_ref} that you deployed with an NFS Ganesha back e
 .Prerequisites
 
 * You have completed the previous adoption steps.
-* In the source cloud, verify the NFS Ganesha parameters that the overcloud uses to configure the {image_service} back end. Specifically, in your{OpenStackPreviousInstaller} heat templates, find the following variables that override the default content that is provided by the `glance-nfs.yaml` file in the 
+* In the source cloud, verify the NFS Ganesha parameters that the overcloud uses to configure the {image_service} back end. Specifically, in your{OpenStackPreviousInstaller} heat templates, find the following variables that override the default content that is provided by the `glance-nfs.yaml` file in the
 `/usr/share/openstack-tripleo-heat-templates/environments/storage` directory:
 +
 ----
