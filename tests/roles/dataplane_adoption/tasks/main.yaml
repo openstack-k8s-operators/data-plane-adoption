@@ -163,6 +163,7 @@
         {%+ endif +%}
         - ovn
         - neutron-metadata
+        - telemetry
       env:
         - name: ANSIBLE_CALLBACKS_ENABLED
           value: "profile_tasks"
@@ -268,6 +269,7 @@
         - nova
         - ovn
         - neutron-metadata
+        - telemetry
       nodeTemplate:
         extraMounts:
         - extraVolType: Ceph
