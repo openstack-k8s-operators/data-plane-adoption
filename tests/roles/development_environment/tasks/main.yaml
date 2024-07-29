@@ -30,7 +30,7 @@
   no_log: "{{ use_no_log }}"
   environment:
     INSTALL_YAMLS_PATH: "{{ install_yamls_path }}"
-    CONTROLLER1_SSH="{{ controller1_ssh }}"
+    CONTROLLER1_SSH: "{{ controller1_ssh }}"
     OS_CLOUD_NAME: "{{ os_cloud_name }}"
   ansible.builtin.shell:
     cmd: |
