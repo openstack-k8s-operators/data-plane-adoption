@@ -30,14 +30,12 @@
   no_log: "{{ use_no_log }}"
   environment:
     INSTALL_YAMLS_PATH: "{{ install_yamls_path }}"
-    EDPM_PRIVATEKEY_PATH: "{{ edpm_privatekey_path }}"
-    OS_CLOUD_IP: "{{ standalone_ip | default(edpm_node_ip) }}"
+    CONTROLLER1_SSH="{{ controller1_ssh }}"
     OS_CLOUD_NAME: "{{ os_cloud_name }}"
-    OS_USER: "{{ os_user }}"
   ansible.builtin.shell:
     cmd: |
       {{ shell_header }}
-      alias openstack="ssh -i {{ edpm_privatekey_path }} ${OS_USER}@${OS_CLOUD_IP} OS_CLOUD=${OS_CLOUD_NAME} openstack"
+      alias openstack="${CONTROLLER1_SSH} OS_CLOUD=${OS_CLOUD_NAME} openstack"
       ${BASH_ALIASES[openstack]} token issue -f value -c id
   register: before_adoption_token
 
