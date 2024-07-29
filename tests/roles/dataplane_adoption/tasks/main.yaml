@@ -149,7 +149,6 @@
       services:
         - bootstrap
         - download-cache
-        - configure-network
         - validate-network
         - install-os
         - configure-os
@@ -256,7 +255,6 @@
       services:
         - bootstrap
         - download-cache
-        - configure-network
         - validate-network
         - install-os
         - configure-os
