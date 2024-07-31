@@ -46,13 +46,13 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod --selector=component=cinder-scheduler -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
-    oc get pod --selector=component=cinder-api -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
-    [ -z "{{ cinder_volume_backend }}" ] || oc get pod --selector=component=cinder-volume -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
-    [ -z "{{ cinder_backup_backend }}" ] || oc get pod --selector=component=cinder-backup -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc wait pod --for condition=Ready -l component=cinder-scheduler
+    oc wait pod --for condition=Ready -l component=cinder-api
+    [ -z "{{ cinder_volume_backend }}" ] || oc wait pod --for condition=Ready -l component=cinder-volume
+    [ -z "{{ cinder_backup_backend }}" ] || oc wait pod --for condition=Ready -l component=cinder-backup
   register: cinder_running_result
   until: cinder_running_result is success
-  retries: 180
+  retries: 60
   delay: 2
 
 # Give time for volume and backup services to initialize drivers, otherwise they
