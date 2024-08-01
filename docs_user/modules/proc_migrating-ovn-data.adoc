@@ -8,8 +8,9 @@ Migrate the data in the OVN databases from the original {rhos_prev_long} deploym
 
 * The `OpenStackControlPlane` resource is created.
 * `NetworkAttachmentDefinition` custom resources (CRs) for the original cluster are defined. Specifically, the `internalapi` network is defined.
-* Ensure that the original {networking_first_ref} and OVN `northd` are not running.
-* Ensure that there is network routability between the control plane services and the adopted cluster.
+* The original {networking_first_ref} and OVN `northd` are not running.
+* There is network routability between the control plane services and the adopted cluster.
+* The cloud is migrated to the Modular Layer 2 plug-in with Open Virtual Networking (ML2/OVN) mechanism driver.
 * Define the following shell variables. Replace the example values with values that are correct for your environment:
 +
 ----
@@ -137,7 +138,7 @@ spec:
           storageRequest: 10G
           networkAttachment: internalapi
       ovnNorthd:
-        replicas: 0
+        replicas: 1
       ovnController:
         networkAttachment: tenant
         nodeSelector:
@@ -210,7 +211,7 @@ spec:
 '
 ----
 
-. Optional: To run OVN gateway services on {OpenShiftShort} nodes, enable the control plane `ovn-controller` service:
+. If you are running OVN gateway services on {OpenShiftShort} nodes, enable the control plane `ovn-controller` service:
 +
 [source,yaml]
 ----
