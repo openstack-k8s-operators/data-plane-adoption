@@ -157,12 +157,12 @@
         - run-os
         - reboot-os
         - install-certs
+        - ovn
+        - neutron-metadata
         {%+ if compute_adoption|bool +%}
         - libvirt
         - nova
         {%+ endif +%}
-        - ovn
-        - neutron-metadata
         - telemetry
       env:
         - name: ANSIBLE_CALLBACKS_ENABLED
@@ -259,16 +259,16 @@
         - configure-network
         - validate-network
         - install-os
+        - ceph-hci-pre
         - configure-os
+        - ssh-known-hosts
         - run-os
         - reboot-os
-        - install-certs
-        - ceph-hci-pre
         - ceph-client
-        - libvirt
-        - nova
         - ovn
         - neutron-metadata
+        - libvirt
+        - nova
         - telemetry
       nodeTemplate:
         extraMounts:
