@@ -129,7 +129,7 @@ done
 $ oc rsh mariadb-copy-data mysql -h "${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" -e "SHOW databases;"
 ----
 
-. Run `mysqlcheck` on the original database to check for things that are not OK:
+. Check that `mysqlcheck` had no errors:
 +
 ----
 . ~/.source_cloud_exported_variables
