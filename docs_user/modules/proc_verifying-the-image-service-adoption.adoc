@@ -17,7 +17,7 @@ If no line appears, then the configuration is correct.
 . Inspect the resulting {image_service} pods:
 +
 ----
-GLANCE_POD=`oc get pod |grep glance-default-external-0 | cut -f 1 -d' '`
+GLANCE_POD=`oc get pod |grep glance-default | cut -f 1 -d' ' | head -n 1`
 oc exec -t $GLANCE_POD -c glance-api -- cat /etc/glance/glance.conf.d/02-config.conf
 
 [DEFAULT]
@@ -50,7 +50,6 @@ ceph.conf
 
 | 569ed81064f84d4a91e0d2d807e4c1f1 | regionOne | glance       | image        | True    | internal  | http://glance-internal-openstack.apps-crc.testing   |
 | 5843fae70cba4e73b29d4aff3e8b616c | regionOne | glance       | image        | True    | public    | http://glance-public-openstack.apps-crc.testing     |
-| 709859219bc24ab9ac548eab74ad4dd5 | regionOne | glance       | image        | True    | admin     | http://glance-admin-openstack.apps-crc.testing      |
 ----
 
 . Check that the images that you previously listed in the source cloud are available in the adopted service:

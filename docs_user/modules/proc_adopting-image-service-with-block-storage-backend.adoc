@@ -2,7 +2,7 @@
 
 = Adopting the {image_service} that is deployed with a {block_storage} back end
 
-Adopt the {image_service_first_ref} that you deployed with a {block_storage_first_ref} back end in the {rhos_prev_long} ({OpenStackShort}) environment. The control plane `glanceAPI` instance is deployed with the following configuration:
+Adopt the {image_service_first_ref} that you deployed with a {block_storage_first_ref} back end in the {rhos_prev_long} ({OpenStackShort}) environment. The control plane `glanceAPI` instance is deployed with the following configuration. You use this configuration in the patch manifest that deploys the {image_service} with the block storage back end:
 
 ----
 ..
@@ -31,8 +31,7 @@ spec
 
 .Procedure
 
-. Write the patch manifest into a file, for example `glance_cinder.patch`.
-For example:
+. Create a new file, for example `glance_cinder.patch`, and include the following content:
 +
 ----
 spec:
@@ -41,6 +40,7 @@ spec:
     apiOverride:
       route: {}
     template:
+      secret: osp-secret
       databaseInstance: openstack
       storage:
         storageRequest: 10G

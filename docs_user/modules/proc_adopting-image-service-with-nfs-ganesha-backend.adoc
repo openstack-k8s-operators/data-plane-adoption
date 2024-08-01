@@ -146,7 +146,7 @@ Mounts:
 ...
 ----
 
-* Check the mountpoint:
+* Check that the mountpoint that points to `/var/lib/glance/images` is mapped to the expected `nfs server ip` and `nfs path`:
 +
 ----
 $ oc rsh -c glance-api glance-default-single-0
