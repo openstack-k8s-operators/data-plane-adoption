@@ -44,7 +44,7 @@
                 strategy: persistent
                 retention: 24h
                 persistent:
-                  pvcStorageClass: "local-storage"
+                  pvcStorageClass: local-storage
                   pvcStorageRequest: 20G
     '
 
