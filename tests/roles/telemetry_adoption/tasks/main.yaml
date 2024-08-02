@@ -45,7 +45,7 @@
                 retention: 24h
                 persistent:
                   pvcStorageClass: local-storage
-                  pvcStorageRequest: 20G
+                  pvcStorageRequest: 10G
     '
 
 - name: wait for alertmanager metric storage to start up
