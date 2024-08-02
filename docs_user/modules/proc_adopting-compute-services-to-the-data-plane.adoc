@@ -261,6 +261,7 @@ spec:
     - nova
     - ovn
     - neutron-metadata
+    - telemetry
   env:
     - name: ANSIBLE_CALLBACKS_ENABLED
       value: "profile_tasks"
@@ -411,21 +412,22 @@ EOF
 oc patch osdpns/openstack --type=merge --patch "
 spec:
   services:
-    - repo-setup
-    - download-cache
     - bootstrap
+    - download-cache
     - configure-network
     - validate-network
     - install-os
     - configure-os
+    - ssh-known-hosts
     - run-os
     - reboot-os
-    - install-certs
     - ceph-client
-    - libvirt
-    - nova
+    - install-certs
     - ovn
     - neutron-metadata
+    - libvirt
+    - nova
+    - telemetry
   nodeTemplate:
     extraMounts:
     - extraVolType: Ceph

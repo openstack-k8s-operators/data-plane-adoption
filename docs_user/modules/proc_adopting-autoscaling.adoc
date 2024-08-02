@@ -1,6 +1,6 @@
 [id="adopting-autoscaling_{context}"]
 
-= Adopting autoscaling
+= Adopting Autoscaling services
 
 Adopting autoscaling means that an existing `OpenStackControlPlane` custom resource (CR), where Aodh services are supposed to be disabled, should be patched to start the service with the configuration parameters provided by the source environment.
 
@@ -20,48 +20,22 @@ should be already adopted.
 . Patch the `OpenStackControlPlane` CR to deploy autoscaling services:
 +
 ----
-cat << EOF > aodh_patch.yaml
+oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
-  autoscaling:
+  telemetry:
     enabled: true
-    prometheus:
-      deployPrometheus: false
-    aodh:
-      customServiceConfig: |
-        [DEFAULT]
-        debug=true
-      secret: osp-secret
-ifeval::["{build}" != "downstream"]
-      apiImage: "quay.io/podified-antelope-centos9/openstack-aodh-api:current-podified"
-      evaluatorImage: "quay.io/podified-antelope-centos9/openstack-aodh-evaluator:current-podified"
-      notifierImage: "quay.io/podified-antelope-centos9/openstack-aodh-notifier:current-podified"
-      listenerImage: "quay.io/podified-antelope-centos9/openstack-aodh-listener:current-podified"
-endif::[]
-ifeval::["{build}" == "downstream"]
-      apiImage: "registry.redhat.io/rhosp-dev-preview/openstack-aodh-api-rhel9:18.0"
-      evaluatorImage: "registry.redhat.io/rhosp-dev-preview/openstack-aodh-evaluator-rhel9:18.0"
-      notifierImage: "registry.redhat.io/rhosp-dev-preview/openstack-aodh-notifier-rhel9:18.0"
-      listenerImage: "registry.redhat.io/rhosp-dev-preview/openstack-aodh-listener-rhel9:18.0"
-endif::[]
-      passwordSelectors:
-      databaseAccount: aodh
-      databaseInstance: openstack
-      memcachedInstance: memcached
-EOF
-----
-
-. Optional: If you have previously backed up your {OpenStackShort} services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct. This will producre the difference between both ini configuration files:
-+
-----
-os-diff diff /tmp/collect_tripleo_configs/aodh/etc/aodh/aodh.conf aodh_patch.yaml --crd
-----
-+
-For more information, see xref:reviewing-the-openstack-control-plane-configuration_{context}[Reviewing the {rhos_prev_long} control plane configuration].
-
-. Patch the `OpenStackControlPlane` CR to deploy Aodh services:
-+
-----
-oc patch openstackcontrolplane openstack --type=merge --patch-file aodh_patch.yaml
+    template:
+      autoscaling:
+        enabled: true
+        aodh:
+          passwordSelector:
+            aodhService: AodhPassword
+          databaseAccount: aodh
+          databaseInstance: openstack
+          secret: osp-secret
+          serviceUser: aodh
+        heatInstance: heat
+'
 ----
 
 .Verification
@@ -69,7 +43,7 @@ oc patch openstackcontrolplane openstack --type=merge --patch-file aodh_patch.ya
 . If autoscaling services are enabled, inspect Aodh pods:
 +
 ----
-AODH_POD=`oc get pods -l service=aodh | tail -n 1 | cut -f 1 -d' '`
+AODH_POD=`oc get pods -l service=aodh -n openstack | tail -n 1 | cut -f 1 -d' '`
 oc exec -t $AODH_POD -c aodh-api -- cat /etc/aodh/aodh.conf
 ----
 
@@ -77,30 +51,34 @@ oc exec -t $AODH_POD -c aodh-api -- cat /etc/aodh/aodh.conf
 +
 ----
 openstack endpoint list | grep aodh
-| 6a805bd6c9f54658ad2f24e5a0ae0ab6 | regionOne | aodh      | network      | True    | public    | http://aodh-public-openstack.apps-crc.testing  |
-| b943243e596847a9a317c8ce1800fa98 | regionOne | aodh      | network      | True    | internal  | http://aodh-internal.openstack.svc:9696        |
-| f97f2b8f7559476bb7a5eafe3d33cee7 | regionOne | aodh      | network      | True    | admin     | http://192.168.122.99:9696                     |
+| d05d120153cd4f9b8310ac396b572926 | regionOne | aodh  | alarming  | True    | internal  | http://aodh-internal.openstack.svc:8042  |
+| d6daee0183494d7a9a5faee681c79046 | regionOne | aodh  | alarming  | True    | public    | http://aodh-public.openstack.svc:8042    |
 ----
 
-. Create sample resources. You can test whether you can create alarms:
+.Autoscaling template adoption
+
+* `PrometheusAlarm` alarm type must be used instead of `GnocchiAggregationByResourcesAlarm`
+
+* Create Aodh alarms of type prometheus
 +
 ----
-openstack alarm create \
---name low_alarm \
---type gnocchi_resources_threshold \
---metric cpu \
---resource-id b7ac84e4-b5ca-4f9e-a15c-ece7aaf68987 \
---threshold 35000000000 \
---comparison-operator lt \
---aggregation-method rate:mean \
---granularity 300 \
+openstack alarm create --name high_cpu_alarm \
+--type prometheus \
+--query "(rate(ceilometer_cpu{resource_name=~'cirros'})) * 100" \
+--alarm-action 'log://' \
+--granularity 15 \
 --evaluation-periods 3 \
---alarm-action 'log:\\' \
---ok-action 'log:\\' \
---resource-type instance
+--comparison-operator gt \
+--threshold 7000000000
 ----
 
-//=== (TODO)
-
-//* Include adopted autoscaling heat templates
-//* Include adopted Aodh alarm create commands of type prometheus
+* Verify the state of alarm
++
+----
+openstack alarm list
++--------------------------------------+------------+------------------+-------------------+----------+
+| alarm_id                             | type       | name             | state  | severity | enabled  |
++--------------------------------------+------------+------------------+-------------------+----------+
+| 209dc2e9-f9d6-40e5-aecc-e767ce50e9c0 | prometheus | prometheus_alarm |   ok   |    low   |   True   |
++--------------------------------------+------------+------------------+-------------------+----------+
+----

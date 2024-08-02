@@ -1,0 +1,110 @@
+- name: deploy cluster-observability-operator
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc create -f - <<EOF
+    apiVersion: operators.coreos.com/v1alpha1
+    kind: Subscription
+    metadata:
+      name: cluster-observability-operator
+      namespace: openshift-operators
+    spec:
+      channel: development
+      installPlanApproval: Automatic
+      name: cluster-observability-operator
+      source: redhat-operators
+      sourceNamespace: openshift-marketplace
+    EOF
+
+- name: wait for cluster-observability-operator installation to succeed
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait --for jsonpath="{.status.phase}"=Succeeded csv --namespace=openshift-operators -l operators.coreos.com/cluster-observability-operator.openshift-operators
+  register: coo_install_result
+  until: coo_install_result is success
+  retries: 60
+  delay: 2
+
+- name: deploy metric storage
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      telemetry:
+        enabled: true
+        template:
+          metricStorage:
+            enabled: true
+            monitoringStack:
+              alertingEnabled: true
+              scrapeInterval: 30s
+              storage:
+                strategy: persistent
+                retention: 24h
+                persistent:
+                  pvcStorageRequest: 20G
+    '
+
+- name: wait for alertmanager metric storage to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=alertmanager=metric-storage -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: alertmanager_running_result
+  until: alertmanager_running_result is success
+  retries: 60
+  delay: 2
+
+- name: wait for prometheus metric storage to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=prometheus=metric-storage -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: prometheus_running_result
+  until: prometheus_running_result is success
+  retries: 60
+  delay: 2
+
+- name: deploy podified Ceilometer
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      telemetry:
+        enabled: true
+        template:
+          ceilometer:
+            passwordSelector:
+              ceilometerService: CeilometerPassword
+            enabled: true
+            secret: osp-secret
+            serviceUser: ceilometer
+    '
+
+- name: wait for Ceilometer to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pod --selector=service=ceilometer -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+  register: ceilometer_running_result
+  until: ceilometer_running_result is success
+  retries: 60
+  delay: 2
+
+- name: include logging
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      telemetry:
+        template:
+          logging:
+            enabled: false
+            ipaddr: 172.17.0.80
+            port: 10514
+            cloNamespace: openshift-logging
+    '
