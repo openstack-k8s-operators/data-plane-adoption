@@ -42,11 +42,12 @@ ceph.conf
 . Check that the service is active, and that the endpoints are updated in the {OpenStackShort} CLI:
 +
 ----
-(openstack)$ service list | grep image
+$ oc rsh openstackclient -n openstackclient
+$ openstack service list | grep image
 
 | fc52dbffef36434d906eeb99adfc6186 | glance    | image        |
 
-(openstack)$ endpoint list | grep image
+$ openstack endpoint list | grep image
 
 | 569ed81064f84d4a91e0d2d807e4c1f1 | regionOne | glance       | image        | True    | internal  | http://glance-internal-openstack.apps-crc.testing   |
 | 5843fae70cba4e73b29d4aff3e8b616c | regionOne | glance       | image        | True    | public    | http://glance-public-openstack.apps-crc.testing     |
@@ -55,7 +56,7 @@ ceph.conf
 . Check that the images that you previously listed in the source cloud are available in the adopted service:
 +
 ----
-(openstack)$ image list
+$ openstack image list
 +--------------------------------------+--------+--------+
 | ID                                   | Name   | Status |
 +--------------------------------------+--------+--------+

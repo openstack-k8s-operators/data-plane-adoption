@@ -17,15 +17,11 @@ To complete the {image_service} adoption, ensure that your environment meets the
 * You have a Single Node OpenShift or OpenShift Local that is running in the {OpenShift} cluster.
 * Optional: You can reach an internal/external `Ceph` cluster by both `crc` and {OpenStackPreviousInstaller}.
 
-ifeval::["{build}" != "downstream"]
-The {image_service} adoption follows the same pattern as the {identity_service_first_ref} adoption. For more information, see xref:adopting-the-identity-service_adopt-control-plane[Adopting the {identity_service}]
-endif::[]
-
 include::../modules/proc_adopting-image-service-with-object-storage-backend.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-image-service-with-block-storage-backend.adoc[leveloffset=+1]
 
-include::../modules/proc_adopting-image-service-with-nfs-ganesha-backend.adoc[leveloffset=+1]
+include::../modules/proc_adopting-image-service-with-nfs-backend.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-image-service-with-ceph-backend.adoc[leveloffset=+1]
 
