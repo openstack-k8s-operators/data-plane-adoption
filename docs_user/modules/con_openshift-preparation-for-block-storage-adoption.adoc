@@ -2,18 +2,12 @@
 
 = {OpenShift} preparation for {block_storage} adoption
 
-Before deploying {rhos_prev_long} ({OpenStackShort}) in {OpenShift}, you must ensure that the networks are ready, that you have decided the node selection, and also make sure any necessary changes to the {OpenShiftShort} nodes have been made. For {block_storage_first_ref} volume and backup services all these 3 must be carefully considered.
+Before you deploy {rhos_prev_long} ({OpenStackShort}) in {OpenShift}, ensure that the networks are ready, that you decided which {OpenShiftShort} nodes to restrict, and that you made any necessary changes to the {OpenShiftShort} nodes. 
 
 Node Selection::
-You might need, or want, to restrict the {OpenShiftShort} nodes where {block_storage} volume and
-backup services can run.
+You might need to restrict the {OpenShiftShort} nodes where the {block_storage} volume and backup services can run.
 +
-The best example of when you need to do node selection for a specific {block_storage} is when you deploy the {block_storage} with the LVM driver. In that scenario, the
-LVM data where the volumes are stored only exists in a specific host, so you
-need to pin the Block Storage-volume service to that specific {OpenShiftShort} node. Running
-the service on any other {OpenShiftShort} node would not work.  Since `nodeSelector`
-only works on labels, you cannot use the {OpenShiftShort} host node name to restrict
-the LVM backend and you need to identify it using a unique label, an existing label, or new label:
+An example of when you need to restrict nodes for a specific {block_storage} is when you deploy the {block_storage} with the LVM driver. In that scenario, the LVM data where the volumes are stored only exists in a specific host, so you need to pin the Block Storage-volume service to that specific {OpenShiftShort} node. Running the service on any other {OpenShiftShort} node does not work.  Since `nodeSelector` only works on labels, you cannot use the {OpenShiftShort} host node name to restrict the LVM back end. You need to identify the LVM back end by using a unique label, an existing label, or new label:
 +
 ----
 $ oc label nodes worker0 lvm=cinder-volumes
@@ -38,21 +32,11 @@ spec:
 < . . . >
 ----
 +
-As mentioned in the xref:about-node-selector_planning[About node selector], an example where you need to use labels is when using FC storage and you do not have HBA cards in all your {OpenShiftShort} nodes. In this scenario you need to restrict all the {block_storage} volume backends (not only the FC one) as well as the backup services.
+For more information about node selection, see xref:about-node-selector_planning[About node selector]. 
 +
-Depending on the {block_storage} backends, their configuration, and the usage of {block_storage},
-you can have network intensive {block_storage} volume services with lots of I/O as well as
-{block_storage} backup services that are not only network intensive but also memory and
-CPU intensive. This may be a concern for the {OpenShiftShort} human operators, and
-they may want to use the `nodeSelector` to prevent these service from
-interfering with their other {OpenShiftShort} workloads. For more information about node selection, see xref:about-node-selector_planning[About node selector].
+When you select the nodes where the {block_storage} volume is going to run, the{block_storage} volume might also use local storage when downloading a {image_service_first_ref} image for the create volume from image operation, and it can require a considerable amount of space when having concurrent operations and not using {block_storage} volume cache.
 +
-When selecting the nodes where the {block_storage} volume is going to run remember that {block_storage}-volume may also use local storage when downloading a {image_service_first_ref} image for the create volume from image operation, and it can require a considerable
-amount of space when having concurrent operations and not using {block_storage} volume
-cache.
-+
-If you do not have nodes with enough local disk space for the temporary images, you can use a remote NFS location for the images. You had to manually set this up in {OpenStackPreviousInstaller} deployments, but with operators, you can do it
-automatically using the extra volumes feature ()`extraMounts`.
+If your nodes do not have enough local disk space for temporary images, you can use a remote NFS location by setting the extra volumes feature ()`extraMounts`.
 
 Transport protocols::
 Due to the specifics of the storage transport protocols some changes may be
@@ -62,9 +46,9 @@ instructions that can serve as a guide for the different transport protocols.
 +
 Check the backend sections in your `cinder.conf` file that are listed in the
 `enabled_backends` configuration option to figure out the transport storage
-protocol used by the backend.
+protocol used by the back end.
 +
-Depending on the backend, you can find the transport protocol:
+Depending on the back end, you can find the transport protocol:
 +
 * Looking at the `volume_driver` configuration option, as it may contain the
 protocol itself: RBD, iSCSI, FC...
