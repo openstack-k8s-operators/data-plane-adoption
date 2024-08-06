@@ -3,4 +3,4 @@ prelaunch_test_instance_script: pre_launch.bash
 edpm_privatekey_path: ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa
 run_pre_adoption_validation: true
 os_cloud_name: standalone
-os_user: root
+source_osp_ssh_user: root
