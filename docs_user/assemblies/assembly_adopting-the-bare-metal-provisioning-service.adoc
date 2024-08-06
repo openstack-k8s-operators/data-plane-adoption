@@ -4,7 +4,7 @@
 
 = Adopting the Bare Metal Provisioning service
 
-Review information about your {bare_metal_first_ref} configuration and then adopt your {bare_metal} to the {rhos_long} control plane.
+Review information about {bare_metal_first_ref} configurations, and then adopt your {bare_metal} to the {rhos_long} control plane.
 
 include::../modules/con_bare-metal-provisioning-service-configurations.adoc[leveloffset=+1]
 
