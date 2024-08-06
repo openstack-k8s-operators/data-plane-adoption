@@ -6,7 +6,7 @@ Verify that you adopted the {image_service_first_ref} to the {rhos_long} {rhos_c
 
 .Procedure
 
-. Test the {image_service} from the {rhos_prev_long} command line interface (CLI). You can compare and ensure that the configuration is applied to the {image_service} pods:
+. Test the {image_service} from the {rhos_prev_long} CLI. You can compare and ensure that the configuration is applied to the {image_service} pods:
 +
 ----
 $ os-diff diff /etc/glance/glance.conf.d/02-config.conf glance_patch.yaml --frompod -p glance-api
