@@ -3,7 +3,7 @@
 ifeval::["{build}" == "downstream"]
 = Preparing the {block_storage} configuration
 
-Creating the Cinder configuration entails:
+To creating the {block_storage_first_ref} configuration, complete the following preparation tasks.
 endif::[]
 
 ifeval::["{build}" != "downstream"]
@@ -13,38 +13,20 @@ The high level explanation of the tailor-made approach is:
 endif::[]
 
 .Procedure
-. Determine what part of the configuration is generic for all the {block_storage_first_ref}
-services and remove anything that would change when deployed in {OpenShift}, like
-the `connection` in the `[dabase]` section, the `transport_url` and `log_dir` in
-`[DEFAULT]`, the whole `[coordination]` and `[barbican]` sections.  This
-configuration goes into the `customServiceConfig` (or a `Secret` and then used
-in `customServiceConfigSecrets`) at the `cinder: template:` level.
-. Determine if there's any scheduler specific configuration and add it to the
+. Determine what part of the configuration is generic for all the Block Storage
+services and remove anything that would change when deployed in {OpenShift} ({OpenShiftShort}), such as the `connection` in the `[dabase]` section, the `transport_url` and `log_dir` in the `[DEFAULT]` sections, and the whole `[coordination]` and `[barbican]` sections. This configuration goes into the `customServiceConfig`, or a `Secret` and then used in `customServiceConfigSecrets`, at the `cinder: template:` level.
+. Determine if there is any scheduler-specific configuration and add it to the
 `customServiceConfig` section in `cinder: template: cinderScheduler`.
-. Determine if there's any API specific configuration and add it to the
+. Determine if there is any API-specific configuration and add it to the
 `customServiceConfig` section in `cinder: template: cinderAPI`.
-. If you have {block_storage} backup deployed, then you get the {block_storage} backup relevant
-configuration options and add them to `customServiceConfig` (or a `Secret` and
-then used in `customServiceConfigSecrets`) at the `cinder: template:
-cinderBackup:` level. You should remove the `host` configuration in the
-`[DEFAULT]` section to facilitate supporting multiple replicas in the future.
-. Determine the individual volume backend configuration for each of the
-drivers. The configuration will not only be the specific driver section, it
-should also include the `[backend_defaults]` section and FC zoning sections is
-they are being used, because the {block_storage} operator doesn't support a
-`customServiceConfig` section global for all volume services.  Each backend
-would have its own section under `cinder: template: cinderVolumes` and the
-configuration would go in `customServiceConfig` (or a `Secret` and then used in
-`customServiceConfigSecrets`).
-. Check if any of the {block_storage} volume drivers being used requires a custom vendor
-image. If they do, find the location of the image in the vendor's instruction
-available in the https://catalog.redhat.com/software/search?target_platforms=Red%20Hat%20OpenStack%20Platform&p=1&functionalCategories=Data%20storage[{rhos_prev_long} {block_storage} ecosystem
-page]
-//kgilliga: Shouldn't this link be this instead? https://catalog.redhat.com/software/search?target_platforms=Red%20Hat%20OpenStack%20Platform&p=1&functionalCategories=Data%20storage&certified_plugin_types=Block%20Storage%20(Cinder)
-and create or modify an `OpenStackVersion` manifest to specify the custom
-image using the key from the `cinderVolumes` section.
+. If {block_storage} backup is deployed, then add the {block_storage} backup configuration options to `customServiceConfig`, or a `Secret` and then used in `customServiceConfigSecrets`, at the `cinder: template:
+cinderBackup:` level. Remove the `host` configuration in the `[DEFAULT]` section to support multiple replicas in the future.
+. Determine the individual volume back-end configuration for each of the
+drivers. The configuration is the specific driver section, and it includes the `[backend_defaults]` section and FC zoning sections if you use them. The {block_storage} operator does not support a global `customServiceConfig` section for all volume services. Each back end has its own section under `cinder: template: cinderVolumes`, and the configuration goes in `customServiceConfig` or a `Secret` and then used in `customServiceConfigSecrets`.
+. Check if any of the {block_storage} volume drivers being used require a custom vendor image. If they do, find the location of the image in the link:https://catalog.redhat.com/search?searchType=software[Red Hat Ecosystem Catalog], 
+and create or modify an `OpenStackVersion` custom resource (CR) to specify the custom image by using the key from the `cinderVolumes` section.
 +
-For example, if we had this configuration:
+For example, if you have the following configuration:
 +
 [source,yaml]
 ----
@@ -59,8 +41,7 @@ spec:
 < . . . >
 ----
 +
-Then the `OpenStackVersion` describing the container image for that backend
-would look like this:
+Then the `OpenStackVersion` CR that describes the container image for that back end looks like the following example:
 +
 [source,yaml]
 ----
@@ -74,15 +55,11 @@ spec:
       pure: registry.connect.redhat.com/purestorage/openstack-cinder-volume-pure-rhosp-18-0'
 ----
 +
-The name of the `OpenStackVersion` must match the name of your `OpenStackControlPlane`, so in your case it may be other than `openstack`.
+[NOTE]
+The name of the `OpenStackVersion` must match the name of your `OpenStackControlPlane`.
 
-. External files: Block Storage services sometimes use external files, for example for
-a custom policy, or to store credentials, or SSL CA bundles to connect to a
-storage array, and you need to make those files available to the right
-containers. To achieve this, you use `Secrets` or `ConfigMap` to store the
-information in {OpenShiftShort} and then the `extraMounts` key. For example, for the
-Ceph credentials stored in a `Secret` called `ceph-conf-files` you patch
-the top level `extraMounts` in `OpenstackControlPlane`:
+. External files: Block Storage services sometimes use external files, for example, for a custom policy, or to store credentials, or SSL CA bundles to connect to a storage array. To make those files available to the right containers, you use `Secrets` or `ConfigMap` to store the information in {OpenShiftShort} and then in the `extraMounts` key. For example, for Ceph credentials that are stored in a `Secret` called `ceph-conf-files`, you patch
+the top level `extraMounts` in the `OpenstackControlPlane` CR:
 +
 [source,yaml]
 ----
@@ -106,8 +83,8 @@ spec:
               name: ceph-conf-files
 ----
 +
-But for a service specific one, like the API policy, you do it directly
-on the service itself. In this example, you include the Block Storage API
+For a service-specific file, such as the API policy, you add the configuration 
+on the service itself. In the following example, you include the `CinderAPI`
 configuration that references the policy you are adding from a `ConfigMap`
 called `my-cinder-conf` that has a key `policy` with the contents of the
 policy:

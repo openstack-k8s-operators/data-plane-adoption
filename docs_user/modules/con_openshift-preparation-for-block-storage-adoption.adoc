@@ -2,9 +2,11 @@
 
 = {OpenShift} preparation for {block_storage} adoption
 
-Before you deploy {rhos_prev_long} ({OpenStackShort}) in {OpenShift}, ensure that the networks are ready, that you decided which {OpenShiftShort} nodes to restrict, and that you made any necessary changes to the {OpenShiftShort} nodes. 
+Before you deploy {rhos_prev_long} ({OpenStackShort}) in {OpenShift} ({OpenShiftShort}), ensure that the networks are ready, that you decide which {OpenShiftShort} nodes to restrict, and that you make any necessary changes to the {OpenShiftShort} nodes.
 
-Node Selection::
+//kgilliga: Might need to change xref:about-node-selector_planning[About node selector] to the link to RHOCP documentation if I remove this module. (https://docs.openshift.com/container-platform/4.16/nodes/scheduling/nodes-scheduler-node-selectors.html)
+
+Node selection::
 You might need to restrict the {OpenShiftShort} nodes where the {block_storage} volume and backup services can run.
 +
 An example of when you need to restrict nodes for a specific {block_storage} is when you deploy the {block_storage} with the LVM driver. In that scenario, the LVM data where the volumes are stored only exists in a specific host, so you need to pin the Block Storage-volume service to that specific {OpenShiftShort} node. Running the service on any other {OpenShiftShort} node does not work.  Since `nodeSelector` only works on labels, you cannot use the {OpenShiftShort} host node name to restrict the LVM back end. You need to identify the LVM back end by using a unique label, an existing label, or new label:
@@ -32,49 +34,36 @@ spec:
 < . . . >
 ----
 +
-For more information about node selection, see xref:about-node-selector_planning[About node selector]. 
+For more information about node selection, see xref:about-node-selector_planning[About node selector].
 +
-When you select the nodes where the {block_storage} volume is going to run, the{block_storage} volume might also use local storage when downloading a {image_service_first_ref} image for the create volume from image operation, and it can require a considerable amount of space when having concurrent operations and not using {block_storage} volume cache.
-+
+[NOTE]
+====
 If your nodes do not have enough local disk space for temporary images, you can use a remote NFS location by setting the extra volumes feature ()`extraMounts`.
-
+====
 Transport protocols::
-Due to the specifics of the storage transport protocols some changes may be
-required on the {OpenShiftShort} side, and although this is something that must be
-documented by the Vendor here wer are going to provide some generic
-instructions that can serve as a guide for the different transport protocols.
+Due to the specifics of the storage transport protocols, some changes might be
+required for {OpenShiftShort}. Use the following instructions as a guide for the different transport protocols:
 +
-Check the backend sections in your `cinder.conf` file that are listed in the
-`enabled_backends` configuration option to figure out the transport storage
-protocol used by the back end.
+* Check the back-end sections in your `cinder.conf` file that are listed in the
+`enabled_backends` configuration option to determine the transport storage
+protocol that the back end uses.
+* Depending on the back end, you can find the transport protocol by viewing the `volume_driver` or `target_protocol` configuration options.
 +
-Depending on the back end, you can find the transport protocol:
-+
-* Looking at the `volume_driver` configuration option, as it may contain the
-protocol itself: RBD, iSCSI, FC...
-* Looking at the `target_protocol` configuration option
-+
-WARNING: Any time a `MachineConfig` is used to make changes to {OpenShiftShort}
-nodes the node will reboot!!  Act accordingly.
+[WARNING]
+If you use a `MachineConfig` to make changes to {OpenShiftShort} nodes, the nodes reboot.
 
 NFS::
-There is nothing to do for NFS. {OpenShiftShort} can connect to NFS backends without
-any additional changes.
+{OpenShiftShort} connects to NFS back ends without additional changes.
 
 RBD/Ceph::
-There is nothing to do for RBD/Ceph in terms of preparing the nodes, {OpenShiftShort}
-can connect to Ceph backends without any additional changes. Credentials and
-configuration files will need to be provided to the services though.
+{OpenShiftShort} connects to Ceph back ends without additional changes. You must provide credentials and configuration files to the services.
 
 iSCSI::
-Connecting to iSCSI volumes requires that the iSCSI initiator is running on the
-{OpenShiftShort} hosts where volume and backup services are going to run, because
-the Linux Open iSCSI initiator does not currently support network namespaces, so
-you must only run 1 instance of the service for the normal {OpenShiftShort} usage, plus
-the {OpenShiftShort} CSI plugins, plus the {OpenStackShort} services.
+To connect to iSCSI volumes, the iSCSI initiator must run on the
+{OpenShiftShort} hosts where volume and backup services are going to run. The Linux Open iSCSI initiator does not support network namespaces, so you must only run one instance of the service for the normal {OpenShiftShort} usage, as well as
+the {OpenShiftShort} CSI plugins and the {OpenStackShort} services.
 +
-If you are not already running `iscsid` on the {OpenShiftShort} nodes, then you need
-to apply a `MachineConfig` similar to this one:
+If you are not already running `iscsid` on the {OpenShiftShort} nodes, then you must apply a `MachineConfig`. For example:
 +
 [source,yaml]
 ----
@@ -95,37 +84,28 @@ spec:
         name: iscsid.service
 ----
 +
-If you are using labels to restrict the nodes where the Block Storage services are running you need to use a `MachineConfigPool` as described in
-the xref:about-node-selector_planning[About node selector] to limit the effects of the
-`MachineConfig` to only the nodes where your services may run.
+If you use labels to restrict the nodes where the Block Storage services run, you must use a `MachineConfigPool` to limit the effects of the
+`MachineConfig` to only the nodes where your services might run. For more information, xref:about-node-selector_planning[About node selector].
 +
 If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
-
-//For production deployments using iSCSI volumes, we always recommend setting up
-//multipathing, please look at the <<multipathing,multipathing section>> to see
-//how to configure it. kgilliga: Commented out because multipathing module doesn't exist yet. Update with xref for beta.
++
+For production deployments that use iSCSI volumes, it is recommended to configure
+multipathing.
 
 //*TODO:* Add, or at least mention, the Nova eDPM side for iSCSI.
 
 FC::
-There is nothing to do for FC volumes to work, but the {block_storage} volume and {block_storage} backup services need to run in an {OpenShiftShort} host that has HBAs, so if there
-are nodes that do not have HBAs then you need to use labels to restrict where
-these services can run, as mentioned in xref:about-node-selector_planning[About node selector].
+The {block_storage} volume and {block_storage} backup services need to run in an {OpenShiftShort} host that has HBAs. If some nodes do not have HBAs, then you need to use labels to restrict where these services can run. For more information, see xref:about-node-selector_planning[About node selector].
 +
-This also means that for virtualized {OpenShiftShort} clusters using FC you need to
-expose the host's HBAs inside the VM.
-
-//For production deployments using FC volumes we always recommend setting up
-//multipathing, please look at the <<multipathing,multipathing section>> to see
-//how to configure it. kgilliga: Commented out because multipathing module doesn't exist yet. Update with xref for beta.
+If you have virtualized {OpenShiftShort} clusters that use FC you need to expose the host HBAs inside the virtual machine.
++
+For production deployments that use FC volumes, it is recommended to configure
+multipathing.
 
 NVMe-oF::
-Connecting to NVMe-oF volumes requires that the nvme kernel modules are loaded
-on the {OpenShiftShort} hosts.
+To connect to NVMe-oF volumes, nvme kernel modules must be loaded on the {OpenShiftShort} hosts.
 +
-If you are not already loading the `nvme-fabrics` module on the {OpenShiftShort} nodes
-where volume and backup services are going to run then you need to apply a
-`MachineConfig` similar to this one:
+If you are not already loading the `nvme-fabrics` module on the {OpenShiftShort} nodes where the volume and backup services are going to run, then you must apply a `MachineConfig`. For example:
 +
 ----
 apiVersion: machineconfiguration.openshift.io/v1
@@ -156,50 +136,41 @@ spec:
 ----
 +
 If you are using labels to restrict the nodes where Block Storage
-services are running, you need to use a `MachineConfigPool` as described in
-the xref:about-node-selector_planning[About node selector] to limit the effects of the
-`MachineConfig` to only the nodes where your services may run.
+services are running, you need to use a `MachineConfigPool` to limit the effects of the `MachineConfig` to only the nodes where your services run. For more information, see xref:about-node-selector_planning[About node selector]. 
 +
-If you are using a single node deployment to test the process,replace `worker` with `master` in the `MachineConfig`.
+If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
 +
-You are only loading the `nvme-fabrics` module because it takes care of loading
-the transport specific modules (tcp, rdma, fc) as needed.
+You only load the `nvme-fabrics` module because it loads the transport-specific modules, such as tcp, rdma, or fc, as needed.
 +
 ifeval::["{build}" != "downstream"]
-For production deployments using NVMe-oF volumes it is recommended that you use
-multipathing. For NVMe-oF volumes {OpenStackShort} uses native multipathing, called
+For production deployments that use NVMe-oF volumes, it is recommended that you use multipathing. For NVMe-oF volumes {OpenStackShort} uses native multipathing, called
 https://nvmexpress.org/faq-items/what-is-ana-nvme-multipathing/[ANA].
 endif::[]
 ifeval::["{build}" != "upstream"]
-For production deployments using NVMe-oF volumes it is recommended that you use
-multipathing. For NVMe-oF volumes {OpenStackShort} uses native multipathing, called ANA.
+For production deployments that use NVMe-oF volumes, it is recommended that you use multipathing. For NVMe-oF volumes, {OpenStackShort} uses native multipathing, called ANA.
 endif::[]
 +
-Once the {OpenShiftShort} nodes have rebooted and are loading the `nvme-fabrics` module
-you can confirm that the Operating System is configured and supports ANA by
-checking on the host:
+After the {OpenShiftShort} nodes reboot and are loading the `nvme-fabrics` module, you can confirm that the operating system is configured and supports ANA by checking the host:
 +
 ----
-cat /sys/module/nvme_core/parameters/multipath
+$ cat /sys/module/nvme_core/parameters/multipath
 ----
 +
-IMPORTANT: ANA does not use the Linux Multipathing Device Mapper, but the
-current {OpenStackShort} code requires `multipathd` on Compute nodes to be running for {compute_service_first_ref} to be able to use multipathing.
+[IMPORTANT]
+ANA does not use the Linux Multipathing Device Mapper, but
+{OpenStackShort} requires `multipathd` on Compute nodes to be running for the{compute_service_first_ref} to be able to use multipathing.
 
 //*TODO:* Add, or at least mention, the Nova eDPM side for NVMe-oF.
 
 Multipathing::
-For iSCSI and FC protocols, using multipathing is recommended, which
-has 4 parts:
+Multipathing is recommended for iSCSI and FC protocols. To configure multipathing, your perform the following tasks:
 
 * Prepare the {OpenShiftShort} hosts
 * Configure the Block Storage services
-* Prepare the {compute_service} computes
-* Configure the {compute_service} service
+* Prepare the {compute_service} nodes
+* Configure the {compute_service}
 +
-To prepare the {OpenShiftShort} hosts, you need to ensure that the Linux Multipath
-Device Mapper is configured and running on the {OpenShiftShort} hosts, and you do
-that using `MachineConfig` like this one:
+To prepare the {OpenShiftShort} hosts, ensure that the Linux Multipath Device Mapper is configured and running on the {OpenShiftShort} hosts by using `MachineConfig`. For example:
 +
 [source,yaml]
 ----
@@ -235,16 +206,13 @@ spec:
         name: multipathd.service
 ----
 +
-If you are using labels to restrict the nodes where Block Storage
-services are running you need to use a `MachineConfigPool` as described in
-the xref:about-node-selector_planning[About node selector] to limit the effects of the
-`MachineConfig` to only the nodes where your services may run.
+If use labels to restrict the nodes where Block Storage services are running, you need to use a `MachineConfigPool` to limit the effects of the `MachineConfig` to only the nodes where your services run. For more information, see xref:about-node-selector_planning[About node selector].
 +
 If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
 +
 To configure the Block Storage services to use multipathing, enable the
-`use_multipath_for_image_xfer` configuration option in all the backend sections
-and in the `[DEFAULT]` section for the backup service. This is the default in control plane deployments. Multipathing works as long as the service is running on the {OpenShiftShort} host. Do not override this option by setting `use_multipath_for_image_xfer = false`.
+`use_multipath_for_image_xfer` configuration option in all the back-end sections
+and in the `[DEFAULT]` section for the backup service. This is the default in control plane deployments. For multipathing to work, the service must run on the {OpenShiftShort} host. Do not override this option by setting `use_multipath_for_image_xfer = false`.
 
 //*TODO:* Add, or at least mention, the Nova eDPM side for Multipathing once
 //it's implemented.

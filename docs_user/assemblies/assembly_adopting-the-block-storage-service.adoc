@@ -14,7 +14,6 @@ To adopt a {OpenStackPreviousInstaller}-deployed {block_storage_first_ref} into 
 * Validate the new deployment.
 
 include::../modules/con_block-storage-service-limitations.adoc[leveloffset=+1]
-//kgilliga: Move this to Chapter 1?
 
 include::../modules/con_openshift-preparation-for-block-storage-adoption.adoc[leveloffset=+1]
 
