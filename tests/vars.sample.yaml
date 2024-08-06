@@ -58,3 +58,7 @@ run_pre_adoption_validation: true
 
 # Whether the adopted node will host compute services
 compute_adoption: true
+
+# Whether to adopt Octavia
+octavia_adoption: true
+enable_octavia: true

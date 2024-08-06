@@ -1,0 +1,34 @@
+[id="adopting-the-loadbalancer-service_{context}"]
+
+= Adopting the {loadbalancer_service}
+
+During the adoption process the {loadbalancer_first_ref} service
+must stay disabled in the new control plane.
+
+== Certificates
+Before running the script below the shell variables `CONTROLLER1_SSH` and
+`CONTROLLER1_SCP` must be set to contain the command to log into one of the
+controllers using `ssh` and `scp` respectively as root user.
+
+[source,bash]
+----
+include::../../tests/roles/dataplane_adoption/tasks/octavia_certs.yaml[lines="7..83",indent=0]
+----
+
+These commands convert the existing single CA configuration into a dual CA configuration.
+
+== TODO: Other things
+TODO
+
+== Enabling the {loadbalancer_service} in OpenShift
+Run the following command in order to enable the {loadbalancer_service} CR.
+
+[source,bash]
+----
+oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  octavia:
+    enabled: true
+    template: {}
+'
+----
