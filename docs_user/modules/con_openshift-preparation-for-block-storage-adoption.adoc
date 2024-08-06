@@ -136,7 +136,7 @@ spec:
 ----
 +
 If you are using labels to restrict the nodes where Block Storage
-services are running, you need to use a `MachineConfigPool` to limit the effects of the `MachineConfig` to only the nodes where your services run. For more information, see xref:about-node-selector_planning[About node selector]. 
+services are running, you need to use a `MachineConfigPool` to limit the effects of the `MachineConfig` to only the nodes where your services run. For more information, see xref:about-node-selector_planning[About node selector].
 +
 If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
 +

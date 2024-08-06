@@ -2,7 +2,7 @@
 
 = Limitations for adopting the {block_storage}
 
-Before you begin the {block_storage_first_ref} adoption, review the following limitations: 
+Before you begin the {block_storage_first_ref} adoption, review the following limitations:
 
 * There is no global `nodeSelector` option for all {block_storage} volumes. You must specify the `nodeSelector` for each back end.
 * There are no global `customServiceConfig` or `customServiceConfigSecrets` options for all {block_storage} volumes. You must specify these options for each back end.

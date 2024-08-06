@@ -6,7 +6,7 @@ Apply the patch and wait for the operator to apply the changes and deploy the Bl
 
 .Prerequisites
 
-* The {block_storage_first_ref} is stopped. 
+* The {block_storage_first_ref} is stopped.
 * The service databases are imported into the control plane MariaDB.
 * The {identity_service_first_ref} and {key_manager_first_ref} are adopted.
 * The Storage network is properly configured on the {OpenShiftShort} cluster.
@@ -98,7 +98,7 @@ spec:
             report_discard_supported=True
 ----
 
-. Retrieve the list of the previous scheduler and backup services: 
+. Retrieve the list of the previous scheduler and backup services:
 +
 ----
 $ openstack volume service list
