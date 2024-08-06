@@ -6,10 +6,7 @@
     oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack
     oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack-nova-compute-ffu
     oc delete --ignore-not-found=true --wait=false openstackcontrolplane/openstack
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    metadata:
-      finalizers: []
-    ' || true
+    oc patch openstackcontrolplane openstack --type=merge --patch '{"metadata": {"finalizers":null}}' || true
 
     while oc get pod | grep rabbitmq-server-0; do
         sleep 2
@@ -24,6 +21,9 @@
     oc delete --ignore-not-found=true secret osp-secret
     oc delete issuer rootca-internal --ignore-not-found
     oc delete secret rootca-internal --ignore-not-found
+
+    oc get secret -n openstack -oname | xargs -I{} oc patch {} -n openstack --type=merge -p '{"metadata": {"finalizers":null}}'
+    oc get secret -n openstack -oname | xargs -I{} oc delete {}
   when: pcp_cleanup_enabled|bool
 
 - name: revert standalone VM to snapshotted state
