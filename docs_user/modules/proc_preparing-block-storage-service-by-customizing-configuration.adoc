@@ -23,7 +23,7 @@ services and remove anything that would change when deployed in {OpenShift} ({Op
 cinderBackup:` level. Remove the `host` configuration in the `[DEFAULT]` section to support multiple replicas in the future.
 . Determine the individual volume back-end configuration for each of the
 drivers. The configuration is the specific driver section, and it includes the `[backend_defaults]` section and FC zoning sections if you use them. The {block_storage} operator does not support a global `customServiceConfig` section for all volume services. Each back end has its own section under `cinder: template: cinderVolumes`, and the configuration goes in `customServiceConfig` or a `Secret` and then used in `customServiceConfigSecrets`.
-. Check if any of the {block_storage} volume drivers being used require a custom vendor image. If they do, find the location of the image in the link:https://catalog.redhat.com/search?searchType=software[Red Hat Ecosystem Catalog], 
+. Check if any of the {block_storage} volume drivers being used require a custom vendor image. If they do, find the location of the image in the link:https://catalog.redhat.com/search?searchType=software[Red Hat Ecosystem Catalog],
 and create or modify an `OpenStackVersion` custom resource (CR) to specify the custom image by using the key from the `cinderVolumes` section.
 +
 For example, if you have the following configuration:
@@ -83,7 +83,7 @@ spec:
               name: ceph-conf-files
 ----
 +
-For a service-specific file, such as the API policy, you add the configuration 
+For a service-specific file, such as the API policy, you add the configuration
 on the service itself. In the following example, you include the `CinderAPI`
 configuration that references the policy you are adding from a `ConfigMap`
 called `my-cinder-conf` that has a key `policy` with the contents of the
