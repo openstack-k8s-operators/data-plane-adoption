@@ -4,29 +4,24 @@
 
 = Adopting the {image_service}
 
-Adopting {image_service_first_ref} means that an existing `OpenStackControlPlane` custom resource (CR), where {image_service}
-is supposed to be disabled, should be patched to start the service with the
-configuration parameters provided by the source environment.
+To adopt the {image_service_first_ref} you patch an existing `OpenStackControlPlane` custom resource (CR) that has the {image_service} disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
 
-When the procedure is over, the expectation is to see the `GlanceAPI` service
-up and running: the {identity_service} endpoints are updated and the same backend of the source Cloud is available. If the conditions above are met, the adoption is considered concluded.
+The {image_service} adoption is complete if you see the following results:
 
-This guide also assumes that:
+* The `GlanceAPI` service up and running.
+* The {identity_service} endpoints are updated, and the same back end of the source cloud is available.
 
-* A {OpenStackPreviousInstaller} environment (the source Cloud) is running on one side.
-* A `SNO` / `CodeReadyContainers` is running on the other side.
-* (optional) An internal/external `Ceph` cluster is reachable by both `crc` and {OpenStackPreviousInstaller}.
+To complete the {image_service} adoption, ensure that your environment meets the following criteria:
 
-ifeval::["{build}" != "downstream"]
-//This link goes to a 404. Do we need this text downstream?
-As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Glance Adoption follows the same pattern.
-endif::[]
+* You have a running {OpenStackPreviousInstaller} environment (the source cloud).
+* You have a Single Node OpenShift or OpenShift Local that is running in the {OpenShift} cluster.
+* Optional: You can reach an internal/external `Ceph` cluster by both `crc` and {OpenStackPreviousInstaller}.
 
 include::../modules/proc_adopting-image-service-with-object-storage-backend.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-image-service-with-block-storage-backend.adoc[leveloffset=+1]
 
-include::../modules/proc_adopting-image-service-with-nfs-ganesha-backend.adoc[leveloffset=+1]
+include::../modules/proc_adopting-image-service-with-nfs-backend.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-image-service-with-ceph-backend.adoc[leveloffset=+1]
 

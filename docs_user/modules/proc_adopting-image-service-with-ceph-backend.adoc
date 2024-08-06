@@ -1,19 +1,18 @@
 [id="adopting-image-service-with-ceph-backend_{context}"]
 
-= Adopting the {image_service} that is deployed with a {Ceph} backend
+= Adopting the {image_service} that is deployed with a {Ceph} back end
 
-Adopt the {image_service_first_ref} that you deployed with a {Ceph} backend. Use the `customServiceConfig` parameter to inject the right configuration to the `GlanceAPI` instance.
+Adopt the {image_service_first_ref} that you deployed with a {Ceph} back end. Use the `customServiceConfig` parameter to inject the right configuration to the `GlanceAPI` instance.
 
 .Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB, {identity_service_first_ref} and {key_manager_first_ref}
-should be already adopted.
-* Make sure the Ceph-related secret (`ceph-conf-files`) was created in
+* You have completed the previous adoption steps.
+* Ensure that the Ceph-related secret (`ceph-conf-files`) is created in
 the `openstack` namespace and that the `extraMounts` property of the
-`OpenStackControlPlane` custom resource (CR) has been configured properly. These tasks are described in an earlier Adoption step xref:configuring-a-ceph-backend_migrating-databases[Configuring a Ceph backend].
+`OpenStackControlPlane` custom resource (CR) is configured properly. For more information, see xref:configuring-a-ceph-backend_migrating-databases[Configuring a Ceph back end].
 +
 ----
-cat << EOF > glance_patch.yaml
+$ cat << EOF > glance_patch.yaml
 spec:
   glance:
     enabled: true
@@ -30,11 +29,10 @@ spec:
         rbd_store_pool=images
         store_description=Ceph glance store backend.
       storage:
-        storageClass: "local-storage"
         storageRequest: 10G
       glanceAPIs:
         default:
-          replicas: 1
+          replicas: 0
           override:
             service:
               internal:
@@ -52,19 +50,19 @@ EOF
 
 [NOTE]
 ====
-If you have previously backed up your {OpenStackShort} services configuration file from the old environment, you can use os-diff to compare and make sure the configuration is correct.
+If you backed up your {rhos_prev_long} ({OpenStackShort}) services configuration file from the original environment, you can compare it with the confgiuration file that you adopted and ensure that the configuration is correct.
 For more information, see xref:pulling-configuration-from-tripleo-deployment_reviewing-configuration[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
 
 ----
 os-diff diff /tmp/collect_tripleo_configs/glance/etc/glance/glance-api.conf glance_patch.yaml --crd
 ----
 
-This produces the difference between both ini configuration files.
+This command produces the difference between both ini configuration files.
 ====
 
 .Procedure
 
-* Patch `OpenStackControlPlane` CR to deploy {image_service} with a {Ceph} backend:
+* Patch the `OpenStackControlPlane` CR to deploy the {image_service} with a {Ceph} back end:
 +
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_patch.yaml

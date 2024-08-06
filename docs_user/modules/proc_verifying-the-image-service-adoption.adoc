@@ -2,22 +2,22 @@
 
 = Verifying the {image_service} adoption
 
-Verify that you successfully adopted your {image_service_first_ref} to the {rhos_long} {rhos_curr_ver} deployment.
+Verify that you adopted the {image_service_first_ref} to the {rhos_long} {rhos_curr_ver} deployment.
 
 .Procedure
 
-. Test the {image_service_first_ref} from the {rhos_prev_long} CLI. You can compare and make sure the configuration has been correctly applied to the {image_service} pods:
+. Test the {image_service} from the {rhos_prev_long} CLI. You can compare and ensure that the configuration is applied to the {image_service} pods:
 +
 ----
-os-diff diff /etc/glance/glance.conf.d/02-config.conf glance_patch.yaml --frompod -p glance-api
+$ os-diff diff /etc/glance/glance.conf.d/02-config.conf glance_patch.yaml --frompod -p glance-api
 ----
 +
-If no line appears, then the configuration is correctly done.
+If no line appears, then the configuration is correct.
 
-. Inspect the resulting glance pods:
+. Inspect the resulting {image_service} pods:
 +
 ----
-GLANCE_POD=`oc get pod |grep glance-default-external-0 | cut -f 1 -d' '`
+GLANCE_POD=`oc get pod |grep glance-default | cut -f 1 -d' ' | head -n 1`
 oc exec -t $GLANCE_POD -c glance-api -- cat /etc/glance/glance.conf.d/02-config.conf
 
 [DEFAULT]
@@ -31,32 +31,32 @@ rbd_store_pool=images
 store_description=Ceph glance store backend.
 ----
 
-. If you use a Ceph backend, ensure that the Ceph secrets are properly mounted:
+. If you use a {Ceph} back end, ensure that the {Ceph} secrets are mounted:
 +
 ----
-oc exec -t $GLANCE_POD -c glance-api -- ls /etc/ceph
+$ oc exec -t $GLANCE_POD -c glance-api -- ls /etc/ceph
 ceph.client.openstack.keyring
 ceph.conf
 ----
 
-. Check that the service is active and the endpoints are properly updated in the {OpenStackShort} CLI:
+. Check that the service is active, and that the endpoints are updated in the {OpenStackShort} CLI:
 +
 ----
-(openstack)$ service list | grep image
+$ oc rsh openstackclient -n openstackclient
+$ openstack service list | grep image
 
 | fc52dbffef36434d906eeb99adfc6186 | glance    | image        |
 
-(openstack)$ endpoint list | grep image
+$ openstack endpoint list | grep image
 
 | 569ed81064f84d4a91e0d2d807e4c1f1 | regionOne | glance       | image        | True    | internal  | http://glance-internal-openstack.apps-crc.testing   |
 | 5843fae70cba4e73b29d4aff3e8b616c | regionOne | glance       | image        | True    | public    | http://glance-public-openstack.apps-crc.testing     |
-| 709859219bc24ab9ac548eab74ad4dd5 | regionOne | glance       | image        | True    | admin     | http://glance-admin-openstack.apps-crc.testing      |
 ----
 
-. Check that the images that you previously listed in the source Cloud are available in the adopted service:
+. Check that the images that you previously listed in the source cloud are available in the adopted service:
 +
 ----
-(openstack)$ image list
+$ openstack image list
 +--------------------------------------+--------+--------+
 | ID                                   | Name   | Status |
 +--------------------------------------+--------+--------+
@@ -64,7 +64,7 @@ ceph.conf
 +--------------------------------------+--------+--------+
 ----
 ifeval::["{build}" != "downstream"]
-. Test that an image can be created on the adopted service:
+. Test that you can create an image on the adopted service:
 +
 ----
 (openstack)$ alias openstack="oc exec -t openstackclient -- openstack"

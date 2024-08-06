@@ -1,19 +1,17 @@
-[id="adopting-image-service-with-nfs-ganesha-backend_{context}"]
+[id="adopting-image-service-with-nfs-backend_{context}"]
 
-= Adopting the {image_service} that is deployed with an NFS Ganesha backend
+= Adopting the {image_service} that is deployed with an NFS back end
 
-Adopt the {image_service_first_ref} that you deployed with an NFS Ganesha backend. The following steps assume that:
+Adopt the {image_service_first_ref} that you deployed with an NFS back end. To complete the following procedure, ensure that your environment meets the following criteria:
 
-. The Storage network has been propagated to the {OpenStackShort} control plane.
-. The {image_service} is able to reach the Storage network and connect to the nfs-server through the port `2049`.
+* The Storage network is propagated to the {rhos_prev_long} ({OpenStackShort}) control plane.
+* The {image_service} can reach the Storage network and connect to the nfs-server through the port `2049`.
 
 .Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB, {identity_service_first_ref} and {key_manager_first_ref}
-should be already adopted.
-* In the source cloud, verify the NFS Ganesha parameters used by the overcloud to configure the {image_service} backend.
-In particular, find among the {OpenStackPreviousInstaller} heat templates the following variables that are usually an override of the default content provided by
-`/usr/share/openstack-tripleo-heat-templates/environments/storage/glance-nfs.yaml`[glance-nfs.yaml]:
+* You have completed the previous adoption steps.
+* In the source cloud, verify the NFS parameters that the overcloud uses to configure the {image_service} back end. Specifically, in your{OpenStackPreviousInstaller} heat templates, find the following variables that override the default content that is provided by the `glance-nfs.yaml` file in the
+`/usr/share/openstack-tripleo-heat-templates/environments/storage` directory:
 +
 ----
 
@@ -25,17 +23,20 @@ In particular, find among the {OpenStackPreviousInstaller} heat templates the fo
 
 ----
 +
-In the example above, as the first variable shows, the {image_service} has no notion of NFS Ganesha backend: the `File` driver is used in this scenario, and behind the scenes, the `filesystem_store_datadir` which usually points to `/var/lib/glance/images/` is mapped to the export value provided by the `GlanceNfsShare` variable.
-If the `GlanceNfsShare` is not exported through a network that is supposed to be propagated to the adopted {rhos_prev_long} control plane, an extra action is required by the human administrator, who must stop the `nfs-server` and remap the export to the `storage` network. This action usually happens when the {image_service} is stopped in the source Controller nodes.
+[NOTE]
+====
+In this example, the `GlanceBackend` variable shows that the {image_service} has no notion of an NFS back end. The variable is using the `File` driver and, in the background, the `filesystem_store_datadir`. The `filesystem_store_datadir` is mapped to the export value provided by the `GlanceNfsShare` variable instead of `/var/lib/glance/images/`.
+If you do not export the `GlanceNfsShare` through a network that is propagated to the adopted {rhos_long} control plane, you must stop the `nfs-server` and remap the export to the `storage` network. Before doing so, ensure that the {image_service} is stopped in the source Controller nodes.
 ifeval::["{build}" != "downstream"]
 In the control plane, as per the (https://github.com/openstack-k8s-operators/docs/blob/main/images/network_diagram.jpg)[network isolation diagram],
 the {image_service} is attached to the Storage network, propagated via the associated `NetworkAttachmentsDefinition` custom resource, and the resulting Pods have already the right permissions to handle the {image_service} traffic through this network.
 endif::[]
+
 ifeval::["{build}" != "upstream"]
-In the control plane, the {image_service} is attached to the Storage network, propagated via the associated `NetworkAttachmentsDefinition` custom resource, and the resulting Pods have already the right permissions to handle the {image_service} traffic through this network.
+In the control plane, the {image_service} is attached to the Storage network, then propagated through the associated `NetworkAttachmentsDefinition` custom resource (CR), and the resulting pods already have the right permissions to handle the {image_service} traffic through this network.
 endif::[]
-In a deployed {OpenStackShort} control plane, you can verify that the network mapping matches with what has been deployed in the {OpenStackPreviousInstaller}-based environment by checking both the `NodeNetworkConfigPolicy` (`nncp`) and the `NetworkAttachmentDefinition` (`net-attach-def`):
-+
+In a deployed {OpenStackShort} control plane, you can verify that the network mapping matches with what has been deployed in the {OpenStackPreviousInstaller}-based environment by checking both the `NodeNetworkConfigPolicy` (`nncp`) and the `NetworkAttachmentDefinition` (`net-attach-def`). The following is an example of the output that you should check in the {OpenShift} environment to make sure that there are no issues with the propagated networks:
+
 ----
 $ oc get nncp
 NAME                        STATUS      REASON
@@ -55,17 +56,14 @@ internalapi   true          false             ["172.17.0.80-172.17.0.90"]
 storage       true          false             ["172.18.0.80-172.18.0.90"]
 tenant        true          false             ["172.19.0.80-172.19.0.90"]
 ----
-+
-The above represents an example of the output that should be checked in the
-{OpenShift} environment to make sure there are no issues with the propagated
-networks.
+====
 
 .Procedure
 
-. Adopt the {image_service} and create a new `default` `GlanceAPI` instance connected with the existing NFS Ganesha share.
+. Adopt the {image_service} and create a new `default` `GlanceAPI` instance that is connected with the existing NFS share:
 +
 ----
-cat << EOF > glance_nfs_patch.yaml
+$ cat << EOF > glance_nfs_patch.yaml
 
 spec:
   extraMounts:
@@ -79,8 +77,8 @@ spec:
       volumes:
       - name: nfs
         nfs:
-          path: /var/nfs
-          server: 172.17.3.20
+          path: <exported_path>
+          server: <ip_address>
     name: r1
     region: r1
   glance:
@@ -95,11 +93,10 @@ spec:
         [default_backend]
         filesystem_store_datadir = /var/lib/glance/images/
       storage:
-        storageClass: "local-storage"
         storageRequest: 10G
       glanceAPIs:
         default:
-          replicas: 1
+          replicas: 0
           type: single
           override:
             service:
@@ -116,12 +113,10 @@ spec:
 EOF
 ----
 +
-[NOTE]
-Replace in `glance_nfs_patch.yaml` the `nfs/server` IP address with the IP used
-to reach the `nfs-server` and make sure the `nfs/path` points to the exported
-path in the `nfs-server`.
+* Replace `<ip_address>` with the IP address that you use to reach the `nfs-server`.
+* Replace `<exported_path>` with the exported path in the `nfs-server`.
 
-. Patch `OpenStackControlPlane` to deploy {image_service} with a NFS Ganesha backend:
+. Patch the `OpenStackControlPlane` CR to deploy the {image_service} with an NFS back end:
 +
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_nfs_patch.yaml
@@ -129,7 +124,7 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_nfs_
 
 .Verification
 
-* When GlanceAPI is active, you can see a single API instance:
+* When `GlanceAPI` is active, confirm that you can see a single API instance:
 +
 ----
 $ oc get pods -l service=glance
@@ -137,8 +132,9 @@ NAME                      READY   STATUS    RESTARTS
 glance-default-single-0   3/3     Running   0
 ```
 ----
-and the description of the pod must report:
 
+* Ensure that the description of the pod reports the following output:
++
 ----
 Mounts:
 ...
@@ -150,10 +146,10 @@ Mounts:
 ...
 ----
 
-* Check the mountpoint:
+* Check that the mountpoint that points to `/var/lib/glance/images` is mapped to the expected `nfs server ip` and `nfs path` that you defined in the new default `GlanceAPI` instance:
 +
 ----
-oc rsh -c glance-api glance-default-single-0
+$ oc rsh -c glance-api glance-default-single-0
 
 sh-5.1# mount
 ...
@@ -163,7 +159,7 @@ sh-5.1# mount
 ...
 ----
 
-* Confirm that the UUID has been created in the exported directory on the NFS Ganesha node. For example:
+* Confirm that the UUID is created in the exported directory on the NFS node. For example:
 +
 ----
 $ oc rsh openstackclient
@@ -185,7 +181,7 @@ sh-5.1$ openstack image list
 +--------------------------------------+--------+--------+
 ----
 
-* On the nfs-server node, the same `uuid` is in the exported `/var/nfs`:
+* On the `nfs-server` node, the same `uuid` is in the exported `/var/nfs`:
 +
 ----
 $ ls /var/nfs/

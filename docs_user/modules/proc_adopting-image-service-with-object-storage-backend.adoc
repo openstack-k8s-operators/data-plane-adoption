@@ -1,8 +1,8 @@
 [id="adopting-image-service-with-object-storage-backend_{context}"]
 
-= Adopting the {image_service} that is deployed with a {object_storage} backend
+= Adopting the {image_service} that is deployed with a {object_storage} back end
 
-Adopt the {image_service_first_ref} that you deployed with an {object_storage_first_ref} backend. When {image_service} is deployed with {object_storage_first_ref} as a backend in the {rhos_prev_long} environment based on {OpenStackPreviousInstaller}, the control plane `glanceAPI` instance is deployed with the following configuration:
+Adopt the {image_service_first_ref} that you deployed with an {object_storage_first_ref} back end in the {rhos_prev_long} ({OpenStackShort}) environment. The control plane `glanceAPI` instance is deployed with the following configuration. You use this configuration in the patch manifest that deploys the {image_service} with the object storage back end:
 
 ----
 ..
@@ -25,13 +25,11 @@ spec
 
 .Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB, {identity_service_first_ref} and {key_manager_first_ref}
-should be already adopted.
+* You have completed the previous adoption steps.
 
 .Procedure
 
-. Write the patch manifest into a file, for example `glance_swift.patch`.
-For example:
+. Create a new file, for example, `glance_swift.patch`, and include the following content:
 +
 ----
 spec:
@@ -40,9 +38,9 @@ spec:
     apiOverride:
       route: {}
     template:
+      secret: osp-secret
       databaseInstance: openstack
       storage:
-        storageClass: "local-storage"
         storageRequest: 10G
       customServiceConfig: |
         [DEFAULT]
@@ -73,8 +71,9 @@ spec:
             - storage
 ----
 +
-Having {object_storage} as a backend establishes a dependency between the two services, and any deployed `GlanceAPI` instance would not work if {image_service} is configured with {object_storage} that is still not available in the `OpenStackControlPlane`.
-Once {object_storage}, and in particular `SwiftProxy`, has been adopted, it is possible to proceed with the `GlanceAPI` adoption. For more information, see xref:adopting-the-object-storage-service_adopt-control-plane[Adopting the Object Storage service].
+[NOTE]
+The {object_storage} as a back end establishes a dependency with the {image_service}. Any deployed `GlanceAPI` instances do not work if the {image_service} is configured with the {object_storage} that is not available in the `OpenStackControlPlane` custom resource.
+After the {object_storage}, and in particular `SwiftProxy`, is adopted, you can proceed with the `GlanceAPI` adoption. For more information, see xref:adopting-the-object-storage-service_adopt-control-plane[Adopting the Object Storage service].
 
 . Verify that `SwiftProxy` is available:
 +
@@ -83,7 +82,7 @@ $ oc get pod -l component=swift-proxy | grep Running
 swift-proxy-75cb47f65-92rxq   3/3     Running   0
 ----
 
-. Patch the `GlanceAPI` service deployed in the control plane context:
+. Patch the `GlanceAPI` service that is deployed in the control plane:
 +
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch-file=glance_swift.patch
