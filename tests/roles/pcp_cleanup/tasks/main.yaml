@@ -2,28 +2,15 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-
-    oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack
-    oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack-nova-compute-ffu
-    oc delete --ignore-not-found=true --wait=false openstackcontrolplane/openstack
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    metadata:
-      finalizers: []
-    ' || true
-
-    while oc get pod | grep rabbitmq-server-0; do
-        sleep 2
-    done
-    while oc get pod | grep openstack-galera-0; do
-        sleep 2
-    done
-
-    oc delete --ignore-not-found=true --wait=false pod mariadb-copy-data
-    oc delete --ignore-not-found=true --wait=false pvc mariadb-data
-    oc delete --ignore-not-found=true --wait=false pod ovn-copy-data
-    oc delete --ignore-not-found=true secret osp-secret
-    oc delete issuer rootca-internal --ignore-not-found
-    oc delete secret rootca-internal --ignore-not-found
+    cd {{ install_yamls_path }}
+    make openstack_cleanup
+    make deploy_cleanup
+    sleep 30
+    make edpm_deploy_cleanup
+    make crc_storage_cleanup_with_retries
+    make cleanup
+    make namespace_cleanup
+    make input_cleanup
   when: pcp_cleanup_enabled|bool
 
 - name: revert standalone VM to snapshotted state
