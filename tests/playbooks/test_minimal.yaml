@@ -28,9 +28,6 @@
     - role: mariadb_copy
       tags:
         - mariadb_copy
-    - role: ovn_adoption
-      tags:
-        - ovn_adoption
     - role: keystone_adoption
       tags:
         - keystone_adoption
