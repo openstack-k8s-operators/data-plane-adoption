@@ -33,6 +33,8 @@ include::../assemblies/assembly_adopting-the-shared-file-systems-service.adoc[le
 
 include::../modules/proc_adopting-the-orchestration-service.adoc[leveloffset=+1]
 
+include::../modules/proc_adopting-the-loadbalancer-service.adoc[leveloffset=+1]
+
 include::../modules/proc_adopting-telemetry-services.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-autoscaling.adoc[leveloffset=+1]

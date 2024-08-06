@@ -11,3 +11,7 @@ use_no_log: false
 
 # Whether the adopted node will host compute services
 compute_adoption: true
+
+# Whether to adopt Octavia
+enable_octavia: true
+octavia_adoption: true
