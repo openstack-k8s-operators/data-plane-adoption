@@ -355,6 +355,7 @@
           - openstack
           servicesOverride:
           - pre-adoption-validation
+          backoffLimit: 1
         EOF
 
     - name: Wait for the validation deployment to finish
@@ -418,6 +419,7 @@
           - openstack
           servicesOverride:
           - tripleo-cleanup
+          backoffLimit: 1
         EOF
 
     - name: Wait for the deployment to finish
@@ -463,6 +465,7 @@
     spec:
       nodeSets:
       - openstack
+      backoffLimit: 3
     EOF
 
 - name: wait for dataplane node set to be ready
