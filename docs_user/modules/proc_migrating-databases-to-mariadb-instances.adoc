@@ -154,7 +154,7 @@ You must transition {compute_service_first_ref} services that are imported later
 ----
 $ oc rsh mariadb-copy-data << EOF
   mysql -h"${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" \
-  -N -e "show databases" | grep -E -v "schema|mysql|gnocchi" | \
+  -N -e "show databases" | grep -E -v "schema|mysql|gnocchi|aodh" | \
   while read dbname; do
     echo "Dumping \${dbname}";
     mysqldump -h"${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" \
