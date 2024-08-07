@@ -27,6 +27,7 @@
   delay: 2
 
 - name: deploy metric storage
+  when: telemetry_metric_storage|bool
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}

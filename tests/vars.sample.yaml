@@ -58,3 +58,9 @@ run_pre_adoption_validation: true
 
 # Whether the adopted node will host compute services
 compute_adoption: true
+
+# Telemetry metric storage
+# Disable metric storage until https://issues.redhat.com/browse/OSPRH-9252 is implemented
+# Once implemented we'll be able to have a switcher to use ephemeral(testing)
+# or persistance(production) storage for telemetry_metric_storage
+telemetry_metric_storage: true
