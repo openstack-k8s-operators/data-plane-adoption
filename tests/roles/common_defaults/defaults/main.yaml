@@ -11,3 +11,6 @@ use_no_log: false
 
 # Whether the adopted node will host compute services
 compute_adoption: true
+
+# Disable metric storage until ephemeral storage is implemented by setting to false
+telemetry_metric_storage: true

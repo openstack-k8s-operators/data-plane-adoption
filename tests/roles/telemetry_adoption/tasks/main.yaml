@@ -27,6 +27,7 @@
   delay: 2
 
 - name: deploy metric storage
+  when: telemetry_metric_storage|bool
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -48,6 +49,7 @@
     '
 
 - name: wait for alertmanager metric storage to start up
+  when: telemetry_metric_storage|bool
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -58,6 +60,7 @@
   delay: 2
 
 - name: wait for prometheus metric storage to start up
+  when: telemetry_metric_storage|bool
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
