@@ -82,6 +82,7 @@
         - openstack
       servicesOverride:
         - nova
+      backoffLimit: 3
     EOF
 
 - name: wait for Nova compute EDPM services to become ready
