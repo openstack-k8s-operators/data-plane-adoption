@@ -2,7 +2,13 @@
 
 = Adopting Telemetry services
 
-Adopting Telemetry means that an existing `OpenStackControlPlane` custom resource (CR), where Telemetry services are supposed to be disabled, should be patched to start the service with the configuration parameters provided by the source environment.
+The observability solution that is used in  the source environment (STF) is not the observability solution used to retrieve metrics and logs in the target environment. It has been developed with a better integration with both OpenStack and OpenShift. This means that different backends are used, rendering old data not automatically migrable.
+
+Metrics and logs are considered short-lived data and thus they are not intended to be migrated to the target environment. A procedure to adopt legacy autoscaling stack templates to the target environment is provided in the autoscaling documentation.
+
+Adopting Telemetry means that the solution will be removed from the cluster and the new solution will be deployed in the target environment, allowing for metrics (and optionally logs) retrieval and storage in the new backends.
+
+To achieve this an existing `OpenStackControlPlane` custom resource (CR), where Telemetry services are supposed to be disabled, should be patched to start the service with the configuration parameters provided by the source environment.
 
 This guide also assumes that:
 
