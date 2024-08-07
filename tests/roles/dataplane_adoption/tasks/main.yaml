@@ -510,3 +510,8 @@
 - name: Adopted Neutron and OVN agents post-checks
   ansible.builtin.include_tasks:
     file: neutron_verify.yaml
+
+- name: Adopt Octavia Certificates Wallaby->Antelope FFU
+  when: octavia_adoption|bool
+  ansible.builtin.include_tasks:
+    file: octavia_certs.yaml
