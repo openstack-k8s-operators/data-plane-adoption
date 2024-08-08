@@ -3,7 +3,7 @@
 ifeval::["{build}" == "downstream"]
 = Preparing the {block_storage} configuration
 
-To creating the {block_storage_first_ref} configuration, complete the following preparation tasks.
+Customize your {block_storage_first_ref} configuration to prepare it for adoption. 
 endif::[]
 
 ifeval::["{build}" != "downstream"]
@@ -13,8 +13,7 @@ The high level explanation of the tailor-made approach is:
 endif::[]
 
 .Procedure
-. Determine what part of the configuration is generic for all the Block Storage
-services and remove anything that would change when deployed in {OpenShift} ({OpenShiftShort}), such as the `connection` in the `[dabase]` section, the `transport_url` and `log_dir` in the `[DEFAULT]` sections, and the whole `[coordination]` and `[barbican]` sections. This configuration goes into the `customServiceConfig`, or a `Secret` and then used in `customServiceConfigSecrets`, at the `cinder: template:` level.
+. Determine what part of the configuration is generic for all the Block Storage services and remove anything that would change when deployed in {OpenShift} ({OpenShiftShort}), such as the `connection` in the `[dabase]` section, the `transport_url` and `log_dir` in the `[DEFAULT]` sections, and the whole `[coordination]` and `[barbican]` sections. This configuration goes into the `customServiceConfig`, or a `Secret` and then used in `customServiceConfigSecrets`, at the `cinder: template:` level.
 . Determine if there is any scheduler-specific configuration and add it to the
 `customServiceConfig` section in `cinder: template: cinderScheduler`.
 . Determine if there is any API-specific configuration and add it to the
@@ -23,8 +22,7 @@ services and remove anything that would change when deployed in {OpenShift} ({Op
 cinderBackup:` level. Remove the `host` configuration in the `[DEFAULT]` section to support multiple replicas in the future.
 . Determine the individual volume back-end configuration for each of the
 drivers. The configuration is the specific driver section, and it includes the `[backend_defaults]` section and FC zoning sections if you use them. The {block_storage} operator does not support a global `customServiceConfig` section for all volume services. Each back end has its own section under `cinder: template: cinderVolumes`, and the configuration goes in `customServiceConfig` or a `Secret` and then used in `customServiceConfigSecrets`.
-. Check if any of the {block_storage} volume drivers being used require a custom vendor image. If they do, find the location of the image in the link:https://catalog.redhat.com/search?searchType=software[Red Hat Ecosystem Catalog],
-and create or modify an `OpenStackVersion` custom resource (CR) to specify the custom image by using the key from the `cinderVolumes` section.
+. Check if any of the {block_storage} volume drivers being used require a custom vendor image. If they do, find the location of the image in the link:https://catalog.redhat.com/search?searchType=software[Red Hat Ecosystem Catalog], and create or modify an `OpenStackVersion` custom resource (CR) to specify the custom image by using the key from the `cinderVolumes` section.
 +
 For example, if you have the following configuration:
 +

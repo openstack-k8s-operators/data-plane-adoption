@@ -4,8 +4,6 @@
 
 = Preparing the {block_storage} configurations for adoption
 
-The {block_storage_first_ref} is configured by using configuration snippets instead of using configuration parameters defined by the installer. For more information, see xref:service-configurations_planning[Service configurations].
-
 The recommended way to deploy {block_storage} volume back ends is to use a {block_storage} volume service for each back end.
 
 For example, you have an LVM and a Ceph back end and two entries in `cinderVolume`, and you cannot set global defaults for all volume services. You must define a service for each of them:
@@ -42,8 +40,6 @@ ifeval::["{build}" != "downstream"]
 There are 2 ways to prepare a {block_storage} configuration for adoption, tailor-making
 it or doing it quick and dirty. There is no difference in how {block_storage} operates with both methods, though tailor-making it is recommended whenever possible.
 endif::[]
-
-include::../modules/proc_preparing-block-storage-service-by-customizing-configuration.adoc[leveloffset=+1]
 
 
 ifeval::["{build}" != "downstream"]
