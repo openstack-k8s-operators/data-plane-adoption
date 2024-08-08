@@ -1,12 +1,8 @@
-[id="deploying-the-block-storage-services_{context}"]
+[id="adopting-the-block-storage-service_{context}"]
 
-= Deploying the Block Storage services
+= Adopting the {block_storage}
 
-To adopt a {OpenStackPreviousInstaller}-deployed {block_storage_first_ref} into {rhos_long}, perform the following actions:
-
-* Create the manifest based on the existing `cinder.conf` file.
-* Deploy the {block_storage}.
-* Validate the new deployment.
+To adopt a {OpenStackPreviousInstaller}-deployed {block_storage_first_ref}, create the manifest based on the existing `cinder.conf` file, deploy the {block_storage}, and validate the new deployment.
 
 .Prerequisites
 
@@ -28,8 +24,10 @@ $CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/cinder/etc/cinder/cin
 . Create a new file, for example, `cinder.patch`, and apply the configuration:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch-file=cinder.patch
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file=<patch_name>
 ----
++
+* Replace `<patch_name>` with the name of your patch file.
 +
 The following example shows a `cinder.patch` file for an RBD deployment:
 +
@@ -121,12 +119,14 @@ $ openstack volume service list
 +------------------+------------------------+------+---------+-------+----------------------------+
 ----
 
-. Remove services for hosts that are in the `down` state. For example:
+. Remove services for hosts that are in the `down` state:
 +
 ----
-$ oc exec -it cinder-scheduler-0 -- cinder-manage service remove cinder-backup standalone.localdomain
-$ oc exec -it cinder-scheduler-0 -- cinder-manage service remove cinder-scheduler standalone.localdomain
+$ oc exec -it cinder-scheduler-0 -- cinder-manage service remove <service_name>
+$ oc exec -it cinder-scheduler-0 -- cinder-manage service remove <service_name>
 ----
++
+* Replace `<service_name>` with the name of the service to remove.
 
 . Apply the DB data migrations:
 +
@@ -136,8 +136,10 @@ You are not required to run the data migrations at this step, but you must run t
 ====
 +
 ----
-$ oc exec -it cinder-scheduler-0 -- cinder-manage db online_data_migrations
+$ oc exec -it cinder-scheduler-0 -- cinder-manage db <database_name>
 ----
++
+* Replace `<database_name>` with the name of the database to migrate.
 
 .Verification
 
@@ -159,7 +161,7 @@ $ openstack endpoint list --service cinderv3
 $ openstack volume service list
 ----
 
-. Confirm that your previous volume types, volumes, snapshots, and backups are there:
+. Confirm that you have your previous volume types, volumes, snapshots, and backups:
 +
 ----
 $ openstack volume type list
@@ -170,17 +172,19 @@ $ openstack volume backup list
 
 . To confirm that the configuration is working, perform the following steps:
 
-.. Create a volume from an image to check that the connection to {image_service_first_ref} is working.
+.. Create a volume from an image to check that the connection to {image_service_first_ref} is working:
 +
 ----
 $ openstack volume create --image cirros --bootable --size 1 disk_new
 ----
 
-.. Back up the old attached volume to a new backup. For example:
+.. Back up the previous attached volume:
 +
 ----
-$ openstack --os-volume-api-version 3.47 volume create --backup backup restored
+$ openstack --os-volume-api-version 3.47 volume create --backup <backup_name>
 ----
++
+* Replace `<backup_name>` with the name of your new backup location.
 +
 [NOTE]
-You do not boot a {compute_service_first_ref} instance by using the new `volume from` image or try to detach the old volume because the {compute_service} and the {block_storage} are still not connected.
+You do not boot a {compute_service_first_ref} instance by using the new `volume from` image or try to detach the previous volume because the {compute_service} and the {block_storage} are still not connected.

@@ -21,4 +21,48 @@ RBD, iSCSI, FC, NFS, NVMe-oF, etc.
 Once you know all the transport protocols that you are using, you can make
 sure that you are taking them into consideration when placing the Block Storage services (as mentioned above in the Node Roles section) and the right storage transport related binaries are running on the {OpenShift} nodes.
 
-Detailed information about the specifics for each storage transport protocol can be found in the xref:openshift-preparation-for-block-storage-adoption_adopting-block-storage[{OpenShift} preparation for {block_storage} adoption].
+Detailed information about the specifics for each storage transport protocol can be found in the xref:openshift-preparation-for-block-storage-adoption_storage-requirements[{OpenShift} preparation for {block_storage} adoption].
+
+The recommended way to deploy {block_storage} volume back ends is to use a {block_storage} volume service for each back end.
+
+For example, you have an LVM and a Ceph back end and two entries in `cinderVolume`, and you cannot set global defaults for all volume services. You must define a service for each of them:
+
+[source,yaml]
+----
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+spec:
+  cinder:
+    enabled: true
+    template:
+      cinderVolume:
+        lvm:
+          customServiceConfig: |
+            [DEFAULT]
+            debug = True
+            [lvm]
+< . . . >
+        ceph:
+          customServiceConfig: |
+            [DEFAULT]
+            debug = True
+            [ceph]
+< . . . >
+----
++
+[WARNING]
+Check that all configuration options are still valid for the new {rhos_long} version. Configuration options might be deprecated, removed, or added. This applies to both back-end driver-specific configuration options and other generic options.
+
+ifeval::["{build}" != "downstream"]
+There are 2 ways to prepare a {block_storage} configuration for adoption, tailor-making
+it or doing it quick and dirty. There is no difference in how {block_storage} operates with both methods, though tailor-making it is recommended whenever possible.
+endif::[]
+
+
+ifeval::["{build}" != "downstream"]
+include::../modules/proc_preparing-block-storage-service-by-using-agnostic-config-file.adoc[leveloffset=+1]
+
+include::../modules/con_block-storage-service-config-generation-helper-tool.adoc[leveloffset=+1]
+endif::[]
