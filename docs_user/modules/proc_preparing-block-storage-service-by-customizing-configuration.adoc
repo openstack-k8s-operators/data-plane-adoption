@@ -3,7 +3,7 @@
 ifeval::["{build}" == "downstream"]
 = Preparing the {block_storage} configuration
 
-Customize your {block_storage_first_ref} configuration to prepare it for adoption. 
+Customize your {block_storage_first_ref} configuration to prepare it for adoption.
 endif::[]
 
 ifeval::["{build}" != "downstream"]
