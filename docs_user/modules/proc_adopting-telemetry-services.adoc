@@ -2,13 +2,13 @@
 
 = Adopting Telemetry services
 
-The observability solution that is used in  the source environment (STF) is not the observability solution used to retrieve metrics and logs in the target environment. It has been developed with a better integration with both OpenStack and OpenShift. This means that different backends are used, rendering old data not automatically migrable.
+The observability solution that is used in the source environment, Service Telemetry Framework, is not the observability solution that is used to retrieve metrics and logs in the target environment. The solution is developed to better integrate with both {rhos_prev_long} and {OpenShift}. You cannot automatically migrate old data because different back ends are used.
 
-Metrics and logs are considered short-lived data and thus they are not intended to be migrated to the target environment. A procedure to adopt legacy autoscaling stack templates to the target environment is provided in the autoscaling documentation.
+Metrics and logs are considered short-lived data and are not intended to be migrated to the target environment. For information about adopting legacy autoscaling stack templates to the target environment, see xref:adopting-autoscaling_adopt-control-plane[Adopting Autoscaling services].
 
-Adopting Telemetry means that the solution will be removed from the cluster and the new solution will be deployed in the target environment, allowing for metrics (and optionally logs) retrieval and storage in the new backends.
+If you adopt Telemetry services, the solution is removed from the cluster and the new solution is deployed in the target environment, allowing for metrics, and optionally logs, to be retrieved and stored in the new back ends.
 
-To achieve this an existing `OpenStackControlPlane` custom resource (CR), where Telemetry services are supposed to be disabled, should be patched to start the service with the configuration parameters provided by the source environment.
+To adopt Telemetry services, you patch an existing `OpenStackControlPlane` custom resource (CR) that has Telemetry services disabled to start the service with the configuration parameters that are provided by the source environment.
 
 This guide also assumes that:
 
