@@ -11,6 +11,18 @@
   ansible.builtin.debug:
     msg: "Migrate mon: {{ cur_mon }} to node: {{ target_node }}"
 
+- name: MON - Get current mon IP address from mon_map override
+  when: mon_map is defined
+  ansible.builtin.set_fact:
+    mon_ipaddr: "{{ mon_ip | trim | ansible.utils.ipaddr }}"
+  vars:
+    mon_ip: |-
+      {% for mon in mon_map %}
+      {%   if mon.hostname == cur_mon %}
+      {{ mon.ip }}
+      {%   endif %}
+      {% endfor %}
+
 - name: MON - check mons quorum
   become: true
   ansible.builtin.command: "{{ ceph_cli }} -s -f json"
@@ -25,30 +37,13 @@
   tags:
     - ceph_mon_quorum
 
+# Backup data
 - name: Backup data for client purposes
-  delegate_to: "{{ cur_mon }}"
+  ansible.builtin.include_tasks: backup.yaml
+  vars:
+    host: "{{ cur_mon }}"
   tags:
     - ceph_backup
-  block:
-    - name: Ensure backup directory exists
-      ansible.builtin.file:
-        path: "{{ ceph_config_tmp_client_home }}"
-        state: directory
-        mode: '0755'
-    - name: Check file in the src directory
-      ansible.builtin.find:
-        paths: /etc/ceph
-        patterns: "*"
-      register: dir_ceph_files
-    - name: Backup ceph client data
-      when: dir_ceph_files.files | length > 0
-      become: true
-      ansible.builtin.copy:
-        remote_src: true
-        src: "{{ item.path }}"
-        dest: "{{ ceph_config_tmp_client_home }}"
-        mode: '0644'
-      loop: "{{ dir_ceph_files.files }}"
 
 # Before draining the current node, migrate the active mgr on a different
 # _admin host
@@ -77,6 +72,26 @@
         - mgr.active_name | length > 0
         - mgr.active_name | regex_search(cur_mon)
 
+- name: Unmanage mons
+  become: true
+  ceph_mkspec:
+    service_type: mon
+    cluster: ceph
+    apply: true
+    label: "mon"
+    render_path: "{{ ceph_spec_render_dir }}"
+    unmanaged: true
+  register: spc
+  environment:
+    CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
+    CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
+    CEPH_CONF: "{{ ceph_config_tmp_client_home }}"
+
+- name: Print the resulting spec
+  when: debug | default(false)
+  ansible.builtin.debug:
+    msg: "{{ spc }}"
+
 # Drain and rm the cur_mon from the Ceph cluster
 - name: MON - Drain and rm --force the cur_mon host
   # when: cur_mon in decomm_nodes
@@ -87,6 +102,9 @@
     - ceph_drain
 
 - name: MON - Get current mon IP address
+  when:
+    - mon_ipaddr is not defined
+    - discover_mons | bool | default(true)
   ansible.builtin.set_fact:
     mon_ipaddr: "{{ mon_ip | split(':') | first | ansible.utils.ipaddr }}"
   vars:
@@ -97,6 +115,7 @@
       {%   endif %}
       {% endfor %}
 
+# (fpantano): TODO: Move the ip migration to a dedicated network.yaml
 - name: MON - Move the mon IP Address to {{ target_node }}
   become: true
   # if no mon addr, this variable is False and the whole block is skipped
@@ -159,52 +178,6 @@
 - name: Redeploy MON
   become: true
   block:
-    # when a label is added, if we're not fast enough, a mon is automatically
-    # added on the storage network. However, in case the node has multiple ip
-    # addresses, it might happen that the mon is deployed using the right IP.
-    # For this reason we need to redeploy it by rm + add (as redeploy does not
-    # accept an IP as input
-    # - name: MON - Check quorum
-    #   ansible.builtin.command: "{{ ceph_cli }} mon stat -f json"
-    #   register: monstat
-    #   retries: 20
-    #   delay: 3
-    #   until: "'{{ target_node.split('.')[0] }}' in monstat.stdout | from_json | community.general.json_query('quorum[*].name') | default([]) | list"
-    #   loop_control:
-    #     label: "MON - Check quorum"
-
-    ## Even though we explicitly redeploy a given mon using the host:ip format,
-    # it is possible that the orchestrator (who owns the process and the spec)
-    # takes initiative to redeploy a mon, on an arbitrary ip address (if many)
-    # between the `ceph orch rm ...` command and the `ceph orch daemon add ...`
-    # one. For this reason, the deamon redeploy follows this flow:
-    # 1. update and unmanage the spec
-    # 2. redeploy on the right network as per the official doc:
-    #    https://docs.ceph.com/en/quincy/cephadm/services/mon/
-    # 3. manage the spec
-    # Note: a pause between the steps is required to allow the orchestrator to
-    #       process the spec and update the daemons ref
-    - name: Unmanage mons
-      # root privileges required to run cephadm
-      # and apply the new spec
-      ceph_mkspec:
-        service_type: mon
-        cluster: ceph
-        apply: true
-        label: "mon"
-        render_path: "{{ ceph_spec_render_dir }}"
-        unmanaged: true
-      register: spc
-      environment:
-        CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
-        CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
-        CEPH_CONF: "{{ ceph_config_tmp_client_home }}"
-
-    - name: Print the resulting spec
-      when: debug | default(false)
-      ansible.builtin.debug:
-        msg: "{{ spc }}"
-
     # We add labels in advance to the target node to make sure we are able to
     # deploy a tmp mon that will be replaced with the right one (on the desired
     # network). By adding an additional mon at this stage we can ensure we always
@@ -241,13 +214,6 @@
     - name: Wait for the current mon to be deleted
       ansible.builtin.pause:
         seconds: "{{ ceph_wait_mon_timeout }}"
-
-    # Check if mon even exists before removing it
-    # - name: MON - Check there is no mon on {{ target_node }}
-    #   ansible.builtin.command: "{{ ceph_cli }} orch ps --daemon_type mon --daemon_id {{ daemon_id }} -f json"
-    #   register: psmon
-    #   vars:
-    #     daemon_id: "{{ target_node.split('.')[0] }}"
 
     - name: MON - Redeploy mon on {{ target_node }}
       when: debug | default(false)
