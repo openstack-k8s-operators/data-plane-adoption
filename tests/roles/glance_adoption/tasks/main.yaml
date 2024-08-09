@@ -10,8 +10,8 @@
           - 'nfs_server_addr/nfs_server_path must be defined'
     - name: Generate the glance CR config spec based on the selected backend
       ansible.builtin.template:
-        src: templates/glance_nfs.yaml.j2
-        dst: /tmp/glance_nfs.yaml
+        src: glance_nfs.yaml.j2
+        dest: /tmp/glance_nfs.yaml
         mode: "0600"
     - name: Deploy GlanceAPI with NFS backend
       ansible.builtin.shell: |
