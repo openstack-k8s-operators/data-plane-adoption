@@ -1,3 +1,17 @@
+### CI CHECK ####
+
+- name: Restart Network
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Restart Network
+      ansible.builtin.systemd:
+        name: network
+        state: restarted
+    - name: Reset the SSH connection to handle network restart
+      ansible.builtin.meta: reset_connection
+### END CHECK ###
+
 - name: Externalize Ceph
   hosts: "{{ groups['overcloud'][0] | default([]) }}"
   gather_facts: false
