@@ -7,8 +7,7 @@ To adopt the Placement service, you patch an existing `OpenStackControlPlane` cu
 .Prerequisites
 
 * You import your databases to MariaDB instances on the control plane. For more information, see xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances].
-* You adopt the {identity_service_first_ref} to the {rhos_long} the xref:adopting-the-identity-service_adopt-control-plane[Adopting the Identity service].
-* You must deploy the Memcached operator. For more information, see xref:deploying-backend-services_migrating-databases[Deploying back-end services].
+* You adopt the {identity_service_first_ref}. For more information, see xref:adopting-the-identity-service_adopt-control-plane[Adopting the Identity service].
 
 .Procedure
 
