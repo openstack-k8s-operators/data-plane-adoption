@@ -2,21 +2,19 @@
 
 = Adopting the Placement service
 
+To adopt the Placement service, you patch an existing `OpenStackControlPlane` custom resource (CR) that has the Placement service disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
+
 .Prerequisites
 
-* Previous Adoption steps completed. Notably,
- ** the xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances]
-must already be imported into the control plane MariaDB.
- ** the xref:adopting-the-identity-service_adopt-control-plane[Adopting the Identity service] needs to be imported.
- ** the Memcached operator needs to be deployed (nothing to import for it from
-the source environment).
+* You import your databases to MariaDB instances on the control plane. For more information, see xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances].
+* You adopt the {identity_service_first_ref}. For more information, see xref:adopting-the-identity-service_adopt-control-plane[Adopting the Identity service].
 
 .Procedure
 
-* Patch `OpenStackControlPlane` to deploy the Placement service:
+* Patch the `OpenStackControlPlane` CR to deploy the Placement service:
 +
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   placement:
     enabled: true
@@ -41,13 +39,13 @@ spec:
 
 .Verification
 
-* Check that Placement endpoints are defined and pointing to the
-control plane FQDNs and that Placement API responds:
+* Check that the Placement service endpoints are defined and pointing to the
+control plane FQDNs, and that the Placement API responds:
 +
 ----
-alias openstack="oc exec -t openstackclient -- openstack"
+$ alias openstack="oc exec -t openstackclient -- openstack"
 
-openstack endpoint list | grep placement
+$ openstack endpoint list | grep placement
 
 
 # Without OpenStack CLI placement plugin installed:
