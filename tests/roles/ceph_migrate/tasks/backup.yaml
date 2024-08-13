@@ -1,8 +1,5 @@
 - name: Backup data for client purposes
   delegate_to: "{{ host }}"
-  when:
-    - ceph_client_ip is defined
-    - mon_ipaddr | default('')
   block:
     - name: Ensure backup directory exists
       ansible.builtin.file:
@@ -19,7 +16,7 @@
       become: true
       ansible.builtin.copy:
         remote_src: true
-        src: "/etc/ceph/{{ item }}"
+        src: "{{ item.path }}"
         dest: "{{ ceph_config_tmp_client_home }}"
         mode: '0644'
       loop: "{{ dir_ceph_files.files }}"

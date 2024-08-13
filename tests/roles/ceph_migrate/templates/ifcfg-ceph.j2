@@ -1,0 +1,13 @@
+DEVICE=vlan{{ storage_vlan }}
+ONBOOT=yes
+HOTPLUG=no
+NM_CONTROLLED=no
+PEERDNS=no
+DEVICETYPE=ovs
+TYPE=OVSIntPort
+OVS_BRIDGE={{ storage_br }}
+OVS_OPTIONS="tag={{ storage_vlan }}"
+MTU=1500
+BOOTPROTO=static
+IPADDR={{ cur_ip }}
+NETMASK=255.255.255.0

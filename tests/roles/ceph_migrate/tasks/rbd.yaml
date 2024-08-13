@@ -9,7 +9,8 @@
     # Use the inventory as source of truth to make sure we **always**
     # select mon[0] as client. If we stick on decomm_nodes nodes we
     # might end up selecting a different node on multiple runs.
-    cur_mon: "{{ groups['mon'][0] | default(decomm_nodes | list | sort | first) }}"
+    client_node: "{{ groups['mon'][0] | default(decomm_nodes | list | sort | first) }}"
+    # TODO (fpantano): Remove this os-net-config variable here
     os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
   tags:
     - ceph_client

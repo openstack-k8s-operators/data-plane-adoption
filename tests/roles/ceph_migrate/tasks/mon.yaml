@@ -27,13 +27,13 @@
   become: true
   ansible.builtin.command: "{{ ceph_cli }} -s -f json"
   register: monmap
-  retries: 20
-  delay: 2
-  # >= is related to the fact that the current monmap might still have
-  # references to the old mon daemon coming from the drained node
-  until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
-  loop_control:
-    label: "MON - check mons quorum"
+  tags:
+    - ceph_mon_quorum
+
+- name: ansible.builtin.fail if there's no quorum
+  ansible.builtin.fail:
+    msg: "Mons are not in quorum"
+  when: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) <= ((decomm_nodes |default([]) | length | int) | default(3))
   tags:
     - ceph_mon_quorum
 
@@ -128,6 +128,7 @@
       ansible.builtin.debug:
         msg: "{{ mon_ipaddr }}"
 
+    # Remove the address from the source node
     - name: MON - Patch os-net-config config and REMOVE the current mon IP address
       delegate_to: "{{ cur_mon }}"
       ansible.builtin.lineinfile:
@@ -138,13 +139,13 @@
       vars:
         os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
 
-    - name: MON - Refresh os-net-config
+    # TODO (fpantano): check if it is necessary to rm ifcfg-vlanX
+    - name: MON - Refresh network on the source node
       delegate_to: "{{ cur_mon }}"
-      ansible.builtin.shell:
-        "os-net-config -c {{ os_net_conf_path }}"
-      vars:
-        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
+      ansible.builtin.command:
+        "ifdown {{ net_script_path }}/ifcfg-vlan{{ storage_vlan }}"
 
+    # Add the mon ip address to the target node
     - name: MON - Patch os-net-config config and add the mon IP
       delegate_to: "{{ target_node }}"
       ansible.builtin.lineinfile:
@@ -156,13 +157,20 @@
       vars:
         os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
 
-    - name: MON - Refresh os-net-config
+    - name: MON - Render /etc/network-scripts/sysconfig/ifcfg-ceph
+      delegate_to: "{{ target_node }}"
+      ansible.builtin.template:
+        src: ifcfg-ceph.j2
+        dest: "{{ net_script_path }}/ifcfg-vlan{{ storage_vlan }}-ceph"
+        mode: "0600"
+        force: true
+      vars:
+        cur_ip: "{{ mon_ipaddr }}"
+
+    - name: MON - Refresh network on the target node
       delegate_to: "{{ target_node }}"
       ansible.builtin.command:
-        "os-net-config -c {{ os_net_conf_path }}"
-      # (NOTE): TMP WORKAROUND TO TEST THE PLAYBOK W/O ADOPTION
-      vars:
-        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
+        "ifup {{ net_script_path }}/ifcfg-vlan{{ storage_vlan }}-ceph"
 
     - name: MON - ping ip address to see if is reachable on the target node
       ansible.builtin.command:
@@ -174,6 +182,18 @@
       when: ping_target_ip.rc != 0
       ansible.builtin.fail:
         msg: "Can't reach the mon IP on the target node"
+
+    - name: Setup a Ceph client to the first node
+      ansible.builtin.include_tasks: ceph_client.yaml
+      vars:
+        # Use the inventory as source of truth to make sure we **always**
+        # select mon[0] as client. If we stick on decomm_nodes nodes we
+        # might end up selecting a different node on multiple runs.
+        client_node: "{{ groups['mon'][0] | default(decomm_nodes | list | sort | first) }}"
+        # TODO (fpantano): Remove this os-net-config variable here
+        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
+      tags:
+        - ceph_client
 
 - name: Redeploy MON
   become: true
