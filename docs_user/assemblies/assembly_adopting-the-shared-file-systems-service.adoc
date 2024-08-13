@@ -15,7 +15,7 @@ network refers to the {CephCluster} cluster's public network, and the Shared Fil
 The {rhos_component_storage_file} supports the following storage networking scenarios:
 
 * You can directly control the networking for your respective file shares.
-* The {rhos_acro} administrator configures the storage networking. 
+* The {rhos_acro} administrator configures the storage networking.
 
 
 include::../modules/con_changes-to-cephFS-via-NFS.adoc[leveloffset=+1]
