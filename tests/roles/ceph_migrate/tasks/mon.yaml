@@ -11,13 +11,13 @@
   ansible.builtin.debug:
     msg: "Migrate mon: {{ cur_mon }} to node: {{ target_node }}"
 
-- name: MON - Get current mon IP address from mon_map override
-  when: mon_map is defined
+- name: MON - Get current mon IP address from node_map override
+  when: node_map is defined
   ansible.builtin.set_fact:
     mon_ipaddr: "{{ mon_ip | trim | ansible.utils.ipaddr }}"
   vars:
     mon_ip: |-
-      {% for mon in mon_map %}
+      {% for mon in node_map %}
       {%   if mon.hostname == cur_mon %}
       {{ mon.ip }}
       {%   endif %}
@@ -27,13 +27,13 @@
   become: true
   ansible.builtin.command: "{{ ceph_cli }} -s -f json"
   register: monmap
-  retries: 20
-  delay: 2
-  # >= is related to the fact that the current monmap might still have
-  # references to the old mon daemon coming from the drained node
-  until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
-  loop_control:
-    label: "MON - check mons quorum"
+  tags:
+    - ceph_mon_quorum
+
+- name: ansible.builtin.fail if there's no quorum
+  ansible.builtin.fail:
+    msg: "Mons are not in quorum"
+  when: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) < ((decomm_nodes |default([]) | length | int) | default(3))
   tags:
     - ceph_mon_quorum
 
@@ -72,26 +72,6 @@
         - mgr.active_name | length > 0
         - mgr.active_name | regex_search(cur_mon)
 
-- name: Unmanage mons
-  become: true
-  ceph_mkspec:
-    service_type: mon
-    cluster: ceph
-    apply: true
-    label: "mon"
-    render_path: "{{ ceph_spec_render_dir }}"
-    unmanaged: true
-  register: spc
-  environment:
-    CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
-    CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
-    CEPH_CONF: "{{ ceph_config_tmp_client_home }}"
-
-- name: Print the resulting spec
-  when: debug | default(false)
-  ansible.builtin.debug:
-    msg: "{{ spc }}"
-
 # Drain and rm the cur_mon from the Ceph cluster
 - name: MON - Drain and rm --force the cur_mon host
   # when: cur_mon in decomm_nodes
@@ -122,6 +102,7 @@
   # because there's no network related action that should be performed
   when:
     - mon_ipaddr | default('')
+    - ceph_keep_mon_ipaddr | default(true)
   block:
     - name: MON - Get current mon IP address
       when: debug | default(false)
@@ -176,23 +157,27 @@
         msg: "Can't reach the mon IP on the target node"
 
 - name: Redeploy MON
+  when: ceph_keep_mon_ipaddr | default(true)
   become: true
   block:
-    # We add labels in advance to the target node to make sure we are able to
-    # deploy a tmp mon that will be replaced with the right one (on the desired
-    # network). By adding an additional mon at this stage we can ensure we always
-    # have quorum and at least 3 active mons while migrating the src daemon to the
-    # target node.
-    - name: MON - Setup Mon/Mgr label to the target node
-      ansible.builtin.include_tasks: labels.yaml
-      vars:
-        nodes:
-          - "{{ target_node }}"
-        act: "add"
-        labels:
-          - "mon"
-          - "mgr"
-          - "_admin"
+    - name: Unmanage mons
+      become: true
+      ceph_mkspec:
+        service_type: mon
+        cluster: ceph
+        apply: true
+        label: "mon"
+        render_path: "{{ ceph_spec_render_dir }}"
+        unmanaged: true
+      register: spc
+      environment:
+        CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
+        CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
+        CEPH_CONF: "{{ ceph_config_tmp_client_home }}"
+    - name: Print the resulting spec
+      when: debug | default(false)
+      ansible.builtin.debug:
+        msg: "{{ spc }}"
 
     # Check if a mon exists in the target node and remove it
     - name: MON - Get tmp mon
@@ -211,7 +196,7 @@
       loop_control:
         label: "MON - Get tmp mon"
 
-    - name: Wait for the current mon to be deleted
+    - name: MON - Wait for the current mon to be deleted
       ansible.builtin.pause:
         seconds: "{{ ceph_wait_mon_timeout }}"
 
@@ -227,7 +212,7 @@
       ansible.builtin.command:
         "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
 
-    - name: Wait for the spec to be updated
+    - name: MON - Wait for the spec to be updated
       ansible.builtin.pause:
         seconds: "{{ ceph_wait_mon_timeout }}"
 
@@ -235,13 +220,13 @@
   become: true
   ansible.builtin.command: "{{ ceph_cli }} -s -f json"
   register: monmap
-  retries: 30
-  delay: 4
-  # >= is related to the fact that the current monmap might still have
-  # references to the old mon daemon coming from the drained node
-  until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
-  loop_control:
-    label: "MON - check mons quorum"
+  tags:
+    - ceph_mon_quorum
+
+- name: ansible.builtin.fail if there's no quorum
+  ansible.builtin.fail:
+    msg: "Mons are not in quorum"
+  when: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) < ((decomm_nodes |default([]) | length | int) | default(3))
   tags:
     - ceph_mon_quorum
 
@@ -254,7 +239,7 @@
     - name: reconfig osds
       ansible.builtin.command: "{{ ceph_cli }} orch reconfig osd.default_drive_group "
 
-- name: Manage mons
+- name: MON - Manage mons
   # root privileges required to run cephadm
   # and apply the new spec
   become: true

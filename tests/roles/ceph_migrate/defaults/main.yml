@@ -28,6 +28,7 @@ ceph_timeout: 30
 # wait for mon to be deployed and the orch spec to be
 # updated
 ceph_wait_mon_timeout: 10
+ceph_keep_mon_ipaddr: true
 
 # DEFAULT Ceph Reef container images
 ceph_haproxy_container_image: "quay.io/ceph/haproxy:2.3"

@@ -1,23 +1,8 @@
-# Assign an IP Address on the Storage network to mon[0], that is going to
-# be decommissioned: it will be used during the entire migration procedure as
-# a client
-- name: TMP_CLIENT - Get current mon IP address
-  ansible.builtin.set_fact:
-    mon_ipaddr: "{{ mon_ip | split(':') | first | ansible.utils.ipaddr }}"
-  vars:
-    mon_ip: |-
-      {% for mon in mon_dump.mons %}
-      {%   if mon.name == cur_mon.split('.')[0] %}
-      {{ mon.addr }}
-      {%   endif %}
-      {% endfor %}
-
 - name: TMP_CLIENT - Setup a tmp client ip address on the src node
   when:
     - ceph_client_ip is defined
-    - mon_ipaddr | default('')
   become: true
-  delegate_to: "{{ cur_mon }}"
+  delegate_to: "{{ client_node }}"
   block:
     - name: TMP_CLIENT - Patch os-net-config config and setup a tmp client IP
       ansible.builtin.lineinfile:
@@ -35,6 +20,6 @@
 - name: Backup data for client purposes
   ansible.builtin.include_tasks: backup.yaml
   vars:
-    host: "{{ cur_mon }}"
+    host: "{{ client_node }}"
   tags:
     - ceph_backup
