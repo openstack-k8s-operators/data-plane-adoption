@@ -123,7 +123,7 @@ for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
 done
 ----
 
-. Get the count of not-OK source databases:
+. Get the count of source databases with the `NOK` (not-OK) status:
 +
 ----
 $ oc rsh mariadb-copy-data mysql -h "${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" -e "SHOW databases;"
@@ -146,7 +146,7 @@ $ oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
 ----
 +
 [NOTE]
-You must transition {compute_service_first_ref} services imported later on into a superconductor architecture by deleting the old service records in cells databases, starting with `cell1`. New records are registered with different hostnames provided by the {compute_service} operator. All Compute services, except the Compute agent, have no internal state, and its service records can be safely deleted. You also need to rename the former `default` cell to `cell1`.
+You must transition {compute_service_first_ref} services that are imported later into a superconductor architecture by deleting the old service records in the cell databases, starting with `cell1`. New records are registered with different hostnames provided by the {compute_service} operator. All Compute services, except the Compute agent, have no internal state, and their service records can be safely deleted. You also need to rename the former `default` cell to `cell1`.
 
 . Create a dump of the original databases:
 +
@@ -256,7 +256,7 @@ novadb_svc_records=$(oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -ur
 diff -Z <(echo $novadb_svc_records) <(echo $PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES)
 ----
 
-. Delete the `mariadb-data` pod and `mariadb-copy-data` persistent volume claim with databases backup:
+. Delete the `mariadb-data` pod and the `mariadb-copy-data` persistent volume claim that contains the database backup:
 +
 [NOTE]
 Consider taking a snapshot of them before deleting.
