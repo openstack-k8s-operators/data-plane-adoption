@@ -1,29 +1,25 @@
 [id="deploying-file-systems-service-control-plane_{context}"]
 
-= Deploying the {rhos_component_storage_file} control plane
+= Deploying the {rhos_component_storage_file} on the control plane
 
 Copy the {rhos_component_storage_file_first_ref} configuration from the {rhos_prev_long} {rhos_prev_ver} deployment, and then deploy the {rhos_component_storage_file} on the control plane.
 
 .Prerequisites
 
-* Ensure that {rhos_component_storage_file} systemd services (`api`, `cron`, `scheduler`) are
-stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
-* If the deployment uses CephFS through NFS as a storage backend, ensure that
-pacemaker ordering and collocation constraints are adjusted. For more
+* The {rhos_component_storage_file} systemd services such as `api`, `cron`, and `scheduler` are stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
+* If the deployment uses CephFS through NFS as a storage back end, the
+Pacemaker ordering and collocation constraints are adjusted. For more
 information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
-* Ensure that the {rhos_component_storage_file} pacemaker service (`openstack-manila-share`) is
-stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
-* Ensure that the database migration has completed. For more information, see xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances].
-* Ensure that {OpenShift} nodes where `manila-share` service will be deployed
+* The {rhos_component_storage_file} Pacemaker service (`openstack-manila-share`) is stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
+* The database migration is complete. For more information, see xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances].
+* The {OpenShift} nodes where the `manila-share` service is to be deployed
 can reach the management network that the storage system is in.
-* If the deployment uses CephFS through NFS as a storage backend, ensure that
-a new clustered Ceph NFS service is deployed on the Ceph cluster with the help
+* If the deployment uses CephFS through NFS as a storage back end, a new clustered Ceph NFS service is deployed on the {CephCluster} cluster with the help
 of Ceph orchestrator. For more information, see
 xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a Ceph NFS cluster].
-* Ensure that services such as {identity_service_first_ref} and memcached are available prior to
-adopting the Shared File Systems services.
-* If tenant-driven networking was enabled (`driver_handles_share_servers=True`),
-ensure that {networking_first_ref} has been deployed prior to adopting Shared File Systems services.
+* Services such as the {identity_service_first_ref} and memcached are available prior to adopting the Shared File Systems services.
+* If you enabled tenant-driven networking (`driver_handles_share_servers=True`),
+the {networking_first_ref} is deployed.
 
 .Procedure
 ifeval::["{build}" != "downstream"]
@@ -31,36 +27,28 @@ ifeval::["{build}" != "downstream"]
 defined] already. Then copy the configuration file from {OpenStackShort} {rhos_prev_ver} for reference.
 endif::[]
 ifeval::["{build}" != "upstream"]
-. Define the `CONTROLLER1_SSH` environment variable, if it hasn't been
+. Define the `CONTROLLER1_SSH` environment variable, if it has not been
 defined already. Then copy the configuration file from {OpenStackShort} {rhos_prev_ver} for reference.
 endif::[]
 +
 ----
-$CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/manila/etc/manila/manila.conf | awk '!/^ *#/ && NF' > ~/manila.conf
+$ CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/manila/etc/manila/manila.conf | awk '!/^ *#/ && NF' > ~/manila.conf
 ----
 
-. Review this configuration alongside any configuration changes that were noted since {OpenStackShort} {rhos_prev_ver}. Not all of it makes sense to bring into the new cloud environment:
-// - TODO link config diff tables for RHOSP 17.1 (Wallaby) to RHOSP 18 (Antelope) -
-//kgilliga: The following list might need to be placed in its own module and linked here. This is too much text for a procedure.
-* The {rhos_component_storage_file} operator is capable of setting up database related configuration
-(`[database]`), service authentication (`auth_strategy`,
-`[keystone_authtoken]`), message bus configuration
-(`transport_url`, `control_exchange`), the default paste config
-(`api_paste_config`) and inter-service communication configuration (
-`[neutron]`, `[nova]`, `[cinder]`, `[glance]` `[oslo_messaging_*]`). So
-all of these can be ignored.
-* Ignore the `osapi_share_listen` configuration. In {rhos_long} {rhos_curr_ver}, you rely on
-{OpenShift} routes and ingress.
-* Pay attention to policy overrides. In {rhos_acro} {rhos_curr_ver}, the {rhos_component_storage_file} ships with a secure
-default RBAC, and overrides may not be necessary.
+. Review the configuration file alongside any configuration changes that were made since {OpenStackShort} {rhos_prev_ver}. Not all of it makes sense to bring into the new cloud environment:
+* The {rhos_component_storage_file} operator is capable of setting up the following configurations and can be ignored:
+** Database-related configuration (`[database]`)
+** Service authentication (`auth_strategy`, `[keystone_authtoken]`)
+** Message bus configuration (`transport_url`, `control_exchange`) 
+** The default paste config (`api_paste_config`)
+** Inter-service communication configuration (`[neutron]`, `[nova]`, `[cinder]`, `[glance]` `[oslo_messaging_*]`)
+* Ignore the `osapi_share_listen` configuration. In {rhos_long} {rhos_curr_ver}, you rely on {OpenShift} routes and ingress.
+* Check for policy overrides. In {rhos_acro} {rhos_curr_ver}, the {rhos_component_storage_file} ships with a secure default Role-based access control (RBAC), and overrides might not be necessary.
 ifeval::["{build}" != "downstream"]
 Please review RBAC defaults by using the https://docs.openstack.org/oslo.policy/latest/cli/oslopolicy-policy-generator.html[Oslo policy generator]
 tool.
 endif::[]
-If a custom policy is necessary, you must provide it as a
-`ConfigMap`. The following sample spec illustrates how a
-`ConfigMap` called `manila-policy` can be set up with the contents of a
-file called `policy.yaml`.
+* If a custom policy is necessary, you must provide it as a `ConfigMap`. The following example spec illustrates how you can set up a `ConfigMap` called `manila-policy` with the contents of a file called `policy.yaml`:
 +
 [source,yaml]
 ----
@@ -92,24 +80,15 @@ file called `policy.yaml`.
                         path: policy.yaml
 ----
 
-* You must preserve the value of the `host` option under the `[DEFAULT]`
-section as `hostgroup`.
-* The {rhos_component_storage_file} API service needs the `enabled_share_protocols` option to be
-added in the `customServiceConfig` section in `manila: template: manilaAPI`.
-* If you had scheduler overrides, add them to the `customServiceConfig`
+* The value of the `host` option under the `[DEFAULT]` section must be `hostgroup`.
+* To run the {rhos_component_storage_file} API service, you must add the `enabled_share_protocols` option to the `customServiceConfig` section in `manila: template: manilaAPI`.
+* If you have scheduler overrides, add them to the `customServiceConfig`
 section in `manila: template: manilaScheduler`.
-* If you had multiple storage backend drivers configured with {OpenStackShort} {rhos_prev_ver},
-you will need to split them up when deploying {rhos_acro} {rhos_curr_ver}. Each storage
-backend driver needs to use its own instance of the `manila-share`
-service.
-* If a storage backend driver needs a custom container image, find it on the
-https://catalog.redhat.com/software/containers/search?gs&q=manila[RHOSP Ecosystem Catalog]
-and create or modify an `OpenStackVersion` manifest to specify the custom image
-using the same `<custom name>`.
+* If you have multiple storage back-end drivers configured with {OpenStackShort} {rhos_prev_ver}, you need to split them up when deploying {rhos_acro} {rhos_curr_ver}. Each storage back-end driver needs to use its own instance of the `manila-share` service.
+* If a storage back-end driver needs a custom container image, find it in the
+link:https://catalog.redhat.com/software/containers/search?gs&q=manila[Red Hat Ecosystem Catalog], and create or modify an `OpenStackVersion` custom resource (CR) to specify the custom image using the same `custom name`.
 +
-In the following example that illustrates multiple storage backend drivers,
-where only one is using a custom container image, we have the manila spec from
-`OpenStackControlPlane`:
+The following example shows a manila spec from the `OpenStackControlPlane` CR that includes multiple storage back-end drivers, where only one is using a custom container image:
 +
 [source,yaml]
 ----
@@ -153,7 +132,7 @@ where only one is using a custom container image, we have the manila spec from
             replicas: 1
 ----
 +
-And then we have the `OpenStackVersion` to define the custom container image:
+The following example shows the `OpenStackVersion` CR that defines the custom container image:
 +
 [source,yaml]
 ----
@@ -167,11 +146,13 @@ spec:
       pure: registry.connect.redhat.com/purestorage/openstack-manila-share-pure-rhosp-18-0
 ----
 +
-The name of the `OpenStackVersion` must match the name of your `OpenStackControlPlane`, so in your case it may be other than `openstack`.
+The name of the `OpenStackVersion` CR must match the name of your `OpenStackControlPlane` CR.
 
+// - TODO link config diff tables for RHOSP 17.1 (Wallaby) to RHOSP 18 (Antelope) -
+//kgilliga: add link to the "preparing the shared file systems service configuration"
 . If providing sensitive information, such as passwords, hostnames and
 usernames, it is recommended to use {OpenShift} secrets, and the
-`customServiceConfigSecrets` key. An example:
+`customServiceConfigSecrets` key. For example:
 +
 [source,yaml]
 ----
