@@ -62,7 +62,7 @@ RBD/Ceph::
 iSCSI::
 To connect to iSCSI volumes, the iSCSI initiator must run on the
 {OpenShiftShort} hosts where volume and backup services are going to run. The Linux Open iSCSI initiator does not support network namespaces, so you must only run one instance of the service for the normal {OpenShiftShort} usage, as well as
-the {OpenShiftShort} CSI plugins and the {OpenShiftShort} services.
+the {OpenShiftShort} CSI plugins and the {OpenStackShort} services.
 +
 If you are not already running `iscsid` on the {OpenShiftShort} nodes, then you must apply a `MachineConfig`. For example:
 +
