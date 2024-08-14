@@ -34,7 +34,7 @@ spec:
 < . . . >
 ----
 +
-For more information about node selection, see xref:about-node-selector_planning[About node selector]. 
+For more information about node selection, see xref:about-node-selector_planning[About node selector].
 +
 [NOTE]
 ====
@@ -156,7 +156,7 @@ $ cat /sys/module/nvme_core/parameters/multipath
 ----
 +
 [IMPORTANT]
-ANA does not use the Linux Multipathing Device Mapper, but {OpenShiftShort} requires `multipathd` on Compute nodes to be running for the {compute_service_first_ref} to be able to use multipathing. Multipathing is automatically configured on data plane nodes when they are provisioned. 
+ANA does not use the Linux Multipathing Device Mapper, but {OpenShiftShort} requires `multipathd` on Compute nodes to be running for the {compute_service_first_ref} to be able to use multipathing. Multipathing is automatically configured on data plane nodes when they are provisioned.
 
 Multipathing::
 Multipathing is recommended for iSCSI and FC protocols. To configure multipathing on these protocols, you perform the following tasks:
@@ -207,4 +207,3 @@ If use labels to restrict the nodes where Block Storage services are running, yo
 If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
 +
 Cinder volume and backup are configured by default to use multipathing.
-
