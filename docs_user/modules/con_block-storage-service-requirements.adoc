@@ -7,7 +7,7 @@ The Block Storage service (cinder) has both local storage used by the service an
 Local storage is used for example when downloading a {image_service_first_ref} image for the create volume from image operation, which can become considerable when having
 concurrent operations and not using the Block Storage service volume cache.
 
-In the Operator deployed {OpenStackShort}, there is a way to configure the
+In the Operator deployed {rhos_long}, there is a way to configure the
 location of the conversion directory to be an NFS share (using the extra
 volumes feature), something that needed to be done manually before.
 
@@ -16,7 +16,7 @@ regarding the Block Storage service backends, because you are using the same one
 using in your current deployment, you should still evaluate it, because it may not be so straightforward.
 
 First you need to check the transport protocol the Block Storage service backends are using:
-RBD, iSCSI, FC, NFS, NVMe-oF, etc.
+RBD, iSCSI, FC, NFS, NVMe-TCP, etc.
 
 Once you know all the transport protocols that you are using, you can make
 sure that you are taking them into consideration when placing the Block Storage services (as mentioned above in the Node Roles section) and the right storage transport related binaries are running on the {OpenShift} nodes.
@@ -25,7 +25,7 @@ Detailed information about the specifics for each storage transport protocol can
 
 The recommended way to deploy {block_storage} volume back ends is to use a {block_storage} volume service for each back end.
 
-For example, you have an LVM and a Ceph back end and two entries in `cinderVolume`, and you cannot set global defaults for all volume services. You must define a service for each of them:
+For example, you have an LVM and a Ceph back end and two entries in `cinderVolumes`, and you cannot set global defaults for all volume services. You must define a service for each of them:
 
 [source,yaml]
 ----
@@ -37,7 +37,7 @@ spec:
   cinder:
     enabled: true
     template:
-      cinderVolume:
+      cinderVolumes:
         lvm:
           customServiceConfig: |
             [DEFAULT]

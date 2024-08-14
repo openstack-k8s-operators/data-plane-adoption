@@ -4,7 +4,7 @@
 
 Before you deploy {rhos_prev_long} ({OpenStackShort}) in {OpenShift} ({OpenShiftShort}), ensure that the networks are ready, that you decide which {OpenShiftShort} nodes to restrict, and that you make any necessary changes to the {OpenShiftShort} nodes.
 
-//kgilliga: Might need to change xref:about-node-selector_planning[About node selector] to the link to RHOCP documentation if I remove this module. (https://docs.openshift.com/container-platform/4.16/nodes/scheduling/nodes-scheduler-node-selectors.html)
+//kgilliga: Need to change xref:about-node-selector_planning[About node selector] to the link to RHOCP documentation if I remove this module. (https://docs.openshift.com/container-platform/4.16/nodes/scheduling/nodes-scheduler-node-selectors.html)
 
 Node selection::
 You might need to restrict the {OpenShiftShort} nodes where the {block_storage} volume and backup services can run.
@@ -34,7 +34,7 @@ spec:
 < . . . >
 ----
 +
-For more information about node selection, see xref:about-node-selector_planning[About node selector].
+For more information about node selection, see xref:about-node-selector_planning[About node selector]. 
 +
 [NOTE]
 ====
@@ -42,12 +42,13 @@ If your nodes do not have enough local disk space for temporary images, you can 
 ====
 Transport protocols::
 Due to the specifics of the storage transport protocols, some changes might be
-required for {OpenShiftShort}. Use the following instructions as a guide for the different transport protocols:
+required for {OpenShiftShort}. Before making changes, review the following information:
 +
 * Check the back-end sections in your `cinder.conf` file that are listed in the
 `enabled_backends` configuration option to determine the transport storage
 protocol that the back end uses.
 * Depending on the back end, you can find the transport protocol by viewing the `volume_driver` or `target_protocol` configuration options.
+* The `icssid` service, `multipathd` service, and `NVMe-TCP` kernel modules start automatically on data plane nodes.
 +
 [WARNING]
 If you use a `MachineConfig` to make changes to {OpenShiftShort} nodes, the nodes reboot.
@@ -61,7 +62,7 @@ RBD/Ceph::
 iSCSI::
 To connect to iSCSI volumes, the iSCSI initiator must run on the
 {OpenShiftShort} hosts where volume and backup services are going to run. The Linux Open iSCSI initiator does not support network namespaces, so you must only run one instance of the service for the normal {OpenShiftShort} usage, as well as
-the {OpenShiftShort} CSI plugins and the {OpenStackShort} services.
+the {OpenShiftShort} CSI plugins and the {OpenShiftShort} services.
 +
 If you are not already running `iscsid` on the {OpenShiftShort} nodes, then you must apply a `MachineConfig`. For example:
 +
@@ -92,18 +93,16 @@ If you are using a single node deployment to test the process, replace `worker` 
 For production deployments that use iSCSI volumes, it is recommended to configure
 multipathing.
 
-//*TODO:* Add, or at least mention, the Nova eDPM side for iSCSI.
-
 FC::
-The {block_storage} volume and {block_storage} backup services need to run in an {OpenShiftShort} host that has HBAs. If some nodes do not have HBAs, then you need to use labels to restrict where these services can run. For more information, see xref:about-node-selector_planning[About node selector].
+The {block_storage} volume and {block_storage} backup services need to run in an {OpenShiftShort} host that has host bus adapters (HBAs). If some nodes do not have HBAs, then you need to use labels to restrict where these services can run. For more information, see xref:about-node-selector_planning[About node selector].
 +
 If you have virtualized {OpenShiftShort} clusters that use FC you need to expose the host HBAs inside the virtual machine.
 +
 For production deployments that use FC volumes, it is recommended to configure
 multipathing.
 
-NVMe-oF::
-To connect to NVMe-oF volumes, nvme kernel modules must be loaded on the {OpenShiftShort} hosts.
+NVMe-TCP::
+To connect to NVMe-TCP volumes, `NVMe-TCP` kernel modules must be loaded on the {OpenShiftShort} hosts.
 +
 If you are not already loading the `nvme-fabrics` module on the {OpenShiftShort} nodes where the volume and backup services are going to run, then you must apply a `MachineConfig`. For example:
 +
@@ -143,11 +142,11 @@ If you are using a single node deployment to test the process, replace `worker` 
 You only load the `nvme-fabrics` module because it loads the transport-specific modules, such as tcp, rdma, or fc, as needed.
 +
 ifeval::["{build}" != "downstream"]
-For production deployments that use NVMe-oF volumes, it is recommended that you use multipathing. For NVMe-oF volumes {OpenStackShort} uses native multipathing, called
+For production deployments that use NVMe-TCP volumes, it is recommended that you use multipathing. For NVMe-TCP volumes {OpenShiftShort} uses native multipathing, called
 https://nvmexpress.org/faq-items/what-is-ana-nvme-multipathing/[ANA].
 endif::[]
 ifeval::["{build}" != "upstream"]
-For production deployments that use NVMe-oF volumes, it is recommended that you use multipathing. For NVMe-oF volumes, {OpenStackShort} uses native multipathing, called ANA.
+For production deployments that use NVMe-TCP volumes, it is recommended that you use multipathing. For NVMe-TCP volumes, {OpenShiftShort} uses native multipathing, called ANA.
 endif::[]
 +
 After the {OpenShiftShort} nodes reboot and are loading the `nvme-fabrics` module, you can confirm that the operating system is configured and supports ANA by checking the host:
@@ -157,13 +156,10 @@ $ cat /sys/module/nvme_core/parameters/multipath
 ----
 +
 [IMPORTANT]
-ANA does not use the Linux Multipathing Device Mapper, but
-{OpenStackShort} requires `multipathd` on Compute nodes to be running for the{compute_service_first_ref} to be able to use multipathing.
-
-//*TODO:* Add, or at least mention, the Nova eDPM side for NVMe-oF.
+ANA does not use the Linux Multipathing Device Mapper, but {OpenShiftShort} requires `multipathd` on Compute nodes to be running for the {compute_service_first_ref} to be able to use multipathing. Multipathing is automatically configured on data plane nodes when they are provisioned. 
 
 Multipathing::
-Multipathing is recommended for iSCSI and FC protocols. To configure multipathing, your perform the following tasks:
+Multipathing is recommended for iSCSI and FC protocols. To configure multipathing on these protocols, you perform the following tasks:
 
 * Prepare the {OpenShiftShort} hosts
 * Configure the Block Storage services
@@ -210,9 +206,5 @@ If use labels to restrict the nodes where Block Storage services are running, yo
 +
 If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
 +
-To configure the Block Storage services to use multipathing, enable the
-`use_multipath_for_image_xfer` configuration option in all the back-end sections
-and in the `[DEFAULT]` section for the backup service. This is the default in control plane deployments. For multipathing to work, the service must run on the {OpenShiftShort} host. Do not override this option by setting `use_multipath_for_image_xfer = false`.
+Cinder volume and backup are configured by default to use multipathing.
 
-//*TODO:* Add, or at least mention, the Nova eDPM side for Multipathing once
-//it's implemented.

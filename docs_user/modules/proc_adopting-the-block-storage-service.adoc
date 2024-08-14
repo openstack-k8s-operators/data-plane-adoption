@@ -122,11 +122,11 @@ $ openstack volume service list
 . Remove services for hosts that are in the `down` state:
 +
 ----
-$ oc exec -it cinder-scheduler-0 -- cinder-manage service remove <service_name>
-$ oc exec -it cinder-scheduler-0 -- cinder-manage service remove <service_name>
+$ oc exec -it cinder-scheduler-0 -- cinder-manage service remove <service_binary> <service_host>
 ----
 +
-* Replace `<service_name>` with the name of the service to remove.
+* Replace `<service_binary>` with the name of the binary, for example, `cinder-backup`.
+* Replace `<service_host>` with the host name, for example, `cinder-backup-0`.
 
 . Apply the DB data migrations:
 +
@@ -136,10 +136,8 @@ You are not required to run the data migrations at this step, but you must run t
 ====
 +
 ----
-$ oc exec -it cinder-scheduler-0 -- cinder-manage db <database_name>
+$ oc exec -it cinder-scheduler-0 -- cinder-manage db online_data_migrations
 ----
-+
-* Replace `<database_name>` with the name of the database to migrate.
 
 .Verification
 
@@ -152,14 +150,19 @@ $ alias openstack="oc exec -t openstackclient -- openstack"
 . Confirm that {block_storage} endpoints are defined and pointing to the control plane FQDNs:
 +
 ----
-$ openstack endpoint list --service cinderv3
+$ openstack endpoint list --service <endpoint>
 ----
++
+* Replace `<endpoint>` with the name of the endpoint that you want to confirm. 
 
-. Confirm that the Block Storage services are running. The API does not show but if you get a response you know it's up as well:
+. Confirm that the Block Storage services are running:
 +
 ----
 $ openstack volume service list
 ----
++
+[NOTE]
+Cinder API services do not appear in the list. However, if you get a response from the `openstack volume service list` command, that means at least one of the cinder API services is running.
 
 . Confirm that you have your previous volume types, volumes, snapshots, and backups:
 +
