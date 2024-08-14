@@ -39,7 +39,7 @@ $ CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/manila/etc/manila/ma
 * The {rhos_component_storage_file} operator is capable of setting up the following configurations and can be ignored:
 ** Database-related configuration (`[database]`)
 ** Service authentication (`auth_strategy`, `[keystone_authtoken]`)
-** Message bus configuration (`transport_url`, `control_exchange`) 
+** Message bus configuration (`transport_url`, `control_exchange`)
 ** The default paste config (`api_paste_config`)
 ** Inter-service communication configuration (`[neutron]`, `[nova]`, `[cinder]`, `[glance]` `[oslo_messaging_*]`)
 * Ignore the `osapi_share_listen` configuration. In {rhos_long} {rhos_curr_ver}, you rely on {OpenShift} routes and ingress.
