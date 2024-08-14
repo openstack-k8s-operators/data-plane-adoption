@@ -221,6 +221,10 @@
             edpm_sshd_configure_firewall: true
             edpm_sshd_allowed_ranges: {{ edpm_sshd_allowed_ranges }}
 
+            {% if edpm_container_registry_insecure_registries is defined -%}
+            edpm_container_registry_insecure_registries: {{ edpm_container_registry_insecure_registries }}
+            {% endif -%}
+
             # Do not attempt OVS major upgrades here
             edpm_ovs_packages:
             - openvswitch3.1
