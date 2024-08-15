@@ -2,31 +2,20 @@
 
 = Decommissioning the {rhos_prev_long} standalone Ceph NFS service
 
-If the deployment uses CephFS through NFS, you must inform your {rhos_prev_long}({OpenStackShort}) users
-that the old, standalone NFS service will be decommissioned. Users can discover
-the new export locations for their pre-existing shares by querying the {rhos_component_storage_file} API.
-To stop using the old NFS server, they need to unmount and remount their
-shared file systems on each client. If users are consuming the {rhos_component_storage_file} shares via
-the {rhos_component_storage_file} CSI plugin for {OpenShift}, this migration can be done by scaling down
-the application pods and scaling them back up. Clients spawning new workloads
-must be discouraged from using share exports via the old NFS service. The {rhos_component_storage_file}
-will no longer communicate with the old NFS service, and so it cannot apply or
-alter any export rules on the old NFS service.
+If your deployment uses CephFS through NFS, you must decommission the {rhos_prev_long}({OpenStackShort}) standalone NFS service. Since future software upgrades do not support the previous NFS service, it is recommended that the decommissioning period is short. 
 
-Since the old NFS service will no longer be supported by future software
-upgrades, it is recommended that the decommissioning period is short.
+You can discover the new export locations for your existing shares by querying the Shared File Systems API. To stop using the previous NFS server, you need to unmount and remount the shared file systems on each client. If you are consuming the {rhos_component_storage_file} shares with the {rhos_component_storage_file} CSI plugin for {OpenShift}, you can migrate the shares by scaling down the application pods and scaling them back up. Clients spawning new workloads should not use share exports through the previous NFS service. The {rhos_component_storage_file} no longer communicates with the previous NFS service, and so it cannot apply or alter any export rules on the previous NFS service.
 
 .Procedure
 
-. Once the old NFS service is no longer used, you can adjust the configuration
-for the `manila-share` service to remove the `cephfs_ganesha_server_ip` option.
-Doing this will restart the `manila-share` process and remove the export
-locations that pertained to the old NFS service from all the shares.
-//kgilliga: Is this 2 separate steps? Remove the `cephfs_ganesha_server_ip` option, and then run oc patch openstackcontrolplane openstack? Or is the following code just an example of what the yaml file should look like?
+. Remove the `cephfs_ganesha_server_ip` option from the `manila-share` service configuration:
++
+[NOTE]
+This restarts the `manila-share` process and removes the export locations that applied to the previous NFS service from all the shares.
 +
 [source,yaml]
 ----
-cat << __EOF__ > ~/manila.patch
+$ cat << __EOF__ > ~/manila.patch
 spec:
   manila:
     enabled: true
@@ -54,19 +43,19 @@ spec:
 __EOF__
 
 ----
-+
+
+. Patch the `OpenStackControlPlane` custom resource:
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patch
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patch
 ----
 
-. To cleanup the standalone ceph nfs service from the {OpenStackShort} control plane
-nodes, you can disable and delete the pacemaker resources associated with the
-service. Replace `<VIP>` in the following commands with the IP address assigned
-to the ceph-nfs service in your environment.
+. Optional: To clean up the standalone `ceph-nfs` service from the {OpenStackShort} control plane nodes, you can disable and delete the Pacemaker resources associated with the service: 
 +
 ----
-sudo pcs resource disable ceph-nfs
-sudo pcs resource disable ip-<VIP>
-sudo pcs resource unmanage ceph-nfs
-sudo pcs resource unmanage ip-<VIP>
+$ sudo pcs resource disable ceph-nfs
+$ sudo pcs resource disable ip-<VIP>
+$ sudo pcs resource unmanage ceph-nfs
+$ sudo pcs resource unmanage ip-<VIP>
 ----
++
+* Replace `<VIP>` with the IP address assigned to the `ceph-nfs` service in your environment.

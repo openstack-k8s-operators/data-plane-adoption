@@ -14,7 +14,7 @@ Copy the {rhos_component_storage_file_first_ref} configuration from the {rhos_pr
 * If the deployment uses CephFS through NFS as a storage back end, a new clustered Ceph NFS service is deployed on the {CephCluster} cluster with the help
 of Ceph orchestrator. For more information, see xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a Ceph NFS cluster].
 * Services such as the {identity_service_first_ref} and memcached are available prior to adopting the Shared File Systems services.
-* If you enabled tenant-driven networking (`driver_handles_share_servers=True`), the {networking_first_ref} is deployed.
+* If you enabled tenant-driven networking by setting `driver_handles_share_servers=True`, the {networking_first_ref} is deployed.
 
 .Procedure
 ifeval::["{build}" != "downstream"]
