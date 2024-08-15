@@ -2,7 +2,7 @@
 
 = Decommissioning the {rhos_prev_long} standalone Ceph NFS service
 
-If your deployment uses CephFS through NFS, you must decommission the {rhos_prev_long}({OpenStackShort}) standalone NFS service. Since future software upgrades do not support the previous NFS service, it is recommended that the decommissioning period is short. 
+If your deployment uses CephFS through NFS, you must decommission the {rhos_prev_long}({OpenStackShort}) standalone NFS service. Since future software upgrades do not support the previous NFS service, it is recommended that the decommissioning period is short.
 
 You can discover the new export locations for your existing shares by querying the Shared File Systems API. To stop using the previous NFS server, you need to unmount and remount the shared file systems on each client. If you are consuming the {rhos_component_storage_file} shares with the {rhos_component_storage_file} CSI plugin for {OpenShift}, you can migrate the shares by scaling down the application pods and scaling them back up. Clients spawning new workloads should not use share exports through the previous NFS service. The {rhos_component_storage_file} no longer communicates with the previous NFS service, and so it cannot apply or alter any export rules on the previous NFS service.
 
@@ -49,7 +49,7 @@ __EOF__
 $ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patch
 ----
 
-. Optional: To clean up the standalone `ceph-nfs` service from the {OpenStackShort} control plane nodes, you can disable and delete the Pacemaker resources associated with the service: 
+. Optional: To clean up the standalone `ceph-nfs` service from the {OpenStackShort} control plane nodes, you can disable and delete the Pacemaker resources associated with the service:
 +
 ----
 $ sudo pcs resource disable ceph-nfs
