@@ -49,13 +49,13 @@
 # _admin host
 - name: Migrate Ceph mgr from the current node if required
   block:
-    - name: Get the current mgrmap dump
+    - name: MON - Get the current active mgr
       become: true
       ansible.builtin.command:
-        "{{ ceph_cli }} mgr dump -f json"
+        "{{ ceph_cli }} mgr stat -f json"
       register: mgr
 
-    - name: Load mgr data
+    - name: MON - Load mgr data
       ansible.builtin.set_fact:
         mgr: "{{ mgr.stdout | from_json }}"
 
@@ -102,7 +102,7 @@
   # because there's no network related action that should be performed
   when:
     - mon_ipaddr | default('')
-    - ceph_keep_mon_ipaddr | default(true)
+    - ceph_keep_mon_ipaddr | default(false)
   block:
     - name: MON - Get current mon IP address
       when: debug | default(false)
@@ -157,7 +157,7 @@
         msg: "Can't reach the mon IP on the target node"
 
 - name: Redeploy MON
-  when: ceph_keep_mon_ipaddr | default(true)
+  when: ceph_keep_mon_ipaddr | default(false)
   become: true
   block:
     - name: Unmanage mons
