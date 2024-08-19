@@ -52,7 +52,6 @@
     act: "add"
     labels:
       - "mon"
-      - "mgr"
       - "_admin"
 
 - name: Normalize the mon spec to use labels
@@ -72,6 +71,17 @@
   tags:
     - ceph_rbd
 
+# Wait for new mons as a result of the spec apply: we already have three mons
+# deployed on decomm_nodes, we should now see three more on target_node(s)
+- name: RBD - wait new daemons to be available
+  ansible.builtin.include_tasks: wait_daemons.yaml
+  vars:
+    daemon: mon
+    daemon_id: "{{ node.split('.')[0] }}"
+  loop: "{{ target_nodes }}"
+  loop_control:
+    loop_var: node
+
 # we need to serially migrate mons, so we loop over the nodes and run the
 # procedure provided by mon.yaml
 - name: MON - Migrate RBD node
@@ -83,6 +93,7 @@
       vars:
         cur_mon: "{{ node.0 }}"
         target_node: "{{ node.1 }}"
+        client_node: "{{ groups['mon'][0] | default(decomm_nodes | list | sort | first) }}"
       # This condition might be a different one
       loop: "{{ decomm_nodes | zip(target_nodes) }}"
       loop_control:

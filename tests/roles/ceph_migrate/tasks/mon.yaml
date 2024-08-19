@@ -39,6 +39,7 @@
 
 # Backup data
 - name: Backup data for client purposes
+  when: cur_mon != client_node
   ansible.builtin.include_tasks: backup.yaml
   vars:
     host: "{{ cur_mon }}"
