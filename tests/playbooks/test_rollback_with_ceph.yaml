@@ -65,9 +65,11 @@
     - role: telemetry_adoption
       tags:
         - telemetry_adoption
+      when: telemetry_adoption|default(true)
     - role: autoscaling_adoption
       tags:
         - autoscaling_adoption
+      when: telemetry_adoption|default(true)
     - role: manila_adoption
       tags:
         - manila_adoption
