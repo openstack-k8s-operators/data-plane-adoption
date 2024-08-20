@@ -5,11 +5,6 @@
       CEPH_SSH="{{ controller1_ssh }}"
       CEPH_KEY=$($CEPH_SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0")
       CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
-  when: not ospdo_src| bool
-
-- name: execute alternative tasks when source env is ODPdO
-  ansible.builtin.include_tasks: ospdo_ceph_backend_configuration.yaml
-  when: ospdo_src| bool
 
 - name: update the openstack keyring caps for Manila
   no_log: "{{ use_no_log }}"

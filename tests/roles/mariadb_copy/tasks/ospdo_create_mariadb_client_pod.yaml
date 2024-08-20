@@ -5,14 +5,12 @@
   block:
   - name: register source_mariadb_ip
     no_log: "{{ use_no_log }}"
-    delegate_to: "{{ adoption_ospdo_host }}"
     ansible.builtin.shell: |
       {{ controller1_ssh }} sudo cat /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg | grep -A1 'listen mysql'|tail -n 1|sed 's/.*bind //g' |sed 's/:3306.*//g'
     register: source_mariadb_ip
 
   - name: register source_db_root_pass
     no_log: "{{ use_no_log }}"
-    delegate_to: "{{ adoption_ospdo_host }}"
     ansible.builtin.shell: |
       oc get secret -n openstack tripleo-passwords -o jsonpath='{.data.*}'| base64 -d |grep MysqlRootPassword|sed 's/.*: //g'
     register: source_db_root_pass
@@ -31,7 +29,6 @@
         SOURCE_DB_ROOT_PASSWORD={{ source_db_root_pass.stdout }}
 
   - name: start an adoption mariadb helper pod on ospdo src env
-    delegate_to: "{{ adoption_ospdo_host }}"
     ansible.builtin.shell: |
       {{ shell_header }}
       {{ mariadb_copy_shell_vars_src }}
@@ -89,7 +86,6 @@
 
     changed_when: true
   - name: wait for the pod to come up
-    delegate_to: "{{ adoption_ospdo_host }}"
     ansible.builtin.shell: |
       {{ shell_header }}
       {{ oc_header }}

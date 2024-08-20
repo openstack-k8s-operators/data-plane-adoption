@@ -1,11 +1,4 @@
 - name: get service passwords
-  delegate_to: "{{ adoption_ospdo_host }}"
   ansible.builtin.shell: |
      oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
 
-- name: Fetch file from delegate host
-  delegate_to: "{{ adoption_ospdo_host }}"
-  fetch:
-    src: ~/tripleo-standalone-passwords.yaml
-    dest: ~/tripleo-standalone-passwords.yaml
-    flat: yes
