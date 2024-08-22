@@ -1,0 +1,22 @@
+- name: Backup data for client purposes
+  delegate_to: "{{ host }}"
+  block:
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: "{{ ceph_config_tmp_client_home }}"
+        state: directory
+        mode: '0755'
+    - name: Check file in the src directory
+      ansible.builtin.find:
+        paths: /etc/ceph
+        patterns: "*"
+      register: dir_ceph_files
+    - name: Backup ceph client data
+      when: dir_ceph_files.files | length > 0
+      become: true
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ item.path }}"
+        dest: "{{ ceph_config_tmp_client_home }}"
+        mode: '0644'
+      loop: "{{ dir_ceph_files.files }}"

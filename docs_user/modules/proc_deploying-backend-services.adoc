@@ -158,6 +158,8 @@ spec:
   tls:
     podLevel:
       enabled: false
+    ingress:
+      enabled: false
 ----
 
 . Deploy the `OpenStackControlPlane` CR. Ensure that you only enable the DNS, MariaDB, Memcached, and RabbitMQ services. All other services must

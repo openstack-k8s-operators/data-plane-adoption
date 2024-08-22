@@ -52,5 +52,5 @@
     ${BASH_ALIASES[openstack]} stack list
   register: heat_responding_result
   until: heat_responding_result is success
-  retries: 15
+  retries: 60
   delay: 2

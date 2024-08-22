@@ -5,17 +5,6 @@
     ceph_fsid: "{{ mon_dump.fsid }}"
     ceph_cluster: ceph
 
-- name: Update firewall rules on the target nodes
-  ansible.builtin.include_tasks: firewall.yaml
-  vars:
-    ifports_range: "6800:7300"
-    node: "{{ n }}"
-  loop: "{{ target_nodes }}"
-  loop_control:
-    loop_var: n
-  tags:
-    - ceph_firewall
-
 - name: MDS - Load Spec from the orchestrator
   ansible.builtin.set_fact:
     mds_spec: "{{ mds }}"

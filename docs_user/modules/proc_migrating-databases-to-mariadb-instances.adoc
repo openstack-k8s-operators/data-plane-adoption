@@ -1,27 +1,22 @@
 [id="migrating-databases-to-mariadb-instances_{context}"]
 
-//kgilliga: Find out if the steps in the Variables and pre-checks sections can go in the main procedure or if they have to be done before.
-
 = Migrating databases to MariaDB instances
 
-This document describes how to move the databases from the original
-{rhos_prev_long} ({OpenStackShort}) deployment to the MariaDB instances in the {OpenShift} cluster.
+Migrate your databases from the original {rhos_prev_long} ({OpenStackShort}) deployment to the MariaDB instances in the {OpenShift} cluster.
 
-[NOTE]
-This example scenario describes a simple single-cell setup. Real
-multi-stack topology recommended for production use results in different
-cells DBs layout, and should be using different naming schemes (not covered
-here this time).
+//[NOTE]
+//This example scenario describes a simple single-cell setup. Real
+//multi-stack topology recommended for production use results in different
+//cells DBs layout, and should be using different naming schemes (not covered
+//here this time). kgilliga: I hid the same note in the Compute adoption procedure. Will likely reinstate this after multi-cell is released.
 
 .Prerequisites
 
-* Make sure the previous Adoption steps have been performed successfully.
- ** The `OpenStackControlPlane` resource must be already created.
- ** The control plane MariaDB and RabbitMQ are running. No other control plane services are running.
- ** Required services specific topology. For more information, see xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
- ** {OpenStackShort} services have been stopped. For more information, see xref:stopping-openstack-services_{context}[Stopping {rhos_prev_long} services].
- ** There must be network routability between the original MariaDB and the MariaDB for the control plane.
-* Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
+* Ensure that the control plane MariaDB and RabbitMQ are running, and that no other control plane services are running.
+* Retrieve the topology-specific service configuration. For more information, see xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
+* Stop the {OpenStackShort} services. For more information, see xref:stopping-openstack-services_{context}[Stopping {rhos_prev_long} services].
+* Ensure that there is network routability between the original MariaDB and the MariaDB for the control plane.
+* Define the following shell variables. Replace the following example values with values that are correct for your environment:
 +
 ----
 PODIFIED_MARIADB_IP=$(oc get svc --selector "mariadb/name=openstack" -ojsonpath='{.items[0].spec.clusterIP}')
@@ -52,13 +47,13 @@ SOURCE_GALERA_MEMBERS=(
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
-* Prepare MariaDB copy directory and the adoption helper pod
+* Prepare the MariaDB copy directory and the adoption helper pod:
 
-* Create a temporary folder to store adoption helper pod (pick storage requests to fit MySQL database size):
+. Create a temporary folder to store the adoption helper pod. Choose storage requests that fit the MySQL database size:
 +
 ----
-mkdir ~/adoption-db
-cd ~/adoption-db
+$ mkdir ~/adoption-db
+$ cd ~/adoption-db
 ----
 +
 [source,yaml]
@@ -108,10 +103,10 @@ spec:
 EOF
 ----
 
-* Wait for the pod to come up
+. Wait for the pod to be ready:
 +
 ----
-oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
+$ oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
 ----
 
 .Procedure
@@ -128,41 +123,35 @@ for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
 done
 ----
 
-. Get the count of not-OK source databases:
+. Get the count of source databases with the `NOK` (not-OK) status:
 +
 ----
-oc rsh mariadb-copy-data mysql -h "${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" -e "SHOW databases;"
+$ oc rsh mariadb-copy-data mysql -h "${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" -e "SHOW databases;"
 ----
 
-. Run mysqlcheck on the original DB to look for things that are not OK:
+. Check that `mysqlcheck` had no errors:
 +
 ----
 . ~/.source_cloud_exported_variables
 test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ]
 ----
 
-. Test connection to control plane DBs (show databases):
+. Test the connection to the control plane databases:
 +
 ----
-oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
+$ oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
     mysql -rsh "$PODIFIED_MARIADB_IP" -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
-oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
+$ oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
     mysql -rsh "$PODIFIED_CELL1_MARIADB_IP" -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
 ----
 +
 [NOTE]
-You need to transition {compute_service_first_ref} services imported later on into a
-superconductor architecture. For that, delete the old service records in
-cells DBs, starting from the cell1. New records will be registered with
-different hostnames provided by the {compute_service} service operator. All {compute_service}
-services, except the compute agent, have no internal state, and its service
-records can be safely deleted. You also need to rename the former `default` cell
-to `cell1`.
+You must transition {compute_service_first_ref} services that are imported later into a superconductor architecture by deleting the old service records in the cell databases, starting with `cell1`. New records are registered with different hostnames provided by the {compute_service} operator. All Compute services, except the Compute agent, have no internal state, and their service records can be safely deleted. You also need to rename the former `default` cell to `cell1`.
 
 . Create a dump of the original databases:
 +
 ----
-oc rsh mariadb-copy-data << EOF
+$ oc rsh mariadb-copy-data << EOF
   mysql -h"${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" \
   -N -e "show databases" | grep -E -v "schema|mysql|gnocchi" | \
   while read dbname; do
@@ -174,10 +163,10 @@ oc rsh mariadb-copy-data << EOF
 EOF
 ----
 
-. Restore the databases from .sql files into the control plane MariaDB:
+. Restore the databases from `.sql` files into the control plane MariaDB:
 +
 ----
-oc rsh mariadb-copy-data << EOF
+$ oc rsh mariadb-copy-data << EOF
   # db schemas to rename on import
   declare -A db_name_map
   db_name_map['nova']='nova_cell1'
@@ -226,10 +215,10 @@ EOF
 
 .Verification
 
-Compare the following outputs with the topology specific configuration.
+Compare the following outputs with the topology-specific service configuration.
 For more information, see xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
 
-. Check that the databases were imported correctly:
+. Check that the databases are imported correctly:
 +
 ----
 . ~/.source_cloud_exported_variables
@@ -267,14 +256,16 @@ novadb_svc_records=$(oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -ur
 diff -Z <(echo $novadb_svc_records) <(echo $PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES)
 ----
 
-. During the pre/post checks the pod `mariadb-client` might have returned a pod security warning
-related to the `restricted:latest` security context constraint. This is due to default security
-context constraints and will not prevent pod creation by the admission controller. You'll see a
-warning for the short-lived pod but it will not interfere with functionality.
-. Delete the `mariadb-data` pod and `mariadb-copy-data` persistent volume claim with databases backup (consider making a snapshot of it, before deleting)
+. Delete the `mariadb-data` pod and the `mariadb-copy-data` persistent volume claim that contains the database backup:
++
+[NOTE]
+Consider taking a snapshot of them before deleting.
 +
 ----
-oc delete pod mariadb-copy-data
-oc delete pvc mariadb-data
+$ oc delete pod mariadb-copy-data
+$ oc delete pvc mariadb-data
 ----
-For more information, see https://learn.redhat.com/t5/DO280-Red-Hat-OpenShift/About-pod-security-standards-and-warnings/m-p/32502[About pod security standards and warnings].
+
+[NOTE]
+During the pre-checks and post-checks, the `mariadb-client` pod might return a pod security warning related to the `restricted:latest` security context constraint. This warning is due to default security context constraints and does not prevent the admission controller from creating a pod. You see a warning for the short-lived pod, but it does not interfere with functionality.
+For more information, see link:https://learn.redhat.com/t5/DO280-Red-Hat-OpenShift/About-pod-security-standards-and-warnings/m-p/32502[About pod security standards and warnings].
