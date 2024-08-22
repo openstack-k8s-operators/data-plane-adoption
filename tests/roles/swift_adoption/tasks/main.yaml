@@ -44,7 +44,7 @@
           swiftRing:
             ringReplicas: 1
           swiftStorage:
-            replicas: 0
+            replicas: 1
             networkAttachments:
             - storage
             storageClass: local-storage
