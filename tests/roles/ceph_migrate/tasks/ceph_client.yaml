@@ -1,20 +1,8 @@
-- name: TMP_CLIENT - Get current mon IP address
-  ansible.builtin.set_fact:
-    mon_ipaddr: "{{ mon_ip | split(':') | first | ansible.utils.ipaddr }}"
-  vars:
-    mon_ip: |-
-      {% for mon in mon_dump.mons %}
-      {%   if mon.name == cur_mon.split('.')[0] %}
-      {{ mon.addr }}
-      {%   endif %}
-      {% endfor %}
-
 - name: TMP_CLIENT - Setup a tmp client ip address on the src node
   when:
     - ceph_client_ip is defined
-    - mon_ipaddr | default('')
   become: true
-  delegate_to: "{{ cur_mon }}"
+  delegate_to: "{{ client_node }}"
   block:
     - name: TMP_CLIENT - Patch os-net-config config and setup a tmp client IP
       ansible.builtin.lineinfile:
@@ -28,30 +16,30 @@
       ansible.builtin.command:
         "os-net-config -c {{ os_net_conf_path }}"
 
+# Backup data
 - name: Backup data for client purposes
-  delegate_to: "{{ cur_mon }}"
+  ansible.builtin.include_tasks: backup.yaml
+  vars:
+    host: "{{ client_node }}"
+  tags:
+    - ceph_backup
+
+# Refresh ceph.conf information when mon addresses are **not** migrated
+# (not ceph_keep_mon_ipaddr)
+- name: Refresh ceph.conf info
+  delegate_to: "{{ client_node }}"
+  become: true
   when:
-    - ceph_client_ip is defined
-    - mon_ipaddr | default('')
+    - not ceph_keep_mon_ipaddr | default(false)
+    - node_map is defined
+  tags:
+    - ceph_conf_refresh
   block:
-    - name: Ensure backup directory exists
-      ansible.builtin.file:
-        path: "{{ ceph_config_tmp_client_home }}"
-        state: directory
-        mode: '0755'
-    - name: Check file in the src directory
-      ansible.builtin.find:
-        paths: /etc/ceph
-        patterns: "*"
-      register: dir_ceph_files
-    - name: Backup ceph client data
-      when: dir_ceph_files.files | length > 0
-      become: true
-      ansible.builtin.copy:
-        remote_src: true
-        src: "/etc/ceph/{{ item }}"
-        dest: "{{ ceph_config_tmp_client_home }}"
-        mode: '0666'
-      loop:
-        - ceph.conf
-        - ceph.client.admin.keyring
+    - name: Render global ceph.conf
+      ansible.builtin.template:
+        src: ceph.conf.j2
+        dest: "{{ ceph_config_tmp_client_home }}/ceph.conf"
+        mode: '0644'
+        force: true
+      vars:
+        ceph_fsid: "{{ mon_dump.fsid }}"

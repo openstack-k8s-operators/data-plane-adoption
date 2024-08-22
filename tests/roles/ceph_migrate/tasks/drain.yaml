@@ -67,6 +67,7 @@
     ceph_fsid: "{{ mon_dump.fsid }}"
 
 - name: MON - Remove host from the Ceph hostmap
+  become: true
   block:
     # Check if mon even exists before removing it
     - name: MON - check host in hostmap
@@ -78,6 +79,5 @@
     # The node should be empty at this point, let's remove it from the Ceph cluster
     - name: MON - rm the cur_mon host from the Ceph cluster
       when: lsh.stdout | from_json | community.general.json_query('[*].hostname') | length > 0
-      become: true
       ansible.builtin.command:
         "{{ ceph_cli }} orch host rm {{ cur_mon }} --force"

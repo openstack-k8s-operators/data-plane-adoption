@@ -9,7 +9,7 @@
     # Use the inventory as source of truth to make sure we **always**
     # select mon[0] as client. If we stick on decomm_nodes nodes we
     # might end up selecting a different node on multiple runs.
-    cur_mon: "{{ groups['mon'][0] | default(decomm_nodes | list | sort | first) }}"
+    client_node: "{{ groups['mon'][0] | default(decomm_nodes | list | sort | first) }}"
     os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
   tags:
     - ceph_client
@@ -20,21 +20,6 @@
   ansible.builtin.include_tasks: mgr.yaml
   tags:
     - ceph_mgr
-    - ceph_rbd
-
-# Update the firewall on the target nodes
-- name: Update firewall rules on the target nodes
-  ansible.builtin.include_tasks: firewall.yaml
-  vars:
-    ifports:
-      - 3300
-      - 6789
-    node: "{{ n }}"
-  loop: "{{ target_nodes }}"
-  loop_control:
-    loop_var: n
-  tags:
-    - ceph_firewall
     - ceph_rbd
 
 # Normalize the mon spec to use labels instead of hosts as placement
@@ -55,6 +40,20 @@
   tags:
     - ceph_rbd
 
+# We add labels in advance to the target node to make sure we are able to
+# deploy a tmp mon that will be replaced with the right one (on the desired
+# network). By adding an additional mon at this stage we can ensure we always
+# have quorum and at least 3 active mons while migrating the src daemon to the
+# target node.
+- name: Expand MON labels to the overcloud nodes
+  ansible.builtin.import_tasks: labels.yaml
+  vars:
+    nodes: "{{ hostmap.keys() }}"
+    act: "add"
+    labels:
+      - "mon"
+      - "_admin"
+
 - name: Normalize the mon spec to use labels
   # root privileges required to run cephadm
   # and apply the new spec
@@ -72,6 +71,17 @@
   tags:
     - ceph_rbd
 
+# Wait for new mons as a result of the spec apply: we already have three mons
+# deployed on decomm_nodes, we should now see three more on target_node(s)
+- name: RBD - wait new daemons to be available
+  ansible.builtin.include_tasks: wait_daemons.yaml
+  vars:
+    daemon: mon
+    daemon_id: "{{ node.split('.')[0] }}"
+  loop: "{{ target_nodes }}"
+  loop_control:
+    loop_var: node
+
 # we need to serially migrate mons, so we loop over the nodes and run the
 # procedure provided by mon.yaml
 - name: MON - Migrate RBD node
@@ -83,9 +93,9 @@
       vars:
         cur_mon: "{{ node.0 }}"
         target_node: "{{ node.1 }}"
+        client_node: "{{ groups['mon'][0] | default(decomm_nodes | list | sort | first) }}"
       # This condition might be a different one
       loop: "{{ decomm_nodes | zip(target_nodes) }}"
-      # loop: "{{ decomm_nodes|zip(hostmap.keys() | difference(decomm_nodes) | sort) | list }}"
       loop_control:
         loop_var: node
 
