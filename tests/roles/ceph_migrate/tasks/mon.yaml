@@ -96,66 +96,17 @@
       {%   endif %}
       {% endfor %}
 
-# (fpantano): TODO: Move the ip migration to a dedicated network.yaml
-- name: MON - Move the mon IP Address to {{ target_node }}
-  become: true
+- name: MON - Migrate the mon ip address from src to target node
   # if no mon addr, this variable is False and the whole block is skipped
   # because there's no network related action that should be performed
   when:
     - mon_ipaddr | default('')
     - ceph_keep_mon_ipaddr | default(false)
-  block:
-    - name: MON - Get current mon IP address
-      when: debug | default(false)
-      ansible.builtin.debug:
-        msg: "{{ mon_ipaddr }}"
-
-    - name: MON - Patch os-net-config config and REMOVE the current mon IP address
-      delegate_to: "{{ cur_mon }}"
-      ansible.builtin.lineinfile:
-        path: "{{ os_net_conf_path }}"
-        state: absent
-        regexp: '{{ mon_ipaddr }}/24'
-        backup: true
-      vars:
-        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
-
-    - name: MON - Refresh os-net-config
-      delegate_to: "{{ cur_mon }}"
-      ansible.builtin.shell:
-        "os-net-config -c {{ os_net_conf_path }}"
-      vars:
-        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
-
-    - name: MON - Patch os-net-config config and add the mon IP
-      delegate_to: "{{ target_node }}"
-      ansible.builtin.lineinfile:
-        dest: "{{ os_net_conf_path }}"
-        insertafter: "{{ ceph_storage_net_prefix }}"
-        line: "    - ip_netmask: {{ mon_ipaddr }}/24"
-        backup: true
-      # (NOTE): TMP WORKAROUND TO TEST THE PLAYBOK W/O ADOPTION
-      vars:
-        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
-
-    - name: MON - Refresh os-net-config
-      delegate_to: "{{ target_node }}"
-      ansible.builtin.command:
-        "os-net-config -c {{ os_net_conf_path }}"
-      # (NOTE): TMP WORKAROUND TO TEST THE PLAYBOK W/O ADOPTION
-      vars:
-        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
-
-    - name: MON - ping ip address to see if is reachable on the target node
-      ansible.builtin.command:
-        "ping -W1 -c 3 {{ mon_ipaddr }}"
-      delegate_to: "{{ target_node }}"
-      register: ping_target_ip
-
-    - name: MON - Fail if the IP address is not active in the target node
-      when: ping_target_ip.rc != 0
-      ansible.builtin.fail:
-        msg: "Can't reach the mon IP on the target node"
+  ansible.builtin.include_tasks: network.yaml
+  vars:
+    src_node: "{{ cur_mon }}"
+    dest_node: "{{ target_node }}"
+    manual_migration: true
 
 - name: Redeploy MON
   when: ceph_keep_mon_ipaddr | default(false)
@@ -207,9 +158,7 @@
         msg: "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
 
     - name: MON - Redeploy mon on {{ target_node }}
-      when:
-        - mon_ipaddr | default('')
-        - psmon.stdout | from_json | community.general.json_query('[*].daemon_name') | length == 0
+      when: psmon.stdout | from_json | community.general.json_query('[*].daemon_name') | length == 0
       ansible.builtin.command:
         "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
 

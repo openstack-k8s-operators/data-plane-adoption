@@ -35,7 +35,7 @@
       - "_admin"
 
 # Sleep before moving to the next task
-- name: Pause
+- name: Wait for the orchestrator to remove labels
   ansible.builtin.pause:
     seconds: "{{ ceph_wait_mon_timeout }}"
 
