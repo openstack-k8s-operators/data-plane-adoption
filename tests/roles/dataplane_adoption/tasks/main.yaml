@@ -163,7 +163,9 @@
         - libvirt
         - nova
         {%+ endif +%}
+        {% if telemetry_adoption|bool +%}
         - telemetry
+        {%+ endif +%}
       env:
         - name: ANSIBLE_CALLBACKS_ENABLED
           value: "profile_tasks"
@@ -208,8 +210,10 @@
             edpm_nova_compute_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-compute:{{ image_tag }}"
             edpm_nova_libvirt_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-libvirt:{{ image_tag }}"
             edpm_ovn_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
+            {% if telemetry_adoption|bool +%}
             edpm_telemetry_ceilometer_compute_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ceilometer-compute:{{ image_tag }}"
             edpm_telemetry_ceilometer_ipmi_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ceilometer-ipmi:{{ image_tag }}"
+            {%+ endif +%}
             edpm_neutron_sriov_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-sriov-agent:{{ image_tag }}"
             edpm_neutron_ovn_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-ovn-agent:{{ image_tag }}"
             edpm_neutron_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
@@ -290,7 +294,9 @@
         - neutron-metadata
         - libvirt
         - nova
+        {% if telemetry_adoption|bool +%}
         - telemetry
+        {%+ endif +%}
       nodeTemplate:
         extraMounts:
         - extraVolType: Ceph
