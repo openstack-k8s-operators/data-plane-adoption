@@ -2,15 +2,10 @@
 
 = Limitations for adopting the {block_storage}
 
-There are currently limitations that are worth highlighting; some are
-related to this guideline while some to the operator:
+Before you begin the {block_storage_first_ref} adoption, review the following limitations:
 
-* There is no global `nodeSelector` for all {block_storage_first_ref} volumes, so it needs to be
-specified per backend.
-* There is no global `customServiceConfig` or `customServiceConfigSecrets` for
-all {block_storage} volumes, so it needs to be specified per backend.
-* Adoption of LVM backends, where the volume data is stored in the compute
-nodes, is not currently being documented in this process.
-* Support for {block_storage} backends that require kernel modules not included in RHEL
-has not been tested in Operator deployed {rhos_prev_long}.
-* Adoption of DCN/Edge deployment is not currently described in this guide.
+* There is no global `nodeSelector` option for all {block_storage} volumes. You must specify the `nodeSelector` for each back end.
+* There are no global `customServiceConfig` or `customServiceConfigSecrets` options for all {block_storage} volumes. You must specify these options for each back end.
+* Adoption of LVM back ends, where the volume data is stored in the Compute nodes, is not documented in this guide.
+* Support for {block_storage} back ends that require kernel modules that are not included in Red Hat Enterprise Linux is not tested in {rhos_long}.
+* Adoption of DCN/Edge deployment is not documented in this guide.

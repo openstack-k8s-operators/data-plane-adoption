@@ -1,23 +1,12 @@
 [id="preparing-the-block-storage-service_{context}"]
-
+//kgilliga: The content in this file was integrated with "Block storage requirements" (con_block-storage-service-requirements.adoc)
 :context: preparing-block-storage
 
 = Preparing the {block_storage} configurations for adoption
 
-The {block_storage_first_ref} is configured using
-configuration snippets instead of using configuration parameters
-defined by the installer. For more information, see xref:service-configurations_planning[Service configurations].
+The recommended way to deploy {block_storage} volume back ends is to use a {block_storage} volume service for each back end.
 
-The recommended way to deploy {block_storage} volume backends has changed to remove old
-limitations, add flexibility, and improve operations.
-
-When deploying with {OpenStackPreviousInstaller} you used to run a single {block_storage} volume service with
-all your backends (each backend would run on its own process), and even though
-that way of deploying is still supported, it is not recommended. It is recommended to use a volume service per backend since it is a superior deployment model.
-
-With an LVM and a Ceph backend you have 2 entries in `cinderVolume` and,
-as mentioned in the limitations section, you cannot set global defaults for all
-volume services, so you have to define it for each of them, like this:
+For example, you have an LVM and a Ceph back end and two entries in `cinderVolume`, and you cannot set global defaults for all volume services. You must define a service for each of them:
 
 [source,yaml]
 ----
@@ -43,26 +32,13 @@ spec:
             [ceph]
 < . . . >
 ----
-
-Reminder that for volume backends that have sensitive information using `Secret`
-and the `customServiceConfigSecrets` key is the recommended way to go.
-
-For adoption instead of using a whole deployment manifest you use a targeted
-patch, like you did with other services, and in this patch you will enable the
-different Block Storage services with their specific configurations.
-
++
 [WARNING]
-Check that all configuration options are still valid for the new
-{rhos_prev_long} version. Configuration options may have been deprecated,
-removed, or added. This applies to both backend driver specific configuration
-options and other generic options.
+Check that all configuration options are still valid for the new {rhos_long} version. Configuration options might be deprecated, removed, or added. This applies to both back-end driver-specific configuration options and other generic options.
 
 ifeval::["{build}" != "downstream"]
-There are 2 ways to prepare a {block_storage} configuration for adoption, tailor-making
-it or doing it quick and dirty. There is no difference in how {block_storage} operates with both methods, though tailor-making it is recommended whenever possible.
+There are two ways to prepare a {block_storage} configuration for adoption. You can customize the configuration or prepare a quick configuration. There is no difference in how {block_storage} operates with both methods, but customization is recommended whenever possible.
 endif::[]
-
-include::../modules/proc_preparing-block-storage-service-by-customizing-configuration.adoc[leveloffset=+1]
 
 
 ifeval::["{build}" != "downstream"]

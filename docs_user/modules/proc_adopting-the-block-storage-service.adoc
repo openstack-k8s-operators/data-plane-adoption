@@ -1,0 +1,193 @@
+[id="adopting-the-block-storage-service_{context}"]
+
+= Adopting the {block_storage}
+
+To adopt a {OpenStackPreviousInstaller}-deployed {block_storage_first_ref}, create the manifest based on the existing `cinder.conf` file, deploy the {block_storage}, and validate the new deployment.
+
+.Prerequisites
+
+* You have reviewed the {block_storage} limitations. For more information, see xref:block-storage-limitations_storage-requirements[Limitations for adopting the {block_storage}].
+* You have planned the placement of the Block Storage services.
+* You have prepared the {OpenShift} nodes where the volume and backup services run. For more information, see xref:openshift-preparation-for-block-storage-adoption_storage-requirements[{OpenShift} preparation for {block_storage} adoption].
+* The {block_storage_first_ref} is stopped.
+* The service databases are imported into the control plane MariaDB.
+* The {identity_service_first_ref} and {key_manager_first_ref} are adopted.
+* The Storage network is correctly configured on the {OpenShiftShort} cluster.
+* The contents of `cinder.conf` file. Download the file so that you can access it locally:
++
+----
+$CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/cinder/etc/cinder/cinder.conf > cinder.conf
+----
+
+.Procedure
+
+. Create a new file, for example, `cinder.patch`, and apply the configuration:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file=<patch_name>
+----
++
+* Replace `<patch_name>` with the name of your patch file.
++
+The following example shows a `cinder.patch` file for an RBD deployment:
++
+[source,yaml]
+----
+spec:
+  extraMounts:
+  - extraVol:
+    - extraVolType: Ceph
+      mounts:
+      - mountPath: /etc/ceph
+        name: ceph
+        readOnly: true
+      propagation:
+      - CinderVolume
+      - CinderBackup
+      - Glance
+      volumes:
+      - name: ceph
+        projected:
+          sources:
+          - secret:
+              name: ceph-conf-files
+  cinder:
+    enabled: true
+    apiOverride:
+      route: {}
+    template:
+      databaseInstance: openstack
+      databaseAccount: cinder
+      secret: osp-secret
+      cinderAPI:
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+        replicas: 1
+        customServiceConfig: |
+          [DEFAULT]
+          default_volume_type=tripleo
+      cinderScheduler:
+        replicas: 1
+      cinderBackup:
+        networkAttachments:
+        - storage
+        replicas: 1
+        customServiceConfig: |
+          [DEFAULT]
+          backup_driver=cinder.backup.drivers.ceph.CephBackupDriver
+          backup_ceph_conf=/etc/ceph/ceph.conf
+          backup_ceph_user=openstack
+          backup_ceph_pool=backups
+      cinderVolumes:
+        ceph:
+          networkAttachments:
+          - storage
+          replicas: 1
+          customServiceConfig: |
+            [tripleo_ceph]
+            backend_host=hostgroup
+            volume_backend_name=tripleo_ceph
+            volume_driver=cinder.volume.drivers.rbd.RBDDriver
+            rbd_ceph_conf=/etc/ceph/ceph.conf
+            rbd_user=openstack
+            rbd_pool=volumes
+            rbd_flatten_volume_from_snapshot=False
+            report_discard_supported=True
+----
+
+. Retrieve the list of the previous scheduler and backup services:
++
+----
+$ openstack volume service list
+
++------------------+------------------------+------+---------+-------+----------------------------+
+| Binary           | Host                   | Zone | Status  | State | Updated At                 |
++------------------+------------------------+------+---------+-------+----------------------------+
+| cinder-backup    | standalone.localdomain | nova | enabled | down  | 2023-06-28T11:00:59.000000 |
+| cinder-scheduler | standalone.localdomain | nova | enabled | down  | 2023-06-28T11:00:29.000000 |
+| cinder-volume    | hostgroup@tripleo_ceph | nova | enabled | up    | 2023-06-28T17:00:03.000000 |
+| cinder-scheduler | cinder-scheduler-0     | nova | enabled | up    | 2023-06-28T17:00:02.000000 |
+| cinder-backup    | cinder-backup-0        | nova | enabled | up    | 2023-06-28T17:00:01.000000 |
++------------------+------------------------+------+---------+-------+----------------------------+
+----
+
+. Remove services for hosts that are in the `down` state:
++
+----
+$ oc exec -it cinder-scheduler-0 -- cinder-manage service remove <service_binary> <service_host>
+----
++
+* Replace `<service_binary>` with the name of the binary, for example, `cinder-backup`.
+* Replace `<service_host>` with the host name, for example, `cinder-backup-0`.
+
+. Apply the DB data migrations:
++
+[NOTE]
+====
+You are not required to run the data migrations at this step, but you must run them before the next upgrade. However, for adoption, it is recommended to run the migrations now to ensure that there are no issues before you run production workloads on the deployment.
+====
++
+----
+$ oc exec -it cinder-scheduler-0 -- cinder-manage db online_data_migrations
+----
+
+.Verification
+
+. Ensure that the `openstack` alias is defined:
++
+----
+$ alias openstack="oc exec -t openstackclient -- openstack"
+----
+
+. Confirm that {block_storage} endpoints are defined and pointing to the control plane FQDNs:
++
+----
+$ openstack endpoint list --service <endpoint>
+----
++
+* Replace `<endpoint>` with the name of the endpoint that you want to confirm.
+
+. Confirm that the Block Storage services are running:
++
+----
+$ openstack volume service list
+----
++
+[NOTE]
+Cinder API services do not appear in the list. However, if you get a response from the `openstack volume service list` command, that means at least one of the cinder API services is running.
+
+. Confirm that you have your previous volume types, volumes, snapshots, and backups:
++
+----
+$ openstack volume type list
+$ openstack volume list
+$ openstack volume snapshot list
+$ openstack volume backup list
+----
+
+. To confirm that the configuration is working, perform the following steps:
+
+.. Create a volume from an image to check that the connection to {image_service_first_ref} is working:
++
+----
+$ openstack volume create --image cirros --bootable --size 1 disk_new
+----
+
+.. Back up the previous attached volume:
++
+----
+$ openstack --os-volume-api-version 3.47 volume create --backup <backup_name>
+----
++
+* Replace `<backup_name>` with the name of your new backup location.
++
+[NOTE]
+You do not boot a {compute_service_first_ref} instance by using the new `volume from` image or try to detach the previous volume because the {compute_service} and the {block_storage} are still not connected.

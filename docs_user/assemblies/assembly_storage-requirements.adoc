@@ -17,3 +17,9 @@ you can deploy the services.
 include::../modules/con_storage-driver-certification.adoc[leveloffset=+1]
 
 include::../modules/con_block-storage-service-requirements.adoc[leveloffset=+1]
+
+include::../modules/con_block-storage-service-limitations.adoc[leveloffset=+1]
+
+include::../modules/con_openshift-preparation-for-block-storage-adoption.adoc[leveloffset=+1]
+
+include::../modules/proc_preparing-block-storage-service-by-customizing-configuration.adoc[leveloffset=+1]
