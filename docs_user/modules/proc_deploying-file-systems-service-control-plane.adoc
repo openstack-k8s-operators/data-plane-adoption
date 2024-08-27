@@ -189,14 +189,8 @@ $ oc create secret generic osp-secret-manila-netapp --from-file=~/netapp_secrets
            replicas: 1
     < . . . >
 ----
-+
-* If you need to add extra files to any of the services, you can use `extraMounts`. For example, when using {Ceph}, you can add the {rhos_component_storage_file} Ceph user's keyring file as well as the `ceph.conf` configuration file.
-* Ensure that the names of the back ends (`share_backend_name`) are the same as they were in {OpenStackShort} {rhos_prev_ver}.
-* It is recommended to set the replica count of the `manilaAPI` service and the `manilaScheduler` service to 3. Ensure that you set the replica count of the `manilaShares` service to 1.
-* Ensure that the appropriate storage management network is specified in the `manilaShares` section. The example below connects the `manilaShares` instance with the CephFS back-end driver to the `storage` network.
-* Prior to adopting the `manilaShares` service for CephFS through NFS, ensure that you create a clustered Ceph NFS service. The name of the service must be `cephfs_nfs_cluster_id`.
 
-. Patch the `OpenStackControlPlane` CR to deploy the {rhos_component_storage_file}. The following example patch file uses native CephFS:
+. Create a patch file for the `OpenStackControlPlane` CR to deploy the {rhos_component_storage_file}. The following example `manila.patch` file uses native CephFS:
 +
 [source,yaml]
 ----
@@ -210,8 +204,8 @@ spec:
       databaseInstance: openstack
       databaseAccount: manila
       secret: osp-secret
-      manilaAPI:
-        replicas: 3
+      manilaAPI: 
+        replicas: 3 <1>
         customServiceConfig: |
           [DEFAULT]
           enabled_share_protocols = cephfs
@@ -226,27 +220,49 @@ spec:
               spec:
                 type: LoadBalancer
       manilaScheduler:
-        replicas: 3
+        replicas: 3 <2>
       manilaShares:
         cephfs:
-          replicas: 1
+          replicas: 1 <3>
           customServiceConfig: |
             [DEFAULT]
             enabled_share_backends = tripleo_ceph
             host = hostgroup
             [cephfs]
             driver_handles_share_servers=False
-            share_backend_name=cephfs
+            share_backend_name=cephfs <4>
             share_driver=manila.share.drivers.cephfs.driver.CephFSDriver
             cephfs_conf_path=/etc/ceph/ceph.conf
             cephfs_auth_id=openstack
             cephfs_cluster_name=ceph
             cephfs_volume_mode=0755
             cephfs_protocol_helper_type=CEPHFS
-          networkAttachments:
+          networkAttachments: <5>
               - storage
+      extraMounts: <6>
+      - name: v1
+        region: r1
+        extraVol:
+          - propagation:
+            - ManilaShare
+          extraVolType: Ceph
+          volumes:
+          - name: ceph
+            secret:
+              secretName: ceph-conf-files
+          mounts:
+          - name: ceph
+            mountPath: "/etc/ceph"
+            readOnly: true
 __EOF__
 ----
++
+<1> It is recommended to set the replica count of the `manilaAPI` service to 3. 
+<2> It is recommended to set the replica count of the `manilaScheduler` service to 3.
+<3> Set the replica count of the `manilaShares` service to 1.
+<4> Ensure that the names of the back ends (`share_backend_name`) are the same as they were in {OpenStackShort} {rhos_prev_ver}.
+<5> Ensure that the appropriate storage management network is specified in the `networkAttachments` section. For example, the `manilaShares` instance with the CephFS back-end driver is connected to the `storage` network.
+<6> If you need to add extra files to any of the services, you can use `extraMounts`. For example, when using {Ceph}, you can add the {rhos_component_storage_file} Ceph user's keyring file as well as the `ceph.conf` configuration file.
 +
 The following example patch file uses CephFS through NFS:
 +
@@ -293,19 +309,22 @@ spec:
             cephfs_auth_id=openstack
             cephfs_cluster_name=ceph
             cephfs_protocol_helper_type=NFS
-            cephfs_nfs_cluster_id=cephfs
-            cephfs_ganesha_server_ip=172.17.5.47
+            cephfs_nfs_cluster_id=cephfs 
+            cephfs_ganesha_server_ip=172.17.5.47 
           networkAttachments:
               - storage
 __EOF__
 ----
 +
+* Prior to adopting the `manilaShares` service for CephFS through NFS, ensure that you create a clustered Ceph NFS service. The name of the service must be `cephfs_nfs_cluster_id`. The `cephfs_nfs_cluster_id` option is set with the name of the NFS cluster created on {Ceph}.
+* The `cephfs_ganesha_server_ip` option is preserved from the configuration on the {OpenStackShort} {rhos_prev_ver} environment.
+
+. Patch the `OpenStackControlPlane` CR:
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patch
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/<manila.patch>
 ----
 +
-* The `cephfs_ganesha_server_ip` option is preserved from the configuration on the {OpenStackShort} {rhos_prev_ver} environment.
-* The `cephfs_nfs_cluster_id` option is set with the name of the NFS cluster created on {Ceph}.
+* Replace `<manila.patch>` with the name of your patch file.
 
 .Verification
 
@@ -343,7 +362,7 @@ $ openstack share pool list --detail
 $ openstack share list
 $ openstack share snapshot list
 ----
-
+ifeval::["{build}" != "downstream"]
 . You can create further resources:
 +
 ----
@@ -351,3 +370,4 @@ $ openstack share create cephfs 10 --snapshot mysharesnap --name myshareclone
 $ openstack share create nfs 10 --name mynfsshare
 $ openstack share export location list mynfsshare
 ----
+endif::[]
