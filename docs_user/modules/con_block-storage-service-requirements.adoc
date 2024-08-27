@@ -56,8 +56,7 @@ spec:
 Check that all configuration options are still valid for the new {rhos_long} version. Configuration options might be deprecated, removed, or added. This applies to both back-end driver-specific configuration options and other generic options.
 
 ifeval::["{build}" != "downstream"]
-There are 2 ways to prepare a {block_storage} configuration for adoption, tailor-making
-it or doing it quick and dirty. There is no difference in how {block_storage} operates with both methods, though tailor-making it is recommended whenever possible.
+There are two ways to prepare a {block_storage} configuration for adoption. You can customize the configuration or prepare a quick configuration. There is no difference in how {block_storage} operates with both methods, but customization is recommended whenever possible.
 endif::[]
 
 

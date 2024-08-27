@@ -12,7 +12,7 @@ To adopt a {OpenStackPreviousInstaller}-deployed {block_storage_first_ref}, crea
 * The {block_storage_first_ref} is stopped.
 * The service databases are imported into the control plane MariaDB.
 * The {identity_service_first_ref} and {key_manager_first_ref} are adopted.
-* The Storage network is properly configured on the {OpenShiftShort} cluster.
+* The Storage network is correctly configured on the {OpenShiftShort} cluster.
 * The contents of `cinder.conf` file. Download the file so that you can access it locally:
 +
 ----

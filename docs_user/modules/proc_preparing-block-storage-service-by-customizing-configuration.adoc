@@ -18,7 +18,7 @@ endif::[]
 `customServiceConfig` section in `cinder: template: cinderScheduler`.
 . Determine if there is any API-specific configuration and add it to the
 `customServiceConfig` section in `cinder: template: cinderAPI`.
-. If {block_storage} backup is deployed, then add the {block_storage} backup configuration options to `customServiceConfig`, or a `Secret` and then used in `customServiceConfigSecrets`, at the `cinder: template:
+. If the {block_storage} backup is deployed, add the {block_storage} backup configuration options to `customServiceConfig`, or to a `Secret` that you can add to `customServiceConfigSecrets`, at the `cinder: template:
 cinderBackup:` level. Remove the `host` configuration in the `[DEFAULT]` section to support multiple replicas in the future.
 . Determine the individual volume back-end configuration for each of the
 drivers. The configuration is the specific driver section, and it includes the `[backend_defaults]` section and FC zoning sections if you use them. The {block_storage} operator does not support a global `customServiceConfig` section for all volume services. Each back end has its own section under `cinder: template: cinderVolumes`, and the configuration goes in `customServiceConfig` or a `Secret` and then used in `customServiceConfigSecrets`.
