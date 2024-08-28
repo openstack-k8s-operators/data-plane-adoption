@@ -1,0 +1,10 @@
+---
+horizon_patch: |
+  spec:
+    horizon:
+      enabled: true
+      apiOverride:
+        route: {}
+      template:
+        memcachedInstance: memcached
+        secret: osp-secret

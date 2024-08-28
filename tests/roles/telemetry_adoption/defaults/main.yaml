@@ -1,0 +1,38 @@
+---
+telemetry_metric_storage_patch: |
+  spec:
+    telemetry:
+      enabled: true
+      template:
+        metricStorage:
+          enabled: true
+          monitoringStack:
+            alertingEnabled: true
+            scrapeInterval: 30s
+            storage:
+              strategy: persistent
+              retention: 24h
+              persistent:
+                pvcStorageRequest: 20G
+
+telemetry_ceilometer_patch: |
+  spec:
+    telemetry:
+      enabled: true
+      template:
+        ceilometer:
+          passwordSelector:
+            ceilometerService: CeilometerPassword
+          enabled: true
+          secret: osp-secret
+          serviceUser: ceilometer
+
+telemetry_logging_patch: |
+  spec:
+    telemetry:
+      template:
+        logging:
+          enabled: false
+          ipaddr: 172.17.0.80
+          port: 10514
+          cloNamespace: openshift-logging

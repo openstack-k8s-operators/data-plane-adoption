@@ -14,23 +14,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      heat:
-        enabled: true
-        apiOverride:
-          route: {}
-        template:
-          databaseInstance: openstack
-          databaseAccount: heat
-          secret: osp-secret
-          memcachedInstance: memcached
-          passwordSelectors:
-            authEncryptionKey: HeatAuthEncryptionKey
-            service: HeatPassword
-          rabbitMqClusterName: rabbitmq
-          serviceUser: heat
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ heat_patch }}'
 
 - name: wait for Heat to start up
   ansible.builtin.shell: |
