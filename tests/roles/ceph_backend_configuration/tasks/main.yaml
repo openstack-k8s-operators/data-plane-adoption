@@ -40,26 +40,4 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      extraMounts:
-        - name: v1
-          region: r1
-          extraVol:
-            - propagation:
-              - CinderVolume
-              - CinderBackup
-              - GlanceAPI
-              - ManilaShare
-              extraVolType: Ceph
-              volumes:
-              - name: ceph
-                projected:
-                  sources:
-                  - secret:
-                      name: ceph-conf-files
-              mounts:
-              - name: ceph
-                mountPath: "/etc/ceph"
-                readOnly: true
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ ceph_backend_configuration_patch }}'

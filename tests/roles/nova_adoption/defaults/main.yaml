@@ -1,3 +1,168 @@
 ironic_adoption: false
 # Libvirt backends: ceph or local
 nova_libvirt_backend: local
+
+nova_libvirt_patch: |
+  spec:
+    nova:
+      enabled: true
+      apiOverride:
+        route: {}
+      template:
+        secret: osp-secret
+        apiServiceTemplate:
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                spec:
+                  type: LoadBalancer
+          customServiceConfig: |
+            [workarounds]
+            disable_compute_service_check_for_ffu=true
+        metadataServiceTemplate:
+          enabled: true # deploy single nova metadata on the top level
+          override:
+            service:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+          customServiceConfig: |
+            [workarounds]
+            disable_compute_service_check_for_ffu=true
+        schedulerServiceTemplate:
+          customServiceConfig: |
+            [workarounds]
+            disable_compute_service_check_for_ffu=true
+        cellTemplates:
+          cell0:
+            conductorServiceTemplate:
+              customServiceConfig: |
+                [workarounds]
+                disable_compute_service_check_for_ffu=true
+          cell1:
+            metadataServiceTemplate:
+              enabled: false # enable here to run it in a cell instead
+              override:
+                  service:
+                    metadata:
+                      annotations:
+                        metallb.universe.tf/address-pool: internalapi
+                        metallb.universe.tf/allow-shared-ip: internalapi
+                        metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                    spec:
+                      type: LoadBalancer
+              customServiceConfig: |
+                [workarounds]
+                disable_compute_service_check_for_ffu=true
+            conductorServiceTemplate:
+              customServiceConfig: |
+                [workarounds]
+                disable_compute_service_check_for_ffu=true
+
+nova_ironic_patch: |
+  spec:
+    nova:
+      enabled: true
+      apiOverride:
+        route: {}
+      template:
+        secret: osp-secret
+        apiServiceTemplate:
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                spec:
+                  type: LoadBalancer
+          customServiceConfig: |
+            [workarounds]
+            disable_compute_service_check_for_ffu=true
+        metadataServiceTemplate:
+          enabled: true # deploy single nova metadata on the top level
+          override:
+            service:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+          customServiceConfig: |
+            [workarounds]
+            disable_compute_service_check_for_ffu=true
+        schedulerServiceTemplate:
+          customServiceConfig: |
+            [workarounds]
+            disable_compute_service_check_for_ffu=true
+        cellTemplates:
+          cell0:
+            conductorServiceTemplate:
+              customServiceConfig: |
+                [workarounds]
+                disable_compute_service_check_for_ffu=true
+          cell1:
+            conductorServiceTemplate:
+              customServiceConfig: |
+                [workarounds]
+                disable_compute_service_check_for_ffu=true
+            novaComputeTemplates:
+              standalone:
+                customServiceConfig: |
+                  [DEFAULT]
+                  host = standalone.localdomain
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=true
+                replicas: 1
+                resources: {}
+                computeDriver: ironic.IronicDriver
+                networkAttachments:
+                  - internalapi
+
+remove_ffu_workaround_patch: |
+  spec:
+    nova:
+      template:
+        apiServiceTemplate:
+          customServiceConfig: |
+            [workarounds]
+            disable_compute_service_check_for_ffu=false
+        metadataServiceTemplate:
+          customServiceConfig: |
+            [workarounds]
+            disable_compute_service_check_for_ffu=false
+        schedulerServiceTemplate:
+          customServiceConfig: |
+            [workarounds]
+            disable_compute_service_check_for_ffu=false
+        cellTemplates:
+          cell0:
+            conductorServiceTemplate:
+              customServiceConfig: |
+                [workarounds]
+                disable_compute_service_check_for_ffu=false
+          cell1:
+            conductorServiceTemplate:
+              customServiceConfig: |
+                [workarounds]
+                disable_compute_service_check_for_ffu=false
+            novaComputeTemplates:
+              standalone:
+                customServiceConfig: |
+                  [DEFAULT]
+                  host = standalone.localdomain
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=false

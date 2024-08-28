@@ -3,24 +3,4 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      cinder:
-        enabled: true
-        template:
-          cinderVolumes:
-            volume1:
-              networkAttachments:
-              - storage
-              replicas: 1
-              customServiceConfig: |
-                [tripleo_ceph]
-                backend_host=hostgroup
-                volume_backend_name=tripleo_ceph
-                volume_driver=cinder.volume.drivers.rbd.RBDDriver
-                rbd_ceph_conf=/etc/ceph/ceph.conf
-                rbd_user=openstack
-                rbd_pool=volumes
-                rbd_flatten_volume_from_snapshot=False
-                report_discard_supported=True
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_volume_backend_patch }}'

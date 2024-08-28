@@ -2,61 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      ironic:
-        enabled: true
-        template:
-          rpcTransport: oslo
-          databaseInstance: openstack
-          ironicAPI:
-            replicas: 1
-            override:
-              service:
-                internal:
-                  metadata:
-                    annotations:
-                      metallb.universe.tf/address-pool: internalapi
-                      metallb.universe.tf/allow-shared-ip: internalapi
-                      metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-                  spec:
-                    type: LoadBalancer
-          ironicConductors:
-          - replicas: 1
-            networkAttachments:
-            - baremetal
-            provisionNetwork: baremetal
-            storageRequest: 10G
-            storageClass: {{ storage_class_name }}
-            customServiceConfig: |
-              [neutron]
-              cleaning_network=provisioning
-              provisioning_network=provisioning
-              rescuing_network=provisioning
-              # inspection_network=<introspection network uuid>
-              [conductor]
-              automated_clean=true
-          ironicInspector:
-            replicas: 1
-            inspectionNetwork: baremetal
-            networkAttachments:
-            - baremetal
-            dhcpRanges:
-            - name: inspector-0
-              cidr: 172.20.1.0/24
-              start: 172.20.1.190
-              end: 172.20.1.199
-              gateway: 172.20.1.1
-            serviceUser: ironic-inspector
-            databaseAccount: ironic-inspector
-            passwordSelectors:
-              database: IronicInspectorDatabasePassword
-              service: IronicInspectorPassword
-          ironicNeutronAgent:
-            replicas: 1
-            rabbitMqClusterName: rabbitmq
-          secret: osp-secret
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ ironic_patch }}'
 
 - name: Wait for Ironic control plane services' CRs to become ready
   ansible.builtin.include_tasks:
@@ -96,16 +42,7 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
-    spec:
-      ironic:
-        template:
-          ironicAPI:
-            customServiceConfig: |
-              [oslo_policy]
-              enforce_scope=false
-              enforce_new_defaults=false
-    '
+    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '{{ ironic_disable_rbac_patch }}'
 
 - name: Wait for Ironic control plane services' CRs to become ready
   ansible.builtin.include_tasks:
@@ -140,16 +77,7 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
-    spec:
-      ironic:
-        template:
-          ironicAPI:
-            customServiceConfig: |
-              [oslo_policy]
-              enforce_scope=true
-              enforce_new_defaults=true
-    '
+    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '{{ ironic_enable_rbac_patch }}'
 
 - name: Wait for Ironic control plane services' CRs to become ready
   ansible.builtin.include_tasks:
