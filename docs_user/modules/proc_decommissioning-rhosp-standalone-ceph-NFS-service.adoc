@@ -4,7 +4,14 @@
 
 If your deployment uses CephFS through NFS, you must decommission the {rhos_prev_long}({OpenStackShort}) standalone NFS service. Since future software upgrades do not support the previous NFS service, it is recommended that the decommissioning period is short.
 
-You can discover the new export locations for your existing shares by querying the Shared File Systems API. To stop using the previous NFS server, you need to unmount and remount the shared file systems on each client. If you are consuming the {rhos_component_storage_file} shares with the {rhos_component_storage_file} CSI plugin for {OpenShift}, you can migrate the shares by scaling down the application pods and scaling them back up. Clients spawning new workloads should not use share exports through the previous NFS service. The {rhos_component_storage_file} no longer communicates with the previous NFS service, and so it cannot apply or alter any export rules on the previous NFS service.
+.Prerequisites
+
+* You identified the new export locations for your existing shares by querying the Shared File Systems API. 
+* You unmounted and remounted the shared file systems on each client to stop using the previous NFS server.
+* If you are consuming the {rhos_component_storage_file} shares with the {rhos_component_storage_file} CSI plugin for {OpenShift}, you migrated the shares by scaling down the application pods and scaling them back up.
+
+[NOTE]
+Clients that are creating new workloads should not use share exports through the previous NFS service. The {rhos_component_storage_file} no longer communicates with the previous NFS service, and so it cannot apply or alter any export rules on the previous NFS service.
 
 .Procedure
 
@@ -45,11 +52,16 @@ __EOF__
 ----
 
 . Patch the `OpenStackControlPlane` custom resource:
++
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/manila.patch
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/<manila.patch>
 ----
+* Replace `<manila.patch>` with the name of your patch file.
 
-. Optional: To clean up the standalone `ceph-nfs` service from the {OpenStackShort} control plane nodes, you can disable and delete the Pacemaker resources associated with the service:
+. Clean up the standalone `ceph-nfs` service from the {OpenStackShort} control plane nodes by disabling and deleting the Pacemaker resources associated with the service:
++
+[IMPORTANT]
+You can defer this step until after {rhos_acro} {rhos_curr_ver} is operational. However, in the meantime, you cannot decommission the Controller nodes.
 +
 ----
 $ sudo pcs resource disable ceph-nfs

@@ -1,0 +1,120 @@
+[id="preparing-the-shared-file-systems-service-configuration_{context}"]
+
+= Recommendations for preparing the {rhos_component_storage_file} configuration
+
+To deploy {rhos_component_storage_file_first_ref} on the control plane, you must copy the original configuration file from the {rhos_prev_long} {rhos_prev_ver} deployment. You must review the content in the file to make sure you are adopting the correct configuration for {rhos_long} {rhos_curr_ver}. Not all of the content needs to be brought into the new cloud environment. 
+
+Review the following recommendations for preparing your {rhos_component_storage_file} configuration file for adoption:
+
+* The {rhos_component_storage_file} operator sets up the following configurations and can be ignored:
+** Database-related configuration (`[database]`)
+** Service authentication (`auth_strategy`, `[keystone_authtoken]`)
+** Message bus configuration (`transport_url`, `control_exchange`)
+** The default paste config (`api_paste_config`)
+** Inter-service communication configuration (`[neutron]`, `[nova]`, `[cinder]`, `[glance]` `[oslo_messaging_*]`)
+* Ignore the `osapi_share_listen` configuration. In {rhos_long} {rhos_curr_ver}, you rely on {OpenShift} routes and ingress.
+* Check for policy overrides. In {rhos_acro} {rhos_curr_ver}, the {rhos_component_storage_file} ships with a secure default Role-based access control (RBAC), and overrides might not be necessary.
+ifeval::["{build}" != "downstream"]
+Please review RBAC defaults by using the https://docs.openstack.org/oslo.policy/latest/cli/oslopolicy-policy-generator.html[Oslo policy generator]
+tool.
+endif::[]
+* If a custom policy is necessary, you must provide it as a `ConfigMap`. The following example spec illustrates how you can set up a `ConfigMap` called `manila-policy` with the contents of a file called `policy.yaml`:
++
+[source,yaml]
+----
+  spec:
+    manila:
+      enabled: true
+      template:
+        manilaAPI:
+          customServiceConfig: |
+             [oslo_policy]
+             policy_file=/etc/manila/policy.yaml
+        extraMounts:
+        - extraVol:
+          - extraVolType: Undefined
+            mounts:
+            - mountPath: /etc/manila/
+              name: policy
+              readOnly: true
+            propagation:
+            - ManilaAPI
+            volumes:
+            - name: policy
+              projected:
+                sources:
+                - configMap:
+                    name: manila-policy
+                    items:
+                      - key: policy
+                        path: policy.yaml
+----
+
+* The value of the `host` option under the `[DEFAULT]` section must be `hostgroup`.
+* To run the {rhos_component_storage_file} API service, you must add the `enabled_share_protocols` option to the `customServiceConfig` section in `manila: template: manilaAPI`.
+* If you have scheduler overrides, add them to the `customServiceConfig`
+section in `manila: template: manilaScheduler`.
+* If you have multiple storage back-end drivers configured with {OpenStackShort} {rhos_prev_ver}, you need to split them up when deploying {rhos_acro} {rhos_curr_ver}. Each storage back-end driver needs to use its own instance of the `manila-share` service.
+* If a storage back-end driver needs a custom container image, find it in the
+link:https://catalog.redhat.com/software/containers/search?gs&q=manila[Red Hat Ecosystem Catalog], and create or modify an `OpenStackVersion` custom resource (CR) to specify the custom image using the same `custom name`.
++
+The following example shows a manila spec from the `OpenStackControlPlane` CR that includes multiple storage back-end drivers, where only one is using a custom container image:
++
+[source,yaml]
+----
+  spec:
+    manila:
+      enabled: true
+      template:
+        manilaAPI:
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_share_protocols = nfs
+          replicas: 3
+        manilaScheduler:
+          replicas: 3
+        manilaShares:
+         netapp:
+           customServiceConfig: |
+             [DEFAULT]
+             debug = true
+             enabled_share_backends = netapp
+             host = hostgroup
+             [netapp]
+             driver_handles_share_servers = False
+             share_backend_name = netapp
+             share_driver = manila.share.drivers.netapp.common.NetAppDriver
+             netapp_storage_family = ontap_cluster
+             netapp_transport_type = http
+           replicas: 1
+         pure:
+            customServiceConfig: |
+             [DEFAULT]
+             debug = true
+             enabled_share_backends=pure-1
+             host = hostgroup
+             [pure-1]
+             driver_handles_share_servers = False
+             share_backend_name = pure-1
+             share_driver = manila.share.drivers.purestorage.flashblade.FlashBladeShareDriver
+             flashblade_mgmt_vip = 203.0.113.15
+             flashblade_data_vip = 203.0.10.14
+            replicas: 1
+----
++
+The following example shows the `OpenStackVersion` CR that defines the custom container image:
++
+[source,yaml]
+----
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackVersion
+metadata:
+  name: openstack
+spec:
+  customContainerImages:
+    cinderVolumeImages:
+      pure: registry.connect.redhat.com/purestorage/openstack-manila-share-pure-rhosp-18-0
+----
++
+The name of the `OpenStackVersion` CR must match the name of your `OpenStackControlPlane` CR.
+* If you are providing sensitive information, such as passwords, hostnames, and usernames, it is recommended to use {OpenShiftShort} secrets, and the `customServiceConfigSecrets` key. You can use `customConfigSecrets` in any service.
