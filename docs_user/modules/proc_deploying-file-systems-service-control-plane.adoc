@@ -30,7 +30,7 @@ endif::[]
 $ CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/manila/etc/manila/manila.conf | awk '!/^ *#/ && NF' > ~/manila.conf
 ----
 
-. Review the configuration file for any configuration changes that were made since {OpenStackShort} {rhos_prev_ver}. For more information on preparing this file for {rhos_long}, see xref:preparing-the-shared-file-systems-service-configuration_adopting-shared-file-systems[Recommendations for preparing the {rhos_component_storage_file} configuration]. 
+. Review the configuration file for any configuration changes that were made since {OpenStackShort} {rhos_prev_ver}. For more information on preparing this file for {rhos_long}, see xref:preparing-the-shared-file-systems-service-configuration_adopting-shared-file-systems[Recommendations for preparing the {rhos_component_storage_file} configuration].
 // - TODO link config diff tables for RHOSP 17.1 (Wallaby) to RHOSP 18 (Antelope) -
 . Optional: If you are providing sensitive information, such as passwords, hostnames, and usernames, create a secret CR and apply it to the relevant {rhos_component_storage_file}.
 .. Create a file that includes the secrets, for example, `netapp_secrets.conf`:
@@ -95,7 +95,7 @@ spec:
       databaseInstance: openstack
       databaseAccount: manila
       secret: osp-secret
-      manilaAPI: 
+      manilaAPI:
         replicas: 3 <1>
         customServiceConfig: |
           [DEFAULT]
@@ -148,7 +148,7 @@ spec:
 __EOF__
 ----
 +
-<1> It is recommended to set the replica count of the `manilaAPI` service to 3. 
+<1> It is recommended to set the replica count of the `manilaAPI` service to 3.
 <2> It is recommended to set the replica count of the `manilaScheduler` service to 3.
 <3> Set the replica count of the `manilaShares` service to 1.
 <4> Ensure that the names of the back ends (`share_backend_name`) are the same as they were in {OpenStackShort} {rhos_prev_ver}.
@@ -200,8 +200,8 @@ spec:
             cephfs_auth_id=openstack
             cephfs_cluster_name=ceph
             cephfs_protocol_helper_type=NFS
-            cephfs_nfs_cluster_id=cephfs 
-            cephfs_ganesha_server_ip=172.17.5.47 
+            cephfs_nfs_cluster_id=cephfs
+            cephfs_ganesha_server_ip=172.17.5.47
           networkAttachments:
               - storage
 __EOF__
