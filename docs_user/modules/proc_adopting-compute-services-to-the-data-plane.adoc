@@ -2,6 +2,8 @@
 
 = Adopting Compute services to the {rhos_acro} data plane
 
+To adopt the Compute (nova) services to the {rhos_long} data plane, 
+
 .Prerequisites
 
 * The remaining control plane nodes, repositories, and packages on the Compute hosts are stopped. For more information, see xref:stopping-infrastructure-management-and-compute-services_{context}[Stopping infrastructure management and Compute services].
@@ -635,7 +637,7 @@ EOF
 +
 [NOTE]
 If you have other node sets to deploy, for example, for networker nodes, you can
-add them in the `nodeSets` list in this step, or create separate `OpenStackDataPlaneDeployment` CRs later. Note that once a `OpenStackDataPlaneDeployment` CR is deployed, it is impossible to add new node sets to it later.
+add them in the `nodeSets` list in this step, or create separate `OpenStackDataPlaneDeployment` CRs later. Note that once a `OpenStackDataPlaneDeployment` CR is deployed, you cannot add new node sets to it later.
 
 .Verification
 
