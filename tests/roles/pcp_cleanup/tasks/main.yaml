@@ -24,6 +24,7 @@
     oc delete --ignore-not-found=true secret osp-secret
     oc delete issuer rootca-internal --ignore-not-found
     oc delete secret rootca-internal --ignore-not-found
+    oc delete subscription cluster-observability-operator -n openshift-operators --ignore-not-found
   when: pcp_cleanup_enabled|bool
 
 - name: revert standalone VM to snapshotted state
