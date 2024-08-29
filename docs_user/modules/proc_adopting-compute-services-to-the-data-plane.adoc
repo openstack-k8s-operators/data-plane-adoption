@@ -2,7 +2,7 @@
 
 = Adopting Compute services to the {rhos_acro} data plane
 
-To adopt the Compute (nova) services to the {rhos_long} data plane, 
+To adopt the Compute (nova) services to the {rhos_long} data plane,
 
 .Prerequisites
 
@@ -79,7 +79,7 @@ EOF
 +
 * When `neutron-sriov-nic-agent` is running on the existing Compute nodes, the physical device mappings match the values that are defined in the `OpenStackDataPlaneNodeSet` custom resource (CR). For more information, see xref:pulling-configuration-from-tripleo-deployment_adopt-control-plane[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
 
-* The shell variables that are necessary to run the script that runs the fast-forward upgrade are defined: 
+* The shell variables that are necessary to run the script that runs the fast-forward upgrade are defined:
 +
 [NOTE]
 Do not set `CEPH_FSID` if the local storage back end is going to be configured by Nova for Libvirt. The storage back end must match the one used on the source cloud. You cannot change the storage back end during adoption.
