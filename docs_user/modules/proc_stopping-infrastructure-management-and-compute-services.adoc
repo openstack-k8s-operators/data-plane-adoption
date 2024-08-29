@@ -2,15 +2,13 @@
 
 = Stopping infrastructure management and Compute services
 
-The source cloud's control plane can be decomissioned,
-which is taking down only cloud controllers, database and messaging nodes.
-Nodes that must remain functional are those running the `Compute`, `Storage`,
-or `Networker` roles (in terms of composable roles covered by
-{OpenStackPreviousInstaller} Heat Templates).
+You must decomission cloud Controller nodes, database nodes, and messaging nodes on the source cloud's control plane. Nodes that are running the `Compute`, `Storage`, or `Networker` roles must remain functional (in terms of composable roles covered by {OpenStackPreviousInstaller} Heat Templates). 
+
+The following procedure applies to a single node standalone {OpenStackPreviousInstaller} deployment. You must remove conflicting repositories and packages from your Compute hosts. That is required to install libvirt packages when these hosts are adopted as data plane nodes, where modular libvirt daemons are no longer running in podman containers. 
 
 .Prerequisites
 
-* Define the following shell variables. The values that are used are examples and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Replace these example values with values that are correct for your environment:
+* Define the following shell variables. Replace the following example values with values that are correct for your environment:
 +
 [subs=+quotes]
 ----
@@ -28,19 +26,22 @@ computes=(
 ----
 +
 ** Replace `["standalone.localdomain"]="192.168.122.100"` with the name of the Compute node and its IP address.
-** These ssh variables with the ssh commands are used instead of ansible to create instructions that are independent of where they are running. But ansible commands could be used to achieve the same result if you are in the right host, for example to stop a service:
 +
+[NOTE]
+====
+These ssh variables with the ssh commands are used instead of ansible to create instructions that are independent of where they are running. But ansible commands could be used to achieve the same result if you are in the right host, for example to stop a service, run the following command:
+
 ----
 . stackrc
 ansible -i $(which tripleo-ansible-inventory) Compute -m shell -a "sudo systemctl stop tripleo_virtqemud.service" -b
 ----
+====
 
 .Procedure
 
-* Run the following script to remove the conflicting repositories and packages (in case of a devsetup that uses Standalone {OpenStackPreviousInstaller}) from all Compute hosts. That is required to install libvirt packages, when these hosts become adopted as data plane nodes, where modular libvirt daemons are no longer running in podman containers:
+* Remove the conflicting repositories and packages from all Compute hosts: 
 +
 ----
-
 PacemakerResourcesToStop=(
                 "galera-bundle"
                 "haproxy-bundle"
