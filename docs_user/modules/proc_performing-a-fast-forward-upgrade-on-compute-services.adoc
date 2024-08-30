@@ -15,20 +15,20 @@ services apply the change right after custom resource (CR) is patched. Compute d
 
 .Procedure
 
-. Wait for cell1 Compute data plane services version updated (it may take some time):
+. Wait for cell1 Compute data plane services version to be updated (it may take some time):
 +
 ----
-oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
+$ oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
     -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
 ----
 +
-The above query should return an empty result as a completion criterion.
+The query returns an empty result when the update is completed.
 
-. Remove pre-fast-forward upgrade workarounds for Compute control plane services:
+. Patch the `OpenStackControlPlane` CR to remove the pre-fast-forward upgrade workarounds from the Compute control plane services:
 +
 [source,yaml]
 ----
-oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
 spec:
   nova:
     template:
@@ -62,17 +62,17 @@ spec:
 '
 ----
 
-. Wait for Compute control plane services' CRs to be ready:
+. Wait for the Compute control plane services CRs to be ready:
 +
 ----
-oc wait --for condition=Ready --timeout=300s Nova/nova
+$ oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 
-. Remove pre-fast-forward upgrade workarounds for Compute data plane services:
+. Remove the pre-fast-forward upgrade workarounds from the Compute data plane services:
 +
 [source,yaml]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -96,26 +96,26 @@ spec:
 EOF
 ----
 
-. Wait for Compute data plane service to be ready:
+. Wait for the Compute data plane services to be ready:
 +
 ----
-oc wait --for condition=Ready openstackdataplanedeployment/openstack-nova-compute-ffu --timeout=5m
+$ oc wait --for condition=Ready openstackdataplanedeployment/openstack-nova-compute-ffu --timeout=5m
 ----
 
 . Run Compute database online migrations to complete the fast-forward upgrade:
 +
 ----
-oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
-oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
+$ oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
+$ oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
 ----
 
-. Discover Compute hosts in the cell:
+. Discover the Compute hosts in the cell:
 +
 ----
-oc rsh nova-cell0-conductor-0 nova-manage cell_v2 discover_hosts --verbose
+$ oc rsh nova-cell0-conductor-0 nova-manage cell_v2 discover_hosts --verbose
 ----
 
-. Verify if Compute services can stop the existing test VM instance:
+. Verify if the Compute services can stop the existing test VM instance:
 +
 ----
 ${BASH_ALIASES[openstack]} server list | grep -qF '| test | ACTIVE |' && ${BASH_ALIASES[openstack]} server stop test || echo PASS
@@ -123,7 +123,7 @@ ${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' || echo F
 ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test 2>&1 || echo PASS
 ----
 
-. Verify if Compute services can start the existing test VM instance:
+. Verify if the Compute services can start the existing test VM instance:
 +
 ----
 ${BASH_ALIASES[openstack]} server list | grep -qF '| test | SHUTOFF |' && ${BASH_ALIASES[openstack]} server start test || echo PASS
@@ -132,5 +132,4 @@ ${BASH_ALIASES[openstack]} server list | grep -F '| test | ACTIVE |' && \
 ----
 
 [NOTE]
-After the data plane adoption, the hosts continue to run Red Hat Enterprise Linux (RHEL)
-{rhel_prev_ver}. To take advantage of RHEL {rhel_curr_ver}, perform a minor update procedure after finishing the adoption procedure.
+After the data plane adoption, the Compute hosts continue to run Red Hat Enterprise Linux (RHEL) {rhel_prev_ver}. To take advantage of RHEL {rhel_curr_ver}, perform a minor update procedure after finishing the adoption procedure.

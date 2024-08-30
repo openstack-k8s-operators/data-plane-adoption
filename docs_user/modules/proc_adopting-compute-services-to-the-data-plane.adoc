@@ -122,7 +122,7 @@ ifeval::["{build}" != "downstream"]
 $(cat ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa | base64 | sed \'s/^/        /')
 endif::[]
 ifeval::["{build}" == "downstream"]
-$(cat *<path_to_SSH_key>* | base64 | sed \'s/^/        /')
+$(cat <path_to_SSH_key> | base64 | sed \'s/^/        /')
 endif::[]
 EOF
 ----
@@ -143,7 +143,7 @@ rm -f id*
 cd -
 ----
 
-. If you use a local storage back end for `libvirt`, create a `nova-compute-extra-config` service to remove pre-FFU workarounds and configure Compute services to use a local storage back end:
+. If you use a local storage back end for `libvirt`, create a `nova-compute-extra-config` service to remove pre-fast-forward workarounds and configure Compute services to use a local storage back end:
 +
 [source,yaml]
 ----
@@ -179,7 +179,7 @@ The secret `nova-cell<X>-compute-config` is auto-generated for each
   edpmServiceType: nova
 ----
 
-. If you use a Ceph back end for `libvirt`, create a `nova-compute-extra-config` service to remove pre-FFU workarounds and configure Compute services to use a Ceph back end:
+. If you use a Ceph back end for `libvirt`, create a `nova-compute-extra-config` service to remove pre-fast-forward upgrade workarounds and configure Compute services to use a Ceph back end:
 +
 [source,yaml]
 ----
@@ -419,6 +419,8 @@ ovs-vsctl list Open .
 external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings=<bridge_mappings>, ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
 ...
 ----
++
+* Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
 
 . If you use a Ceph back end for {block_storage_first_ref}, prepare the adopted data plane workloads:
 +
@@ -659,7 +661,7 @@ $ oc logs -l app=openstackansibleee -f --max-log-requests 20
 $ oc wait --for condition=Ready osdpns/openstack --timeout=30m
 ----
 
-. Verify that the {networking_first_ref} agents are alive:
+. Verify that the {networking_first_ref} agents are running:
 +
 ----
 $ oc exec openstackclient -- openstack network agent list
