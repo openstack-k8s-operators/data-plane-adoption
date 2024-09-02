@@ -38,6 +38,11 @@
     file: rhev.yaml
   when: platform_rhev|default(false)
 
+- name: Include OSPdO vars
+  ansible.builtin.include_vars:
+    file: ospdo.yaml
+  when: ospdo_src| bool
+
 - name: ensure IPAM is configured
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -59,6 +64,10 @@
   register: edpm_privatekey
   when: edpm_encoded_privatekey is undefined
 
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.include_tasks: ospdo_dataplane.yaml
+  when: ospdo_src| bool
+
 - name: create dataplane-adoption-secret.yaml
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -72,6 +81,7 @@
     data:
         ssh-privatekey: "{{ edpm_encoded_privatekey | default(edpm_privatekey.content) }}"
     EOF
+  when: not ospdo_src| bool
 
 - name: generate an ssh key-pair nova-migration-ssh-key secret
   when: compute_adoption|bool

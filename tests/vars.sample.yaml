@@ -64,3 +64,8 @@ telemetry_adoption: true
 # Whether source env is OSPD Director Operator
 # i.e. https://github.com/openstack-k8s-operators/osp-director-operator
 ospdo_src: false
+
+# rhoso namespace
+osp18_namespace: "openstack"
+# director operator namespace
+ospdo_namespace: "ospdo_openstack"

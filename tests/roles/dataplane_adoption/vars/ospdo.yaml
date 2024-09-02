@@ -1,0 +1,110 @@
+# Specific OSPdO Adoption vars
+# ospdo nodes deployment configuration template
+edpm_nodes:
+    compute-0:
+      # Use a FQDN here to avoid issues with value specified in netconfig.yaml
+      hostName: compute-0.osptest.test.metalkube.org
+      ansible:
+        ansibleHost: 172.22.0.170
+        ansibleUser: cloud-admin
+      networks:
+      - name: ctlplane
+        fixedIP: 172.22.0.170
+        subnetName: ctlplane
+      - name: internalapi
+        fixedIP: 172.17.0.170
+        subnetName: internalapi
+      - name: storage
+        fixedIP: 172.18.0.170
+        subnetName: storage
+      - name: tenant
+        fixedIP: 172.20.0.170
+        subnetName: tenant
+    compute-1:
+      # Use a FQDN here to avoid issues with value specified in netconfig.yaml
+      hostName: compute-1.osptest.test.metalkube.org
+      ansible:
+        ansibleHost: 172.22.0.180
+        ansibleUser: cloud-admin
+      networks:
+      - name: ctlplane
+        fixedIP: 172.22.0.180
+        subnetName: ctlplane
+      - name: internalapi
+        fixedIP: 172.17.0.180
+        subnetName: internalapi
+      - name: storage
+        fixedIP: 172.18.0.180
+        subnetName: storage
+      - name: tenant
+        fixedIP: 172.20.0.180
+        subnetName: tenant
+
+edpm_network_config_template: |
+ ---
+           {% set mtu_list = [ctlplane_mtu] %}
+           {% for network in nodeset_networks %}
+           {{ mtu_list.append(lookup('vars', networks_lower[network] ~ '_mtu')) }}
+           {%- endfor %}
+           {% set min_viable_mtu = mtu_list | max %}
+           network_config:
+           # BMH provisioning interface used for ctlplane
+           - type: interface
+             name: nic 1
+             mtu: 1500
+             use_dhcp: false
+             dns_servers: {{ ctlplane_dns_nameservers }}
+             domain: {{ dns_search_domains }}
+             addresses:
+             - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
+             routes: {{ ctlplane_host_routes }}
+           # Disable OCP cluster interface
+           - type: interface
+             name: nic2
+             mtu: 1500
+             use_dhcp: false
+           {% for network in nodeset_networks %}
+           {% if network in ["external"] %}
+           - type: ovs_bridge
+             name: {{ neutron_physical_bridge_name }}
+             mtu: 1500
+             dns_servers: {{ ctlplane_dns_nameservers }}
+             use_dhcp: false
+             members:
+             - type: interface
+               name: nic3
+               mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
+               primary: true
+           {% endif %}
+           {% endfor %}
+           - type: ovs_bridge
+             name: br-tenant
+             mtu: {{ min_viable_mtu }}
+             use_dhcp: false
+             members:
+             - type: interface
+               name: nic4
+               mtu: {{ min_viable_mtu }}
+               use_dhcp: false
+               primary: true
+           {% for network in nodeset_networks %}
+           {% if network not in ["external"] %}
+             - type: vlan
+               mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
+               vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
+               addresses:
+               - ip_netmask:
+                   {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
+               routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
+           {% endif %}
+           {% endfor %}
+
+
+neutron_physical_bridge_name: br-ex
+neutron_public_interface_name: nic3
+edpm_ovn_bridge_mappings: datacentre:br-ex
+
+edpm_sshd_allowed_ranges:
+  - 192.168.122.0/24
+  - 172.22.0.0/24
+
