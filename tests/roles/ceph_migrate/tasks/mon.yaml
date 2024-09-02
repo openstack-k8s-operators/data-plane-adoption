@@ -1,3 +1,17 @@
+## Experimental (CI only)
+#- name: Restart network service asynchronously
+#  delegate_to: "{{ target_node }}"
+#  ansible.builtin.systemd:
+#    name: network
+#    state: restarted
+#  async: 60
+#  poll: 10
+#
+#- name: Wait for the network connection to re-establish
+#  ansible.builtin.wait_for_connection:
+#    delay: 30
+#    timeout: 120
+
 # Get a client using -v /home/tripleo-admin/ceph_config:/etc/ceph:z as input
 - name: Get ceph_cli
   ansible.builtin.include_tasks: ceph_cli.yaml
@@ -71,7 +85,7 @@
         "{{ ceph_cli }} mgr fail {{ mgr.active_name }}"
       when:
         - mgr.active_name | length > 0
-        - mgr.active_name | regex_search(cur_mon)
+        - mgr.active_name | regex_search(cur_mon | split('.') | first) or mgr.active_name | regex_search(target_node | split('.') | first)
 
 # Drain and rm the cur_mon from the Ceph cluster
 - name: MON - Drain and rm --force the cur_mon host
@@ -126,6 +140,8 @@
         CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
         CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
         CEPH_CONF: "{{ ceph_config_tmp_client_home }}"
+      notify: restart mgr
+
     - name: Print the resulting spec
       when: debug | default(false)
       ansible.builtin.debug:
@@ -147,6 +163,7 @@
       delay: 4
       loop_control:
         label: "MON - Get tmp mon"
+      notify: restart mgr
 
     - name: MON - Wait for the current mon to be deleted
       ansible.builtin.pause:
@@ -158,9 +175,9 @@
         msg: "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
 
     - name: MON - Redeploy mon on {{ target_node }}
-      when: psmon.stdout | from_json | community.general.json_query('[*].daemon_name') | length == 0
       ansible.builtin.command:
         "{{ ceph_cli }} orch daemon add mon {{ target_node }}:{{ mon_ipaddr }}"
+      notify: restart mgr
 
     - name: MON - Wait for the spec to be updated
       ansible.builtin.pause:
@@ -204,6 +221,7 @@
     CEPH_CONTAINER_IMAGE: "{{ ceph_container }}"
     CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
     CEPH_CONF: "{{ ceph_config_tmp_client_home }}"
+  notify: restart mgr
 
 # Wait for the redeploy to finish before moving to the next stage
 - name: MON - wait daemons

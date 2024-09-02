@@ -81,3 +81,4 @@
       when: lsh.stdout | from_json | community.general.json_query('[*].hostname') | length > 0
       ansible.builtin.command:
         "{{ ceph_cli }} orch host rm {{ cur_mon }} --force"
+      notify: restart mgr
