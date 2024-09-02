@@ -1,0 +1,15 @@
+# Take the private ssh key (id_ra) from the /home/cloud-admin/.ssh/ directory of the openstackclient pod and create a secret in the osp18 namespace
+- name: Create secret from openstackclient pod
+  ansible.builtin.shell: |
+      {{ shell_header }}
+      {{ oc_header }}
+      oc apply -f - <<EOF
+      apiVersion: v1
+      kind: Secret
+      metadata:
+          name: dataplane-adoption-secret
+          namespace: ${osp18_namespace}
+      data:
+          ssh-privatekey: |
+      $(oc exec -n "${ospdo_namespace}" -t openstackclient openstackclient -- cat /home/cloud-admin/.ssh/id_rsa | base64 | sed 's/^/        /')
+      EOF
