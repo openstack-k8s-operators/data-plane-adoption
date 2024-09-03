@@ -206,7 +206,7 @@ data:
 EOF
 ----
 +
-Provided above resources should contain a cell-specific configurations. 
+Provided above resources should contain a cell-specific configurations.
 For multi-cell, config maps and {rhos_prev_long} data plane services should be named like `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`.
 
 ifeval::["{build}" == "downstream"]
