@@ -39,8 +39,8 @@ ${BASH_ALIASES[openstack]} flavor show m1.small || \
 ${BASH_ALIASES[openstack]} network show private || ${BASH_ALIASES[openstack]} network create private --share
 ${BASH_ALIASES[openstack]} subnet show priv_sub || ${BASH_ALIASES[openstack]} subnet create priv_sub --subnet-range 192.168.0.0/24 --network private
 ${BASH_ALIASES[openstack]} network show public || ${BASH_ALIASES[openstack]} network create public --external --provider-network-type flat --provider-physical-network datacentre
-${BASH_ALIASES[openstack]} subnet show pub_sub || \
-    ${BASH_ALIASES[openstack]} subnet create pub_sub --subnet-range 192.168.122.0/24 --allocation-pool start=192.168.122.200,end=192.168.122.210 --gateway 192.168.122.1 --no-dhcp --network public
+${BASH_ALIASES[openstack]} subnet show public_subnet || \
+    ${BASH_ALIASES[openstack]} subnet create public_subnet --subnet-range 192.168.122.0/24 --allocation-pool start=192.168.122.171,end=192.168.122.250 --gateway 192.168.122.1 --dhcp --network public
 ${BASH_ALIASES[openstack]} router show priv_router || {
     ${BASH_ALIASES[openstack]} router create priv_router
     ${BASH_ALIASES[openstack]} router add subnet priv_router priv_sub
