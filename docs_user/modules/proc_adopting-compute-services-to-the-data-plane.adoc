@@ -493,11 +493,9 @@ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
   }]'
 ----
 
-Note that in order to use `neutron-dhcp` with OVN for baremetal
-provisioning the `disable_ovn_dhcp_for_baremetal_ports` configuration
-option for Neutron needs to be set to `true` (it defaults to
-`false`). This configuration can be set in the `NeutronAPI` spec as
-follows:
++
+[NOTE]
+To use `neutron-dhcp` with OVN for the {bare_metal_first_ref}, you must set the `disable_ovn_dhcp_for_baremetal_ports` configuration option for the {networking_first_ref}  to `true`.  You can set this configuration in the `NeutronAPI` spec:
 
 [source,yaml]
 ----
