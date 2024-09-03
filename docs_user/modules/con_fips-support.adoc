@@ -6,6 +6,6 @@ If you are adopting a {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} FIPS e
 
 There is a major difference with how FIPS was configured in {OpenStackPreviousInstaller} and how it is enabled and enforced in operator deployments. In {OpenStackPreviousInstaller}, FIPS is enabled as part of its configuration, whereas in operator deployments, there is no specific FIPS configuration.
 
-If your cluster is FIPS enabled, you must deploy a FIPS {OpenShiftShort} cluster to adopt your {OpenStackShort} {rhos_prev_ver} FIPS control plane.
+If your cluster is FIPS enabled, you must deploy a FIPS {OpenShift} ({OpenShiftShort}) cluster to adopt your {OpenStackShort} {rhos_prev_ver} FIPS control plane.
 
 Enabling FIPS in {OpenShiftShort} is out of scope for this guide. Please refer to the link:https://docs.openshift.com/container-platform/latest/installing/installing-fips.html[Support for FIPS cryptography] in _OpenShift Container Platform Documentation_.
