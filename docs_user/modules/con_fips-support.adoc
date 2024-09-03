@@ -8,4 +8,4 @@ There is a major difference with how FIPS was configured in {OpenStackPreviousIn
 
 If your cluster is FIPS enabled, you must deploy a FIPS {OpenShift} ({OpenShiftShort}) cluster to adopt your {OpenStackShort} {rhos_prev_ver} FIPS control plane.
 
-Enabling FIPS in {OpenShiftShort} is out of scope for this guide. Please refer to the link:https://docs.openshift.com/container-platform/latest/installing/installing-fips.html[Support for FIPS cryptography] in _OpenShift Container Platform Documentation_.
+For more information about enabling FIPS in {OpenShiftShort}, see link:https://docs.openshift.com/container-platform/latest/installing/installing-fips.html[Support for FIPS cryptography] in _OpenShift Container Platform Documentation_.
