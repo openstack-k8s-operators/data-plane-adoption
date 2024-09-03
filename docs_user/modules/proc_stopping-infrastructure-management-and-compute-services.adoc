@@ -27,16 +27,6 @@ computes=(
 +
 ** Replace `["standalone.localdomain"]="192.168.122.100"` with the name of the Compute node and its IP address.
 ** Replace `<path_to_SSH_key>` with the path to your SSH key.
-+
-[NOTE]
-====
-These ssh variables with the ssh commands are used instead of ansible to create instructions that are independent of where they are running. But ansible commands could be used to achieve the same result if you are in the right host, for example to stop a service, run the following command:
-
-----
-. stackrc
-ansible -i $(which tripleo-ansible-inventory) Compute -m shell -a "sudo systemctl stop tripleo_virtqemud.service" -b
-----
-====
 
 .Procedure
 

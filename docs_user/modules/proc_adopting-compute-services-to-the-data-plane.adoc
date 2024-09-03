@@ -206,7 +206,7 @@ data:
 EOF
 ----
 +
-Provided above resources should contain a cell-specific configurations.
+Provided above resources should contain a cell-specific configurations. 
 For multi-cell, config maps and {rhos_prev_long} data plane services should be named like `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`.
 
 ifeval::["{build}" == "downstream"]
@@ -460,8 +460,7 @@ spec:
 ----
 +
 [NOTE]
-Ensure that you retain the original `OpenStackDataPlaneNodeSet` services
-composition, except for the inserted `ceph-client` service.
+Ensure that you retain the list of services from the original `OpenStackDataPlaneNodeSet` CR that you deployed, except for the inserted `ceph-client` service.
 
 . Optional: Enable `neutron-sriov-nic-agent` in the `OpenStackDataPlaneNodeSet` CR:
 +
@@ -515,9 +514,9 @@ spec:
           disable_ovn_dhcp_for_baremetal_ports = true
 ----
 
-. Run pre-adoption validation:
+. Run the pre-adoption validation:
 
-.. Create the validation service:
+.. Create the validation service. For example:
 +
 [source,yaml]
 ----
@@ -531,7 +530,7 @@ spec:
 EOF
 ----
 
-.. Create a `OpenStackDataPlaneDeployment` CR that runs only the validation:
+.. Create a `OpenStackDataPlaneDeployment` CR that runs only the validation. For example:
 +
 [source,yaml]
 ----
@@ -589,7 +588,7 @@ to use the same profile as the one set on the {OpenStackShort} {rhos_prev_ver} n
 
 . Remove the remaining {OpenStackPreviousInstaller} services:
 
-.. Create the cleanup data plane service:
+.. Create an `OpenStackDataPlaneService` CR to clean up the data plane services you are adopting:
 +
 [source,yaml]
 ----

@@ -12,7 +12,7 @@ If you have Networker nodes in your existing {rhos_long} deployment, adopt them 
 
 .Prerequisites
 
-. Define the following shell variable. The following value is an example
+* Define the following shell variable. The following value is an example
 and applies to a single node standalone {OpenStackPreviousInstaller} deployment:
 +
 [subs=+quotes]
@@ -31,7 +31,7 @@ networkers=(
 . Deploy the `OpenStackDataPlaneNodeSet` CR for your Networker nodes:
 +
 [NOTE]
-You can reuse most of the `nodeTemplate` section from the `openstack` CR that is designated for your `Compute` nodes. However, some of the variables might be unnecessary because of a more limited set of services that are running on `Networker` nodes. Ensure that `edpm_enable_chassis_gw: true` is set to run `ovn-controller` in gateway mode.
+You can reuse most of the `nodeTemplate` section from the `OpenStackDataPlaneNodeSet` CR that is designated for your `Compute` nodes. However, some of the variables might be unnecessary because of a more limited set of services that are running on `Networker` nodes. Ensure that `edpm_enable_chassis_gw: true` is set to run `ovn-controller` in gateway mode.
 +
 [source,yaml]
 ----
@@ -214,19 +214,21 @@ external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-b
 +
 [source,yaml]
 ----
-$ oc patch openstackdataplanenodeset openstack-networker --type='json' --patch='[
+$ oc patch openstackdataplanenodeset <networker_CR_name> --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
     "value": "neutron-metadata"
   }]'
 ----
++
+* Replace `<networker_CR_name>` with the name of the CR that you deployed for your Networker nodes, for example, `openstack-networker`.
 
 . Optional: Enable `neutron-dhcp` in the `OpenStackDataPlaneNodeSet` CR:
 +
 [source,yaml]
 ----
-$ oc patch openstackdataplanenodeset openstack-networker --type='json' --patch='[
+$ oc patch openstackdataplanenodeset <networker_CR_name> --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
@@ -290,7 +292,7 @@ EOF
 +
 [NOTE]
 Alternatively, you can include the `Networker` specific node set in the
-`nodeSets` list when you create the main `openstack` `OpenStackDataPlaneDeployment` CR, before you deploy it. Note that once an `OpenStackDataPlaneDeployment` CR is deployed, you cannot add new node sets to it later.
+`nodeSets` list when you create the main `OpenStackDataPlaneDeployment` CR, before you deploy it. Note that once an `OpenStackDataPlaneDeployment` CR is deployed, you cannot add new node sets to it later.
 
 .Verification
 
