@@ -63,7 +63,7 @@ control plane, excluding the {identity_service} and its endpoints:
 ----
 $ openstack endpoint list | grep keystone | awk '/admin/{ print $2; }' | xargs ${BASH_ALIASES[openstack]} endpoint delete || true
 
-for service in aodh heat heat-cfn barbican cinderv3 glance manila manilav2 neutron nova placement swift ironic-inspector ironic; do
+for service in aodh heat heat-cfn barbican cinderv3 glance gnocchi manila manilav2 neutron nova placement swift ironic-inspector ironic; do
   openstack service list | awk "/ $service /{ print \$2; }" | xargs ${BASH_ALIASES[openstack]} service delete || true
 done
 ----
