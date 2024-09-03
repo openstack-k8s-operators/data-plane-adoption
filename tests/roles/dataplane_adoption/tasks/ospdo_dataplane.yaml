@@ -13,3 +13,20 @@
           ssh-privatekey: |
       $(oc exec -n "${ospdo_namespace}" -t openstackclient openstackclient -- cat /home/cloud-admin/.ssh/id_rsa | base64 | sed 's/^/        /')
       EOF
+
+
+# needed for : https://github.com/openstack-k8s-operators/openstack-operator/blob/37f12745cc6971241f6d24fa9b0a28d39a428be7/config/services/dataplane_v1beta1_openstackdataplaneservice_libvirt.yaml#L8
+- name: Create secret for OpenStackDataPlaneService
+  ansible.builtin.shell: |
+    LIBVIRT_PASSWORD=$(grep <"${PASSWORD_FILE}" ' LibvirtTLSPassword:' | awk -F ': ' '{ print $2; }')
+
+    oc apply -f - <<EOF
+    apiVersion: v1
+    data:
+    LibvirtPassword: $(echo -n "${LIBVIRT_PASSWORD}" | base64)
+    kind: Secret
+    metadata:
+    name: libvirt-secret
+    namespace: ${OSP18_NAMESPACE}
+    type: Opaque
+    EOF
