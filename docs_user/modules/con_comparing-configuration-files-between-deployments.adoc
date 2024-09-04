@@ -2,17 +2,20 @@
 
 = Comparing configuration files between deployments
 
-In order to help users to handle the configuration for the {OpenStackPreviousInstaller} and {rhos_prev_long}
-services the tool: https://github.com/openstack-k8s-operators/os-diff has been
-develop to compare the configuration files between the {OpenStackPreviousInstaller} deployment and the {rhos_long} cloud.
-Make sure Golang is installed and configured on your environment:
+To help you manage the configuration for your {OpenStackPreviousInstaller} and {rhos_prev_long} ({OpenStackShort}) services, you can compare the configuration files between your {OpenStackPreviousInstaller} deployment and the {rhos_long} cloud.
 
+.Prerequisites
+
+* Golang is installed and configured on your environment:
++
 ----
 dnf install -y golang-github-openstack-k8s-operators-os-diff
 ----
 
-Then configure the `/etc/os-diff/os-diff.cfg` file and the `/etc/os-diff/ssh.config` file according to your environment. To allow os-diff to connect to your clouds and pull files from the services that you describe in the `config.yaml` file you need to properly set the option in the `os-diff.cfg` file:
+.Procedure
 
+. Configure the `/etc/os-diff/os-diff.cfg` file and the `/etc/os-diff/ssh.config` file according to your environment. To allow os-diff to connect to your clouds and pull files from the services that you describe in the `config.yaml` file, you must properly set the option in the `os-diff.cfg` file:
++
 [source,yaml]
 [subs=+quotes]
 ----
@@ -66,8 +69,8 @@ director_host=my.undercloud.local
 
 Note that the result of using `ssh_cmd` and `director_host` should be a "successful ssh access".
 
-Configure or generate the `ssh.config` file from inventory or hosts file, for example:
-
+. Configure or generate the `ssh.config` file from the inventory or hosts file, for example:
++
 [source,yaml]
 [subs=+quotes]
 ----
@@ -128,9 +131,10 @@ Host undercloud
   UserKnownHostsFile /dev/null
 ----
 
+.Verification
 
-And test your connection:
-
+. Test your connection:
++
 ----
 ssh -F ssh.config standalone
 ----
