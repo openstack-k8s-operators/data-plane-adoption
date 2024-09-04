@@ -2,27 +2,19 @@
 
 = Rolling back the control plane adoption
 
-If you encountered a problem during the adoption of the {rhos_prev_long} ({OpenStackShort}) control plane services that prevents you from completing the adoption procedure, you can roll back the control plane adoption.
+If you encountered a problem that prevents you from completing the adoption of the {rhos_prev_long} ({OpenStackShort}) control plane services, you can roll back the control plane adoption.
 
 [IMPORTANT]
-The roll back operation is only possible during the
-control plane parts of the adoption procedure. If you altered the data plane
-nodes in any way during the procedure, the roll back is not possible.
+You can only roll back the control plane adoption during the parts of the adoption procedure that alter the control plane. If you altered the data plane
+nodes in any way, you cannot perform the rollback procedure.
 
-During the control plane adoption, services on the source cloud's
-control plane are stopped but not removed. The databases on the source
-control plane are not edited by the adoption procedure. The
-destination control plane received a copy of the original
-control plane databases. The roll back procedure assumes that the data
-plane has not yet been touched by the adoption procedure and it is
-still connected to the source control plane.
+During the control plane adoption, services on the {OpenStackShort} control plane are stopped but not removed. The databases on the {OpenStackShort} control plane are not edited during the adoption procedure. The {rhos_long} control plane receives a copy of the original control plane databases. The rollback procedure assumes that the data plane has not yet been modified by the adoption procedure, and it is still connected to the {OpenStackShort} control plane.
 
 The rollback procedure consists of the following steps:
 
-* Restoring the functionality of the source control plane.
+* Restoring the functionality of the {OpenStackShort} control plane.
 
-* Removing the partially or fully deployed destination
-  control plane.
+* Removing the partially or fully deployed {rhos_acro} control plane.
 
 .Procedure
 
@@ -138,26 +130,23 @@ for i in {1..3}; do
 done
 ----
 
-. If the Ceph NFS service is running on the deployment as a {rhos_component_storage_file_first_ref}
-backend, you must restore the pacemaker ordering and colocation constraints
-involving the "openstack-manila-share" service:
+. If the Ceph NFS service is running on the deployment as a {rhos_component_storage_file_first_ref} back end, you must restore the Pacemaker order and colocation constraints for the `openstack-manila-share` service:
 +
 ----
 
-sudo pcs constraint order start ceph-nfs then openstack-manila-share kind=Optional id=order-ceph-nfs-openstack-manila-share-Optional
-sudo pcs constraint colocation add openstack-manila-share with ceph-nfs score=INFINITY id=colocation-openstack-manila-share-ceph-nfs-INFINITY
+$ sudo pcs constraint order start ceph-nfs then openstack-manila-share kind=Optional id=order-ceph-nfs-openstack-manila-share-Optional
+$ sudo pcs constraint colocation add openstack-manila-share with ceph-nfs score=INFINITY id=colocation-openstack-manila-share-ceph-nfs-INFINITY
 
 ----
 
-. Verify that the source cloud is operational again, e.g. by
-running `openstack` CLI commands or using the {dashboard_first_ref}.
-//kgilliga: Should we be more specific? Which CLI commands?
+. Verify that the source cloud is operational again, for example, you
+can run `openstack` CLI commands or check that you can access the {dashboard_first_ref}.
 
-. Remove the partially or fully deployed control plane so that another adoption attempt can be made later:
+. Remove the partially or fully deployed control plane so that you can attempt the adoption again later:
 +
 ----
-oc delete --ignore-not-found=true --wait=false openstackcontrolplane/openstack
-oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc delete --ignore-not-found=true --wait=false openstackcontrolplane/openstack
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 metadata:
   finalizers: []
 ' || true
@@ -169,20 +158,12 @@ while oc get pod | grep openstack-galera-0; do
     sleep 2
 done
 
-oc delete --ignore-not-found=true --wait=false pod mariadb-copy-data
-oc delete --ignore-not-found=true --wait=false pvc mariadb-data
-oc delete --ignore-not-found=true --wait=false pod ovn-copy-data
-oc delete --ignore-not-found=true secret osp-secret
+$ oc delete --ignore-not-found=true --wait=false pod mariadb-copy-data
+$ oc delete --ignore-not-found=true --wait=false pvc mariadb-data
+$ oc delete --ignore-not-found=true --wait=false pod ovn-copy-data
+$ oc delete --ignore-not-found=true secret osp-secret
 ----
 
 [NOTE]
-Since restoring the source control plane services, their internal
-state may have changed. Before retrying the adoption procedure, it is
-important to verify that the control plane resources have
-been removed and there are no leftovers which could affect the
-following adoption procedure attempt. Notably, the previously created
-copies of the database contents must not be used in another adoption
-attempt, and new copies must be made according to the adoption
-procedure documentation.
-
-//kgilliga: How do users verify that the control plane resources have all been removed?
+After you restore the {OpenStackShort} control plane services, their internal
+state might have changed. Before you retry the adoption procedure, verify that all the control plane resources are removed and that there are no leftovers which could affect the following adoption procedure attempt. You must not use previously created copies of the database contents in another adoption attempt. You must make new copies according to the adoption procedure documentation.
