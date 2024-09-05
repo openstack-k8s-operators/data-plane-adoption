@@ -8,7 +8,7 @@ The {rhos_component_storage_file_first_ref} in {rhos_long} provides a self-servi
 
 File shares in {rhos_acro} require network access. Ensure that the networking in the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} environment matches the network plans for your new cloud after adoption. This ensures that tenant workloads remain connected to storage during the adoption process. The {rhos_component_storage_file} control plane services are not in the data path. Shutting down the API, scheduler, and share manager services do not impact access to existing shared file systems.
 
-Typically, storage and storage device management networks are separate. Shared File Systems services only need access to the storage device management network.
+Typically, storage and storage device management are separate networks. Shared File Systems services only need access to the storage device management network.
 For example, if you used a {CephCluster} cluster in the deployment, the "storage"
 network refers to the {CephCluster} cluster's public network, and the Shared File Systems service's share manager service needs to be able to reach it.
 
