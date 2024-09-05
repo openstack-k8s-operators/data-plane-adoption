@@ -33,7 +33,7 @@ endif::[]
 
 .Procedure
 
-. Copy the configuration file from {OpenStackShort} {rhos_prev_ver} for reference.
+. Copy the configuration file from {OpenStackShort} {rhos_prev_ver} for reference:
 +
 ----
 $ CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/manila/etc/manila/manila.conf | awk '!/^ *#/ && NF' > ~/manila.conf
