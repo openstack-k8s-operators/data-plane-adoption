@@ -162,6 +162,7 @@ os-diff pull
 ----
 +
 The configuration is pulled and stored by default in the following directory:
++
 ----
 /tmp/tripleo/
 ----
