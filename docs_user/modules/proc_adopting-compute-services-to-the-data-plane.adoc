@@ -2,7 +2,9 @@
 
 = Adopting Compute services to the {rhos_acro} data plane
 
-To adopt the Compute (nova) services to the {rhos_long} data plane,
+Adopt your Compute (nova) services to the {rhos_long} data plane.
+
+//kgilliga: The following text belongs under the code block in step 6 but I'm unable to hide it there: "For multi-cell, config maps and {rhos_prev_long} data plane services should be named like `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`."
 
 .Prerequisites
 
@@ -206,8 +208,7 @@ data:
 EOF
 ----
 +
-Provided above resources should contain a cell-specific configurations.
-For multi-cell, config maps and {rhos_prev_long} data plane services should be named like `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`.
+The resources provided in the `ConfigMap` contain cell-specific configurations.
 
 ifeval::["{build}" == "downstream"]
 . Create a secret for the subscription manager and a secret for the Red Hat registry:
@@ -498,9 +499,9 @@ $ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
     "value": "neutron-dhcp"
   }]'
 ----
-
 +
 [NOTE]
+====
 To use `neutron-dhcp` with OVN for the {bare_metal_first_ref}, you must set the `disable_ovn_dhcp_for_baremetal_ports` configuration option for the {networking_first_ref}  to `true`.  You can set this configuration in the `NeutronAPI` spec:
 
 [source,yaml]
@@ -513,7 +514,7 @@ spec:
           [ovn]
           disable_ovn_dhcp_for_baremetal_ports = true
 ----
-
+====
 . Run the pre-adoption validation:
 
 .. Create the validation service. For example:

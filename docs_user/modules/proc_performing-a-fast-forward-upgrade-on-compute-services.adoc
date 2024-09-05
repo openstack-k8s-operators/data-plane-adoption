@@ -15,14 +15,19 @@ services apply the change right after custom resource (CR) is patched. Compute d
 
 .Procedure
 
-. Wait for cell1 Compute data plane services version to be updated (it may take some time):
+. Wait for cell1 Compute data plane services version to be updated:
 +
 ----
 $ oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
     -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
 ----
 +
-The query returns an empty result when the update is completed.
+[NOTE]
+====
+The query returns an empty result when the update is completed. No downtime is expected for virtual machine workloads. 
+
+If you encounter errors, review the nova Compute agent log files on the data plane, and the `nova-conductor` journal records on the control plane.
+====
 
 . Patch the `OpenStackControlPlane` CR to remove the pre-fast-forward upgrade workarounds from the Compute control plane services:
 +
