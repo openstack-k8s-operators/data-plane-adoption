@@ -17,6 +17,9 @@ neutron_config_patch: |
               spec:
                 type: LoadBalancer
         databaseInstance: openstack
+        customServiceConfig: |
+          [DEFAULT]
+          debug = True
         databaseAccount: neutron
         secret: osp-secret
         networkAttachments:
