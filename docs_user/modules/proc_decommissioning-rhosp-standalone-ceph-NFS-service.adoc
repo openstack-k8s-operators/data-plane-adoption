@@ -61,7 +61,7 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/<manila.p
 . Clean up the standalone `ceph-nfs` service from the {OpenStackShort} control plane nodes by disabling and deleting the Pacemaker resources associated with the service:
 +
 [IMPORTANT]
-You can defer this step until after {rhos_acro} {rhos_curr_ver} is operational. However, in the meantime, you cannot decommission the Controller nodes.
+You can defer this step until after {rhos_acro} {rhos_curr_ver} is operational. During this time, you cannot decommission the Controller nodes.
 +
 ----
 $ sudo pcs resource disable ceph-nfs
