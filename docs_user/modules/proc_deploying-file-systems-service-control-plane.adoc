@@ -2,7 +2,7 @@
 
 = Deploying the {rhos_component_storage_file} on the control plane
 
-Copy the {rhos_component_storage_file_first_ref} configuration from the {rhos_prev_long} {rhos_prev_ver} deployment, and then deploy the {rhos_component_storage_file} on the control plane.
+Copy the {rhos_component_storage_file_first_ref} configuration from the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} deployment, and then deploy the {rhos_component_storage_file} on the control plane.
 
 .Prerequisites
 
@@ -15,16 +15,25 @@ Copy the {rhos_component_storage_file_first_ref} configuration from the {rhos_pr
 of Ceph orchestrator. For more information, see xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a Ceph NFS cluster].
 * Services such as the {identity_service_first_ref} and memcached are available prior to adopting the Shared File Systems services.
 * If you enabled tenant-driven networking by setting `driver_handles_share_servers=True`, the {networking_first_ref} is deployed.
-
-.Procedure
 ifeval::["{build}" != "downstream"]
-. Define the `CONTROLLER1_SSH` environment variable, if it link:stop_openstack_services.md#variables[hasn't been
-defined] already. Then copy the configuration file from {OpenStackShort} {rhos_prev_ver} for reference.
+* Define the `CONTROLLER1_SSH` environment variable if it link:stop_openstack_services.md#variables[hasn't been
+defined] already. Replace the following example values with values that are correct for your environment:
++
+----
+CONTROLLER1_SSH="ssh -i <path to SSH key> root@<node IP>"
+----
 endif::[]
 ifeval::["{build}" != "upstream"]
-. Define the `CONTROLLER1_SSH` environment variable, if it has not been
-defined already. Then copy the configuration file from {OpenStackShort} {rhos_prev_ver} for reference.
+* The `CONTROLLER1_SSH` environment variable is defined and points to the {OpenStackShort} Controller node. Replace the following example values with values that are correct for your environment:
++
+----
+CONTROLLER1_SSH="ssh -i <path to SSH key> root@<node IP>"
+----
 endif::[]
+
+.Procedure
+
+. Copy the configuration file from {OpenStackShort} {rhos_prev_ver} for reference:
 +
 ----
 $ CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/manila/etc/manila/manila.conf | awk '!/^ *#/ && NF' > ~/manila.conf
