@@ -31,7 +31,7 @@ networkers=(
 . Deploy the `OpenStackDataPlaneNodeSet` CR for your Networker nodes:
 +
 [NOTE]
-You can reuse most of the `nodeTemplate` section from the `OpenStackDataPlaneNodeSet` CR that is designated for your `Compute` nodes. However, some of the variables might be unnecessary because of a more limited set of services that are running on `Networker` nodes. 
+You can reuse most of the `nodeTemplate` section from the `OpenStackDataPlaneNodeSet` CR that is designated for your `Compute` nodes. However, some of the variables might be unnecessary because of a more limited set of services that are running on `Networker` nodes.
 +
 [source,yaml]
 ----
