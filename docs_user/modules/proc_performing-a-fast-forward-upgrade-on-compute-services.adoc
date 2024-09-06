@@ -2,16 +2,11 @@
 
 = Performing a fast-forward upgrade on Compute services
 
-Compute services rolling upgrade cannot be done during adoption,
-there is in a lock-step with Compute control plane services, because those are managed independently by data plane ansible and Kubernetes Operators.
-The Compute service operator and OpenStack Operator ensure upgrading
-is done independently of each other, by configuring
-`[upgrade_levels]compute=auto` for Compute services. Compute control plane
-services apply the change right after custom resource (CR) is patched. Compute data plane services will catch up the same config change with ansible deployment later on.
+You must upgrade the Compute services from {rhos_prev_long} {rhos_prev_ver} to {rhos_long} {rhos_curr_ver} on the control plane and data plane. The upgrade procedure involves the following tasks:
 
-//[NOTE]
-//Additional orchestration happening around the FFU workarounds
-//configuration for Compute data plane service is a subject of future changes. kgilliga: We don't comment on future changes downstream.
+* Update the cell1 Compute data plane services version.
+* Remove pre-fast-forward upgrade workarounds from the Compute control plane services and Compute data plane services.
+* Run Compute database online migrations to update live data.
 
 .Procedure
 
@@ -24,7 +19,7 @@ $ oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_
 +
 [NOTE]
 ====
-The query returns an empty result when the update is completed. No downtime is expected for virtual machine workloads. 
+The query returns an empty result when the update is completed. No downtime is expected for virtual machine workloads.
 
 If you encounter errors, review the nova Compute agent log files on the data plane, and the `nova-conductor` journal records on the control plane.
 ====
@@ -100,6 +95,9 @@ spec:
     - nova
 EOF
 ----
++
+[NOTE]
+The service included in the `servicesOverride` key must match the name of the service that you included in the `OpenStackDataPlaneNodeSet` CR. For example, if you use a custom service called `nova-custom`, ensure that you add it to the `servicesOverride` key.
 
 . Wait for the Compute data plane services to be ready:
 +
@@ -113,6 +111,8 @@ $ oc wait --for condition=Ready openstackdataplanedeployment/openstack-nova-comp
 $ oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
 $ oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
 ----
+
+.Verification
 
 . Discover the Compute hosts in the cell:
 +

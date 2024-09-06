@@ -673,3 +673,7 @@ $ oc exec openstackclient -- openstack network agent list
 | a4f1b584-16f1-4937-b2b0-28102a3f6eaa | OVN Controller agent         | standalone.localdomain |                   | :-)   | UP    | ovn-controller             |
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
 ----
+
+.Next steps
+
+* You must perform a fast-forward upgrade on your Compute services. For more information, see xref:performing-a-fast-forward-upgrade-on-compute-services_{context}[Performing a fast-forward upgrade on Compute services].

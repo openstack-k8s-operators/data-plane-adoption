@@ -8,7 +8,7 @@ If you have Networker nodes in your existing {rhos_long} deployment, adopt them 
 
 * If you want to continue running OVN gateway services on Networker nodes, keep `ovn` service in the list to deploy.
 
-* You might also want to run the `neutron-dhcp` service on your Networker nodes instead of your Compute nodes. Note that using `neutron-dhcp` with OVN is not generally needed.
+* Optional: You can run the `neutron-dhcp` service on your Networker nodes instead of your Compute nodes. Using `neutron-dhcp` with OVN is not generally needed. However, it might be necessary in deployments with dynamic host configuration protocol (DHCP) relays, or if you require advanced DHCP options that are supported by dnsmasq but not by the OVN native DHCP implementation.
 
 .Prerequisites
 
@@ -31,7 +31,7 @@ networkers=(
 . Deploy the `OpenStackDataPlaneNodeSet` CR for your Networker nodes:
 +
 [NOTE]
-You can reuse most of the `nodeTemplate` section from the `OpenStackDataPlaneNodeSet` CR that is designated for your `Compute` nodes. However, some of the variables might be unnecessary because of a more limited set of services that are running on `Networker` nodes. Ensure that `edpm_enable_chassis_gw: true` is set to run `ovn-controller` in gateway mode.
+You can reuse most of the `nodeTemplate` section from the `OpenStackDataPlaneNodeSet` CR that is designated for your `Compute` nodes. However, some of the variables might be unnecessary because of a more limited set of services that are running on `Networker` nodes. 
 +
 [source,yaml]
 ----
@@ -41,7 +41,7 @@ kind: OpenStackDataPlaneNodeSet
 metadata:
   name: openstack-networker
 spec:
-  tlsEnabled: false
+  tlsEnabled: false <1>
   networkAttachments:
       - ctlplane
   preProvisioned: true
@@ -140,7 +140,7 @@ endif::[]
         edpm_nodes_validation_validate_gateway_icmp: false
 
         # edpm ovn-controller configuration
-        edpm_ovn_bridge_mappings: <bridge_mappings>
+        edpm_ovn_bridge_mappings: <bridge_mappings> <2>
         edpm_ovn_bridge: br-int
         edpm_ovn_encap_type: geneve
         ovn_monitor_all: true
@@ -148,7 +148,7 @@ endif::[]
         edpm_ovn_ofctrl_wait_before_clear: 8000
 
         # serve as a OVN gateway
-        edpm_enable_chassis_gw: true
+        edpm_enable_chassis_gw: true <3>
 
         timesync_ntp_servers:
 ifeval::["{build}" != "downstream"]
@@ -197,7 +197,9 @@ endif::[]
 EOF
 ----
 +
-* If TLS Everywhere is enabled, change `spec:tlsEnabled` to `true`.
+<1> If TLS Everywhere is enabled, change `spec:tlsEnabled` to `true`.
+<2> Set to the same values that you used in your {rhos_prev_long} {rhos_prev_ver} deployment.
+<3> Set to `true` to run `ovn-controller` in gateway mode.
 
 . Ensure that the `ovn-controller` settings that are configured in the `OpenStackDataPlaneNodeSet` CR are the same as the settings that were set in the `Networker` nodes before adoption. This configuration is stored in the `external_ids`` column in the `Open_vSwitch` table in the Open vSwitch database:
 +
@@ -311,8 +313,10 @@ $ oc logs -l app=openstackansibleee -f --max-log-requests 20
 . Wait for the data plane node set to reach the `Ready` status:
 +
 ----
-$ oc wait --for condition=Ready osdpns/openstack-networker --timeout=30m
+$ oc wait --for condition=Ready osdpns/<networker_CR_name> --timeout=30m
 ----
++
+* Replace `<networker_CR_name>` with the name of the CR that you deployed for your Networker nodes, for example, `openstack-networker`.
 
 . Verify that the {networking_first_ref} agents are running. The list of agents might vary depending on the services you enabled:
 +
