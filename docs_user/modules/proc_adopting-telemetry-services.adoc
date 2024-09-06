@@ -2,9 +2,9 @@
 
 = Adopting Telemetry services
 
-To adopt Telemetry services, you patch an existing `OpenStackControlPlane` custom resource (CR) that has Telemetry services disabled to start the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} environment. 
+To adopt Telemetry services, you patch an existing `OpenStackControlPlane` custom resource (CR) that has Telemetry services disabled to start the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} environment.
 
-If you adopt Telemetry services, the observability solution that is used in the {OpenStackShort} {rhos_prev_ver} environment, Service Telemetry Framework, is removed from the cluster. The new solution is deployed in the {rhos_long} environment, allowing for metrics, and optionally logs, to be retrieved and stored in the new back ends. 
+If you adopt Telemetry services, the observability solution that is used in the {OpenStackShort} {rhos_prev_ver} environment, Service Telemetry Framework, is removed from the cluster. The new solution is deployed in the {rhos_long} environment, allowing for metrics, and optionally logs, to be retrieved and stored in the new back ends.
 
 You cannot automatically migrate old data because different back ends are used. Metrics and logs are considered short-lived data and are not intended to be migrated to the {rhos_acro} environment. For information about adopting legacy autoscaling stack templates to the {rhos_acro} environment, see xref:adopting-autoscaling_adopt-control-plane[Adopting Autoscaling services].
 
@@ -12,7 +12,7 @@ You cannot automatically migrate old data because different back ends are used. 
 
 * The {OpenStackPreviousInstaller} environment is running (the source cloud).
 * The Single Node OpenShift or OpenShift Local is running in the {OpenShift} cluster.
-* Previous adoption steps are completed. 
+* Previous adoption steps are completed.
 * MariaDB, the {identity_service_first_ref}, and the data plane are adopted. For more information, see the following documentation:
 ** xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances]
 ** xref:adopting-the-identity-service_adopt-control-plane[Adopting the {identity_service}]
