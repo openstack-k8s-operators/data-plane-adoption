@@ -2,28 +2,27 @@
 
 = Adopting Telemetry services
 
-The observability solution that is used in the source environment, Service Telemetry Framework, is not the observability solution that is used to retrieve metrics and logs in the target environment. The solution is developed to better integrate with both {rhos_prev_long} and {OpenShift}. You cannot automatically migrate old data because different back ends are used.
+To adopt Telemetry services, you patch an existing `OpenStackControlPlane` custom resource (CR) that has Telemetry services disabled to start the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} environment. 
 
-Metrics and logs are considered short-lived data and are not intended to be migrated to the target environment. For information about adopting legacy autoscaling stack templates to the target environment, see xref:adopting-autoscaling_adopt-control-plane[Adopting Autoscaling services].
+If you adopt Telemetry services, the observability solution that is used in the {OpenStackShort} {rhos_prev_ver} environment, Service Telemetry Framework, is removed from the cluster. The new solution is deployed in the {rhos_long} environment, allowing for metrics, and optionally logs, to be retrieved and stored in the new back ends. 
 
-If you adopt Telemetry services, the solution is removed from the cluster and the new solution is deployed in the target environment, allowing for metrics, and optionally logs, to be retrieved and stored in the new back ends.
-
-To adopt Telemetry services, you patch an existing `OpenStackControlPlane` custom resource (CR) that has Telemetry services disabled to start the service with the configuration parameters that are provided by the source environment.
-
-This guide also assumes that:
-
-. A {OpenStackPreviousInstaller} environment (the source Cloud) is running on one side;
-. A `SNO` / `CodeReadyContainers` is running on the other side.
+You cannot automatically migrate old data because different back ends are used. Metrics and logs are considered short-lived data and are not intended to be migrated to the {rhos_acro} environment. For information about adopting legacy autoscaling stack templates to the {rhos_acro} environment, see xref:adopting-autoscaling_adopt-control-plane[Adopting Autoscaling services].
 
 .Prerequisites
 
-* Previous Adoption steps completed. MariaDB, the {identity_service_first_ref} and the data plane should be already adopted.
-//kgilliga:Should this procedure be moved after the "Adopting the data plane" chapter?
+* The {OpenStackPreviousInstaller} environment is running (the source cloud).
+* The Single Node OpenShift or OpenShift Local is running in the {OpenShift} cluster.
+* Previous adoption steps are completed. 
+* MariaDB, the {identity_service_first_ref}, and the data plane are adopted. For more information, see the following documentation:
+** xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances]
+** xref:adopting-the-identity-service_adopt-control-plane[Adopting the {identity_service}]
+** xref:adopting-data-plane_data-plane[Adopting the data plane]
+//kgilliga: Check the data plane xref after adding ifdef attributes to assemblies.
 
 * Patch the `OpenStackControlPlane` CR to deploy `cluster-observability-operator`:
 +
 ----
-oc create -f - <<EOF
+$ oc create -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -37,17 +36,17 @@ spec:
   sourceNamespace: openshift-marketplace
 EOF
 ----
-
-* Wait for the installation to succeed
++
+** Wait for the installation to succeed:
 +
 ----
-oc wait --for jsonpath="{.status.phase}"=Succeeded csv --namespace=openshift-operators -l operators.coreos.com/cluster-observability-operator.openshift-operators
+$ oc wait --for jsonpath="{.status.phase}"=Succeeded csv --namespace=openshift-operators -l operators.coreos.com/cluster-observability-operator.openshift-operators
 ----
 
-* Enable metrics storage backend
+* Enable the metrics storage back end:
 +
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   telemetry:
     template:
@@ -64,15 +63,15 @@ spec:
 '
 ----
 
-* Verify that `alertmanager` and `prometheus` pods are available
+* Verify that the `alertmanager` and `prometheus` pods are available:
 +
 ----
-oc get pods -l alertmanager=metric-storage -n openstack
+$ oc get pods -l alertmanager=metric-storage -n openstack
 NAME                            READY   STATUS    RESTARTS   AGE
 alertmanager-metric-storage-0   2/2     Running   0          46s
 alertmanager-metric-storage-1   2/2     Running   0          46s
 
-oc get pods -l prometheus=metric-storage -n openstack
+$ oc get pods -l prometheus=metric-storage -n openstack
 NAME                          READY   STATUS    RESTARTS   AGE
 prometheus-metric-storage-0   3/3     Running   0          46s
 ----
@@ -82,7 +81,7 @@ prometheus-metric-storage-0   3/3     Running   0          46s
 * Patch the `OpenStackControlPlane` CR to deploy Ceilometer services:
 +
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   telemetry:
     enabled: true
@@ -108,13 +107,13 @@ oc exec -t $CEILOMETETR_POD -c ceilometer-central-agent -- cat /etc/ceilometer/c
 . Inspect enabled pollsters:
 +
 ----
-oc get secret ceilometer-config-data -o jsonpath="{.data['polling\.yaml\.j2']}"  | base64 -d
+$ oc get secret ceilometer-config-data -o jsonpath="{.data['polling\.yaml\.j2']}"  | base64 -d
 ----
 
-. Optional: Override default pollsters according to requirements:
+. Optional: Override default pollsters according to the requirements of your environment:
 +
 ----
-oc patch openstackcontrolplane controlplane --type=merge --patch '
+$ oc patch openstackcontrolplane controlplane --type=merge --patch '
 spec:
   telemetry:
     template:
@@ -133,10 +132,10 @@ spec:
 '
 ----
 
-* Patch the `OpenStackControlPlane` CR to include `logging`
+. Patch the `OpenStackControlPlane` CR to include `logging`:
 +
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   telemetry:
     template:
