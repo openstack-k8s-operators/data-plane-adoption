@@ -2,11 +2,11 @@
 
 = Rolling back the control plane adoption
 
-If you encountered a problem that prevents you from completing the adoption of the {rhos_prev_long} ({OpenStackShort}) control plane services, you can roll back the control plane adoption.
+If you encountered a problem and are unable to complete the adoption of the {rhos_prev_long} ({OpenStackShort}) control plane services, you can roll back the control plane adoption.
 
 [IMPORTANT]
-You can only roll back the control plane adoption during the parts of the adoption procedure that alter the control plane. If you altered the data plane
-nodes in any way, you cannot perform the rollback procedure.
+Do not attempt the rollback if you altered the data plane nodes in any way.
+You can only roll back the control plane adoption if you altered the control plane. 
 
 During the control plane adoption, services on the {OpenStackShort} control plane are stopped but not removed. The databases on the {OpenStackShort} control plane are not edited during the adoption procedure. The {rhos_long} control plane receives a copy of the original control plane databases. The rollback procedure assumes that the data plane has not yet been modified by the adoption procedure, and it is still connected to the {OpenStackShort} control plane.
 
@@ -140,7 +140,7 @@ $ sudo pcs constraint colocation add openstack-manila-share with ceph-nfs score=
 ----
 
 . Verify that the source cloud is operational again, for example, you
-can run `openstack` CLI commands or check that you can access the {dashboard_first_ref}.
+can run `openstack` CLI commands such as `openstack server list`, or check that you can access the {dashboard_first_ref}.
 
 . Remove the partially or fully deployed control plane so that you can attempt the adoption again later:
 +
@@ -166,4 +166,4 @@ $ oc delete --ignore-not-found=true secret osp-secret
 
 [NOTE]
 After you restore the {OpenStackShort} control plane services, their internal
-state might have changed. Before you retry the adoption procedure, verify that all the control plane resources are removed and that there are no leftovers which could affect the following adoption procedure attempt. You must not use previously created copies of the database contents in another adoption attempt. You must make new copies. For more information about making new copies, see xref:migrating-databases-to-the-control-plane_storage-requirements[Migrating databases to the control plane].
+state might have changed. Before you retry the adoption procedure, verify that all the control plane resources are removed and that there are no leftovers which could affect the following adoption procedure attempt. You must not use previously created copies of the database contents in another adoption attempt. You must make a new copy of the latest state of the original source database contents. For more information about making new copies of the database, see xref:migrating-databases-to-the-control-plane_storage-requirements[Migrating databases to the control plane].
