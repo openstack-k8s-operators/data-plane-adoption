@@ -6,7 +6,7 @@ If you encountered a problem and are unable to complete the adoption of the {rho
 
 [IMPORTANT]
 Do not attempt the rollback if you altered the data plane nodes in any way.
-You can only roll back the control plane adoption if you altered the control plane. 
+You can only roll back the control plane adoption if you altered the control plane.
 
 During the control plane adoption, services on the {OpenStackShort} control plane are stopped but not removed. The databases on the {OpenStackShort} control plane are not edited during the adoption procedure. The {rhos_long} control plane receives a copy of the original control plane databases. The rollback procedure assumes that the data plane has not yet been modified by the adoption procedure, and it is still connected to the {OpenStackShort} control plane.
 
