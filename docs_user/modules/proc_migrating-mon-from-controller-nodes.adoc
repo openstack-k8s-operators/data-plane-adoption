@@ -106,6 +106,23 @@ placement:
 $ sudo cephadm shell -m /tmp/mon.yaml
 $ ceph orch apply -i /mnt/mon.yaml
 ----
+
+. Extend the `mon` label to the rest of the {Ceph} target nodes to ensure that
+  you never lose quorum during the migration process:
++
+----
+declare -A target_nodes
+
+target_nodes[mon]="oc0-ceph-0 oc0-ceph-1 oc0-ceph2"
+
+mon_nodes="${target_nodes[mon]}"
+IFS=' ' read -r -a mons <<< "$mon_nodes"
+
+for node in "${mons[@]}"; do
+    ceph orch host add label $node mon
+    ceph orch host add label $node _admin
+done
+----
 +
 [NOTE]
 Applying the `mon.yaml` spec allows the existing strategy to use `labels`
@@ -115,7 +132,7 @@ Execute this step once to avoid multiple iterations when multiple Ceph Mons are
 migrated.
 
 . Check the status of the {CephCluster} and the Ceph orchestrator daemons list.
-  Make sure that the three mons are in quorum and listed by the `ceph orch`
+  Make sure that mons are in quorum and listed by the `ceph orch`
   command:
 +
 ----
@@ -125,7 +142,7 @@ migrated.
     health: HEALTH_OK
 
   services:
-    mon: 3 daemons, quorum oc0-controller-0,oc0-controller-1,oc0-controller-2 (age 19m)
+    mon: 6 daemons, quorum oc0-controller-0,oc0-controller-1,oc0-controller-2,oc0-ceph-0,oc0-ceph-1,oc0-ceph-2 (age 19m)
     mgr: oc0-controller-0.xzgtvo(active, since 32m), standbys: oc0-controller-1.mtxohd, oc0-controller-2.ahrgsk
     osd: 8 osds: 8 up (since 12m), 8 in (since 18m); 1 remapped pgs
 
@@ -139,8 +156,9 @@ migrated.
 ----
 [ceph: root@oc0-controller-0 /]# ceph orch host ls
 HOST              ADDR           LABELS          STATUS
-oc0-ceph-0        192.168.24.14  osd
-oc0-ceph-1        192.168.24.7   osd
+oc0-ceph-0        192.168.24.14  osd mon _admin
+oc0-ceph-1        192.168.24.7   osd mon _admin
+oc0-ceph-2        192.168.24.8   osd mon _admin
 oc0-controller-0  192.168.24.15  _admin mgr mon
 oc0-controller-1  192.168.24.23  _admin mgr mon
 oc0-controller-2  192.168.24.13  _admin mgr mon
@@ -231,16 +249,7 @@ done
 * Replace <target_node> with the hostname of the host listed in the {CephCluster}
   through the `ceph orch host ls` command.
 
-[Note]
-At this point the cluster is running with only two mons, but a third mon appears
-and will be deployed on the target node.
-However, The third mon might be deployed on a different ip address available in
-the node, and you need to redeploy it when the ip migration is concluded.
-Even though the mon is deployed on the wrong ip address, it's useful keep the
-quorum to three and it ensures we do not risk to lose the cluster because two
-mons go in split brain.
-
-. Confirm that the cluster has three mons and they are in quorum:
+. Confirm that mons are in quorum:
 +
 ----
 $ cephadm shell -- ceph -s
