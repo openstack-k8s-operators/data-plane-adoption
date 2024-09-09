@@ -13,13 +13,10 @@ You cannot automatically migrate old data because different back ends are used. 
 * The {OpenStackPreviousInstaller} environment is running (the source cloud).
 * The Single Node OpenShift or OpenShift Local is running in the {OpenShift} cluster.
 * Previous adoption steps are completed.
-* MariaDB, the {identity_service_first_ref}, and the data plane are adopted. For more information, see the following documentation:
-** xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances]
-** xref:adopting-the-identity-service_adopt-control-plane[Adopting the {identity_service}]
-** xref:adopting-data-plane_data-plane[Adopting the data plane]
-//kgilliga: Check the data plane xref after adding ifdef attributes to assemblies.
 
-* Patch the `OpenStackControlPlane` CR to deploy `cluster-observability-operator`:
+.Procedure
+
+. Patch the `OpenStackControlPlane` CR to deploy `cluster-observability-operator`:
 +
 ----
 $ oc create -f - <<EOF
@@ -36,14 +33,31 @@ spec:
   sourceNamespace: openshift-marketplace
 EOF
 ----
-+
-** Wait for the installation to succeed:
+
+. Wait for the installation to succeed:
 +
 ----
 $ oc wait --for jsonpath="{.status.phase}"=Succeeded csv --namespace=openshift-operators -l operators.coreos.com/cluster-observability-operator.openshift-operators
 ----
 
-* Enable the metrics storage back end:
+. Patch the `OpenStackControlPlane` CR to deploy Ceilometer services:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  telemetry:
+    enabled: true
+    template:
+      ceilometer:
+        passwordSelector:
+          ceilometerService: CeilometerPassword
+        enabled: true
+        secret: osp-secret
+        serviceUser: ceilometer
+'
+----
+
+. Enable the metrics storage back end:
 +
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
@@ -63,7 +77,9 @@ spec:
 '
 ----
 
-* Verify that the `alertmanager` and `prometheus` pods are available:
+.Verification
+
+. Verify that the `alertmanager` and `prometheus` pods are available:
 +
 ----
 $ oc get pods -l alertmanager=metric-storage -n openstack
@@ -75,27 +91,6 @@ $ oc get pods -l prometheus=metric-storage -n openstack
 NAME                          READY   STATUS    RESTARTS   AGE
 prometheus-metric-storage-0   3/3     Running   0          46s
 ----
-
-.Procedure
-
-* Patch the `OpenStackControlPlane` CR to deploy Ceilometer services:
-+
-----
-$ oc patch openstackcontrolplane openstack --type=merge --patch '
-spec:
-  telemetry:
-    enabled: true
-    template:
-      ceilometer:
-        passwordSelector:
-          ceilometerService: CeilometerPassword
-        enabled: true
-        secret: osp-secret
-        serviceUser: ceilometer
-'
-----
-
-.Verification
 
 . Inspect the resulting Ceilometer pods:
 +
@@ -132,7 +127,9 @@ spec:
 '
 ----
 
-. Patch the `OpenStackControlPlane` CR to include `logging`:
+.Next steps
+
+. Optional: Patch the `OpenStackControlPlane` CR to include `logging`:
 +
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
