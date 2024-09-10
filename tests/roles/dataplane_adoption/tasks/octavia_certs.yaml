@@ -43,10 +43,12 @@
     cd ${CERT_MIGRATE_PATH}/client_ca
     openssl genrsa -aes256 -out private/client.key.pem -passout env:CLIENT_PASSPHRASE 4096
     openssl req -config ../openssl.cnf -new -passin env:CLIENT_PASSPHRASE -sha256 -key private/client.key.pem -out csr/client.csr.pem -subj "${CERT_SUBJECT}"
-    mkdir -p ${CERT_MIGRATE_PATH}/client_ca/private ${CERT_MIGRATE_PATH}/client_ca/newcerts
-    chmod 700 ${CERT_MIGRATE_PATH}/client_ca/private
+    mkdir -p ${CERT_MIGRATE_PATH}/client_ca/private ${CERT_MIGRATE_PATH}/client_ca/newcerts ${CERT_MIGRATE_PATH}/private /tmp/octavia-ssl/private
+    chmod 700 ${CERT_MIGRATE_PATH}/client_ca/private ${CERT_MIGRATE_PATH}/private /tmp/octavia-ssl/private
+
     cp ${CERT_MIGRATE_PATH}/client_ca/private/ca.key.pem ${CERT_MIGRATE_PATH}/private/cakey.pem
-    cp ${CERT_MIGRATE_PATH}/client_ca/certs/client_ca.cert.pem ${CERT_MIGRATE_PATH}/ca_01.pem
+    cp ${CERT_MIGRATE_PATH}/private/cakey.pem /tmp/octavia-ssl/private/cakey.pem
+    cp ${CERT_MIGRATE_PATH}/client_ca/certs/client_ca.cert.pem /tmp/octavia-ssl/ca_01.pem
     openssl ca -config ../openssl.cnf -extensions usr_cert -passin env:SERVER_CA_PASSPHRASE -days 1825 -notext -batch -md sha256 -in csr/client.csr.pem -out certs/client.cert.pem
     openssl rsa -passin env:CLIENT_PASSPHRASE -in private/client.key.pem -out private/client.cert-and-key.pem
     cat certs/client.cert.pem >> private/client.cert-and-key.pem

@@ -8,7 +8,16 @@ must stay disabled in the new control plane.
 == Certificates
 Before running the script below the shell variables `CONTROLLER1_SSH` and
 `CONTROLLER1_SCP` must be set to contain the command to log into one of the
-controllers using `ssh` and `scp` respectively as root user.
+controllers using `ssh` and `scp` respectively as root user as shown below.
+
+[source,bash]
+----
+CONTROLLER1_SSH="ssh -i <path to the ssh key> root@192.168.122.100"
+CONTROLLER1_SCP="scp -i <path to the ssh key> root@192.168.122.100"
+----
+
+Make sure to replace `+<path to the ssh key>+` with the correct path to the ssh
+key for connecting to the controller.
 
 [source,bash]
 ----

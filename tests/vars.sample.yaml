@@ -65,4 +65,3 @@ enable_octavia: true
 
 # Where perform or not telemetry installation during adoption
 telemetry_adoption: true
-
