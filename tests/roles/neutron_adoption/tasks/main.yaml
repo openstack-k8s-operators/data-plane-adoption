@@ -2,29 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      neutron:
-        enabled: true
-        apiOverride:
-          route: {}
-        template:
-          override:
-            service:
-              internal:
-                metadata:
-                  annotations:
-                    metallb.universe.tf/address-pool: internalapi
-                    metallb.universe.tf/allow-shared-ip: internalapi
-                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-                spec:
-                  type: LoadBalancer
-          databaseInstance: openstack
-          databaseAccount: neutron
-          secret: osp-secret
-          networkAttachments:
-          - internalapi
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ neutron_config_patch }}'
 
 - name: wait for Neutron to start up
   ansible.builtin.shell: |

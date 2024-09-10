@@ -1,0 +1,8 @@
+[global]
+fsid = {{ ceph_fsid }}
+mon host = {% if node_map is defined and node_map | length > 0 %}
+{%- for entry in node_map -%}
+{{ entry.ip }}
+{%- if not loop.last %},{% endif %}
+{%- endfor -%}
+{% endif -%}

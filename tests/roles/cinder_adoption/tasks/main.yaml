@@ -2,37 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      cinder:
-        enabled: true
-        apiOverride:
-          route: {}
-        template:
-          databaseInstance: openstack
-          databaseAccount: cinder
-          secret: osp-secret
-          cinderAPI:
-            override:
-              service:
-                internal:
-                  metadata:
-                    annotations:
-                      metallb.universe.tf/address-pool: internalapi
-                      metallb.universe.tf/allow-shared-ip: internalapi
-                      metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-                  spec:
-                    type: LoadBalancer
-          cinderBackup:
-            networkAttachments:
-            - storage
-            replicas: 0 # no backups by default
-          cinderVolumes:
-            volume1:
-              networkAttachments:
-              - storage
-              replicas: 0 # no volumes by default
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_scheduler_api_patch }}'
 
 - name: Deploy cinder-volume if necessary
   when: cinder_volume_backend | default('') != ''

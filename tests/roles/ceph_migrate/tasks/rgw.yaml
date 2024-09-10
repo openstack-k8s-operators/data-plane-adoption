@@ -14,20 +14,6 @@
   tags:
     - ceph_rgw_ingress
 
-- name: Update firewall rules on the target nodes
-  ansible.builtin.include_tasks: firewall.yaml
-  vars:
-    node: "{{ n }}"
-    ifports:
-      - 8080
-      - 8090
-      - 8989
-  loop: "{{ target_nodes }}"
-  loop_control:
-    loop_var: n
-  tags:
-    - ceph_firewall
-
 # - Expand labels to the target nodes
 - name: Apply RGW label to the target nodes
   ansible.builtin.import_tasks: labels.yaml
@@ -90,7 +76,7 @@
     CEPH_CONTAINER_BINARY: "{{ ceph_container_cli }}"
 
 - name: Print the resulting spec
-  when: debug | default(true)
+  when: debug | default(false)
   ansible.builtin.debug:
     msg: "{{ spc }}"
 
@@ -117,7 +103,7 @@
     - ceph_rgw_ingress
 
 - name: Print the resulting spec
-  when: debug | default(true)
+  when: debug | default(false)
   ansible.builtin.debug:
     msg: "{{ spc }}"
   tags:

@@ -1,0 +1,33 @@
+---
+swift_patch: |
+  spec:
+    swift:
+      enabled: true
+      template:
+        memcachedInstance: memcached
+        swiftRing:
+          ringReplicas: 1
+        swiftStorage:
+          replicas: 0
+          networkAttachments:
+          - storage
+          storageClass: local-storage
+          storageRequest: 10Gi
+        swiftProxy:
+          secret: osp-secret
+          replicas: 1
+          passwordSelectors:
+            service: SwiftPassword
+          serviceUser: swift
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                spec:
+                  type: LoadBalancer
+          networkAttachments:
+          - storage

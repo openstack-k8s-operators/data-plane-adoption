@@ -1,17 +1,6 @@
 - name: Externalize Ceph
   hosts: "{{ groups['overcloud'][0] | default([]) }}"
-  gather_facts: false
-  vars:
-    ceph_daemons_layout:
-      # rbd is used to group mon/mgr migration that
-      # happens within the same flow
-      rbd: false
-      rgw: true
-      mds: true
-      monitoring: false
-  module_defaults:
-    ansible.builtin.shell:
-      executable: /bin/bash
+  gather_facts: true
   tasks:
     # Load src Ceph cluster data
     - name: Load Ceph data
@@ -38,6 +27,15 @@
         tasks_from: ceph_containers
       tags:
         - ceph_containers
+        - always
+
+    # Add firewall rules
+    - name: Firewall
+      ansible.builtin.import_role:
+        name: ceph_migrate
+        tasks_from: ceph_firewall
+      tags:
+        - ceph_firewall
         - always
 
     # Monitoring Stack migration

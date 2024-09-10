@@ -2,16 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      horizon:
-        enabled: true
-        apiOverride:
-          route: {}
-        template:
-          memcachedInstance: memcached
-          secret: osp-secret
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ horizon_patch }}'
 - name: wait for Horizon to start up
   ansible.builtin.shell: |
     {{ shell_header }}

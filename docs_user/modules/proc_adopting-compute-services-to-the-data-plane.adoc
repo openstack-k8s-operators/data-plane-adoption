@@ -493,6 +493,21 @@ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
   }]'
 ----
 
++
+[NOTE]
+To use `neutron-dhcp` with OVN for the {bare_metal_first_ref}, you must set the `disable_ovn_dhcp_for_baremetal_ports` configuration option for the {networking_first_ref}  to `true`.  You can set this configuration in the `NeutronAPI` spec:
+
+[source,yaml]
+----
+..
+spec:
+  serviceUser: neutron
+   ...
+      customServiceConfig: |
+          [ovn]
+          disable_ovn_dhcp_for_baremetal_ports = true
+----
+
 . Run pre-adoption validation:
 
 .. Create the validation service:

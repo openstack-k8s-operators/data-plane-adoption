@@ -25,6 +25,12 @@ SOURCE_MARIADB_IP=172.17.0.2
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
 ----
++
+To get the value to set `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller node:
++
+----
+$ grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep bind
+----
 
 .Procedure
 

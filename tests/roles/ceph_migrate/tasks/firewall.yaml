@@ -39,6 +39,7 @@
 
 - name: Firewall save block
   delegate_to: "{{ node }}"
+  when: ceph_firewall_save | default(false)
   become: true
   block:
     - name: Save firewall rules ipv4

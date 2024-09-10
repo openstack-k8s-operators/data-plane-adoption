@@ -2,21 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      ovn:
-        enabled: true
-        template:
-          ovnDBCluster:
-            ovndbcluster-nb:
-              dbType: NB
-              storageRequest: 10G
-              networkAttachment: internalapi
-            ovndbcluster-sb:
-              dbType: SB
-              storageRequest: 10G
-              networkAttachment: internalapi
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ ovs_db_patch }}'
 
 - name: wait for OVN ovsdb-servers to start up
   ansible.builtin.shell: |
@@ -227,28 +213,14 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      ovn:
-        enabled: true
-        template:
-          ovnNorthd:
-            replicas: 1
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ ovn_northd_patch }}'
 
 - name: Patch OVN add baremetal bridge mapping
   when: ironic_adoption|bool
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      ovn:
-        template:
-          ovnController:
-            nicMappings:
-              baremetal: baremetal
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ ovn_nic_mapping_patch }}'
 
 - name: Enable ovn controller
   ansible.builtin.shell: |

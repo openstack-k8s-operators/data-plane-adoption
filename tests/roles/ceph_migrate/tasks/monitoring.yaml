@@ -14,25 +14,6 @@
     labels:
       - "monitoring"
 
-- name: Update firewall rules on the target nodes
-  ansible.builtin.include_tasks: firewall.yaml
-  vars:
-    node: "{{ n }}"
-    ifports:
-      - 3100
-      - 8444
-      - 9090
-      - 9092
-      - 9093
-      - 9094
-      - 9100
-      - 9283
-  loop: "{{ target_nodes }}"
-  loop_control:
-    loop_var: n
-  tags:
-    - ceph_firewall
-
 - name: MONITORING - Load Spec from the orchestrator
   ansible.builtin.set_fact:
     monitoring_stack: "{{ monitoring }}"

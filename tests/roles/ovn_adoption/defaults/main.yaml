@@ -2,3 +2,34 @@ ovn_image: quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
 storage_class_name: crc-csi-hostpath-provisioner
 storage_reclaim_policy: delete
 ironic_adoption: false
+
+ovs_db_patch: |
+  spec:
+    ovn:
+      enabled: true
+      template:
+        ovnDBCluster:
+          ovndbcluster-nb:
+            dbType: NB
+            storageRequest: 10G
+            networkAttachment: internalapi
+          ovndbcluster-sb:
+            dbType: SB
+            storageRequest: 10G
+            networkAttachment: internalapi
+
+ovn_northd_patch: |
+  spec:
+    ovn:
+      enabled: true
+      template:
+        ovnNorthd:
+          replicas: 1
+
+ovn_nic_mapping_patch: |
+  spec:
+    ovn:
+      template:
+        ovnController:
+          nicMappings:
+            baremetal: baremetal

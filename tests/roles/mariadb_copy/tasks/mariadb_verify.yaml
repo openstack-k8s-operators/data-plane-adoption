@@ -10,3 +10,5 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell:
     cmd: "{{ lookup('ansible.builtin.template', 'post_checks.bash') }}"
+  register: result
+  failed_when: result.rc != 0 or 'CHECK FAILED' in result.stdout

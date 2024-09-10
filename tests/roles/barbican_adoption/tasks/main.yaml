@@ -9,41 +9,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      barbican:
-        enabled: true
-        apiOverride:
-          route: {}
-        template:
-          databaseInstance: openstack
-          databaseAccount: barbican
-          rabbitMqClusterName: rabbitmq
-          secret: osp-secret
-          simpleCryptoBackendSecret: osp-secret
-          serviceAccount: barbican
-          serviceUser: barbican
-          passwordSelectors:
-            database: BarbicanDatabasePassword
-            service: BarbicanPassword
-            simplecryptokek: BarbicanSimpleCryptoKEK
-          barbicanAPI:
-            replicas: 1
-            override:
-              service:
-                internal:
-                  metadata:
-                    annotations:
-                      metallb.universe.tf/address-pool: internalapi
-                      metallb.universe.tf/allow-shared-ip: internalapi
-                      metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-                  spec:
-                    type: LoadBalancer
-          barbicanWorker:
-            replicas: 1
-          barbicanKeystoneListener:
-            replicas: 1
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ barbican_patch }}'
 
 - name: wait for Barbican to start up
   ansible.builtin.shell: |

@@ -1,0 +1,17 @@
+---
+heat_patch: |
+  spec:
+    heat:
+      enabled: true
+      apiOverride:
+        route: {}
+      template:
+        databaseInstance: openstack
+        databaseAccount: heat
+        secret: osp-secret
+        memcachedInstance: memcached
+        passwordSelectors:
+          authEncryptionKey: HeatAuthEncryptionKey
+          service: HeatPassword
+        rabbitMqClusterName: rabbitmq
+        serviceUser: heat

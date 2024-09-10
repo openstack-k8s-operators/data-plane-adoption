@@ -91,7 +91,9 @@
     . ~/.source_cloud_exported_variables
     {% endif %}
 
-    test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ]
+    test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ] && echo "OK" || echo "CHECK FAILED"
+  register: result
+  failed_when: result.rc != 0 or 'CHECK FAILED' in result.stdout
 
 - name: test connection to podified DBs (show databases)
   no_log: "{{ use_no_log }}"

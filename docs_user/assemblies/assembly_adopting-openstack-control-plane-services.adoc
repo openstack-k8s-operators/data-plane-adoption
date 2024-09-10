@@ -20,7 +20,7 @@ include::../modules/proc_adopting-the-placement-service.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-the-compute-service.adoc[leveloffset=+1]
 
-include::../assemblies/assembly_adopting-the-block-storage-service.adoc[leveloffset=+1]
+include::../modules/proc_adopting-the-block-storage-service.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-the-openstack-dashboard.adoc[leveloffset=+1]
 

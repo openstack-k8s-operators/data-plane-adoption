@@ -2,3 +2,88 @@
 # Backup backends: ceph or swift
 cinder_volume_backend: ""
 cinder_backup_backend: ""
+
+cinder_scheduler_api_patch: |
+  spec:
+    cinder:
+      enabled: true
+      apiOverride:
+        route: {}
+      template:
+        databaseInstance: openstack
+        databaseAccount: cinder
+        secret: osp-secret
+        cinderAPI:
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                spec:
+                  type: LoadBalancer
+        cinderBackup:
+          networkAttachments:
+          - storage
+          replicas: 0 # no backups by default
+        cinderVolumes:
+          volume1:
+            networkAttachments:
+            - storage
+            replicas: 0 # no volumes by default
+
+cinder_volume_backend_patch: |
+  spec:
+    cinder:
+      enabled: true
+      template:
+        cinderVolumes:
+          volume1:
+            networkAttachments:
+            - storage
+            replicas: 1
+            customServiceConfig: |
+              [tripleo_ceph]
+              backend_host=hostgroup
+              volume_backend_name=tripleo_ceph
+              volume_driver=cinder.volume.drivers.rbd.RBDDriver
+              rbd_ceph_conf=/etc/ceph/ceph.conf
+              rbd_user=openstack
+              rbd_pool=volumes
+              rbd_flatten_volume_from_snapshot=False
+              report_discard_supported=True
+
+cinder_backup_ceph_patch: |
+  spec:
+    cinder:
+      enabled: true
+      template:
+        cinderBackup:
+          networkAttachments:
+          - storage
+          replicas: 1
+          customServiceConfig: |
+            [DEFAULT]
+            backup_driver=cinder.backup.drivers.ceph.CephBackupDriver
+            backup_ceph_conf=/etc/ceph/ceph.conf
+            backup_ceph_user=openstack
+            backup_ceph_pool=backups
+
+cinder_backup_swift_patch: |
+  spec:
+    cinder:
+      enabled: true
+      template:
+        cinderBackup:
+          networkAttachments:
+          - storage
+          replicas: 1
+          customServiceConfig: |
+            [DEFAULT]
+            backup_driver = cinder.backup.drivers.swift.SwiftBackupDriver
+            # Below are defaults, explicit for illustration purposes
+            backup_swift_auth = per_user
+            keystone_catalog_info = identity:Identity Service:publicURL
+            swift_catalog_info = object-store:swift:publicURL

@@ -4,23 +4,21 @@
 
 = Adopting the {rhos_component_storage_file}
 
-The {rhos_component_storage_file_first_ref} provides {rhos_prev_long} ({OpenStackShort})
-users with a self-service API to create and manage file shares. File
-shares (or simply, "shares"), are built for concurrent read/write access by
-any number of clients. This, coupled with the inherent elasticity of the
-underlying storage makes the {rhos_component_storage_file} essential in
-cloud environments with require RWX ("read write many") persistent storage.
+The {rhos_component_storage_file_first_ref} in {rhos_long} provides a self-service API to create and manage file shares. File shares (or "shares"), are built for concurrent read/write access from multiple clients. This makes the {rhos_component_storage_file} essential in cloud environments that require a ReadWriteMany persistent storage.
 
-File shares in {OpenStackShort} are accessed directly over a network. Hence, it is essential to plan the networking of the cloud to create a successful and sustainable orchestration layer for shared file systems.
+File shares in {rhos_acro} require network access. Ensure that the networking in the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} environment matches the network plans for your new cloud after adoption. This ensures that tenant workloads remain connected to storage during the adoption process. The {rhos_component_storage_file} control plane services are not in the data path. Shutting down the API, scheduler, and share manager services do not impact access to existing shared file systems.
 
-The {rhos_component_storage_file} supports two levels of storage networking abstractions - one where users can directly control the networking for their respective file shares; and another where the storage networking is configured by the {OpenStackShort} administrator. It is important to ensure that the networking in the {OpenStackShort} {rhos_prev_ver} environment matches the network plans for your new cloud after adoption. This ensures that tenant workloads remain connected to storage through the adoption process, even as the control plane suffers a minor interruption. The {rhos_component_storage_file} control plane services are not in the data path; and shutting down the API, scheduler and share manager services will not impact access to existing shared file systems.
+Typically, storage and storage device management are separate networks. Shared File Systems services only need access to the storage device management network.
+For example, if you used a {CephCluster} cluster in the deployment, the "storage"
+network refers to the {CephCluster} cluster's public network, and the Shared File Systems service's share manager service needs to be able to reach it.
 
-Typically, storage and storage device management networks are separate.
-Shared File Systems services only need access to the storage device management network.
-For example, if a Ceph cluster was used in the deployment, the "storage"
-network refers to the Ceph cluster's public network, and the Shared File Systems service's share manager service needs to be able to reach it.
+The {rhos_component_storage_file} supports the following storage networking scenarios:
 
-include::../modules/con_changes-to-cephFS-via-NFS.adoc[leveloffset=+1]
+* You can directly control the networking for your respective file shares.
+* The {rhos_acro} administrator configures the storage networking.
+
+
+include::../modules/con_preparing-the-shared-file-systems-service-configuration.adoc[leveloffset=+1]
 
 include::../modules/proc_deploying-file-systems-service-control-plane.adoc[leveloffset=+1]
 

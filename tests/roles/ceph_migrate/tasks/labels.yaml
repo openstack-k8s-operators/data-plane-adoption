@@ -15,7 +15,7 @@
 # under the License.
 
 - name: Print INPUT
-  when: debug | default(true)
+  when: debug | default(false)
   block:
     - name: Set/Unset labels - {{ act }}
       ansible.builtin.debug:

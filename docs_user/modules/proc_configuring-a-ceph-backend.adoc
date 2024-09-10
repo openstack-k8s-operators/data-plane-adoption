@@ -1,40 +1,27 @@
 [id="configuring-a-ceph-backend_{context}"]
 
-= Configuring a Ceph backend
+= Configuring a {Ceph} back end
 
-If the original deployment uses a Ceph storage backend for any service
-(e.g. {image_service_first_ref}, {block_storage_first_ref}, {compute_service_first_ref}, {rhos_component_storage_file_first_ref}), the same backend must be used in the
-adopted deployment and custom resources (CRs) must be configured accordingly.
+If your {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} deployment uses a {Ceph} back end for any service, such as {image_service_first_ref}, {block_storage_first_ref}, {compute_service_first_ref}, or {rhos_component_storage_file_first_ref}, you must configure the custom resources (CRs) to use the same back end in the {rhos_long} {rhos_curr_ver} deployment.
 
-If you use {rhos_component_storage_file_first_ref}, on {OpenStackPreviousInstaller} environments, the CephFS driver in {rhos_component_storage_file} is configured to use
-its own keypair. For convenience, modify the `openstack` user so that you
-can use it across all {rhos_prev_long} services.
+[NOTE]
+To run `ceph` commands, you must use SSH to connect to a {Ceph} node and run `sudo cephadm shell`. This generates a Ceph orchestrator container that enables you to run administrative commands against the {CephCluster} cluster. If you deployed the {CephCluster} cluster by using {OpenStackPreviousInstaller}, you can launch the `cephadm` shell from an {OpenStackShort} Controller node.
 
-Using the same user across the services serves two purposes:
+.Prerequisites
 
-* The capabilities of the user required to interact with {rhos_component_storage_file}
-became far simpler and hence, more became more secure with {rhos_acro} {rhos_curr_ver}.
-* It is simpler to create a common ceph secret (keyring and ceph config
-file) and propagate the secret to all services that need it.
-
-[TIP]
-To run `ceph` commands, you must use SSH to connect to a Ceph
-storage node and run `sudo cephadm shell`. This brings up a ceph orchestrator
-container that allows you to run administrative commands against the ceph
-cluster. If you deployed the ceph cluster by using {OpenStackPreviousInstaller}, you may launch the `cephadm` shell from an {OpenStackShort} controller node.
-
+* The `OpenStackControlPlane` CR is created.
+* If your {OpenStackShort} {rhos_prev_ver} deployment uses the {rhos_component_storage_file}, the openstack keyring is updated. Modify the `openstack` user so that you can use it across all {OpenStackShort} services:
++
 ----
 ceph auth caps client.openstack \
   mgr 'allow *' \
   mon 'allow r, profile rbd' \
   osd 'profile rbd pool=vms, profile rbd pool=volumes, profile rbd pool=images, allow rw pool manila_data'
 ----
-
-.Prerequisites
-
-* The `OpenStackControlPlane` custom resource (CR) must already exist.
-* Define the following shell variables. The values that are used are examples. Replace these example values with values that are correct for your environment:
-
++
+Using the same user across all services makes it simpler to create a common {Ceph} secret that includes the keyring and `ceph.conf` file and propagate the secret to all the services that need it.
+* The following shell variables are defined. Replace the following example values with values that are correct for your environment:
++
 [subs=+quotes]
 ----
 ifeval::["{build}" != "downstream"]
@@ -49,10 +36,10 @@ CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
 
 .Procedure
 
-. Create the `ceph-conf-files` secret, containing Ceph configuration:
+. Create the `ceph-conf-files` secret that includes the {Ceph} configuration:
 +
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: v1
 data:
   ceph.client.openstack.keyring: $CEPH_KEY
@@ -65,7 +52,7 @@ type: Opaque
 EOF
 ----
 +
-The content of the file should look something like this:
+The content of the file should be similar to the following example:
 +
 [source,yaml]
 ----
@@ -87,11 +74,11 @@ stringData:
     mon_host = 10.1.1.2,10.1.1.3,10.1.1.4
 ----
 
-. Configure `extraMounts` within the `OpenStackControlPlane` CR:
+. In your `OpenStackControlPlane` CR, inject `ceph.conf` and `ceph.client.openstack.keyring` to the {OpenStackShort} services that are defined in the propagation list. For example:
 +
 [source,yaml]
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   extraMounts:
     - name: v1
