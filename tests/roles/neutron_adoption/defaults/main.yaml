@@ -6,6 +6,11 @@ neutron_config_patch: |
       apiOverride:
         route: {}
       template:
+        customServiceConfig: |
+          [DEFAULT]
+          default_log_levels = keystonemiddleware.auth_token=DEBUG,keystoneauth.session=DEBUG
+          [keystone_authtoken]
+          memcached_servers =
         override:
           service:
             internal:
