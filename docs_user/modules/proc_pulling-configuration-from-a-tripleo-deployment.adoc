@@ -2,7 +2,7 @@
 
 = Pulling the configuration from a {OpenStackPreviousInstaller} deployment
 
-Before you start the data plane adoption workflow, pull the configuration from the {rhos_prev_long} ({OpenStackShort}) services and {OpenStackPreviousInstaller} on your file system to back up the configuration files. You can then use the files later, during the configuration of the adopted services, and for the record to compare and ensure nothing has been missed or misconfigured.
+Before you start the data plane adoption workflow, pull the configuration from the {rhos_prev_long} ({OpenStackShort}) services and {OpenStackPreviousInstaller} on your file system to back up the configuration files. You can then use the files later, during the configuration of the adopted services, and for the record to compare and ensure that nothing is missed or misconfigured.
 
 .Prerequisites
 
@@ -28,7 +28,7 @@ remote_config_path=/tmp/tripleo
 +
 Ensure that the ssh command you provide in `ssh_cmd` parameter is correct and includes key authentication.
 
-. Enable the services that you want to include in the `/etc/os-diff/config.yaml` file, and disable the services that you want to exclude from the file. Ensure that you have the correct permissions to edit the file, for example:
+. Enable the services that you want to include in the `/etc/os-diff/config.yaml` file, and disable the services that you want to exclude from the file. Ensure that you have the correct permissions to edit the file:
 +
 ----
 $ chown ospng:ospng /etc/os-diff/config.yaml
@@ -74,13 +74,13 @@ Repeat this step for each {OpenStackShort} service that you want to disable or e
 ----
 services:
   ovs_external_ids:
-    hosts:
+    hosts: <1>
       - standalone
-    service_command: "ovs-vsctl list Open_vSwitch . | grep external_ids | awk -F ': ' '{ print $2; }'"
-    cat_output: true
+    service_command: "ovs-vsctl list Open_vSwitch . | grep external_ids | awk -F ': ' '{ print $2; }'" <2>
+    cat_output: true <3>
     path:
       - ovs_external_ids.json
-    config_mapping:
+    config_mapping: <4>
       ovn-bridge-mappings: edpm_ovn_bridge_mappings
       ovn-bridge: edpm_ovn_bridge
       ovn-encap-type: edpm_ovn_encap_type
@@ -89,33 +89,15 @@ services:
       ovn-ofctrl-wait-before-clear: edpm_ovn_ofctrl_wait_before_clear
 ----
 +
-You must correctly configure an SSH config file or equivalent for non-standard services, such as OVS. The `ovs_external_ids` service does not run in a container, and the OVS data is stored on each host of your cloud, for example, `controller_1/controller_2/` and so on.
+[NOTE]
+You must correctly configure an SSH config file or equivalent for non-standard services, such as OVS. The `ovs_external_ids` service does not run in a container, and the OVS data is stored on each host of your cloud, for example, `controller_1/controller_2/`, and so on.
 +
-With the `hosts` key, os-diff loops on each host and runs the command in the `service_command` key:
-+
-----
-    ovs_external_ids:
-        path:
-            - ovs_external_ids.json
-        hosts:
-            - standalone
-----
-+
-The `service_command` key provides the required information. It could be a simple cat from a config file. If you want os-diff to get the output of the command and store the output in a file specified by the key path, set `cat_output` to true. Then you can provide a mapping between in this case the EDPM CRD, and the ovs-vsctl output with config_mapping:
-+
-----
-        service_command: 'ovs-vsctl list Open_vSwitch . | grep external_ids | awk -F '': '' ''{ print $2; }'''
-        cat_output: true
-        config_mapping:
-            ovn-bridge: edpm_ovn_bridge
-            ovn-bridge-mappings: edpm_ovn_bridge_mappings
-            ovn-encap-type: edpm_ovn_encap_type
-            ovn-monitor-all: ovn_monitor_all
-            ovn-ofctrl-wait-before-clear: edpm_ovn_ofctrl_wait_before_clear
-            ovn-remote-probe-interval: edpm_ovn_remote_probe_interval
-----
-+
-Then you can use the following command to compare the values:
+<1> Os-diff loops on each host and runs the command in the `service_command` key.
+<2> The `service_command` key provides the required information.
+<3> Os-diff gets the output of the command and stores the output in a file that is specified by the key path.
+<4> Provide a mapping between, in this example, the data plane custom resource definition and the `ovs-vsctl` output.
+
+.. Compare the values:
 +
 ----
 $ os-diff diff ovs_external_ids.json edpm.crd --crd --service ovs_external_ids

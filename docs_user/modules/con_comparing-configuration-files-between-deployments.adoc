@@ -14,7 +14,7 @@ dnf install -y golang-github-openstack-k8s-operators-os-diff
 
 .Procedure
 
-. Configure the `/etc/os-diff/os-diff.cfg` file and the `/etc/os-diff/ssh.config` file according to your environment. To allow os-diff to connect to your clouds and pull files from the services that you describe in the `config.yaml` file, you must set the option in the `os-diff.cfg` file:
+. Configure the `/etc/os-diff/os-diff.cfg` file and the `/etc/os-diff/ssh.config` file according to your environment. To allow os-diff to connect to your clouds and pull files from the services that you describe in the `config.yaml` file, you must set the following options in the `os-diff.cfg` file:
 +
 [source,yaml]
 [subs=+quotes]
@@ -40,29 +40,8 @@ connection=local
 ssh_cmd=""
 ----
 +
-<1> Instructs os-diff to access your {OpenStackPreviousInstaller} host through SSH.
+<1> Instructs os-diff to access your {OpenStackPreviousInstaller} host through SSH. The default value is `ssh -F ssh.config`. However, you can set the value without an ssh.config file, for example, `ssh -i /home/user/.ssh/id_rsa stack@my.undercloud.local`.
 <2> The host to use to access your cloud, and the podman/docker binary is installed and allowed to interact with the running containers. You can leave this key blank.
-+
-----
-ssh_cmd=ssh -F ssh.config standalone
-director_host=
-----
-+
-or without an SSH config file:
-+
-----
-ssh_cmd=ssh -i /home/user/.ssh/id_rsa stack@my.undercloud.local
-director_host=
-----
-+
-or
-+
-----
-ssh_cmd=ssh -i /home/user/.ssh/id_rsa stack@
-director_host=my.undercloud.local
-----
-+
-The result of using `ssh_cmd` and `director_host` is a "successful ssh access".
 
 . If you used a host file to connect to your cloud, configure the `ssh.config` file to allow os-diff to access your {OpenStackShort} environment, for example:
 +
