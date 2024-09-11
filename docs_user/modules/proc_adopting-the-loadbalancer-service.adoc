@@ -16,7 +16,7 @@ CONTROLLER1_SSH="ssh -i <path to the ssh key> root@192.168.122.100"
 CONTROLLER1_SCP="scp -i <path to the ssh key> root@192.168.122.100"
 ----
 
-Make sure to replace `+<path to the ssh key>+` with the correct path to the ssh
+Make sure to replace `<path to the ssh key>` with the correct path to the ssh
 key for connecting to the controller.
 
 [source,bash]
