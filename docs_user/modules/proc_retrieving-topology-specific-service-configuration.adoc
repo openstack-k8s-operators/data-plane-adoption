@@ -102,4 +102,4 @@ SRIOV_AGENTS=$ oc run mariadb-client mysql -rsh "$SOURCE_MARIADB_IP" \
 "select host, configurations from agents where agents.binary='neutron-sriov-nic-agent';"
 ----
 
-. Save the configuration in the `~/.source_cloud_exported_variables` file. 
+. Save the configuration in the `~/.source_cloud_exported_variables` file.
