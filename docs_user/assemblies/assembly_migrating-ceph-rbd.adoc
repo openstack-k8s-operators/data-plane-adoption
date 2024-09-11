@@ -20,7 +20,7 @@ meet the following requirements:
   cluster].
 * Both the {Ceph} public and cluster networks are propagated with
   {OpenStackPreviousInstaller} to the target nodes.
-* Ceph Metadata Server, monitoring stack, Ceph Ceph Object Gateway, and other services are migrated to the target nodes.
+* Ceph Metadata Server, monitoring stack, Ceph Object Gateway, and any other daemon that is deployed on Controller nodes.
 ifeval::["{build}" != "upstream"]
 * The daemons distribution follows the cardinality constraints that are
   described in link:https://access.redhat.com/articles/1548993[Red Hat Ceph

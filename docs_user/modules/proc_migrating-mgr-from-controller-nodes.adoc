@@ -2,7 +2,8 @@
 
 You must migrate your Ceph Manager daemons from the {rhos_prev_long} ({OpenStackShort}) Controller nodes to a set of target nodes. Target nodes are either existing {Ceph} nodes, or {OpenStackShort} Compute nodes if {Ceph} is deployed by {OpenStackPreviousInstaller} with a Hyperconverged Infrastructure (HCI) topology.
 
-The following procedure uses `cephadm` and the Ceph Orchestrator to drive the Ceph Manager migration, and the Ceph spec to modify the placement and reschedule the Ceph Manager daemons. Ceph Manager is run in an active/passive state, and it also provides many modules, including the Ceph Orchestrator.
+[NOTE]
+The following procedure uses `cephadm` and the Ceph Orchestrator to drive the Ceph Manager migration, and the Ceph spec to modify the placement and reschedule the Ceph Manager daemons. Ceph Manager is run in an active/passive state. It also provides many modules, including the Ceph Orchestrator. Every potential module, such as the Ceph Dashboard, that is provided by `ceph-mgr` is implicitly migrated with Ceph Manager.
 
 .Prerequisites
 
@@ -21,7 +22,7 @@ ssh heat-admin@<target_node> sudo iptables -I INPUT \
     -p tcp --match multiport --dports $dports -j ACCEPT;
 ----
 +
-* Replace `<target_node>` with the name of the node you are migrating to.
+* Replace `<target_node>` with the hostname of the hosts that are listed in the {Ceph} environment. Run `ceph orch host ls` to see the list of the hosts.
 +
 Repeat this step for each target node.
 
@@ -38,11 +39,8 @@ label to the target node:
 ----
 $ ceph orch host label add <target_node> mgr; done
 ----
-+
-* Replace `<target_node>` with the hostname of the hosts listed in the {Ceph}
-through the `ceph orch host ls` command.
-+
-Repeat the actions described above for each target node that hosts a Ceph Manager daemon.
+
+. Repeat steps 1-3 for each target node that hosts a Ceph Manager daemon.
 
 . Get the Ceph Manager spec:
 +

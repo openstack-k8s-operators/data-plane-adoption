@@ -12,56 +12,56 @@ To migrate the Ceph Monitor daemons, the following actions occur:
 * Additional monitors are deployed to the target nodes, and they are promoted
 as `_admin` nodes that you can use to manage the {CephCluster} cluster and
 perform day 2 operations.
+//kgilliga: We are going to move the following steps to the planning chapter. Hiding this for now to be used as a reference later.
+//.Prerequisites
 
-.Prerequisites
+//* The target nodes, CephStorage or ComputeHCI, are configured to have both `storage` and `storage_mgmt` networks. This ensures that you can use both {Ceph} public and cluster networks from the same node. This step requires you to interact with {OpenStackPreviousInstaller}. From {OpenStackShort} {rhos_prev_ver} and later you do not have to run a stack update.
+//+
+//[NOTE]
+//This step requires you to interact with {OpenStackPreviousInstaller}. From {OpenStackShort} {rhos_prev_ver} and later you do not have to run a stack update.
+//* Run `os-net-config` on the bare metal node and configure additional networks:
+//.. If target nodes are `CephStorage`, ensure that the network is defined in the
+//`metalsmith.yaml` for the `CephStorage` nodes:
+//+
+//[source,yaml]
+//----
+//- name: CephStorage
+//count: 2
+//instances:
+//- hostname: oc0-ceph-0
+//name: oc0-ceph-0
+//- hostname: oc0-ceph-1
+//name: oc0-ceph-1
+//defaults:
+//networks:
+//- network: ctlplane
+//vif: true
+//- network: storage_cloud_0
+//subnet: storage_cloud_0_subnet
+//- network: storage_mgmt_cloud_0
+//subnet: storage_mgmt_cloud_0_subnet
+//network_config:
+//template: templates/single_nic_vlans/single_nic_vlans_storage.j2
+//----
 
-* The target nodes, CephStorage or ComputeHCI, are configured to have both `storage` and `storage_mgmt` networks. This ensures that you can use both {Ceph} public and cluster networks from the same node. This step requires you to interact with {OpenStackPreviousInstaller}. From {OpenStackShort} {rhos_prev_ver} and later you do not have to run a stack update.
-+
-[NOTE]
-This step requires you to interact with {OpenStackPreviousInstaller}. From {OpenStackShort} {rhos_prev_ver} and later you do not have to run a stack update.
-* Run `os-net-config` on the bare metal node and configure additional networks:
-.. If target nodes are `CephStorage`, ensure that the network is defined in the
-`metalsmith.yaml` for the `CephStorage` nodes:
-+
-[source,yaml]
-----
-  - name: CephStorage
-    count: 2
-    instances:
-      - hostname: oc0-ceph-0
-        name: oc0-ceph-0
-      - hostname: oc0-ceph-1
-        name: oc0-ceph-1
-    defaults:
-      networks:
-        - network: ctlplane
-          vif: true
-        - network: storage_cloud_0
-            subnet: storage_cloud_0_subnet
-        - network: storage_mgmt_cloud_0
-            subnet: storage_mgmt_cloud_0_subnet
-      network_config:
-        template: templates/single_nic_vlans/single_nic_vlans_storage.j2
-----
+//.. Add the missing network:
+//+
+//----
+//$ openstack overcloud node provision \
+//-o overcloud-baremetal-deployed-0.yaml --stack overcloud-0 \
+//--network-config -y --concurrency 2 /home/stack/metalsmith-0.yaml
+//----
 
-.. Provision the `CephStorage` nodes:
-+
-----
-$ openstack overcloud node provision \
-  -o overcloud-baremetal-deployed-0.yaml --stack overcloud-0 \
-  --network-config -y --concurrency 2 /home/stack/metalsmith-0.yam
-----
-
-.. Verify that the storage network is configured on the target nodes:
-+
-----
-(undercloud) [stack@undercloud ~]$ ssh heat-admin@192.168.24.14 ip -o -4 a
-1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
-5: br-storage    inet 192.168.24.14/24 brd 192.168.24.255 scope global br-storage\       valid_lft forever preferred_lft forever
-6: vlan1    inet 192.168.24.14/24 brd 192.168.24.255 scope global vlan1\       valid_lft forever preferred_lft forever
-7: vlan11    inet 172.16.11.172/24 brd 172.16.11.255 scope global vlan11\       valid_lft forever preferred_lft forever
-8: vlan12    inet 172.16.12.46/24 brd 172.16.12.255 scope global vlan12\       valid_lft forever preferred_lft forever
-----
+//.. Verify that the storage network is configured on the target nodes:
+//+
+//----
+//(undercloud) [stack@undercloud ~]$ ssh heat-admin@192.168.24.14 ip -o -4 a
+//1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
+//5: br-storage    inet 192.168.24.14/24 brd 192.168.24.255 scope global br-storage\       valid_lft forever preferred_lft forever
+//6: vlan1    inet 192.168.24.14/24 brd 192.168.24.255 scope global vlan1\       valid_lft forever preferred_lft forever
+//7: vlan11    inet 172.16.11.172/24 brd 172.16.11.255 scope global vlan11\       valid_lft forever preferred_lft forever
+//8: vlan12    inet 172.16.12.46/24 brd 172.16.12.255 scope global vlan12\       valid_lft forever preferred_lft forever
+//----
 
 .Procedure
 
@@ -105,7 +105,7 @@ $ ceph orch apply -i /mnt/mon.yaml
 ----
 
 . Extend the `mon` label to the rest of the {Ceph} target nodes to ensure that
-  you never lose quorum during the migration process:
+you never lose quorum during the migration process:
 +
 ----
 declare -A target_nodes
@@ -126,9 +126,8 @@ Applying the `mon.yaml` spec allows the existing strategy to use `labels`
 instead of `hosts`. As a result, any node with the `mon` label can host a Ceph
 Monitor daemon. Perform this step only once to avoid multiple iterations when multiple Ceph Monitors are migrated.
 
-. Check the status of the {CephCluster} and the Ceph orchestrator daemons list.
-  Make sure that mons are in quorum and listed by the `ceph orch`
-  command:
+. Check the status of the {CephCluster} and the Ceph Orchestrator daemons list.
+Ensure that mons are in a quorum and listed by the `ceph orch` command:
 +
 ----
 # ceph -s
@@ -168,7 +167,7 @@ $ sudo cp -R /etc/ceph $HOME/ceph_client_backup
 
 . Before you drain the source node and relocate the IP address of the storage
 network to the target node, fail the `ceph-mgr` if it is active on the
-source node:
+source node or target node:
 +
 ----
 $ ceph mgr fail <mgr_instance>
@@ -176,7 +175,7 @@ $ ceph mgr fail <mgr_instance>
 +
 * Replace `<mgr_instance>` with the Ceph Manager daemon to fail.
 
-. Drain the source node and start the Ceph Monitor migration. From the `cephadm` shell, remove the labels on the source node:
+. From the `cephadm` shell, remove the labels on the source node:
 +
 ----
 for label in mon mgr _admin; do
@@ -226,11 +225,6 @@ ifeval::["{build}" == "downstream"]
 To clean up the existing containers and remove the `cephadm` data from the source node, contact Red Hat Support.
 endif::[]
 ====
-// fpantano: there's an automated procedure run through cephadm but it's too
-// risky. If the user doesn't perform it properly the cluster can be affected.
-// We can put a downstream comment to contact the RH support to clean the source
-// node up in case of leftovers, and open a bug for cephadm.
-//. ssh into one of the existing Ceph mons (usually controller-1 or controller-2)
 
 . Prepare the target node to host the new Ceph Monitor and add the `mon` label to the target node:
 +
@@ -242,7 +236,7 @@ done
 +
 * Replace `<target_node>` with the hostname of the host listed in the {CephCluster} through the `ceph orch host ls` command.
 
-. Confirm that mons are in quorum:
+. Confirm that mons are in a quorum:
 +
 ----
 $ cephadm shell -- ceph -s
@@ -273,7 +267,11 @@ mon_host = [v2:172.17.3.60:3300/0,v1:172.17.3.60:6789/0] [v2:172.17.3.29:3300/0,
 $ sudo os-net-config -c /etc/os-net-config/config.yaml
 ----
 
-. Verify, using the `ip` command, that the IP address is not present in the source node anymore.
+. Verify that the IP address is not present in the source node anymore, for example:
++
+----
+$ [controller-0]$ ip -o a | grep 172.17.3.
+----
 
 . SSH into the target node, for example `cephstorage-0`, and add the IP address
 for the new mon.
@@ -325,7 +323,7 @@ $ ceph orch daemon add rm mon.<target_node> --force
 +
 * Replace `<target_node>` with the hostname of the target node that is included in the {Ceph} cluster.
 
-. Redeploy the new Ceph Monitor on the target node by using the previous IP address:
+. Redeploy the new Ceph Monitor on the target node by using the migrated IP address:
 +
 ----
 $ ceph orch daemon add mon <target_node>:<ip_address>
