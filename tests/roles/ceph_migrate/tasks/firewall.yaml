@@ -1,59 +1,34 @@
-# TRIPLEO CEPHSTORAGE NODES MIGHT HAVE IPTABLES FROM TRIPLEO
-#
-# This set of tasks are supposed to manage the firewall using
-# iptables: adopted nodes still manage firewall this way
-- name: Firewall add block
+# Add firewall rules for all the Ceph Services
+
+# TODO: Delete this task
+- name: Ensure firewall is stopped
   delegate_to: "{{ node }}"
   become: true
-  block:
-    - name: Ensure firewall is enabled/started
-      ansible.builtin.systemd:
-        name: iptables
-        state: started
-        enabled: true
+  ansible.builtin.systemd:
+    name: iptables
+    state: stopped
 
-- name: Update firewall rules
+- name: Ceph Migration - Build the list of src and target nodes
   delegate_to: "{{ node }}"
   become: true
-  block:
-    - name: Update rules - List
-      when: ifports | default([]) | length > 0
-      ansible.builtin.iptables:
-        chain: INPUT
-        ctstate: NEW
-        protocol: tcp
-        destination_port: "{{ item }}"
-        action: insert
-        jump: ACCEPT
-      loop: "{{ ifports }}"
+  ansible.builtin.blockinfile:
+    marker_begin: "BEGIN ceph firewall rules"
+    marker_end: "END ceph firewall rules"
+    path: "{{ item }}"
+    block: |
+      -A INPUT -p tcp -m tcp --dport 8080 -m conntrack --ctstate NEW -m comment --comment "100 ceph_rgw ipv4" -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 8090 -m conntrack --ctstate NEW -m comment --comment "101 ceph_rgw ipv4" -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 8989 -m conntrack --ctstate NEW -m comment --comment "102 ceph_rgw ipv4" -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 3300 -m conntrack --ctstate NEW -m comment --comment "110 ceph_mon ipv4" -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 6789 -m conntrack --ctstate NEW -m comment --comment "111 ceph_mon ipv4" -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 6800:7300 -m conntrack --ctstate NEW -m comment --comment "112 ceph_mds_mgr ipv4" -j ACCEPT
+  loop: "{{ firewall_path }}"
 
-    - name: Update rules - Range
-      when: ifports_range | default("") | length > 0
-      ansible.builtin.iptables:
-        chain: INPUT
-        ctstate: NEW
-        protocol: tcp
-        destination_port: "{{ ifports_range }}"
-        action: insert
-        jump: ACCEPT
-
-- name: Firewall save block
+- name: Ensure firewall is enabled/started
+  when: ceph_firewall | bool | default(false)
   delegate_to: "{{ node }}"
-  when: ceph_firewall_save | default(false)
   become: true
-  block:
-    - name: Save firewall rules ipv4
-      ansible.builtin.command: /usr/libexec/iptables/iptables.init save
-
-    - name: Save firewall rules ipv6
-      ansible.builtin.command: /usr/libexec/iptables/ip6tables.init save
-
-    - name: Reload iptables service
-      ansible.builtin.systemd:
-        daemon_reload: true
-        enabled: true
-        name: "{{ item }}"
-        state: started
-      loop:
-        - iptables.service
-        - ip6tables.service
+  ansible.builtin.systemd:
+    name: iptables
+    state: restarted
+    enabled: true

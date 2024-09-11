@@ -1,17 +1,3 @@
-## Experimental (CI only)
-#- name: Restart network service asynchronously
-#  delegate_to: "{{ target_node }}"
-#  ansible.builtin.systemd:
-#    name: network
-#    state: restarted
-#  async: 60
-#  poll: 10
-#
-#- name: Wait for the network connection to re-establish
-#  ansible.builtin.wait_for_connection:
-#    delay: 30
-#    timeout: 120
-
 # Get a client using -v /home/tripleo-admin/ceph_config:/etc/ceph:z as input
 - name: Get ceph_cli
   ansible.builtin.include_tasks: ceph_cli.yaml

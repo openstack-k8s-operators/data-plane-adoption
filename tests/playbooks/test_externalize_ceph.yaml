@@ -30,13 +30,13 @@
         - always
 
     # Add firewall rules
-    #- name: Firewall
-    #  ansible.builtin.import_role:
-    #    name: ceph_migrate
-    #    tasks_from: ceph_firewall
-    #  tags:
-    #    - ceph_firewall
-    #    - always
+    - name: Firewall
+      ansible.builtin.import_role:
+        name: ceph_migrate
+        tasks_from: ceph_firewall
+      tags:
+        - ceph_firewall
+        - always
 
     # Monitoring Stack migration
     - name: Monitoring
