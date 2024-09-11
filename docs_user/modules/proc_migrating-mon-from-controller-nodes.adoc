@@ -104,8 +104,8 @@ $ sudo cephadm shell -m /tmp/mon.yaml
 $ ceph orch apply -i /mnt/mon.yaml
 ----
 
-. Extend the `mon` label to the rest of the {Ceph} target nodes to ensure that
-you never lose quorum during the migration process:
+. Apply the `mon` label to the remaining {Ceph} target nodes to ensure that
+quorum is maintained during the migration process:
 +
 ----
 declare -A target_nodes
