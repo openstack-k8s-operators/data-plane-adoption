@@ -1,0 +1,16 @@
+.Verification
+
+* Verify that the {CephCluster} cluster is healthy:
++
+----
+[ceph: root@oc0-controller-0 specs]# ceph -s
+  cluster:
+    id:     f6ec3ebe-26f7-56c8-985d-eb974e8e08e3
+    health: HEALTH_OK
+...
+...
+----
+
+.Next steps
+
+* Repeat this procedure for any additional Controller node that hosts a Ceph Monitor until you migrate all the Ceph Monitor daemons to the target nodes.
