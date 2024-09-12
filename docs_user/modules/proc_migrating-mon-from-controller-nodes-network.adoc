@@ -9,6 +9,8 @@ IP address migration assumes that the target nodes are originally deployed by
 
 // NOTE (fpantano): we need to document the same ip address migration procedure
 // w/ an EDPM node that has already been adopted.
+.Procedure
+
 . Get the original Ceph Monitor IP address from the existing `/etc/ceph/ceph.conf` file on the `mon_host` line, for example:
 +
 ----
@@ -63,4 +65,4 @@ $ ip -o a | grep 172.17.3.60
 
 .Next steps
 
-Proceed to the next step
+Proceed to the next step xref:redeploying-a-ceph-monitor-on-the-target-node_{context}[Redeploying the Ceph Monitor on the target node]. 

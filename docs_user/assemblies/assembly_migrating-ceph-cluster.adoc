@@ -6,9 +6,6 @@ ifdef::context[:parent-context: {context}]
 
 :context: migrating-ceph
 
-:toc: left
-:toclevels: 3
-
 In the context of data plane adoption, where the {rhos_prev_long}
 ({OpenStackShort}) services are redeployed in {OpenShift}, you migrate a
 {OpenStackPreviousInstaller}-deployed {CephCluster} cluster by using a process
