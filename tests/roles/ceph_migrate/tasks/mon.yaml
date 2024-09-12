@@ -23,17 +23,13 @@
       {%   endif %}
       {% endfor %}
 
-- name: MON - check mons quorum
+- name: MON - Check mons quorum
   become: true
   ansible.builtin.command: "{{ ceph_cli }} -s -f json"
   register: monmap
-  tags:
-    - ceph_mon_quorum
-
-- name: ansible.builtin.fail if there's no quorum
-  ansible.builtin.fail:
-    msg: "Mons are not in quorum"
-  when: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) < ((decomm_nodes |default([]) | length | int) | default(3))
+  until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
+  retries: 100
+  delay: 5
   tags:
     - ceph_mon_quorum
 
@@ -169,17 +165,13 @@
       ansible.builtin.pause:
         seconds: "{{ ceph_wait_mon_timeout }}"
 
-- name: MON - check mons quorum
+- name: MON - Check mons quorum
   become: true
   ansible.builtin.command: "{{ ceph_cli }} -s -f json"
   register: monmap
-  tags:
-    - ceph_mon_quorum
-
-- name: ansible.builtin.fail if there's no quorum
-  ansible.builtin.fail:
-    msg: "Mons are not in quorum"
-  when: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) < ((decomm_nodes |default([]) | length | int) | default(3))
+  until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
+  retries: 100
+  delay: 5
   tags:
     - ceph_mon_quorum
 
@@ -187,10 +179,10 @@
 - name: MON - refresh cephadm info - fail ceph mgr and refresh osd config
   become: true
   block:
-    - name: force-fail ceph mgr
-      ansible.builtin.command: "{{ ceph_cli }} mgr fail"
     - name: reconfig osds
       ansible.builtin.command: "{{ ceph_cli }} orch reconfig osd.default_drive_group "
+    - name: force-fail ceph mgr
+      ansible.builtin.command: "{{ ceph_cli }} mgr fail"
 
 - name: MON - Manage mons
   # root privileges required to run cephadm

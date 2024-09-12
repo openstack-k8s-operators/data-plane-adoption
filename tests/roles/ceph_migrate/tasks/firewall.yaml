@@ -1,12 +1,14 @@
 # Add firewall rules for all the Ceph Services
 
-# TODO: Delete this task
-- name: Ensure firewall is stopped
+- name: Ensure firewall is temporarily stopped
   delegate_to: "{{ node }}"
   become: true
   ansible.builtin.systemd:
-    name: iptables
+    name: "{{ item }}"
     state: stopped
+  loop:
+    - iptables
+    - nftables
 
 - name: Ceph Migration - Build the list of src and target nodes
   delegate_to: "{{ node }}"
@@ -21,6 +23,8 @@
       -A INPUT -p tcp -m tcp --dport 8989 -m conntrack --ctstate NEW -m comment --comment "102 ceph_rgw ipv4" -j ACCEPT
       -A INPUT -p tcp -m tcp --dport 3300 -m conntrack --ctstate NEW -m comment --comment "110 ceph_mon ipv4" -j ACCEPT
       -A INPUT -p tcp -m tcp --dport 6789 -m conntrack --ctstate NEW -m comment --comment "111 ceph_mon ipv4" -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 2049 -m conntrack --ctstate NEW -m comment --comment "111 ceph_nfs ipv4" -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 12049 -m conntrack --ctstate NEW -m comment --comment "111 ceph_nfs_backend ipv4" -j ACCEPT
       -A INPUT -p tcp -m tcp --dport 6800:7300 -m conntrack --ctstate NEW -m comment --comment "112 ceph_mds_mgr ipv4" -j ACCEPT
   loop: "{{ firewall_path }}"
 

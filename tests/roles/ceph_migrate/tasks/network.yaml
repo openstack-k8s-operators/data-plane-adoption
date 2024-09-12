@@ -15,6 +15,8 @@
         regexp: '{{ mon_ipaddr }}/24'
         backup: true
       vars:
+        # tripleo controllers have tripleo_config.yaml, while adopted nodes
+        # might simply have config.yaml
         os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
 
     - name: MON - Refresh os-net-config (src node)
@@ -23,6 +25,8 @@
       ansible.builtin.shell:
         "os-net-config -c {{ os_net_conf_path }}"
       vars:
+        # tripleo controllers have tripleo_config.yaml, while adopted nodes
+        # might simply have config.yaml
         os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
 
     - name: MON - manually rm the ip address (src node)
@@ -37,18 +41,12 @@
         insertafter: "{{ ceph_storage_net_prefix }}"
         line: "    - ip_netmask: {{ mon_ipaddr }}/24"
         backup: true
-      # (NOTE): TMP WORKAROUND TO TEST THE PLAYBOOK BEFORE ADOPTION
-      vars:
-        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
 
     - name: MON - Refresh os-net-config (target_node)
       when: not manual_migration | bool | default(false)
       delegate_to: "{{ target_node }}"
       ansible.builtin.command:
         "os-net-config -c {{ os_net_conf_path }}"
-      # (NOTE): TMP WORKAROUND TO TEST THE PLAYBOOK BEFORE ADOPTION
-      vars:
-        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
 
     - name: MON - statically assign the ip address to the target node
       when: manual_migration | bool | default(false)
