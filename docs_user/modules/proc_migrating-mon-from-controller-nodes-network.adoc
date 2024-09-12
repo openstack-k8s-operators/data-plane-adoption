@@ -65,4 +65,4 @@ $ ip -o a | grep 172.17.3.60
 
 .Next steps
 
-Proceed to the next step xref:redeploying-a-ceph-monitor-on-the-target-node_{context}[Redeploying the Ceph Monitor on the target node]. 
+Proceed to the next step xref:redeploying-a-ceph-monitor-on-the-target-node_{context}[Redeploying the Ceph Monitor on the target node].

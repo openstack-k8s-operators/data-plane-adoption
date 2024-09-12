@@ -11,10 +11,10 @@ deployed by {OpenStackPreviousInstaller} with a Hyperconverged Infrastructure (H
 
 To migrate the Ceph Monitor daemons, you must perform the following high-level steps:
 
-. xref:configuring-target-nodes-for-ceph-monitor-migration_{context}[Configure the target nodes for Ceph Monitor migration]. 
+. xref:configuring-target-nodes-for-ceph-monitor-migration_{context}[Configure the target nodes for Ceph Monitor migration].
 . xref:draining-the-source-node_{context}[Drain the source node].
 . xref:migrating-the-ceph-monitor-ip-address_{context}[Migrate your Ceph Monitor IP addresses to the target nodes].
-. xref:redeploying-a-ceph-monitor-on-the-target-node_{context}[Redeploy the Ceph Monitor on the target node]. 
+. xref:redeploying-a-ceph-monitor-on-the-target-node_{context}[Redeploy the Ceph Monitor on the target node].
 . xref:verifying-the-cluster-after-ceph-mon-migration_{context}[Verify that the {Cephcluster} cluster is healthy].
 
 Repeat these steps for any additional Controller node that hosts a Ceph Monitor until you migrate all the Ceph Monitor daemons to the target nodes.
