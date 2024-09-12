@@ -81,7 +81,7 @@ services:
     path:
       - ovs_external_ids.json
     config_mapping: <4>
-      ovn-bridge-mappings: edpm_ovn_bridge_mappings
+      ovn-bridge-mappings: edpm_ovn_bridge_mappings: ["datacentre:br-ex"]
       ovn-bridge: edpm_ovn_bridge
       ovn-encap-type: edpm_ovn_encap_type
       ovn-monitor-all: ovn_monitor_all
