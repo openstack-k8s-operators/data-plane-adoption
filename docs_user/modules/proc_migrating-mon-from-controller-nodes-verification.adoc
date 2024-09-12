@@ -1,4 +1,10 @@
-.Verification
+[id="verifying-the-cluster-after-ceph-mon-migration_{context}"]
+
+= Verifying the {CephCluster} cluster after Ceph Monitor migration
+
+After you finish migrating your Ceph Monitor daemons to the target nodes, verify that the the {CephCluster} cluster is healthy.
+
+.Procedure
 
 * Verify that the {CephCluster} cluster is healthy:
 +
@@ -10,7 +16,3 @@
 ...
 ...
 ----
-
-.Next steps
-
-* Repeat this procedure for any additional Controller node that hosts a Ceph Monitor until you migrate all the Ceph Monitor daemons to the target nodes.

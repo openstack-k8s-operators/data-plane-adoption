@@ -4,6 +4,8 @@
 
 Drain the existing Controller nodes and remove the source node host from the {CephCluster} cluster.
 
+.Procedure
+
 . On the source node, back up the `/etc/ceph/` directory to run `cephadm` and get a shell for the {Ceph} cluster from the source node:
 +
 ----
@@ -85,4 +87,4 @@ $ cephadm shell -- ceph orch ps | grep -i mon
 
 .Next steps
 
-Proceed to the next step
+Proceed to the next step xref:migrating-the-ceph-monitor-ip-address_{context}[Migrating the Ceph Monitor IP address].

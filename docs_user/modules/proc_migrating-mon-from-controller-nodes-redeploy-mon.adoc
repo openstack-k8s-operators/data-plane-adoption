@@ -5,6 +5,8 @@
 You use the IP address that you migrated to the target node to redeploy the
 Ceph Monitor on the target node.
 
+.Procedure
+
 . Get the Ceph mon spec:
 +
 ----
@@ -97,4 +99,4 @@ $ sudo cephadm shell -- ceph orch reconfig osd.default_drive_group
 
 .Next steps
 
-Proceed to the next step
+Proceed to the next step xref:verifying-the-cluster-after-ceph-mon-migration_{context}[Verifying the {CephCluster} cluster after Ceph Monitor migration].
