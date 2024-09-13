@@ -81,6 +81,14 @@ echo "$PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS"
 [IMPORTANT]
 After the {OpenStackShort} control plane services are shut down, if any of the exported values are lost, re-running the command fails because the control plane services are no longer running on the source cloud, and the data cannot be retrieved. To avoid data loss, preserve the exported values in an environment file before shutting down the control plane services.
 
+. If `neutron-sriov-nic-agent` agents are running in your {OpenStackShort} deployment, get the configuration to use for the data plane adoption:
++
+----
+SRIOV_AGENTS=$ oc run mariadb-client mysql -rsh "$SOURCE_MARIADB_IP" \
+-uroot -p"$SOURCE_DB_ROOT_PASSWORD" ovs_neutron -e \
+"select host, configurations from agents where agents.binary='neutron-sriov-nic-agent';"
+----
+
 . Store the exported variables for future use:
 +
 ----
@@ -94,12 +102,4 @@ SRIOV_AGENTS="$SRIOV_AGENTS"
 EOF
 ----
 
-. If `neutron-sriov-nic-agent` agents are running in your {OpenStackShort} deployment, get the configuration to use for the data plane adoption:
-+
-----
-SRIOV_AGENTS=$ oc run mariadb-client mysql -rsh "$SOURCE_MARIADB_IP" \
--uroot -p"$SOURCE_DB_ROOT_PASSWORD" ovs_neutron -e \
-"select host, configurations from agents where agents.binary='neutron-sriov-nic-agent';"
-----
 
-. Save the configuration in the `~/.source_cloud_exported_variables` file.

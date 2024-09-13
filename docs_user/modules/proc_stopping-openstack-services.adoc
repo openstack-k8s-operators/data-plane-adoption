@@ -34,10 +34,10 @@ ifeval::["{build}" != "downstream"]
 CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 endif::[]
 ifeval::["{build}" == "downstream"]
-CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
+CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<controller-1 IP>*"
 endif::[]
-CONTROLLER2_SSH=""
-CONTROLLER3_SSH=""
+CONTROLLER2_SSH="ssh -i *<path to SSH key>* root@*<controller-2 IP>*"
+CONTROLLER3_SSH="ssh -i *<path to SSH key>* root@*<controller-3 IP>*"
 ----
 
 .Procedure

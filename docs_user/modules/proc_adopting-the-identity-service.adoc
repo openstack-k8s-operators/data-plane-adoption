@@ -29,7 +29,7 @@ EOF
 . Patch the `OpenStackControlPlane` CR to deploy the {identity_service}:
 +
 ----
-$ oc patch openstackcontrolplane openstack-galera-network-isolation --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   keystone:
     enabled: true

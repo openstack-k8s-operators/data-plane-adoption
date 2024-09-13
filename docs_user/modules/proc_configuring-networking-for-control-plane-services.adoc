@@ -44,6 +44,9 @@ deployment. Please use `exclude` as follows.
 ```
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
+metadata:
+  name: internalapi
+  namespace: openstack
 spec:
   config: |
     {

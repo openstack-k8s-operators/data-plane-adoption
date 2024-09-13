@@ -25,7 +25,7 @@ endif::[]
 * Patch the `OpenStackControlPlane` CR to deploy the {networking_service}:
 +
 ----
-$ oc patch openstackcontrolplane openstack-galera-network-isolation --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   neutron:
     enabled: true

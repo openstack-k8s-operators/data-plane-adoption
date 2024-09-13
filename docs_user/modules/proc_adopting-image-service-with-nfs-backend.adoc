@@ -119,7 +119,7 @@ EOF
 . Patch the `OpenStackControlPlane` CR to deploy the {image_service} with an NFS back end:
 +
 ----
-$ oc patch openstackcontrolplane openstack-galera-network-isolation --type=merge --patch-file glance_nfs_patch.yaml
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_nfs_patch.yaml
 ----
 
 .Verification
