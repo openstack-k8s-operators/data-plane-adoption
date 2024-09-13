@@ -81,29 +81,23 @@ echo "$PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS"
 [IMPORTANT]
 After the {OpenStackShort} control plane services are shut down, if any of the exported values are lost, re-running the command fails because the control plane services are no longer running on the source cloud, and the data cannot be retrieved. To avoid data loss, preserve the exported values in an environment file before shutting down the control plane services.
 
-. Store the exported variables for future use:
-+
-----
-$ cat > ~/.source_cloud_exported_variables << EOF
-PULL_OPENSTACK_CONFIGURATION_DATABASES="$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-    mysql -rsh $SOURCE_MARIADB_IP -uroot -p$SOURCE_DB_ROOT_PASSWORD -e 'SHOW databases;')"
-PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK="$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-    mysqlcheck --all-databases -h $SOURCE_MARIADB_IP -u root -p$SOURCE_DB_ROOT_PASSWORD | grep -v OK)"
-PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-    mysql -rsh $SOURCE_MARIADB_IP -uroot -p$SOURCE_DB_ROOT_PASSWORD nova_api -e \
-    'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')"
-PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES="$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-    mysql -rsh $SOURCE_MARIADB_IP -uroot -p$SOURCE_DB_ROOT_PASSWORD nova_api -e \
-    "select host from nova.services where services.binary='nova-compute';")"
-PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$($CONTROLLER1_SSH sudo podman exec -it nova_api nova-manage cell_v2 list_cells)"
-EOF
-chmod 0600 ~/.source_cloud_exported_variables
-----
-
 . If `neutron-sriov-nic-agent` agents are running in your {OpenStackShort} deployment, get the configuration to use for the data plane adoption:
 +
 ----
-$ podman run -i --rm --userns=keep-id -u $UID $MARIADB_IMAGE mysql \
-    -rsh "$SOURCE_MARIADB_IP" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" ovs_neutron -e \
-    "select host, configurations from agents where agents.binary='neutron-sriov-nic-agent';"
+SRIOV_AGENTS=$ oc run mariadb-client mysql -rsh "$SOURCE_MARIADB_IP" \
+-uroot -p"$SOURCE_DB_ROOT_PASSWORD" ovs_neutron -e \
+"select host, configurations from agents where agents.binary='neutron-sriov-nic-agent';"
+----
+
+. Store the exported variables for future use:
++
+----
+$ cat >~/.source_cloud_exported_variables <<EOF
+PULL_OPENSTACK_CONFIGURATION_DATABASES="$PULL_OPENSTACK_CONFIGURATION_DATABASES"
+PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK="$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"
+PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="$PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS"
+PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES="$PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES"
+PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS"
+SRIOV_AGENTS="$SRIOV_AGENTS"
+EOF
 ----

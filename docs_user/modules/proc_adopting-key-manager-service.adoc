@@ -38,7 +38,6 @@ spec:
       serviceAccount: barbican
       serviceUser: barbican
       passwordSelectors:
-        database: BarbicanDatabasePassword
         service: BarbicanPassword
         simplecryptokek: BarbicanSimpleCryptoKEK
       barbicanAPI:
