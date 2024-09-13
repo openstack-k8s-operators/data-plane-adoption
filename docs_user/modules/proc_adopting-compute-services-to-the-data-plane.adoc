@@ -2,14 +2,18 @@
 
 = Adopting Compute services to the {rhos_acro} data plane
 
+Adopt your Compute (nova) services to the {rhos_long} data plane.
+
+//kgilliga: The following text belongs under the code block in step 6 but I'm unable to hide it there: "For multi-cell, config maps and {rhos_prev_long} data plane services should be named like `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`."
+
 .Prerequisites
 
-* Remaining source cloud xref:stopping-infrastructure-management-and-compute-services_{context}[Stopping infrastructure management and Compute services] on Compute hosts.
-* Ceph backend for Nova/Libvirt is configured xref:configuring-a-ceph-backend_migrating-databases[Configuring a Ceph backend].
-* Make sure the IPAM is configured
-
+* You have stopped the remaining control plane nodes, repositories, and packages on the {compute_service_first_ref} hosts. For more information, see xref:stopping-infrastructure-management-and-compute-services_{context}[Stopping infrastructure management and Compute services].
+* You have configured the Ceph back end for the `NovaLibvirt` service. For more information, see xref:configuring-a-ceph-backend_migrating-databases[Configuring a Ceph back end].
+* You have configured IP Address Management (IPAM):
++
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: network.openstack.org/v1beta1
 kind: NetConfig
 metadata:
@@ -74,10 +78,11 @@ spec:
       vlan: 22
 EOF
 ----
++
+* When `neutron-sriov-nic-agent` is running on the existing {compute_service} nodes, ensure that the physical device mappings match the values that are defined in the `OpenStackDataPlaneNodeSet` custom resource (CR). For more information, see xref:pulling-configuration-from-tripleo-deployment_adopt-control-plane[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
 
-* When `neutron-sriov-nic-agent` is running on the existing Compute nodes, check the physical device mappings and ensure that they match the values that are defined in the `OpenStackDataPlaneNodeSet` custom resource (CR). For more information, see xref:pulling-configuration-from-tripleo-deployment_reviewing-configuration[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
-
-* Define the shell variables necessary to run the script that runs the fast-forward upgrade. Omit setting `CEPH_FSID`, if the local storage backend is going to be configured by Nova for Libvirt. The storage backend cannot be changed during adoption, and must match the one used on the source cloud:
+* You have defined the shell variables to run the script that runs the fast-forward upgrade:
++
 ----
 PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
 CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //'
@@ -89,7 +94,11 @@ export computes=(
   # ...
 )
 ----
-** Replace `["standalone.localdomain"]="192.168.122.100"` with the name of the Compute node and its IP address.
++
+** Replace `["standalone.localdomain"]="192.168.122.100"` with the name and IP address of the {compute_service} node.
++
+[NOTE]
+Do not set a value for the `CEPH_FSID` parameter if the local storage back end is configured by the {compute_service} for libvirt. The storage back end must match the source cloud storage back end. You cannot change the storage back end during adoption.
 
 .Procedure
 
@@ -98,12 +107,12 @@ ifeval::["{build}" != "downstream"]
 //kgilliga:I need to check if we will document this in Red Hat docs.
 endif::[]
 ifeval::["{build}" != "upstream"]
-. Create a ssh authentication secret for the data plane nodes:
+. Create an SSH authentication secret for the data plane nodes:
 endif::[]
 +
 [subs=+quotes]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: v1
 kind: Secret
 metadata:
@@ -115,15 +124,17 @@ ifeval::["{build}" != "downstream"]
 $(cat ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa | base64 | sed \'s/^/        /')
 endif::[]
 ifeval::["{build}" == "downstream"]
-$(cat *<path to SSH key>* | base64 | sed \'s/^/        /')
+$(cat <path_to_SSH_key> | base64 | sed \'s/^/        /')
 endif::[]
 EOF
 ----
++
+* Replace `<path_to_SSH_key>` with the path to your SSH key.
 
 . Generate an ssh key-pair `nova-migration-ssh-key` secret:
 +
 ----
-cd "$(mktemp -d)"
+$ cd "$(mktemp -d)"
 ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
 oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
   -n openstack \
@@ -134,9 +145,28 @@ rm -f id*
 cd -
 ----
 
-. Create a `nova-compute-extra-config` service (with local storage backend for `libvirt`):
+. If you use a local storage back end for libvirt, create a `nova-compute-extra-config` service to remove pre-fast-forward workarounds and configure Compute services to use a local storage back end:
 +
-. If TLS Everywhere is enabled, append the following to the OpenStackDataPlaneService spec:
+[source,yaml]
+----
+$ oc apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nova-extra-config
+  namespace: openstack
+data:
+  19-nova-compute-cell1-workarounds.conf: |
+    [workarounds]
+    disable_compute_service_check_for_ffu=true
+EOF
+----
++
+[NOTE]
+The secret `nova-cell<X>-compute-config` auto-generates for each
+`cell<X>`. You must specify values for the `nova-cell<X>-compute-config` and `nova-migration-ssh-key` parameters for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
+
+. If TLS Everywhere is enabled, append the following content to the `OpenStackDataPlaneService` CR:
 +
 [source,yaml]
 ----
@@ -150,33 +180,12 @@ cd -
   caCerts: combined-ca-bundle
   edpmServiceType: nova
 ----
+
+. If you use a Ceph back end for libvirt, create a `nova-compute-extra-config` service to remove pre-fast-forward upgrade workarounds and configure Compute services to use a Ceph back end:
 +
 [source,yaml]
 ----
-oc apply -f - <<EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nova-extra-config
-  namespace: openstack
-data:
-  19-nova-compute-cell1-workarounds.conf: |
-    [workarounds]
-    disable_compute_service_check_for_ffu=true
-EOF
-----
-+
-The secret `nova-cell<X>-compute-config` is auto-generated for each
-`cell<X>`. You must specify `nova-cell<X>-compute-config` and `nova-migration-ssh-key` for each custom `OpenStackDataPlaneService` related to the Compute service.
-
-That service removes pre-FFU workarounds and configures Compute
-services for local storage backend.
-
-* Or, create a `nova-compute-extra-config` service (with Ceph backend for `libvirt`):
-+
-[source,yaml]
-----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -199,50 +208,44 @@ data:
 EOF
 ----
 +
-That service removes pre-FFU workarounds and configures Compute
-services for Ceph storage backend.
-Provided above resources should contain a cell-specific configurations.
-For multi-cell, config maps and {rhos_prev_long} data plane services should be named like `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`.
+The resources in the `ConfigMap` contain cell-specific configurations.
 
 ifeval::["{build}" == "downstream"]
 . Create a secret for the subscription manager and a secret for the Red Hat registry:
 +
 [source,yaml]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: v1
 kind: Secret
 metadata:
   name: subscription-manager
 data:
-  username: <base64 encoded subscription-manager username>
-  password: <base64 encoded subscription-manager password>
+  username: <base64_encoded_username>
+  password: <base64_encoded_password>
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: redhat-registry
 data:
-  username: <base64 encoded registry username>
-  password: <base64 encoded registry password>
+  username: <registry_username>
+  password: <registry_password>
 EOF
 ----
 endif::[]
 
 . Deploy the `OpenStackDataPlaneNodeSet` CR:
 +
-. If TLS Everywhere is enabled, change spec:tlsEnabled to true
-. If using a custom DNS Domain, modify the spec:nodes:[NODE NAME]:hostName to use fqdn for the node
-+
 [source,yaml]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneNodeSet
 metadata:
   name: openstack
 spec:
-  tlsEnabled: false
+  tlsEnabled: false <1>
   networkAttachments:
       - ctlplane
   preProvisioned: true
@@ -269,7 +272,7 @@ spec:
       value: "True"
   nodes:
     standalone:
-      hostName: standalone
+      hostName: standalone <2>
       ansible:
         ansibleHost: ${computes[standalone.localdomain]}
       networks:
@@ -346,7 +349,7 @@ endif::[]
         edpm_nodes_validation_validate_gateway_icmp: false
 
         # edpm ovn-controller configuration
-        edpm_ovn_bridge_mappings: <bridge_mappings>
+        edpm_ovn_bridge_mappings: <bridge_mappings> <3>
         edpm_ovn_bridge: br-int
         edpm_ovn_encap_type: geneve
         ovn_monitor_all: true
@@ -405,11 +408,26 @@ endif::[]
 EOF
 ----
 +
-* Prepare adopted EDPM workloads to use Ceph backend for Block Storage service (cinder), if configured so
+<1> If TLS Everywhere is enabled, change `spec:tlsEnabled` to `true`.
+<2> If your deployment has a custom DNS Domain, modify the `spec:nodes:[NODE NAME]:hostName` to use fqdn for the node.
+<3> Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
+
+. Ensure that you use the same `ovn-controller` settings in the `OpenStackDataPlaneNodeSet` CR that you used in the {compute_service} nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
++
+----
+ovs-vsctl list Open .
+...
+external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings=<bridge_mappings>, ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
+...
+----
++
+* Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
+
+. If you use a Ceph back end for {block_storage_first_ref}, prepare the adopted data plane workloads:
 +
 [source,yaml]
 ----
-oc patch osdpns/openstack --type=merge --patch "
+$ oc patch osdpns/openstack --type=merge --patch "
 spec:
   services:
     - bootstrap
@@ -441,26 +459,15 @@ spec:
         readOnly: true
 "
 ----
-Note that you should retain the original `OpenStackDataPlaneNodeSet` services
-composition, except the inserted `ceph-client` service.
-
-+ Ensure that the `ovn-controller` settings that are configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the Compute nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
 +
-----
-ovs-vsctl list Open .
-...
-external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings=<bridge_mappings>, ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
-...
-----
-
-+
-* Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
+[NOTE]
+Ensure that you use the same list of services from the original `OpenStackDataPlaneNodeSet` CR, except for the inserted `ceph-client` service.
 
 . Optional: Enable `neutron-sriov-nic-agent` in the `OpenStackDataPlaneNodeSet` CR:
 +
 [source,yaml]
 ----
-oc patch openstackdataplanenodeset openstack --type='json' --patch='[
+$ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
@@ -485,16 +492,16 @@ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
 +
 [source,yaml]
 ----
-oc patch openstackdataplanenodeset openstack --type='json' --patch='[
+$ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
     "value": "neutron-dhcp"
   }]'
 ----
-
 +
 [NOTE]
+====
 To use `neutron-dhcp` with OVN for the {bare_metal_first_ref}, you must set the `disable_ovn_dhcp_for_baremetal_ports` configuration option for the {networking_first_ref}  to `true`.  You can set this configuration in the `NeutronAPI` spec:
 
 [source,yaml]
@@ -507,14 +514,14 @@ spec:
           [ovn]
           disable_ovn_dhcp_for_baremetal_ports = true
 ----
-
-. Run pre-adoption validation:
+====
+. Run the pre-adoption validation:
 
 .. Create the validation service:
 +
 [source,yaml]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneService
 metadata:
@@ -524,11 +531,11 @@ spec:
 EOF
 ----
 
-.. Create a `OpenStackDataPlaneDeployment` CR that runs the validation only:
+.. Create a `OpenStackDataPlaneDeployment` CR that runs only the validation:
 +
 [source,yaml]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
@@ -540,50 +547,44 @@ spec:
   - pre-adoption-validation
 EOF
 ----
-+
-Wait for the validation to finish.
 
-.. Confirm that all the Ansible EE pods reach a `Completed` status:
+.. When the validation is finished, confirm that the status of the Ansible EE pods is `Completed`:
 +
 ----
-# watching the pods
-watch oc get pod -l app=openstackansibleee
+$ watch oc get pod -l app=openstackansibleee
 ----
 +
 ----
-# following the ansible logs with:
-oc logs -l app=openstackansibleee -f --max-log-requests 20
+$ oc logs -l app=openstackansibleee -f --max-log-requests 20
 ----
 
 .. Wait for the deployment to reach the `Ready` status:
 +
 ----
-oc wait --for condition=Ready openstackdataplanedeployment/openstack-pre-adoption --timeout=10m
+$ oc wait --for condition=Ready openstackdataplanedeployment/openstack-pre-adoption --timeout=10m
 ----
++
+[IMPORTANT]
+====
+If any openstack-pre-adoption validations fail, you must reference the Ansible logs to determine which ones were unsuccessful, and then try the following troubleshooting options:
 
-. If any openstack-pre-adoption validations fail, you must first determine
-which ones were unsuccessful based on the ansible logs and then follow the
-instructions below for each case:
+* If the hostname validation failed, check that the hostname of the data plane
+node is correctly listed in the `OpenStackDataPlaneNodeSet` CR.
 
-* if the hostname validation failed then check that the hostname of the EDPM
-node is correctly listed in the `OpenStackDataPlaneNodeSet`
+* If the kernel argument check failed, ensure that the kernel argument configuration in the `edpm_kernel_args` and `edpm_kernel_hugepages` variables in the `OpenStackDataPlaneNodeSet` CR is the same as the kernel argument configuration that you used in the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} node.
 
-* if the kernel argument check failed then make sure that the
-`OpenStackDataPlaneNodeSet` has the same kernel argument configuration in
-`edpm_kernel_args` and `edpm_kernel_hugepages` variables than what is used in
-the 17 node.
+* If the tuned profile check failed, ensure that the
+`edpm_tuned_profile` variable in the `OpenStackDataPlaneNodeSet` CR is configured
+to use the same profile as the one set on the {OpenStackShort} {rhos_prev_ver} node.
+====
 
-* if the tuned profile check failed then make sure that the
-`edpm_tuned_profile` variable in the `OpenStackDataPlaneNodeSet` is configured
-to use the same profile as set on the (source) OSP 17 node.
+. Remove the remaining {OpenStackPreviousInstaller} services:
 
-. Remove leftover {OpenStackPreviousInstaller} services
-
-.. Create cleanup data plane service
+.. Create an `OpenStackDataPlaneService` CR to clean up the data plane services you are adopting:
 +
 [source,yaml]
----
-oc apply -f - <<EOF
+----
+$ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneService
 metadata:
@@ -591,13 +592,13 @@ metadata:
 spec:
   playbook: osp.edpm.tripleo_cleanup
 EOF
----
+----
 
-.. Create OpenStackDataPlaneDeployment to run cleanup
+.. Create the `OpenStackDataPlaneDeployment` CR to run the clean-up:
 +
 [source,yaml]
----
-oc apply -f - <<EOF
+----
+$ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
@@ -608,15 +609,13 @@ spec:
   servicesOverride:
   - tripleo-cleanup
 EOF
----
+----
 
-.. Wait for the removal to finish.
-
-. Deploy the `OpenStackDataPlaneDeployment` CR:
+. When the clean-up is finished, deploy the `OpenStackDataPlaneDeployment` CR:
 +
 [source,yaml]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
@@ -626,38 +625,33 @@ spec:
   - openstack
 EOF
 ----
-
-Note: if you have other node sets to deploy (e.g. for networker nodes), you may
-add them above in `nodeSets` list, or create separate
-`OpenStackDataPlaneDeployment` CRs later.
-
-Note that once a `OpenStackDataPlaneDeployment` CR is deployed, it's impossible
-to add new node sets to it later.
++
+[NOTE]
+If you have other node sets to deploy, such as Networker nodes, you can
+add them in the `nodeSets` list in this step, or create separate `OpenStackDataPlaneDeployment` CRs later. You cannot add new node sets to an `OpenStackDataPlaneDeployment` CR after deployment.
 
 .Verification
 
 . Confirm that all the Ansible EE pods reach a `Completed` status:
 +
 ----
-# watching the pods
-watch oc get pod -l app=openstackansibleee
+$ watch oc get pod -l app=openstackansibleee
 ----
 +
 ----
-# following the ansible logs with:
-oc logs -l app=openstackansibleee -f --max-log-requests 20
+$ oc logs -l app=openstackansibleee -f --max-log-requests 20
 ----
 
 . Wait for the data plane node set to reach the `Ready` status:
 +
 ----
-oc wait --for condition=Ready osdpns/openstack --timeout=30m
+$ oc wait --for condition=Ready osdpns/openstack --timeout=30m
 ----
 
-. Verify that {networking_first_ref} agents are alive:
+. Verify that the {networking_first_ref} agents are running:
 +
 ----
-oc exec openstackclient -- openstack network agent list
+$ oc exec openstackclient -- openstack network agent list
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
 | ID                                   | Agent Type                   | Host                   | Availability Zone | Alive | State | Binary                     |
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
@@ -666,3 +660,7 @@ oc exec openstackclient -- openstack network agent list
 | a4f1b584-16f1-4937-b2b0-28102a3f6eaa | OVN Controller agent         | standalone.localdomain |                   | :-)   | UP    | ovn-controller             |
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
 ----
+
+.Next steps
+
+* You must perform a fast-forward upgrade on your Compute services. For more information, see xref:performing-a-fast-forward-upgrade-on-compute-services_{context}[Performing a fast-forward upgrade on Compute services].
