@@ -67,19 +67,22 @@ export FIP=192.168.122.20
 # check connectivity via FIP
 ping -c4 ${FIP}
 
+# create bootable volume
 if ! ${BASH_ALIASES[openstack]} volume show disk ; then
-    ${BASH_ALIASES[openstack]} volume create --image cirros --bootable --size 1 disk
+    ${BASH_ALIASES[openstack]} volume create --image cirros --size 1 disk
     wait_for_status "volume show disk" "test volume 'disk' creation"
 fi
 
+# create volume backup
 if ! ${BASH_ALIASES[openstack]} volume backup show backup; then
     ${BASH_ALIASES[openstack]} volume backup create --name backup disk
     wait_for_status "volume backup show backup" "test volume 'disk' backup completion"
 fi
 
+# create volume snapshot
 if ! ${BASH_ALIASES[openstack]} volume snapshot show snapshot ; then
     ${BASH_ALIASES[openstack]} volume snapshot create --volume disk snapshot
-    wait_for_status "volume snapshot show snapshot" "test volume 'disk' backup snapshot availability"
+    wait_for_status "volume snapshot show snapshot" "test volume 'disk' snapshot availability"
 fi
 
 # Add volume to the test VM
