@@ -3,14 +3,17 @@
 :build: downstream
 
 ifeval::["{build}" != "downstream"]
-:OpenShift: OpenShift
-:rhos_long: OpenStack
+:rhocp_long: OpenShift
+:rhos_long: Red{nbsp}Hat OpenStack Services on OpenShift (RHOSO)
+:rhos_long_noacro: Red{nbsp}Hat OpenStack Services on OpenShift
+:rhos_acro: RHOSO
 :rhos_prev_long: OpenStack
-:rhos_acro: OSP
 :OpenStackShort: OSP
 :OpenShiftShort: OCP
+:ocp_curr_ver: 4.16
 :rhos_curr_ver: Antelope
 :rhos_prev_ver: Wallaby
+:rhos_z_stream: 0
 :rhel_curr_ver: 9.4
 :rhel_prev_ver: 9.2
 :OpenStackPreviousInstaller: TripleO
@@ -71,15 +74,18 @@ endif::[]
 
 ifeval::["{build}" == "downstream"]
 :rhos_long: Red{nbsp}Hat OpenStack Services on OpenShift (RHOSO)
+:rhos_long_noacro: Red{nbsp}Hat OpenStack Services on OpenShift
 :rhos_acro: RHOSO
 :rhos_prev_long: Red{nbsp}Hat OpenStack Platform
 :OpenStackShort: RHOSP
 :rhos_curr_ver: 18.0
 :rhos_prev_ver: 17.1
+:rhos_z_stream: 0
 :rhel_curr_ver: 9.4
 :rhel_prev_ver: 9.2
-:OpenShift: Red Hat OpenShift Container Platform
+:rhocp_long: Red Hat OpenShift Container Platform (RHOCP)
 :OpenShiftShort: RHOCP
+:ocp_curr_ver: 4.16
 :OpenStackPreviousInstaller: director
 :Ceph: Red Hat Ceph Storage
 :CephCluster: Red Hat Ceph Storage
@@ -134,3 +140,10 @@ ifeval::["{build}" == "downstream"]
 //Telemetry service
 :telemetry: Telemetry service
 endif::[]
+
+// Common URLs. Do not override. Do not delete.
+:base_url: https://access.redhat.com/documentation
+:defaultURL: https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/{rhos_curr_ver}/html
+:defaultOCPURL: https://access.redhat.com/documentation/en-us/openshift_container_platform/{ocp_curr_ver}/html
+:defaultCephURL:  https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/{CephVernum}/html
+

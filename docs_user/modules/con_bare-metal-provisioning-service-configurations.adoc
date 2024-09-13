@@ -39,5 +39,5 @@ Finally, a parameter which may be important based upon your configuration and ex
 
 As a warning, hardware types set via the `ironic.conf` `enabled_hardware_types` parameter and hardware type driver interfaces starting with `staging-` are not available to be migrated into an adopted configuration.
 
-Furthermore, {OpenStackPreviousInstaller}-based deployments made architectural decisions based upon self-management of services. When adopting deployments, you don't necessarilly need multiple replicas of secondary services such as the Introspection service. Should the host the container is running upon fail, {OpenShift} will restart the container on another host. The short-term transitory loss
+Furthermore, {OpenStackPreviousInstaller}-based deployments made architectural decisions based upon self-management of services. When adopting deployments, you don't necessarilly need multiple replicas of secondary services such as the Introspection service. Should the host the container is running upon fail, {rhocp_long} will restart the container on another host. The short-term transitory loss
 //kgilliga: This last sentence trails off.

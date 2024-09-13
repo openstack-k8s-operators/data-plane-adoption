@@ -4,7 +4,7 @@
 
 = Configuring the network for the RHOSO deployment
 
-With {OpenShift} ({OpenShiftShort}), the network is a very important aspect of the deployment, and
+With {rhocp_long}, the network is a very important aspect of the deployment, and
 it is important to plan it carefully. The general network requirements for the
 {rhos_prev_long} ({OpenStackShort}) services are not much different from the ones in a {OpenStackPreviousInstaller} deployment, but the way you handle them is.
 

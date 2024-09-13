@@ -69,7 +69,7 @@ SWIFT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' SwiftPassword:
 
 .Procedure
 
-. Ensure that you are using the {OpenShift} namespace where you want the
+. Ensure that you are using the {rhocp_long} namespace where you want the
 control plane to be deployed:
 +
 ----

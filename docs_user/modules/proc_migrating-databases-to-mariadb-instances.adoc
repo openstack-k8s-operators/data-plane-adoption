@@ -2,7 +2,7 @@
 
 = Migrating databases to MariaDB instances
 
-Migrate your databases from the original {rhos_prev_long} ({OpenStackShort}) deployment to the MariaDB instances in the {OpenShift} cluster.
+Migrate your databases from the original {rhos_prev_long} ({OpenStackShort}) deployment to the MariaDB instances in the {rhocp_long} cluster.
 
 //[NOTE]
 //This example scenario describes a simple single-cell setup. Real

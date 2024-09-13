@@ -19,9 +19,9 @@ First you need to check the transport protocol the Block Storage service backend
 RBD, iSCSI, FC, NFS, NVMe-TCP, etc.
 
 Once you know all the transport protocols that you are using, you can make
-sure that you are taking them into consideration when placing the Block Storage services (as mentioned above in the Node Roles section) and the right storage transport related binaries are running on the {OpenShift} nodes.
+sure that you are taking them into consideration when placing the Block Storage services (as mentioned above in the Node Roles section) and the right storage transport related binaries are running on the {rhocp_long} nodes.
 
-Detailed information about the specifics for each storage transport protocol can be found in the xref:openshift-preparation-for-block-storage-adoption_storage-requirements[{OpenShift} preparation for {block_storage} adoption].
+Detailed information about the specifics for each storage transport protocol can be found in the xref:openshift-preparation-for-block-storage-adoption_storage-requirements[{OpenShiftShort} preparation for {block_storage} adoption].
 
 The recommended way to deploy {block_storage} volume back ends is to use a {block_storage} volume service for each back end.
 

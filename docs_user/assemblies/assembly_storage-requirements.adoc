@@ -8,7 +8,7 @@ When looking into the storage in an {rhos_prev_long} ({OpenStackShort}) deployme
 two kinds, the storage requirements of the services themselves and the
 storage used for the {OpenStackShort} users that the services will manage.
 
-These requirements may drive your {OpenShift} ({OpenShiftShort}) node selection, as mentioned above,
+These requirements may drive your {rhocp_long} node selection, as mentioned above,
 and may require you to do some preparations on the {OpenShiftShort} nodes before
 you can deploy the services.
 

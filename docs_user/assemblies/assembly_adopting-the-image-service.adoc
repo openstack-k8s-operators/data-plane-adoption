@@ -14,7 +14,7 @@ The {image_service} adoption is complete if you see the following results:
 To complete the {image_service} adoption, ensure that your environment meets the following criteria:
 
 * You have a running {OpenStackPreviousInstaller} environment (the source cloud).
-* You have a Single Node OpenShift or OpenShift Local that is running in the {OpenShift} cluster.
+* You have a Single Node OpenShift or OpenShift Local that is running in the {rhocp_long} cluster.
 * Optional: You can reach an internal/external `Ceph` cluster by both `crc` and {OpenStackPreviousInstaller}.
 
 include::../modules/proc_adopting-image-service-with-object-storage-backend.adoc[leveloffset=+1]

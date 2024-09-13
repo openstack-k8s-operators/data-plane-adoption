@@ -10,7 +10,7 @@ Copy the {rhos_component_storage_file_first_ref} configuration from the {rhos_pr
 * If the deployment uses CephFS through NFS as a storage back end, the Pacemaker ordering and collocation constraints are adjusted. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
 * The {rhos_component_storage_file} Pacemaker service (`openstack-manila-share`) is stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
 * The database migration is complete. For more information, see xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances].
-* The {OpenShift} ({OpenShiftShort}) nodes where the `manila-share` service is to be deployed can reach the management network that the storage system is in.
+* The {rhocp_long} nodes where the `manila-share` service is to be deployed can reach the management network that the storage system is in.
 * If the deployment uses CephFS through NFS as a storage back end, a new clustered Ceph NFS service is deployed on the {CephCluster} cluster with the help
 of Ceph orchestrator. For more information, see xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a Ceph NFS cluster].
 * Services such as the {identity_service_first_ref} and memcached are available prior to adopting the Shared File Systems services.

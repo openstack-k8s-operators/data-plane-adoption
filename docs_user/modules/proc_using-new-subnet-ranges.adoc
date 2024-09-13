@@ -78,7 +78,7 @@ The next step is to configure similar routes for the old subnet for control plan
         next-hop-interface: ospbr
 ```
 
-Once applied, you should eventually see the following route added to your {OpenShift} ({OpenShiftShort}) nodes.
+Once applied, you should eventually see the following route added to your {rhocp_long} nodes.
 
 ```bash
 # ip route | grep 192
