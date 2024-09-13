@@ -7,7 +7,7 @@ If you are using Object Storage as a service, adopt the {object_storage_first_re
 .Prerequisites
 
 * The {object_storage} storage back-end services are running in the {rhos_prev_long} ({OpenStackShort}) deployment.
-* The storage network is properly configured on the {OpenShift} cluster. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0-beta/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhocp-for-rhoso#proc_configuring-the-data-plane-network_preparing[Configuring the data plane network] in _Deploying Red Hat OpenStack Services on OpenShift_.
+* The storage network is properly configured on the {rhocp_long} cluster. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0-beta/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhocp-for-rhoso#proc_configuring-the-data-plane-network_preparing[Configuring the data plane network] in _Deploying Red Hat OpenStack Services on OpenShift_.
 
 .Procedure
 

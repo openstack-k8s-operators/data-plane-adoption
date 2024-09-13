@@ -17,7 +17,7 @@ To ensure availability during the {object_storage_first_ref} migration, you perf
 * No new environmental variables need to be defined, though you use the
 `CONTROLLER1_SSH` alias that was defined in a previous step.
 //kgilliga: Note to self: I'm not sure if the first 2 prereqs are necessary if no new variables need to be defined and the Object Storage adoption chapter comes before this chapter.
-* For DNS servers, all existing nodes must be able to resolve host names of the {OpenShift} pods, for example by using the
+* For DNS servers, all existing nodes must be able to resolve host names of the {rhocp_long} pods, for example by using the
 external IP of the DNSMasq service as name server in `/etc/resolv.conf`:
 +
 ----
@@ -52,7 +52,7 @@ Sample represents 100.00% of the object partition space
 
 . Add new nodes by scaling up the SwiftStorage resource from 0 to 3. In
 that case 3 storage instances using PVCs are created, running on the
-{OpenShift} cluster.
+{rhocp_long} cluster.
 // TODO add paragraph / link on EDPM node usage for Swift
 +
 ----

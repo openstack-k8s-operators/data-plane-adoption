@@ -13,7 +13,7 @@ The high level explanation of the tailor-made approach is:
 endif::[]
 
 .Procedure
-. Determine what part of the configuration is generic for all the Block Storage services and remove anything that would change when deployed in {OpenShift} ({OpenShiftShort}), such as the `connection` in the `[database]` section, the `transport_url` and `log_dir` in the `[DEFAULT]` sections, and the whole `[coordination]` and `[barbican]` sections. The remaining generic configuration goes into the `customServiceConfig`, or a `Secret` and is then used in `customServiceConfigSecrets`, at the `cinder: template:` level.
+. Determine what part of the configuration is generic for all the Block Storage services and remove anything that would change when deployed in {rhocp_long}, such as the `connection` in the `[database]` section, the `transport_url` and `log_dir` in the `[DEFAULT]` sections, and the whole `[coordination]` and `[barbican]` sections. The remaining generic configuration goes into the `customServiceConfig`, or a `Secret` and is then used in `customServiceConfigSecrets`, at the `cinder: template:` level.
 . Determine if there is any scheduler-specific configuration and add it to the
 `customServiceConfig` section in `cinder: template: cinderScheduler`.
 . Determine if there is any API-specific configuration and add it to the

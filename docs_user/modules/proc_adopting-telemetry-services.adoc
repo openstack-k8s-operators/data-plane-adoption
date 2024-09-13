@@ -11,7 +11,7 @@ You cannot automatically migrate old data because different back ends are used. 
 .Prerequisites
 
 * The {OpenStackPreviousInstaller} environment is running (the source cloud).
-* The Single Node OpenShift or OpenShift Local is running in the {OpenShift} cluster.
+* The Single Node OpenShift or OpenShift Local is running in the {rhocp_long} cluster.
 * Previous adoption steps are completed.
 
 .Procedure

@@ -6,7 +6,7 @@
 
 The new deployment model puts additional burden on the size of IP allocation
 pools available for {rhos_prev_long} ({OpenStackShort}) services. This is because each service deployed
-on {OpenShift} ({OpenShiftShort}) worker nodes will now require an IP address from the IPAM pool (in
+on {rhocp_long} worker nodes will now require an IP address from the IPAM pool (in
 the previous deployment model, all services hosted on a controller node shared
 the same IP address.)
 

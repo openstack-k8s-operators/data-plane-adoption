@@ -8,7 +8,7 @@ To adopt a {OpenStackPreviousInstaller}-deployed {block_storage_first_ref}, crea
 
 * You have reviewed the {block_storage} limitations. For more information, see xref:block-storage-limitations_storage-requirements[Limitations for adopting the {block_storage}].
 * You have planned the placement of the Block Storage services.
-* You have prepared the {OpenShift} nodes where the volume and backup services run. For more information, see xref:openshift-preparation-for-block-storage-adoption_storage-requirements[{OpenShift} preparation for {block_storage} adoption].
+* You have prepared the {rhocp_long} nodes where the volume and backup services run. For more information, see xref:openshift-preparation-for-block-storage-adoption_storage-requirements[{OpenShiftShort} preparation for {block_storage} adoption].
 * The {block_storage_first_ref} is stopped.
 * The service databases are imported into the control plane MariaDB.
 * The {identity_service_first_ref} and {key_manager_first_ref} are adopted.
