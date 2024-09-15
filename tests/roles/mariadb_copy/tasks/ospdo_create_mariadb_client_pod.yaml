@@ -4,7 +4,6 @@
 - name: set OSPdO env vars
   block:
   - name: register source_mariadb_ip
-    no_log: "{{ use_no_log }}"
     ansible.builtin.shell: |
       {{ controller1_ssh }} sudo cat /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg | grep -A1 'listen mysql'|tail -n 1|sed 's/.*bind //g' |sed 's/:3306.*//g'
     register: source_mariadb_ip
@@ -27,71 +26,4 @@
         ["standalone.localdomain"]={{ source_mariadb_ip.stdout }}
         )
         SOURCE_DB_ROOT_PASSWORD={{ source_db_root_pass.stdout }}
-
-  - name: start an adoption mariadb helper pod on ospdo src env
-    ansible.builtin.shell: |
-      {{ shell_header }}
-      {{ mariadb_copy_shell_vars_src }}
-
-      oc apply -f - <<EOF
-      ---
-      apiVersion: v1
-      kind: PersistentVolumeClaim
-      metadata:
-        name: {{ mariadb_clnt_pod_name }}
-        namespace: openstack
-      spec:
-        storageClassName: $STORAGE_CLASS
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 10Gi
-      ---
-      apiVersion: v1
-      kind: Pod
-      metadata:
-        name: {{ mariadb_clnt_pod_name }}
-        namespace: openstack
-        annotations:
-          k8s.v1.cni.cncf.io/networks: '[{"name": "internalapi-static", "namespace": "openstack",
-              "ips": ["{{ mariadb_clnt_pod_ip }}"]}]'
-          openshift.io/scc: anyuid
-        labels:
-          app: adoption
-      spec:
-        metadata:
-          labels:
-            app: openstackclient
-        containers:
-        - image: $MARIADB_IMAGE
-          command: [ "sh", "-c", "sleep infinity"]
-          name: adoption
-          volumeMounts:
-          - mountPath: /backup
-            name: mariadb-data
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop: ALL
-          runAsNonRoot: false
-          seccompProfile:
-            type: RuntimeDefault
-        volumes:
-        - name: mariadb-data
-          persistentVolumeClaim:
-            claimName: {{ mariadb_clnt_pod_name }}
-
-      EOF
-
-    changed_when: true
-  - name: wait for the pod to come up
-    ansible.builtin.shell: |
-      {{ shell_header }}
-      {{ oc_header }}
-      oc wait --for condition=Ready pod/{{ mariadb_clnt_pod_name }} --timeout=30s
-    register: mariadb_data_pod_result
-    until: mariadb_data_pod_result is success
-    retries: 5
-    delay: 6
-
+        MARIADB_CLIENT_ANNOTATIONS="-n osp18"
