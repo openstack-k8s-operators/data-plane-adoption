@@ -97,25 +97,20 @@
   args:
     chdir: "../config"
 
-- name: wait for mariadb to start up
+- name: wait for services to start up
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
-  register: mariadb_running_result
-  until: mariadb_running_result is success
-  retries: 60
+    oc get pod {{ item }} -o jsonpath='{.status.phase}{"\n"}' | grep Running
+  register: service_running_result
+  until: service_running_result is success
+  retries: 150
   delay: 2
-
-- name: wait for cell1 mariadb to start up
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc get pod openstack-cell1-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
-  register: mariadb_running_result
-  until: mariadb_running_result is success
-  retries: 60
-  delay: 2
+  loop:
+    - openstack-galera-0
+    - openstack-cell1-galera-0
+    - rabbitmq-server-0
+    - rabbitmq-cell1-server-0
 
 - name: Patch openstack upstream dns server to set the correct value for the environment
   when: upstream_dns is defined
