@@ -51,7 +51,7 @@ EOF
 [NOTE]
 ====
 If you backed up your {rhos_prev_long} ({OpenStackShort}) services configuration file from the original environment, you can compare it with the confgiuration file that you adopted and ensure that the configuration is correct.
-For more information, see xref:pulling-configuration-from-tripleo-deployment_reviewing-configuration[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
+For more information, see xref:pulling-configuration-from-tripleo-deployment_adopt-control-plane[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
 
 ----
 os-diff diff /tmp/collect_tripleo_configs/glance/etc/glance/glance-api.conf glance_patch.yaml --crd

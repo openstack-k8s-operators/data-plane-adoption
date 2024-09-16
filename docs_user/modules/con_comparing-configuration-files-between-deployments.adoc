@@ -2,17 +2,20 @@
 
 = Comparing configuration files between deployments
 
-In order to help users to handle the configuration for the {OpenStackPreviousInstaller} and {rhos_prev_long}
-services the tool: https://github.com/openstack-k8s-operators/os-diff has been
-develop to compare the configuration files between the {OpenStackPreviousInstaller} deployment and the {rhos_long} cloud.
-Make sure Golang is installed and configured on your environment:
+To help you manage the configuration for your {OpenStackPreviousInstaller} and {rhos_prev_long} ({OpenStackShort}) services, you can compare the configuration files between your {OpenStackPreviousInstaller} deployment and the {rhos_long} cloud by using the os-diff tool.
 
+.Prerequisites
+
+* Golang is installed and configured on your environment:
++
 ----
 dnf install -y golang-github-openstack-k8s-operators-os-diff
 ----
 
-Then configure the `/etc/os-diff/os-diff.cfg` file and the `/etc/os-diff/ssh.config` file according to your environment. To allow os-diff to connect to your clouds and pull files from the services that you describe in the `config.yaml` file you need to properly set the option in the `os-diff.cfg` file:
+.Procedure
 
+. Configure the `/etc/os-diff/os-diff.cfg` file and the `/etc/os-diff/ssh.config` file according to your environment. To allow os-diff to connect to your clouds and pull files from the services that you describe in the `config.yaml` file, you must set the following options in the `os-diff.cfg` file:
++
 [source,yaml]
 [subs=+quotes]
 ----
@@ -23,8 +26,8 @@ service_config_file=config.yaml
 
 [Tripleo]
 
-ssh_cmd=ssh -F ssh.config
-director_host=standalone
+ssh_cmd=ssh -F ssh.config <1>
+director_host=standalone <2>
 container_engine=podman
 connection=ssh
 remote_config_path=/tmp/tripleo
@@ -36,38 +39,12 @@ ocp_local_config_path=/tmp/ocp
 connection=local
 ssh_cmd=""
 ----
++
+<1> Instructs os-diff to access your {OpenStackPreviousInstaller} host through SSH. The default value is `ssh -F ssh.config`. However, you can set the value without an ssh.config file, for example, `ssh -i /home/user/.ssh/id_rsa stack@my.undercloud.local`.
+<2> The host to use to access your cloud, and the podman/docker binary is installed and allowed to interact with the running containers. You can leave this key blank.
 
-Os-diff uses `ssh_cmd` to access your {OpenStackPreviousInstaller} host via SSH,
-or the host where your cloud is accessible and the podman/docker binary is installed
-and allowed to interact with the running containers. This option could have a different form:
-
-----
-ssh_cmd=ssh -F ssh.config standalone
-director_host=
-----
-
-----
-ssh_cmd=ssh -F ssh.config
-director_host=standalone
-----
-
-or without an SSH config file:
-
-----
-ssh_cmd=ssh -i /home/user/.ssh/id_rsa stack@my.undercloud.local
-director_host=
-----
-
-or
-----
-ssh_cmd=ssh -i /home/user/.ssh/id_rsa stack@
-director_host=my.undercloud.local
-----
-
-Note that the result of using `ssh_cmd` and `director_host` should be a "successful ssh access".
-
-Configure or generate the `ssh.config` file from inventory or hosts file, for example:
-
+. If you use a host file to connect to your cloud, configure the `ssh.config` file to allow os-diff to access your {OpenStackShort} environment, for example:
++
 [source,yaml]
 [subs=+quotes]
 ----
@@ -88,7 +65,7 @@ ifeval::["{build}" != "downstream"]
     IdentityFile ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa
 endif::[]
 ifeval::["{build}" == "downstream"]
-    IdentityFile *<path to SSH key>*
+    IdentityFile <path to SSH key>
 endif::[]
     User root
     StrictHostKeyChecking no
@@ -101,36 +78,19 @@ Host crc
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null
 ----
++
+* Replace `<path to SSH key>` with the path to your SSH key. You must provide a value for `IdentityFile` to get full working access to your {OpenStackShort} environment.
 
-Os-diff can use an `ssh.config` file for getting access to your {rhos_prev_long} environment.
-The following command can help you generate this SSH config file from your Ansible inventory, for example, `tripleo-ansible-inventory.yaml` file:
-
+. If you use an inventory file to connect to your cloud, generate the `ssh.config` file from your Ansible inventory, for example, `tripleo-ansible-inventory.yaml` file:
++
 ----
-os-diff configure -i tripleo-ansible-inventory.yaml -o ssh.config --yaml
-----
-
-[NOTE]
-You must set the `IdentityFile` key in the file to get full working access:
-
-----
-Host standalone
-  HostName standalone
-  User root
-  IdentityFile ~/.ssh/id_rsa
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
-
-Host undercloud
-  HostName undercloud
-  User root
-  IdentityFile ~/.ssh/id_rsa
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
+$ os-diff configure -i tripleo-ansible-inventory.yaml -o ssh.config --yaml
 ----
 
+.Verification
 
-And test your connection:
-
+* Test your connection:
++
 ----
-ssh -F ssh.config standalone
+$ ssh -F ssh.config standalone
 ----
