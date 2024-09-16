@@ -36,12 +36,6 @@
   retries: 10
   delay: 2
 
-- name: execute alternative tasks when source env is ODPdO
-  ansible.builtin.include_tasks: ospdo_ovn_adoption.yaml
-  when: ospdo_src| bool
-  vars:
-    get_source_ovndb_ip : True
-
 - name: set OVN copy shell vars
   no_log: "{{ use_no_log }}"
   ansible.builtin.set_fact:
@@ -56,7 +50,6 @@
       CONTROLLER1_SSH="{{ controller1_ssh }}"
       CONTROLLER2_SSH="{{ controller2_ssh }}"
       CONTROLLER3_SSH="{{ controller3_ssh }}"
-  when: not ospdo_src| bool
 
 - name: start an adoption helper pod
   ansible.builtin.shell: |-
@@ -97,7 +90,7 @@
       name: ovn-copy-data
       annotations:
         openshift.io/scc: anyuid
-        k8s.v1.cni.cncf.io/networks: internalapi
+        k8s.v1.cni.cncf.io/networks: internalapi{{ osp18_ns_suffix|default('') }}
       labels:
         app: adoption
     spec:

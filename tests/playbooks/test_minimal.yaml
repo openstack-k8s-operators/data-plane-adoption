@@ -25,12 +25,12 @@
     # - role: stop_openstack_services
     #   tags:
     #     - stop_openstack_services
-    - role: mariadb_copy
-      tags:
-        - mariadb_copy
-    # - role: ovn_adoption
+    # - role: mariadb_copy
     #   tags:
-    #     - ovn_adoption
+    #     - mariadb_copy
+    - role: ovn_adoption
+      tags:
+        - ovn_adoption
     # - role: keystone_adoption
     #   tags:
     #     - keystone_adoption
