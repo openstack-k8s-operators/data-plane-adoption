@@ -79,7 +79,7 @@ Host crc
     UserKnownHostsFile=/dev/null
 ----
 +
-* Replace `<path to SSH key>` with the path to your SSH key. You must set the `IdentityFile` key in the file to get full working access to your {OpenStackShort} environment.
+* Replace `<path to SSH key>` with the path to your SSH key. You must provide a value for `IdentityFile` to get full working access to your {OpenStackShort} environment.
 
 . If you used an inventory file to connect to your cloud, generate the `ssh.config` file from your Ansible inventory, for example, `tripleo-ansible-inventory.yaml` file:
 +
