@@ -81,7 +81,7 @@ services:
     path:
       - ovs_external_ids.json
     config_mapping: <4>
-      ovn-bridge-mappings: edpm_ovn_bridge_mappings: ["datacentre:br-ex"]
+      ovn-bridge-mappings: edpm_ovn_bridge_mappings <5>
       ovn-bridge: edpm_ovn_bridge
       ovn-encap-type: edpm_ovn_encap_type
       ovn-monitor-all: ovn_monitor_all
@@ -92,10 +92,11 @@ services:
 [NOTE]
 You must correctly configure an SSH config file or equivalent for non-standard services, such as OVS. The `ovs_external_ids` service does not run in a container, and the OVS data is stored on each host of your cloud, for example, `controller_1/controller_2/`, and so on.
 +
-<1> Os-diff loops on each host and runs the command in the `service_command` key.
-<2> The `service_command` key provides the required information.
+<1> The list of hosts, for example, `compute-1`, `compute-2`.
+<2> The command that runs against the hosts.
 <3> Os-diff gets the output of the command and stores the output in a file that is specified by the key path.
-<4> Provide a mapping between, in this example, the data plane custom resource definition and the `ovs-vsctl` output.
+<4> Provides a mapping between, in this example, the data plane custom resource definition and the `ovs-vsctl` output.
+<5> The `edpm_ovn_bridge_mappings` variable must be a list of strings, for example, `["datacentre:br-ex"]`.
 
 .. Compare the values:
 +

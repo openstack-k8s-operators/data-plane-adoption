@@ -79,7 +79,7 @@ spec:
 EOF
 ----
 +
-* When `neutron-sriov-nic-agent` is running on the existing {compute_service} nodes, ensure that the physical device mappings match the values that are defined in the `OpenStackDataPlaneNodeSet` custom resource (CR). For more information, see xref:pulling-configuration-from-tripleo-deployment_adopt-control-plane[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
+* If `neutron-sriov-nic-agent` is running on your {compute_service} nodes, ensure that the physical device mappings match the values that are defined in the `OpenStackDataPlaneNodeSet` custom resource (CR). For more information, see xref:pulling-configuration-from-tripleo-deployment_adopt-control-plane[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
 
 * You have defined the shell variables to run the script that runs the fast-forward upgrade:
 +
