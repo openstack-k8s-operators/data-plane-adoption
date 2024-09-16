@@ -1,3 +1,15 @@
 - name: get service passwords
   ansible.builtin.shell: |
      oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
+  when: get_svc_pass| default(false) | bool
+
+- name: Deploy podified control along side OSPdO
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    mkdir -p tmp
+    oc kustomize base_ospdo > tmp/test_deployment.yaml
+    oc apply -f tmp/test_deployment.yaml
+  args:
+    chdir: "../config"
+  when: deploy_ctlplane_ospdo| default(false) | bool

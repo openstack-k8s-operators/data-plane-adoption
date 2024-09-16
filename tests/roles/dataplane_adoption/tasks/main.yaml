@@ -31,7 +31,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc project openstack
+    oc project {{ osp18_namespace|default('openstack') }}
 
 - name: Include RHEV vars
   ansible.builtin.include_vars:

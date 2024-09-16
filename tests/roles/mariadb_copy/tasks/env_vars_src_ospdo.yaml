@@ -1,6 +1,3 @@
-# This is needed since it creates a mysql-client pod on the source OSPDO env,
-# which has access to the internal-api and can query the OSPDO mariadb,
-# otherwise not accesible.
 - name: set OSPdO env vars
   block:
   - name: register source_mariadb_ip

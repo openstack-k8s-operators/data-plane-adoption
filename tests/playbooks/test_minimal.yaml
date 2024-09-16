@@ -19,15 +19,15 @@
     # - role: backend_services
     #   tags:
     #     - backend_services
-    - role: get_services_configuration
-      tags:
-        - get_services_configuration
+    # - role: get_services_configuration
+    #   tags:
+    #     - get_services_configuration
     # - role: stop_openstack_services
     #   tags:
     #     - stop_openstack_services
-    # - role: mariadb_copy
-    #   tags:
-    #     - mariadb_copy
+    - role: mariadb_copy
+      tags:
+        - mariadb_copy
     # - role: ovn_adoption
     #   tags:
     #     - ovn_adoption
