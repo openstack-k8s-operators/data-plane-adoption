@@ -1,3 +1,5 @@
+ifdef::context[:parent-context: {context}]
+
 [id="adopting-the-shared-file-systems-service_{context}"]
 
 :context: adopting-shared-file-systems
@@ -23,3 +25,6 @@ include::../modules/con_preparing-the-shared-file-systems-service-configuration.
 include::../modules/proc_deploying-file-systems-service-control-plane.adoc[leveloffset=+1]
 
 include::../modules/proc_decommissioning-rhosp-standalone-ceph-NFS-service.adoc[leveloffset=+1]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]
