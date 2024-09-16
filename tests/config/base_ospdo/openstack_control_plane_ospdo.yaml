@@ -1,0 +1,160 @@
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+  namespace: {{ osp18_namespace }}
+spec:
+  nodeSelector:
+    type: openstack
+  storageClass: {{ storage_class }}
+
+  barbican:
+    enabled: false
+    template:
+      barbicanAPI: {}
+      barbicanWorker: {}
+      barbicanKeystoneListener: {}
+
+  cinder:
+    enabled: false
+    template:
+      cinderAPI: {}
+      cinderScheduler: {}
+      cinderBackup: {}
+      cinderVolumes: {}
+
+  dns:
+    template:
+      override:
+        service:
+          metadata:
+            annotations:
+              metallb.universe.tf/address-pool: ctlplane{{ osp18_ns_suffix }}
+              metallb.universe.tf/allow-shared-ip: ctlplane{{ osp18_ns_suffix }}
+              metallb.universe.tf/loadBalancerIPs: 172.22.0.80
+          spec:
+            type: LoadBalancer
+      options:
+        - key: server
+          values:
+            - 172.22.0.1
+      replicas: 1
+
+  glance:
+    enabled: false
+    template:
+      glanceAPIs: {}
+
+  horizon:
+    enabled: false
+    template: {}
+
+  ironic:
+    enabled: false
+    template:
+      ironicConductors: []
+
+  keystone:
+    enabled: false
+    template: {}
+
+  manila:
+    enabled: false
+    template:
+      manilaAPI: {}
+      manilaScheduler: {}
+      manilaShares: {}
+
+  mariadb:
+    enabled: false
+    templates: {}
+
+  galera:
+    enabled: true
+    templates:
+      openstack:
+          adoptionRedirect: {}
+          replicas: 1
+          secret: osp-secret
+          storageClass: {{ storage_class }}
+          storageRequest: 500M
+          tls: {}
+      openstack-cell1:
+          adoptionRedirect: {}
+          replicas: 1
+          secret: osp-secret
+          storageClass: {{ storage_class }}
+          storageRequest: 500M
+          tls: {}
+
+  memcached:
+    enabled: true
+    templates:
+      memcached:
+        replicas: 1
+
+  neutron:
+    enabled: false
+    template: {}
+
+  nova:
+    enabled: false
+    template: {}
+
+  ovn:
+    enabled: false
+    template:
+      ovnDBCluster:
+        ovndbcluster-nb:
+          dbType: NB
+          storageClass: {{ storage_class }}
+          storageRequest: 10G
+          networkAttachment: internalapi{{ osp18_ns_suffix }}
+        ovndbcluster-sb:
+          storageClass: {{ storage_class }}
+          dbType: SB
+          storageRequest: 10G
+          networkAttachment: internalapi{{ osp18_ns_suffix }}
+      ovnNorthd:
+        replicas: 0
+      ovnController:
+        networkAttachment: tenant{{ osp18_ns_suffix }}
+        nodeSelector:
+          node: non-existing-node-name
+
+  placement:
+    enabled: false
+    template: {}
+
+  rabbitmq:
+    templates:
+      rabbitmq:
+        replicas: 1
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi{{ osp18_ns_suffix }}
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.85
+            spec:
+              type: LoadBalancer
+      rabbitmq-cell1:
+        persistence:
+          storageClassName: {{ storage_class }}
+        replicas: 1
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi{{ osp18_ns_suffix }}
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.86
+            spec:
+              type: LoadBalancer
+
+  ceilometer:
+    enabled: false
+    template: {}
+
+  autoscaling:
+    enabled: false
+    template: {}

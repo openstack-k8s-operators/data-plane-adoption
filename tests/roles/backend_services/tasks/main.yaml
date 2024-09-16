@@ -2,7 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc project openstack
+    oc project {{ osp18_namespace|default('openstack') }}
 
 - name: create osp-secret
   ansible.builtin.shell: |
@@ -14,6 +14,8 @@
 - name: execute alternative tasks when source env is ODPdO
   ansible.builtin.include_tasks: ospdo_backend_services.yaml
   when: ospdo_src| bool
+  vars:
+    get_svc_pass: true
 
 - name: set service passwords
   no_log: "{{ use_no_log }}"
@@ -95,13 +97,22 @@
       args:
         chdir: "../config"
 
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.include_tasks: ospdo_backend_services.yaml
+  when: ospdo_src| bool
+  vars:
+    deploy_ctlplane_ospdo: true
+
 - name: Deploy the podified control plane
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc apply -f ../config/tmp/test_deployment.yaml
-  # args:
-  #   chdir: "../config"
+    mkdir -p tmp
+    oc kustomize base > tmp/test_deployment.yaml
+    oc apply -f tmp/test_deployment.yaml
+  args:
+    chdir: "../config"
+  when: not ospdo_src| bool
 
 - name: wait for services to start up
   ansible.builtin.shell: |

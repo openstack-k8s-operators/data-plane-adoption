@@ -1,3 +1,9 @@
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.include_role:
+    name: mariadb_copy
+    tasks_from: env_vars_src_ospdo.yaml
+  when: ospdo_src| bool
+
 - name: get the source database service environment variables
   ansible.builtin.include_tasks:
     file: env_vars_src.yaml
