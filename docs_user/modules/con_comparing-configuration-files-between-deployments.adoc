@@ -43,7 +43,7 @@ ssh_cmd=""
 <1> Instructs os-diff to access your {OpenStackPreviousInstaller} host through SSH. The default value is `ssh -F ssh.config`. However, you can set the value without an ssh.config file, for example, `ssh -i /home/user/.ssh/id_rsa stack@my.undercloud.local`.
 <2> The host to use to access your cloud, and the podman/docker binary is installed and allowed to interact with the running containers. You can leave this key blank.
 
-. If you used a host file to connect to your cloud, configure the `ssh.config` file to allow os-diff to access your {OpenStackShort} environment, for example:
+. If you use a host file to connect to your cloud, configure the `ssh.config` file to allow os-diff to access your {OpenStackShort} environment, for example:
 +
 [source,yaml]
 [subs=+quotes]
