@@ -7,7 +7,7 @@ Before you start the data plane adoption workflow, back up the configuration fro
 .Prerequisites
 
 * The os-diff tool is installed and configured. For more information, see
-xref:comparing-configuration-files-between-deployments_configuring-network[Comparing configuration files between deployments]. 
+xref:comparing-configuration-files-between-deployments_configuring-network[Comparing configuration files between deployments].
 
 ifeval::["{build}" != "downstream"]
 All the services are describes in a yaml file:
