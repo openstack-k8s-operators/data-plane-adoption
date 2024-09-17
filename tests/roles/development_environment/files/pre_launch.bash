@@ -89,3 +89,14 @@ fi
 if ${BASH_ALIASES[openstack]} volume show disk -f json | jq -r '.status' | grep -q available ; then
     ${BASH_ALIASES[openstack]} server add volume test disk
 fi
+
+# create another bootable volume
+if ! ${BASH_ALIASES[openstack]} volume show boot-volume ; then
+    ${BASH_ALIASES[openstack]} volume create --image cirros --size 1 boot-volume
+    wait_for_status "volume show boot-volume" "test volume 'boot-volume' creation"
+fi
+
+# Launch an instance from boot-volume (BFV)
+if ${BASH_ALIASES[openstack]} volume show boot-volume -f json | jq -r '.status' | grep -q available ; then
+    ${BASH_ALIASES[openstack]} server create --flavor m1.small --volume boot-volume --nic net-id=private bfv-server --wait
+fi
