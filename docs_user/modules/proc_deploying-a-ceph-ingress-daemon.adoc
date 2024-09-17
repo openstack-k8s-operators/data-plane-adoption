@@ -2,7 +2,7 @@
 
 = Deploying a {Ceph} ingress daemon
 
-To match the cardinality diagram, you use cephadm labels to refer to a group of nodes where a given daemon type should be deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_{context}[{Ceph} daemon cardinality].
+To match the cardinality diagram, you use cephadm labels to refer to a group of nodes where a given daemon type should be deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_migrating-ceph[{Ceph} daemon cardinality].
 `HAProxy` is managed by {OpenStackPreviousInstaller} through `Pacemaker`: the three running instances at this point will point to the old RGW backends, resulting in a broken configuration.
 ifeval::["{build}" != "upstream"]
 Since you are going to deploy the Ceph ingress daemon, the first thing to do is remove the existing `ceph_rgw` config, clean up the config created by {OpenStackPreviousInstaller} and restart the service to make sure other services are not affected by this change.

@@ -2,7 +2,7 @@
 
 = Migrating the {Ceph} RGW backends
 
-To match the cardinality diagram, you use cephadm labels to refer to a group of nodes where a given daemon type should be deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_{context}[{Ceph} daemon cardinality].
+To match the cardinality diagram, you use cephadm labels to refer to a group of nodes where a given daemon type should be deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_migrating-ceph[{Ceph} daemon cardinality].
 
 .Procedure
 
