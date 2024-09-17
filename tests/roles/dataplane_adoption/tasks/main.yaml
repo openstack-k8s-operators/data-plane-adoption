@@ -6,6 +6,14 @@
     ceph_backend_configuration_fsid_shell_vars: |
       CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //')
 
+- name: Restart neutron pods after control plane adoption
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ oc_login_command }}
+    oc delete pod -n openstack -l service=neutron
+
 - name: Patch openstackversion to use image built from source or latest if none is defined
   when: not skip_patching_ansibleee_csv | bool
   no_log: "{{ use_no_log }}"
