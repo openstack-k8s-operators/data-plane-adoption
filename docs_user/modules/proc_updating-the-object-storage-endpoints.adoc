@@ -1,8 +1,9 @@
 [id="updating-the-object-storage-endpoints_{context}"]
 
-= Updating the object-store endpoints
+= Updating the object storage endpoints
 
-The object-storage endpoints still point to the original virtual IP address (VIP) that is owned by pacemaker. You must update the object-store endpoints because other services stll use the original VIP, and you reserved a new VIP on the same network.
+The object-storage endpoints still point to the original virtual IP address (VIP) that is owned by Pacemaker. 
+You must update the object-storage endpoints to point to the new VIP because other services stll use the original VIP, and you reserved a new virtual IP address (VIP) that you reserved on the same network.
 
 .Procedure
 
@@ -54,7 +55,7 @@ DEBUG:swiftclient:RESP BODY: b'[]'
 . Run tempest tests against object-storage:
 +
 ----
-(overcloud) [stack@undercloud-0 tempest-dir]$  tempest run --regex tempest.api.object_storage
+(overcloud) [stack@undercloud-0 tempest-dir]$ tempest run --regex tempest.api.object_storage
 ...
 ...
 ...
