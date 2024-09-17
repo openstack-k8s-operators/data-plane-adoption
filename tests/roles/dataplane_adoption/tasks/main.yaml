@@ -185,6 +185,7 @@
             os_net_config_dns: {{ dataplane_os_net_config_dns | default("") }}
             edpm_bootstrap_command: |
               {{ edpm_bootstrap_command| indent(10) }}
+            edpm_default_mounts: []
 
             # edpm_network_config
             # nic config template for a EDPM compute node
