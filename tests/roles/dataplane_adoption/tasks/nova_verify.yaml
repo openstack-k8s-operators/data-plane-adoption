@@ -5,7 +5,16 @@
       alias openstack="oc exec -t openstackclient -- openstack"
 
 # NOTE(bogdando): do not use 'set -o pipefail' for these verifications
-- name: verify if Nova services can stop the existing test VM instance
+- name: verify if the existing test VM instance is running
+  when: prelaunch_test_instance|bool
+  ansible.builtin.shell: |
+    {{ nova_header }}
+    ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test 2>&1 || echo FAIL
+  register: nova_verify_running_result
+  failed_when:
+    - ("FAIL" in nova_verify_running_result.stdout_lines)
+
+- name: verify if the Compute services can stop the existing test VM instance
   when: prelaunch_test_instance|bool
   ansible.builtin.shell: |
     {{ nova_header }}
@@ -19,7 +28,7 @@
   retries: 10
   delay: 6
 
-- name: verify if Nova services can start the existing test VM instance
+- name: verify if the Compute services can start the existing test VM instance
   when: prelaunch_test_instance|bool
   ansible.builtin.shell: |
     {{ nova_header }}

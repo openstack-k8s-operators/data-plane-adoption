@@ -120,6 +120,12 @@ $ oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
 $ oc rsh nova-cell0-conductor-0 nova-manage cell_v2 discover_hosts --verbose
 ----
 
+. Verify if the existing test VM instance is running:
++
+---
+${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test 2>&1 || echo FAIL
+---
+
 . Verify if the Compute services can stop the existing test VM instance:
 +
 ----
