@@ -28,9 +28,9 @@
     # - role: mariadb_copy
     #   tags:
     #     - mariadb_copy
-    - role: ovn_adoption
-      tags:
-        - ovn_adoption
+    # - role: ovn_adoption
+    #   tags:
+    #     - ovn_adoption
     # - role: keystone_adoption
     #   tags:
     #     - keystone_adoption
@@ -75,6 +75,6 @@
     # - role: pull_openstack_configuration
     #   tags:
     #     - pull_openstack_configuration
-    # - role: dataplane_adoption
-    #   tags:
-    #     - dataplane_adoption
+    - role: dataplane_adoption
+      tags:
+        - dataplane_adoption
