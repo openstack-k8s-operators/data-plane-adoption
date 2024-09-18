@@ -8,7 +8,7 @@
   - name: register source_db_root_pass
     no_log: "{{ use_no_log }}"
     ansible.builtin.shell: |
-      oc get secret -n openstack tripleo-passwords -o jsonpath='{.data.*}'| base64 -d |grep MysqlRootPassword|sed 's/.*: //g'
+      oc get secret -n {{ ospdo_namespace }} tripleo-passwords -o jsonpath='{.data.*}'| base64 -d |grep MysqlRootPassword|sed 's/.*: //g'
     register: source_db_root_pass
 
   - name: set src MariaDB copy shell vars
