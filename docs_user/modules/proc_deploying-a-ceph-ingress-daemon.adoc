@@ -2,21 +2,24 @@
 
 = Deploying a {Ceph} ingress daemon
 
-To ensure that you distribute the correct number of services to your available {Ceph} nodes, you use `cephadm` labels to refer to a group of nodes where a given daemon type is deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_migrating-ceph[{Ceph} daemon cardinality].
-
-`HAProxy` is managed by {OpenStackPreviousInstaller} through Pacemaker. The three running instances are pointing to the old RGW back ends, resulting in a broken configuration.
-
-ifeval::["{build}" != "upstream"]
 To deploy the Ceph ingress daemon, you perform the following actions:
 
 . Remove the existing `ceph_rgw` configuration.
 . Clean up the configuration created by {OpenStackPreviousInstaller}.
-. Restart the service to ensure that other services are not affected by this change.
-endif::[]
-ifeval::["{build}" != "downstream"]
-Since you are going to deploy the https://github.com/openstack-archive/tripleo-ansible/blob/stable/wallaby/tripleo_ansible/ansible_plugins/modules/ceph_mkspec.py[Ceph ingress daemon], the first thing to do is remove the existing `ceph_rgw` config, clean up the config created by {OpenStackPreviousInstaller} and restart the service to make sure other services are not affected by this change.
-endif::[]
+. Restart the service to ensure that other services that consume the {object_storage_first_ref} are not affected by this change.
+
+When you deploy the ingress daemon, two new containers are created:
+
+* HAProxy, which you use to reach the back ends.
+* Keepalived, which you use to own the virtual IP address.
+
+To ensure that you distribute the correct number of services to your available {Ceph} nodes, you use `cephadm` labels to refer to a group of nodes where a given daemon type is deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_migrating-ceph[{Ceph} daemon cardinality].
+
 After you complete this procedure, you can reach the RGW back end from the ingress daemon and use RGW through the {object_storage} CLI.
+
+//ifeval::["{build}" != "downstream"]
+//Since you are going to deploy the https://github.com/openstack-archive/tripleo-ansible/blob/stable/wallaby/tripleo_ansible/ansible_plugins/modules/ceph_mkspec.py[Ceph ingress daemon], the first thing to do is remove the existing `ceph_rgw` config, clean up the config created by {OpenStackPreviousInstaller} and restart the service to make sure other services are not affected by this change.
+//endif::[]
 
 .Procedure
 
@@ -60,7 +63,7 @@ haproxy-bundle successfully restarted
 [root@controller-0 ~]#
 ----
 +
-The {object_storage_first_ref} CLI fails at this point:
+The {object_storage_first_ref} CLI fails to establish the connection. This is expected:
 +
 ----
 (overcloud) [root@cephstorage-0 ~]# swift list

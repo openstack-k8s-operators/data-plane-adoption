@@ -47,9 +47,7 @@ approach, and change the rgw backend port to 8090 to avoid conflicts
 with the https://github.com/openstack/tripleo-ansible/blob/master/tripleo_ansible/roles/tripleo_cephadm/tasks/rgw.yaml#L26-L30[Ceph Ingress Daemon] (*)
 endif::[]
 ifeval::["{build}" != "upstream"]
-. During the overcloud deployment, RGW is applied at step 2
-(external_deployment_steps), and a `cephadm` compatible spec is generated in
-`/home/ceph-admin/specs/rgw` from {OpenStackPreviousInstaller}. Locate the RGW spec:
+. Locate the RGW spec:
 endif::[]
 +
 ----
@@ -162,7 +160,7 @@ Query 172.17.3.81
 ---
 ----
 
-. If RGW back ends are migrated to the {Ceph} nodes, there is no "`internalAPI`" network. You must reconfigure the RGW keystone endpoint to point to the external network that you propagated: 
+. If RGW back ends are migrated to the {Ceph} nodes, there is no "`internalAPI`" network. You must reconfigure the RGW keystone endpoint to point to the external network that you propagated:
 +
 ----
 [ceph: root@controller-0 /]# ceph config dump | grep keystone

@@ -172,7 +172,7 @@ network_config:
   - network: external
 ----
 
-.. Run the `overcloud node provision` command passing the `--network-config` option:
+.. Configure the new network on the bare metal nodes:
 +
 ----
 (undercloud) [stack@undercloud-0]$

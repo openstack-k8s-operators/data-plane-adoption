@@ -9,7 +9,7 @@ For more information, see link:https://access.redhat.com/articles/1548993[Red Ha
 endif::[]
 The resulting topology depends on the available hardware, as well as the number
 of {Ceph} services in the Controller nodes that are going to be retired.
-The number of services that you can migrate depends on the number of available nodes in the cluster. The following diagrams show the distribution of {Ceph} daemons on {Ceph} nodes where at least 3 nodes are required. 
+The number of services that you can migrate depends on the number of available nodes in the cluster. The following diagrams show the distribution of {Ceph} daemons on {Ceph} nodes where at least 3 nodes are required.
 
 * The following scenario includes only RGW and RBD, without the {Ceph} dashboard:
 +
@@ -21,7 +21,7 @@ The number of services that you can migrate depends on the number of available n
 | osd | mon/mgr/crash      | rgw/ingress |
 ----
 
-* With the {dashboard_service}, but without {rhos_component_storage_file_first_ref}, at least 4 nodes are required. The {Ceph} dashboard has no failover:
+* With the {Ceph} dashboard, but without {rhos_component_storage_file_first_ref}, at least 4 nodes are required. The {Ceph} dashboard has no failover:
 +
 ----
 |     |                     |             |
