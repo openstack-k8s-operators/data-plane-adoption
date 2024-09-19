@@ -1,0 +1,11 @@
+[id="adoption-guidelines_{context}"]
+
+= Adoption guidelines
+
+* Review your custom configuration every major release.
+* Prepare a Method of Procedure (MOP) that is specific to your environment. All commands in the adoption documentation are examples and should not be copied and pasted verbatim.
+* Use representative hardware in a staging environment. 
+** You can use the representative staging environment to prepare a MOP and validate any changes in content.
+** Ensure that the RHEL upgrade is validated in the representative staging environment.
+* Use Satellite for localized and version-pinned rpm content where your Compute nodes are located. In the production environment, use the content that was tested in the staging environment.
+
