@@ -10,7 +10,7 @@ The following prerequisites require you to perform tasks within the adoption gui
 
 * You have reviewed the xref:adoption-limitations_{context}[Adoption limitations].
 * You have reviewed the {rhocp_long} requirements, data plane node requirements, Compute node requirements, and so on. For more information, see link:{planning}/index[{planning-t}].
-* You have reviewed the adoption-specific networking requirements. For more information, see xref:configuring-network-for-RHOSO-deployment_{context}[Configuring the network for the RHOSO deployment].
+* You have reviewed the adoption-specific networking requirements. For more information, see xref:configuring-network-for-RHOSO-deployment_configuring-network[Configuring the network for the RHOSO deployment].
 * You have reviewed the adoption-specific storage requirements. For more information, see xref:storage-requirements_planning[Storage requirements].
 * You have reviewed how to customize your deployed control plane with the services that are required for your environment. For more information, see link:{customizing-rhoso}/index[{customizing-rhoso-t}].
 * You have familiarized yourself with the following {OpenShiftShort} concepts that are used during adoption:
