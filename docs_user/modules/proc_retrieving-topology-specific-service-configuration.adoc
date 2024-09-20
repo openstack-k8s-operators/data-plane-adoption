@@ -22,7 +22,13 @@ CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
 MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
 endif::[]
 SOURCE_MARIADB_IP=172.17.0.2
+ifeval::["{build}" != "downstream"]
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
+endif::[]
+ifeval::["{build}" == "downstream"]
+SOURCE_DB_ROOT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
+)
+endif::[]
 MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
 ----
 +
