@@ -15,3 +15,5 @@ placement_password: ''
 heat_password: ''
 heat_auth_encryption_key: ''
 swift_password: ''
+dns_lb_ip: 192.168.122.80
+dns_server_ip: 192.168.122.1

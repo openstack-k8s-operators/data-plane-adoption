@@ -2,7 +2,7 @@
   import_playbook: _before_adoption.yaml
 
 - name: Adoption
-  hosts: local
+  hosts: localhost
   gather_facts: false
   force_handlers: true
   module_defaults:

@@ -1,6 +1,6 @@
 set -e
 
-alias openstack="ssh -q -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@${OS_CLOUD_IP} OS_CLOUD=${OS_CLOUD_NAME} openstack"
+alias openstack="$OPENSTACK_COMMAND"
 
 function wait_for_status() {
     local time=0

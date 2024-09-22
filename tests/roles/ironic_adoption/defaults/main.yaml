@@ -1,6 +1,6 @@
 ---
 storage_class_name: crc-csi-hostpath-provisioner
-
+dns_server_provisioning_ip: 192.168.122.80
 ironic_patch: |
   spec:
     ironic:

@@ -58,10 +58,14 @@
         oc set data secret/osp-secret "SwiftPassword={{ swift_password }}"
     {% endif %}
 
-- name: template out the tls override for deployment
+- name: create tmp directory
+  ansible.builtin.command:
+    cmd: mkdir -p ../config/tmp
+
+- name: template out the controlplane deployment
   ansible.builtin.template:
-    src: tls_overrides.j2
-    dest: "../config/base/tls_overrides.yaml"
+    src: openstack_control_plane.j2
+    dest: "../config/tmp/test_deployment.yaml"
     mode: '644'
     force: true
 
@@ -91,11 +95,9 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    mkdir -p tmp
-    oc kustomize base > tmp/test_deployment.yaml
-    oc apply -f tmp/test_deployment.yaml
-  args:
-    chdir: "../config"
+    oc apply -f ../config/tmp/test_deployment.yaml
+  # args:
+  #   chdir: "../config"
 
 - name: wait for services to start up
   ansible.builtin.shell: |
