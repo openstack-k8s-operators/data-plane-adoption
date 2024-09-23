@@ -37,7 +37,7 @@ listen ceph_rgw
   server controller-2.storage.redhat.local 172.17.3.156:8080 check fall 5 inter 2000 rise 2
 ----
 
-. Restart `haproxy-bundle` and verify that it is started:
+. Restart `haproxy-bundle` and confirm that it is started:
 +
 ----
 [root@controller-0 ~]# sudo pcs resource restart haproxy-bundle
@@ -52,14 +52,14 @@ haproxy-bundle successfully restarted
     * haproxy-bundle-podman-2   (ocf:heartbeat:podman):  Started controller-2
 ----
 
-. Confirm that no process is connected to the 8080 port:
+. Confirm that no process is connected to port 8080:
 +
 ----
 [root@controller-0 ~]# ss -antop | grep 8080
 [root@controller-0 ~]#
 ----
 +
-The {object_storage_first_ref} CLI fails to establish the connection. This is expected:
+You can expect the {object_storage_first_ref} CLI to fail to establish the connection:
 +
 ----
 (overcloud) [root@cephstorage-0 ~]# swift list

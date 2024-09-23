@@ -2,7 +2,7 @@
 
 = Completing prerequisites for {Ceph} RGW migration
 
-You must complete the following prerequisites before you begin the Ceph Object Gateway (RGW) migration.
+Complete the following prerequisites before you begin the Ceph Object Gateway (RGW) migration.
 
 .Procedure
 
@@ -26,8 +26,7 @@ You must complete the following prerequisites before you begin the Ceph Object G
     +------------------------+    +----------------+
 ----
 
-. Log in to `controller-0` and check the Pacemaker status to help you
-identify the information that you need before you start the RGW migration.
+. Log in to `controller-0` and check the Pacemaker status to identify important information for the RGW migration:
 +
 ----
 Full List of Resources:
@@ -44,7 +43,7 @@ Full List of Resources:
     * haproxy-bundle-podman-2   (ocf:heartbeat:podman):  Started controller-1
 ----
 
-. Identify the ranges of the storage networks:
+. Identify the ranges of the storage networks. The following is an example and the values might differ in your environment:
 +
 ----
 [heat-admin@controller-0 ~]$ ip -o -4 a
@@ -66,7 +65,7 @@ Full List of Resources:
 environment, HAProxy has the front-end Virtual IP (VIP) assigned.
 <2> `vlan30` represents the Storage Network, where the new RGW instances should be started on the {CephCluster} nodes.
 
-. Identify the network that you previously had in HAProxy and propagate it through {OpenStackPreviousInstaller} to the {CephCluster} nodes. This network is used to reserve a new VIP that is owned by {Ceph} and used as the entry point for the RGW service.
+. Identify the network that you previously had in HAProxy and propagate it through {OpenStackPreviousInstaller} to the {CephCluster} nodes. Use this network to reserve a new VIP that is owned by {Ceph} as the entry point for the RGW service.
 
 .. Log in to `controller-0` and find the `ceph_rgw` section in the current HAProxy configuration:
 +
@@ -91,7 +90,7 @@ listen ceph_rgw
   server controller-2.storage.redhat.local 172.17.3.156:8080 check fall 5 inter 2000 rise 2
 ----
 
-.. Confirm that the network is used as an HAProxy front end. The following example shows that `controller-0` exposes the services by using the external network, which is not present in the {Ceph} nodes. You must propagate the external network through {OpenStackPreviousInstaller}:
+.. Confirm that the network is used as an HAProxy front end. The following example shows that `controller-0` exposes the services by using the external network, which is absent from the {Ceph} nodes. You must propagate the external network through {OpenStackPreviousInstaller}:
 +
 ----
 [controller-0]$ ip -o -4 a
@@ -103,7 +102,7 @@ listen ceph_rgw
 
 . Propagate the HAProxy front-end network to {CephCluster} nodes.
 
-.. Change the NIC template that is used to define the `ceph-storage` network interfaces and add the new config section:
+.. Change the NIC template that you use to define the `ceph-storage` network interfaces and add the new config section:
 +
 [source,yaml]
 ----
@@ -146,7 +145,7 @@ network_config:
     primary: true
 ----
 
-.. Add the External Network to the `baremetal.yaml` file that is used by metalsmith:
+.. Add the External Network to the `baremetal.yaml` file that is used by `metalsmith`:
 +
 [source,yaml]
 ----

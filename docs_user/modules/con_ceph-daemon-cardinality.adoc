@@ -5,11 +5,10 @@
 {Ceph} 6 and later applies strict constraints in the way daemons can be
 colocated within the same node.
 ifeval::["{build}" != "upstream"]
-For more information, see link:https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations].
+For more information, see the Red Hat Knowledgebase article link:https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations].
 endif::[]
-The resulting topology depends on the available hardware, as well as the number
-of {Ceph} services in the Controller nodes that are going to be retired.
-The number of services that you can migrate depends on the number of available nodes in the cluster. The following diagrams show the distribution of {Ceph} daemons on {Ceph} nodes where at least 3 nodes are required.
+Your topology depends on the available hardware and the amount of {Ceph} services in the Controller nodes that you retire.
+The amount of services that you can migrate depends on the amount of available nodes in the cluster. The following diagrams show the distribution of {Ceph} daemons on {Ceph} nodes where at least 3 nodes are required.
 
 * The following scenario includes only RGW and RBD, without the {Ceph} dashboard:
 +
