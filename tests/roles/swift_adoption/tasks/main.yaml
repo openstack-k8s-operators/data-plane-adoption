@@ -42,6 +42,7 @@
     {{ shell_header }}
     {{ oc_header }}
     oc get pod -l component=swift-proxy -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc get pod -l component=swift-storage -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
   register: swift_running_result
   until: swift_running_result is success
   retries: 60
