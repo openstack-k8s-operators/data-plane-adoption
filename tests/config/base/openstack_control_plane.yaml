@@ -102,6 +102,8 @@ spec:
     template:
       ovnController:
         networkAttachment: tenant
+        nicMappings:
+          datacentre: ospbr
         nodeSelector:
           node: non-existing-node-name
       ovnNorthd:

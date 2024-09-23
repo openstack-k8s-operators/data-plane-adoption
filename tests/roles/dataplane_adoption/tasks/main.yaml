@@ -24,7 +24,7 @@
     oc patch -n openstack openstackversion openstack \
       --type='json' -p='[{
       "op":"replace", "path":"/spec/customContainerImages/ansibleeeImage",
-      "value": "{{ ansibleee_runner_img | default('quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest')}}"}]'
+      "value": "{{ ansibleee_runner_img | default('quay.rdoproject.org/openstack-k8s-operators/openstack-ansibleee-runner:5d83a73c090bdb8bbbfa9e4bf335cf26a74b23ba')}}"}]'
 
 - name: ensure namespace
   no_log: "{{ use_no_log }}"
@@ -157,8 +157,6 @@
       services:
         - bootstrap
         - download-cache
-        - configure-network
-        - validate-network
         - install-os
         - configure-os
         - ssh-known-hosts
@@ -167,6 +165,8 @@
         - install-certs
         - ovn
         - neutron-metadata
+        - configure-network
+        - validate-network
         {%+ if compute_adoption|bool +%}
         - libvirt
         - nova
@@ -258,9 +258,6 @@
             ovn_monitor_all: true
             edpm_ovn_remote_probe_interval: 60000
             edpm_ovn_ofctrl_wait_before_clear: 8000
-
-            # serve as a OVN gateway
-            edpm_enable_chassis_gw: true
     EOF
 
 - name: Create OpenStackDataPlaneNodeSet_networker
@@ -281,8 +278,6 @@
       services:
         - bootstrap
         - download-cache
-        - configure-network
-        - validate-network
         - install-os
         - configure-os
         - ssh-known-hosts
@@ -291,6 +286,8 @@
         - install-certs
         - ovn
         - neutron-metadata
+        - configure-network
+        - validate-network
       env:
         - name: ANSIBLE_CALLBACKS_ENABLED
           value: "profile_tasks"
