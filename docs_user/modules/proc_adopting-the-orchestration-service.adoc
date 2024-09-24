@@ -2,35 +2,24 @@
 
 = Adopting the {orchestration}
 
-Adopting the {orchestration_first_ref} means that an existing `OpenStackControlPlane` custom resource (CR), where {orchestration}
-is supposed to be disabled, should be patched to start the service with the
-configuration parameters provided by the source environment.
+To adopt the {orchestration_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR), where the {orchestration}
+is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
 
-After the adoption process has been completed, a user can expect that they
-will then have CRs for `Heat`, `HeatAPI`, `HeatEngine` and `HeatCFNAPI`.
-Additionally, a user should have endpoints created within {identity_service_first_ref} to facilitate
-the above mentioned servies.
-
-This guide also assumes that:
-
-. A {OpenStackPreviousInstaller} environment (the source Cloud) is running on one side;
-. A {rhocp_long} environment is running on the other side.
+After you complete the adoption process, you have CRs for `Heat`, `HeatAPI`, `HeatEngine`, and `HeatCFNAPI`, and endpoints within the {identity_service_first_ref} to facilitate these services.
 
 .Prerequisites
 
-* Previous Adoption steps completed. Notably, MariaDB and {identity_service}
-should be already adopted.
-* In addition, if your existing {orchestration} stacks contain resources from other services
-such as {networking_first_ref}, {compute_service_first_ref}, {object_storage_first_ref}, etc. Those services should be adopted first before
-trying to adopt {orchestration}.
+* The source {OpenStackPreviousInstaller} environment is running.
+* The target {rhocp_long} environment is running.
+* You adopted MariaDB and the {identity_service}.
+* If your existing {orchestration} stacks contain resources from other services such as {networking_first_ref}, {compute_service_first_ref}, {object_storage_first_ref}, and so on, adopt those sevices before adopting the {orchestration}.
 
 .Procedure
 ifeval::["{build}" != "downstream"]
 As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Heat Adoption follows a similar pattern.
 endif::[]
 
-. Patch the `osp-secret` to update the `HeatAuthEncryptionKey` and `HeatPassword`. This needs to match what you have configured in the existing {OpenStackPreviousInstaller} {orchestration} configuration.
-You can retrieve and verify the existing `auth_encryption_key` and `service` passwords via:
+. Retrieve the existing `auth_encryption_key` and `service` passwords. You use these passwords to patch the `osp-secret`:
 +
 ----
 [stack@rhosp17 ~]$ grep -E 'HeatPassword|HeatAuth' ~/overcloud-deploy/overcloud/overcloud-passwords.yaml
@@ -38,7 +27,7 @@ You can retrieve and verify the existing `auth_encryption_key` and `service` pas
   HeatPassword: dU2N0Vr2bdelYH7eQonAwPfI3
 ----
 
-. And verifying on one of the Controllers that this is indeed the value in use:
+. Log in to a Controller node and verify that the `auth_encryption_key` value is the same as the `HeatAuthEncryptionKey` value:
 +
 ----
 [stack@rhosp17 ~]$ ansible -i overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml overcloud-controller-0 -m shell -a "grep auth_encryption_key /var/lib/config-data/puppet-generated/heat/etc/heat/heat.conf | grep -Ev '^#|^$'" -b
@@ -46,20 +35,24 @@ overcloud-controller-0 | CHANGED | rc=0 >>
 auth_encryption_key=Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2
 ----
 
-. This password needs to be base64 encoded and added to the `osp-secret`
+. Base64 encode the password: 
 +
 ----
-❯ echo Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2 | base64
+$ echo Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2 | base64
 UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzIK
+----
 
-❯ oc patch secret osp-secret --type='json' -p='[{"op" : "replace" ,"path" : "/data/HeatAuthEncryptionKey" ,"value" : "UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzIK"}]'
+. Patch the `osp-secret` to update the `HeatAuthEncryptionKey` and `HeatPassword` parameters. These values must match the values in the {OpenStackPreviousInstaller} {orchestration} configuration:
++
+----
+$ oc patch secret osp-secret --type='json' -p='[{"op" : "replace" ,"path" : "/data/HeatAuthEncryptionKey" ,"value" : "UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzIK"}]'
 secret/osp-secret patched
 ----
 
-. Patch `OpenStackControlPlane` to deploy the {orchestration}:
+. Patch the `OpenStackControlPlane` CR to deploy the {orchestration}:
 +
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   heat:
     enabled: true
@@ -78,10 +71,10 @@ spec:
 
 .Verification
 
-. Ensure all of the CRs reach the "Setup Complete" state:
+. Ensure that the status of all the CRs is `Setup complete`:
 +
 ----
-❯ oc get Heat,HeatAPI,HeatEngine,HeatCFNAPI
+$ oc get Heat,HeatAPI,HeatEngine,HeatCFNAPI
 NAME                           STATUS   MESSAGE
 heat.heat.openstack.org/heat   True     Setup complete
 
@@ -95,10 +88,10 @@ NAME                                        STATUS   MESSAGE
 heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
 ----
 
-. Check that the {orchestration} is registered in {identity_service}:
+. Check that the {orchestration} is registered in the {identity_service}:
 +
 ----
- oc exec -it openstackclient -- openstack service list -c Name -c Type
+$ oc exec -it openstackclient -- openstack service list -c Name -c Type
 +------------+----------------+
 | Name       | Type           |
 +------------+----------------+
@@ -115,7 +108,7 @@ heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
 ----
 +
 ----
-❯ oc exec -it openstackclient -- openstack endpoint list --service=heat -f yaml
+$ oc exec -it openstackclient -- openstack endpoint list --service=heat -f yaml
 - Enabled: true
   ID: 1da7df5b25b94d1cae85e3ad736b25a5
   Interface: public
@@ -132,10 +125,10 @@ heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
   URL: http://heat-api-internal.openstack-operators.svc:8004/v1/%(tenant_id)s
 ----
 
-. Check the {orchestration} engine services are up:
+. Check that the {orchestration} engine services are up:
 +
 ----
- oc exec -it openstackclient -- openstack orchestration service list -f yaml
+$ oc exec -it openstackclient -- openstack orchestration service list -f yaml
 - Binary: heat-engine
   Engine ID: b16ad899-815a-4b0c-9f2e-e6d9c74aa200
   Host: heat-engine-6d47856868-p7pzz
@@ -166,10 +159,10 @@ heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
   Updated At: '2023-10-11T21:48:01.000000'
 ----
 
-. Verify you can now see your the {orchestration} stacks again. Test whether you can create networks, subnets, ports, or routers:
+. Verify that you can see your {orchestration} stacks. Test whether you can create networks, subnets, ports, or routers:
 +
 ----
-❯ openstack stack list -f yaml
+$ openstack stack list -f yaml
 - Creation Time: '2023-10-11T22:03:20Z'
   ID: 20f95925-7443-49cb-9561-a1ab736749ba
   Project: 4eacd0d1cab04427bc315805c28e66c9
