@@ -6,12 +6,11 @@ ifdef::context[:parent-context: {context}]
 
 = {rhos_long_noacro} {rhos_curr_ver} adoption overview
 
-Before you adopt your Red Hat OpenStack Platform (RHOSP) 17.1 overcloud to a Red Hat OpenStack Services on OpenShift (RHOSO) {rhos_curr_ver} data plane, review the prerequisites, adoption process, and post-adoption tasks. Ensure that you understand the entire adoption process and how to sufficiently prepare your RHOSP environment for adoption.
+Adoption is the process of migrating a {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} overcloud to a {rhos_long_noacro} {rhos_curr_ver} data plane. To ensure that you understand the entire adoption process and how to sufficiently prepare your {OpenStackShort} environment, review the prerequisites, adoption process, and post-adoption tasks.
 
 [IMPORTANT]
-This chapter contains considerations for adoption planning, but it is
-important to read the whole adoption guide before you start
-the process. You should form an understanding of the procedure,
+It is important to read the whole adoption guide before you start
+the adoption. You should form an understanding of the procedure,
 prepare the necessary configuration snippets for each service ahead of
 time, and test the procedure in a representative test environment
 before you adopt your main environment.
