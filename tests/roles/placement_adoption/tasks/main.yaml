@@ -8,7 +8,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod --selector=service=placement -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc wait pod --for condition=Ready --selector=service=placement
   register: placement_running_result
   until: placement_running_result is success
   retries: 60
