@@ -20,7 +20,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod -l service=heat -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc wait pod --for condition=Ready -l service=heat
   register: heat_running_result
   until: heat_running_result is success
   retries: 60
