@@ -1,0 +1,23 @@
+[id="adoption-process-overview_{context}"]
+
+= Adoption process overview
+
+Familiarize yourself with the steps of the adoption process and the optional post-adoption tasks.
+
+.Main adoption process
+
+. xref:migrating-tls-everywhere_configuring-network[Migrate TLS everywhere (TLS-e) to the Red Hat OpenStack Services on OpenShift (RHOSO) deployment].
+. xref:migrating-databases-to-the-control-plane_configuring-network[Migrate your existing databases to the new control plane].
+. xref:adopting-openstack-control-plane-services_configuring-network[Adopt your Red Hat OpenStack Platform 17.1 control plane services to the new RHOSO 18.0 deployment].
+. xref:adopting-data-plane_adopt-control-plane[Adopt the RHOSO 18.0 data plane].
+. xref:migrating-the-object-storage-service_adopt-control-plane[Migrate the Object Storage service (swift) to the RHOSO nodes].
+. xref:ceph-migration_adopt-control-plane[Migrate the {Ceph} cluster].
+.. xref:migrating-ceph-monitoring_migrating-ceph[Migrate the monitoring stack component to new nodes within an existing {Ceph} cluster].
+.. xref:migrating-ceph-mds_migrating-ceph-monitoring[Migrate {Ceph} MDS to new nodes within the existing cluster].
+.. xref:migrating-ceph-rgw_migrating-ceph-monitoring[Migrate {Ceph} RGW to external RHEL nodes].
+.. xref:migrating-ceph-rbd_migrating-ceph-monitoring[Migrate {Ceph} RBD to external RHEL nodes].
+
+.Post-adoption tasks
+
+* Optional: Run tempest to verify that the entire adoption process is working properly. For more information, see link:{defaultURL}/validating_and_troubleshooting_the_deployed_cloud/index[Validating and troubleshooting the deployed cloud].
+* Optional: Perform a minor update from RHEL 9.2 to 9.4. You can perform a minor update any time after you complete the adoption procedure. For more information, see link:{defaultURL}/updating_your_environment_to_the_latest_maintenance_release/index[Updating your environment to the latest maintenance release].

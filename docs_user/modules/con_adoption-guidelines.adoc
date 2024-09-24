@@ -1,0 +1,22 @@
+[id="adoption-guidelines_{context}"]
+
+= Guidelines for planning the adoption
+
+When planning to adopt a {rhos_long} {rhos_curr_ver} environment, consider the scope of the change. An adoption is similar in scope to a data center upgrade. Different firmware levels, hardware vendors, hardware profiles, networking interfaces, storage interfaces, and so on affect the adoption process and can cause changes in behavior during the adoption.
+
+Review the following guidelines to adequately plan for the adoption and increase the chance that you complete the adoption successfully:
+
+[IMPORTANT]
+All commands in the adoption documentation are examples. Do not copy and paste the commands verbatim.
+
+* To minimize the risk of an adoption failure, reduce the number of environmental differences between the staging environment and the production sites.
+* If the staging environment is not representative of the production sites, or a staging environment is not available, then you must plan to include contingency time in case the adoption fails.
+* Review your custom {rhos_prev_long} ({OpenStackShort}) service configuration at every major release.
+** Every major {rhos_acro} release upgrades through multiple {OpenStackShort} versions.
+** Each new {OpenStackShort} version might deprecate configuration options or change the format of the configuration.
+* Prepare a Method of Procedure (MOP) that is specific to your environment to reduce the risk of variance or omitted steps when running the adoption process.
+* You can use representative hardware in a staging environment to prepare a MOP and validate any content changes.
+** Include a cross-section of firmware versions, additional interface or device hardware, and any additional software in the representative staging environment to ensure that it is broadly representative of the variety that is present in the production environments.
+** Ensure that you validate any Red Hat Enterprise Linux update or upgrade in the representative staging environment.
+* Use Satellite for localized and version-pinned RPM content where your data plane nodes are located.
+* In the production environment, use the content that you tested in the staging environment.

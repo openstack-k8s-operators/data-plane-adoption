@@ -1,0 +1,42 @@
+[id="adoption-prerequisites_{context}"]
+
+= Adoption prerequisites
+
+Before you begin the adoption procedure, complete the following prerequisites:
+
+Planning information::
+
+* Review the xref:adoption-limitations_{context}[Adoption limitations].
+* Review the {rhocp_long} requirements, data plane node requirements, Compute node requirements, and so on. For more information, see link:{planning}/index[{planning-t}].
+* Review the adoption-specific networking requirements. For more information, see xref:configuring-network-for-RHOSO-deployment_planning[Configuring the network for the RHOSO deployment].
+* Review the adoption-specific storage requirements. For more information, see xref:storage-requirements_configuring-network[Storage requirements].
+* Review how to customize your deployed control plane with the services that are required for your environment. For more information, see link:{customizing-rhoso}/index[{customizing-rhoso-t}].
+* Familiarize yourself with the following {OpenShiftShort} concepts that are used during adoption:
+** link:{defaultOCPURL}/nodes/overview-of-nodes[Overview of nodes]
+** link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors]
+** link:{defaultOCPURL}/machine_configuration/index[Machine configuration overview]
+
+Back-up information::
+
+* Back up your {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} environment by using one of the following options:
+** The Relax-and-Recover tool. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/backing_up_and_restoring_the_undercloud_and_control_plane_nodes/assembly_backing-up-the-undercloud-and-the-control-plane-nodes-using-the-relax-and-recover-tool_br-undercloud-ctlplane[Backing up the undercloud and the control plane nodes by using the Relax-and-Recover tool] in _Backing up and restoring the undercloud and control plane nodes_.
+** The Snapshot and Revert tool. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/backing_up_and_restoring_the_undercloud_and_control_plane_nodes/assembly_snapshot-and-revert-appendix_snapshot-and-revert-appendix[Backing up your Red Hat OpenStack Platform cluster by using the Snapshot and Revert tool] in _Backing up and restoring the undercloud and control plane nodes_.
+** A third-party backup and recovery tool. For more information about certified backup and recovery tools, see the link:https://catalog.redhat.com/[Red Hat Ecosystem Catalog].
+* Back up the configuration files from the {OpenStackShort} services and {OpenStackPreviousInstaller} on your file system. For more information, see xref:pulling-configuration-from-tripleo-deployment_adopt-control-plane[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
+
+Compute::
+
+* Upgrade your Compute nodes to Red Hat Enterprise Linux {rhel_prev_ver}. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/framework_for_upgrades_16.2_to_17.1/index#upgrading-compute-nodes_upgrading-the-compute-node-operating-system[Upgrading all Compute nodes to RHEL 9.2] in _Framework for upgrades (16.2 to 17.1)_.
+
+ML2/OVS::
+
+* If you use the Modular Layer 2 plug-in with Open vSwitch mechanism driver (ML2/OVS), migrate it to the Modular Layer 2 plug-in with Open Virtual Networking (ML2/OVN) mechanism driver. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/migrating_to_the_ovn_mechanism_driver/index[Migrating to the OVN mechanism driver].
+
+Tools::
+
+* Install the `oc` command line tool on your workstation.
+* Install the `podman` command line tool on your workstation.
+
+{OpenStackShort} {rhos_prev_ver} hosts::
+
+* All control plane and data plane hosts of the {OpenStackShort} {rhos_prev_ver} cloud are up and running, and continue to run throughout the adoption procedure.

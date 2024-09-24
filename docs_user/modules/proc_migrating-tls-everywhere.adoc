@@ -1,7 +1,5 @@
 [id="migrating-tls-everywhere_{context}"]
 
-//:context: tls
-
 = Migrating TLS-e to the {rhos_acro} deployment
 
 The {rhos_long} deployment adopts the settings from the
