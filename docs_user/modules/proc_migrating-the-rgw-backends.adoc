@@ -114,7 +114,7 @@ rgw.rgw.cephstorage-1.qynkan  cephstorage-1  172.17.3.26:8090  running (16s)
 rgw.rgw.cephstorage-2.krycit  cephstorage-2  172.17.3.81:8090  running (13s)
 ----
 
-. Ensure that the new RGW back ends are reachable on the new ports. You are eventually going to enable an IngressDaemon on port 8080. Log in to each {CephCluster} node that includes RGW and add the `iptables` rule to allow connections to both 8080 and 8090 ports in the {CephCluster} nodes:
+. Ensure that the new RGW back ends are reachable on the new ports, so you can enable an IngressDaemon on port 8080 later. Log in to each {CephCluster} node that includes RGW and add the `iptables` rule to allow connections to both 8080 and 8090 ports in the {CephCluster} nodes:
 +
 ----
 iptables -I INPUT -p tcp -m tcp --dport 8080 -m conntrack --ctstate NEW -m comment --comment "ceph rgw ingress" -j ACCEPT
