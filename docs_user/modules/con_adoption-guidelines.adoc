@@ -18,5 +18,5 @@ All commands in the adoption documentation are examples. Do not copy and paste t
 * You can use representative hardware in a staging environment to prepare a MOP and validate any content changes.
 ** Include a cross-section of firmware versions, additional interface or device hardware, and any additional software in the representative staging environment to ensure that it is broadly representative of the variety that is present in the production environments.
 ** Ensure that you validate any Red Hat Enterprise Linux update or upgrade in the representative staging environment.
-* Use Satellite for localized and version-pinned RPM content where your data plane nodes are located. 
+* Use Satellite for localized and version-pinned RPM content where your data plane nodes are located.
 * In the production environment, use the content that you tested in the staging environment.
