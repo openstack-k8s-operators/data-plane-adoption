@@ -17,9 +17,9 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod --selector=component=manila-api -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
-    oc get pod --selector=component=manila-scheduler -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
-    oc get pod --selector=component=manila-share -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc wait pod --for condition=Ready --selector=component=manila-api
+    oc wait pod --for condition=Ready --selector=component=manila-scheduler
+    oc wait pod --for condition=Ready --selector=component=manila-share
   register: manila_running_result
   until: manila_running_result is success
   retries: 60
