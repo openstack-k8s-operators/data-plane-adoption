@@ -1,12 +1,12 @@
 [id="migrating-the-rgw-backends_{context}"]
 
-= Migrating the {Ceph} RGW backends
+= Migrating the {Ceph} RGW back ends
 
-To match the cardinality diagram, you use cephadm labels to refer to a group of nodes where a given daemon type should be deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_migrating-ceph[{Ceph} daemon cardinality].
+You must migrate your Ceph Object Gateway (RGW) back ends from your Controller nodes to your {Ceph} nodes. To ensure that you distribute the correct amount of services to your available nodes, you use `cephadm` labels to refer to a group of nodes where a given daemon type is deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_migrating-ceph[{Ceph} daemon cardinality].
 
 .Procedure
 
-. Add the RGW label to the {Ceph} nodes:
+. Add the RGW label to the {Ceph} nodes that you want to migrate your RGW back ends to:
 +
 ----
 for i in 0 1 2; {
@@ -47,9 +47,7 @@ approach, and change the rgw backend port to 8090 to avoid conflicts
 with the https://github.com/openstack/tripleo-ansible/blob/master/tripleo_ansible/roles/tripleo_cephadm/tasks/rgw.yaml#L26-L30[Ceph Ingress Daemon] (*)
 endif::[]
 ifeval::["{build}" != "upstream"]
-. During the overcloud deployment, RGW is applied at step 2
-(external_deployment_steps), and a cephadm compatible spec is generated in
-`/home/ceph-admin/specs/rgw` from {OpenStackPreviousInstaller}. Find the RGW spec:
+. Locate the RGW spec:
 endif::[]
 +
 ----
@@ -71,24 +69,25 @@ spec:
   rgw_zone: default
 ----
 
-. In the `placement` section, replace the following values:
-* Replace the controller nodes with the `label: rgw` label.
-* Change the ` rgw_frontend_port` value to `8090` to avoid conflicts with the Ceph ingress daemon.
+. In the `placement` section, ensure that the `label` and `rgw_frontend_port` values are set:
 +
 ----
 ---
 networks:
 - 172.17.3.0/24
 placement:
-  label: rgw
+  label: rgw <1>
 service_id: rgw
 service_name: rgw.rgw
 service_type: rgw
 spec:
-  rgw_frontend_port: 8090
+  rgw_frontend_port: 8090 <2>
   rgw_realm: default
   rgw_zone: default
 ----
++
+<1> Replace the Controller nodes with the `label: rgw` label.
+<2> Change the `rgw_frontend_port` value to `8090` to avoid conflicts with the Ceph ingress daemon.
 
 . Apply the new RGW spec by using the orchestrator CLI:
 +
@@ -115,11 +114,7 @@ rgw.rgw.cephstorage-1.qynkan  cephstorage-1  172.17.3.26:8090  running (16s)
 rgw.rgw.cephstorage-2.krycit  cephstorage-2  172.17.3.81:8090  running (13s)
 ----
 
-. Ensure that the new RGW backends are reachable on
-the new ports, because you are going to enable an IngressDaemon on port 8080
-later in the process. For this reason, log in to each RGW node (the {CephCluster}
-nodes) and add the iptables rule to allow connections to both 8080 and 8090
-ports in the {CephCluster} nodes.
+. Ensure that the new RGW back ends are reachable on the new ports, so you can enable an IngressDaemon on port 8080 later. Log in to each {CephCluster} node that includes RGW and add the `iptables` rule to allow connections to both 8080 and 8090 ports in the {CephCluster} nodes:
 +
 ----
 iptables -I INPUT -p tcp -m tcp --dport 8080 -m conntrack --ctstate NEW -m comment --comment "ceph rgw ingress" -j ACCEPT
@@ -135,7 +130,7 @@ for port in 8080 8090; {
 }
 ----
 
-. From a Controller node (e.g. controller-0) try to reach (curl) the RGW backends:
+. From a Controller node, such as `controller-0`, try to reach the RGW back ends:
 +
 ----
 for i in 26 23 81; do {
@@ -165,7 +160,7 @@ Query 172.17.3.81
 ---
 ----
 
-. If RGW backends are migrated in the {Ceph} nodes, there is no "`internalAPI`" network(this is not true in the case of HCI). Reconfigure the RGW keystone endpoint, pointing to the external network that has been propagated. For more information about propagating the external network, see xref:completing-prerequisites-for-migrating-ceph-rgw_{context}[Completing prerequisites for migrating {Ceph} RGW].
+. If you migrated RGW back ends to the {Ceph} nodes, there is no `internalAPI` network, except in the case of HCI nodes. You must reconfigure the RGW keystone endpoint to point to the external network that you propagated:
 +
 ----
 [ceph: root@controller-0 /]# ceph config dump | grep keystone
@@ -173,3 +168,5 @@ global   basic rgw_keystone_url  http://172.16.1.111:5000
 
 [ceph: root@controller-0 /]# ceph config set global rgw_keystone_url http://10.0.0.103:5000
 ----
++
+For more information about propagating the external network, see xref:completing-prerequisites-for-migrating-ceph-rgw_{context}[Completing prerequisites for migrating {Ceph} RGW].

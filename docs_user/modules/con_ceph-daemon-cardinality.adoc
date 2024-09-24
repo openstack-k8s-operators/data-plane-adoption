@@ -5,17 +5,13 @@
 {Ceph} 6 and later applies strict constraints in the way daemons can be
 colocated within the same node.
 ifeval::["{build}" != "upstream"]
-For more information, see link:https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations].
+For more information, see the Red Hat Knowledgebase article link:https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations].
 endif::[]
-The resulting topology depends on the available hardware, as well as the amount
-of {Ceph} services present in the Controller nodes that are going to be
-retired.
-As a general rule, the number of services that can be migrated depends on the
-number of available nodes in the cluster. The following diagrams cover the
-distribution of the {Ceph} daemons on the {Ceph} nodes where at least three
-nodes are required in a scenario that includes only RGW and RBD, without the
-{Ceph} Dashboard:
+Your topology depends on the available hardware and the amount of {Ceph} services in the Controller nodes that you retire.
+The amount of services that you can migrate depends on the amount of available nodes in the cluster. The following diagrams show the distribution of {Ceph} daemons on {Ceph} nodes where at least 3 nodes are required.
 
+* The following scenario includes only RGW and RBD, without the {Ceph} dashboard:
++
 ----
 |    |                     |             |
 |----|---------------------|-------------|
@@ -24,9 +20,8 @@ nodes are required in a scenario that includes only RGW and RBD, without the
 | osd | mon/mgr/crash      | rgw/ingress |
 ----
 
-With the {dashboard_service}, and without {rhos_component_storage_file_first_ref}, at
-least 4 nodes are required. The {Ceph} dashboard has no failover:
-
+* With the {Ceph} dashboard, but without {rhos_component_storage_file_first_ref}, at least 4 nodes are required. The {Ceph} dashboard has no failover:
++
 ----
 |     |                     |             |
 |-----|---------------------|-------------|
@@ -36,9 +31,8 @@ least 4 nodes are required. The {Ceph} dashboard has no failover:
 | osd | rgw/ingress   | (free)            |
 ----
 
-With the {Ceph} dashboard and the {rhos_component_storage_file}, 5 nodes
-minimum are required, and the {Ceph} dashboard has no failover:
-
+* With the {Ceph} dashboard and the {rhos_component_storage_file}, a minimum of 5 nodes are required, and the {Ceph} dashboard has no failover:
++
 ----
 |     |                     |                         |
 |-----|---------------------|-------------------------|

@@ -1,8 +1,8 @@
 [id="updating-the-object-storage-endpoints_{context}"]
 
-= Updating the object-store endpoints
+= Updating the {object_storage} endpoints
 
-The object-storage endpoints still point to the original virtual IP address (VIP) that is owned by pacemaker. You must update the object-store endpoints because other services stll use the original VIP, and you reserved a new VIP on the same network.
+You must update the {object_storage_first_ref} endpoints to point to the new virtual IP address (VIP) that you reserved on the same network that you used to deploy RGW ingress.
 
 .Procedure
 
@@ -50,11 +50,11 @@ DEBUG:swiftclient:RESP STATUS: 200 OK
 DEBUG:swiftclient:RESP HEADERS: {'content-length': '2', 'x-timestamp': '1676452317.72866', 'x-account-container-count': '0', 'x-account-object-count': '0', 'x-account-bytes-used': '0', 'x-account-bytes-used-actual': '0', 'x-account-storage-policy-default-placement-container-count': '0', 'x-account-storage-policy-default-placement-object-count': '0', 'x-account-storage-policy-default-placement-bytes-used': '0', 'x-account-storage-policy-default-placement-bytes-used-actual': '0', 'x-trans-id': 'tx00000765c4b04f1130018-0063eca1dd-1dcba-default', 'x-openstack-request-id': 'tx00000765c4b04f1130018-0063eca1dd-1dcba-default', 'accept-ranges': 'bytes', 'content-type': 'application/json; charset=utf-8', 'date': 'Wed, 15 Feb 2023 09:11:57 GMT'}
 DEBUG:swiftclient:RESP BODY: b'[]'
 ----
-
-. Run tempest tests against object-storage:
+ifeval::["{build}" != "downstream"]
+. Run tempest tests against {object_storage}:
 +
 ----
-(overcloud) [stack@undercloud-0 tempest-dir]$  tempest run --regex tempest.api.object_storage
+(overcloud) [stack@undercloud-0 tempest-dir]$ tempest run --regex tempest.api.object_storage
 ...
 ...
 ...
@@ -81,3 +81,4 @@ Worker Balance
  - Worker 6 (20 tests) => 0:00:16.290323
  - Worker 7 (27 tests) => 0:00:17.103827
 ----
+endif::[]

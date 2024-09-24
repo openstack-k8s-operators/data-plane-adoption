@@ -2,16 +2,20 @@
 
 = Deploying a {Ceph} ingress daemon
 
-To match the cardinality diagram, you use cephadm labels to refer to a group of nodes where a given daemon type should be deployed. For more information about the cardinality diagram, see xref:ceph-daemon-cardinality_migrating-ceph[{Ceph} daemon cardinality].
-`HAProxy` is managed by {OpenStackPreviousInstaller} through `Pacemaker`: the three running instances at this point will point to the old RGW backends, resulting in a broken configuration.
-ifeval::["{build}" != "upstream"]
-Since you are going to deploy the Ceph ingress daemon, the first thing to do is remove the existing `ceph_rgw` config, clean up the config created by {OpenStackPreviousInstaller} and restart the service to make sure other services are not affected by this change.
-endif::[]
-ifeval::["{build}" != "downstream"]
-Since you are going to deploy the https://github.com/openstack-archive/tripleo-ansible/blob/stable/wallaby/tripleo_ansible/ansible_plugins/modules/ceph_mkspec.py[Ceph ingress daemon], the first thing to do is remove the existing `ceph_rgw` config, clean up the config created by {OpenStackPreviousInstaller} and restart the service to make sure other services are not affected by this change.
-endif::[]
-After you complete this procedure, you can reach the RGW backend from the ingress daemon and use RGW through the {object_storage} command line interface (CLI).
-//kgilliga: I will rewrite this intro for GA.
+To deploy the Ceph ingress daemon, you perform the following actions:
+
+. Remove the existing `ceph_rgw` configuration.
+. Clean up the configuration created by {OpenStackPreviousInstaller}.
+. Redeploy the {object_storage_first_ref}.
+
+When you deploy the ingress daemon, two new containers are created:
+
+* HAProxy, which you use to reach the back ends.
+* Keepalived, which you use to own the virtual IP address.
+
+You use the `rgw` label to distribute the ingress daemon to only the number of nodes that host Ceph Object Gateway (RGW) daemons. For more information about distributing daemons among your nodes, see xref:ceph-daemon-cardinality_migrating-ceph[{Ceph} daemon cardinality].
+
+After you complete this procedure, you can reach the RGW back end from the ingress daemon and use RGW through the {object_storage} CLI.
 
 .Procedure
 
@@ -33,7 +37,7 @@ listen ceph_rgw
   server controller-2.storage.redhat.local 172.17.3.156:8080 check fall 5 inter 2000 rise 2
 ----
 
-. Restart `haproxy-bundle` and ensure it is started:
+. Restart `haproxy-bundle` and confirm that it is started:
 +
 ----
 [root@controller-0 ~]# sudo pcs resource restart haproxy-bundle
@@ -48,14 +52,14 @@ haproxy-bundle successfully restarted
     * haproxy-bundle-podman-2   (ocf:heartbeat:podman):  Started controller-2
 ----
 
-. Confirm that no process is bound to 8080:
+. Confirm that no process is connected to port 8080:
 +
 ----
 [root@controller-0 ~]# ss -antop | grep 8080
 [root@controller-0 ~]#
 ----
 +
-The {object_storage_first_ref} CLI fails at this point:
+You can expect the {object_storage_first_ref} CLI to fail to establish the connection:
 +
 ----
 (overcloud) [root@cephstorage-0 ~]# swift list
@@ -82,7 +86,7 @@ endif::[]
 $ sudo vim /home/ceph-admin/specs/rgw_ingress
 ----
 
-. Paste the following content in to the `rgw_ingress` file:
+. Paste the following content into the `rgw_ingress` file:
 +
 [source,yaml]
 ----
