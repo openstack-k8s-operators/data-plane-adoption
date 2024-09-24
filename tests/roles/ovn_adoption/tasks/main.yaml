@@ -8,8 +8,8 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod --selector=service=ovsdbserver-nb -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
-    oc get pod --selector=service=ovsdbserver-sb -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc wait pod --for condition=Ready --selector=service=ovsdbserver-nb
+    oc wait pod --for condition=Ready --selector=service=ovsdbserver-sb
   register: ovn_ovsdb_servers_running_result
   until: ovn_ovsdb_servers_running_result is success
   retries: 60
