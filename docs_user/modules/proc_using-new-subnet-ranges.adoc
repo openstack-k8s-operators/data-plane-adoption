@@ -44,8 +44,8 @@ network_config:
     routes:
     - ip_netmask: 0.0.0.0/0
       next_hop: 192.168.1.1
-    - ip_netmask: 172.31.0.0/24 <1> 
-      next_hop: 192.168.1.100 <2>   
+    - ip_netmask: 172.31.0.0/24 <1>
+      next_hop: 192.168.1.100 <2>
 ```
 <1> The new control plane subnet.
 <2> The control plane IP address of the adopted data plane node.
