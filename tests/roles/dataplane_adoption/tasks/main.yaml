@@ -646,3 +646,7 @@
 - name: Adopted Neutron and OVN agents post-checks
   ansible.builtin.include_tasks:
     file: neutron_verify.yaml
+
+- name: Adopted Cinder post-checks
+  ansible.builtin.include_tasks:
+    file: cinder_verify.yaml
