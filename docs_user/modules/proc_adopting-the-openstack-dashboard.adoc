@@ -6,7 +6,8 @@ To adopt the {dashboard_first_ref}, you patch an existing `OpenStackControlPlane
 
 .Prerequisites
 
-* You have adopted Memcached and the {identity_service_first_ref}.
+* You adopted Memcached. For more information, see xref:deploying-backend-services_migrating-databases[Deploying back-end services].
+* You adopted the {identity_service_first_ref}. For more information, see xref:adopting-the-identity-service_adopt-control-plane[Adopting the {identity_service}].
 
 .Procedure
 
