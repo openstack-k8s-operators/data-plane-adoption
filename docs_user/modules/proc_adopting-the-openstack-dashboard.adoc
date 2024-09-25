@@ -2,17 +2,19 @@
 
 = Adopting the {dashboard_service}
 
+To adopt the {dashboard_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) that has the {dashboard_service} disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} environment.
+
 .Prerequisites
 
-* Previous Adoption steps completed. Notably, Memcached and
-{identity_service_first_ref} should be already adopted.
+* You adopted Memcached. For more information, see xref:deploying-backend-services_migrating-databases[Deploying back-end services].
+* You adopted the {identity_service_first_ref}. For more information, see xref:adopting-the-identity-service_adopt-control-plane[Adopting the {identity_service}].
 
 .Procedure
 
-* Patch `OpenStackControlPlane` to deploy the {dashboard_service}:
+* Patch the `OpenStackControlPlane` CR to deploy the {dashboard_service}:
 +
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   horizon:
     enabled: true
@@ -26,13 +28,13 @@ spec:
 
 .Verification
 
-. See that the {dashboard_service} instance is successfully deployed and ready
+. Verify that the {dashboard_service} instance is successfully deployed and ready:
 +
 ----
-oc get horizon
+$ oc get horizon
 ----
 
-. Check that the {dashboard_service} is reachable and returns status code `200`
+. Confirm that the {dashboard_service} is reachable and returns a `200` status code:
 +
 ----
 PUBLIC_URL=$(oc get horizon horizon -o jsonpath='{.status.endpoint}')
