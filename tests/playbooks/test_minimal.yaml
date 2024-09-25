@@ -16,12 +16,12 @@
     #   tags:
     #     - tls_adoption
     #   when: enable_tlse|default(false)
-    # - role: backend_services
-    #   tags:
-    #     - backend_services
-    # - role: get_services_configuration
-    #   tags:
-    #     - get_services_configuration
+    #  - role: backend_services
+    #    tags:
+    #      - backend_services
+    - role: get_services_configuration
+      tags:
+        - get_services_configuration
     # - role: stop_openstack_services
     #   tags:
     #     - stop_openstack_services
@@ -75,6 +75,6 @@
     # - role: pull_openstack_configuration
     #   tags:
     #     - pull_openstack_configuration
-    - role: dataplane_adoption
-      tags:
-        - dataplane_adoption
+    # - role: dataplane_adoption
+    #   tags:
+    #     - dataplane_adoption
