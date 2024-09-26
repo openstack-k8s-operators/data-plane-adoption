@@ -2,29 +2,24 @@
 
 = Migrating TLS-e to the {rhos_acro} deployment
 
-The {rhos_long} deployment adopts the settings from the
-{rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver}  deployment. If TLS everywhere (TLS-e) is disabled in the {OpenStackShort} deployment, it is not enabled in the {rhos_acro} deployment.
+If you enabled TLS everywhere (TLS-e) in your {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} deployment, you must migrate TLS-e to the {rhos_long} deployment.
 
-If the {OpenStackPreviousInstaller} deployment was deployed with TLS-e, FreeIPA (IdM) is used to issue certificates for the {OpenStackShort} services. Certmonger, a client process which is installed on all hosts, interacts with FreeIPA (IdM) to request, install, track and renew these certificates.
+The {rhos_acro} deployment uses the cert-manager operator to issue, track, and renew the certificates. In the following procedure, you extract the CA signing certificate from the FreeIPA instance that you use to provide the certificates in the {OpenStackShort} environment, and then import them into cert-manager in the {rhos_acro} environment. As a result, you minimize the disruption on the Compute nodes because you do not need to install a new chain of trust.
 
-The {rhos_acro} Operator-based deployment uses the cert-manager operator to issue, track, and renew the certificates.
+You then decommission the previous FreeIPA node and no longer use it to issue certificates. This might not be possible if you use the IPA server to issue certificates for non-{OpenStackShort} systems.
 
-Because the same root certificate authority (CA) is used to generate new certificates, you do not have to modify the currently used chain of trust.
-_Disclaimer: the below steps were reproduced on a FreeIPA 4.10.1 server. The location of files and directories may slightly change on different versions._
+[NOTE]
+====
+* The following procedure was reproduced on a FreeIPA 4.10.1 server. The location of the files and directories might change depending on the version.
 
-These instructions explain how to extract the CA signing certificate from the FreeIPA instance that is used to provide the certificates in the source environment and import it into certmanager for use in the target environment. In this way, disruption on the Compute nodes can be minimized because a new chain of trust need not be installed.
-
-It is expected that the old FreeIPA node is then decommissioned and no longer used to issue certificates. This might not be possible if the IPA server is used to issue certificates for non-{OpenStackShort} systems.
-
-This procedure will also need to be modified if the signing keys are stored in an hardware security module (HSM) instead of an NSS shared database (NSSDB). In that case, if the key is retrievable, special HSM utilities might be required.
-//kgilliga: Note to self: This intro will need to be rewritten/reorganized. Determine the most relevant info.
+* If the signing keys are stored in an hardware security module (HSM) instead of an NSS shared database (NSSDB), and the keys are retrievable, special HSM utilities might be required.
+====
 
 .Prerequisites
 
 * Your {OpenStackShort} deployment is using TLS-e.
-* Make sure the previous Adoption steps (if any) have been performed successfully.
-* Make sure the backend services on the new deployment are not started yet.
-* Define the following shell variables. The values that are used are examples and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Replace these example values with values that are correct for your environment:
+* Ensure that the back-end services on the new deployment are not started yet.
+* Define the following shell variables. The values are examples and refer to a single-node standalone {OpenStackPreviousInstaller} deployment. Replace these example values with values that are correct for your environment:
 +
 ifeval::["{build}" != "downstream"]
 ----
@@ -48,7 +43,10 @@ endif::[]
 $IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
 ----
 +
-The `-L` option lists all certificates, and `-d` specifies where they are stored. This will produce some output like this:
+* The `-L` option lists all certificates.
+* The `-d` option specifies where the certificates are stored. 
++
+The command produces an output similar to the following example:
 +
 ----
 Certificate Nickname                                         Trust Attributes
@@ -60,41 +58,41 @@ Server-Cert cert-pki-ca                                      u,u,u
 subsystemCert cert-pki-ca                                    u,u,u
 auditSigningCert cert-pki-ca                                 u,u,Pu
 ----
-+
-The item you need to consider is the first one: `caSigningCert cert-pki-ca`.
 
-
-. Export the certificate and key from the `/etc/pki/pki-tomcat/alias` directory:
+. Export the certificate and key from the `/etc/pki/pki-tomcat/alias` directory. The following example uses the `caSigningCert cert-pki-ca` certificate:
 +
 ----
 $IPA_SSH pk12util -o /tmp/freeipa.p12 -n 'caSigningCert\ cert-pki-ca' -d /etc/pki/pki-tomcat/alias -k /etc/pki/pki-tomcat/alias/pwdfile.txt -w /etc/pki/pki-tomcat/alias/pwdfile.txt
 ----
 +
-The command generates a P12 file with both the certificate and the key. The `/etc/pki/pki-tomcat/alias/pwdfile.txt` file contains the password that protects the key. You can use it to both extract the key and generate the new file, `/tmp/freeipa.p12`. You can also choose another password. If you choose to apply a different password for the new file, replace the parameter of the `-w` option, or use the `-W` (capital W) option followed by the password (in clear text).
-+
-With that file, you can also separately get the certificate and the key by using the `openssl pkcs12` command.
+[NOTE]
+====
+The command generates a P12 file with both the certificate and the key. The `/etc/pki/pki-tomcat/alias/pwdfile.txt` file contains the password that protects the key. You can use the password to both extract the key and generate the new file, `/tmp/freeipa.p12`. You can also choose another password. If you choose a different password for the new file, replace the parameter of the `-w` option, or use the `-W` option followed by the password, in clear text.
+
+With that file, you can also get the certificate and the key by using the `openssl pkcs12` command.
+====
 
 . Create the secret that contains the root CA:
 +
 ----
-oc create secret generic rootca-internal -n openstack
+$ oc create secret generic rootca-internal -n openstack
 ----
 
 . Import the certificate and the key from FreeIPA:
 +
 ----
-oc patch secret rootca-internal -n openstack -p="{\"data\":{\"ca.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
+$ oc patch secret rootca-internal -n openstack -p="{\"data\":{\"ca.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
 
-oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
+$ oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
 
-oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.key\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl rsa | base64 -w 0`\"}}"
+$ oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.key\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl rsa | base64 -w 0`\"}}"
 ----
 
-. Create the cert-manager Issuer and reference the created secret:
+. Create the cert-manager issuer and reference the secret:
 +
 [source, yaml]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
@@ -117,18 +115,17 @@ EOF
 $IPA_SSH rm /tmp/freeipa.p12
 ----
 
+.Verification
 
-. Verify that the necessary resources were created by using the following commands:
+* Verify that the necessary resources are created:
 +
 ----
-oc get issuers -n openstack
+$ oc get issuers -n openstack
 ----
 +
 ----
-oc get secret rootca-internal -n openstack -o yaml
+$ oc get secret rootca-internal -n openstack -o yaml
 ----
-
 
 [NOTE]
-After the adoption procedure is finished, the cert-manager operator is responsible for issuing and refreshing new certificates when they expire.
-However, only the usual certificate rotation procedure is applied. This means that services and workloads that are not restarted and don't support reloading of the certificates are still using the certificates originally issued by IPA and generated by the certmonger daemon. In particular, as of writing this procedure, TLS certs for VNC consoles of the libvirt managed qemu domains are not rotated. You may need to restart or migrate the domains before the certificates expire.
+After the adoption procedure is finished, the cert-manager operator issues and refreshes new certificates when they expire. However, only the usual certificate rotation procedure is applied. This means that services and workloads that are not restarted and do not support reloading the certificates are still using the certificates originally issued by IPA and generated by the certmonger daemon. Particularly, TLS certs for VNC consoles of the libvirt-managed qemu domains are not rotated. You might need to restart or migrate the domains before the certificates expire.
