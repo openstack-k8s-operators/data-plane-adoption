@@ -44,7 +44,13 @@ SOURCE_GALERA_MEMBERS=(
   ["standalone.localdomain"]=172.17.0.100
   # ...
 )
+ifeval::["{build}" != "downstream"]
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
+endif::[]
+ifeval::["{build}" == "downstream"]
+SOURCE_DB_ROOT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
+)
+endif::[]
 ----
 +
 To get the value to set `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller node:

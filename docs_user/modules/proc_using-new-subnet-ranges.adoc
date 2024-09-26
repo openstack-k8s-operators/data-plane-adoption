@@ -35,10 +35,7 @@ addresses in `fixedIP` fields in `OpenstackDataplaneNodeSet` per-node section.
 Before proceeding, configure host routes on the adopted nodes for the
 control plane subnets.
 
-To achieve this, you will need to re-run `tripleo deploy` with additional
-`routes` entries added to `network_config`. (This change should be applied
-for every adopted node configuration.) For example, you may add the following
-to `net_config.yaml`:
+To achieve this, you will need to re-run `openstack overcloud node provision` with additional `routes` entries added to `network_config`. (This change should be applied for every adopted node configuration.) For example, you may add the following to `net_config.yaml`:
 
 ```yaml
 network_config:
@@ -47,20 +44,22 @@ network_config:
     routes:
     - ip_netmask: 0.0.0.0/0
       next_hop: 192.168.1.1
-    - ip_netmask: 172.31.0.0/24  # <- new ctlplane subnet
-      next_hop: 192.168.1.100    # <- adopted node ctlplane IP address
+    - ip_netmask: 172.31.0.0/24 <1>
+      next_hop: 192.168.1.100 <2>
 ```
+<1> The new control plane subnet.
+<2> The control plane IP address of the adopted data plane node.
 
 Do the same for other networks that will need to use different subnets for the
 new and old parts of the deployment.
 
-Once done, run `tripleo deploy` to apply the new configuration.
+Once done, run `openstack overcloud node provision` to apply the new configuration.
 
 Note that network configuration changes are not applied by default to avoid
 risk of network disruption. You will have to enforce the changes by setting the
 `StandaloneNetworkConfigUpdate: true` in the {OpenStackPreviousInstaller} configuration files.
 
-Once `tripleo deploy` is complete, you should see new link local routes to the
+Once `openstack overcloud node provision` is complete, you should see new link local routes to the
 new subnet on each node. For example,
 
 ```bash
@@ -74,9 +73,11 @@ The next step is to configure similar routes for the old subnet for control plan
 `NodeNetworkConfigurationPolicy` CRs for each network. For example,
 
 ```yaml
-      - destination: 192.168.122.0/24
-        next-hop-interface: ospbr
+      - destination: 192.168.122.0/24 <1>
+        next-hop-interface: ospbr <2>
 ```
+<1> The isolated network's original subnet on the data plane.
+<2> The {OpenShiftShort} worker network interface that corresponds to the isolated network on the data plane.
 
 Once applied, you should eventually see the following route added to your {rhocp_long} nodes.
 

@@ -42,7 +42,12 @@ ADMIN_PASSWORD=SomePassword
 To use the existing {OpenStackShort} deployment password:
 +
 ----
+ifeval::["{build}" != "downstream"]
 ADMIN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
+endif::[]
+ifeval::["{build}" == "downstream"]
+ADMIN_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
+endif::[]
 ----
 * Set the service password variables to match the original deployment.
 Database passwords can differ in the control plane environment, but
@@ -51,6 +56,7 @@ you must synchronize the service account passwords.
 For example, in developer environments with {OpenStackPreviousInstaller} Standalone, the passwords can be extracted:
 +
 ----
+ifeval::["{build}" != "downstream"]
 AODH_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AodhPassword:' | awk -F ': ' '{ print $2; }')
 BARBICAN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' BarbicanPassword:' | awk -F ': ' '{ print $2; }')
 CEILOMETER_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CeilometerPassword:' | awk -F ': ' '{ print $2; }')
@@ -65,6 +71,23 @@ NOVA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NovaPassword:' 
 OCTAVIA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' OctaviaPassword:' | awk -F ': ' '{ print $2; }')
 PLACEMENT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' PlacementPassword:' | awk -F ': ' '{ print $2; }')
 SWIFT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' SwiftPassword:' | awk -F ': ' '{ print $2; }')
+endif::[]
+ifeval::["{build}" == "downstream"]
+AODH_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' AodhPassword:' | awk -F ': ' '{ print $2; }')
+BARBICAN_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' BarbicanPassword:' | awk -F ': ' '{ print $2; }')
+CEILOMETER_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' CeilometerPassword:' | awk -F ': ' '{ print $2; }')
+CINDER_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' CinderPassword:' | awk -F ': ' '{ print $2; }')
+GLANCE_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' GlancePassword:' | awk -F ': ' '{ print $2; }')
+HEAT_AUTH_ENCRYPTION_KEY=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' HeatAuthEncryptionKey:' | awk -F ': ' '{ print $2; }')
+HEAT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' HeatPassword:' | awk -F ': ' '{ print $2; }')
+IRONIC_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' IronicPassword:' | awk -F ': ' '{ print $2; }')
+MANILA_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' ManilaPassword:' | awk -F ': ' '{ print $2; }')
+NEUTRON_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' NeutronPassword:' | awk -F ': ' '{ print $2; }')
+NOVA_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' NovaPassword:' | awk -F ': ' '{ print $2; }')
+OCTAVIA_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' OctaviaPassword:' | awk -F ': ' '{ print $2; }')
+PLACEMENT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' PlacementPassword:' | awk -F ': ' '{ print $2; }')
+SWIFT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' SwiftPassword:' | awk -F ': ' '{ print $2; }')
+endif::[]
 ----
 
 .Procedure
