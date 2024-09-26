@@ -8,7 +8,7 @@
   - name: register controller node
     no_log: "{{ use_no_log }}"
     ansible.builtin.shell: |
-      oc get pod -n {{ ospdo_namespace }} -l kubevirt.io=virt-launcher -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
+      oc get pod -n {{ ospdo_namespace }} --field-selector='status.phase=Running' -l kubevirt.io=virt-launcher -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
     register: controller_node
 
   - name: register source_db_root_pass
