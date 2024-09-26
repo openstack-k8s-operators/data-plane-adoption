@@ -6,13 +6,14 @@ If you use CephFS via NFS with the {rhos_component_storage_file_first_ref}, you 
 
 .Procedure
 
-. Identify the {Ceph} nodes to deploy the new clustered NFS service, for example, `cephstorage-0`, `cephstorage-1`, `cephstorage-2`. 
+. Identify the {Ceph} nodes to deploy the new clustered NFS service, for example, `cephstorage-0`, `cephstorage-1`, `cephstorage-2`.
 +
 [NOTE]
-You must deploy this service on the `StorageNFS` isolated network so that you can mount your existing shares through the new NFS export locations. 
+You must deploy this service on the `StorageNFS` isolated network so that you can mount your existing shares through the new NFS export locations.
 You can deploy the new clustered NFS service on your existing CephStorage nodes or HCI nodes, or on new hardware that you enrolled in the {Ceph} cluster.
 
-. Propagate the `StorageNFS` network to the target nodes where the `ceph-nfs` service is deployed, identify the node definition file, `overcloud-baremetal-deploy.yaml`, that is used in the {OpenStackShort} environment. 
+. If you deployed your {Ceph} nodes with {OpenStackPreviousInstaller}, propagate the `StorageNFS` network to the target nodes where the `ceph-nfs` service is deployed.
+.. Identify the node definition file, `overcloud-baremetal-deploy.yaml`, that is used in the {OpenStackShort} environment.
 ifeval::["{build}" != "upstream"]
 For more information about identifying the `overcloud-baremetal-deploy.yaml` file, see link:{customizing-rhoso}/index#assembly_customizing-overcloud-networks[Customizing overcloud networks] in _{customizing-rhoso-t}_.
 endif::[]
@@ -22,9 +23,7 @@ an Overcloud with Network Isolation with TripleO] and link:https://docs.openstac
 network configuration changes after deployment] for the background to these
 tasks.
 endif::[]
-The following steps are relevant if you deployed your {Ceph} nodes with {OpenStackPreviousInstaller}.
-
-. Edit the networks that are associated with the {CephCluster} nodes to include the `StorageNFS` network:
+.. Edit the networks that are associated with the {CephCluster} nodes to include the `StorageNFS` network:
 +
 [source,yaml]
 ----
@@ -50,7 +49,7 @@ The following steps are relevant if you deployed your {Ceph} nodes with {OpenSta
     - network: storage_mgmt
     - network: storage_nfs
 ----
-. Edit the network configuration template file, for example, `/home/stack/network/nic-configs/ceph-storage.j2`, for the {CephCluster} nodes
+.. Edit the network configuration template file, for example, `/home/stack/network/nic-configs/ceph-storage.j2`, for the {CephCluster} nodes
 to include an interface that connects to the `StorageNFS` network:
 +
 [source,yaml]
@@ -62,7 +61,7 @@ to include an interface that connects to the `StorageNFS` network:
   - ip_netmask: {{ storage_nfs_ip }}/{{ storage_nfs_cidr }}
   routes: {{ storage_nfs_host_routes }}
 ----
-. Update the {CephCluster} nodes:
+.. Update the {CephCluster} nodes:
 +
 ----
 $ openstack overcloud node provision \
@@ -82,7 +81,7 @@ address (VIP) for the Ceph NFS service:
 $ openstack port list -c "Fixed IP Addresses" --network storage_nfs
 ----
 
-. In a running `cephadm` shell, identify the hosts that can host the NFS service:
+. In a running `cephadm` shell, identify the hosts for the NFS service:
 +
 ----
 $ ceph orch host ls
