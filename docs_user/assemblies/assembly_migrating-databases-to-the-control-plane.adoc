@@ -14,7 +14,7 @@ include::../modules/proc_deploying-backend-services.adoc[leveloffset=+1]
 
 include::../modules/proc_configuring-a-ceph-backend.adoc[leveloffset=+1]
 
-include::../modules/proc_creating-a-ceph-nfs-cluster.adoc[leveloffset=+1]
+//include::../modules/proc_creating-a-ceph-nfs-cluster.adoc[leveloffset=+1]
 
 include::../modules/proc_stopping-openstack-services.adoc[leveloffset=+1]
 

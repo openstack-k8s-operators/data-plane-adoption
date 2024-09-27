@@ -29,9 +29,9 @@ already part of the {CephCluster} cluster.
 
 include::../modules/con_ceph-daemon-cardinality.adoc[leveloffset=+1]
 
-include::assembly_migrating-ceph-monitoring-stack.adoc[leveloffset=+1]
+//include::assembly_migrating-ceph-monitoring-stack.adoc[leveloffset=+1]
 
-include::../modules/proc_migrating-ceph-mds.adoc[leveloffset=+1]
+//include::../modules/proc_migrating-ceph-mds.adoc[leveloffset=+1]
 
 include::assembly_migrating-ceph-rgw.adoc[leveloffset=+1]
 
