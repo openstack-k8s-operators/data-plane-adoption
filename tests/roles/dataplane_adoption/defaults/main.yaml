@@ -153,3 +153,4 @@ os_diff_dir: tmp/os-diff
 os_diff_data_dir: tmp/os-diff
 prelaunch_test_instance: true
 telemetry_adoption: true
+neutron_qe_dir: ~/src/code.engineering.redhat.com/Neutron-QE/dataplane_adoption/workload_scripts/comp_job

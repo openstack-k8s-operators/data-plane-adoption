@@ -52,3 +52,35 @@
   when: prelaunch_test_instance|bool
   ansible.builtin.shell: |
       ping -c4 {{ lookup('env', 'FIP') | default('192.168.122.20', True) }}
+
+- name: stop pinger
+  when: neutron_qe_test|bool
+  environment:
+    OS_CLOUD_IP: "{{ standalone_ip | default(edpm_node_ip) }}"
+  ansible.builtin.shell: |
+      ssh ${OS_CLOUD_IP} "echo 'exit' > ~/adoption/_pinger_cmd.txt </dev/null"
+
+- name: get validation pinger logs
+  when: neutron_qe_test|bool
+  environment:
+    OS_CLOUD_IP: "{{ standalone_ip | default(edpm_node_ip) }}"
+  ansible.builtin.shell: |
+      ssh ${OS_CLOUD_IP} "set -o pipefail && chmod 744 {{ neutron_qe_dir }}/validate_pinger.sh && \
+      {{ neutron_qe_dir }}/validate_pinger.sh > {{ neutron_qe_dir }}/validate_pinger.sh.log 2>&1"
+
+- name: get validation pinger result
+  when: neutron_qe_test|bool
+  environment:
+    OS_CLOUD_IP: "{{ standalone_ip | default(edpm_node_ip) }}"
+  ansible.builtin.shell: |
+      ssh ${OS_CLOUD_IP} "set -o pipefail && grep -r 'res=1' {{ neutron_qe_dir }}/validate_pinger.sh.log"
+  register: validation_pinger_result
+  ignore_errors: true
+
+- name: verify pinger result
+  when: neutron_qe_test|bool
+  ansible.builtin.assert:
+    that:
+      - validation_pinger_result.rc == 1
+    fail_msg: "fail ping"
+    success_msg: "success ping"
