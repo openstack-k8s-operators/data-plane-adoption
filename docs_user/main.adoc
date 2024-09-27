@@ -14,7 +14,7 @@ endif::[]
 
 include::assemblies/assembly_rhoso-180-adoption-overview.adoc[leveloffset=+1]
 
-include::modules/proc_migrating-tls-everywhere.adoc[leveloffset=+1]
+//include::modules/proc_migrating-tls-everywhere.adoc[leveloffset=+1]
 
 include::assemblies/assembly_migrating-databases-to-the-control-plane.adoc[leveloffset=+1]
 
@@ -22,6 +22,6 @@ include::assemblies/assembly_adopting-openstack-control-plane-services.adoc[leve
 
 include::assemblies/assembly_adopting-the-data-plane.adoc[leveloffset=+1]
 
-include::assemblies/assembly_migrating-the-object-storage-service.adoc[leveloffset=+1]
+//include::assemblies/assembly_migrating-the-object-storage-service.adoc[leveloffset=+1]
 
 include::assemblies/assembly_migrating-ceph-cluster.adoc[leveloffset=+1]
