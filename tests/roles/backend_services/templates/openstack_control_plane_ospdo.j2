@@ -2,12 +2,10 @@ apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
 metadata:
   name: openstack
-  namespace: {{ osp18_namespace }}
 spec:
   nodeSelector:
     type: openstack
-  storageClass: {{ storage_class }}
-
+  storageClass: {{ ospdo_storage_class.stdout }}
   barbican:
     enabled: false
     template:
@@ -76,16 +74,14 @@ spec:
           adoptionRedirect: {}
           replicas: 1
           secret: osp-secret
-          storageClass: {{ storage_class }}
+          storageClass: {{ ospdo_storage_class.stdout }}
           storageRequest: 500M
-          tls: {}
       openstack-cell1:
           adoptionRedirect: {}
           replicas: 1
           secret: osp-secret
-          storageClass: {{ storage_class }}
+          storageClass: {{ ospdo_storage_class.stdout }}
           storageRequest: 500M
-          tls: {}
 
   memcached:
     enabled: true
@@ -107,11 +103,11 @@ spec:
       ovnDBCluster:
         ovndbcluster-nb:
           dbType: NB
-          storageClass: {{ storage_class }}
+          storageClass: {{ ospdo_storage_class.stdout }}
           storageRequest: 10G
           networkAttachment: internalapi{{ osp18_ns_suffix }}
         ovndbcluster-sb:
-          storageClass: {{ storage_class }}
+          storageClass: {{ ospdo_storage_class.stdout }}
           dbType: SB
           storageRequest: 10G
           networkAttachment: internalapi{{ osp18_ns_suffix }}
@@ -140,7 +136,7 @@ spec:
               type: LoadBalancer
       rabbitmq-cell1:
         persistence:
-          storageClassName: {{ storage_class }}
+          storageClassName: {{ ospdo_storage_class.stdout }}
         replicas: 1
         override:
           service:

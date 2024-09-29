@@ -3,13 +3,34 @@
      oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
   when: get_svc_pass| default(false) | bool
 
+- name: template out the tls override for deployment
+  ansible.builtin.template:
+    src: tls_overrides.j2
+    dest: "../config/base_ospdo/tls_overrides.yaml"
+    mode: '644'
+    force: true
+
+- name: get OSPdO storage storageClass
+  ansible.builtin.shell: |
+    oc get -n {{ ospdo_namespace }} pvc openstackclient-hosts -o jsonpath='{.spec.storageClassName}'
+  register: ospdo_storage_class
+  when: deploy_ctlplane_ospdo| default(false) | bool
+
+- name: template out the openstack_control_plane_ospdo override for deployment
+  ansible.builtin.template:
+    src: openstack_control_plane_ospdo.j2
+    dest: "../config/base_ospdo/openstack_control_plane_ospdo.yaml"
+    mode: '644'
+    force: true
+  when: deploy_ctlplane_ospdo| default(false) | bool
+
 - name: Deploy podified control along side OSPdO
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     mkdir -p tmp
     oc kustomize base_ospdo > tmp/test_deployment.yaml
-    oc apply -f tmp/test_deployment.yaml
+    oc apply -n {{ osp18_namespace }} -f tmp/test_deployment.yaml
   args:
     chdir: "../config"
   when: deploy_ctlplane_ospdo| default(false) | bool
