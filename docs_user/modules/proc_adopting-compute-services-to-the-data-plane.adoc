@@ -129,7 +129,9 @@ endif::[]
 EOF
 ----
 +
+ifeval::["{build}" == "downstream"]
 * Replace `<path_to_SSH_key>` with the path to your SSH key.
+endif::[]
 
 . Generate an ssh key-pair `nova-migration-ssh-key` secret:
 +

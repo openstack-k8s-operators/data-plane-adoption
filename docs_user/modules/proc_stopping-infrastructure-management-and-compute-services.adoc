@@ -26,7 +26,9 @@ computes=(
 ----
 +
 ** Replace `["standalone.localdomain"]="192.168.122.100"` with the name and IP address of the Compute node.
+ifeval::["{build}" == "downstream"]
 ** Replace `<path_to_SSH_key>` with the path to your SSH key.
+endif::[]
 
 .Procedure
 
