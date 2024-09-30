@@ -18,12 +18,13 @@
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
 
-    cat > test.yaml <<EOF
+    oc apply -f - <<EOF
     ---
     apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:
       name: mariadb-data
+      namespace: {{ ospdo_namespace| default('openstack') }}
     spec:
       storageClassName: $STORAGE_CLASS
       accessModes:
@@ -39,7 +40,7 @@
       annotations:
         openshift.io/scc: anyuid
         k8s.v1.cni.cncf.io/networks: {{ custom_networks | default('internalapi') }}
-      namespace: {{ ospdo_namespace| default('') }}
+      namespace: {{ ospdo_namespace| default('openstack') }}
       labels:
         app: adoption
     spec:

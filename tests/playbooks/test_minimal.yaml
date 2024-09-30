@@ -16,9 +16,9 @@
       tags:
         - tls_adoption
       when: enable_tlse|default(false)
-     - role: backend_services
-       tags:
-         - backend_services
+    - role: backend_services
+      tags:
+        - backend_services
     - role: get_services_configuration
       tags:
         - get_services_configuration
