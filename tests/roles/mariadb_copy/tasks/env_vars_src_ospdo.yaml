@@ -2,13 +2,13 @@
   block:
   - name: register source_mariadb_ip
     ansible.builtin.shell: |
-     oc -n {{ ospdo_namespace }} get cm tripleo-exports-default -o json | jq -r '.data["ctlplane-export.yaml"]'| sed -e '0,/ MysqlInternal/d' | sed -n '0,/host_nobrackets/s/^.*host_nobrackets\:\s*\(.*\)$/\1/p'
+      oc -n {{ ospdo_namespace }} get cm tripleo-exports-default -o json | jq -r '.data["ctlplane-export.yaml"]'| sed -e '0,/ MysqlInternal/d' | sed -n '0,/host_nobrackets/s/^.*host_nobrackets\:\s*\(.*\)$/\1/p'
     register: source_mariadb_ip
 
   - name: register controller node
     no_log: "{{ use_no_log }}"
     ansible.builtin.shell: |
-      oc get vmi -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
+      oc get vmi -n{{ ospdo_namespace }} -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
     register: controller_node
 
   - name: register source_db_root_pass
