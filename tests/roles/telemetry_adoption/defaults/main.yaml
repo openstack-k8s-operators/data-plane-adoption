@@ -12,6 +12,7 @@ telemetry_metric_storage_patch: |
             storage:
               strategy: persistent
               retention: 24h
+              storageClassName: {{ storage_class_name }}
               persistent:
                 pvcStorageRequest: 20G
 

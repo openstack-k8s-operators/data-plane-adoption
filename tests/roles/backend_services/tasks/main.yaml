@@ -96,8 +96,6 @@
     {{ shell_header }}
     {{ oc_header }}
     oc apply -f ../config/tmp/test_deployment.yaml
-  # args:
-  #   chdir: "../config"
 
 - name: wait for services to start up
   ansible.builtin.shell: |

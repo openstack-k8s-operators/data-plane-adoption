@@ -4,7 +4,7 @@ metadata:
   name: openstack
 spec:
   secret: osp-secret
-  storageClass: local-storage
+  storageClass: {{ control_plane_storage_class  }}
 
   barbican:
     enabled: false
@@ -77,11 +77,11 @@ spec:
       openstack:
         secret: osp-secret
         replicas: 1
-        storageRequest: 500M
+        storageRequest: 1Gi
       openstack-cell1:
         secret: osp-secret
         replicas: 1
-        storageRequest: 500M
+        storageRequest: 1Gi
 
   memcached:
     enabled: true
