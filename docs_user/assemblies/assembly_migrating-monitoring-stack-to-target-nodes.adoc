@@ -6,28 +6,16 @@ ifdef::context[:parent-context: {context}]
 
 = Migrating the monitoring stack to the target nodes
 
-The migration procedure relies on nodes re-labeling: this kind of action,
-combined with an update in the existing spec, results in the daemons'
-relocation on the target nodes.
+To migrate the monitoring stack to the target nodes, you add the monitoring label to your existing nodes and update the configuration of each daemon.
 
-Before start this process, a few considerations are required:
+Before you start the migration, review the following considerations:
 
-* There’s no need to migrate node exporters: these daemons are deployed across
-the nodes that are part of the {CephCluster} cluster (placement is ‘*’), and  we’re going to lose metrics as long as the Controller nodes are not part of the {CephCluster} cluster anymore
-* Each monitoring stack component is bound to specific ports that {OpenStackPreviousInstaller} is
-supposed to open beforehand; make sure to double check the firewall rules are
-in place and the ports are opened for a given monitoring stack service
+* You do not need to migrate node exporters. These daemons are deployed across
+the nodes that are part of the {CephCluster} cluster (the placement is ‘*’), and you lose metrics when the Controller nodes are not part of the {CephCluster} cluster anymore.
+* Each monitoring stack component is bound to specific ports that {OpenStackPreviousInstaller} you open before the migration. Confirm that the firewall rules are in place and the ports are open for a given monitoring stack service.
 
-Depending on the target nodes and the number of deployed/active daemons, it is
-possible to either relocate the existing containers to the target nodes, or
-select a subset of nodes that are supposed to host the monitoring stack
-daemons. As we mentioned in the previous section, HA is not supported, hence
-reducing the placement with `count: 1` is a reasonable solution and allows to
-successfully migrate the existing daemons in an HCI (or HW limited) scenario
-without impacting other services.
-However, it is still possible to put in place a dedicated HA solution and
-realize a component that is consistent with the {OpenStackPreviousInstaller} model to reach HA.
-Building and deployment such HA model is out of scope for this procedure.
+Depending on the target nodes and the number of deployed or active daemons, you can either relocate the existing containers to the target nodes, or
+select a subset of nodes that host the monitoring stack daemons. High availability (HA) is not supported, so reducing the placement with `count: 1`  allows you to migrate the existing daemons in a Hyperconverged Infrastructure (or HW limited) scenario without impacting other services.
 
 include::../modules/proc_migrating-existing-daemons-to-target-nodes.adoc[leveloffset=+1]
 

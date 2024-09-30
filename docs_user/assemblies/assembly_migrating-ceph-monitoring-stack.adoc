@@ -6,32 +6,23 @@ ifdef::context[:parent-context: {context}]
 
 = Migrating the monitoring stack component to new nodes within an existing {Ceph} cluster
 
-The Ceph Dashboard module adds web-based monitoring and administration to the
-Ceph Manager.
-With {OpenStackPreviousInstaller}-deployed {Ceph}, this component is enabled as
-part of the overcloud deploy and it is composed of the following:
+The {Ceph} Dashboard module adds web-based monitoring and administration to the
+Ceph Manager. With {OpenStackPreviousInstaller}-deployed {Ceph}, the {Ceph} Dashboard is enabled as part of deploying the overcloud and is composed of the following components:
 
-- Ceph Manager module
-- Grafana
-- Prometheus
-- Alertmanager
-- Node exporter
+* Ceph Manager module
+* Grafana
+* Prometheus
+* Alertmanager
+* Node exporter
 
-The Ceph Dashboard containers are included through
-`tripleo-container-image-prepare` parameters and the high availability relies
-on `Haproxy` and `Pacemaker` deployed on the {OpenStackShort} front. For an
-external {CephCluster} cluster, high availability is not supported. The goal of
-this procedure is to migrate and relocate the Ceph Monitoring components to
-free Controller nodes.
+The {Ceph} Dashboard containers are included through `tripleo-container-image-prepare` parameters, and high availability (HA) relies
+on `Haproxy` and `Pacemaker` deployed on the {rhos_prev_long} ({OpenStackShort}) front. For an external {CephCluster} cluster, HA is not supported. 
 
-For this procedure, we assume that we are beginning with a {OpenStackShort}
-based on {rhos_prev_ver} and a {Ceph} {CephVernum} deployment managed by
-{OpenStackPreviousInstaller}. We assume that:
+In this procedure, you migrate and relocate the Ceph Monitoring components to free Controller nodes. You begin with an {OpenStackShort} {rhos_prev_ver} environment and a {Ceph} {CephVernum} deployment that is managed by
+{OpenStackPreviousInstaller}. Your environment must also meet the following requirements:
 
-* {Ceph} has been upgraded to {CephVernum} and is managed by
-  cephadm/orchestrator
-* Both the {Ceph} public and cluster networks are propagated,
-  through {OpenStackPreviousInstaller}, to the target nodes
+* Your {Ceph} {CephVernum} deployment is managed by `cephadm` and Ceph Orchestrator.
+* Both the {Ceph} public and cluster networks are propagated through {OpenStackPreviousInstaller} to the target nodes.
 
 include::../modules/proc_completing-prerequisites-for-migrating-ceph-monitoring-stack.adoc[leveloffset=+1]
 
