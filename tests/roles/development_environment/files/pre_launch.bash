@@ -100,3 +100,6 @@ fi
 if ${BASH_ALIASES[openstack]} volume show boot-volume -f json | jq -r '.status' | grep -q available ; then
     ${BASH_ALIASES[openstack]} server create --flavor m1.small --volume boot-volume --nic net-id=private bfv-server --wait
 fi
+
+# Get console log
+${BASH_ALIASES[openstack]} console log show test

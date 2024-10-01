@@ -52,3 +52,14 @@
   when: prelaunch_test_instance|bool
   ansible.builtin.shell: |
       ping -c4 {{ lookup('env', 'FIP') | default('192.168.122.20', True) }}
+
+- name: Check console log test vm
+  when: prelaunch_test_instance|bool
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ neutron_header }}
+    ${BASH_ALIASES[openstack]} console log show test
+
+- name: Ensure test failure to debug and hold
+  ansible.builtin.fail:
+    msg: "Failing here to ensure we can hold a node and debug from the node"
