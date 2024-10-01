@@ -1,16 +1,16 @@
 [id="troubleshooting-object-storage-migration_{context}"]
 
-= Troubleshooting the {object_storage_first_ref} migration
+= Troubleshooting the {object_storage} migration
 
 You can troubleshoot issues with the {object_storage_first_ref} migration.
 
-* The following command might be helpful to debug if the replication is not working and the `swift-dispersion-report` is not back to 100% availability.
+* If the replication is not working and the `swift-dispersion-report` is not back to 100% availability, check the replicator progress to help you debug:
 +
 ----
-CONTROLLER1_SSH tail /var/log/containers/swift/swift.log | grep object-server
+$ CONTROLLER1_SSH tail /var/log/containers/swift/swift.log | grep object-server
 ----
 +
-This should show the replicator progress, for example:
+The following shows an example of the output:
 +
 ----
 Mar 14 06:05:30 standalone object-server[652216]: <f+++++++++ 4e2/9cbea55c47e243994b0b10d8957184e2/1710395823.58025.data
@@ -24,10 +24,10 @@ Mar 14 06:05:31 standalone object-server[652216]: Removing partition: /srv/node/
 * You can also check the ring consistency and replicator status:
 +
 ----
-oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-recon -r --md5'
+$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-recon -r --md5'
 ----
 +
-Note that the output might show a md5 mismatch until approx. 2 minutes after pushing new rings. Eventually it looks similar to the following example:
+The output might show a md5 mismatch until approximately 2 minutes after pushing the new rings. After the 2 minutes, the output looks similar to the following example:
 +
 ----
 [...]
