@@ -35,7 +35,7 @@ overcloud-controller-0 | CHANGED | rc=0 >>
 auth_encryption_key=Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2
 ----
 
-. Base64 encode the password: 
+. Base64 encode the password:
 +
 ----
 $ echo Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2 | base64
@@ -159,7 +159,7 @@ $ oc exec -it openstackclient -- openstack orchestration service list -f yaml
   Updated At: '2023-10-11T21:48:01.000000'
 ----
 
-. Verify that you can see your {orchestration} stacks. Test whether you can create networks, subnets, ports, or routers:
+. Verify that you can see your {orchestration} stacks:
 +
 ----
 $ openstack stack list -f yaml
