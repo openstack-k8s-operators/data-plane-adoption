@@ -90,7 +90,7 @@
       name: ovn-copy-data
       annotations:
         openshift.io/scc: anyuid
-        k8s.v1.cni.cncf.io/networks: internalapi
+        k8s.v1.cni.cncf.io/networks: internalapi{{ osp18_ns_suffix|default('') }}
       labels:
         app: adoption
     spec:
