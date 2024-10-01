@@ -8,14 +8,14 @@ ifdef::context[:parent-context: {context}]
 
 To migrate the monitoring stack to the target nodes, you add the monitoring label to your existing nodes and update the configuration of each daemon.
 
-Before you start the migration, review the following considerations:
+Before you start the migration, review the following:
 
 * You do not need to migrate node exporters. These daemons are deployed across
-the nodes that are part of the {CephCluster} cluster (the placement is ‘*’), and you lose metrics when the Controller nodes are not part of the {CephCluster} cluster anymore.
-* Each monitoring stack component is bound to specific ports that {OpenStackPreviousInstaller} you open before the migration. Confirm that the firewall rules are in place and the ports are open for a given monitoring stack service.
+the nodes that are part of the {CephCluster} cluster (the placement is ‘*’).
+* Confirm that the firewall rules are in place and the ports are open for a given monitoring stack service.
 
 Depending on the target nodes and the number of deployed or active daemons, you can either relocate the existing containers to the target nodes, or
-select a subset of nodes that host the monitoring stack daemons. High availability (HA) is not supported, so reducing the placement with `count: 1`  allows you to migrate the existing daemons in a Hyperconverged Infrastructure (or HW limited) scenario without impacting other services.
+select a subset of nodes that host the monitoring stack daemons. High availability (HA) is not supported. Reducing the placement with `count: 1`  allows you to migrate the existing daemons in a Hyperconverged Infrastructure, or hardware-limited, scenario without impacting other services.
 
 include::../modules/proc_migrating-existing-daemons-to-target-nodes.adoc[leveloffset=+1]
 

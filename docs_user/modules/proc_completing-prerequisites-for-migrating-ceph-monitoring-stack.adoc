@@ -33,7 +33,7 @@ Confirm that the cluster is healthy and that both `ceph orch ls` and
 
 . Review and update the container image registry:
 [NOTE]
-If you run the {Ceph} externalization procedure after you migrate the {rhos_prev_long} control plane, it is important to consider updating the container images in the {CephCluster} cluster configuration. The current container images point to the undercloud registry, which might not be available anymore. Because the undercloud is not available after adoption is complete, replace the undercloud-provided images with an alternative registry.
+If you run the {Ceph} externalization procedure after you migrate the {rhos_prev_long} control plane, update the container images in the {CephCluster} cluster configuration. The current container images point to the undercloud registry, which might not be available anymore. Because the undercloud is not available after adoption is complete, replace the undercloud-provided images with an alternative registry.
 ifeval::["{build}" != "downstream"]
 In case the desired option is to rely on the https://github.com/ceph/ceph/blob/reef/src/cephadm/cephadm.py#L48[default images]
 shipped by cephadm, remove the following config options from the {CephCluster} cluster.

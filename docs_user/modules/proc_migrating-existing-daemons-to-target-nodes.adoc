@@ -93,7 +93,7 @@ prometheus.cephstorage-1    cephstorage-1.redhat.local  172.17.3.53:9092
 ----
 +
 [NOTE]
-After you migrate the monitoring stack, you lose high availability. The monitoring stack daemons no longer have a Virtual IP address and HAProxy anymore. Node exporters are still running on all the nodes. Instead of using labels we keep the current approach as we want to not reduce the monitoring space covered.
+After you migrate the monitoring stack, you lose high availability. The monitoring stack daemons no longer have a Virtual IP address and HAProxy anymore. Node exporters are still running on all the nodes.
 
 . Review the {Ceph} configuration to ensure that it aligns with the configuration on the target nodes. In particular, focus on the following configuration entries:
 +
@@ -133,8 +133,7 @@ mgr  advanced  mgr/dashboard/GRAFANA_API_URL         https://172.17.3.144:3100
 ----
 +
 [NOTE]
-The Ceph Dashboard (mgr module plugin) is not impacted by the relocation. The service is provided by the Ceph Manager daemon. You might experience an impact when the active `mgr` daemon is migrated or is force-failed. However, defining 3 replicas allows you to redirect requests to a different instance (it’s still an A/P model), hence the impact should be
-limited.
+The Ceph Dashboard, as the service  provided by the Ceph `mgr`, is not impacted by the relocation. You might experience an impact when the active `mgr` daemon is migrated or is force-failed. However, you can define 3 replicas to redirect requests to a different instance (it’s still an A/P model), so that the impact is limited.
 . When the RBD migration is over, regenerate the following {Ceph} configuration keys to point to the right `mgr` container:
 +
 ----
