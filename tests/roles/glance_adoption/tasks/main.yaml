@@ -1,3 +1,9 @@
+- name: template out the local backend
+  ansible.builtin.template:
+    src: "{{ role_path }}/files/glance_local.yaml.j2"
+    dest: "{{ role_path }}/files/glance_local.yaml"
+    mode: '644'
+
 - name: deploy podified Glance with local backend
   when: glance_backend == 'nfs'
   block:
@@ -19,6 +25,12 @@
         {{ oc_header }}
         oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/glance_nfs.yaml
 
+- name: template out the glance backend
+  ansible.builtin.template:
+    src: "{{ role_path }}/files/glance_ceph.yaml.j2"
+    dest: "{{ role_path }}/files/glance_ceph.yaml"
+    mode: '644'
+
 - name: deploy podified Glance with Ceph backend
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -26,12 +38,24 @@
      oc patch openstackcontrolplane openstack --type=merge --patch-file={{ role_path }}/files/glance_ceph.yaml
   when: glance_backend == 'ceph'
 
+- name: template out the swift backend
+  ansible.builtin.template:
+    src: "{{ role_path }}/files/glance_swift.yaml.j2"
+    dest: "{{ role_path }}/files/glance_swift.yaml"
+    mode: '644'
+
 - name: deploy podified Glance with Swift backend
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     oc patch openstackcontrolplane openstack --type=merge --patch-file={{ role_path }}/files/glance_swift.yaml
   when: glance_backend == 'swift'
+
+- name: template out the cinder backend
+  ansible.builtin.template:
+    src: "{{ role_path }}/files/glance_cinder.yaml.j2"
+    dest: "{{ role_path }}/files/glance_cinder.yaml"
+    mode: '644'
 
 - name: deploy podified Glance with Cinder backend
   ansible.builtin.shell: |

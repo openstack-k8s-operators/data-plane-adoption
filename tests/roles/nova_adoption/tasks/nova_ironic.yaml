@@ -4,7 +4,6 @@
     {{ oc_header }}
     oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '{{ nova_ironic_patch}}'
 
-
 - name: wait for Nova control plane services' CRs to become ready
   ansible.builtin.include_tasks:
     file: wait.yaml
