@@ -131,7 +131,7 @@ spec:
             metadata:
               annotations:
                 metallb.universe.tf/address-pool: internalapi{{ osp18_ns_suffix }}
-                metallb.universe.tf/loadBalancerIPs: 172.17.0.85
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.190
             spec:
               type: LoadBalancer
       rabbitmq-cell1:
@@ -143,7 +143,7 @@ spec:
             metadata:
               annotations:
                 metallb.universe.tf/address-pool: internalapi{{ osp18_ns_suffix }}
-                metallb.universe.tf/loadBalancerIPs: 172.17.0.86
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.196
             spec:
               type: LoadBalancer
 

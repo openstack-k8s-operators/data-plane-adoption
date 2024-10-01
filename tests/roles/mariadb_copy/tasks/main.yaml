@@ -73,7 +73,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait --for condition=Ready pod/mariadb-copy-data --timeout=10s
+    oc wait --for condition=Ready -n {{ ospdo_namespace| default('openstack') }} pod/mariadb-copy-data --timeout=10s
   register: mariadb_data_pod_result
   until: mariadb_data_pod_result is success
   retries: 25
