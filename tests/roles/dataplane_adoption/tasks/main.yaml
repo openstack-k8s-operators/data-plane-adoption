@@ -194,6 +194,12 @@
             edpm_bootstrap_command: |
               {{ edpm_bootstrap_command| indent(10) }}
 
+            edpm_kernel_sysctl_extra_settings:
+              net.ipv4.neigh.default.gc_stale_time:
+                value: 30
+              net.ipv4.route.gc_timeout:
+                value: 60
+
             # edpm_network_config
             # nic config template for a EDPM compute node
             edpm_network_config_template: |
@@ -310,6 +316,13 @@
             os_net_config_dns: {{ dataplane_os_net_config_dns | default("") }}
             edpm_bootstrap_command: |
               {{ edpm_bootstrap_command| indent(10) }}
+
+            edpm_kernel_sysctl_extra_settings:
+              net.ipv4.neigh.default.gc_stale_time:
+                value: 30
+              net.ipv4.route.gc_timeout:
+                value: 60
+
             # edpm_network_config
             # nic config template for a EDPM compute node
             edpm_network_config_template: |
