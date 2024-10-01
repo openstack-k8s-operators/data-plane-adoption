@@ -102,9 +102,17 @@ spec:
   monitor_port: 8898
   virtual_interface_networks:
     - <external_network>
+  ssl_cert: |
+     -----BEGIN CERTIFICATE-----
+     ...
+     -----END CERTIFICATE-----
+     -----BEGIN PRIVATE KEY-----
+     ...
+     -----END PRIVATE KEY-----
 ----
 +
 * Replace `<external_network>` with your external network, for example, `10.0.0.0/24`. For more information, see xref:completing-prerequisites-for-migrating-ceph-rgw_{context}[Completing prerequisites for migrating {Ceph} RGW].
+* If TLS is enabled, add the  SSL certificate and key concatenation as described in link:{configuring-storage}/assembly_configuring-red-hat-ceph-storage-as-the-backend-for-rhosp-storage#proc_ceph-configure-rgw-with-tls_ceph-back-end[Configuring RGW with TLS for an external Red Hat Ceph Storage cluster] in _{configuring-storage-t}_.
 
 . Apply the `rgw_ingress` spec by using the Ceph orchestrator CLI:
 +
