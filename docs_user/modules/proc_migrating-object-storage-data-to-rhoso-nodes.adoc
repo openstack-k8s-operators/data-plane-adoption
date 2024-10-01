@@ -1,42 +1,37 @@
 [id="migrating-object-storage-data-to-rhoso-nodes_{context}"]
 
-= Migrating the {object_storage_first_ref} data from {OpenStackShort} to {rhos_long} nodes
+= Migrating the {object_storage} data from {OpenStackShort} to {rhos_acro} nodes
 
-To ensure availability during the {object_storage_first_ref} migration, you perform the following steps:
+The {object_storage_first_ref} migration involves the following steps:
 
-. Add new nodes to the {object_storage} rings
-. Set weights of existing nodes to 0
-. Rebalance rings, moving one replica
-. Copy rings to old nodes and restart services
-. Check replication status and repeat previous two steps until old nodes are drained
-. Remove the old nodes from the rings
+. Add new nodes to the {object_storage} rings.
+. Set weights of existing nodes to 0.
+. Rebalance rings by moving one replica.
+. Copy rings to old nodes and restart services.
+. Check replication status and repeat the previous two steps until the old nodes are drained.
+. Remove the old nodes from the rings.
 
 .Prerequisites
 
-* Previous {object_storage} adoption steps are completed.
-* No new environmental variables need to be defined, though you use the
-`CONTROLLER1_SSH` alias that was defined in a previous step.
-//kgilliga: Note to self: I'm not sure if the first 2 prereqs are necessary if no new variables need to be defined and the Object Storage adoption chapter comes before this chapter.
-* For DNS servers, all existing nodes must be able to resolve host names of the {rhocp_long} pods, for example by using the
-external IP of the DNSMasq service as name server in `/etc/resolv.conf`:
+* Adopt the {object_storage}. For more information, see xref:adopting-the-object-storage-service_adopt-control-plane[Adopting the {object_storage}].
+* For DNS servers, ensure that all existing nodes are able to resolve the hostnames of the {rhocp_long} pods, for example, by using the external IP of the DNSMasq service as the server name in `/etc/resolv.conf`:
 +
 ----
-oc get service dnsmasq-dns -o jsonpath="{.status.loadBalancer.ingress[0].ip}" | CONTROLLER1_SSH tee /etc/resolv.conf
+$ oc get service dnsmasq-dns -o jsonpath="{.status.loadBalancer.ingress[0].ip}" | CONTROLLER1_SSH tee /etc/resolv.conf
 ----
-* To track the current status of the replication a tool called `swift-dispersion` is used. It consists of two parts, a population tool to be run before changing the {object_storage} rings and a report tool to run afterwards to gather the current status. Run the `swift-dispersion-populate` command:
-//kgilliga: Is this a prerequisite?
+* Track the current status of the replication by using the `swift-dispersion` tool:
 +
 ----
-oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-dispersion-populate'
+$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-dispersion-populate'
 ----
 +
-The command might need a few minutes to complete. It creates 0-byte objects distributed across the {object_storage} deployment, and its counter-part `swift-dispersion-report` can be used afterwards to show the current replication status.
-+
-The output of the `swift-dispersion-report` command should look like the following:
+The command might need a few minutes to complete. It creates 0-byte objects that are distributed across the {object_storage} deployment, and you can use the `swift-dispersion-report` afterward to show the current replication status:
 +
 ----
-oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-dispersion-report'
+$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-dispersion-report'
 ----
++
+The output of the `swift-dispersion-report` command looks similar to the following:
 +
 ----
 Queried 1024 containers for dispersion reporting, 5s, 0 retries
@@ -50,29 +45,28 @@ Sample represents 100.00% of the object partition space
 
 .Procedure
 
-. Add new nodes by scaling up the SwiftStorage resource from 0 to 3. In
-that case 3 storage instances using PVCs are created, running on the
-{rhocp_long} cluster.
+. Add new nodes by scaling up the SwiftStorage resource from 0 to 3:
 // TODO add paragraph / link on EDPM node usage for Swift
 +
 ----
-oc patch openstackcontrolplane openstack --type=merge -p='{"spec":{"swift":{"template":{"swiftStorage":{"replicas": 3}}}}}'
+$ oc patch openstackcontrolplane openstack --type=merge -p='{"spec":{"swift":{"template":{"swiftStorage":{"replicas": 3}}}}}'
 ----
++
+Three storage instances using Persistent Volume Claims are created, running on the {rhocp_long} cluster.
 
 . Wait until all three pods are running:
 +
 ----
-oc wait pods --for condition=Ready -l component=swift-storage
+$ oc wait pods --for condition=Ready -l component=swift-storage
 ----
 
-. Drain the existing nodes. Get the storage management IP
-addresses of the nodes to drain from the current rings:
+. Get the storage management IP addresses of the nodes to drain from the current rings:
 +
 ----
-oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-ring-builder object.builder' | tail -n +7 | awk '{print $4}' | sort -u
+$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-ring-builder object.builder' | tail -n +7 | awk '{print $4}' | sort -u
 ----
 +
-The output will look similar to the following:
+The output looks similar to the following:
 +
 ----
 172.20.0.100:6200
@@ -80,23 +74,24 @@ swift-storage-0.swift-storage.openstack.svc:6200
 swift-storage-1.swift-storage.openstack.svc:6200
 swift-storage-2.swift-storage.openstack.svc:6200
 ----
-+
-In this case the old node 172.20.0.100 is drained. Your nodes might be
-different, and depending on the deployment there are likely more nodes to be included in the following commands.
+
+. Drain the old nodes. In the following example, the old node `172.20.0.100` is drained:
 +
 ----
-oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
+$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
 swift-ring-tool get
 swift-ring-tool drain 172.20.0.100
 swift-ring-tool rebalance
 swift-ring-tool push'
 ----
++
+Depending on your deployment, you might have more nodes to include in the command.
 
-. Copy and apply the updated rings need to the original nodes. Run the
-ssh commands for your existing nodes storing {object_storage} data.
+. Copy and apply the updated rings to the original nodes. Run the
+ssh commands for your existing nodes that store the {object_storage} data: 
 +
 ----
-oc extract --confirm cm/swift-ring-files
+$ oc extract --confirm cm/swift-ring-files
 CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
 CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
 ----
@@ -104,10 +99,10 @@ CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
 . Track the replication progress by using the `swift-dispersion-report` tool:
 +
 ----
-oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report"
+$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report"
 ----
 +
-The output shows less than 100% of copies found. Repeat the above command until both the container and all container and object copies are found:
+The output shows less than 100% of copies found. Repeat the command until all container and object copies are found:
 +
 ----
 Queried 1024 containers for dispersion reporting, 6s, 0 retries
@@ -121,44 +116,44 @@ There were 285 partitions missing 0 copies.
 Sample represents 100.00% of the object partition space
 ----
 
-. Move the next replica to the new nodes. To do so, rebalance and distribute the rings again:
+. Move the next replica to the new nodes by rebalancing and distributing the rings:
 +
 ----
-oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
+$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
 swift-ring-tool get
 swift-ring-tool rebalance
 swift-ring-tool push'
 
-oc extract --confirm cm/swift-ring-files
+$ oc extract --confirm cm/swift-ring-files
 CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
 CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
 ----
 +
-Monitor the `swift-dispersion-report` output again, wait until all copies are found again and repeat this step until all your replicas are moved to the new nodes.
+Monitor the `swift-dispersion-report` output again, wait until all copies are found, and then repeat this step until all your replicas are moved to the new nodes.
 
-. After the nodes are drained, remove the nodes from the rings:
+. Remove the nodes from the rings:
 +
 ----
-oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
+$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
 swift-ring-tool get
 swift-ring-tool remove 172.20.0.100
 swift-ring-tool rebalance
 swift-ring-tool push'
 ----
 
+[NOTE]
+Even if all replicas are on the new nodes and the `swift-dispersion-report` command reports 100% of the copies found, there might still be data on the old nodes. The replicators remove this data, but it might take more time.
+
 .Verification
 
-* Even if all replicas are already on the the new nodes and the
-`swift-dispersion-report` command reports 100% of the copies found, there might still be data on old nodes. This data is removed by the replicators, but it might take some more time.
-+
-You can check the disk usage of all disks in the cluster:
+. Check the disk usage of all disks in the cluster:
 +
 ----
-oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-recon -d'
+$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-recon -d'
 ----
 
-* Confirm that there are no more `\*.db` or `*.data` files in the directory `/srv/node` on these nodes:
+. Confirm that there are no more `\*.db` or `*.data` files in the `/srv/node` directory on the nodes:
 +
 ----
-CONTROLLER1_SSH "find /srv/node/ -type f -name '*.db' -o -name '*.data' | wc -l"
+$ CONTROLLER1_SSH "find /srv/node/ -type f -name '*.db' -o -name '*.data' | wc -l"
 ----
