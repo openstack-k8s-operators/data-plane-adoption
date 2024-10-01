@@ -85,11 +85,6 @@ if ! ${BASH_ALIASES[openstack]} volume snapshot show snapshot ; then
     wait_for_status "volume snapshot show snapshot" "test volume 'disk' snapshot availability"
 fi
 
-# Add volume to the test VM
-if ${BASH_ALIASES[openstack]} volume show disk -f json | jq -r '.status' | grep -q available ; then
-    ${BASH_ALIASES[openstack]} server add volume test disk
-fi
-
 # create another bootable volume
 if ! ${BASH_ALIASES[openstack]} volume show boot-volume ; then
     ${BASH_ALIASES[openstack]} volume create --image cirros --size 1 boot-volume
@@ -100,3 +95,6 @@ fi
 if ${BASH_ALIASES[openstack]} volume show boot-volume -f json | jq -r '.status' | grep -q available ; then
     ${BASH_ALIASES[openstack]} server create --flavor m1.small --volume boot-volume --nic net-id=private bfv-server --wait
 fi
+
+# Get console log
+${BASH_ALIASES[openstack]} console log show test
