@@ -29,13 +29,13 @@ spec:
             annotations:
               metallb.universe.tf/address-pool: ctlplane
               metallb.universe.tf/allow-shared-ip: ctlplane
-              metallb.universe.tf/loadBalancerIPs: 192.168.122.80
+              metallb.universe.tf/loadBalancerIPs: {{ dns_lb_ip }}
           spec:
             type: LoadBalancer
       options:
       - key: server
         values:
-        - 192.168.122.1
+        - {{ dns_server_ip }}
       replicas: 1
 
   glance:
@@ -151,3 +151,27 @@ spec:
         replicas: 0
       swiftProxy:
         replicas: 1
+
+  tls:
+{% if enable_tlse %}
+    podLevel:
+      enabled: true
+      internal:
+        ca:
+          customIssuer: rootca-internal
+      libvirt:
+        ca:
+          customIssuer: rootca-internal
+      ovn:
+        ca:
+          customIssuer: rootca-internal
+    ingress:
+      ca:
+        customIssuer: rootca-internal
+      enabled: true
+{% else %}
+    podLevel:
+      enabled: false
+    ingress:
+      enabled: false
+{% endif %}

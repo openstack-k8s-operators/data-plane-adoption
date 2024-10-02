@@ -99,4 +99,4 @@
     {{ shell_header }}
     {{ oc_header }}
     alias openstack="oc exec -t openstackclient -- openstack"
-    ${BASH_ALIASES[openstack]} subnet set --dns-nameserver 192.168.122.80  provisioning-subnet
+    ${BASH_ALIASES[openstack]} subnet set --dns-nameserver {{ dns_server_provisioning_ip }} provisioning-subnet
