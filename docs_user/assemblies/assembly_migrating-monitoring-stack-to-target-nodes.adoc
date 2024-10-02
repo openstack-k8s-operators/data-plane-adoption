@@ -11,7 +11,7 @@ To migrate the monitoring stack to the target nodes, you add the monitoring labe
 Before you start the migration, review the following:
 
 * You do not need to migrate node exporters. These daemons are deployed across
-the nodes that are part of the {CephCluster} cluster (the placement is ‘*’).
+the nodes that are part of the {Ceph} cluster (the placement is ‘*’).
 * Confirm that the firewall rules are in place and the ports are open for a given monitoring stack service.
 
 Depending on the target nodes and the number of deployed or active daemons, you can either relocate the existing containers to the target nodes, or

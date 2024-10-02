@@ -14,7 +14,7 @@ for item in $(sudo cephadm shell --  ceph orch host ls --format json | jq -r '.[
 done
 ----
 
-. Verify that all 3 hosts have the monitoring label:
+. Verify that all the hosts on the target nodes have the monitoring label:
 +
 ----
 [tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls
@@ -133,22 +133,25 @@ mgr  advanced  mgr/dashboard/GRAFANA_API_URL         https://172.17.3.144:3100
 ----
 +
 [NOTE]
-The Ceph Dashboard, as the service  provided by the Ceph `mgr`, is not impacted by the relocation. You might experience an impact when the active `mgr` daemon is migrated or is force-failed. However, you can define 3 replicas to redirect requests to a different instance (it’s still an A/P model), so that the impact is limited.
-. When the RBD migration is over, regenerate the following {Ceph} configuration keys to point to the right `mgr` container:
-+
-----
-mgr    advanced  mgr/dashboard/controller-0.ycokob/server_addr  172.17.3.33
-mgr    advanced  mgr/dashboard/controller-1.lmzpuc/server_addr  172.17.3.147
-mgr    advanced  mgr/dashboard/controller-2.xpdgfl/server_addr  172.17.3.138
-----
-+
-----
-$ sudo cephadm shell
-$ ceph orch ps | awk '/mgr./ {print $1}'
-----
+The Ceph Dashboard, as the service  provided by the Ceph `mgr`, is not impacted by the relocation. You might experience an impact when the active `mgr` daemon is migrated or is force-failed. However, you can define 3 replicas in the Ceph Manager configuration to redirect requests to a different instance.
 
-. For each retrieved `mgr` daemon, update the entry in the {Ceph} configuration:
-+
-----
-$ ceph config set mgr mgr/dashboard/<>/server_addr/<ip addr>
-----
+//. When the RBD migration is over, regenerate the following {Ceph} configuration keys to point to the right `mgr` container:
+//+
+//----
+//mgr    advanced  mgr/dashboard/controller-0.ycokob/server_addr  172.17.3.33
+//mgr    advanced  mgr/dashboard/controller-1.lmzpuc/server_addr  172.17.3.147
+//mgr    advanced  mgr/dashboard/controller-2.xpdgfl/server_addr  172.17.3.138
+//----
+//+
+//----
+//$ sudo cephadm shell
+//$ ceph orch ps | awk '/mgr./ {print $1}'
+//----
+
+//. For each retrieved `mgr` daemon, update the entry in the {Ceph} configuration:
+//+
+//----
+//$ ceph config set mgr mgr/dashboard/<>/server_addr/<ip addr>
+//----
+
+//kgilliga: The hidden steps above will be placed in a "post Ceph migration procedure".
