@@ -4,6 +4,11 @@
 
 Complete the following prerequisites before you migrate a {Ceph} cluster with monitoring stack components.
 
+//[NOTE]
+//In addition to updating the container images related to the monitoring stack, you must update the configuration entry related to the `container_image_base`. This has an impact on all the {Ceph} daemons that rely on the undercloud images.
+//New daemons are deployed by using the new image registry location that is configured in the {Ceph} cluster.
+//kgilliga: This note needs to be included in the yet-to-be-created Ceph prerequisites module in the Planning chapter.
+
 .Procedure
 
 . Gather the current status of the monitoring stack. Verify that
@@ -67,7 +72,5 @@ for i in prometheus grafana alertmanager node_exporter; do
     cephadm shell -- ceph config rm mgr mgr/cephadm/container_image_$i
 done
 ----
-+
-[NOTE]
-In addition to updating the container images related to the monitoring stack, you must update the configuration entry related to the `container_image_base`. This has an impact on all the {Ceph} daemons that rely on the undercloud images.
-New daemons are deployed by using the new image registry location that is configured in the {Ceph} cluster.
+
+
