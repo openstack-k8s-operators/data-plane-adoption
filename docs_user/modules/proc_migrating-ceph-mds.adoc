@@ -2,28 +2,33 @@
 
 = Migrating {Ceph} MDS to new nodes within the existing cluster
 
-In the context of data plane adoption, where the {rhos_prev_long} ({OpenStackShort}) services are
-redeployed in {rhocp_long}, a {OpenStackPreviousInstaller}-deployed {CephCluster} cluster will undergo a migration in a process we are calling “externalizing” the {CephCluster} cluster.
-There are two deployment topologies, broadly, that include an “internal” {CephCluster} cluster today: one is where {OpenStackShort} includes dedicated {CephCluster} nodes to host object storage daemons (OSDs), and the other is Hyperconverged Infrastructure (HCI) where Compute nodes double up as {CephCluster} nodes. In either scenario, there are some {Ceph} processes that are deployed on {OpenStackShort} Controller nodes: {Ceph} monitors, Ceph Object Gateway (RGW), Rados Block Device (RBD), Ceph Metadata Server (MDS), Ceph Dashboard, and NFS Ganesha.
-This document describes how to migrate the MDS daemon in case {rhos_component_storage_file_first_ref} (deployed with either a cephfs-native or ceph-nfs backend) is part of the overcloud deployment. The MDS migration is performed by cephadm, and as done for the other daemons, the general idea is to move the daemons placement from a "hosts" based approach to a "label" based one.
+During the data plane adoption, where the {rhos_prev_long} ({OpenStackShort}) services are redeployed in {rhocp_long}, a {OpenStackPreviousInstaller}-deployed {CephCluster} cluster is migrated in a process called externalizing the {Ceph} cluster.
+
+There are two deployment topologies that currently include an internal {CephCluster} cluster: 
+
+* {OpenStackShort} includes dedicated {CephCluster} nodes to host object storage daemons (OSDs). 
+* Hyperconverged Infrastructure (HCI), where Compute nodes double up as {CephCluster} nodes. 
+
+In either scenario, there are some {Ceph} processes that are deployed on {OpenStackShort} Controller nodes: {Ceph} monitors, Ceph Object Gateway (RGW), Rados Block Device (RBD), Ceph Metadata Server (MDS), Ceph Dashboard, and NFS Ganesha.
+
+This procedure describes how to migrate the MDS daemon when {rhos_component_storage_file_first_ref}, deployed with either a cephfs-native or ceph-nfs back end, is part of the overcloud deployment. The MDS migration is performed by `cephadm`, and you move the daemons placement from a hosts-based approach to a label-based approach.
 ifeval::["{build}" != "upstream"]
-This ensures that the human operator can easily visualize the status of the cluster and where daemons are placed using the `ceph orch host` command, and have a general view of how the daemons are co-located within a given host, according to the https://access.redhat.com/articles/1548993[cardinality matrix].
+This ensures that you can visualize the status of the cluster and where daemons are placed by using the `ceph orch host` command. You can also have a general view of how the daemons are co-located within a given host, as described in the Red Hat Knowledgebase article https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations].
 endif::[]
 ifeval::["{build}" != "downstream"]
-This ensures that the human operator can easily visualize the status of the cluster and where daemons are placed using the `ceph orch host` command, and have a general view of how the daemons are co-located within a given host.
+This ensures that you can visualize the status of the cluster and where daemons are placed by using the `ceph orch host` command, and have a general view of how the daemons are co-located within a given host.
 endif::[]
-//kgilliga: Note to self/SMEs: This intro will be rewritten for GA, so the text might not flow very well right now.
 
-For this procedure, we assume that we are beginning with a {OpenStackShort} based on {rhos_prev_ver} and a {Ceph} {CephVernum} deployment managed by {OpenStackPreviousInstaller}.
-We assume that:
+For this procedure, your environment must meet the following requirements:
 
-* {Ceph} is upgraded to {Ceph} {CephVernum} and is managed by cephadm/orchestrator.
-* Both the {Ceph} public and cluster networks are propagated, through{OpenStackPreviousInstaller}, to the target nodes.
+* An {OpenStackShort} {rhos_prev_ver} environment and a {Ceph} {CephVernum} deployment that is managed by {OpenStackPreviousInstaller}.
+* {Ceph} is upgraded to {Ceph} {CephVernum} and is managed by `cephadm`.
+* Both the {Ceph} public and cluster networks are propagated through{OpenStackPreviousInstaller} to the target nodes.
 
 .Prerequisites
 
 * Verify that the {CephCluster} cluster is healthy and check the MDS status:
-
++
 ----
 [ceph: root@controller-0 /]# ceph fs ls
 name: cephfs, metadata pool: manila_metadata, data pools: [manila_data ]
@@ -47,7 +52,7 @@ MDS version: ceph version 17.2.6-100.el9cp (ea4e3ef8df2cf26540aae06479df031dcfc8
 ----
 
 * Retrieve more detailed information on the Ceph File System (CephFS) MDS status:
-
++
 ----
 [ceph: root@controller-0 /]# ceph fs dump
 
@@ -93,7 +98,7 @@ dumped fsmap epoch 8
 ----
 
 * Check the OSD blocklist and clean up the client list:
-
++
 ----
 [ceph: root@controller-0 /]# ceph osd blocklist ls
 ..
@@ -102,12 +107,13 @@ for item in $(ceph osd blocklist ls | awk '{print $0}'); do
      ceph osd blocklist rm $item;
 done
 ----
-
++
 [NOTE]
-When a file system client is unresponsive or misbehaving, it may happen that
-the access to the file system is forcibly terminated. This process is called
-eviction. Evicting a CephFS client prevents it from communicating further with MDS daemons and OSD daemons.
-Ordinarily, a blocklisted client may not reconnect to the servers: it must be unmounted and then remounted. However, in some situations it may be useful to permit a client that was evicted to attempt to reconnect. Because CephFS uses the RADOS OSD blocklist to control client eviction, CephFS clients can be permitted to reconnect by removing them from the blocklist.
+====
+When a file system client is unresponsive or misbehaving, the access to the file system might be forcibly terminated. This process is called eviction. Evicting a CephFS client prevents it from communicating further with MDS daemons and OSD daemons.
+
+Ordinarily, a blocklisted client might not reconnect to the servers; you must unmount and then remount the client. However, in some situations, it might be useful to permit a client that was evicted to attempt to reconnect. Because CephFS uses the RADOS OSD blocklist to control client eviction, you can permit CephFS clients to reconnect by removing them from the blocklist.
+====
 
 .Procedure
 
@@ -135,7 +141,7 @@ placement:
   - controller-2.redhat.local
 ----
 
-. Extend the MDS labels to the target nodes:
+. Apply the MDS labels to the target nodes:
 +
 ----
 for item in $(sudo cephadm shell --  ceph orch host ls --format json | jq -r '.[].hostname'); do
@@ -143,7 +149,7 @@ for item in $(sudo cephadm shell --  ceph orch host ls --format json | jq -r '.[
 done
 ----
 
-. Verify all the hosts have the MDS label:
+. Verify that all the hosts have the MDS label:
 +
 ----
 [tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls
@@ -174,15 +180,16 @@ placement:
   label: mds
 ----
 
-. Use the `ceph orchestrator` to apply the new MDS spec: it results in an
-increased number of mds daemons:
+. Use the `ceph orchestrator` to apply the new MDS spec:
 +
 ----
 $ sudo cephadm shell -m mds.yaml -- ceph orch apply -i /mnt/mds.yaml
 Scheduling new mds deployment …
 ----
++
+This results in an increased number of MDS daemons.
 
-. Check the new standby daemons temporarily added to the cephfs fs:
+. Check the new standby daemons that are temporarily added to the CephFS:
 +
 ----
 $ ceph fs dump
@@ -205,15 +212,15 @@ Standby daemons:
 . To migrate MDS to the right nodes, set the MDS affinity that manages the MDS failover:
 ifeval::["{build}" != "downstream"]
 [NOTE]
-It is possible to elect as "active" a dedicated MDS for a particular file system. To configure this preference, `CephFS` provides a configuration option for MDS called `mds_join_fs` which enforces this affinity.
-When failing over MDS daemons, a cluster’s monitors will prefer standby daemons with `mds_join_fs` equal to the file system name with the failed rank. If no standby exists with `mds_join_fs` equal to the file system name, it will choose an unqualified standby as a replacement.
+It is possible to elect as "active" a dedicated MDS for a particular file system. To configure this preference, `CephFS` provides a configuration option for MDS called `mds_join_fs`, which enforces this affinity.
+When failing over MDS daemons, a cluster’s monitors prefer standby daemons with `mds_join_fs` equal to the file system name with the failed rank. If no standby exists with `mds_join_fs` equal to the file system name, it chooses an unqualified standby as a replacement.
 endif::[]
 +
 ----
-ceph config set mds.mds.cephstorage-0.fqcshx mds_join_fs cephfs
+$ ceph config set mds.mds.cephstorage-0.fqcshx mds_join_fs cephfs
 ----
 
-. Remove the labels from Controller nodes and force the MDS failover to the
+. Remove the labels from the Controller nodes and force the MDS failover to the
 target node:
 +
 ----
