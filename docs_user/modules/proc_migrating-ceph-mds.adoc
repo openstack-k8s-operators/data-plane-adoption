@@ -103,7 +103,7 @@ done
 ====
 When a file system client is unresponsive or misbehaving, the access to the file system might be forcibly terminated. This process is called eviction. Evicting a CephFS client prevents it from communicating further with MDS daemons and OSD daemons.
 
-Ordinarily, a blocklisted client might not reconnect to the servers; you must unmount and then remount the client. However, in some situations, it might be useful to permit a client that was evicted to attempt to reconnect. Because CephFS uses the RADOS OSD blocklist to control client eviction, you can permit CephFS clients to reconnect by removing them from the blocklist.
+Ordinarily, a blocklisted client cannot reconnect to the servers; you must unmount and then remount the client. However, permitting a client that was evicted to attempt to reconnect can be useful. Because CephFS uses the RADOS OSD blocklist to control client eviction, you can permit CephFS clients to reconnect by removing them from the blocklist.
 ====
 
 .Procedure
