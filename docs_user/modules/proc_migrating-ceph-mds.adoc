@@ -10,7 +10,7 @@ ifeval::["{build}" != "downstream"]
 This ensures that you can visualize the status of the cluster and where daemons are placed by using the `ceph orch host` command, and have a general view of how the daemons are co-located within a given host.
 endif::[]
 
-For this procedure, your environment must meet the following requirements:
+.Prerequisites
 
 * An {OpenStackShort} {rhos_prev_ver} environment and a {Ceph} {CephVernum} deployment that is managed by {OpenStackPreviousInstaller}.
 * {Ceph} is upgraded to {Ceph} {CephVernum} and is managed by `cephadm`.
