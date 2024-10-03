@@ -4,38 +4,24 @@ ifdef::context[:parent-context: {context}]
 
 :context: configuring-network
 
-= Configuring the network for the RHOSO deployment
+= Configuring the network for the {rhos_long_noacro} deployment
 
-With {rhocp_long}, the network is a very important aspect of the deployment, and
-it is important to plan it carefully. The general network requirements for the
-{rhos_prev_long} ({OpenStackShort}) services are not much different from the ones in a {OpenStackPreviousInstaller} deployment, but the way you handle them is.
-
-[NOTE]
-For more information about the network architecture and configuration, see
-link:{deploying-rhoso}/assembly_preparing-rhocp-for-rhoso[Preparing Red Hat OpenShift Container Platform for {rhos_long_noacro}] in the _ {deploying-rhoso-t}_guide and link:{defaultOCPURL}/networking/about-networking.html[About networking].
-
-When adopting a new {OpenStackShort} deployment, it is important to align the network
+When you adopt a new {rhos_long} deployment, you must align the network
 configuration with the adopted cluster to maintain connectivity for existing
 workloads.
 
-The following logical configuration steps will incorporate the existing network
-configuration:
+You need to incorporate the existing network configuration in the following steps:
 
-* configure **{OpenShiftShort} worker nodes** to align VLAN tags and IPAM
-  configuration with the existing deployment.
-* configure **Control Plane services** to use compatible IP ranges for
-  service and load balancing IPs.
-* configure **Data Plane nodes** to use corresponding compatible configuration for
-  VLAN tags and IPAM.
+* You configure {rhocp_long} worker nodes to align VLAN tags and IP Address Management (IPAM) configuration with the existing deployment.
+* You configure control plane services to use compatible IP ranges for service and load-balancing IP addresses.
+* You configure data plane nodes to use corresponding compatible configuration for VLAN tags and IPAM.
+* You can either reuse IPAM configuration from the existing deployment or, depending on IP address availability in the existing allocation pools, define new ranges to be used for the new control plane services. If you define new ranges, you configure IP routing between the old and new ranges. For more information, see xref:planning-your-ipam-configuration_configuring-network[Planning your IPAM configuration].
+* You reuse VLAN tags from the existing deployment.
 
-Specifically,
+[NOTE]
+For more information about the network architecture and configuration, see
+link:{deploying-rhoso}/assembly_preparing-rhoso-networks[Preparing networks for Red Hat OpenStack Services on OpenShift] in _{deploying-rhoso-t}_ and link:{defaultOCPURL}/networking/about-networking[About networking] in _Networking_.
 
-* IPAM configuration will either be reused from the
-  **existing** deployment or, depending on IP address availability in the
-  existing allocation pools, **new** ranges will be defined to be used for the
-  new control plane services. If so, **IP routing** will be configured between
-  the old and new ranges. For more information, see xref:planning-your-ipam-configuration_configuring-network[Planning your IPAM configuration].
-* VLAN tags will be reused from the existing deployment.
 
 include::../modules/proc_retrieving-network-information-from-your-existing-deployment.adoc[leveloffset=+1]
 
