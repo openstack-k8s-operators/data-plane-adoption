@@ -72,5 +72,3 @@ for i in prometheus grafana alertmanager node_exporter; do
     cephadm shell -- ceph config rm mgr mgr/cephadm/container_image_$i
 done
 ----
-
-
