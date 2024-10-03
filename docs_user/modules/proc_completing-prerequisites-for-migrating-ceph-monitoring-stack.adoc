@@ -2,19 +2,22 @@
 
 = Completing prerequisites for a {Ceph} cluster with monitoring stack components
 
-You must complete the following prerequisites before you migrate a {Ceph} cluster with monitoring stack components.
+Complete the following prerequisites before you migrate a {Ceph} cluster with monitoring stack components.
+
+//[NOTE]
+//In addition to updating the container images related to the monitoring stack, you must update the configuration entry related to the `container_image_base`. This has an impact on all the {Ceph} daemons that rely on the undercloud images.
+//New daemons are deployed by using the new image registry location that is configured in the {Ceph} cluster.
+//kgilliga: This note needs to be included in the yet-to-be-created Ceph prerequisites module in the Planning chapter.
 
 .Procedure
 
 . Gather the current status of the monitoring stack. Verify that
-the hosts have no `monitoring` label (or `grafana`, `prometheus`, `alertmanager`
-in case of a per daemons placement evaluation) associated:
+the hosts have no `monitoring` label, or `grafana`, `prometheus`, or `alertmanager`, in cases of a per daemons placement evaluation:
 [NOTE]
-The entire relocation process is driven by cephadm and relies on labels to be
+The entire relocation process is driven by `cephadm` and relies on labels to be
 assigned to the target nodes, where the daemons are scheduled.
 ifeval::["{build}" != "upstream"]
-Review the https://access.redhat.com/articles/1548993[cardinality matrix] before assigning labels and choose carefully the nodes where the monitoring
-stack components should be scheduled on.
+For more information about assigning labels to nodes, review the Red Hat Knowledgebase article https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations].
 endif::[]
 +
 ----
@@ -30,13 +33,12 @@ controller-2.redhat.local   192.168.24.10  mon _admin mgr
 6 hosts in cluster
 ----
 +
-Confirm that the cluster is healthy and both `ceph orch ls` and
+Confirm that the cluster is healthy and that both `ceph orch ls` and
 `ceph orch ps` return the expected number of deployed daemons.
 
-. Review and update the container image registry. If the {Ceph} externalization procedure is executed after the {rhos_prev_long} control
-plane has been migrated, it’s important to consider updating the container
-images referenced in the {CephCluster} cluster config. The current container images point to the undercloud registry, and it might be no longer available. As the undercloud won’t be available in the future, replace the undercloud provided
-images with an alternative registry.
+. Review and update the container image registry:
+[NOTE]
+If you run the {Ceph} externalization procedure after you migrate the {rhos_prev_long} control plane, update the container images in the {CephCluster} cluster configuration. The current container images point to the undercloud registry, which might not be available anymore. Because the undercloud is not available after adoption is complete, replace the undercloud-provided images with an alternative registry.
 ifeval::["{build}" != "downstream"]
 In case the desired option is to rely on the https://github.com/ceph/ceph/blob/reef/src/cephadm/cephadm.py#L48[default images]
 shipped by cephadm, remove the following config options from the {CephCluster} cluster.
@@ -65,18 +67,8 @@ endif::[]
 . Remove the undercloud container images:
 +
 ----
-# remove the base image
-cephadm shell -- ceph config rm mgr mgr/cephadm/container_image_base
-# remove the undercloud images associated to the monitoring
-# stack components
+$ cephadm shell -- ceph config rm mgr mgr/cephadm/container_image_base
 for i in prometheus grafana alertmanager node_exporter; do
     cephadm shell -- ceph config rm mgr mgr/cephadm/container_image_$i
 done
 ----
-
-[NOTE]
-In the example above, in addition to the monitoring stack related
-container images, we update the config entry related to the
-container_image_base. This has an impact on all the {Ceph} daemons that rely on
-the undercloud images.
-New daemons will be deployed using the new/default {Ceph} image.
