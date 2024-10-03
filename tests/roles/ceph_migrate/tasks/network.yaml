@@ -1,0 +1,65 @@
+- name: MON - Move the mon IP Address to {{ target_node }}
+  become: true
+  when: migrate_mon_ip | default(true)
+  block:
+    - name: MON - Print current mon IP address
+      when: debug | default(false)
+      ansible.builtin.debug:
+        msg: "{{ mon_ipaddr }}"
+
+    - name: MON - Patch net-config config and remove the IP address (src node)
+      delegate_to: "{{ cur_mon }}"
+      ansible.builtin.lineinfile:
+        path: "{{ os_net_conf_path }}"
+        state: absent
+        regexp: '{{ mon_ipaddr }}/24'
+        backup: true
+      vars:
+        # tripleo controllers have tripleo_config.yaml, while adopted nodes
+        # might simply have config.yaml
+        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
+
+    - name: MON - Refresh os-net-config (src node)
+      delegate_to: "{{ cur_mon }}"
+      when: not manual_migration | default(false)
+      ansible.builtin.shell:
+        "os-net-config -c {{ os_net_conf_path }}"
+      vars:
+        # tripleo controllers have tripleo_config.yaml, while adopted nodes
+        # might simply have config.yaml
+        os_net_conf_path: "/etc/os-net-config/tripleo_config.yaml"
+
+    - name: MON - manually rm the ip address (src node)
+      when: manual_migration | bool | default(false)
+      delegate_to: "{{ cur_mon }}"
+      ansible.builtin.command: "ip a del {{ mon_ipaddr }}/24 dev vlan{{ vlan_id }}"
+
+    - name: MON - Patch net-config config and add the IP address (target node)
+      delegate_to: "{{ target_node }}"
+      ansible.builtin.lineinfile:
+        dest: "{{ os_net_conf_path }}"
+        insertafter: "{{ ceph_storage_net_prefix }}"
+        line: "    - ip_netmask: {{ mon_ipaddr }}/24"
+        backup: true
+
+    - name: MON - Refresh os-net-config (target_node)
+      when: not manual_migration | bool | default(false)
+      delegate_to: "{{ target_node }}"
+      ansible.builtin.command:
+        "os-net-config -c {{ os_net_conf_path }}"
+
+    - name: MON - statically assign the ip address to the target node
+      when: manual_migration | bool | default(false)
+      delegate_to: "{{ target_node }}"
+      ansible.builtin.command: "ip a add {{ mon_ipaddr }}/24 dev vlan{{ vlan_id }}"
+
+    - name: MON - ping ip address to see if is reachable on the target node
+      ansible.builtin.command:
+        "ping -W1 -c 3 {{ mon_ipaddr }}"
+      delegate_to: "{{ target_node }}"
+      register: ping_target_ip
+
+    - name: MON - Fail if the IP address is not active in the target node
+      when: ping_target_ip.rc != 0
+      ansible.builtin.fail:
+        msg: "Can't reach the mon IP on the target node"
