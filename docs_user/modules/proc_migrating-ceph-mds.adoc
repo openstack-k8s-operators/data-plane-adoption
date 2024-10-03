@@ -2,16 +2,7 @@
 
 = Migrating {Ceph} MDS to new nodes within the existing cluster
 
-During the data plane adoption, where the {rhos_prev_long} ({OpenStackShort}) services are redeployed in {rhocp_long}, a {OpenStackPreviousInstaller}-deployed {CephCluster} cluster is migrated in a process called externalizing the {Ceph} cluster.
-
-There are two deployment topologies that currently include an internal {CephCluster} cluster: 
-
-* {OpenStackShort} includes dedicated {CephCluster} nodes to host object storage daemons (OSDs). 
-* Hyperconverged Infrastructure (HCI), where Compute nodes double up as {CephCluster} nodes. 
-
-In either scenario, there are some {Ceph} processes that are deployed on {OpenStackShort} Controller nodes: {Ceph} monitors, Ceph Object Gateway (RGW), Rados Block Device (RBD), Ceph Metadata Server (MDS), Ceph Dashboard, and NFS Ganesha.
-
-This procedure describes how to migrate the MDS daemon when {rhos_component_storage_file_first_ref}, deployed with either a cephfs-native or ceph-nfs back end, is part of the overcloud deployment. The MDS migration is performed by `cephadm`, and you move the daemons placement from a hosts-based approach to a label-based approach.
+The following procedure describes how to migrate the MDS daemon when {rhos_component_storage_file_first_ref}, deployed with either a cephfs-native or ceph-nfs back end, is part of the overcloud deployment. The MDS migration is performed by `cephadm`, and you move the daemons placement from a hosts-based approach to a label-based approach.
 ifeval::["{build}" != "upstream"]
 This ensures that you can visualize the status of the cluster and where daemons are placed by using the `ceph orch host` command. You can also have a general view of how the daemons are co-located within a given host, as described in the Red Hat Knowledgebase article https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations].
 endif::[]
@@ -209,12 +200,11 @@ Standby daemons:
 [mds.mds.controller-1.tyiziq{-1:499136} state up:standby seq 1 addr [v2:172.17.3.43:6800/3615018301,v1:172.17.3.43:6801/3615018301] compat {c=[1],r=[1],i=[7ff]}]
 ----
 
-. To migrate MDS to the right nodes, set the MDS affinity that manages the MDS failover:
-ifeval::["{build}" != "downstream"]
+. To migrate MDS to the target nodes, set the MDS affinity that manages the MDS failover:
++
 [NOTE]
-It is possible to elect as "active" a dedicated MDS for a particular file system. To configure this preference, `CephFS` provides a configuration option for MDS called `mds_join_fs`, which enforces this affinity.
-When failing over MDS daemons, a cluster’s monitors prefer standby daemons with `mds_join_fs` equal to the file system name with the failed rank. If no standby exists with `mds_join_fs` equal to the file system name, it chooses an unqualified standby as a replacement.
-endif::[]
+It is possible to elect a dedicated MDS as "active" for a particular file system. To configure this preference, `CephFS` provides a configuration option for MDS called `mds_join_fs`, which enforces this affinity.
+When failing over MDS daemons, cluster monitors prefer standby daemons with `mds_join_fs` equal to the file system name with the failed rank. If no standby exists with `mds_join_fs` equal to the file system name, it chooses an unqualified standby as a replacement.
 +
 ----
 $ ceph config set mds.mds.cephstorage-0.fqcshx mds_join_fs cephfs
@@ -231,8 +221,7 @@ Removed label mds from host controller-1.redhat.local
 Removed label mds from host controller-2.redhat.local
 ----
 +
-The switch happens behind the scenes, and the new active MDS is the one that
-you set through the `mds_join_fs` command.
+The switch to the target node happens in the background. The new active MDS is the one that you set by using the `mds_join_fs` command.
 
 . Check the result of the failover and the new deployed daemons:
 +
