@@ -9,6 +9,7 @@
     {{ shell_header }}
     {{ oc_header }}
     cd {{ install_yamls_path }}
+    export NAMESPACE={{ osp18_namespace|default('openstack') }}
     make input
 
 - name: execute alternative tasks when source env is ODPdO
@@ -74,7 +75,6 @@
     dest: "../config/tmp/test_deployment.yaml"
     mode: '644'
     force: true
-  when: not ospdo_src| bool
 
 - name: when periodic, create OpenStackVersion CR with container overrides
   when:
