@@ -1,25 +1,14 @@
 [id="reusing-existing-subnet-ranges_{context}"]
 
-= Scenario 2: Reusing existing subnet ranges
+= Reusing existing subnet ranges
 
-This scenario is only applicable when the existing subnet ranges have enough IP
-addresses for the new control plane services. On the other hand, it allows to
-avoid additional routing configuration between the old and new subnets, as in xref:using-new-subnet-ranges_{context}[Scenario 1: Using new subnet ranges].
+You can reuse existing subnet ranges if they have enough IP addresses to allocate to the new control plane services. You configure the new control plane services to use the same subnet as you used in the adopted environment, and configure the allocation pools that are used by the new services to exclude IP addresses that are already allocated to existing cluster nodes. By reusing existing subnets, you avoid additional routing configuration between the old and new subnets. as in xref:using-new-subnet-ranges_{context}[Configuring new subnet ranges].
 
-The general idea here is to instruct the new control plane services to use the
-same subnet as in the adopted environment, but define allocation pools used by
-the new services in a way that would exclude IP addresses that were already
-allocated to existing cluster nodes.
+If your existing subnets do not have enough IP addresses in the existing subnet ranges for the new control plane services, you must create new subnet ranges. For more information, see xref:using-new-subnet-ranges_{context}[Using new subnet ranges].
 
-This scenario implies that the remaining IP addresses in the existing subnet is
-enough for the new control plane services. If not,
-xref:using-new-subnet-ranges_{context}[Scenario 1: Using new subnet ranges] should be used
-instead. For more information, see xref:planning-your-ipam-configuration_configuring-network[Planning your IPAM configuration].
-
-No special routing configuration is required in this scenario; the only thing
-to pay attention to is to make sure that already consumed IP addresses don't
-overlap with the new allocation pools configured for {rhos_prev_long} control plane services.
+No special routing configuration is required to reuse subnet ranges. However, you must ensure that already consumed IP addresses do not overlap with the new allocation pools configured for {rhos_long_noacro} control plane services.
 
 If you are especially constrained by the size of the existing subnet, you may
 have to apply elaborate exclusion rules when defining allocation pools for the
 new control plane services. For more information, see
+
