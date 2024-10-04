@@ -23,6 +23,7 @@
   when: prelaunch_test_instance|bool
   ansible.builtin.shell: |
     {{ nova_header }}
+    ssh -ni {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }} test -f ~/syscalls_after.log '||' sudo bpftrace -e 'tracepoint:raw_syscalls:sys_enter { @[comm] = count(); } interval:s:1 { print("=========="); print(@); clear(@); }' '|' tee ~/syscalls_after.log &
     ${BASH_ALIASES[openstack]} server list -c Name -c Status -f value | grep -qF "test SHUTOFF" && ${BASH_ALIASES[openstack]} server start test || echo PASS
     ${BASH_ALIASES[openstack]} server list -c Name -c Status -f value | grep -qF "test ACTIVE" && \
       ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test --fit-width -f json | jq -r '.state' | grep running || echo FAIL

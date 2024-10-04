@@ -85,18 +85,23 @@ if ! ${BASH_ALIASES[openstack]} volume snapshot show snapshot ; then
     wait_for_status "volume snapshot show snapshot" "test volume 'disk' snapshot availability"
 fi
 
-# Add volume to the test VM
-if ${BASH_ALIASES[openstack]} volume show disk -f json | jq -r '.status' | grep -q available ; then
-    ${BASH_ALIASES[openstack]} server add volume test disk
-fi
-
 # create another bootable volume
 if ! ${BASH_ALIASES[openstack]} volume show boot-volume ; then
     ${BASH_ALIASES[openstack]} volume create --image cirros --size 1 boot-volume
     wait_for_status "volume show boot-volume" "test volume 'boot-volume' creation"
 fi
 
+ssh -i {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }} sudo dnf install -y bpftrace
+ssh -ni {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }} sudo bpftrace -e 'tracepoint:raw_syscalls:sys_enter { @[comm] = count(); } interval:s:1 { print("=========="); print(@); clear(@); }' '|' tee ~/syscalls_before.log &
+
 # Launch an instance from boot-volume (BFV)
 if ${BASH_ALIASES[openstack]} volume show boot-volume -f json | jq -r '.status' | grep -q available ; then
     ${BASH_ALIASES[openstack]} server create --flavor m1.small --volume boot-volume --nic net-id=private bfv-server --wait
 fi
+
+# Get console log
+${BASH_ALIASES[openstack]} console log show test
+
+total=$(ssh -i {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }} cat ~/syscalls_before.log | awk -F': ' '/libvirt|emu/ {if ($1) print $1}' |  cut -d's' -f1 | paste -s -d+ - | bc)
+lines=$(ssh -i {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }}cat ~/syscalls_before.log | awk -F': ' '/libvirt|emu/ {if ($1) print $1}' | wc -l)
+echo "Libvirt/Qemu sycalls counts average: $$(( total / lines ))"
