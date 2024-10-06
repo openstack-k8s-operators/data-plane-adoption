@@ -12,7 +12,7 @@
 
 - name: get OSPdO storage storageClass
   ansible.builtin.shell: |
-    oc get -n {{ ospdo_namespace }} pvc openstackclient-hosts -o jsonpath='{.spec.storageClassName}'
+    oc get -n {{ org_namespace }} pvc openstackclient-hosts -o jsonpath='{.spec.storageClassName}'
   register: ospdo_storage_class
   when: deploy_ctlplane_ospdo| default(false) | bool
 
