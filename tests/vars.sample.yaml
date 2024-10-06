@@ -68,4 +68,4 @@ ospdo_src: false
 # rhoso namespace
 osp18_namespace: "openstack"
 # director operator namespace
-ospdo_namespace: "ospdo_openstack"
+org_namespace: "ospdo_openstack"
