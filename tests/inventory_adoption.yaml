@@ -1,5 +1,0 @@
-[local]
-localhost ansible_connection=local
-[ospdo_bm]
-titan134.lab.eng.tlv2.redhat.com ansible_ssh_user=root ansible_ssh_private_key_file=~/.ssh/id_rsa_jenkins
-
