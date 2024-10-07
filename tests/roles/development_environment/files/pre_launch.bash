@@ -17,6 +17,12 @@ function wait_for_status() {
     done
 }
 
+# Benchmark CPU
+# Install sysbench
+ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa -o StrictHostKeyChecking=no root@192.168.122.100 sudo dnf install -y sysbench
+# Run benchmark
+ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa -o StrictHostKeyChecking=no root@192.168.122.100 sysbench cpu run --max-requests=10000000 --threads="$(nproc)"
+
 # Create Image
 IMG=cirros-0.5.2-x86_64-disk.img
 URL=http://download.cirros-cloud.net/0.5.2/$IMG
