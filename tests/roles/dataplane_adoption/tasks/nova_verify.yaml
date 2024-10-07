@@ -19,6 +19,10 @@
   retries: 10
   delay: 6
 
+- name: Dump sysctl
+  ansible.builtin.shell: |
+    ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa -o StrictHostKeyChecking=no root@192.168.122.100 'sysctl -a | tee ~/sysctl-after.log'
+
 - name: verify if Nova services can start the existing test VM instance
   when: prelaunch_test_instance|bool
   ansible.builtin.shell: |

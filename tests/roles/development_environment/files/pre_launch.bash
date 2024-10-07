@@ -17,6 +17,8 @@ function wait_for_status() {
     done
 }
 
+ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa -o StrictHostKeyChecking=no root@192.168.122.100 'sysctl -a | tee ~/sysctl-before.log'
+
 # Create Image
 IMG=cirros-0.5.2-x86_64-disk.img
 URL=http://download.cirros-cloud.net/0.5.2/$IMG
