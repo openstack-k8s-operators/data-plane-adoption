@@ -1,18 +1,16 @@
 [id="con_bare-metal-provisioning-service-configurations_{context}"]
 
-= Bare Metal Provisioning service configurations
+= {bare_metal} configurations
 
-The {bare_metal_first_ref} is configured by using configuration snippets. For more information about the configuration snippets, see xref:service-configurations_planning[Service configurations].
+You configure the {bare_metal_first_ref} by using configuration snippets. For more information about configuring the control plane with the {bare_metal}, see link:{customizing-rhoso}/index[{customizing-rhoso-t}].
 
-{OpenStackPreviousInstaller} generally took care to not override the defaults of the {bare_metal}, however as with any system of descreet configuration management attempting to provide a cross-version compatability layer, some configuration was certainly defaulted in particular ways. For example, PXE Loader file names were often overridden at intermediate layers, and you will thus want to pay particular attention to the settings you choose to apply in your adopted deployment. The operator attempts to apply reasonable working default configuration, but if you override them with prior configuration, your experience may not be ideal or your new {bare_metal} will fail to operate. Similarly, additional configuration may be necessary, for example
-if your `ironic.conf` has additional hardware types enabled and in use.
+Some {bare_metal} configuration is overridden in {OpenStackPreviousInstaller}, for example, PXE Loader file names are often overridden at intermediate layers. You must pay attention to the settings you apply in your {rhos_long} deployment. The operator applies a reasonable working default configuration, but if you override them with your prior configuration, your experience might not be ideal or your new {bare_metal} fails to operate. Similarly, additional configuration might be necessary, for example, if you enable and use additional hardware types in your `ironic.conf` file.
 
-Furthermore, the model of reasonable defaults includes commonly used hardware-types and driver interfaces. For example, if you previously needed to enable the `redfish-virtual-media` boot interface and the `ramdisk` deploy interface, the good news is you don't need to, they are enabled by default. One aspect to be on the watch for after completing adoption is when adding new bare metal nodes, the driver interface selection occurs based upon order of presidence in the configuration if not explicitly set on the node creation request or as an established default in `ironic.conf`.
+The model of reasonable defaults includes commonly used hardware-types and driver interfaces. For example, the `redfish-virtual-media` boot interface and the `ramdisk` deploy interface are enabled by default. If you add new bare metal nodes after the adoption is complete, the driver interface selection occurs based on the order of precedence in the configuration if it is not explicitly set on the node creation request or as an established default in the `ironic.conf` file.
 
-That being said, some configuration parameters are provided as either a convenience to the operator so they don't need to be set on an individual node level while also needing to know precise values, for example, network UUID values, or it is centrally configured in `ironic.conf` as the setting controls behaivor a security control.
+Some configuration parameters do not need to be set on an individual node level, for example, network UUID values, or they are centrally configured in the `ironic.conf` file as the setting controls behavior a security control.
 
-The settings, if configured, and formatted as [section] and parameter name, are critical to be maintained from the prior deployment to the new deployment as it will govern quite a bit of the underlying behavior and values in the previous configuration, would have used specific values if
-set.
+It is critical that you maintain the following parameters that you configured and formatted as `[section]` and parameter name from the prior deployment to the new deployment. These parameters govern the underlying behavior and values in the previous configuration, would have used specific values if set.
 
 * [neutron]cleaning_network
 * [neutron]provisioning_network
@@ -24,7 +22,7 @@ set.
 * [conductor]force_power_state_during_sync
 // FIXME: The setting above likely should be True by default in deployments, but would have been *false* by defaults on prior underclouds.
 
-The following parameters *can* be set individually on a node, however, some operators choose to use embedded configuration options to avoid the need to set it individually when creating/managing bare metal nodes. We recommend you check your prior ironic.conf file for these parameters, and if set apply as specific override configuration.
+You can set the following parameters individually on a node. However, you might choose to use embedded configuration options to avoid the need to set the parameters individually when creating or managing bare metal nodes. Check your prior `ironic.conf` file for these parameters, and if set, apply a specific override configuration.
 
 * [conductor]bootloader
 * [conductor]rescue_ramdisk
@@ -32,12 +30,12 @@ The following parameters *can* be set individually on a node, however, some oper
 * [conductor]deploy_kernel
 * [conductor]deploy_ramdisk
 
-Finally, a parameter which may be important based upon your configuration and experience, are the instances of `kernel_append_params`, formerly `pxe_append_params` in the `[pxe]` and `[redfish]` configuration sections. Largely this parameter is used to appy boot time options like "console" for the deployment ramdisk and as such often seeks to be changed.
+The instances of `kernel_append_params`, formerly `pxe_append_params` in the `[pxe]` and `[redfish]` configuration sections, are used to apply boot time options like "console" for the deployment ramdisk and as such often must be changed.
 
 // TODO:
 // Conductor Groups?!
 
-As a warning, hardware types set via the `ironic.conf` `enabled_hardware_types` parameter and hardware type driver interfaces starting with `staging-` are not available to be migrated into an adopted configuration.
+[WARNING]
+You cannot migrate hardware types that are set with the `ironic.conf` file `enabled_hardware_types` parameter, and hardware type driver interfaces starting with `staging-` into the adopted configuration.
 
-Furthermore, {OpenStackPreviousInstaller}-based deployments made architectural decisions based upon self-management of services. When adopting deployments, you don't necessarilly need multiple replicas of secondary services such as the Introspection service. Should the host the container is running upon fail, {rhocp_long} will restart the container on another host. The short-term transitory loss
-//kgilliga: This last sentence trails off.
+Additionally, {OpenStackPreviousInstaller}-based deployments made architectural decisions based on self-management of services. When adopting deployments, you do not necessarilly need multiple replicas of secondary services such as the Introspection service. Should the host the container is running on fail, {rhocp_long} restarts the container on another host. The short-term transitory loss
