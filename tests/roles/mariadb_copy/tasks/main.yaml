@@ -12,10 +12,73 @@
   ansible.builtin.include_tasks:
     file: env_vars_dst.yaml
 
-- name: start adoption mariadb helper pod on source ns
-  ansible.builtin.include_tasks: create_mariadb_data_pod.yaml
-  vars:
-    namespace: "{{ org_namespace | default('openstack') }}"
+- name: start an adoption mariadb helper pod
+  ansible.builtin.shell: |-
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ mariadb_copy_shell_vars_src }}
+
+    oc apply -f - <<EOF
+    ---
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: mariadb-data
+      namespace: {{ ospdo_namespace| default('openstack') }}
+    spec:
+      storageClassName: $STORAGE_CLASS
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+    ---
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: mariadb-copy-data
+      annotations:
+        openshift.io/scc: anyuid
+        k8s.v1.cni.cncf.io/networks: {{ custom_networks | default('internalapi') }}
+      namespace: {{ ospdo_namespace| default('openstack') }}
+      labels:
+        app: adoption
+    spec:
+      {{ custom_spec|default('') }}
+      containers:
+      - image: $MARIADB_IMAGE
+        command: [ "sh", "-c", "sleep infinity"]
+        name: adoption
+        volumeMounts:
+        - mountPath: /backup
+          name: mariadb-data
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ALL
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+      - name: mariadb-data
+        persistentVolumeClaim:
+          claimName: mariadb-data
+
+    EOF
+
+  changed_when: true
+  notify: delete adoption mariadb helper pod and pvc
+
+
+- name: wait for the pod to come up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait --for condition=Ready -n {{ ospdo_namespace| default('openstack') }} pod/mariadb-copy-data --timeout=10s
+  register: mariadb_data_pod_result
+  until: mariadb_data_pod_result is success
+  retries: 25
+  delay: 2
 
 - name: check that the Galera database cluster members are online and synced
   no_log: "{{ use_no_log }}"
@@ -25,7 +88,7 @@
     {{ mariadb_copy_shell_vars_src }}
     for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
       echo "Checking for the database node $i WSREP status Synced"
-      oc rsh -n {{ org_namespace| default('openstack') }} mariadb-copy-data mysql \
+      oc rsh -n {{ ospdo_namespace| default('openstack') }} mariadb-copy-data mysql \
         -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" \
         -e "show global status like 'wsrep_local_state_comment'" | \
         grep -qE "\bSynced\b"
@@ -53,14 +116,6 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell:
     cmd: "{{ lookup('ansible.builtin.template', 'dump_dbs.bash') }}"
-
-- name: start adoption mariadb helper pod on dest NS in case of OSPdO src
-  ansible.builtin.include_tasks: create_mariadb_data_pod.yaml
-  vars:
-    namespace: "{{ osp18_namespace | default('openstack') }}"
-    restore_db_pod: true
-    recreate_pod: true
-  when: ospdo_src|bool
 
 - name: restore databases
   no_log: "{{ use_no_log }}"
