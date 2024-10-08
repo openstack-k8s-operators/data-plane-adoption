@@ -34,3 +34,23 @@
       {{ shell_header }}
       {{ openstack_command }} credential create admin test -f value -c id
   register: before_adoption_credential
+
+- name: create resources script
+  when: neutron_qe_test | default('false') | bool
+  environment:
+    OS_CLOUD_IP: "{{ standalone_ip | default(edpm_node_ip) }}"
+  block:
+    - name: execute create resources script
+      ansible.builtin.shell: |
+          ssh ${OS_CLOUD_IP} "set -o pipefail && chmod 744 {{ neutron_qe_dir }}/create_resources.sh && \
+          {{ neutron_qe_dir }}/create_resources.sh > {{ neutron_qe_dir }}/create_resources.sh.log 2>&1"
+
+    - name: execute prepare-pinger script
+      ansible.builtin.shell: |
+          ssh ${OS_CLOUD_IP} "set -o pipefail && chmod 744 {{ neutron_qe_dir }}/prepare-pinger.sh && \
+          {{ neutron_qe_dir }}/prepare-pinger.sh > {{ neutron_qe_dir }}/prepare-pinger.sh.log 2>&1"
+
+    - name: execute start-pinger script
+      ansible.builtin.shell: |
+          timeout 20 ssh ${OS_CLOUD_IP} "set -o pipefail && chmod 744 {{ neutron_qe_dir }}/start-pinger.sh && \
+          nohup {{ neutron_qe_dir }}/start-pinger.sh > {{ neutron_qe_dir }}/start-pinger.sh.log 2>&1" &
