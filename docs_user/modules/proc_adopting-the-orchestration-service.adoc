@@ -16,10 +16,10 @@ After you complete the adoption process, you have CRs for `Heat`, `HeatAPI`, `He
 
 .Procedure
 ifeval::["{build}" != "downstream"]
-As already done for https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone], the Heat Adoption follows a similar pattern.
+The Heat Adoption follows a similar workflow to https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone].
 endif::[]
 
-. Retrieve the existing `auth_encryption_key` and `service` passwords. You use these passwords to patch the `osp-secret`:
+. Retrieve the existing `auth_encryption_key` and `service` passwords. You use these passwords to patch the `osp-secret`. In the following example, the `auth_encryption_key` is used as `HeatAuthEncryptionKey` and the `service` password is used as `HeatPassword`:
 +
 ----
 [stack@rhosp17 ~]$ grep -E 'HeatPassword|HeatAuth' ~/overcloud-deploy/overcloud/overcloud-passwords.yaml
@@ -35,7 +35,7 @@ overcloud-controller-0 | CHANGED | rc=0 >>
 auth_encryption_key=Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2
 ----
 
-. Base64 encode the password:
+. Encode the password to Base64 format:
 +
 ----
 $ echo Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2 | base64
@@ -71,7 +71,7 @@ spec:
 
 .Verification
 
-. Ensure that the status of all the CRs is `Setup complete`:
+. Ensure that the statuses of all the CRs are `Setup complete`:
 +
 ----
 $ oc get Heat,HeatAPI,HeatEngine,HeatCFNAPI
@@ -125,7 +125,7 @@ $ oc exec -it openstackclient -- openstack endpoint list --service=heat -f yaml
   URL: http://heat-api-internal.openstack-operators.svc:8004/v1/%(tenant_id)s
 ----
 
-. Check that the {orchestration} engine services are up:
+. Check that the {orchestration} engine services are running:
 +
 ----
 $ oc exec -it openstackclient -- openstack orchestration service list -f yaml
