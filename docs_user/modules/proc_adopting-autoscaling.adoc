@@ -1,26 +1,25 @@
 [id="adopting-autoscaling_{context}"]
 
-= Adopting Autoscaling services
+= Adopting autoscaling services
 
-Adopting autoscaling means that an existing `OpenStackControlPlane` custom resource (CR), where Aodh services are supposed to be disabled, should be patched to start the service with the configuration parameters provided by the source environment.
-
-This guide also assumes that:
-
-. A {OpenStackPreviousInstaller} environment (the source Cloud) is running on one side;
-. A `SNO` / `CodeReadyContainers` is running on the other side.
+To adopt services that enable autoscaling, you patch an existing `OpenStackControlPlane` custom resource (CR) where the Alarming services (aodh) are disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} environment.
 
 .Prerequisites
 
-* Previous Adoption steps completed. MariaDB, the {identity_service_first_ref}, the {orchestration_first_ref}, and Telemetry
-should be already adopted.
-//kgilliga: Should this procedure be moved to after the data plane adoption chapter?
+* The source {OpenStackPreviousInstaller} environment is running.
+* A Single Node OpenShift or OpenShift Local is running in the {rhocp_long} cluster.
+* You have adopted the following services:
+** MariaDB
+** {identity_service_first_ref}
+** {orchestration_first_ref}
+** {telemetry}
 
 .Procedure
 
-. Patch the `OpenStackControlPlane` CR to deploy autoscaling services:
+. Patch the `OpenStackControlPlane` CR to deploy the autoscaling services:
 +
 ----
-oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   telemetry:
     enabled: true
@@ -38,31 +37,28 @@ spec:
 '
 ----
 
-.Verification
-
-. If autoscaling services are enabled, inspect Aodh pods:
+. Inspect the aodh pods:
 +
 ----
-AODH_POD=`oc get pods -l service=aodh -n openstack | tail -n 1 | cut -f 1 -d' '`
-oc exec -t $AODH_POD -c aodh-api -- cat /etc/aodh/aodh.conf
+$ AODH_POD=`oc get pods -l service=aodh -n openstack | tail -n 1 | cut -f 1 -d' '`
+$ oc exec -t $AODH_POD -c aodh-api -- cat /etc/aodh/aodh.conf
 ----
 
-. Check whether Aodh API service is registered in {identity_service}:
+. Check whether the aodh API service is registered in the {identity_service}:
 +
 ----
-openstack endpoint list | grep aodh
+$ openstack endpoint list | grep aodh
 | d05d120153cd4f9b8310ac396b572926 | regionOne | aodh  | alarming  | True    | internal  | http://aodh-internal.openstack.svc:8042  |
 | d6daee0183494d7a9a5faee681c79046 | regionOne | aodh  | alarming  | True    | public    | http://aodh-public.openstack.svc:8042    |
 ----
 
-.Autoscaling template adoption
-
-* `PrometheusAlarm` alarm type must be used instead of `GnocchiAggregationByResourcesAlarm`
-
-* Create Aodh alarms of type prometheus
+. Optional: Create aodh alarms with the `PrometheusAlarm` alarm type:
++
+[NOTE]
+You must use the `PrometheusAlarm` alarm type instead of `GnocchiAggregationByResourcesAlarm`.
 +
 ----
-openstack alarm create --name high_cpu_alarm \
+$ openstack alarm create --name high_cpu_alarm \
 --type prometheus \
 --query "(rate(ceilometer_cpu{resource_name=~'cirros'})) * 100" \
 --alarm-action 'log://' \
@@ -72,10 +68,10 @@ openstack alarm create --name high_cpu_alarm \
 --threshold 7000000000
 ----
 
-* Verify the state of alarm
+.. Verify that the alarm is enabled:
 +
 ----
-openstack alarm list
+$ openstack alarm list
 +--------------------------------------+------------+------------------+-------------------+----------+
 | alarm_id                             | type       | name             | state  | severity | enabled  |
 +--------------------------------------+------------+------------------+-------------------+----------+

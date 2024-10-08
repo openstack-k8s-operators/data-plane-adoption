@@ -1,3 +1,5 @@
+ifdef::context[:parent-context: {context}]
+
 [id="storage-requirements_{context}"]
 
 :context: storage-requirements
@@ -8,7 +10,7 @@ When looking into the storage in an {rhos_prev_long} ({OpenStackShort}) deployme
 two kinds, the storage requirements of the services themselves and the
 storage used for the {OpenStackShort} users that the services will manage.
 
-These requirements may drive your {OpenShift} ({OpenShiftShort}) node selection, as mentioned above,
+These requirements may drive your {rhocp_long} node selection, as mentioned above,
 and may require you to do some preparations on the {OpenShiftShort} nodes before
 you can deploy the services.
 
@@ -25,3 +27,6 @@ include::../modules/con_openshift-preparation-for-block-storage-adoption.adoc[le
 include::../modules/proc_preparing-block-storage-service-by-customizing-configuration.adoc[leveloffset=+1]
 
 include::../modules/con_changes-to-cephFS-via-NFS.adoc[leveloffset=+1]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]

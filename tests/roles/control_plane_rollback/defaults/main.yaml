@@ -1,2 +1,2 @@
 control_plane_rollback_verify_command: |
-  $CONTROLLER1_SSH OS_CLOUD={{ os_cloud_name }} openstack user list
+  ssh root@{{ standalone_ip }} OS_CLOUD={{ os_cloud_name }} openstack user list

@@ -6,14 +6,8 @@ ifdef::context[:parent-context: {context}]
 
 :context: migrating-ceph
 
-:toc: left
-:toclevels: 3
-
-ifdef::parent-context[:context: {parent-context}]
-ifndef::parent-context[:!context:]
-
 In the context of data plane adoption, where the {rhos_prev_long}
-({OpenStackShort}) services are redeployed in {OpenShift}, you migrate a
+({OpenStackShort}) services are redeployed in {rhocp_long}, you migrate a
 {OpenStackPreviousInstaller}-deployed {CephCluster} cluster by using a process
 called “externalizing” the {CephCluster} cluster.
 
@@ -42,3 +36,6 @@ include::../modules/proc_migrating-ceph-mds.adoc[leveloffset=+1]
 include::assembly_migrating-ceph-rgw.adoc[leveloffset=+1]
 
 include::assembly_migrating-ceph-rbd.adoc[leveloffset=+1]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]

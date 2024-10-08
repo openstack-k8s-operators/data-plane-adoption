@@ -1,28 +1,20 @@
 = Migrating Ceph Manager daemons to {Ceph} nodes
 
-The following section describes how to move Ceph Manager daemons from the
-{rhos_prev_long} Controller nodes to a set of target nodes. Target nodes might
-be pre-existing {Ceph} nodes, or {OpenStackShort} Compute nodes if {Ceph} is
-deployed by {OpenStackPreviousInstaller} with an HCI topology.
-This procedure assumes that Cephadm and the {Ceph} Orchestrator are the tools
-that drive the Ceph Manager migration. As is done with the other Ceph daemons
-(MDS, Monitoring, and RGW), the procedure uses the Ceph spec to modify the
-placement and reschedule the daemons. Ceph Manager is run in an active/passive
-fashion, and it also provides many modules, including the Ceph orchestrator.
+You must migrate your Ceph Manager daemons from the {rhos_prev_long} ({OpenStackShort}) Controller nodes to a set of target nodes. Target nodes are either existing {Ceph} nodes, or {OpenStackShort} Compute nodes if {Ceph} is deployed by {OpenStackPreviousInstaller} with a Hyperconverged Infrastructure (HCI) topology.
 
+[NOTE]
+The following procedure uses `cephadm` and the Ceph Orchestrator to drive the Ceph Manager migration, and the Ceph spec to modify the placement and reschedule the Ceph Manager daemons. Ceph Manager is run in an active/passive state. It also provides many modules, including the Ceph Orchestrator. Every potential module, such as the Ceph Dashboard, that is provided by `ceph-mgr` is implicitly migrated with Ceph Manager.
 
 .Prerequisites
 
-* Configure the target nodes (CephStorage or ComputeHCI) to have both `storage`
-and `storage_mgmt` networks to ensure that you can use both {Ceph} public and
-cluster networks from the same node. This step requires you to interact with
-{OpenStackPreviousInstaller}. From {rhos_prev_long} {rhos_prev_ver} and later
-you do not have to run a stack update.
+* The target nodes, CephStorage or ComputeHCI, are configured to have both `storage` and `storage_mgmt` networks. This ensures that you can use both {Ceph} public and cluster networks from the same node.
++
+[NOTE]
+This step requires you to interact with {OpenStackPreviousInstaller}. From {OpenStackShort} {rhos_prev_ver} and later you do not have to run a stack update.
 
 .Procedure
 
-. Ssh into the target node and enable the firewall rules that are required to
-  reach a Manager service:
+. SSH into the target node and enable the firewall rules that are required to reach a Ceph Manager service:
 +
 ----
 dports="6800:7300"
@@ -30,9 +22,11 @@ ssh heat-admin@<target_node> sudo iptables -I INPUT \
     -p tcp --match multiport --dports $dports -j ACCEPT;
 ----
 +
-Repeat this step for each `<target_node>`.
+* Replace `<target_node>` with the hostname of the hosts that are listed in the {Ceph} environment. Run `ceph orch host ls` to see the list of the hosts.
++
+Repeat this step for each target node.
 
-. Check that the rules are properly applied and persist them:
+. Check that the rules are properly applied to the target node and persist them:
 +
 ----
 $ sudo iptables-save
@@ -43,24 +37,20 @@ $ sudo systemctl restart iptables
 label to the target node:
 +
 ----
-ceph orch host label add <target_node> mgr; done
+$ ceph orch host label add <target_node> mgr; done
 ----
-+
-* Replace `<target_node>` with the hostname of the hosts listed in the {Ceph}
-  through the `ceph orch host ls` command
-+
-Repeat the actions described above for each `<target_node> that will host a
-Ceph Manager daemon.
+
+. Repeat steps 1-3 for each target node that hosts a Ceph Manager daemon.
 
 . Get the Ceph Manager spec:
 +
 [source,yaml]
 ----
-sudo cephadm shell -- ceph orch ls --export mgr > mgr.yaml
+$ sudo cephadm shell -- ceph orch ls --export mgr > mgr.yaml
 ----
 
 . Edit the retrieved spec and add the `label: mgr` section to the `placement`
-  section:
+section:
 +
 [source,yaml]
 ----
@@ -71,25 +61,25 @@ placement:
 ----
 
 . Save the spec in the `/tmp/mgr.yaml` file.
-. Apply the spec with cephadm by using the orchestrator:
+. Apply the spec with `cephadm`` by using the Ceph Orchestrator:
 +
 ----
-sudo cephadm shell -m /tmp/mgr.yaml -- ceph orch apply -i /mnt/mgr.yaml
+$ sudo cephadm shell -m /tmp/mgr.yaml -- ceph orch apply -i /mnt/mgr.yaml
 ----
-+
-As a result of this procedure, you see a Ceph Manager daemon count that matches
-the number of hosts where the `mgr` label is added.
 
-. Verify that the new Ceph Manager are created in the target nodes:
+.Verification
+
+. Verify that the new Ceph Manager daemons are created in the target nodes:
 +
 ----
-ceph orch ps | grep -i mgr
-ceph -s
+$ ceph orch ps | grep -i mgr
+$ ceph -s
 ----
++
+The Ceph Manager daemon count should match the number of hosts where the `mgr` label is added.
 +
 [NOTE]
-The procedure does not shrink the Ceph Manager daemons. The count is grown by
+The migration does not shrink the Ceph Manager daemons. The count grows by
 the number of target nodes, and migrating Ceph Monitor daemons to {Ceph} nodes
 decommissions the stand-by Ceph Manager instances. For more information, see
-xref:migrating-mon-from-controller-nodes_migrating-ceph-rbd[Migrating Ceph Monitor
-daemons to {Ceph} nodes].
+xref:migrating-mon-from-controller-nodes_migrating-ceph-rbd[Migrating Ceph Monitor daemons to {Ceph} nodes].

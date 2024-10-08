@@ -62,11 +62,11 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
+    oc wait --for condition=Ready pod/mariadb-copy-data --timeout=10s
   register: mariadb_data_pod_result
   until: mariadb_data_pod_result is success
-  retries: 5
-  delay: 6
+  retries: 25
+  delay: 2
 
 - name: check that the Galera database cluster members are online and synced
   no_log: "{{ use_no_log }}"

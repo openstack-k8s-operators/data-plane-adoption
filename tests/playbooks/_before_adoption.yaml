@@ -1,5 +1,5 @@
 - name: Prelude
-  hosts: local
+  hosts: localhost
   gather_facts: false
   module_defaults:
     ansible.builtin.shell:
@@ -8,7 +8,7 @@
     - prelude_local
 
 - name: Cleanup
-  hosts: local
+  hosts: localhost
   gather_facts: false
   module_defaults:
     ansible.builtin.shell:

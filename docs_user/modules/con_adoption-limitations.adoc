@@ -1,0 +1,18 @@
+[id="adoption-limitations_{context}"]
+
+= Adoption limitations
+
+The adoption process does not support the following features:
+
+* {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} multi-cell deployments
+* Fast Data path
+* instanceHA
+* Auto-scaling
+* DCN
+* Designate
+* Octavia
+
+If you plan to adopt the {key_manager_first_ref} or a FIPs environment, review the following limitations:
+
+* The {key_manager} does not yet support all of the crypto plug-ins available in {OpenStackPreviousInstaller}.
+* When you adopt a {OpenStackShort} {rhos_prev_ver} FIPS environment to {rhos_acro} {rhos_curr_ver}, your adopted cluster remains a FIPS cluster. There is no option to change the FIPS status during adoption. If your cluster is FIPS-enabled, you must deploy a FIPS {rhocp_long} cluster to adopt your {OpenStackShort} {rhos_prev_ver} FIPS control plane. For more information about enabling FIPS in {OpenShiftShort}, see link:{defaultOCPURL}/installing/installation-overview#installing-fips[Support for FIPS cryptography] in the {OpenShiftShort} _Installing_ guide.

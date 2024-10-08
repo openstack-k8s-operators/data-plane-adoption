@@ -2,7 +2,7 @@
 
 = Migrating databases to MariaDB instances
 
-Migrate your databases from the original {rhos_prev_long} ({OpenStackShort}) deployment to the MariaDB instances in the {OpenShift} cluster.
+Migrate your databases from the original {rhos_prev_long} ({OpenStackShort}) deployment to the MariaDB instances in the {rhocp_long} cluster.
 
 //[NOTE]
 //This example scenario describes a simple single-cell setup. Real
@@ -44,7 +44,13 @@ SOURCE_GALERA_MEMBERS=(
   ["standalone.localdomain"]=172.17.0.100
   # ...
 )
+ifeval::["{build}" != "downstream"]
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
+endif::[]
+ifeval::["{build}" == "downstream"]
+SOURCE_DB_ROOT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
+)
+endif::[]
 ----
 +
 To get the value to set `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller node:
@@ -154,7 +160,7 @@ You must transition {compute_service_first_ref} services that are imported later
 ----
 $ oc rsh mariadb-copy-data << EOF
   mysql -h"${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" \
-  -N -e "show databases" | grep -E -v "schema|mysql|gnocchi" | \
+  -N -e "show databases" | grep -E -v "schema|mysql|gnocchi|aodh" | \
   while read dbname; do
     echo "Dumping \${dbname}";
     mysqldump -h"${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" \

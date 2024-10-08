@@ -2,16 +2,22 @@
 
 = Pulling the configuration from a {OpenStackPreviousInstaller} deployment
 
-You can pull configuration from your {rhos_prev_long} ({OpenStackShort}) services.
+Before you start the data plane adoption workflow, back up the configuration from the {rhos_prev_long} ({OpenStackShort}) services and {OpenStackPreviousInstaller}. You can then use the files during the configuration of the adopted services to ensure that nothing is missed or misconfigured.
 
+.Prerequisites
+
+* The os-diff tool is installed and configured. For more information, see
+xref:comparing-configuration-files-between-deployments_configuring-network[Comparing configuration files between deployments].
+
+ifeval::["{build}" != "downstream"]
 All the services are describes in a yaml file:
 
 https://github.com/openstack-k8s-operators/os-diff/blob/main/config.yaml[service config parameters]
-//kgilliga: Do we want this link in the downstream guide?
+endif::[]
 
 .Procedure
 
-. Update your ssh parameters according to your environment in the os-diff.cfg. Os-diff uses those parameters to connect to your {OpenStackPreviousInstaller} node, query and download the configuration files:
+. Update your ssh parameters according to your environment in the `os-diff.cfg`. Os-diff uses the ssh parameters to connect to your {OpenStackPreviousInstaller} node, and then query and download the configuration files:
 +
 ----
 ssh_cmd=ssh -F ssh.config standalone
@@ -20,16 +26,16 @@ connection=ssh
 remote_config_path=/tmp/tripleo
 ----
 +
-Make sure the ssh command you provide in `ssh_cmd` parameter is correct and with key authentication.
+Ensure that the ssh command you provide in `ssh_cmd` parameter is correct and includes key authentication.
 
-. Enable or disable the services that you want in the `/etc/os-diff/config.yaml` file. Make sure that you have the correct rights to edit the file, for example:
+. Enable the services that you want to include in the `/etc/os-diff/config.yaml` file, and disable the services that you want to exclude from the file. Ensure that you have the correct permissions to edit the file:
 +
 ----
-chown ospng:ospng /etc/os-diff/config.yaml
+$ chown ospng:ospng /etc/os-diff/config.yaml
 ----
-
-Example with default {identity_service_first_ref}:
-
++
+The following example enables the default {identity_service_first_ref} to be included in the `/etc/os-diff/config.yaml` file:
++
 [source,yaml]
 ----
 # service name and file location
@@ -60,21 +66,22 @@ services:
       - /etc/keystone/keystone.conf
       - /etc/keystone/logging.conf
 ----
++
 Repeat this step for each {OpenStackShort} service that you want to disable or enable.
 
-. If you are using non-containerized services, such as the `ovs-external-ids`, os-diff can pull configuration or command output:
+. If you use non-containerized services, such as the `ovs-external-ids`, pull the configuration or the command output. For example:
 +
 ----
 services:
   ovs_external_ids:
-    hosts:
+    hosts: <1>
       - standalone
-    service_command: "ovs-vsctl list Open_vSwitch . | grep external_ids | awk -F ': ' '{ print $2; }'"
-    cat_output: true
+    service_command: "ovs-vsctl list Open_vSwitch . | grep external_ids | awk -F ': ' '{ print $2; }'" <2>
+    cat_output: true <3>
     path:
       - ovs_external_ids.json
-    config_mapping:
-      ovn-bridge-mappings: edpm_ovn_bridge_mappings
+    config_mapping: <4>
+      ovn-bridge-mappings: edpm_ovn_bridge_mappings <5>
       ovn-bridge: edpm_ovn_bridge
       ovn-encap-type: edpm_ovn_encap_type
       ovn-monitor-all: ovn_monitor_all
@@ -82,37 +89,19 @@ services:
       ovn-ofctrl-wait-before-clear: edpm_ovn_ofctrl_wait_before_clear
 ----
 +
-This service is not an {rhos_prev_long} service executed in a container, so the description and the behavior is different. It is important to correctly configure an SSH config file or equivalent for non-standard services such as OVS. The `ovs_external_ids` does not run in a container, and the ovs data is stored
-on each host of our cloud: controller_1/controller_2/...
+[NOTE]
+You must correctly configure an SSH configuration file or equivalent for non-standard services, such as OVS. The `ovs_external_ids` service does not run in a container, and the OVS data is stored on each host of your cloud, for example, `controller_1/controller_2/`, and so on.
 +
-With the `hosts` key, os-diff loops on each host and runs the command in the `service_command` key:
-+
-----
-    ovs_external_ids:
-        path:
-            - ovs_external_ids.json
-        hosts:
-            - standalone
-----
-+
-The `service_command`  provides the required information. It could be a simple cat from a config file. If you want os-diff to get the output of the command and store the output in a file specified by the key path, set `cat_output` to true. Then you can provide a mapping between in this case the EDPM CRD, and the ovs-vsctl output with config_mapping:
+<1> The list of hosts, for example, `compute-1`, `compute-2`.
+<2> The command that runs against the hosts.
+<3> Os-diff gets the output of the command and stores the output in a file that is specified by the key path.
+<4> Provides a mapping between, in this example, the data plane custom resource definition and the `ovs-vsctl` output.
+<5> The `edpm_ovn_bridge_mappings` variable must be a list of strings, for example, `["datacentre:br-ex"]`.
+
+.. Compare the values:
 +
 ----
-        service_command: 'ovs-vsctl list Open_vSwitch . | grep external_ids | awk -F '': '' ''{ print $2; }'''
-        cat_output: true
-        config_mapping:
-            ovn-bridge: edpm_ovn_bridge
-            ovn-bridge-mappings: edpm_ovn_bridge_mappings
-            ovn-encap-type: edpm_ovn_encap_type
-            ovn-monitor-all: ovn_monitor_all
-            ovn-ofctrl-wait-before-clear: edpm_ovn_ofctrl_wait_before_clear
-            ovn-remote-probe-interval: edpm_ovn_remote_probe_interval
-----
-+
-Then you can use the following command to compare the values:
-+
-----
-os-diff diff ovs_external_ids.json edpm.crd --crd --service ovs_external_ids
+$ os-diff diff ovs_external_ids.json edpm.crd --crd --service ovs_external_ids
 ----
 +
 For example, to check the `/etc/yum.conf` on every host, you must put the following statement in the `config.yaml` file. The following example uses a file called `yum_config`:
@@ -133,37 +122,37 @@ services:
 
 . Pull the configuration:
 +
-
-This command will pull all the configuration files that are described in the `/etc/os-diff/config.yaml` file.
-Os-diff can update this file automatically according to your running environment with the command `--update` or `--update-only`.
-This option sets the podman information into the `config.yaml` for all running containers.
-It can be useful later, when all the {rhos_prev_long} services are turned off.
+[NOTE]
+====
+The following command pulls all the configuration files that are included in the `/etc/os-diff/config.yaml` file. You can configure os-diff to update this file automatically according to your running environment by using the `--update` or `--update-only` option. These options set the podman information into the `config.yaml` for all running containers. The podman information can be useful later, when all the {rhos_prev_long} services are turned off.
 
 Note that when the `config.yaml` file is populated automatically you must provide the configuration paths manually for each service.
-
+====
++
 ----
 # will only update the /etc/os-diff/config.yaml
 os-diff pull --update-only
 ----
-
++
 ----
 # will update the /etc/os-diff/config.yaml and pull configuration
 os-diff pull --update
 ----
-
++
 ----
 # will update the /etc/os-diff/config.yaml and pull configuration
 os-diff pull
 ----
-
-The configuration will be pulled and stored by default:
++
+The configuration is pulled and stored by default in the following directory:
++
 ----
 /tmp/tripleo/
 ----
 
 .Verification
 
-* You should have into your local path a directory per services such as:
+* Verify that you have a directory for each service configuration in your local path:
 +
 ----
   ▾ tmp/

@@ -12,7 +12,7 @@ ifeval::["{build}" == "downstream"]
 include::rhoso_attributes.adoc[]
 endif::[]
 
-include::assemblies/assembly_planning-the-new-deployment.adoc[leveloffset=+1]
+include::assemblies/assembly_rhoso-180-adoption-overview.adoc[leveloffset=+1]
 
 include::modules/proc_migrating-tls-everywhere.adoc[leveloffset=+1]
 

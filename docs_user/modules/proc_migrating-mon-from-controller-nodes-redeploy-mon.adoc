@@ -1,0 +1,102 @@
+[id="redeploying-a-ceph-monitor-on-the-target-node_{context}"]
+
+= Redeploying a Ceph Monitor on the target node
+
+You use the IP address that you migrated to the target node to redeploy the
+Ceph Monitor on the target node.
+
+.Procedure
+
+. Get the Ceph mon spec:
++
+----
+$ sudo cephadm shell -- ceph orch ls --export mon > mon.yaml
+----
+
+. Edit the retrieved spec and add the `unmanaged: true` keyword:
++
+[source,yaml]
+----
+service_type: mon
+service_id: mon
+placement:
+  label: mon
+unmanaged: true
+----
+
+. Save the spec in the `/tmp/mon.yaml` file.
+
+. Apply the spec with `cephadm` by using the Ceph Orchestrator:
++
+----
+$ sudo cephadm shell -m /tmp/mon.yaml
+$ ceph orch apply -i /mnt/mon.yaml
+----
++
+The Ceph Monitor daemons are marked as `unmanaged`, and you can now redeploy the existing daemon and bind it to the migrated IP address.
+
+. Delete the existing Ceph Monitor on the target node:
++
+----
+$ sudo cephadm shell -- ceph orch daemon add rm mon.<target_node> --force
+----
++
+* Replace `<target_node>` with the hostname of the target node that is included in the {Ceph} cluster.
+
+. Redeploy the new Ceph Monitor on the target node by using the migrated IP address:
++
+----
+$ sudo cephadm shell -- ceph orch daemon add mon <target_node>:<ip_address>
+----
++
+* Replace `<ip_address>` with the IP address of the migrated IP address.
+
+. Get the Ceph Monitor spec:
++
+----
+$ sudo cephadm shell -- ceph orch ls --export mon > mon.yaml
+----
+
+. Edit the retrieved spec and set the `unmanaged` keyword to `false`:
++
+[source,yaml]
+----
+service_type: mon
+service_id: mon
+placement:
+  label: mon
+unmanaged: false
+----
+
+. Save the spec in the `/tmp/mon.yaml` file.
+
+. Apply the spec with `cephadm` by using the Ceph Orchestrator:
++
+----
+$ sudo cephadm shell -m /tmp/mon.yaml
+$ ceph orch apply -i /mnt/mon.yaml
+----
++
+The new Ceph Monitor runs on the target node with the original IP address.
+
+. Identify the running `mgr`:
++
+----
+$ sudo cephadm shell --  mgr stat
+----
++
+. Refresh the Ceph Manager information by force-failing it:
++
+----
+$ sudo cephadm shell -- ceph mgr fail
+----
++
+. Refresh the `OSD` information:
++
+----
+$ sudo cephadm shell -- ceph orch reconfig osd.default_drive_group
+----
+
+.Next steps
+
+Proceed to the next step xref:verifying-the-cluster-after-ceph-mon-migration_{context}[Verifying the {CephCluster} cluster after Ceph Monitor migration].

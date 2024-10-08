@@ -1,0 +1,90 @@
+[id="draining-the-source-node_{context}"]
+
+= Draining the source node
+
+Drain the existing Controller nodes and remove the source node host from the {CephCluster} cluster.
+
+.Procedure
+
+. On the source node, back up the `/etc/ceph/` directory to run `cephadm` and get a shell for the {Ceph} cluster from the source node:
++
+----
+$ mkdir -p $HOME/ceph_client_backup
+$ sudo cp -R /etc/ceph $HOME/ceph_client_backup
+----
+
+. Identify the active `ceph-mgr` instance:
++
+----
+$ cepahdm shell -- ceph mgr stat
+----
+
+. Fail the `ceph-mgr` if it is active on the source node or target node:
++
+----
+$ cephadm shell -- ceph mgr fail <mgr_instance>
+----
++
+* Replace `<mgr_instance>` with the Ceph Manager daemon to fail.
+
+. From the `cephadm` shell, remove the labels on the source node:
++
+----
+$ for label in mon mgr _admin; do
+    cephadm shell -- ceph orch host rm label <source_node> $label;
+done
+----
++
+* Replace `<source_node>` with the hostname of the source node.
+
+. Remove the running Ceph Monitor daemon from the source node:
++
+----
+$ cephadm shell -- ceph orch daemon rm mon.<source_node> --force"
+----
+
+. Drain the source node:
++
+----
+$ cephadm shell -- ceph drain <source_node>
+----
+
+. Remove the source node host from the {CephCluster} cluster:
++
+----
+$ cephadm shell -- ceph orch host rm <source_node> --force"
+----
++
+[NOTE]
+====
+The source node is not part of the cluster anymore, and should not appear in
+the {Ceph} host list when `cephadm shell -- ceph orch host ls` is run.
+However, if you run `sudo podman ps` in the source node, the list might show that both Ceph Monitors and Ceph Managers are still up and running.
+
+----
+[root@oc0-controller-1 ~]# sudo podman ps
+CONTAINER ID  IMAGE                                                                                        COMMAND               CREATED         STATUS             PORTS       NAMES
+ifeval::["{build}" != "downstream"]
+5c1ad36472bc  quay.io/ceph/daemon@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mon.oc0-contro...  35 minutes ago  Up 35 minutes ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mon-oc0-controller-1
+3b14cc7bf4dd  quay.io/ceph/daemon@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mgr.oc0-contro...  35 minutes ago  Up 35 minutes ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mgr-oc0-controller-1-mtxohd
+endif::[]
+ifeval::["{build}" == "downstream"]
+5c1ad36472bc  registry.redhat.io/ceph/rhceph@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mon.oc0-contro...  35 minutes ago  Up 35 minutes ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mon-oc0-controller-1
+3b14cc7bf4dd  registry.redhat.io/ceph/rhceph@sha256:320c364dcc8fc8120e2a42f54eb39ecdba12401a2546763b7bef15b02ce93bc4  -n mgr.oc0-contro...  35 minutes ago  Up 35 minutes ago              ceph-f6ec3ebe-26f7-56c8-985d-eb974e8e08e3-mgr-oc0-controller-1-mtxohd
+endif::[]
+----
+ifeval::["{build}" == "downstream"]
+To clean up the existing containers and remove the `cephadm` data from the source node, contact Red Hat Support.
+endif::[]
+====
+
+. Confirm that mons are still in quorum:
++
+----
+$ cephadm shell -- ceph -s
+$ cephadm shell -- ceph orch ps | grep -i mon
+----
+
+.Next steps
+
+Proceed to the next step xref:migrating-the-ceph-monitor-ip-address_{context}[Migrating the Ceph Monitor IP address].

@@ -1,0 +1,159 @@
+[id="configuring-target-nodes-for-ceph-monitor-migration_{context}"]
+
+= Configuring target nodes for Ceph Monitor migration
+
+Prepare the target {Ceph} nodes for the Ceph Monitor migration by performing the following actions:
+
+. Enable firewall rules in a target node and persist them.
+. Create a spec that is based on labels and apply it by using `cephadm`.
+. Ensure that the Ceph Monitor quorum is maintained during the migration process.
+
+//kgilliga: We are going to move the following steps to the planning chapter. Hiding this for now to be used as a reference later.
+//.Prerequisites
+
+//* The target nodes, CephStorage or ComputeHCI, are configured to have both `storage` and `storage_mgmt` networks. This ensures that you can use both {Ceph} public and cluster networks from the same node. This step requires you to interact with {OpenStackPreviousInstaller}. From {OpenStackShort} {rhos_prev_ver} and later you do not have to run a stack update.
+//+
+//[NOTE]
+//This step requires you to interact with {OpenStackPreviousInstaller}. From {OpenStackShort} {rhos_prev_ver} and later you do not have to run a stack update.
+//* Run `os-net-config` on the bare metal node and configure additional networks:
+//.. If target nodes are `CephStorage`, ensure that the network is defined in the
+//`metalsmith.yaml` for the `CephStorage` nodes:
+//+
+//[source,yaml]
+//----
+//- name: CephStorage
+//count: 2
+//instances:
+//- hostname: oc0-ceph-0
+//name: oc0-ceph-0
+//- hostname: oc0-ceph-1
+//name: oc0-ceph-1
+//defaults:
+//networks:
+//- network: ctlplane
+//vif: true
+//- network: storage_cloud_0
+//subnet: storage_cloud_0_subnet
+//- network: storage_mgmt_cloud_0
+//subnet: storage_mgmt_cloud_0_subnet
+//network_config:
+//template: templates/single_nic_vlans/single_nic_vlans_storage.j2
+//----
+
+//.. Add the missing network:
+//+
+//----
+//$ openstack overcloud node provision \
+//-o overcloud-baremetal-deployed-0.yaml --stack overcloud-0 \
+//--network-config -y --concurrency 2 /home/stack/metalsmith-0.yaml
+//----
+
+//.. Verify that the storage network is configured on the target nodes:
+//+
+//----
+//(undercloud) [stack@undercloud ~]$ ssh heat-admin@192.168.24.14 ip -o -4 a
+//1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
+//5: br-storage    inet 192.168.24.14/24 brd 192.168.24.255 scope global br-storage\       valid_lft forever preferred_lft forever
+//6: vlan1    inet 192.168.24.14/24 brd 192.168.24.255 scope global vlan1\       valid_lft forever preferred_lft forever
+//7: vlan11    inet 172.16.11.172/24 brd 172.16.11.255 scope global vlan11\       valid_lft forever preferred_lft forever
+//8: vlan12    inet 172.16.12.46/24 brd 172.16.12.255 scope global vlan12\       valid_lft forever preferred_lft forever
+//----
+
+.Procedure
+
+. SSH into the target node and enable the firewall rules that are required to
+reach a Ceph Monitor service:
++
+----
+$ for port in 3300 6789; {
+    ssh heat-admin@<target_node> sudo iptables -I INPUT \
+    -p tcp -m tcp --dport $port -m conntrack --ctstate NEW \
+    -j ACCEPT;
+}
+----
++
+* Replace `<target_node>` with the hostname of the node that hosts the new Ceph Monitor.
+
+. Check that the rules are properly applied to the target node and persist them:
++
+----
+$ sudo iptables-save
+$ sudo systemctl restart iptables
+----
+
+. To migrate the existing Ceph Monitors to the target {Ceph} nodes, create the following {Ceph} spec from the first Ceph Monitor, or the first Controller node, and add the `label:mon` section to the `placement` section:
++
+[source,yaml]
+----
+service_type: mon
+service_id: mon
+placement:
+  label: mon
+----
+
+. Save the spec in the `/tmp/mon.yaml` file.
+
+. Apply the spec with `cephadm` by using the Ceph Orchestrator:
++
+----
+$ sudo cephadm shell -m /tmp/mon.yaml
+$ ceph orch apply -i /mnt/mon.yaml
+----
+
+. Apply the `mon` label to the remaining {Ceph} target nodes to ensure that
+quorum is maintained during the migration process:
++
+----
+declare -A target_nodes
+
+target_nodes[mon]="oc0-ceph-0 oc0-ceph-1 oc0-ceph2"
+
+mon_nodes="${target_nodes[mon]}"
+IFS=' ' read -r -a mons <<< "$mon_nodes"
+
+for node in "${mons[@]}"; do
+    ceph orch host add label $node mon
+    ceph orch host add label $node _admin
+done
+----
++
+[NOTE]
+Applying the `mon.yaml` spec allows the existing strategy to use `labels`
+instead of `hosts`. As a result, any node with the `mon` label can host a Ceph
+Monitor daemon. Perform this step only once to avoid multiple iterations when multiple Ceph Monitors are migrated.
+
+. Check the status of the {CephCluster} and the Ceph Orchestrator daemons list.
+Ensure that Ceph Monitors are in a quorum and listed by the `ceph orch` command:
++
+----
+# ceph -s
+  cluster:
+    id:     f6ec3ebe-26f7-56c8-985d-eb974e8e08e3
+    health: HEALTH_OK
+
+  services:
+    mon: 6 daemons, quorum oc0-controller-0,oc0-controller-1,oc0-controller-2,oc0-ceph-0,oc0-ceph-1,oc0-ceph-2 (age 19m)
+    mgr: oc0-controller-0.xzgtvo(active, since 32m), standbys: oc0-controller-1.mtxohd, oc0-controller-2.ahrgsk
+    osd: 8 osds: 8 up (since 12m), 8 in (since 18m); 1 remapped pgs
+
+  data:
+    pools:   1 pools, 1 pgs
+    objects: 0 objects, 0 B
+    usage:   43 MiB used, 400 GiB / 400 GiB avail
+    pgs:     1 active+clean
+----
++
+----
+[ceph: root@oc0-controller-0 /]# ceph orch host ls
+HOST              ADDR           LABELS          STATUS
+oc0-ceph-0        192.168.24.14  osd mon _admin
+oc0-ceph-1        192.168.24.7   osd mon _admin
+oc0-ceph-2        192.168.24.8   osd mon _admin
+oc0-controller-0  192.168.24.15  _admin mgr mon
+oc0-controller-1  192.168.24.23  _admin mgr mon
+oc0-controller-2  192.168.24.13  _admin mgr mon
+----
+
+.Next steps
+
+Proceed to the next step xref:draining-the-source-node_{context}[Draining the source node].

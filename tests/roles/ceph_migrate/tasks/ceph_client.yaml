@@ -24,14 +24,11 @@
   tags:
     - ceph_backup
 
-# Refresh ceph.conf information when mon addresses are **not** migrated
-# (not ceph_keep_mon_ipaddr)
+# Refresh ceph.conf information
 - name: Refresh ceph.conf info
   delegate_to: "{{ client_node }}"
   become: true
-  when:
-    - not ceph_keep_mon_ipaddr | default(false)
-    - node_map is defined
+  when: node_map is defined
   tags:
     - ceph_conf_refresh
   block:

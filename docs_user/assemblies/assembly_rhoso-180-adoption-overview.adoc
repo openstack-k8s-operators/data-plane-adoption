@@ -1,0 +1,35 @@
+ifdef::context[:parent-context: {context}]
+
+[id="rhoso-180-adoption-overview_{context}"]
+
+:context: planning
+
+= {rhos_long_noacro} {rhos_curr_ver} adoption overview
+
+Adoption is the process of migrating a {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} overcloud to a {rhos_long_noacro} {rhos_curr_ver} data plane. To ensure that you understand the entire adoption process and how to sufficiently prepare your {OpenStackShort} environment, review the prerequisites, adoption process, and post-adoption tasks.
+
+[IMPORTANT]
+It is important to read the whole adoption guide before you start
+the adoption. You should form an understanding of the procedure,
+prepare the necessary configuration snippets for each service ahead of
+time, and test the procedure in a representative test environment
+before you adopt your main environment.
+
+include::../modules/con_adoption-limitations.adoc[leveloffset=+1]
+
+include::../modules/con_adoption-prerequisites.adoc[leveloffset=+1]
+
+include::../modules/con_adoption-guidelines.adoc[leveloffset=+1]
+
+include::../modules/con_adoption-process-overview.adoc[leveloffset=+1]
+
+include::../modules/con_identity-service-authentication.adoc[leveloffset=+1]
+
+include::../assemblies/assembly_configuring-network-for-RHOSO-deployment.adoc[leveloffset=+1]
+
+include::../assemblies/assembly_storage-requirements.adoc[leveloffset=+1]
+
+include::../modules/con_comparing-configuration-files-between-deployments.adoc[leveloffset=+1]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]

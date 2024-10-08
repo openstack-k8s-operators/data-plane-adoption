@@ -1,2 +1,5 @@
 ---
-# handlers file for ceph_migrate
+- name: restart mgr
+  become: true
+  ansible.builtin.command:
+    "{{ ceph_cli }} mgr fail"

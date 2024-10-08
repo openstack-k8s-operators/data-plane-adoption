@@ -2,7 +2,7 @@
 
 = Configuring data plane nodes
 
-A complete {rhos_prev_long} ({OpenStackShort}) cluster consists of {OpenShift} ({OpenShiftShort}) nodes and data plane nodes. The
+A complete {rhos_prev_long} ({OpenStackShort}) cluster consists of {rhocp_long} nodes and data plane nodes. The
 former use `NodeNetworkConfigurationPolicy` custom resource (CR) to configure physical
 interfaces. Since data plane nodes are not {OpenShiftShort} nodes, a different approach to
 configure their network connectivity is used.

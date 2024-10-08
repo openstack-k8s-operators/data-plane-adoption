@@ -15,7 +15,6 @@ spec:
         rbd_store_pool=images
         store_description=Ceph glance store backend.
       storage:
-        storageClass: "local-storage"
         storageRequest: 10G
       glanceAPIs:
         default:

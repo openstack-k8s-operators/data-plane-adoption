@@ -1,0 +1,35 @@
+ifdef::context[:parent-context: {context}]
+
+[id="migrating-mon-from-controller-nodes_{context}"]
+
+= Migrating Ceph Monitor daemons to {Ceph} nodes
+
+:context: migrating-ceph-mon
+
+You must move Ceph Monitor daemons from the {rhos_prev_long} ({OpenStackShort}) Controller nodes to a set of target nodes. Target nodes are either existing {Ceph} nodes, or {OpenStackShort} Compute nodes if {Ceph} is
+deployed by {OpenStackPreviousInstaller} with a Hyperconverged Infrastructure (HCI) topology. Additional Ceph Monitors are deployed to the target nodes, and they are promoted as `_admin` nodes that you can use to manage the {CephCluster} cluster and perform day 2 operations.
+
+To migrate the Ceph Monitor daemons, you must perform the following high-level steps:
+
+. xref:configuring-target-nodes-for-ceph-monitor-migration_{context}[Configure the target nodes for Ceph Monitor migration].
+. xref:draining-the-source-node_{context}[Drain the source node].
+. xref:migrating-the-ceph-monitor-ip-address_{context}[Migrate your Ceph Monitor IP addresses to the target nodes].
+. xref:redeploying-a-ceph-monitor-on-the-target-node_{context}[Redeploy the Ceph Monitor on the target node].
+. xref:verifying-the-cluster-after-ceph-mon-migration_{context}[Verify that the {Cephcluster} cluster is healthy].
+
+Repeat these steps for any additional Controller node that hosts a Ceph Monitor until you migrate all the Ceph Monitor daemons to the target nodes.
+
+
+include::../modules/proc_migrating-mon-from-controller-nodes-config-target-nodes.adoc[leveloffset=+1]
+
+include::../modules/proc_migrating-mon-from-controller-nodes-drain-host.adoc[leveloffset=+1]
+
+include::../modules/proc_migrating-mon-from-controller-nodes-network.adoc[leveloffset=+1]
+
+include::../modules/proc_migrating-mon-from-controller-nodes-redeploy-mon.adoc[leveloffset=+1]
+
+include::../modules/proc_migrating-mon-from-controller-nodes-verification.adoc[leveloffset=+1]
+
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]

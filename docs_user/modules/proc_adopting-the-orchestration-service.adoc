@@ -14,7 +14,7 @@ the above mentioned servies.
 This guide also assumes that:
 
 . A {OpenStackPreviousInstaller} environment (the source Cloud) is running on one side;
-. A {OpenShift} environment is running on the other side.
+. A {rhocp_long} environment is running on the other side.
 
 .Prerequisites
 

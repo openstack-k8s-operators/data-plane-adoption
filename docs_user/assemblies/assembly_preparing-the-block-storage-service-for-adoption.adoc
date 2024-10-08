@@ -1,3 +1,5 @@
+ifdef::context[:parent-context: {context}]
+
 [id="preparing-the-block-storage-service_{context}"]
 //kgilliga: The content in this file was integrated with "Block storage requirements" (con_block-storage-service-requirements.adoc)
 :context: preparing-block-storage
@@ -46,3 +48,6 @@ include::../modules/proc_preparing-block-storage-service-by-using-agnostic-confi
 
 include::../modules/con_block-storage-service-config-generation-helper-tool.adoc[leveloffset=+1]
 endif::[]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]

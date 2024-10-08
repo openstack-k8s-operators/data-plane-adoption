@@ -15,7 +15,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod --selector=service=barbican -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc wait pod --for condition=Ready --selector=service=barbican
   register: barbican_running_result
   until: barbican_running_result is success
   retries: 180

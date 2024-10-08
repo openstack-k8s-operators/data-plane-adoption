@@ -1,3 +1,5 @@
+ifdef::context[:parent-context: {context}]
+
 [id="planning-your-ipam-configuration_{context}"]
 
 :context: ipam-configuration
@@ -6,7 +8,7 @@
 
 The new deployment model puts additional burden on the size of IP allocation
 pools available for {rhos_prev_long} ({OpenStackShort}) services. This is because each service deployed
-on {OpenShift} ({OpenShiftShort}) worker nodes will now require an IP address from the IPAM pool (in
+on {rhocp_long} worker nodes will now require an IP address from the IPAM pool (in
 the previous deployment model, all services hosted on a controller node shared
 the same IP address.)
 
@@ -62,8 +64,11 @@ the former scenario is using the new subnet ranges for control plane services,
 but keeping the old ranges, with their node IP address allocations intact, for
 data plane nodes.
 
-Regardless of the IPAM scenario, the VLAN tags used in the existing deployment will be reused in the new deployment. Depending on the scenario, the IP address ranges to be used for control plane services will be either reused from the old deployment or defined anew. Adjust the configuration as described in xref:configuring-isolated-networks_{context}[Configuring isolated networks].
+Regardless of the IPAM scenario, the VLAN tags used in the existing deployment will be reused in the new deployment. Depending on the scenario, the IP address ranges to be used for control plane services will be either reused from the old deployment or defined anew. Adjust the configuration as described in xref:configuring-isolated-networks_configuring-network[Configuring isolated networks].
 
 include::../modules/proc_using-new-subnet-ranges.adoc[leveloffset=+1]
 
 include::../modules/proc_reusing-existing-subnet-ranges.adoc[leveloffset=+1]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]

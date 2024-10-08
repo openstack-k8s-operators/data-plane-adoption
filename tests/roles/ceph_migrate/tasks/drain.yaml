@@ -35,7 +35,7 @@
       - "_admin"
 
 # Sleep before moving to the next task
-- name: Pause
+- name: Wait for the orchestrator to remove labels
   ansible.builtin.pause:
     seconds: "{{ ceph_wait_mon_timeout }}"
 
@@ -81,3 +81,4 @@
       when: lsh.stdout | from_json | community.general.json_query('[*].hostname') | length > 0
       ansible.builtin.command:
         "{{ ceph_cli }} orch host rm {{ cur_mon }} --force"
+      notify: restart mgr

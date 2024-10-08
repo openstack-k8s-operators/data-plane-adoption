@@ -4,3 +4,6 @@ edpm_privatekey_path: ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa
 run_pre_adoption_validation: true
 os_cloud_name: standalone
 source_osp_ssh_user: root
+# override var for openstack command to use on the source cloud
+openstack_command: >-
+  ssh -i {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }} OS_CLOUD={{ os_cloud_name }} openstack

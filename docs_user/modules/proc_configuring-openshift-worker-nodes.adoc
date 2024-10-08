@@ -1,8 +1,8 @@
 [id="configuring-openshift-worker-nodes_{context}"]
 
-= Configuring {OpenShift} worker nodes
+= Configuring {OpenShiftShort} worker nodes
 
-{OpenShift} worker nodes that run {rhos_prev_long} services need a way to connect the service
+{rhocp_long} worker nodes that run {rhos_prev_long} services need a way to connect the service
 pods to isolated networks. This requires physical network configuration on the
 hypervisor.
 
@@ -18,6 +18,7 @@ items:
 - apiVersion: nmstate.io/v1
   kind: NodeNetworkConfigurationPolicy
   spec:
+    desiredState:
       interfaces:
       - description: internalapi vlan interface
         ipv4:

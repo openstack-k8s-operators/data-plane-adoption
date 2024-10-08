@@ -1,0 +1,18 @@
+[id="verifying-the-cluster-after-ceph-mon-migration_{context}"]
+
+= Verifying the {CephCluster} cluster after Ceph Monitor migration
+
+After you finish migrating your Ceph Monitor daemons to the target nodes, verify that the the {CephCluster} cluster is healthy.
+
+.Procedure
+
+* Verify that the {CephCluster} cluster is healthy:
++
+----
+[ceph: root@oc0-controller-0 specs]# ceph -s
+  cluster:
+    id:     f6ec3ebe-26f7-56c8-985d-eb974e8e08e3
+    health: HEALTH_OK
+...
+...
+----

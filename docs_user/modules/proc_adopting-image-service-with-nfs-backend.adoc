@@ -35,7 +35,7 @@ endif::[]
 ifeval::["{build}" != "upstream"]
 In the control plane, the {image_service} is attached to the Storage network, then propagated through the associated `NetworkAttachmentsDefinition` custom resource (CR), and the resulting pods already have the right permissions to handle the {image_service} traffic through this network.
 endif::[]
-In a deployed {OpenStackShort} control plane, you can verify that the network mapping matches with what has been deployed in the {OpenStackPreviousInstaller}-based environment by checking both the `NodeNetworkConfigPolicy` (`nncp`) and the `NetworkAttachmentDefinition` (`net-attach-def`). The following is an example of the output that you should check in the {OpenShift} environment to make sure that there are no issues with the propagated networks:
+In a deployed {OpenStackShort} control plane, you can verify that the network mapping matches with what has been deployed in the {OpenStackPreviousInstaller}-based environment by checking both the `NodeNetworkConfigPolicy` (`nncp`) and the `NetworkAttachmentDefinition` (`net-attach-def`). The following is an example of the output that you should check in the {rhocp_long} environment to make sure that there are no issues with the propagated networks:
 
 ----
 $ oc get nncp

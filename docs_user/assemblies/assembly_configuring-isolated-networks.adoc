@@ -1,3 +1,5 @@
+ifdef::context[:parent-context: {context}]
+
 [id="configuring-isolated-networks_{context}"]
 
 :context: isolated-networks
@@ -10,9 +12,9 @@ you would like to replicate in the new environment.
 Before proceeding, you should have a list of the following IP address
 allocations to be used for the new control plane services:
 
-* 1 IP address, per isolated network, per {OpenShift} worker node. (These
+* 1 IP address, per isolated network, per {rhocp_long} worker node. (These
   addresses configure openshift worker nodes to
-  `NodeNetworkConfigurationPolicy` custom resources (CRs).) For more information, see xref:configuring-openshift-worker-nodes_isolated-networks[Configuring {OpenShift} worker nodes].
+  `NodeNetworkConfigurationPolicy` custom resources (CRs).) For more information, see xref:configuring-openshift-worker-nodes_isolated-networks[Configuring {rhocp_long} worker nodes].
 * IP range, per isolated network, for the data plane nodes. (These ranges will
   configure data plane nodes to `NetConfig` CRs.) For more information, see xref:configuring-data-plane-nodes_isolated-networks[Configuring data plane nodes].
 * IP range, per isolated network, for control plane services. (These ranges
@@ -36,3 +38,6 @@ include::../modules/proc_configuring-openshift-worker-nodes.adoc[leveloffset=+1]
 include::../modules/proc_configuring-networking-for-control-plane-services.adoc[leveloffset=+1]
 
 include::../modules/proc_configuring-data-plane-nodes.adoc[leveloffset=+1]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]

@@ -12,9 +12,9 @@ The {networking_service} adoption is complete if you see the following results:
 
 .Prerequisites
 
-* Ensure that Single Node OpenShift or OpenShift Local is running in the {OpenShift} cluster.
+* Ensure that Single Node OpenShift or OpenShift Local is running in the {rhocp_long} cluster.
 * Adopt the {identity_service}. For more information, see xref:adopting-the-identity-service_adopt-control-plane[Adopting the {identity_service}].
-* Migrate your OVN databases to `ovsdb-server` instances that run in the {OpenShift} cluster. For more information, see xref:migrating-ovn-data_migrating-databases[Migrating OVN data].
+* Migrate your OVN databases to `ovsdb-server` instances that run in the {rhocp_long} cluster. For more information, see xref:migrating-ovn-data_migrating-databases[Migrating OVN data].
 
 
 .Procedure
@@ -70,7 +70,6 @@ $ openstack endpoint list | grep network
 
 | 6a805bd6c9f54658ad2f24e5a0ae0ab6 | regionOne | neutron      | network      | True    | public    | http://neutron-public-openstack.apps-crc.testing  |
 | b943243e596847a9a317c8ce1800fa98 | regionOne | neutron      | network      | True    | internal  | http://neutron-internal.openstack.svc:9696        |
-| f97f2b8f7559476bb7a5eafe3d33cee7 | regionOne | neutron      | network      | True    | admin     | http://192.168.122.99:9696                        |
 ----
 
 * Create sample resources so that you can test whether the user can create networks, subnets, ports, or routers:

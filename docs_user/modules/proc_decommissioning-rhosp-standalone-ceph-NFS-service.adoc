@@ -8,7 +8,7 @@ If your deployment uses CephFS through NFS, you must decommission the {rhos_prev
 
 * You identified the new export locations for your existing shares by querying the Shared File Systems API.
 * You unmounted and remounted the shared file systems on each client to stop using the previous NFS server.
-* If you are consuming the {rhos_component_storage_file} shares with the {rhos_component_storage_file} CSI plugin for {OpenShift}, you migrated the shares by scaling down the application pods and scaling them back up.
+* If you are consuming the {rhos_component_storage_file} shares with the {rhos_component_storage_file} CSI plugin for {rhocp_long}, you migrated the shares by scaling down the application pods and scaling them back up.
 
 [NOTE]
 Clients that are creating new workloads cannot use share exports through the previous NFS service. The {rhos_component_storage_file} no longer communicates with the previous NFS service, and cannot apply or alter export rules on the previous NFS service.

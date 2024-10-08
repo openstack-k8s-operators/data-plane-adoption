@@ -6,8 +6,8 @@ If you are using Object Storage as a service, adopt the {object_storage_first_re
 
 .Prerequisites
 
-* Ensure that the {object_storage} storage back-end services are running.
-* Ensure that the storage network is properly configured on the {OpenShift} cluster. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0-beta/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhocp-for-rhoso#proc_configuring-the-data-plane-network_preparing[Configuring the data plane network] in _Deploying Red Hat OpenStack Services on OpenShift_.
+* The {object_storage} storage back-end services are running in the {rhos_prev_long} ({OpenStackShort}) deployment.
+* The storage network is properly configured on the {rhocp_long} cluster. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0-beta/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhocp-for-rhoso#proc_configuring-the-data-plane-network_preparing[Configuring the data plane network] in _Deploying Red Hat OpenStack Services on OpenShift_.
 
 .Procedure
 
@@ -60,7 +60,7 @@ spec:
         replicas: 0
         networkAttachments:
         - storage
-        storageClass: local-storage
+        storageClass: local-storage <1>
         storageRequest: 10Gi
       swiftProxy:
         secret: osp-secret
@@ -78,10 +78,13 @@ spec:
                   metallb.universe.tf/loadBalancerIPs: 172.17.0.80
               spec:
                 type: LoadBalancer
-        networkAttachments:
+        networkAttachments: <2>
         - storage
 '
 ----
++
+<1> Must match the {rhos_acro} deployment storage class.
+<2> Must match the network attachment for the previous {object_storage} configuration from the {OpenStackShort} deployment.
 
 .Verification
 

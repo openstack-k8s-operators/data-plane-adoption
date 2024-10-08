@@ -153,3 +153,121 @@ os_diff_dir: tmp/os-diff
 os_diff_data_dir: tmp/os-diff
 prelaunch_test_instance: true
 telemetry_adoption: true
+
+dataplane_cr: |
+  apiVersion: dataplane.openstack.org/v1beta1
+  kind: OpenStackDataPlaneNodeSet
+  metadata:
+    name: openstack
+  spec:
+    tlsEnabled: {{ enable_tlse }}
+    networkAttachments:
+      - ctlplane
+    preProvisioned: true
+    services:
+      - bootstrap
+      - download-cache
+      - configure-network
+      - validate-network
+      - install-os
+      - configure-os
+      - ssh-known-hosts
+      - run-os
+      - reboot-os
+      - install-certs
+      - ovn
+      - neutron-metadata
+      {%+ if compute_adoption|bool +%}
+      - libvirt
+      - nova
+      {%+ endif +%}
+      {% if telemetry_adoption|bool +%}
+      - telemetry
+      {%+ endif +%}
+    env:
+      - name: ANSIBLE_CALLBACKS_ENABLED
+        value: "profile_tasks"
+      - name: ANSIBLE_FORCE_COLOR
+        value: "True"
+      - name: ANSIBLE_VERBOSITY
+        value: "{{ dataplane_verbosity | default ('3') }}"
+    nodes: {{ edpm_nodes }}
+    nodeTemplate:
+      ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
+      ansible:
+        ansibleUser: {{ edpm_user }}
+        ansibleVars:
+          edpm_bootstrap_release_version_package: []
+          os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
+          os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
+          os_net_config_dns: {{ dataplane_os_net_config_dns | default("") }}
+          edpm_bootstrap_command: |
+            {{ edpm_bootstrap_command| indent(10) }}
+
+          # edpm_network_config
+          # nic config template for a EDPM compute node
+          edpm_network_config_template: |
+            {{ edpm_network_config_template| indent(10) }}
+
+          edpm_network_config_hide_sensitive_logs: false
+          #
+          # These vars are for the network config templates themselves and are
+          # considered EDPM network defaults.
+          neutron_physical_bridge_name: {{ neutron_physical_bridge_name }}
+          neutron_public_interface_name: {{ neutron_public_interface_name }}
+
+          # edpm_nodes_validation
+          edpm_nodes_validation_validate_controllers_icmp: false
+          edpm_nodes_validation_validate_gateway_icmp: false
+
+          timesync_ntp_servers: {{ timesync_ntp_servers | default(default_timesync_ntp_servers) }}
+
+          edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
+          edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"
+          edpm_logrotate_crond_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-cron:{{ image_tag }}"
+          edpm_nova_compute_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-compute:{{ image_tag }}"
+          edpm_nova_libvirt_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-libvirt:{{ image_tag }}"
+          edpm_ovn_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
+          {% if telemetry_adoption|bool +%}
+          edpm_telemetry_ceilometer_compute_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ceilometer-compute:{{ image_tag }}"
+          edpm_telemetry_ceilometer_ipmi_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ceilometer-ipmi:{{ image_tag }}"
+          {%+ endif +%}
+          edpm_neutron_sriov_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-sriov-agent:{{ image_tag }}"
+          edpm_neutron_ovn_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-ovn-agent:{{ image_tag }}"
+          edpm_neutron_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
+          edpm_neutron_dhcp_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-dhcp-agent:{{ image_tag }}"
+          edpm_multipathd_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-multipathd:{{ image_tag }}"
+          {% if edpm_telemetry_node_exporter_image is defined -%}
+          edpm_telemetry_node_exporter_image: "{{ edpm_telemetry_node_exporter_image }}"
+          {% endif %}
+          {%- if edpm_container_registry_logins is defined -%}
+          edpm_container_registry_logins:
+            {% for login, value in edpm_container_registry_logins.items() -%}
+            {{ login | indent(10) }}:
+              {{ value | to_nice_yaml | trim }}
+            {% endfor -%}
+          {% endif %}
+
+          gather_facts: false
+          # edpm firewall, change the allowed CIDR if needed
+          edpm_sshd_configure_firewall: true
+          edpm_sshd_allowed_ranges: {{ edpm_sshd_allowed_ranges }}
+
+          {% if edpm_container_registry_insecure_registries is defined -%}
+          edpm_container_registry_insecure_registries: {{ edpm_container_registry_insecure_registries }}
+          {% endif -%}
+
+          # Do not attempt OVS major upgrades here
+          edpm_ovs_packages:
+          - openvswitch3.1
+
+          # ovn-controller settings
+          edpm_ovn_bridge_mappings: ["datacentre:{{ neutron_physical_bridge_name }}"]
+          edpm_ovn_bridge: br-int
+          edpm_ovn_encap_type: geneve
+          ovn_monitor_all: true
+          edpm_ovn_remote_probe_interval: 60000
+          edpm_ovn_ofctrl_wait_before_clear: 8000
+
+          # serve as a OVN gateway
+          edpm_enable_chassis_gw: true

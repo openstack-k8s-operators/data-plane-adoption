@@ -1,8 +1,8 @@
 [id="completing-prerequisites-for-migrating-ceph-rgw_{context}"]
 
-= Completing prerequisites for migrating {Ceph} RGW
+= Completing prerequisites for {Ceph} RGW migration
 
-You must complete the following prerequisites before you begin the {Ceph} RGW migration.
+Complete the following prerequisites before you begin the Ceph Object Gateway (RGW) migration.
 
 .Procedure
 
@@ -26,8 +26,7 @@ You must complete the following prerequisites before you begin the {Ceph} RGW mi
     +------------------------+    +----------------+
 ----
 
-. Log in to `controller-0` and check the `pacemaker` status to help you
-identify the information that you need before you start the RGW migration.
+. Log in to `controller-0` and check the Pacemaker status to identify important information for the RGW migration:
 +
 ----
 Full List of Resources:
@@ -44,7 +43,7 @@ Full List of Resources:
     * haproxy-bundle-podman-2   (ocf:heartbeat:podman):  Started controller-1
 ----
 
-. Use the `ip` command to identify the ranges of the storage networks.
+. Identify the ranges of the storage networks. The following is an example and the values might differ in your environment:
 +
 ----
 [heat-admin@controller-0 ~]$ ip -o -4 a
@@ -52,8 +51,8 @@ Full List of Resources:
 1: lo	inet 127.0.0.1/8 scope host lo\   	valid_lft forever preferred_lft forever
 2: enp1s0	inet 192.168.24.45/24 brd 192.168.24.255 scope global enp1s0\   	valid_lft forever preferred_lft forever
 2: enp1s0	inet 192.168.24.46/32 brd 192.168.24.255 scope global enp1s0\   	valid_lft forever preferred_lft forever
-7: br-ex	inet 10.0.0.122/24 brd 10.0.0.255 scope global br-ex\   	valid_lft forever preferred_lft forever
-8: vlan70	inet 172.17.5.22/24 brd 172.17.5.255 scope global vlan70\   	valid_lft forever preferred_lft forever
+7: br-ex	inet 10.0.0.122/24 brd 10.0.0.255 scope global br-ex\   	valid_lft forever preferred_lft forever <1>
+8: vlan70	inet 172.17.5.22/24 brd 172.17.5.255 scope global vlan70\   	valid_lft forever preferred_lft forever <2>
 8: vlan70	inet 172.17.5.94/32 brd 172.17.5.255 scope global vlan70\   	valid_lft forever preferred_lft forever
 9: vlan50	inet 172.17.2.140/24 brd 172.17.2.255 scope global vlan50\   	valid_lft forever preferred_lft forever
 10: vlan30	inet 172.17.3.73/24 brd 172.17.3.255 scope global vlan30\   	valid_lft forever preferred_lft forever
@@ -62,17 +61,13 @@ Full List of Resources:
 12: vlan40	inet 172.17.4.24/24 brd 172.17.4.255 scope global vlan40\   	valid_lft forever preferred_lft forever
 ----
 +
-* vlan30 represents the Storage Network, where the new RGW instances should be
-started on the {CephCluster} nodes.
-* br-ex represents the External Network, which is where in the current
-environment, haproxy has the frontend Virtual IP (VIP) assigned.
+<1> `br-ex` represents the External Network, where in the current
+environment, HAProxy has the front-end Virtual IP (VIP) assigned.
+<2> `vlan30` represents the Storage Network, where the new RGW instances should be started on the {CephCluster} nodes.
 
-. Identify the network that you previously had in haproxy and propagate it through
-{OpenStackPreviousInstaller} to the {CephCluster} nodes. This network is used to reserve a new VIP
-that is owned by {Ceph} and used as the entry point for the RGW service.
+. Identify the network that you previously had in HAProxy and propagate it through {OpenStackPreviousInstaller} to the {CephCluster} nodes. Use this network to reserve a new VIP that is owned by {Ceph} as the entry point for the RGW service.
 
-.. Log into `controller-0` and check the current HAProxy configuration until you
-find `ceph_rgw` section:
+.. Log in to `controller-0` and find the `ceph_rgw` section in the current HAProxy configuration:
 +
 ----
 $ less /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg
@@ -95,7 +90,7 @@ listen ceph_rgw
   server controller-2.storage.redhat.local 172.17.3.156:8080 check fall 5 inter 2000 rise 2
 ----
 
-.. Confirm that the network is used as an HAProxy frontend:
+.. Confirm that the network is used as an HAProxy front end. The following example shows that `controller-0` exposes the services by using the external network, which is absent from the {Ceph} nodes. You must propagate the external network through {OpenStackPreviousInstaller}:
 +
 ----
 [controller-0]$ ip -o -4 a
@@ -104,13 +99,10 @@ listen ceph_rgw
 7: br-ex	inet 10.0.0.106/24 brd 10.0.0.255 scope global br-ex\   	valid_lft forever preferred_lft forever
 ...
 ----
-+
-This example shows that `controller-0` is exposing the services by using the external network, which is not present in
-the {Ceph} nodes, and you need to propagate it through {OpenStackPreviousInstaller}.
 
-. Propagate the HAProxy frontend network to {CephCluster} nodes.
+. Propagate the HAProxy front-end network to {CephCluster} nodes.
 
-.. Change the NIC template used to define the `ceph-storage` network interfaces and add the new config section:
+.. Change the NIC template that you use to define the `ceph-storage` network interfaces and add the new config section:
 +
 [source,yaml]
 ----
@@ -153,8 +145,7 @@ network_config:
     primary: true
 ----
 
-.. In addition, add the External Network to the `baremetal.yaml` file used by
-metalsmith:
+.. Add the External Network to the `baremetal.yaml` file that is used by `metalsmith`:
 +
 [source,yaml]
 ----
@@ -180,7 +171,7 @@ metalsmith:
   - network: external
 ----
 
-.. Run the `overcloud node provision` command passing the `--network-config` option:
+.. Configure the new network on the bare metal nodes:
 +
 ----
 (undercloud) [stack@undercloud-0]$
@@ -192,7 +183,7 @@ openstack overcloud node provision
   $PWD/network/baremetal_deployment.yaml
 ----
 
-.. Check the new network on the {CephCluster} nodes:
+.. Verify that the new network is configured on the {CephCluster} nodes:
 +
 ----
 [root@cephstorage-0 ~]# ip -o -4 a

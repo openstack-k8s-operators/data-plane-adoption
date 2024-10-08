@@ -1,8 +1,10 @@
+ifdef::context[:parent-context: {context}]
+
 [id="migrating-ceph-rbd_{context}"]
 
-:context: migrating-ceph-rbd
-
 = Migrating Red Hat Ceph Storage RBD to external RHEL nodes
+
+:context: migrating-ceph-rbd
 
 For Hyperconverged Infrastructure (HCI) or dedicated Storage nodes that are
 running {Ceph} version 6 or later, you must migrate the daemons that are
@@ -13,15 +15,12 @@ the Compute nodes for an HCI environment or dedicated storage nodes.
 To migrate Red Hat Ceph Storage Rados Block Device (RBD), your environment must
 meet the following requirements:
 
-* {Ceph} is running version 6 or later and is managed by cephadm.
-* NFS Ganesha is migrated from a {OpenStackPreviousInstaller}-based
-  deployment to cephadm. For more information, see
-  xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a NFS Ganesha
+* {Ceph} is running version 6 or later and is managed by `cephadm`.
+* NFS Ganesha is migrated from a {OpenStackPreviousInstaller} deployment to `cephadm`. For more information, see xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a NFS Ganesha
   cluster].
-* Both the {Ceph} public and cluster networks are propagated, with
-  {OpenStackPreviousInstaller}, to the target nodes.
-* Ceph MDS, Ceph Monitoring stack, Ceph MDS, Ceph RGW and other services are
-  migrated to the target nodes.
+* Both the {Ceph} public and cluster networks are propagated with
+  {OpenStackPreviousInstaller} to the target nodes.
+* Ceph Metadata Server, monitoring stack, Ceph Object Gateway, and any other daemon that is deployed on Controller nodes.
 ifeval::["{build}" != "upstream"]
 * The daemons distribution follows the cardinality constraints that are
   described in link:https://access.redhat.com/articles/1548993[Red Hat Ceph
@@ -29,15 +28,9 @@ ifeval::["{build}" != "upstream"]
 endif::[]
 * The {Ceph} cluster is healthy, and the `ceph -s` command returns `HEALTH_OK`.
 
-During the procedure to migrate the Ceph Mon daemons, the following actions
-occur:
-
-* The mon IP addresses are moved to the target {Ceph} nodes.
-* The existing Controller nodes are drained and decommisioned.
-* Additional monitors are deployed to the target nodes, and they are promoted
-  as `_admin` nodes that can be used to manage the {CephCluster} cluster and
-  perform day 2 operations.
-
 include::../modules/proc_migrating-mgr-from-controller-nodes.adoc[leveloffset=+1]
 
-include::../modules/proc_migrating-mon-from-controller-nodes.adoc[leveloffset=+1]
+include::assembly_migrating-mon-from-controller-nodes.adoc[leveloffset=+1]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]

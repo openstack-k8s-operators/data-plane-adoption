@@ -2,34 +2,18 @@
 
 = Adopting Networker services to the {rhos_acro} data plane
 
-If you have `Networker` nodes in your existing {rhos_acro} deployment, you
-should adopt them to the {rhos_acro} data plane too. The procedure is largely
-the same as for `Compute` nodes.
+Adopt the Networker nodes in your existing {rhos_prev_long} deployment to the {rhos_long} data plane. You decide which services you want to run on the Networker nodes, and create a separate `OpenStackDataPlaneNodeSet` custom resource (CR) for the Networker nodes. You might also decide to implement the following options if they apply to your environment:
 
-The main difference between `Networker` and `Compute` nodes is that `Networker`
-nodes do not run `nova-compute` and `libvirt` services.
+* Depending on your topology, you might need to run the `neutron-metadata` service on the nodes, specifically when you want to serve metadata to SR-IOV ports that are hosted on Compute nodes.
 
-You won't need to run `neutron-sriov` service on `Networker` nodes either. But
-depending on your topology, you might need to run `neutron-metadata` service
-there. Specifically, when you'd like to serve metadata to SR-IOV ports hosted
-on `Compute` nodes.
+* If you want to continue running OVN gateway services on Networker nodes, keep `ovn` service in the list to deploy.
 
-Assuming you'd like to continue running OVN gateway services on `Networker`
-nodes, you will keep `ovn` service in the list to deploy. (You may later decide
-to deprovision OVN gateway services from `Networker` nodes and run them on OCP
-nodes instead. This is currently not recommended and is out of scope for the
-adoption procedure.)
+* Optional: You can run the `neutron-dhcp` service on your Networker nodes instead of your Compute nodes. You might not need to use `neutron-dhcp` with OVN, unless your deployment uses DHCP relays, or advanced DHCP options that are supported by dnsmasq but not by the OVN DHCP implementation.
 
-You may also want to run `neutron-dhcp` service on `Networker` nodes instead of
-`Compute` nodes. (But note that using `neutron-dhcp` with OVN is not generally
-needed.)
+.Prerequisites
 
-Whatever the final list of services you'd like to run on `Networker` nodes, you
-will create a separate `OpenStackDataPlaneNodeSet` CR just for these nodes.
-
-. Define the following shell variable. The value that is used is an example
-and refers to a single node standalone {OpenStackPreviousInstaller} deployment.
-Adjust the value to your environment:
+* Define the shell variable. The following value is an example
+from a single node standalone {OpenStackPreviousInstaller} deployment:
 +
 [subs=+quotes]
 ----
@@ -40,26 +24,24 @@ networkers=(
 )
 ----
 +
-** Replace `["standalone.localdomain"]="192.168.122.100"` with the name of the `Networker` node and its IP address.
+** Replace `["standalone.localdomain"]="192.168.122.100"` with the name and IP address of the Networker node.
 
-. Deploy the other `OpenStackDataPlaneNodeSet` CR. For simplicity, you can
-reuse most of the `nodeTemplate` section from the `openstack` CR designated for
-`Compute` nodes, though strictly speaking, some of the variables may be
-unnecessary because of a more limited set of services running on `Networker`
-nodes. Make sure `edpm_enable_chassis_gw: true` is set to run `ovn-controller`
-in gateway mode.
+.Procedure
+
+. Deploy the `OpenStackDataPlaneNodeSet` CR for your Networker nodes:
 +
-. If TLS Everywhere is enabled, change `spec:tlsEnabled` to `true`.
+[NOTE]
+You can reuse most of the `nodeTemplate` section from the `OpenStackDataPlaneNodeSet` CR that is designated for your Compute nodes. You can omit some of the variables because of the limited set of services that are running on Networker nodes.
 +
 [source,yaml]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneNodeSet
 metadata:
   name: openstack-networker
 spec:
-  tlsEnabled: false
+  tlsEnabled: false <1>
   networkAttachments:
       - ctlplane
   preProvisioned: true
@@ -158,7 +140,7 @@ endif::[]
         edpm_nodes_validation_validate_gateway_icmp: false
 
         # edpm ovn-controller configuration
-        edpm_ovn_bridge_mappings: <bridge_mappings>
+        edpm_ovn_bridge_mappings: <bridge_mappings> <2>
         edpm_ovn_bridge: br-int
         edpm_ovn_encap_type: geneve
         ovn_monitor_all: true
@@ -166,7 +148,7 @@ endif::[]
         edpm_ovn_ofctrl_wait_before_clear: 8000
 
         # serve as a OVN gateway
-        edpm_enable_chassis_gw: true
+        edpm_enable_chassis_gw: true <3>
 
         timesync_ntp_servers:
 ifeval::["{build}" != "downstream"]
@@ -214,8 +196,12 @@ endif::[]
         - openvswitch3.1
 EOF
 ----
++
+<1> If TLS Everywhere is enabled, change `spec:tlsEnabled` to `true`.
+<2> Set to the same values that you used in your {rhos_prev_long} {rhos_prev_ver} deployment.
+<3> Set to `true` to run `ovn-controller` in gateway mode.
 
-. Ensure that the `ovn-controller` settings that are configured in the `OpenStackDataPlaneNodeSet` CR are the same as were set in the `Networker` nodes before adoption. This configuration is stored in the `external_ids`` column in the `Open_vSwitch` table in the Open vSwitch database:
+. Ensure that you use the same `ovn-controller` settings in the `OpenStackDataPlaneNodeSet` CR that you used in the Networker nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
 +
 ----
 ovs-vsctl list Open .
@@ -223,7 +209,6 @@ ovs-vsctl list Open .
 external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings=<bridge_mappings>, ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-cms-options=enable-chassis-as-gw, ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
 ...
 ----
-
 +
 * Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
 
@@ -231,19 +216,21 @@ external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-b
 +
 [source,yaml]
 ----
-oc patch openstackdataplanenodeset openstack-networker --type='json' --patch='[
+$ oc patch openstackdataplanenodeset <networker_CR_name> --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
     "value": "neutron-metadata"
   }]'
 ----
++
+* Replace `<networker_CR_name>` with the name of the CR that you deployed for your Networker nodes, for example, `openstack-networker`.
 
 . Optional: Enable `neutron-dhcp` in the `OpenStackDataPlaneNodeSet` CR:
 +
 [source,yaml]
 ----
-oc patch openstackdataplanenodeset openstack-networker --type='json' --patch='[
+$ oc patch openstackdataplanenodeset <networker_CR_name> --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
@@ -251,14 +238,13 @@ oc patch openstackdataplanenodeset openstack-networker --type='json' --patch='[
   }]'
 ----
 
-. Run pre-adoption validation for `Networker` nodes. This step reuses the
-service that was previously created for `Compute` nodes:
+. Run the `pre-adoption-validation` service for Networker nodes:
 
-.. Create a `OpenStackDataPlaneDeployment` CR that runs the validation only:
+.. Create a `OpenStackDataPlaneDeployment` CR that runs only the validation:
 +
 [source,yaml]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
@@ -270,32 +256,28 @@ spec:
   - pre-adoption-validation
 EOF
 ----
-+
-Wait for the validation to finish.
 
-.. Confirm that all the Ansible EE pods reach a `Completed` status:
+.. When the validation is finished, confirm that the status of the Ansible EE pods is `Completed`:
 +
 ----
-# watching the pods
-watch oc get pod -l app=openstackansibleee
+$ watch oc get pod -l app=openstackansibleee
 ----
 +
 ----
-# following the ansible logs with:
-oc logs -l app=openstackansibleee -f --max-log-requests 20
+$ oc logs -l app=openstackansibleee -f --max-log-requests 20
 ----
 
 .. Wait for the deployment to reach the `Ready` status:
 +
 ----
-oc wait --for condition=Ready openstackdataplanedeployment/openstack-pre-adoption-networker --timeout=10m
+$ oc wait --for condition=Ready openstackdataplanedeployment/openstack-pre-adoption-networker --timeout=10m
 ----
 
-. Deploy the `OpenStackDataPlaneDeployment` CR for `Networker` nodes:
+. Deploy the `OpenStackDataPlaneDeployment` CR for Networker nodes:
 +
 [source,yaml]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
@@ -305,39 +287,34 @@ spec:
   - openstack-networker
 EOF
 ----
-
-Note: alternatively, you could include the `Networker` specific node set in the
-`nodeSets` list when creating the main, `openstack`,
-`OpenStackDataPlaneDeployment` CR.
-
-Note that once a `OpenStackDataPlaneDeployment` CR is deployed, it's impossible
-to add new node sets to it later.
++
+[NOTE]
+Alternatively, you can include the Networker node set in the `nodeSets` list before you deploy the main `OpenStackDataPlaneDeployment` CR. You cannot add new node sets to the `OpenStackDataPlaneDeployment` CR after deployment.
 
 .Verification
 
 . Confirm that all the Ansible EE pods reach a `Completed` status:
 +
 ----
-# watching the pods
-watch oc get pod -l app=openstackansibleee
+$ watch oc get pod -l app=openstackansibleee
 ----
 +
 ----
-# following the ansible logs with:
-oc logs -l app=openstackansibleee -f --max-log-requests 20
+$ oc logs -l app=openstackansibleee -f --max-log-requests 20
 ----
 
 . Wait for the data plane node set to reach the `Ready` status:
 +
 ----
-oc wait --for condition=Ready osdpns/openstack-networker --timeout=30m
+$ oc wait --for condition=Ready osdpns/<networker_CR_name> --timeout=30m
 ----
++
+* Replace `<networker_CR_name>` with the name of the CR that you deployed for your Networker nodes, for example, `openstack-networker`.
 
-. Verify that {networking_service} agents are alive (the list of agents may
-vary depending on the services you've enabled):
+. Verify that the {networking_first_ref} agents are running. The list of agents varies depending on the services you enabled:
 +
 ----
-oc exec openstackclient -- openstack network agent list
+$ oc exec openstackclient -- openstack network agent list
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
 | ID                                   | Agent Type                   | Host                   | Availability Zone | Alive | State | Binary                     |
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+

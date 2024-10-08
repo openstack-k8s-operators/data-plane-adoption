@@ -1,10 +1,12 @@
+ifdef::context[:parent-context: {context}]
+
 [id="configuring-network-for-RHOSO-deployment_{context}"]
 
 :context: configuring-network
 
 = Configuring the network for the RHOSO deployment
 
-With {OpenShift} ({OpenShiftShort}), the network is a very important aspect of the deployment, and
+With {rhocp_long}, the network is a very important aspect of the deployment, and
 it is important to plan it carefully. The general network requirements for the
 {rhos_prev_long} ({OpenStackShort}) services are not much different from the ones in a {OpenStackPreviousInstaller} deployment, but the way you handle them is.
 
@@ -45,3 +47,6 @@ include::../modules/proc_retrieving-network-information-from-your-existing-deplo
 include::../assemblies/assembly_planning-your-ipam-configuration.adoc[leveloffset=+1]
 
 include::../assemblies/assembly_configuring-isolated-networks.adoc[leveloffset=+1]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]

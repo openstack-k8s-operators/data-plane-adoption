@@ -41,7 +41,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod -l component=swift-proxy -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc wait pod --for condition=Ready -l component=swift-proxy
   register: swift_running_result
   until: swift_running_result is success
   retries: 60

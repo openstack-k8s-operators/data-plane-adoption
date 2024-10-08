@@ -1,8 +1,8 @@
 [id="openshift-preparation-for-block-storage-adoption_{context}"]
 
-= {OpenShift} preparation for {block_storage} adoption
+= {OpenShiftShort} preparation for {block_storage} adoption
 
-Before you deploy {rhos_prev_long} ({OpenStackShort}) in {OpenShift} ({OpenShiftShort}), ensure that the networks are ready, that you decide which {OpenShiftShort} nodes to restrict, and that you make any necessary changes to the {OpenShiftShort} nodes.
+Before you deploy {rhos_prev_long} ({OpenStackShort}) in {rhocp_long}, ensure that the networks are ready, that you decide which {OpenShiftShort} nodes to restrict, and that you make any necessary changes to the {OpenShiftShort} nodes.
 
 //kgilliga: Need to change xref:about-node-selector_planning[About node selector] to the link to RHOCP documentation if I remove this module. (https://docs.openshift.com/container-platform/4.16/nodes/scheduling/nodes-scheduler-node-selectors.html)
 

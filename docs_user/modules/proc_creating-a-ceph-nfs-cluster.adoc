@@ -1,29 +1,29 @@
 [id="creating-a-ceph-nfs-cluster_{context}"]
 
-= Creating a NFS Ganesha cluster
+= Creating an NFS Ganesha cluster
 
-If you use the Ceph via NFS backend with {rhos_component_storage_file_first_ref}, prior to adoption, you must create a new clustered NFS service on the Ceph cluster. This service will replace the standalone, pacemaker-controlled `ceph-nfs` service that was used on {rhos_prev_long} {rhos_prev_ver}.
+If you use CephFS through NFS with the {rhos_component_storage_file_first_ref}, you must create a new clustered NFS service on the {Ceph} cluster. This service replaces the standalone, Pacemaker-controlled `ceph-nfs` service that you use in {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver}.
 
 .Procedure
 
-. You must identify the ceph nodes to deploy the new clustered NFS service.This service must be deployed on the `StorageNFS` isolated network so that
-it is easier for clients to mount their existing shares through the new NFS
-export locations.
-. You must propagate the `StorageNFS` network to the target nodes
-where the `ceph-nfs` service will be deployed.
+. Identify the {Ceph} nodes to deploy the new clustered NFS service, for example, `cephstorage-0`, `cephstorage-1`, `cephstorage-2`.
++
+[NOTE]
+You must deploy this service on the `StorageNFS` isolated network so that you can mount your existing shares through the new NFS export locations.
+You can deploy the new clustered NFS service on your existing CephStorage nodes or HCI nodes, or on new hardware that you enrolled in the {Ceph} cluster.
+
+. If you deployed your {Ceph} nodes with {OpenStackPreviousInstaller}, propagate the `StorageNFS` network to the target nodes where the `ceph-nfs` service is deployed.
+.. Identify the node definition file, `overcloud-baremetal-deploy.yaml`, that is used in the {OpenStackShort} environment.
+ifeval::["{build}" != "upstream"]
+For more information about identifying the `overcloud-baremetal-deploy.yaml` file, see link:{customizing-rhoso}/index#assembly_customizing-overcloud-networks[Customizing overcloud networks] in _{customizing-rhoso-t}_.
+endif::[]
 ifeval::["{build}" != "downstream"]
 See link:https://docs.openstack.org/project-deploy-guide/tripleo-docs/wallaby/features/network_isolation.html#deploying-the-overcloud-with-network-isolation[Deploying
 an Overcloud with Network Isolation with TripleO] and link:https://docs.openstack.org/project-deploy-guide/tripleo-docs/wallaby/post_deployment/updating_network_configuration_post_deployment.html[Applying
 network configuration changes after deployment] for the background to these
 tasks.
 endif::[]
-The following steps will be relevant if the Ceph Storage nodes were
-deployed via {OpenStackPreviousInstaller}.
-.. Identify the node definition file used in the environment. This is
-the input file associated with the `openstack overcloud node provision`
-command. For example, this file may be called `overcloud-baremetal-deploy.yaml`
-.. Edit the networks associated with the {CephCluster} nodes to include the
-`StorageNFS` network:
+.. Edit the networks that are associated with the {CephCluster} nodes to include the `StorageNFS` network:
 +
 [source,yaml]
 ----
@@ -49,11 +49,8 @@ command. For example, this file may be called `overcloud-baremetal-deploy.yaml`
     - network: storage_mgmt
     - network: storage_nfs
 ----
-.. Edit the network configuration template file for the {CephCluster} nodes
-to include an interface connecting to the `StorageNFS` network. In the
-example above, the path to the network configuration template file is
-`/home/stack/network/nic-configs/ceph-storage.j2`. This file is modified
-to include the following NIC template:
+.. Edit the network configuration template file, for example, `/home/stack/network/nic-configs/ceph-storage.j2`, for the {CephCluster} nodes
+to include an interface that connects to the `StorageNFS` network:
 +
 [source,yaml]
 ----
@@ -64,11 +61,10 @@ to include the following NIC template:
   - ip_netmask: {{ storage_nfs_ip }}/{{ storage_nfs_cidr }}
   routes: {{ storage_nfs_host_routes }}
 ----
-.. Re-run the `openstack overcloud node provision` command to update the
-{CephCluster} nodes.
+.. Update the {CephCluster} nodes:
 +
 ----
-openstack overcloud node provision \
+$ openstack overcloud node provision \
     --stack overcloud   \
     --network-config -y  \
     -o overcloud-baremetal-deployed-storage_nfs.yaml \
@@ -76,26 +72,46 @@ openstack overcloud node provision \
     /home/stack/network/baremetal_deployment.yaml
 ----
 +
-When the update is complete, ensure that the {CephCluster} nodes have a
-new interface created and tagged with the appropriate VLAN associated with
-`StorageNFS`.
+When the update is complete, ensure that a new interface is created in the{CephCluster} nodes and that they are tagged with the VLAN that is associated with `StorageNFS`.
 
-. Identify an IP address from the `StorageNFS` network to use as the Virtual IP
-address for the Ceph NFS service. This IP address must be provided in place of
-the `{{ VIP }}` in the example below. You can query used IP addresses with:
+. Identify the IP address from the `StorageNFS` network to use as the Virtual IP
+address (VIP) for the Ceph NFS service:
 +
 ----
-openstack port list -c "Fixed IP Addresses" --network storage_nfs
+$ openstack port list -c "Fixed IP Addresses" --network storage_nfs
+----
+
+. In a running `cephadm` shell, identify the hosts for the NFS service:
++
+----
+$ ceph orch host ls
+----
+
+. Label each host that you identified. Repeat this command for each host that you want to label:
++
+----
+$ ceph orch host label add <hostname> nfs
 ----
 +
-* Pick an appropriate size for the NFS cluster. The NFS service provides
-active/active high availability when the cluster size is more than
-one node. It is recommended that the ``{{ cluster_size }}`` is at least one
-less than the number of hosts identified. This solution has been well tested
-with a 3-node NFS cluster.
-* The `ingress-mode` argument must be set to ``haproxy-protocol``. No other
-ingress-mode will be supported. This ingress mode will allow enforcing client
-restrictions through {rhos_component_storage_file}.
+* Replace `<hostname>` with the name of the host that you identified.
+
+. Create the NFS cluster:
++
+----
+$ ceph nfs cluster create cephfs \
+    "label:nfs" \
+    --ingress \
+    --virtual-ip=<VIP>
+    --ingress-mode=haproxy-protocol
+}}
+----
++
+* Replace `<VIP>` with the VIP for the Ceph NFS service.
++
+[NOTE]
+You must set the `ingress-mode` argument to `haproxy-protocol`. No other
+ingress-mode is supported. This ingress mode allows you to enforce client
+restrictions through the {rhos_component_storage_file}.
 ifeval::["{build}" != "downstream"]
 * For more information on deploying the clustered Ceph NFS service, see the
 link:https://docs.ceph.com/en/latest/cephadm/services/nfs/[ceph orchestrator
@@ -103,30 +119,12 @@ documentation].
 endif::[]
 ifeval::["{build}" != "upstream"]
 For more information on deploying the clustered Ceph NFS service, see the
-link:https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/7/html-single/operations_guide/index#management-of-nfs-ganesha-gateway-using-the-ceph-orchestrator[Management of NFS-Ganesha gateway using the Ceph Orchestrator (Limited Availability)] in _Red Hat Ceph Storage 7 Operations Guide_.
+link:{defaultCephURL}/operations_guide/index#management-of-nfs-ganesha-gateway-using-the-ceph-orchestrator[Management of NFS-Ganesha gateway using the Ceph Orchestrator (Limited Availability)] in _Red Hat Ceph Storage 7 Operations Guide_.
 endif::[]
-//kgilliga: Confirm that we should link to the Ceph Operations Guide downstream.
-* The following commands are run inside a `cephadm shell` to create a clustered
-Ceph NFS service.
+
+. Check the status of the NFS cluster:
 +
 ----
-
-# wait for shell to come up, then execute:
-ceph orch host ls
-
-# Identify the hosts that can host the NFS service.
-# Repeat the following command to label each host identified:
-ceph orch host label add <HOST> nfs
-
-# Set the appropriate {{ cluster_size }} and {{ VIP }}:
-ceph nfs cluster create cephfs \
-    "{{ cluster_size }} label:nfs" \
-    --ingress \
-    --virtual-ip={{ VIP }}
-    --ingress-mode=haproxy-protocol
-}}
-
-# Check the status of the nfs cluster with these commands
-ceph nfs cluster ls
-ceph nfs cluster info cephfs
+$ ceph nfs cluster ls
+$ ceph nfs cluster info cephfs
 ----
