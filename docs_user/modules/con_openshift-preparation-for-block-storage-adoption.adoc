@@ -2,14 +2,12 @@
 
 = {OpenShiftShort} preparation for {block_storage} adoption
 
-Before you deploy {rhos_prev_long} ({OpenStackShort}) in {rhocp_long}, ensure that the networks are ready, that you decide which {OpenShiftShort} nodes to restrict, and that you make any necessary changes to the {OpenShiftShort} nodes.
-
-//kgilliga: Need to change xref:about-node-selector_planning[About node selector] to the link to RHOCP documentation if I remove this module. (https://docs.openshift.com/container-platform/4.16/nodes/scheduling/nodes-scheduler-node-selectors.html)
+Before you deploy {rhos_prev_long} ({OpenStackShort}) in {rhocp_long} nodes, ensure that the networks are ready, that you decide which {OpenShiftShort} nodes to restrict, and that you make any necessary changes to the {OpenShiftShort} nodes.
 
 Node selection::
-You might need to restrict the {OpenShiftShort} nodes where the {block_storage} volume and backup services can run.
+You might need to restrict the {OpenShiftShort} nodes where the {block_storage} volume and backup services run.
 +
-An example of when you need to restrict nodes for a specific {block_storage} is when you deploy the {block_storage} with the LVM driver. In that scenario, the LVM data where the volumes are stored only exists in a specific host, so you need to pin the Block Storage-volume service to that specific {OpenShiftShort} node. Running the service on any other {OpenShiftShort} node does not work.  Since `nodeSelector` only works on labels, you cannot use the {OpenShiftShort} host node name to restrict the LVM back end. You need to identify the LVM back end by using a unique label, an existing label, or new label:
+An example of when you need to restrict nodes for a specific {block_storage} is when you deploy the {block_storage} with the LVM driver. In that scenario, the LVM data where the volumes are stored only exists in a specific host, so you need to pin the Block Storage-volume service to that specific {OpenShiftShort} node. Running the service on any other {OpenShiftShort} node does not work. You cannot use the {OpenShiftShort} host node name to restrict the LVM back end. You need to identify the LVM back end by using a unique label, an existing label, or a new label:
 +
 ----
 $ oc label nodes worker0 lvm=cinder-volumes
@@ -34,24 +32,19 @@ spec:
 < . . . >
 ----
 +
-For more information about node selection, see xref:about-node-selector_planning[About node selector].
+For more information about node selection, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
 +
 [NOTE]
 ====
 If your nodes do not have enough local disk space for temporary images, you can use a remote NFS location by setting the extra volumes feature ()`extraMounts`.
 ====
 Transport protocols::
-Due to the specifics of the storage transport protocols, some changes might be
-required for {OpenShiftShort}. Before making changes, review the following information:
+Some changes to the storage transport protocols might be required for {OpenShiftShort}. Before making changes, review the following information:
 +
-* Check the back-end sections in your `cinder.conf` file that are listed in the
-`enabled_backends` configuration option to determine the transport storage
-protocol that the back end uses.
+* If you use a `MachineConfig` to make changes to {OpenShiftShort} nodes, the nodes reboot.
+* Check the back-end sections that are listed in the `enabled_backends` configuration option in your `cinder.conf` file to determine the transport storage protocol that the back end uses.
 * Depending on the back end, you can find the transport protocol by viewing the `volume_driver` or `target_protocol` configuration options.
 * The `icssid` service, `multipathd` service, and `NVMe-TCP` kernel modules start automatically on data plane nodes.
-+
-[WARNING]
-If you use a `MachineConfig` to make changes to {OpenShiftShort} nodes, the nodes reboot.
 
 NFS::
 {OpenShiftShort} connects to NFS back ends without additional changes.
@@ -60,11 +53,10 @@ RBD/Ceph::
 {OpenShiftShort} connects to Ceph back ends without additional changes. You must provide credentials and configuration files to the services.
 
 iSCSI::
-To connect to iSCSI volumes, the iSCSI initiator must run on the
-{OpenShiftShort} hosts where volume and backup services are going to run. The Linux Open iSCSI initiator does not support network namespaces, so you must only run one instance of the service for the normal {OpenShiftShort} usage, as well as
+* To connect to iSCSI volumes, the iSCSI initiator must run on the
+{OpenShiftShort} hosts where the volume and backup services run. The Linux Open iSCSI initiator does not support network namespaces, so you must only run one instance of the service for the normal {OpenShiftShort} usage, as well as
 the {OpenShiftShort} CSI plugins and the {OpenStackShort} services.
-+
-If you are not already running `iscsid` on the {OpenShiftShort} nodes, then you must apply a `MachineConfig`. For example:
+* If you are not already running `iscsid` on the {OpenShiftShort} nodes, then you must apply a `MachineConfig`. For example:
 +
 [source,yaml]
 ----
@@ -84,22 +76,15 @@ spec:
       - enabled: true
         name: iscsid.service
 ----
-+
-If you use labels to restrict the nodes where the Block Storage services run, you must use a `MachineConfigPool` to limit the effects of the
-`MachineConfig` to only the nodes where your services might run. For more information, xref:about-node-selector_planning[About node selector].
-+
-If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
-+
-For production deployments that use iSCSI volumes, it is recommended to configure
-multipathing.
+* If you use labels to restrict the nodes where the Block Storage services run, you must use a `MachineConfigPool` to limit the effects of the
+`MachineConfig` to only the nodes where your services might run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
+* If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
+* For production deployments that use iSCSI volumes, configure multipathing.
 
 FC::
-The {block_storage} volume and {block_storage} backup services need to run in an {OpenShiftShort} host that has host bus adapters (HBAs). If some nodes do not have HBAs, then you need to use labels to restrict where these services can run. For more information, see xref:about-node-selector_planning[About node selector].
-+
-If you have virtualized {OpenShiftShort} clusters that use FC you need to expose the host HBAs inside the virtual machine.
-+
-For production deployments that use FC volumes, it is recommended to configure
-multipathing.
+* The {block_storage} volume and {block_storage} backup services need to run in an {OpenShiftShort} host that has host bus adapters (HBAs). If some nodes do not have HBAs, then you need to use labels to restrict where these services run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
+* If you have virtualized {OpenShiftShort} clusters that use FC you need to expose the host HBAs inside the virtual machine.
+* For production deployments that use FC volumes, configure multipathing.
 
 NVMe-TCP::
 To connect to NVMe-TCP volumes, `NVMe-TCP` kernel modules must be loaded on the {OpenShiftShort} hosts.
@@ -135,7 +120,7 @@ spec:
 ----
 +
 If you are using labels to restrict the nodes where Block Storage
-services are running, you need to use a `MachineConfigPool` to limit the effects of the `MachineConfig` to only the nodes where your services run. For more information, see xref:about-node-selector_planning[About node selector].
+services are running, you need to use a `MachineConfigPool` to limit the effects of the `MachineConfig` to only the nodes where your services run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
 +
 If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
 +
@@ -202,7 +187,7 @@ spec:
         name: multipathd.service
 ----
 +
-If use labels to restrict the nodes where Block Storage services are running, you need to use a `MachineConfigPool` to limit the effects of the `MachineConfig` to only the nodes where your services run. For more information, see xref:about-node-selector_planning[About node selector].
+If use labels to restrict the nodes where Block Storage services are running, you need to use a `MachineConfigPool` to limit the effects of the `MachineConfig` to only the nodes where your services run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
 +
 If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
 +
