@@ -18,10 +18,7 @@ function wait_for_status() {
 }
 
 # Benchmark CPU
-# Install sysbench
-ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa -o StrictHostKeyChecking=no root@192.168.122.100 sudo dnf install -y sysbench
-# Run benchmark
-ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa -o StrictHostKeyChecking=no root@192.168.122.100 sysbench cpu run --max-requests=10000000 --threads="$(nproc)"
+ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa -o StrictHostKeyChecking=no root@192.168.122.100 'sysbench cpu run --max-requests=10000000 --threads="$(nproc)"'
 
 # Create Image
 IMG=cirros-0.5.2-x86_64-disk.img
@@ -97,8 +94,7 @@ if ! ${BASH_ALIASES[openstack]} volume show boot-volume ; then
     wait_for_status "volume show boot-volume" "test volume 'boot-volume' creation"
 fi
 
-ssh -i {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }} sudo dnf install -y bpftrace
-ssh -ni {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }} sudo bpftrace -e 'tracepoint:raw_syscalls:sys_enter { @[comm] = count(); } interval:s:1 { print("=========="); print(@); clear(@); }' '|' tee ~/syscalls_before.log &
+ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa -o StrictHostKeyChecking=no root@192.168.122.100 sudo bpftrace -e 'tracepoint:raw_syscalls:sys_enter { @[comm] = count(); } interval:s:1 { print("=========="); print(@); clear(@); }' '|' tee ~/syscalls_before.log &
 
 # Launch an instance from boot-volume (BFV)
 if ${BASH_ALIASES[openstack]} volume show boot-volume -f json | jq -r '.status' | grep -q available ; then
@@ -108,6 +104,6 @@ fi
 # Get console log
 ${BASH_ALIASES[openstack]} console log show test
 
-total=$(ssh -i {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }} cat ~/syscalls_before.log | awk -F': ' '/libvirt|emu/ {if ($1) print $1}' |  cut -d's' -f1 | paste -s -d+ - | bc)
-lines=$(ssh -i {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }}cat ~/syscalls_before.log | awk -F': ' '/libvirt|emu/ {if ($1) print $1}' | wc -l)
+total=$(ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa -o StrictHostKeyChecking=no root@192.168.122.100 cat ~/syscalls_before.log | awk -F': ' '/libvirt|emu/ {if ($1) print $1}' |  cut -d's' -f1 | paste -s -d+ - | bc)
+lines=$(ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa -o StrictHostKeyChecking=no root@192.168.122.100 cat ~/syscalls_before.log | awk -F': ' '/libvirt|emu/ {if ($1) print $1}' | wc -l)
 echo "Libvirt/Qemu sycalls counts average: $$(( total / lines ))"
