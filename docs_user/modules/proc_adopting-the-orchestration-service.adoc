@@ -27,7 +27,7 @@ endif::[]
   HeatPassword: dU2N0Vr2bdelYH7eQonAwPfI3
 ----
 
-. Log in to a Controller node and verify that the `auth_encryption_key` value is the same as the `HeatAuthEncryptionKey` value:
+. Log in to a Controller node and verify the `auth_encryption_key` value in use:
 +
 ----
 [stack@rhosp17 ~]$ ansible -i overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml overcloud-controller-0 -m shell -a "grep auth_encryption_key /var/lib/config-data/puppet-generated/heat/etc/heat/heat.conf | grep -Ev '^#|^$'" -b
