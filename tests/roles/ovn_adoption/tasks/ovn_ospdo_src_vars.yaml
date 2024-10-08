@@ -28,3 +28,19 @@
       CONTROLLER1_SSH="{{ controller1_ssh }}"
       CONTROLLER2_SSH="echo ospdo src env, skipping on controller-1 "
       CONTROLLER3_SSH="echo ospdo src env ,skipping on controller-2 "
+
+- name: create ovn-data-cert secret
+  ansible.builtin.shell: |
+    oc apply -f - <<EOF
+    ---
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: ovn-data-cert
+      namespace: {{ org_namespace }}
+    type: Opaque
+    EOF
+
+- name: set default NS to {{ osp18_namespace }}
+  ansible.builtin.shell: |
+    oc project {{ osp18_namespace }}

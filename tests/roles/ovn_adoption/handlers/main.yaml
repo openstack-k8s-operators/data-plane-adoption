@@ -2,7 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc delete pod ovn-copy-data
-    oc delete certificate ovn-data-cert
-    oc delete secret ovn-data-cert
-    {% if storage_reclaim_policy.lower() == "delete" %}oc delete pvc ovn-data{% endif %}
+    oc delete pod -n {{ org_namespace| default('openstack') }} ovn-copy-data
+    oc delete certificate -n {{ org_namespace| default('openstack') }} ovn-data-cert
+    oc delete secret -n {{ org_namespace| default('openstack') }} ovn-data-cert
+    {% if storage_reclaim_policy.lower() == "delete" %}oc delete pvc -n {{ org_namespace| default('openstack') }} ovn-data{% endif %}
