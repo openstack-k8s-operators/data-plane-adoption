@@ -7,7 +7,6 @@ spec:
     template:
       databaseInstance: openstack
       storage:
-        storageClass: "local-storage"
         storageRequest: 10G
       customServiceConfig: |
         [DEFAULT]
