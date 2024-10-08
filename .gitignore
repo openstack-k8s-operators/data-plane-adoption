@@ -5,6 +5,7 @@
 /tests/config/base/tls_overrides.yaml
 /tests/config/tmp
 /tests/secrets.yaml
+/tests/secrets_ospdo.yaml
 /tests/playbooks/tmp
 /tests/vars.yaml
 /tests/logs
