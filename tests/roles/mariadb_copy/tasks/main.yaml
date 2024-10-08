@@ -24,7 +24,7 @@
     kind: PersistentVolumeClaim
     metadata:
       name: mariadb-data
-      namespace: {{ ospdo_namespace| default('openstack') }}
+      namespace: {{ org_namespace| default('openstack') }}
     spec:
       storageClassName: $STORAGE_CLASS
       accessModes:
@@ -40,7 +40,7 @@
       annotations:
         openshift.io/scc: anyuid
         k8s.v1.cni.cncf.io/networks: {{ custom_networks | default('internalapi') }}
-      namespace: {{ ospdo_namespace| default('openstack') }}
+      namespace: {{ org_namespace| default('openstack') }}
       labels:
         app: adoption
     spec:
@@ -69,12 +69,11 @@
   changed_when: true
   notify: delete adoption mariadb helper pod and pvc
 
-
 - name: wait for the pod to come up
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait --for condition=Ready -n {{ ospdo_namespace| default('openstack') }} pod/mariadb-copy-data --timeout=10s
+    oc wait --for condition=Ready -n {{ org_namespace| default('openstack') }} pod/mariadb-copy-data --timeout=10s
   register: mariadb_data_pod_result
   until: mariadb_data_pod_result is success
   retries: 25
@@ -88,7 +87,7 @@
     {{ mariadb_copy_shell_vars_src }}
     for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
       echo "Checking for the database node $i WSREP status Synced"
-      oc rsh -n {{ ospdo_namespace| default('openstack') }} mariadb-copy-data mysql \
+      oc rsh -n {{ org_namespace| default('openstack') }} mariadb-copy-data mysql \
         -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" \
         -e "show global status like 'wsrep_local_state_comment'" | \
         grep -qE "\bSynced\b"
