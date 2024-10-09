@@ -73,13 +73,32 @@
   ansible.builtin.debug:
     var: before_adoption_token
 
+- name: test token
+  no_log: "{{ use_no_log }}"
+  environment:
+    INSTALL_YAMLS_PATH: "{{ install_yamls_path }}"
+    EDPM_PRIVATEKEY_PATH: "{{ edpm_privatekey_path }}"
+    OS_CLOUD_IP: "{{ standalone_ip | default(edpm_node_ip) }}"
+    OS_CLOUD_NAME: "{{ os_cloud_name }}"
+    SOURCE_OSP_SSH_USER: "{{ source_osp_ssh_user }}"
+  ansible.builtin.shell:
+    cmd: |
+      {{ shell_header }}
+      alias openstack="oc exec -t openstackclient -- openstack"
+      ${BASH_ALIASES[openstack]} token issue -f value -c id
+  register: test_token
+
+- name: debug test token
+  ansible.builtin.debug:
+    var: test_token
+
 - name: Verify that pre-adoption token still works
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    OS_TOKEN={{ before_adoption_token.stdout }}
-    alias openstack="oc exec -t openstackclient -- openstack"
-    ${BASH_ALIASES[openstack]} endpoint list
+    oc exec -n openstack -t openstackclient -- bash -c 'curl -s -I -H "X-Auth-Token: {{ before_adoption_token.stdout }}" https://keystone-public-openstack.apps-crc.testing/v3/users'
+  register: adoption_token_result
+  failed_when: adoption_token_result.stdout != "200"
 
 - name: Verify that pre-adoption credential stills the same
   ansible.builtin.shell: |
