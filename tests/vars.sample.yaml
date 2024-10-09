@@ -59,5 +59,9 @@ run_pre_adoption_validation: true
 # Whether the adopted node will host compute services
 compute_adoption: true
 
+# Whether to adopt Octavia
+octavia_adoption: true
+enable_octavia: true
+
 # Where perform or not telemetry installation during adoption
 telemetry_adoption: true

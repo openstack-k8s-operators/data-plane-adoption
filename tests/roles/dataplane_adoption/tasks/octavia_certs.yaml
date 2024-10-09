@@ -1,0 +1,80 @@
+- name: Migrate old Octavia certificates to new dual CA structure
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    CONTROLLER1_SSH="{{ controller1_ssh }}"
+    CONTROLLER1_SCP="{{ controller1_ssh  | regex_replace('^ssh', 'scp')}}"
+    SERVER_CA_PASSPHRASE=$($CONTROLLER1_SSH grep ^ca_private_key_passphrase /var/lib/config-data/puppet-generated/octavia/etc/octavia/octavia.conf)
+    export SERVER_CA_PASSPHRASE=$(echo "${SERVER_CA_PASSPHRASE}"  | cut -d '=' -f 2 | xargs)
+    export CLIENT_PASSPHRASE="ThisIsOnlyAppliedTemporarily"
+    CERT_SUBJECT="/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com"
+    CERT_MIGRATE_PATH="$HOME/octavia_cert_migration"
+
+    mkdir -p ${CERT_MIGRATE_PATH}
+    cd ${CERT_MIGRATE_PATH}
+    # Set up the server CA
+    mkdir -p server_ca
+    cd server_ca
+    mkdir -p certs crl newcerts private csr
+    chmod 700 private
+    ${CONTROLLER1_SCP}:/var/lib/config-data/puppet-generated/octavia/etc/octavia/certs/private/cakey.pem private/server_ca.key.pem
+    chmod 400 private/server_ca.key.pem
+    ${CONTROLLER1_SCP}:/tmp/octavia-ssl/client-.pem certs/old_client_cert.pem
+    ${CONTROLLER1_SCP}:/tmp/octavia-ssl/index.txt* ./
+    ${CONTROLLER1_SCP}:/tmp/octavia-ssl/serial* ./
+    ${CONTROLLER1_SCP}:/tmp/octavia-ssl/openssl.cnf ../
+    openssl req -config ../openssl.cnf -key private/server_ca.key.pem -new -passin env:SERVER_CA_PASSPHRASE -x509 -days 18250 -sha256 -extensions v3_ca -out certs/server_ca.cert.pem -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com"
+
+    # Set up the new client CA
+    sed -i "s|^dir\s\+=\s\+\"/tmp/octavia-ssl\"|dir = \"$CERT_MIGRATE_PATH/client_ca\"|" ../openssl.cnf
+    cd ${CERT_MIGRATE_PATH}
+    mkdir -p client_ca
+    cd client_ca
+    mkdir -p certs crl csr newcerts private
+    chmod 700 private
+    touch index.txt
+    echo 1000 > serial
+    openssl genrsa -aes256 -out private/ca.key.pem -passout env:SERVER_CA_PASSPHRASE 4096
+    chmod 400 private/ca.key.pem
+    openssl req -config ../openssl.cnf -key private/ca.key.pem -new -passin env:SERVER_CA_PASSPHRASE -x509 -days 18250 -sha256 -extensions v3_ca -out certs/client_ca.cert.pem -subj "${CERT_SUBJECT}"
+
+    # Create client certificates
+    cd ${CERT_MIGRATE_PATH}/client_ca
+    openssl genrsa -aes256 -out private/client.key.pem -passout env:CLIENT_PASSPHRASE 4096
+    openssl req -config ../openssl.cnf -new -passin env:CLIENT_PASSPHRASE -sha256 -key private/client.key.pem -out csr/client.csr.pem -subj "${CERT_SUBJECT}"
+    mkdir -p ${CERT_MIGRATE_PATH}/client_ca/private ${CERT_MIGRATE_PATH}/client_ca/newcerts ${CERT_MIGRATE_PATH}/private
+    chmod 700 ${CERT_MIGRATE_PATH}/client_ca/private ${CERT_MIGRATE_PATH}/private
+
+    cp ${CERT_MIGRATE_PATH}/client_ca/private/ca.key.pem ${CERT_MIGRATE_PATH}/client_ca/private/cakey.pem
+    cp ${CERT_MIGRATE_PATH}/client_ca/certs/client_ca.cert.pem $CERT_MIGRATE_PATH/client_ca/ca_01.pem
+    openssl ca -config ../openssl.cnf -extensions usr_cert -passin env:SERVER_CA_PASSPHRASE -days 1825 -notext -batch -md sha256 -in csr/client.csr.pem -out certs/client.cert.pem
+    openssl rsa -passin env:CLIENT_PASSPHRASE -in private/client.key.pem -out private/client.cert-and-key.pem
+    cat certs/client.cert.pem >> private/client.cert-and-key.pem
+
+    # Install new data in k8s
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: octavia-certs-secret
+      namespace: openstack
+    type: Opaque
+    data:
+      server_ca.key.pem:  $(cat ${CERT_MIGRATE_PATH}/server_ca/private/server_ca.key.pem | base64 -w0)
+      server_ca.cert.pem: $(cat ${CERT_MIGRATE_PATH}/server_ca/certs/server_ca.cert.pem | base64 -w0)
+      client_ca.cert.pem: $(cat ${CERT_MIGRATE_PATH}/client_ca/certs/client_ca.cert.pem | base64 -w0)
+      client.cert-and-key.pem: $(cat ${CERT_MIGRATE_PATH}/client_ca/private/client.cert-and-key.pem | base64 -w0)
+    EOF
+
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: octavia-ca-passphrase
+      namespace: openstack
+    type: Opaque
+    data:
+      server-ca-passphrase: $(echo $SERVER_CA_PASSPHRASE | base64 -w0)
+    EOF
+
+    rm -rf ${CERT_MIGRATE_PATH}
