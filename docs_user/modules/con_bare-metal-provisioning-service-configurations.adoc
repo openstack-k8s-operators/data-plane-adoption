@@ -4,11 +4,11 @@
 
 You configure the {bare_metal_first_ref} by using configuration snippets. For more information about configuring the control plane with the {bare_metal}, see link:{customizing-rhoso}/index[{customizing-rhoso-t}].
 
-Some {bare_metal} configuration is overridden in {OpenStackPreviousInstaller}, for example, PXE Loader file names are often overridden at intermediate layers. You must pay attention to the settings you apply in your {rhos_long} deployment. The operator applies a reasonable working default configuration, but if you override them with your prior configuration, your experience might not be ideal or your new {bare_metal} fails to operate. Similarly, additional configuration might be necessary, for example, if you enable and use additional hardware types in your `ironic.conf` file.
+Some {bare_metal} configuration is overridden in {OpenStackPreviousInstaller}, for example, PXE Loader file names are often overridden at intermediate layers. You must pay attention to the settings you apply in your {rhos_long} deployment. The `ironic-operator` applies a reasonable working default configuration, but if you override them with your prior configuration, your experience might not be ideal or your new {bare_metal} fails to operate. Similarly, additional configuration might be necessary, for example, if you enable and use additional hardware types in your `ironic.conf` file.
 
-The model of reasonable defaults includes commonly used hardware-types and driver interfaces. For example, the `redfish-virtual-media` boot interface and the `ramdisk` deploy interface are enabled by default. If you add new bare metal nodes after the adoption is complete, the driver interface selection occurs based on the order of precedence in the configuration if it is not explicitly set on the node creation request or as an established default in the `ironic.conf` file.
+The model of reasonable defaults includes commonly used hardware-types and driver interfaces. For example, the `redfish-virtual-media` boot interface and the `ramdisk` deploy interface are enabled by default. If you add new bare metal nodes after the adoption is complete, the driver interface selection occurs based on the order of precedence in the configuration if you do not explicitly set it on the node creation request or as an established default in the `ironic.conf` file.
 
-Some configuration parameters do not need to be set on an individual node level, for example, network UUID values, or they are centrally configured in the `ironic.conf` file as the setting controls behavior a security control.
+Some configuration parameters do not need to be set on an individual node level, for example, network UUID values, or they are centrally configured in the `ironic.conf` file, as the setting controls security behavior.
 
 It is critical that you maintain the following parameters that you configured and formatted as `[section]` and parameter name from the prior deployment to the new deployment. These parameters govern the underlying behavior and values in the previous configuration, would have used specific values if set.
 
@@ -20,7 +20,6 @@ It is critical that you maintain the following parameters that you configured an
 * [deploy]erase_devices_priority
 * [deploy]erase_devices_metadata_priority
 * [conductor]force_power_state_during_sync
-// FIXME: The setting above likely should be True by default in deployments, but would have been *false* by defaults on prior underclouds.
 
 You can set the following parameters individually on a node. However, you might choose to use embedded configuration options to avoid the need to set the parameters individually when creating or managing bare metal nodes. Check your prior `ironic.conf` file for these parameters, and if set, apply a specific override configuration.
 
@@ -37,5 +36,3 @@ The instances of `kernel_append_params`, formerly `pxe_append_params` in the `[p
 
 [WARNING]
 You cannot migrate hardware types that are set with the `ironic.conf` file `enabled_hardware_types` parameter, and hardware type driver interfaces starting with `staging-` into the adopted configuration.
-
-Additionally, {OpenStackPreviousInstaller}-based deployments made architectural decisions based on self-management of services. When adopting deployments, you do not necessarilly need multiple replicas of secondary services such as the Introspection service. Should the host the container is running on fail, {rhocp_long} restarts the container on another host. The short-term transitory loss
