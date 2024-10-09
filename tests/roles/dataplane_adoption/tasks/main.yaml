@@ -166,8 +166,6 @@
       services:
         - bootstrap
         - download-cache
-        - configure-network
-        - validate-network
         - install-os
         - configure-os
         - ssh-known-hosts
@@ -176,6 +174,8 @@
         - install-certs
         - ovn
         - neutron-metadata
+        - configure-network
+        - validate-network
       env:
         - name: ANSIBLE_CALLBACKS_ENABLED
           value: "profile_tasks"
