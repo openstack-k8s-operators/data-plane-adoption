@@ -1,0 +1,23 @@
+- name: Patch net-config config and add the IP address (target node)
+  when:
+    - ceph_storagenfs_ipaddr is defined
+    - ceph_storagenfs_ipaddr | ansible.builtin.ipaddr
+  delegate_to: "{{ target_node }}"
+  become: true
+  ansible.builtin.blockinfile:
+    marker_begin: "BEGIN storageNFS network"
+    marker_end: "END storageNFS network"
+    path: "{{ os_net_conf_path }}"
+    block: |
+      - type: vlan
+        device: {{ ceph_storagenfs_nic }}
+        vlan_id: {{ ceph_storagenfs_vlan_id }}
+        addresses:
+        - ip_netmask: {{ ceph_storagenfs_ipaddr }}/24
+        routes: []
+
+- name: Refresh os-net-config (target_node)
+  become: true
+  delegate_to: "{{ target_node }}"
+  ansible.builtin.command:
+    "os-net-config -c {{ os_net_conf_path }}"
