@@ -9,7 +9,7 @@ By default, newer versions of the {bare_metal} contain a more restrictive access
 
 .Prerequisites
 
-* You have imported the service databases into the control plane MariaDB. 
+* You have imported the service databases into the control plane MariaDB.
 * The {identity_service_first_ref}, {networking_first_ref}, {image_service_first_ref}, and {block_storage_first_ref} are operational.
 +
 [NOTE]
@@ -189,4 +189,3 @@ $ openstack endpoint list |grep ironic
 ----
 $ openstack baremetal node list
 ----
-

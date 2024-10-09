@@ -10,7 +10,7 @@ The model of reasonable defaults includes commonly used hardware-types and drive
 
 Some configuration parameters do not need to be set on an individual node level, for example, network UUID values, or they are centrally configured in the `ironic.conf` file, as the setting controls security behavior.
 
-It is critical that you maintain the following parameters that you configured and formatted as `[section]` and parameter name from the prior deployment to the new deployment. These parameters govern the underlying behavior and values in the previous configuration, would have used specific values if set.
+It is critical that you maintain the following parameters that you configured and formatted as `[section]` and parameter name from the prior deployment to the new deployment. These parameters that govern the underlying behavior and values in the previous configuration would have used specific values if set.
 
 * [neutron]cleaning_network
 * [neutron]provisioning_network
