@@ -1,13 +1,13 @@
 [id="block-storage-requirements_{context}"]
 
-= {block_storage} requirements
+= {block_storage} guidelines
 
-To prepare to adopt your {block_storage_first_ref}, review the following requirements:
+Review the following guidelines to help you prepare to adopt your {block_storage_first_ref}:
 
-* Evaluate your {block_storage} back ends.
-* Check the transport protocol that the {block_storage} back ends use, such as
-RBD, iSCSI, FC, NFS, NVMe-TCP, and so on. You must consider them when you place the Block Storage services and when the right storage transport-related binaries are running on the {rhocp_long} nodes.For more information about each storage transport protocol, see xref:openshift-preparation-for-block-storage-adoption_storage-requirements[{OpenShiftShort} preparation for {block_storage} adoption].
-* To deploy {block_storage} volume back ends, use a {block_storage} volume service for each back end.
+* Take note of the {block_storage} back ends that you use.
+* Determine all the transport protocols that the {block_storage} back ends use, such as
+RBD, iSCSI, FC, NFS, NVMe-TCP, and so on. You must consider them when you place the Block Storage services and when the right storage transport-related binaries are running on the {rhocp_long} nodes. For more information about each storage transport protocol, see xref:openshift-preparation-for-block-storage-adoption_storage-requirements[{OpenShiftShort} preparation for {block_storage} adoption].
+* Use a {block_storage} volume service to deploy each {block_storage} volume back end.
 +
 For example, you have an LVM back end, a Ceph back end, and two entries in `cinderVolumes`, and you cannot set global defaults for all volume services. You must define a service for each of them:
 +

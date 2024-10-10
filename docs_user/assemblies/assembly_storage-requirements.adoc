@@ -6,13 +6,11 @@ ifdef::context[:parent-context: {context}]
 
 = Storage requirements
 
-When looking into the storage in an {rhos_prev_long} ({OpenStackShort}) deployment you can differentiate
-two kinds, the storage requirements of the services themselves and the
-storage used for the {OpenStackShort} users that the services will manage.
+Storage in a {rhos_prev_long} ({OpenStackShort}) deployment refers to the following types:
+* The storage that is needed for the service to run
+* The storage that the service manages
 
-These requirements may drive your {rhocp_long} node selection
-and may require you to do some preparations on the {OpenShiftShort} nodes before
-you can deploy the services.
+Before you can deploy the services in {rhos_long}, you must review the storage requirements, plan your {rhocp_long} node selection, prepare your {OpenShiftShort} nodes, and so on.
 
 //*TODO: Galera, RabbitMQ, Swift, Glance, etc.*
 
