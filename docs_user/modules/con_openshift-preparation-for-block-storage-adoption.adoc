@@ -2,7 +2,7 @@
 
 = {OpenShiftShort} preparation for {block_storage} adoption
 
-Before you deploy {rhos_prev_long} ({OpenStackShort}) in {rhocp_long} nodes, ensure that the networks are ready, that you decide which {OpenShiftShort} nodes to restrict, and that you make any necessary changes to the {OpenShiftShort} nodes.
+Before you deploy {rhos_prev_long} ({OpenStackShort}) in {rhocp_long} nodes, review the following information to ensure that the networks are ready, that you decide which {OpenShiftShort} nodes to restrict, and that you make any necessary changes to the {OpenShiftShort} nodes.
 
 Node selection::
 You might need to restrict the {OpenShiftShort} nodes where the {block_storage} volume and backup services run.
@@ -36,13 +36,13 @@ For more information about node selection, see link:{defaultOCPURL}/nodes/index#
 +
 [NOTE]
 ====
-If your nodes do not have enough local disk space for temporary images, you can use a remote NFS location by setting the extra volumes feature ()`extraMounts`.
+If your nodes do not have enough local disk space for temporary images, you can use a remote NFS location by setting the extra volumes feature, `extraMounts`.
 ====
 Transport protocols::
 Some changes to the storage transport protocols might be required for {OpenShiftShort}. Before making changes, review the following information:
 +
 * If you use a `MachineConfig` to make changes to {OpenShiftShort} nodes, the nodes reboot.
-* Check the back-end sections that are listed in the `enabled_backends` configuration option in your `cinder.conf` file to determine the transport storage protocol that the back end uses.
+* Check the back-end sections that are listed in the `enabled_backends` configuration option in your `cinder.conf` file to determine the enabled storage back-end sections.
 * Depending on the back end, you can find the transport protocol by viewing the `volume_driver` or `target_protocol` configuration options.
 * The `icssid` service, `multipathd` service, and `NVMe-TCP` kernel modules start automatically on data plane nodes.
 
@@ -79,12 +79,12 @@ spec:
 ** If you use labels to restrict the nodes where the Block Storage services run, you must use a `MachineConfigPool` to limit the effects of the
 `MachineConfig` to only the nodes where your services might run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
 ** If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
-** For production deployments that use iSCSI volumes, configure multipathing.
+** For production deployments that use iSCSI volumes, configure multipathing for better I/O.
 
 FC:::
 ** The {block_storage} volume and {block_storage} backup services need to run in an {OpenShiftShort} host that has host bus adapters (HBAs). If some nodes do not have HBAs, then you need to use labels to restrict where these services run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
 ** If you have virtualized {OpenShiftShort} clusters that use FC you need to expose the host HBAs inside the virtual machine.
-** For production deployments that use FC volumes, configure multipathing.
+** For production deployments that use FC volumes, configure multipathing for better I/O.
 
 NVMe-TCP:::
 ** To connect to NVMe-TCP volumes, you must load NVMe-TCP kernel modules on the {OpenShiftShort} hosts.
@@ -127,7 +127,7 @@ For production deployments that use NVMe-TCP volumes, it is recommended that you
 https://nvmexpress.org/faq-items/what-is-ana-nvme-multipathing/[ANA].
 endif::[]
 ifeval::["{build}" != "upstream"]
-** For production deployments that use NVMe-TCP volumes, use multipathing. For NVMe-TCP volumes, {OpenShiftShort} uses native multipathing, called ANA.
+** For production deployments that use NVMe-TCP volumes, use multipathing for better I/O. For NVMe-TCP volumes, {OpenShiftShort} uses native multipathing, called ANA.
 endif::[]
 ** After the {OpenShiftShort} nodes reboot and load the `nvme-fabrics` module, you can confirm that the operating system is configured and that it supports ANA by checking the host:
 +
