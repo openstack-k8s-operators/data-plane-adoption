@@ -268,6 +268,3 @@ dataplane_cr: |
           ovn_monitor_all: true
           edpm_ovn_remote_probe_interval: 60000
           edpm_ovn_ofctrl_wait_before_clear: 8000
-
-          # serve as a OVN gateway
-          edpm_enable_chassis_gw: true
