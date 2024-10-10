@@ -29,3 +29,60 @@
   until: cinder_verify_resources is success
   retries: 10
   delay: 2
+
+- name: Detach disk volume
+  when:
+    - prelaunch_test_instance|bool
+    - cinder_volume_backend in supported_volume_backends
+  block:
+    - name: Detach the disk data volume
+      ansible.builtin.shell: |
+        {{ osc_header }}
+        ${BASH_ALIASES[openstack]} server remove volume test disk
+
+    - name: Wait for disk data volume to be available after detach
+      ansible.builtin.shell: |
+        {{ osc_header }}
+        ${BASH_ALIASES[openstack]} volume list -c Name -c Status -f value | grep "disk available"
+      register: detach_volume
+      until: detach_volume is success
+      retries: 10
+      delay: 10
+
+- name: Restore snapshot
+  when:
+    - prelaunch_test_instance|bool
+    - cinder_volume_backend in supported_volume_backends
+  block:
+    - name: Restore snapshot to disk volume
+      ansible.builtin.shell: |
+        {{ osc_header }}
+        ${BASH_ALIASES[openstack]} --os-volume-api-version 3.40 volume revert snapshot
+
+    - name: Wait for disk data volume to be available after revert
+      ansible.builtin.shell: |
+        {{ osc_header }}
+        ${BASH_ALIASES[openstack]} volume list -c Name -c Status -f value | grep "disk available"
+      register: revert_snapshot
+      until: revert_snapshot is success
+      retries: 10
+      delay: 10
+
+- name: Attach disk volume
+  when:
+    - prelaunch_test_instance|bool
+    - cinder_volume_backend in supported_volume_backends
+  block:
+    - name: Attach the disk data volume
+      ansible.builtin.shell: |
+        {{ osc_header }}
+        ${BASH_ALIASES[openstack]} server add volume test disk
+
+    - name: Wait for disk data volume to be in-use after attach
+      ansible.builtin.shell: |
+        {{ osc_header }}
+        ${BASH_ALIASES[openstack]} volume list -c Name -c Status -f value | grep "disk in-use"
+      register: attach_volume
+      until: attach_volume is success
+      retries: 10
+      delay: 10
