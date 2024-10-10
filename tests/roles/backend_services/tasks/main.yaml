@@ -91,7 +91,7 @@
       args:
         chdir: "../config"
 
-- name: Deploy the podified control plane
+- name: deploy the OpenStackControlPlane CR
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -99,20 +99,21 @@
   # args:
   #   chdir: "../config"
 
-- name: wait for services to start up
+- name: verify that MariaDB and RabbitMQ are running, for all defined cells
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait pod --for condition=Ready {{ item }}
-  register: service_running_result
-  until: service_running_result is success
-  retries: 150
+    {{ cells_env }}
+    oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
+    oc get pod rabbitmq-server-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
+    for CELL in $(echo $RENAMED_CELLS); do
+      oc get pod openstack-$CELL-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
+      oc get pod rabbitmq-$CELL-server-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
+    done
+  register: mariadb_running_result
+  until: mariadb_running_result is success
+  retries: 60
   delay: 2
-  loop:
-    - openstack-galera-0
-    - openstack-cell1-galera-0
-    - rabbitmq-server-0
-    - rabbitmq-cell1-server-0
 
 - name: Patch openstack upstream dns server to set the correct value for the environment
   when: upstream_dns is defined

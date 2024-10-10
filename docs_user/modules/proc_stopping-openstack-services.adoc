@@ -39,6 +39,21 @@ endif::[]
 CONTROLLER2_SSH="ssh -i *<path to SSH key>* root@*<controller-2 IP>*"
 CONTROLLER3_SSH="ssh -i *<path to SSH key>* root@*<controller-3 IP>*"
 ----
+* For a multi-cell deployment, specify the overcloud and cell controllers IPs instead, for example:
++
+[subs=+quotes]
+----
+ifeval::["{build}" != "downstream"]
+CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.103"
+CONTROLLER2_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.106"
+CONTROLLER3_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.109"
+endif::[]
+ifeval::["{build}" == "downstream"]
+CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
+CONTROLLER2_SSH="ssh -i *<path to SSH key>* root@*<node2 IP>*"
+CONTROLLER3_SSH="ssh -i *<path to SSH key>* root@*<node3 IP>*"
+endif::[]
+----
 
 .Procedure
 

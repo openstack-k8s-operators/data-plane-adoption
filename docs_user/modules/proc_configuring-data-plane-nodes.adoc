@@ -34,7 +34,7 @@ kind: NetConfig
 metadata:
   name: netconfig
 spec:
-  networks:
+  networks: <1>
   - name: internalapi
     dnsDomain: internalapi.example.com
     subnets:
@@ -63,6 +63,7 @@ spec:
       cidr: 172.19.0.0/24
       vlan: 22
 ```
+<1> The networks composition must match the source cloud configuration to avoid dataplane connectivity downtime.
 
 List multiple `allocationRanges` entries to exclude some of the IP addresses,
 e.g. to accommodate for addresses already consumed by the adopted environment.

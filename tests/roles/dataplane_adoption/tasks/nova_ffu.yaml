@@ -1,35 +1,25 @@
-- name: get dst database service environment variables
-  ansible.builtin.include_role:
-    name: mariadb_copy
-    tasks_from: env_vars_dst.yaml
-
-- name: wait for cell1 Nova compute EDPM services version updated
+- name: wait for Compute data plane services version updated for all cells
   ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
     {{ mariadb_copy_shell_vars_dst }}
-    oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
-      -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
+    for CELL in $(echo $RENAMED_CELLS); do
+      oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
+        -e "select a.version from nova_${CELL}.services a join nova_${CELL}.services b where a.version!=b.version and a.binary='nova-compute';"
+    done
   register: records_check_results
   until: records_check_results.rc == 0 and records_check_results.stdout_lines | length == 0
   retries: 20
   delay: 6
 
-- name: remove pre-FFU workarounds for Nova control plane services
+- name: patch the OpenStackControlPlane CR to remove the pre-fast-forward upgrade workarounds
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
-    spec:
-      nova:
-        template:
-          cellTemplates:
-            cell0:
-              conductorServiceTemplate:
-                customServiceConfig: |
-                  [workarounds]
-                  disable_compute_service_check_for_ffu=false
-            cell1:
+    {{ cells_env }}
+
+    rm -f celltemplates
+    for CELL in $(echo $RENAMED_CELLS); do
+      cat >> celltemplates << EOF
+            ${CELL}:
               metadataServiceTemplate:
                 customServiceConfig: |
                   [workarounds]
@@ -38,6 +28,13 @@
                 customServiceConfig: |
                   [workarounds]
                   disable_compute_service_check_for_ffu=false
+    EOF
+    done
+
+    cat > oscp-patch.yaml << EOF
+    spec:
+      nova:
+        template:
           apiServiceTemplate:
             customServiceConfig: |
               [workarounds]
@@ -50,47 +47,58 @@
             customServiceConfig: |
               [workarounds]
               disable_compute_service_check_for_ffu=false
-    '
+          cellTemplates:
+            cell0:
+              conductorServiceTemplate:
+                customServiceConfig: |
+                  [workarounds]
+                  disable_compute_service_check_for_ffu=false
+    EOF
+    cat celltemplates >> oscp-patch.yaml
 
-- name: Wait for Nova control plane services' CRs to become ready
+- name: Apply the patch file
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch-file=oscp-patch.yaml
+
+- name: wait until the Compute control plane services CRs are ready
   ansible.builtin.include_role:
     name: nova_adoption
     tasks_from: wait.yaml
 
-- name: remove pre-FFU workarounds for Nova compute EDPM services
+- name: remove the pre-fast-forward upgrade workarounds from the Compute data plane services
   ansible.builtin.shell: |
     {{ shell_header }}
-    {{ oc_header }}
-    oc apply -f - <<EOF
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: nova-extra-config
-      namespace: openstack
-    data:
-      20-nova-compute-cell1-workarounds.conf: |
-        [workarounds]
-        disable_compute_service_check_for_ffu=false
+    {{ nodesets_env_oc }}
+    {{ nova_services_env }}
+
+    oc patch cm nova-cells-global-config --type=json -p='[{"op": "replace", "path": "/data/99-nova-compute-cells-workarounds.conf", "value": "[workarounds]\n"}]'
+    for CELL in $(echo $RENAMED_CELLS); do
+      oc get Openstackdataplanenodeset openstack-${CELL} || continue
+      oc apply -f - <<EOF
     ---
     apiVersion: dataplane.openstack.org/v1beta1
     kind: OpenStackDataPlaneDeployment
     metadata:
-      name: openstack-nova-compute-ffu
+      name: openstack-nova-compute-ffu-$CELL
       namespace: openstack
     spec:
       nodeSets:
-        - openstack
+        - openstack-${CELL}
       servicesOverride:
-        - nova
-      backoffLimit: 3
+        - nova-${CELL}
+    backoffLimit: 3
     EOF
+    done
 
-- name: wait for Nova compute EDPM services to become ready
+# TODO(bogdando): a concurrent wait loop for multiple node sets in multiple deployments?
+- name: wait for the Compute data plane services to be ready for all cells
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
 
-    DEPLOYMENT_NAME=openstack-nova-compute-ffu
+    DEPLOYMENT_NAME=openstack-nova-compute-ffu-cell1
     TRIES=180
     DELAY=10
     ALLOWED_JOB_RETRIES=3
@@ -99,7 +107,8 @@
     do
         ready=$(oc get osdpd/$DEPLOYMENT_NAME -o jsonpath='{.status.conditions[0].status}')
         if [ "$ready" == "True" ]; then
-            echo "Deployment is Ready"
+            echo "Deployment $DEPLOYMENT_NAME is Ready, waiting for other deployments to finish..."
+            oc wait --for condition=Ready openstackdataplanedeployments --all --timeout=5m
             exit 0
         else
             failed=$(oc get jobs -l openstackdataplanedeployment=$DEPLOYMENT_NAME -o jsonpath="{.items[?(@.status.failed > $ALLOWED_JOB_RETRIES)].metadata.name}")
@@ -115,18 +124,22 @@
     echo "Run out of retries"
     exit 2
 
-- name: run Nova DB online migrations to complete FFU
+- name: run Compute database online migrations to complete the upgrade
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc rsh nova-cell0-conductor-0 nova-manage db online_data_migrations
-    oc rsh nova-cell1-conductor-0 nova-manage db online_data_migrations
+    {{ cells_env }}
+
+    oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
+    for CELL in $(echo $RENAMED_CELLS); do
+      oc exec -it nova-${CELL}-conductor-0 -- nova-manage db online_data_migrations
+    done
   register: nova_exec_result
   until: nova_exec_result is success
   retries: 10
   delay: 6
 
-- name: discover Nova compute hosts in the cell
+- name: discover Compute hosts in the cells
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
