@@ -2,28 +2,35 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
+    # Cleanup OpenStackControlPlane object
+    oc delete --ignore-not-found=true osctlplane -l core.openstack.org/openstackcontrolplane -n openstack
 
-    oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack
-    oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack-nova-compute-ffu
-    oc delete --ignore-not-found=true --wait=false openstackcontrolplane/openstack
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    metadata:
-      finalizers: []
-    ' || true
-
-    while oc get pod | grep rabbitmq-server-0; do
-        sleep 2
-    done
-    while oc get pod | grep openstack-galera-0; do
-        sleep 2
+    # Ensure that all pods in openstack namespace are deleted
+    while oc get pod -n openstack | grep -E 'rabbitmq-server-0|openstack-galera-0'; do
+      sleep 2;
     done
 
+    # Cleanup OpenStackDataplane objects
+    oc delete --ignore-not-found=true OpenStackDataPlaneDeployment --all -n openstack
+    oc delete --ignore-not-found=true OpenStackDataPlaneNodeSet --all -n openstack
+    oc delete --ignore-not-found=true OpenStackDataPlaneService --all -n openstack
+
+    # Delete Adoption helper pods
     oc delete --ignore-not-found=true --wait=false pod mariadb-copy-data
     oc delete --ignore-not-found=true --wait=false pvc mariadb-data
     oc delete --ignore-not-found=true --wait=false pod ovn-copy-data
-    oc delete --ignore-not-found=true secret osp-secret
-    oc delete issuer rootca-internal --ignore-not-found
-    oc delete secret rootca-internal --ignore-not-found
+
+    # Delete secrets
+    for secret in $(oc -o name get secrets -n openstack); do
+      echo "Deleting secret ${secret}";
+      #(TODO: holser) oc patch can be removed when OSPRH-10262 is merged
+      oc patch ${secret} -p '{"metadata":{"finalizers":[]}}' --type=merge
+      oc delete ${secret} -n openstack;
+    done
+
+    oc delete --ignore-not-found issuer rootca-internal
+    oc delete --ignore-not-found secret rootca-internal
+
     oc delete subscription cluster-observability-operator -n openshift-operators --ignore-not-found
   when: pcp_cleanup_enabled|bool
 

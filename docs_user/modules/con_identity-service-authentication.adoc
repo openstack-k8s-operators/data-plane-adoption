@@ -1,7 +1,13 @@
 [id="identity-service-authentication_{context}"]
 
-= Identity service authentication
+= {identity_service} authentication
 
-When you adopt a {OpenStackPreviousInstaller} {rhos_prev_long} ({OpenStackShort}) deployment, users authenticate to the Identity service (keystone) by using Secure RBAC (SRBAC). There is no change to how you perform operations if SRBAC is enabled. If SRBAC is not enabled, then adopting a {OpenStackPreviousInstaller} {OpenStackShort} deployment changes how you perform operations, such as adding roles to users. If you have custom policies enabled, contact support before adopting a {OpenStackPreviousInstaller} {OpenStackShort} deployment.
+If you have custom policies enabled, contact Red Hat Support before adopting a {OpenStackPreviousInstaller} OpenStack deployment. You must complete the following steps for adoption:
 
-// For more information on SRBAC see [link].
+. Remove custom policies.
+. Run the adoption.
+. Re-add custom policies by using the new SRBAC syntax.
+
+After you adopt a {OpenStackPreviousInstaller}-based OpenStack deployment to a {rhos_long_noacro} deployment, the {identity_service} performs user authentication and authorization by using Secure RBAC (SRBAC). If SRBAC is already enabled, then there is no change to how you perform operations. If SRBAC is disabled, then adopting a {OpenStackPreviousInstaller}-based OpenStack deployment might change how you perform operations due to changes in API access policies.
+
+For more information on SRBAC, see link:{defaultURL}/performing_security_operations/assembly_srbac-in-rhoso_performing-security-services#assembly_srbac-in-rhoso_performing-security-services[Secure role based access control in Red Hat OpenStack Services on OpenShift] in _Performing security operations_.

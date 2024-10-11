@@ -23,7 +23,7 @@ reset_crc_storage: true
 # Pre-launch test VM instance on the source cloud
 prelaunch_test_instance: false
 
-storage_class_name: crc-csi-hostpath-provisioner #CUSTOMIZE_THIS
+storage_class_name: local-storage #CUSTOMIZE_THIS
 storage_reclaim_policy: delete # or retain
 
 # Snippet to get the desired 'oc' command onto $PATH.

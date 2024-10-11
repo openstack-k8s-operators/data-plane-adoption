@@ -198,7 +198,7 @@ metadata:
   name: openstack
 spec:
   secret: osp-secret
-  storageClass: local-storage
+  storageClass: local-storage <1>
 
   barbican:
     enabled: false
@@ -347,6 +347,8 @@ spec:
         replicas: 1
 EOF
 ----
++
+<1> Select an existing storage class in your {OpenShiftShort} cluster.
 
 .Verification
 

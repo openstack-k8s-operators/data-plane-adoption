@@ -52,3 +52,82 @@
   when: prelaunch_test_instance|bool
   ansible.builtin.shell: |
       ping -c10 {{ lookup('env', 'FIP') | default('192.168.122.20', True) }}
+
+- name: validate pings, new workloads after adoption and cleanup
+  when: neutron_qe_test | default('false') | bool
+  environment:
+    OS_CLOUD_IP: "{{ standalone_ip | default(edpm_node_ip) }}"
+  block:
+    - name: stop pinger
+      ansible.builtin.shell: |
+          ssh ${OS_CLOUD_IP} "echo 'exit' > ~/adoption/_pinger_cmd.txt </dev/null"
+
+    - name: get validation pinger logs
+      ansible.builtin.shell: |
+          ssh ${OS_CLOUD_IP} "set -o pipefail && chmod 744 {{ neutron_qe_dir }}/validate_pinger.sh && \
+          {{ neutron_qe_dir }}/validate_pinger.sh > {{ neutron_qe_dir }}/validate_pinger.sh.log 2>&1"
+
+    - name: get validation pinger result
+      ansible.builtin.shell: |
+          ssh ${OS_CLOUD_IP} "set -o pipefail && grep -r 'res=1' {{ neutron_qe_dir }}/validate_pinger.sh.log"
+      register: validation_pinger_result
+      ignore_errors: true
+
+    - name: verify pinger result
+      ansible.builtin.assert:
+        that:
+          - validation_pinger_result.rc == 1
+        fail_msg: "fail ping"
+        success_msg: "success ping"
+
+    - name: create workloads after adoption
+      ansible.builtin.shell: |
+          {{ shell_header }}
+          set -o pipefail && chmod 744 {{ neutron_qe_dir }}/create_resources_after.sh && \
+          {{ neutron_qe_dir }}/create_resources_after.sh > {{ neutron_qe_dir }}/create_resources_after.sh.log 2>&1
+
+    - name: reboot workloads after adoption
+      ansible.builtin.shell: |
+          {{ shell_header }}
+          set -o pipefail && chmod 744 {{ neutron_qe_dir }}/validate-workload-operations.sh && \
+          export resources_type=granular_poc validate_vm_reboot_p=True validate_vm_shelve_p=True && \
+          {{ neutron_qe_dir }}/validate-workload-operations.sh reboot > {{ neutron_qe_dir }}/validate-workload-operations_reboot.log 2>&1
+
+    - name: get validation result_reboot
+      ansible.builtin.shell: |
+          set -o pipefail && grep -r 'fail' ~/validations_after/connectivity_summary_file_reboot
+      register: validation_result_reboot
+      ignore_errors: true
+
+    - name: verify result_reboot
+      ansible.builtin.assert:
+        that:
+          - validation_result_reboot.rc == 1
+        fail_msg: "fail ping"
+        success_msg: "success ping"
+
+    - name: migration workloads after adoption
+      ansible.builtin.shell: |
+          {{ shell_header }}
+          set -o pipefail && unset validate_vm_reboot_p validate_vm_shelve_p && \
+          export resources_type=granular_poc ping_during_vm_migration=True validate_vm_migration_p=True validate_vm_live_migration_p=True validate_vm_cold_migration_p=True && \
+          {{ neutron_qe_dir }}/validate-workload-operations.sh migration > {{ neutron_qe_dir }}/validate-workload-operations_migration.log 2>&1
+
+    - name: get validation result_migration
+      ansible.builtin.shell: |
+          set -o pipefail && grep -r 'fail' ~/validations_after/connectivity_summary_file_migration
+      register: validation_result_migration
+      ignore_errors: true
+
+    - name: verify result migration
+      ansible.builtin.assert:
+        that:
+          - validation_result_migration.rc == 1
+        fail_msg: "fail ping"
+        success_msg: "success ping"
+
+    - name: cleanup workloads after adoption
+      ansible.builtin.shell: |
+          {{ shell_header }}
+          set -o pipefail && chmod 744 {{ neutron_qe_dir }}/delete-resources.sh && \
+          {{ neutron_qe_dir }}/delete-resources.sh > {{ neutron_qe_dir }}/delete-resources.sh.log 2>&1
