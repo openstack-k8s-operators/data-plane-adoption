@@ -35,7 +35,7 @@ spec:
 [IMPORTANT]
 Ensure that the interface name and IPAM range match the configuration that you used in the `NodeNetworkConfigurationPolicy` CRs.
 
-. Optional: When reusing existing IP ranges, you can exclude part of the range that is used in the existing deployment by using the `exclude` parameter. For example:
+. Optional: When reusing existing IP ranges, you can exclude part of the range that is used in the existing deployment by using the `exclude` parameter in the `NetworkAttachmentDefinition` pool. For example:
 +
 ----
 apiVersion: k8s.cni.cncf.io/v1
@@ -67,10 +67,10 @@ spec:
 <2> Defines the end of the IP range.
 <3> Excludes part of the IP range. This example excludes IP addresses `172.17.0.24` as well as `172.17.0.44` and `172.17.0.45` from the allocation pool.
 
-. If your {OpenStackShort} services require load balancer IP addresses, define the pools for these services in an `IPAllocationPool` CR. For example: 
+. If your {OpenStackShort} services require load balancer IP addresses, define the pools for these services in an `IPAddressPool` CR. For example: 
 +
 [NOTE]
-The load balancer IP addresses belong to the same IP range as the control plane services, and are managed by MetalLB. This pool should also be aligned with the adopted configuration.
+The load balancer IP addresses belong to the same IP range as the control plane services, and are managed by MetalLB. This pool should also be aligned with the {OpenStackShort} configuration.
 +
 ----
 - apiVersion: metallb.io/v1beta1
@@ -83,7 +83,7 @@ The load balancer IP addresses belong to the same IP range as the control plane 
 Define `IPAddressPool` CRs for each isolated network that requires load
 balancer IP addresses.
 
-. Optional: When reusing existing IP ranges, you can exclude part of the range by listing multiple `addresses` entries. For example:
+. Optional: When reusing existing IP ranges, you can exclude part of the range by listing multiple entries in the `addresses` section of the `IPAddressPool`. For example:
 +
 ----
 - apiVersion: metallb.io/v1beta1

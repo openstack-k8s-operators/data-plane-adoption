@@ -2,9 +2,9 @@
 
 = Configuring isolated networks on {OpenShiftShort} worker nodes
 
-To connect service pods to isolated networks on {rhocp_long} worker nodes that run {rhos_prev_long} services physical network configuration on the hypervisor is required.
+To connect service pods to isolated networks on {rhocp_long} worker nodes that run {rhos_prev_long} services, physical network configuration on the hypervisor is required.
 
-This configuration is managed by the NMState operator, which uses custom resources (CRs) to define the desired network configuration for the nodes.
+This configuration is managed by the NMState operator, which uses `NodeNetworkConfigurationPolicy` custom resources (CRs) to define the desired network configuration for the nodes.
 
 .Procedure
 
