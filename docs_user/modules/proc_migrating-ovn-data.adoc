@@ -138,7 +138,7 @@ spec:
           storageRequest: 10G
           networkAttachment: internalapi
       ovnNorthd:
-        replicas: 1
+        replicas: 0
       ovnController:
         networkAttachment: tenant
         nodeSelector:
