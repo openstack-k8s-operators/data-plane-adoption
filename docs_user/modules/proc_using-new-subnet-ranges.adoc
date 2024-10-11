@@ -2,20 +2,22 @@
 
 = Configuring new subnet ranges
 
-You can define new IP ranges for control plane services that belong to a different subnet that is not used in the existing cluster. Then you configure link local IP routing between the old and new subnets to enable old and new service deployments to communicate. This involves using the {OpenStackPreviousInstaller} mechanism on a pre-adopted cluster to configure additional link local routes. This enables the EDP deployment to reach out to adopted nodes by using the old subnet addresses. You can use new subnet ranges with any existing subnet configuration, and when the existing cluster subnet ranges do not have enough free IP addresses for the new control plane services.
+You can define new IP ranges for control plane services that belong to a different subnet that is not used in the existing cluster. Then you configure link local IP routing between the existing and new subnets to enable existing and new service deployments to communicate. This involves using the {OpenStackPreviousInstaller} mechanism on a pre-adopted cluster to configure additional link local routes. This enables the data plane deployment to reach out to {rhos_prev_long} ({OpenStackShort}) nodes by using the existing subnet addresses. You can use new subnet ranges with any existing subnet configuration, and when the existing cluster subnet ranges do not have enough free IP addresses for the new control plane services.
 
 You must size the new subnet appropriately to accommodate the new control
 plane services. There are no specific requirements for the
-existing deployment allocation pools already consumed.
+existing deployment allocation pools that are already consumed by the {OpenStackShort} environment.
 
 In the following procedure, you configure `NetworkAttachmentDefinition` custom resources (CRs) to use a different subnet from what is configured in the `NetConfig` CR for the same networks. The former range is used for control plane services, while the new range is used to manage IP Address Management (IPAM) for data plane nodes.
 
+The values that are used in the following procedure are examples. Use values that are specific to your configuration.
+
 [IMPORTANT]
-Do not change adopted node IP addresses during the adoption process. List the IP addresses in the `fixedIP` fields in the `OpenStackDataPlaneNodeSet` CR `per-node` section.
+Do not change {OpenStackShort} node IP addresses during the adoption process. List the IP addresses in the `fixedIP` fields for each node entry in the `nodes` section of the `OpenStackDataPlaneNodeSet` CR.
 
 .Procedure
 
-. In the `NetworkAttachmentDefinition` CR, configure host routes on the adopted nodes for the control plane subnets. For example:
+. In the `NetworkAttachmentDefinition` CR, configure host routes on the {OpenStackShort} nodes for the control plane subnets. For example:
 +
 ----
 network_config:
@@ -28,11 +30,11 @@ network_config:
       next_hop: 192.168.1.100 <2>
 ----
 <1> The new control plane subnet.
-<2> The control plane IP address of the adopted data plane node.
+<2> The control plane IP address of the existing data plane node.
 +
-Repeat this step for other networks that need to use different subnets for the new and old parts of the deployment.
+Repeat this step for other networks that need to use different subnets for the new and existing parts of the deployment.
 
-. Apply the new configuration to every adopted node:
+. Apply the new configuration to every {OpenStackShort} node:
 +
 ----
 $ openstack overcloud node provision
@@ -52,7 +54,7 @@ the risk of network disruption. You must enforce the changes by setting the
 172.31.0.0/24 via 192.168.122.100 dev br-ctlplane
 ----
 
-. To configure similar routes for the old subnet for the control plane services that are attached to the networks, add `routes` entries to the `NodeNetworkConfigurationPolicy` CRs for each network. For example:
+. To configure similar routes for the existing subnet for the control plane services that are attached to the networks, add `routes` entries to the `NodeNetworkConfigurationPolicy` CRs for each network. For example:
 +
 ----
       - destination: 192.168.122.0/24 <1>
@@ -68,9 +70,9 @@ As a result, the following route is added to your {OpenShiftShort} nodes:
 192.168.122.0/24 dev ospbr proto static scope link
 ----
 +
-At this point, you can ping the adopted nodes from the {OpenShiftShort} nodes by using the old subnet IP addresses.
+At this point, you can ping the adopted nodes from the {OpenShiftShort} nodes by using the existing subnet IP addresses.
 
-. During the data plane adoption, in the `network_config` section of the `NetworkAttachmentDefinition` CR, add link local routes to the new subnets. For example:
+. During the data plane adoption, in the `network_config` section of the `OpenStackDataPlaneNodeSet` CR, add link local routes to the new subnets. For example:
 +
 ----
   nodeTemplate:
@@ -87,7 +89,7 @@ At this point, you can ping the adopted nodes from the {OpenShiftShort} nodes by
             ...
 ----
 
-. List the old IP addresses as `ansibleHost` and `fixedIP`. For example:
+. List the previous IP addresses as `ansibleHost` and `fixedIP`. For example:
 +
 ----
   nodes:
@@ -111,10 +113,7 @@ At this point, you can ping the adopted nodes from the {OpenShiftShort} nodes by
         - 172.31.0.0/24
 ----
 +
-This provides SSH access from the new subnet to the adopted nodes as well as
-the old nodes.
+This provides SSH access from the new subnet to the {OpenStackShort} nodes as well as the {OpenStackShort} subnets.
 
 . Optional: Set `edpm_network_config_update: true` to enforce the changes that you are applying to the nodes:
 
-Note that the examples above are incomplete and should be incorporated into
-your general configuration.

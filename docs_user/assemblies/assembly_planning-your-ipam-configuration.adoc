@@ -38,7 +38,7 @@ to be deployed, their replica numbers, and the number of {OpenShiftShort} worker
 
 Additional IP addresses might be required in future {OpenStackShort} releases, so you must plan for some extra capacity for each of the allocation pools that are used in the new environment.
 
-After you determine the required IP pool size for the new deployment, you can choose to define new IP address ranges or reuse your existing IP address ranges.Regardless of the scenario, the VLAN tags in the existing deployment are reused in the new deployment. Adjust the configuration as described in xref:configuring-isolated-networks_configuring-network[Configuring isolated networks].
+After you determine the required IP pool size for the new deployment, you can choose to define new IP address ranges or reuse your existing IP address ranges. Regardless of the scenario, the VLAN tags in the existing deployment are reused in the new deployment. Ensure that the VLAN tags are properly retained in the new configuration. For more information, see xref:configuring-isolated-networks_configuring-network[Configuring isolated networks].
 
 include::../modules/proc_using-new-subnet-ranges.adoc[leveloffset=+1]
 
