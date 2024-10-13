@@ -6,7 +6,7 @@
 - name: template out the tls override for deployment
   ansible.builtin.template:
     src: tls_overrides.j2
-    dest: "../config/base_ospdo/tls_overrides.yaml"
+    dest: "{{ dpa_tests_dir }}/config/base_ospdo/tls_overrides.yaml"
     mode: '644'
     force: true
 
@@ -19,7 +19,7 @@
 - name: template out the openstack_control_plane_ospdo override for deployment
   ansible.builtin.template:
     src: openstack_control_plane_ospdo.j2
-    dest: "../config/base_ospdo/openstack_control_plane_ospdo.yaml"
+    dest: "{{ dpa_tests_dir }}/config/base_ospdo/openstack_control_plane_ospdo.yaml"
     mode: '644'
     force: true
   when: deploy_ctlplane_ospdo| default(false) | bool
@@ -32,5 +32,5 @@
     oc kustomize base_ospdo > tmp/test_deployment.yaml
     oc apply -n {{ osp18_namespace }} -f tmp/test_deployment.yaml
   args:
-    chdir: "../config"
+    chdir: "{{ dpa_tests_dir }}/config"
   when: deploy_ctlplane_ospdo| default(false) | bool

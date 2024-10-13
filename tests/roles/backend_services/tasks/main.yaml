@@ -9,7 +9,6 @@
     {{ shell_header }}
     {{ oc_header }}
     cd {{ install_yamls_path }}
-    export NAMESPACE={{ osp18_namespace|default('openstack') }}
     make input
 
 - name: execute alternative tasks when source env is ODPdO
