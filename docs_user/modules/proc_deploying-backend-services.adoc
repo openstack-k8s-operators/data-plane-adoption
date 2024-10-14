@@ -216,6 +216,7 @@ spec:
       cinderVolumes: {}
 
   dns:
+    enabled: true
     template:
       override:
         service:
@@ -227,7 +228,7 @@ spec:
           spec:
             type: LoadBalancer
       options:
-      - key: server
+      - key: server <2>
         values:
         - 192.168.122.1
       replicas: 1
@@ -349,6 +350,9 @@ EOF
 ----
 +
 <1> Select an existing storage class in your {OpenShiftShort} cluster.
+<2> Adjust the dnsmasq server entries as needed. In order to access MetalLB resources on OCP control plane,
+including messaging and database services, you should provide IP addresses of OCP master nodes.
+For external, or other resources on the intranet, you may want to provide additional IP addresses for datacentre DNS resolvers.
 
 .Verification
 

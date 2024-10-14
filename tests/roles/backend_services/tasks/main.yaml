@@ -114,15 +114,6 @@
     - rabbitmq-server-0
     - rabbitmq-cell1-server-0
 
-- name: Patch openstack upstream dns server to set the correct value for the environment
-  when: upstream_dns is defined
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    crname=$(oc get openstackcontrolplane -o name)
-    oc patch ${crname} --type json \
-      -p='[{"op": "replace", "path": "/spec/dns/template/options", "value": [{"key": "server", "values": ["{{ upstream_dns }}"]}]}]'
-
 - name: Patch rabbitmq resources for lower resource consumption
   changed_when: false
   ansible.builtin.shell: |

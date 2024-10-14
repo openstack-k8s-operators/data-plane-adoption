@@ -16,4 +16,7 @@ heat_password: ''
 heat_auth_encryption_key: ''
 swift_password: ''
 dns_lb_ip: 192.168.122.80
+# CRC IP for openstack control plane resources hosted on Kubernetes
+upstream_dns: 192.168.122.10
+# hypervisor, or another external DNS resolver IP
 dns_server_ip: 192.168.122.1
