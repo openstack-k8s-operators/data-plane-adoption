@@ -235,6 +235,7 @@
     EOF
 
 - name: check ovs external-ids with os-diff before deployment
+  tags: pull_openstack_configuration
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
