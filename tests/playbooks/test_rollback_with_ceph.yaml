@@ -17,6 +17,10 @@
     - role: development_environment
       tags:
         - development_environment
+    - role: tls_adoption
+      tags:
+        - tls_adoption
+      when: enable_tlse|default(false)
     - role: backend_services
       tags:
         - backend_services
@@ -79,6 +83,7 @@
     - role: pull_openstack_configuration
       tags:
         - pull_openstack_configuration
+
     - role: control_plane_rollback
       tags:
         - control_plane_rollback
