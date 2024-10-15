@@ -82,7 +82,7 @@ spec:
 ** For production deployments that use iSCSI volumes, configure multipathing for better I/O.
 
 FC:::
-** The {block_storage} volume and {block_storage} backup services need to run in an {OpenShiftShort} host that has host bus adapters (HBAs). If some nodes do not have HBAs, then you need to use labels to restrict where these services run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
+** The {block_storage} volume and {block_storage} backup services must run in an {OpenShiftShort} host that has host bus adapters (HBAs). If some nodes do not have HBAs, then use labels to restrict where these services run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
 ** If you have virtualized {OpenShiftShort} clusters that use FC you need to expose the host HBAs inside the virtual machine.
 ** For production deployments that use FC volumes, configure multipathing for better I/O.
 
