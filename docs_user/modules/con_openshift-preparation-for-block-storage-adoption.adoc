@@ -2,7 +2,7 @@
 
 = {OpenShiftShort} preparation for {block_storage} adoption
 
-Before you deploy {rhos_prev_long} ({OpenStackShort}) in {rhocp_long} nodes, review the following information to ensure that the networks are ready, that you decide which {OpenShiftShort} nodes to restrict, and that you make any necessary changes to the {OpenShiftShort} nodes.
+Before you deploy {rhos_prev_long} ({OpenStackShort}) in {rhocp_long} nodes, ensure that the networks are ready, that you decide which {OpenShiftShort} nodes to restrict, and that you make any necessary changes to the {OpenShiftShort} nodes.
 
 Node selection::
 You might need to restrict the {OpenShiftShort} nodes where the {block_storage} volume and backup services run.
