@@ -14,7 +14,7 @@ The {object_storage_first_ref} migration involves the following steps:
 .Prerequisites
 
 * Adopt the {object_storage}. For more information, see xref:adopting-the-object-storage-service_adopt-control-plane[Adopting the {object_storage}].
-* For DNS servers, ensure that all existing nodes are able to resolve the hostnames of the {rhocp_long} pods, for example, by using the external IP of the DNSMasq service as the server name in `/etc/resolv.conf`:
+* For DNS servers, ensure that all existing nodes are able to resolve the hostnames of the {rhocp_long} pods, for example, by using the external IP of the DNSMasq service as the nameserver in `/etc/resolv.conf`:
 +
 ----
 $ oc get service dnsmasq-dns -o jsonpath="{.status.loadBalancer.ingress[0].ip}" | CONTROLLER1_SSH tee /etc/resolv.conf
@@ -88,7 +88,7 @@ swift-ring-tool push'
 Depending on your deployment, you might have more nodes to include in the command.
 
 . Copy and apply the updated rings to the original nodes. Run the
-ssh commands for your existing nodes that store the {object_storage} data: 
+ssh commands for your existing nodes that store the {object_storage} data:
 +
 ----
 $ oc extract --confirm cm/swift-ring-files
