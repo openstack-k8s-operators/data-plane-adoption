@@ -2,7 +2,7 @@
 
 = {block_storage} guidelines
 
-Review the following guidelines to help you prepare to adopt your {block_storage_first_ref}:
+Prepare to adopt your {block_storage_first_ref}:
 
 * Take note of the {block_storage} back ends that you use.
 * Determine all the transport protocols that the {block_storage} back ends use, such as
