@@ -229,9 +229,13 @@ Create a test VM instance with a test volume attachement:
 [,bash]
 ----
 cd ~/data-plane-adoption
+export CINDER_VOLUME_BACKEND_CONFIGURED=true <1>
+export CINDER_BACKUP_BACKEND_CONFIGURED=true
 OS_CLOUD_IP=192.168.122.100 OS_CLOUD_NAME=standalone \
     bash tests/roles/development_environment/files/pre_launch.bash
 ----
+<1> Use `CINDER_*_BACKEND_CONFIGURED=false`, if Cinder Volume or Backup services' storage backends have been not configured for the source cloud,
+or won't be configured for the target cloud. That might be a valid case for some developement setups, but not for a production scenarios.
 
 This also creates a test Cinder volume, a backup from it, and a snapshot of it.
 

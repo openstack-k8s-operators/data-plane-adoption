@@ -1,3 +1,7 @@
+# Supported storage backends for Cinder of the target cloud
+# must match those configured for the source cloud
+supported_backup_backends: []
+supported_volume_backends: []
 netconfig_networks:
   - name: ctlplane
     dnsDomain: ctlplane.example.com
