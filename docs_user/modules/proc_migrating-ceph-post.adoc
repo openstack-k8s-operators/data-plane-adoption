@@ -1,0 +1,27 @@
+[id="updating-the-cluster-dashboard-configuration_{context}"]
+
+= Updating the {CephCluster} cluster Ceph Dashboard configuration
+
+If the Ceph Dashboard is part of the enabled Ceph Manager modules, you need to
+reconfigure the failover settings.
+
+. Regenerate the following {Ceph} configuration keys to point to the right
+  `mgr` container:
++
+----
+mgr    advanced  mgr/dashboard/controller-0.ycokob/server_addr  172.17.3.33
+mgr    advanced  mgr/dashboard/controller-1.lmzpuc/server_addr  172.17.3.147
+mgr    advanced  mgr/dashboard/controller-2.xpdgfl/server_addr  172.17.3.138
+----
++
+----
+$ sudo cephadm shell
+$ ceph orch ps | awk '/mgr./ {print $1}'
+----
+
+. For each retrieved `mgr` daemon, update the corresponding entry in the {Ceph}
+  configuration:
++
+----
+$ ceph config set mgr mgr/dashboard/<>/server_addr/<ip addr>
+----
