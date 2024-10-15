@@ -87,7 +87,7 @@ FC:::
 ** For production deployments that use FC volumes, configure multipathing for better I/O.
 
 NVMe-TCP:::
-** To connect to NVMe-TCP volumes, you must load NVMe-TCP kernel modules on the {OpenShiftShort} hosts.
+** To connect to NVMe-TCP volumes, load NVMe-TCP kernel modules on the {OpenShiftShort} hosts.
 ** If you do not already load the `nvme-fabrics` module on the {OpenShiftShort} nodes where the volume and backup services are going to run, then you must apply a `MachineConfig`. For example:
 +
 ----
