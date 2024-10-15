@@ -21,12 +21,9 @@ on `HAProxy` and `Pacemaker` to be deployed on the {rhos_prev_long} ({OpenStackS
 In this procedure, you migrate and relocate the Ceph Monitoring components to free Controller nodes.
 
 .Prerequisites
-* You have an {OpenStackShort} {rhos_prev_ver} environment.
-* You have a {Ceph} {CephVernum} deployment that is managed by {OpenStackPreviousInstaller}.
-* Your {Ceph} {CephVernum} deployment is managed by `cephadm`.
-* Both the {Ceph} public and cluster networks are propagated through {OpenStackPreviousInstaller} to the target nodes.
 
-include::../modules/proc_completing-prerequisites-for-migrating-ceph-monitoring-stack.adoc[leveloffset=+1]
+* Complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_ceph-prerequisites[{Ceph} prerequisites].
+
 
 include::../assemblies/assembly_migrating-monitoring-stack-to-target-nodes.adoc[leveloffset=+1]
 

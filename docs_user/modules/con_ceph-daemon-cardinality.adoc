@@ -2,8 +2,7 @@
 
 = {Ceph} daemon cardinality
 
-{Ceph} 6 and later applies strict constraints in the way daemons can be
-colocated within the same node.
+{Ceph} {CephVernum} and later applies strict constraints in the way daemons can be colocated within the same node.
 ifeval::["{build}" != "upstream"]
 For more information, see the Red Hat Knowledgebase article link:https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations].
 endif::[]

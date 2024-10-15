@@ -5,13 +5,6 @@ You must migrate your Ceph Manager daemons from the {rhos_prev_long} ({OpenStack
 [NOTE]
 The following procedure uses `cephadm` and the Ceph Orchestrator to drive the Ceph Manager migration, and the Ceph spec to modify the placement and reschedule the Ceph Manager daemons. Ceph Manager is run in an active/passive state. It also provides many modules, including the Ceph Orchestrator. Every potential module, such as the Ceph Dashboard, that is provided by `ceph-mgr` is implicitly migrated with Ceph Manager.
 
-.Prerequisites
-
-* The target nodes, CephStorage or ComputeHCI, are configured to have both `storage` and `storage_mgmt` networks. This ensures that you can use both {Ceph} public and cluster networks from the same node.
-+
-[NOTE]
-This step requires you to interact with {OpenStackPreviousInstaller}. From {OpenStackShort} {rhos_prev_ver} and later you do not have to run a stack update.
-
 .Procedure
 
 . SSH into the target node and enable the firewall rules that are required to reach a Ceph Manager service:

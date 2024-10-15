@@ -7,26 +7,14 @@ ifdef::context[:parent-context: {context}]
 :context: migrating-ceph-rbd
 
 For Hyperconverged Infrastructure (HCI) or dedicated Storage nodes that are
-running {Ceph} version 6 or later, you must migrate the daemons that are
+running {Ceph} {CephVernum} or later, you must migrate the daemons that are
 included in the {rhos_prev_long} control plane into the existing external Red
 Hat Enterprise Linux (RHEL) nodes. The external RHEL nodes typically include
 the Compute nodes for an HCI environment or dedicated storage nodes.
 
-To migrate Red Hat Ceph Storage Rados Block Device (RBD), your environment must
-meet the following requirements:
+.Prerequisites
 
-* {Ceph} is running version 6 or later and is managed by `cephadm`.
-* NFS Ganesha is migrated from a {OpenStackPreviousInstaller} deployment to `cephadm`. For more information, see xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a NFS Ganesha
-  cluster].
-* Both the {Ceph} public and cluster networks are propagated with
-  {OpenStackPreviousInstaller} to the target nodes.
-* Ceph Metadata Server, monitoring stack, Ceph Object Gateway, and any other daemon that is deployed on Controller nodes.
-ifeval::["{build}" != "upstream"]
-* The daemons distribution follows the cardinality constraints that are
-  described in link:https://access.redhat.com/articles/1548993[Red Hat Ceph
-  Storage: Supported configurations].
-endif::[]
-* The {Ceph} cluster is healthy, and the `ceph -s` command returns `HEALTH_OK`.
+* Complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_ceph-prerequisites[{Ceph} prerequisites].
 
 include::../modules/proc_migrating-mgr-from-controller-nodes.adoc[leveloffset=+1]
 
