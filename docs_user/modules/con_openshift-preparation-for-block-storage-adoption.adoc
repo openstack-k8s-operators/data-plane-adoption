@@ -77,7 +77,7 @@ spec:
         name: iscsid.service
 ----
 ** If you use labels to restrict the nodes where the Block Storage services run, you must use a `MachineConfigPool` to limit the effects of the
-`MachineConfig` to only the nodes where your services might run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
+`MachineConfig` to the nodes where your services might run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
 ** If you are using a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
 ** For production deployments that use iSCSI volumes, configure multipathing for better I/O.
 
