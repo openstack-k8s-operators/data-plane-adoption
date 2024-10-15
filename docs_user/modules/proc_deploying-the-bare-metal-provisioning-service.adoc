@@ -125,7 +125,7 @@ $ openstack baremetal node list
 [IMPORTANT]
 If the `openstack baremetal node list` command output reports an incorrect power status, wait a few minutes and re-run the command to see if the output syncs with the actual state of the hardware being managed. The time required for the {bare_metal} to review and reconcile the power state of bare metal nodes depends on the number of operating conductors through the `replicas` parameter and which are present in the {bare_metal} deployment being adopted.
 
-. If any {bare_metal} nodes are missing from the `openstack baremetal node list` command, temporarily disable the new RBAC policy to see the nodes again. You can then re-enable RBAC after setting the `owner` field on the nodes:
+. If any {bare_metal} nodes are missing from the `openstack baremetal node list` command, temporarily disable the new RBAC policy to see the nodes again:
 +
 [source,yaml]
 ----
@@ -142,6 +142,15 @@ spec:
           enforce_scope=false
           enforce_new_defaults=false
 '
+----
+
+. After you set the `owner` field on the bare metal nodes, you can re-enable RBAC by removing the `customServiceConfig` section or by setting the following values to `true`:
++
+----
+customServiceConfig: |
+  [oslo_policy]
+  enforce_scope=true
+  enforce_new_defaults=true
 ----
 
 . After this configuration is applied, the operator restarts the Ironic API service and disables the new RBAC policy that is enabled by default. After the RBAC policy is disabled, you can view bare metal nodes without an `owner` field:
