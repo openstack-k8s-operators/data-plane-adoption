@@ -3,7 +3,7 @@
 ifeval::["{build}" == "downstream"]
 = Converting the {block_storage} configuration
 
-In your previous deployment, you use the same `cinder.conf` file for all the services. To prepare your {block_storage_first_ref} configuration for adoption, you need to split this single-file configuration into individual configurations for each {block_storage} service. Review the following information to guide you in coverting your previous configuration:
+In your previous deployment, you use the same `cinder.conf` file for all the services. To prepare your {block_storage_first_ref} configuration for adoption, split this single-file configuration into individual configurations for each {block_storage} service. Review the following information to guide you in coverting your previous configuration:
 endif::[]
 
 ifeval::["{build}" != "downstream"]
