@@ -118,7 +118,7 @@ spec:
             source: data:,nvme-fabrics
 ----
 ** If you use labels to restrict the nodes where Block Storage
-services run, you need to use a `MachineConfigPool` to limit the effects of the `MachineConfig` to only the nodes where your services run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
+services run, use a `MachineConfigPool` to limit the effects of the `MachineConfig` to the nodes where your services run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
 ** If you use a single node deployment to test the process, replace `worker` with `master` in the `MachineConfig`.
 ** Only load the `nvme-fabrics` module because it loads the transport-specific modules, such as TCP, RDMA, or FC, as needed.
 +
