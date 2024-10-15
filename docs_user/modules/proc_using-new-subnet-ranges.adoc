@@ -8,7 +8,7 @@ You must size the new subnet appropriately to accommodate the new control
 plane services. There are no specific requirements for the
 existing deployment allocation pools that are already consumed by the {OpenStackShort} environment.
 
-In the following procedure, you configure `NetworkAttachmentDefinition` custom resources (CRs) to use a different subnet from what is configured in the `NetConfig` CR for the same networks. The former range is used for control plane services, while the new range is used to manage IP Address Management (IPAM) for data plane nodes.
+In the following procedure, you configure `NetworkAttachmentDefinition` custom resources (CRs) to use a different subnet from what is configured in the `network_config` section of the `OpenStackDataPlaneNodeSet` CR for the same networks. The range in the `NetworkAttachmentDefinition` CR is used for control plane services, while the new range in the `OpenStackDataPlaneNodeSet` CR is used to manage IP Address Management (IPAM) for data plane nodes.
 
 The values that are used in the following procedure are examples. Use values that are specific to your configuration.
 
@@ -116,4 +116,3 @@ At this point, you can ping the adopted nodes from the {OpenShiftShort} nodes by
 This provides SSH access from the new subnet to the {OpenStackShort} nodes as well as the {OpenStackShort} subnets.
 
 . Optional: Set `edpm_network_config_update: true` to enforce the changes that you are applying to the nodes:
-

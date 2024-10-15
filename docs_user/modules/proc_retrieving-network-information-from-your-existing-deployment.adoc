@@ -8,7 +8,7 @@ deployment. After you retrieve your network configuration, you have the followin
 * A list of isolated networks that are used in the existing deployment.
 * For each of the isolated networks, the VLAN tag and IP ranges used for
   dynamic address allocation.
-* A list of existing IP address allocations that are used in the environment. You later exclude these addresses from the allocation pools available for the new control plane services. 
+* A list of existing IP address allocations that are used in the environment. You later exclude these addresses from the allocation pools available for the new control plane services.
 
 .Procedure
 
@@ -55,6 +55,3 @@ consumed but are not available for the new control plane services until the adop
 
 . Repeat this procedure for each isolated network and each host in the
 configuration.
-
-
-

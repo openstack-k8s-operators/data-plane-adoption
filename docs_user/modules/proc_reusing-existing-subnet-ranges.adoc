@@ -11,5 +11,3 @@ No special routing configuration is required to reuse subnet ranges. However, yo
 If you are especially constrained by the size of the existing subnet, you may
 have to apply elaborate exclusion rules when defining allocation pools for the
 new control plane services. For more information, see xref:configuring-isolated-networks_configuring-network[Configuring isolated networks].
-
-
