@@ -39,7 +39,7 @@ For more information about node selection, see link:{defaultOCPURL}/nodes/index#
 If your nodes do not have enough local disk space for temporary images, you can use a remote NFS location by setting the extra volumes feature, `extraMounts`.
 ====
 Transport protocols::
-Some changes to the storage transport protocols might be required for {OpenShiftShort}. Before making changes, review the following information:
+Some changes to the storage transport protocols might be required for {OpenShiftShort}:
 +
 * If you use a `MachineConfig` to make changes to {OpenShiftShort} nodes, the nodes reboot.
 * Check the back-end sections that are listed in the `enabled_backends` configuration option in your `cinder.conf` file to determine the enabled storage back-end sections.
