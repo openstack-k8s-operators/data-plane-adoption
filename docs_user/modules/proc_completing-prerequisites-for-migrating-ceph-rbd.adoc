@@ -55,6 +55,3 @@ $ openstack overcloud node provision \
 7: vlan11    inet 172.16.11.172/24 brd 172.16.11.255 scope global vlan11\       valid_lft forever preferred_lft forever
 8: vlan12    inet 172.16.12.46/24 brd 172.16.12.255 scope global vlan12\       valid_lft forever preferred_lft forever
 ----
-
-
-
