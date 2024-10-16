@@ -48,7 +48,7 @@ spec:
       vlan: 22
 ----
 
-. Optional: In the `NetConfig` CR, list multiple `allocationRanges` entries to exclude some of the IP addresses, for example, to accommodate for IP addresses already consumed by the adopted environment:
+. Optional: In the `NetConfig` CR, list multiple ranges for the `allocationRanges` field to exclude some of the IP addresses, for example, to accommodate IP addresses that are already consumed by the adopted environment:
 +
 ----
 apiVersion: network.openstack.org/v1beta1
