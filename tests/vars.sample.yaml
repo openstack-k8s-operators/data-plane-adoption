@@ -61,3 +61,7 @@ compute_adoption: true
 
 # Where perform or not telemetry installation during adoption
 telemetry_adoption: true
+
+# Whether to adopt Octavia
+octavia_adoption: true
+enable_octavia: true
