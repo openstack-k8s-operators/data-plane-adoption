@@ -342,7 +342,7 @@ spec:
       swiftRing:
         ringReplicas: 1
       swiftStorage:
-        replicas: 0
+        replicas: 1
       swiftProxy:
         replicas: 1
 EOF
@@ -352,9 +352,11 @@ EOF
 
 .Verification
 
-* Verify that MariaDB is running:
+. Verify that MariaDB is running:
 +
 ----
 $ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}'
 $ oc get pod openstack-cell1-galera-0 -o jsonpath='{.status.phase}{"\n"}'
 ----
+
+. Verify that you can access the `OpenStackClient` pod. For more information, see link:{defaultURL}/maintaining_the_red_hat_openstack_services_on_openshift_deployment/assembly_accessing-the-rhoso-cloud#proc_accessing-the-OpenStackClient-pod_cloud-access-admin[Accessing the OpenStackClient pod] in _Maintaining the {rhos_long_noacro} deployment_.
