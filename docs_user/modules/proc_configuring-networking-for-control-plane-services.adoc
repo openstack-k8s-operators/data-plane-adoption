@@ -67,7 +67,7 @@ spec:
 <2> Defines the end of the IP range.
 <3> Excludes part of the IP range. This example excludes IP addresses `172.17.0.24` as well as `172.17.0.44` and `172.17.0.45` from the allocation pool.
 
-. If your {OpenStackShort} services require load balancer IP addresses, define the pools for these services in an `IPAddressPool` CR. For example: 
+. If your {OpenStackShort} services require load balancer IP addresses, define the pools for these services in an `IPAddressPool` CR. For example:
 +
 [NOTE]
 The load balancer IP addresses belong to the same IP range as the control plane services, and are managed by MetalLB. This pool should also be aligned with the {OpenStackShort} configuration.
