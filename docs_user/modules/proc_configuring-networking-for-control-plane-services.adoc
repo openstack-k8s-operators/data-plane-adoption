@@ -65,7 +65,7 @@ spec:
 +
 <1> Defines the start of the IP range.
 <2> Defines the end of the IP range.
-<3> Excludes part of the IP range. This example excludes IP addresses `172.17.0.24` as well as `172.17.0.44` and `172.17.0.45` from the allocation pool.
+<3> Excludes part of the IP range. This example excludes IP addresses `172.17.0.24/32` and `172.17.0.44/31` from the allocation pool.
 
 . If your {OpenStackShort} services require load balancer IP addresses, define the pools for these services in an `IPAddressPool` CR. For example:
 +
