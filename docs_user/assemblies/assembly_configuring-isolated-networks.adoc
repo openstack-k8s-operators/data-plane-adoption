@@ -8,7 +8,7 @@ ifdef::context[:parent-context: {context}]
 
 Before you begin replicating your existing VLAN and IPAM configuration in the {rhos_long} environment, you must have the following IP address allocations for the new control plane services:
 
-* 1 IP address, per isolated network, per {rhocp_long} worker node. You configure these IP addresses in the `NodeNetworkConfigurationPolicy` custom resources (CRs) for the {OpenShiftShort} worker nodes. For more information, see xref:configuring-openshift-worker-nodes_isolated-networks[Configuring {OpenShiftShort} worker nodes].
+* 1 IP address for each isolated network on each {rhocp_long} worker node. You configure these IP addresses in the `NodeNetworkConfigurationPolicy` custom resources (CRs) for the {OpenShiftShort} worker nodes. For more information, see xref:configuring-openshift-worker-nodes_isolated-networks[Configuring {OpenShiftShort} worker nodes].
 * 1 IP range, per isolated network, for the data plane nodes. You configure these ranges in the `NetConfig` CRs for the data plane nodes. For more information, see xref:configuring-data-plane-nodes_isolated-networks[Configuring data plane nodes].
 * 1 IP range, per isolated network, for control plane services. These ranges
 enable pod connectivity for isolated networks in the `NetworkAttachmentDefinition` CRs. For more information, see xref:configuring-networking-for-control-plane-services_isolated-networks[Configuring the networking for control plane services].
