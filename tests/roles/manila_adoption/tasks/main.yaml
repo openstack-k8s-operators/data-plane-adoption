@@ -1,19 +1,42 @@
+- name: Check the required input when manila_backend is NFS
+  when: manila_backend == "cephnfs"
+  block:
+    - name: Set shell vars to connect to controller1
+      no_log: "{{ use_no_log }}"
+      ansible.builtin.set_fact:
+        controller_ssh: |
+          CONTROLLER1_SSH="{{ controller1_ssh }}"
+
+    - name: Get ceph-nfs IP Address
+      become: true
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ controller_ssh }}
+        ${CONTROLLER1_SSH} awk -F '[=;]' '/Bind_Addr/ {gsub(/ /, "", $2); print $2}' {{ ganesha_default_path }}
+      register: cephnfs_vip
+
+    - name: Fail if the OLD Ganesha VIP is not a good input value
+      when:
+        - not (cephnfs_vip | ansible.builtin.ipaddr)
+      ansible.builtin.fail:
+        msg: "The (TRIPLEO) gathered Ganesha server IP is malformed"
+
 - name: Deploy Podified Manila
   when: manila_backend == "cephfs" or manila_backend == "cephnfs"
   block:
-    - name: generate CR config based on the selected backend
+    - name: Generate CR config based on the selected backend
       ansible.builtin.template:
         src: manila_cephfs.yaml.j2
         dest: /tmp/manila_cephfs.yaml
         mode: "0600"
 
-    - name: deploy podified Manila with cephfs backend
+    - name: Deploy podified Manila with cephfs backend
       ansible.builtin.shell: |
         {{ shell_header }}
         {{ oc_header }}
         oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/manila_cephfs.yaml
 
-- name: wait for Manila to start up
+- name: Wait for Manila to start up
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -25,7 +48,7 @@
   retries: 60
   delay: 2
 
-- name: check that Manila is reachable and its endpoints are defined
+- name: Check that Manila is reachable and its endpoints are defined
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
