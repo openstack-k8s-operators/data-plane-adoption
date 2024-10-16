@@ -342,7 +342,7 @@ spec:
       swiftRing:
         ringReplicas: 1
       swiftStorage:
-        replicas: 1
+        replicas: 0
       swiftProxy:
         replicas: 1
 EOF
