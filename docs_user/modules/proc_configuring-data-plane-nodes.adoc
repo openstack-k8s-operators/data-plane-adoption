@@ -1,34 +1,18 @@
 [id="configuring-data-plane-nodes_{context}"]
 
-= Configuring data plane nodes
+= Configuring isolated networks on data plane nodes
 
-A complete {rhos_prev_long} ({OpenStackShort}) cluster consists of {rhocp_long} nodes and data plane nodes. The
-former use `NodeNetworkConfigurationPolicy` custom resource (CR) to configure physical
-interfaces. Since data plane nodes are not {OpenShiftShort} nodes, a different approach to
-configure their network connectivity is used.
+Data plane nodes are configured by the OpenStack Operator and your `OpenStackDataPlaneNodeSet` custom resources (CRs). The `OpenStackDataPlaneNodeSet` CRs define your desired network configuration for the nodes.
 
-Instead, data plane nodes are configured by `openstack-operator` and its CRs. The CRs
-define desired network configuration for the nodes.
+Your {rhos_long} network configuration should reflect the existing {rhos_prev_long} ({OpenStackShort}) network setup. You must pull the `net_config.yaml` files from each {OpenStackShort} node and reuse them when you define the `OpenStackDataPlaneNodeSet` CRs. The format of the configuration does not change, so you can put network templates under `edpm_network_config_template` variables, either for all nodes or for each node.
 
-In case of adoption, the configuration should reflect the existing network
-setup. You should be able to pull `net_config.yaml` files from each node and
-reuse it when defining `OpenstackDataplaneNodeSet`. The format of the
-configuration hasn't changed (`os-net-config` is still being used under the
-hood), so you should be able to put network templates under
-`edpm_network_config_template` variables (either common for all nodes, or
-per-node).
+To ensure that the latest network configuration is used during the data plane adoption, you should also set `edpm_network_config_update: true` in the `nodeTemplate` field of the `OpenStackDataPlaneNodeSet` CR.
 
-To make sure the latest network configuration is used during the data plane adoption, you
-should also set `edpm_network_config_update: true` in the `nodeTemplate`.
+.Procedure
 
-You will proceed with the data plane adoption once the {OpenShiftShort} control plane is deployed in the
-{OpenShiftShort} cluster. When doing so, you will configure `NetConfig` and
-`OpenstackDataplaneNodeSet` CRs, using the same VLAN tags and IPAM
-configuration as determined in the previous steps.
-
-For example,
-
-```
+. Configure a `NetConfig` CR with your desired VLAN tags and IPAM configuration. For example:
++
+----
 apiVersion: network.openstack.org/v1beta1
 kind: NetConfig
 metadata:
@@ -62,12 +46,11 @@ spec:
         start: 172.19.0.100
       cidr: 172.19.0.0/24
       vlan: 22
-```
+----
 
-List multiple `allocationRanges` entries to exclude some of the IP addresses,
-e.g. to accommodate for addresses already consumed by the adopted environment.
-
-```
+. Optional: In the `NetConfig` CR, list multiple ranges for the `allocationRanges` field to exclude some of the IP addresses, for example, to accommodate IP addresses that are already consumed by the adopted environment:
++
+----
 apiVersion: network.openstack.org/v1beta1
 kind: NetConfig
 metadata:
@@ -85,6 +68,6 @@ spec:
         start: 172.17.0.201
       cidr: 172.17.0.0/24
       vlan: 20
-```
-
-The example above would exclude the `172.17.0.200` address from the pool.
+----
++
+This example excludes the `172.17.0.200` address from the pool.

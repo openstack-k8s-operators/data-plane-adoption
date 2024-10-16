@@ -1,18 +1,16 @@
 [id="configuring-networking-for-control-plane-services_{context}"]
 
-= Configuring the networking for control plane services
+= Configuring isolated networks on control plane services
 
-Once NMState operator created the desired hypervisor network configuration for
-isolated networks, we need to configure {rhos_prev_long} ({OpenStackShort}) services to use configured
-interfaces. This is achieved by defining `NetworkAttachmentDefinition` custom resources (CRs) for
-each isolated network. (In some clusters, these CRs are managed by the Cluster
-Network Operator in which case `Network` CRs should be used instead. For more information, see
-link:https://docs.openshift.com/container-platform/4.15/networking/cluster-network-operator.html[Cluster
-Network Operator] in _OpenShift Container Platform 4.15 Documentation_.)
+After the NMState operator creates the desired hypervisor network configuration for isolated networks, you must configure the {rhos_prev_long} ({OpenStackShort}) services to use the configured interfaces. You define a `NetworkAttachmentDefinition` custom resource (CR) for each isolated network. In some clusters, these CRs are managed by the Cluster Network Operator, in which case you use `Network` CRs instead. For more information, see
+link:{defaultOCPURL}/networking/cluster-network-operator#nw-cluster-network-operator_cluster-network-operator[Cluster Network Operator] in _Networking_.
 
-For example,
+.Procedure
 
-```
+. Define a `NetworkAttachmentDefinition` CR for each isolated network.
+For example:
++
+----
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
@@ -32,16 +30,14 @@ spec:
         "range_end": "172.17.0.50"
       }
     }
-```
+----
++
+[IMPORTANT]
+Ensure that the interface name and IPAM range match the configuration that you used in the `NodeNetworkConfigurationPolicy` CRs.
 
-Make sure that the interface name and IPAM range match the configuration used
-in `NodeNetworkConfigurationPolicy` CRs.
-
-When reusing existing IP ranges, you may exclude part of the range defined by
-`range_start` and `range_end` that was already consumed in the existing
-deployment. Please use `exclude` as follows.
-
-```
+. Optional: When reusing existing IP ranges, you can exclude part of the range that is used in the existing deployment by using the `exclude` parameter in the `NetworkAttachmentDefinition` pool. For example:
++
+----
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
@@ -57,53 +53,47 @@ spec:
       "ipam": {
         "type": "whereabouts",
         "range": "172.17.0.0/24",
-        "range_start": "172.17.0.20",
-        "range_end": "172.17.0.50",
-        "exclude": [
+        "range_start": "172.17.0.20", <1>
+        "range_end": "172.17.0.50", <2>
+        "exclude": [ <3>
           "172.17.0.24/32",
           "172.17.0.44/31"
         ]
       }
     }
-```
+----
++
+<1> Defines the start of the IP range.
+<2> Defines the end of the IP range.
+<3> Excludes part of the IP range. This example excludes IP addresses `172.17.0.24/32` and `172.17.0.44/31` from the allocation pool.
 
-The example above would exclude addresses `172.17.0.24` as well as
-`172.17.0.44` and `172.17.0.45` from the allocation pool.
-
-//== Load balancer IP addresses
-
-Some {OpenStackShort} services require load balancer IP addresses. These IP addresses
-belong to the same IP range as the control plane services, and are managed by
-MetalLB. The IP address pool is defined by `IPAllocationPool` CRs. This pool
-should also be aligned with the adopted configuration.
-
-For example,
-
-```
+. If your {OpenStackShort} services require load balancer IP addresses, define the pools for these services in an `IPAddressPool` CR. For example:
++
+[NOTE]
+The load balancer IP addresses belong to the same IP range as the control plane services, and are managed by MetalLB. This pool should also be aligned with the {OpenStackShort} configuration.
++
+----
 - apiVersion: metallb.io/v1beta1
   kind: IPAddressPool
   spec:
     addresses:
     - 172.17.0.60-172.17.0.70
-```
-
+----
++
 Define `IPAddressPool` CRs for each isolated network that requires load
 balancer IP addresses.
 
-When reusing existing IP ranges, you may exclude part of the range by listing
-multiple `addresses` entries.
-
-For example,
-
-```
+. Optional: When reusing existing IP ranges, you can exclude part of the range by listing multiple entries in the `addresses` section of the `IPAddressPool`. For example:
++
+----
 - apiVersion: metallb.io/v1beta1
   kind: IPAddressPool
   spec:
     addresses:
     - 172.17.0.60-172.17.0.64
     - 172.17.0.66-172.17.0.70
-```
-
+----
++
 The example above would exclude the `172.17.0.65` address from the allocation
 pool.
 

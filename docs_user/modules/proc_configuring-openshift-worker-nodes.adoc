@@ -1,18 +1,16 @@
 [id="configuring-openshift-worker-nodes_{context}"]
 
-= Configuring {OpenShiftShort} worker nodes
+= Configuring isolated networks on {OpenShiftShort} worker nodes
 
-{rhocp_long} worker nodes that run {rhos_prev_long} services need a way to connect the service
-pods to isolated networks. This requires physical network configuration on the
-hypervisor.
+To connect service pods to isolated networks on {rhocp_long} worker nodes that run {rhos_prev_long} services, physical network configuration on the hypervisor is required.
 
-This configuration is managed by the NMState operator, which uses the custom resources (CRs) to
-define the desired network configuration for the nodes.
+This configuration is managed by the NMState operator, which uses `NodeNetworkConfigurationPolicy` custom resources (CRs) to define the desired network configuration for the nodes.
 
-For each node, define a `NodeNetworkConfigurationPolicy` CR that describes the
-desired network configuration. See the example below.
+.Procedure
 
-```
+* For each {OpenShiftShort} worker node, define a `NodeNetworkConfigurationPolicy` CR that describes the desired network configuration. For example:
++
+----
 apiVersion: v1
 items:
 - apiVersion: nmstate.io/v1
@@ -71,7 +69,7 @@ items:
     nodeSelector:
       kubernetes.io/hostname: ocp-worker-0
       node-role.kubernetes.io/worker: ""
-```
+----
 
 // TODO: Move this to the IPv6 section once it is fully documented, both upstream and downstream.
 ifeval::["{build}" != "downstream"]
