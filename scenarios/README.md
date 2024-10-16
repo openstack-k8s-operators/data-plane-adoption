@@ -34,6 +34,10 @@ the `undercloud.conf`.
 - `undercloud_parameters_defaults`: path to a file that contains
 parameters_defaults for the undercloud, is passed through the `custom_env_files`
 option in the `undercloud.conf`.
+- `routes`: list of routes to define in the undercloud os_net_config template.
+List of dictionaries with the fields `ip_netmask`, `next_hop` and `default`.
+- `os_net_config_iface`: string with the name of the network interface to
+assign to bridge, default is `nic2`.
 
 ### Stacks section
 
@@ -41,7 +45,7 @@ The stacks section contains list of stacks to be deployed. Typically, this will
 be just one, commonly known as `overcloud`, but there can be arbitrarily many.
 For each entry the following parameters can be passed:
 
-- `stackname`: name of the stack deployment, default is `overcloud`.
+- `stackname`: name of the stack deployment.
 - `args`: list of cli arguments to use when deploying the stack.
 - `vars`: list of environment files to use when deploying the stack.
 - `network_data_file`:  path to the network_data file that defines the network
@@ -61,6 +65,10 @@ if defined, it ignores the `vars` and `args` fields, optional.
 - `stack_nodes`: list of groups for the inventory that contains the nodes that
 will be part of the stack, required. This groups must be a subset of the groups
 used as keys in `hostname_groups_map` and `roles_groups_map`.
+- `routes`: list of routes to define in the nodes' os_net_config template.
+List of dictionaries with the fields `ip_netmask`, `next_hop` and `default`.
+- `os_net_config_iface`: string with the name of the network interface to
+assign to bridge, default is `nic2`.
 
 ### Cloud domain
 
