@@ -2,7 +2,7 @@
 
 = Configuring isolated networks on data plane nodes
 
-Data plane nodes are configured by `openstack-operator` and the `OpenstackDataPlaneNodeSet` custom resources (CRs). The CRs define your desired network configuration for the nodes.
+Data plane nodes are configured by the OpenStack Operator and your `OpenStackDataPlaneNodeSet` custom resources (CRs). The `OpenStackDataPlaneNodeSet` CRs define your desired network configuration for the nodes.
 
 Your {rhos_long} network configuration should reflect the existing {rhos_prev_long} ({OpenStackShort}) network setup. You must pull the `net_config.yaml` files from each {OpenStackShort} node and reuse them when you define the `OpenStackDataPlaneNodeSet` CRs. The format of the configuration does not change, so you can put network templates under `edpm_network_config_template` variables, either for all nodes or per node.
 
