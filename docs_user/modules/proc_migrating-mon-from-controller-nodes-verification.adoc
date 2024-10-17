@@ -6,13 +6,21 @@ After you finish migrating your Ceph Monitor daemons to the target nodes, verify
 
 .Procedure
 
-* Verify that the {CephCluster} cluster is healthy:
+. Verify that the {CephCluster} cluster is healthy:
 +
 ----
-[ceph: root@oc0-controller-0 specs]# ceph -s
+$ ceph -s
   cluster:
     id:     f6ec3ebe-26f7-56c8-985d-eb974e8e08e3
     health: HEALTH_OK
 ...
 ...
+----
+
+. Verify that the {CephCluster} mons are running with the old IP addresses. SSH
+  into the target nodes and verify that the Ceph Monitor daemons are bound to
+  the expected IP and port:
++
+----
+$ netstat -tulpn | grep 3300
 ----
