@@ -52,7 +52,7 @@ Sample represents 100.00% of the object partition space
 $ oc patch openstackcontrolplane openstack --type=merge -p='{"spec":{"swift":{"template":{"swiftStorage":{"replicas": 3}}}}}'
 ----
 +
-Three storage instances using Persistent Volume Claims are created, running on the {rhocp_long} cluster.
+This command creates three storage instances on the {rhocp_long} cluster that use Persistent Volume Claims.
 
 . Wait until all three pods are running:
 +
