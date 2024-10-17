@@ -12,13 +12,11 @@ endif::[]
 
 .Prerequisites
 
-* An {OpenStackShort} {rhos_prev_ver} environment and a {Ceph} {CephVernum} deployment that is managed by {OpenStackPreviousInstaller}.
-* {Ceph} is upgraded to {Ceph} {CephVernum} and is managed by `cephadm`.
-* Both the {Ceph} public and cluster networks are propagated through{OpenStackPreviousInstaller} to the target nodes.
+* Complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_ceph-prerequisites[{Ceph} prerequisites].
 
-.Prerequisites
+.Procedure
 
-* Verify that the {CephCluster} cluster is healthy and check the MDS status:
+. Verify that the {CephCluster} cluster is healthy and check the MDS status:
 +
 ----
 [ceph: root@controller-0 /]# ceph fs ls
@@ -42,7 +40,7 @@ mds.controller-1.cwzhog
 MDS version: ceph version 17.2.6-100.el9cp (ea4e3ef8df2cf26540aae06479df031dcfc80343) quincy (stable)
 ----
 
-* Retrieve more detailed information on the Ceph File System (CephFS) MDS status:
+. Retrieve more detailed information on the Ceph File System (CephFS) MDS status:
 +
 ----
 [ceph: root@controller-0 /]# ceph fs dump
@@ -88,7 +86,7 @@ Standby daemons:
 dumped fsmap epoch 8
 ----
 
-* Check the OSD blocklist and clean up the client list:
+. Check the OSD blocklist and clean up the client list:
 +
 ----
 [ceph: root@controller-0 /]# ceph osd blocklist ls
@@ -105,8 +103,6 @@ When a file system client is unresponsive or misbehaving, the access to the file
 
 Ordinarily, a blocklisted client cannot reconnect to the servers; you must unmount and then remount the client. However, permitting a client that was evicted to attempt to reconnect can be useful. Because CephFS uses the RADOS OSD blocklist to control client eviction, you can permit CephFS clients to reconnect by removing them from the blocklist.
 ====
-
-.Procedure
 
 . Get the hosts that are currently part of the {Ceph} cluster:
 +
