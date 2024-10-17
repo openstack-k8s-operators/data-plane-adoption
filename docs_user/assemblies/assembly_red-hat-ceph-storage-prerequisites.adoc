@@ -1,0 +1,33 @@
+ifdef::context[:parent-context: {context}]
+
+[id="red-hat-ceph-storage-prerequisites_{context}"]
+
+:context: ceph-prerequisites
+
+= {Ceph} prerequisites
+
+Before you migrate your {Ceph} cluster daemons from your Controller nodes, complete the following tasks in your {rhos_prev_long} {rhos_prev_ver} environment:
+
+* Upgrade your {Ceph} cluster to release {CephVernum}. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/{rhos_prev_ver}/html-single/framework_for_upgrades_16.2_to_17.1/index#assembly_ceph-6-to-7_upgrade_post-upgrade-external-ceph[Upgrading Red Hat Ceph Storage 6 to 7] in _Framework for upgrades (16.2 to 17.1)_.
+* Your {Ceph} {CephVernum} deployment is managed by `cephadm`.
+* The undercloud is still available, and the nodes and networks are managed by {OpenStackPreviousInstaller}.
+* If you use an externally deployed {Ceph} cluster, you must recreate a `ceph-nfs` cluster in the target nodes as well as propogate the `StorageNFS` network.
+
+Complete the prerequisites for your specific {Ceph} environment:
+
+* xref:completing-prerequisites-for-migrating-ceph-monitoring-stack_{context}[{Ceph} with monitoring stack components]
+* xref:completing-prerequisites-for-migrating-ceph-rgw_{context}[{Ceph} RGW]
+* xref:completing-prerequisites-for-rbd-migration_{context}[{Ceph} RBD]
+* xref:creating-a-ceph-nfs-cluster_{context}[NFS Ganesha]
+
+
+include::../modules/proc_completing-prerequisites-for-migrating-ceph-monitoring-stack.adoc[leveloffset=+1]
+
+include::../modules/proc_completing-prerequisites-for-migrating-ceph-rgw.adoc[leveloffset=+1]
+
+include::../modules/proc_completing-prerequisites-for-migrating-ceph-rbd.adoc[leveloffset=+1]
+
+include::../modules/proc_creating-a-ceph-nfs-cluster.adoc[leveloffset=+1]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]
