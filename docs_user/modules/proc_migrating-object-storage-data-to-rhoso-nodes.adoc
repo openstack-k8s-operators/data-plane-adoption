@@ -60,7 +60,7 @@ Three storage instances using Persistent Volume Claims are created, running on t
 $ oc wait pods --for condition=Ready -l component=swift-storage
 ----
 
-. Get the storage management IP addresses of the nodes to drain from the current rings:
+. From the current rings, get the storage management IP addresses of the nodes to drain:
 +
 ----
 $ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-ring-builder object.builder' | tail -n +7 | awk '{print $4}' | sort -u
