@@ -10,7 +10,7 @@ When you adopt a new {rhos_long} deployment, you must align the network
 configuration with the adopted cluster to maintain connectivity for existing
 workloads.
 
-You need to incorporate the existing network configuration in the following steps:
+Perform the following tasks to incorporate the existing network configuration:
 
 * You configure {rhocp_long} worker nodes to align VLAN tags and IP Address Management (IPAM) configuration with the existing deployment.
 * You configure control plane services to use compatible IP ranges for service and load-balancing IP addresses.
