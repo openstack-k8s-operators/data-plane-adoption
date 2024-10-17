@@ -12,7 +12,7 @@ workloads.
 
 Perform the following tasks to incorporate the existing network configuration:
 
-* You configure {rhocp_long} worker nodes to align VLAN tags and IP Address Management (IPAM) configuration with the existing deployment.
+* Configure {rhocp_long} worker nodes to align VLAN tags and IP Address Management (IPAM) configuration with the existing deployment.
 * You configure control plane services to use compatible IP ranges for service and load-balancing IP addresses.
 * You configure data plane nodes to use corresponding compatible configuration for VLAN tags and IPAM.
 * You can either reuse IPAM configuration from the existing deployment or, depending on IP address availability in the existing allocation pools, define new ranges to be used for the new control plane services. If you define new ranges, you configure IP routing between the old and new ranges. For more information, see xref:planning-your-ipam-configuration_configuring-network[Planning your IPAM configuration].
