@@ -13,7 +13,7 @@ The RHOSO control plane has different requirements for the number of IP addresse
 
 The total number of IP addresses that are required for the new control plane services in each isolated network is calculated as the sum of the following:
 
-* The number of {OpenShiftShort} worker nodes. Each node requires 1 IP address in the `NodeNetworkConfigurationPolicy` custom resources (CRs).
+* The number of {OpenShiftShort} worker nodes. Each worker node requires 1 IP address in the `NodeNetworkConfigurationPolicy` custom resource (CR).
 * The number of IP addresses required for the data plane nodes. Each node requires an IP address from the `NetConfig` CRs.
 * The number of IP addresses required for control plane services. Each service requires an IP address from the `NetworkAttachmentDefinition` CRs. This number depends on the number of replicas for each service.
 * The number of IP addresses required for load balancer IP addresses. Each service requires a Virtual IP address from the `IPAddressPool` CRs.
