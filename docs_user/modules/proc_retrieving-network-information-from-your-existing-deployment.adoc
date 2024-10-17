@@ -28,7 +28,7 @@ deployment. After you retrieve your network configuration, you have the followin
       allocation_pools: [{'start': '172.17.0.4', 'end': '172.17.0.250'}]
 ----
 
-. In the `network_data.yaml` file, make a note of the VLAN tag that is used in the `vlan` key and the IP range in the `ip_subnet` key for each isolated network. The IP range is later split into separate pools for control plane services and load balancer IP addresses.
+. Retrieve the VLAN tag that is used in the `vlan` key and the IP range in the `ip_subnet` key for each isolated network from the `network_data.yaml` file. The IP range is later split into separate pools for control plane services and load balancer IP addresses.
 
 . Use the `tripleo-ansible-inventory.yaml` file to determine the list of IP addresses that are already consumed in the adopted environment. For each listed host in the file, make a note of the IP and VIP addresses that are consumed by the node. For example:
 +
