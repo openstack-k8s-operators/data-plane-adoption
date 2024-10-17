@@ -17,6 +17,44 @@ function wait_for_status() {
     done
 }
 
+function create_volume_resources() {
+    # create a data volume
+    if ! ${BASH_ALIASES[openstack]} volume show disk ; then
+        ${BASH_ALIASES[openstack]} volume create --image cirros --size 1 disk
+        wait_for_status "volume show disk" "test volume 'disk' creation"
+    fi
+
+    # create volume snapshot
+    if ! ${BASH_ALIASES[openstack]} volume snapshot show snapshot ; then
+        ${BASH_ALIASES[openstack]} volume snapshot create --volume disk snapshot
+        wait_for_status "volume snapshot show snapshot" "test volume 'disk' snapshot availability"
+    fi
+
+    # Add volume to the test VM
+    if ${BASH_ALIASES[openstack]} volume show disk -f json | jq -r '.status' | grep -q available ; then
+        ${BASH_ALIASES[openstack]} server add volume test disk
+    fi
+}
+
+function create_backup_resources() {
+    # create volume backup
+    if ! ${BASH_ALIASES[openstack]} volume backup show backup; then
+        ${BASH_ALIASES[openstack]} volume backup create --name backup disk --force
+        wait_for_status "volume backup show backup" "test volume 'disk' backup completion"
+    fi
+}
+
+function create_bfv_volume() {
+    # Launch an instance from boot-volume (BFV)
+    if ! ${BASH_ALIASES[openstack]} volume show boot-volume ; then
+        ${BASH_ALIASES[openstack]} volume create --image cirros --size 1 boot-volume
+        wait_for_status "volume show boot-volume" "test volume 'boot-volume' creation"
+    fi
+    if ${BASH_ALIASES[openstack]} volume show boot-volume -f json | jq -r '.status' | grep -q available ; then
+        ${BASH_ALIASES[openstack]} server create --flavor m1.small --volume boot-volume --nic net-id=private bfv-server --wait
+    fi
+}
+
 # Create Image
 IMG=cirros-0.5.2-x86_64-disk.img
 URL=http://download.cirros-cloud.net/0.5.2/$IMG
@@ -67,36 +105,11 @@ export FIP=192.168.122.20
 # check connectivity via FIP
 ping -c4 ${FIP}
 
-# create bootable volume
-if ! ${BASH_ALIASES[openstack]} volume show disk ; then
-    ${BASH_ALIASES[openstack]} volume create --image cirros --size 1 disk
-    wait_for_status "volume show disk" "test volume 'disk' creation"
+if [ "$CINDER_VOLUME_BACKEND_CONFIGURED" = "true" ]; then
+    create_volume_resources
+    create_bfv_volume
 fi
 
-# create volume backup
-if ! ${BASH_ALIASES[openstack]} volume backup show backup; then
-    ${BASH_ALIASES[openstack]} volume backup create --name backup disk
-    wait_for_status "volume backup show backup" "test volume 'disk' backup completion"
-fi
-
-# create volume snapshot
-if ! ${BASH_ALIASES[openstack]} volume snapshot show snapshot ; then
-    ${BASH_ALIASES[openstack]} volume snapshot create --volume disk snapshot
-    wait_for_status "volume snapshot show snapshot" "test volume 'disk' snapshot availability"
-fi
-
-# Add volume to the test VM
-if ${BASH_ALIASES[openstack]} volume show disk -f json | jq -r '.status' | grep -q available ; then
-    ${BASH_ALIASES[openstack]} server add volume test disk
-fi
-
-# create another bootable volume
-if ! ${BASH_ALIASES[openstack]} volume show boot-volume ; then
-    ${BASH_ALIASES[openstack]} volume create --image cirros --size 1 boot-volume
-    wait_for_status "volume show boot-volume" "test volume 'boot-volume' creation"
-fi
-
-# Launch an instance from boot-volume (BFV)
-if ${BASH_ALIASES[openstack]} volume show boot-volume -f json | jq -r '.status' | grep -q available ; then
-    ${BASH_ALIASES[openstack]} server create --flavor m1.small --volume boot-volume --nic net-id=private bfv-server --wait
+if [ "$CINDER_BACKUP_BACKEND_CONFIGURED" = "true" ]; then
+    create_backup_resources
 fi
