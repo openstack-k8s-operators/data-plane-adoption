@@ -12,22 +12,19 @@ The following procedure applies to a single node standalone {OpenStackPreviousIn
 +
 [subs=+quotes]
 ----
+CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
+# ... <1>
 ifeval::["{build}" != "downstream"]
 EDPM_PRIVATEKEY_PATH="~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa"
 endif::[]
 ifeval::["{build}" == "downstream"]
-EDPM_PRIVATEKEY_PATH="<path_to_SSH_key>"
+EDPM_PRIVATEKEY_PATH="<path_to_SSH_key>" <2>
 endif::[]
-declare -A computes
-computes=(
-  ["standalone.localdomain"]="192.168.122.100"
-  # ...
-)
 ----
 +
-** Replace `["standalone.localdomain"]="192.168.122.100"` with the name and IP address of the Compute node.
+<1> Complete `CONTROLLER<X>_SSH` settings with all controllers' SSH connection info, for all cells, and the main overcloud stack of the source {OpenStackPreviousInstaller} cloud.
 ifeval::["{build}" == "downstream"]
-** Replace `<path_to_SSH_key>` with the path to your SSH key.
+<2> Replace `<path_to_SSH_key>` with the path to your SSH key.
 endif::[]
 
 .Procedure

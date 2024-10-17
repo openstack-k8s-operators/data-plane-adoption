@@ -13,8 +13,22 @@ To adopt the {compute_service_first_ref}, you patch an existing `OpenStackContro
 * You have completed the previous adoption steps.
 * You have defined the following shell variables. Replace the following example values with the values that are correct for your environment:
 ----
-$ alias openstack="oc exec -t openstackclient -- openstack"
+alias openstack="oc exec -t openstackclient -- openstack"
+
+DEFAULT_CELL_NAME="cell3"
+RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
 ----
++
+The `default` cell takes a new name from `DEFAULT_CELL_NAME`.
+In a multi-cell adoption scenario, it may retain its original 'default' name as well.
+
+A standalone TripleO only creates a default cell, so you should define that instead:
++
+----
+DEFAULT_CELL_NAME="cell1"
+RENAMED_CELLS="cell1"
+----
++
 
 .Procedure
 
@@ -22,10 +36,40 @@ $ alias openstack="oc exec -t openstackclient -- openstack"
 +
 [NOTE]
 This procedure assumes that {compute_service} metadata is deployed on the top level and not on each cell level. If the {OpenStackShort} deployment has a per-cell metadata deployment, adjust the following patch as needed. You cannot run the metadata service in `cell0`.
+To enable local cells metadata services, set `spec.nova.template.cellTemplates.cell*.metadataServiceTemplate.enable` in `OpenStackControlPlane` CR.
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+rm -f celltemplates
+for CELL in $(echo $RENAMED_CELLS); do
+  cat >> celltemplates << EOF
+        ${CELL}:
+          hasAPIAccess: true
+          cellDatabaseAccount: nova-$CELL
+          cellDatabaseInstance: openstack-$CELL
+          cellMessageBusInstance: rabbitmq-$CELL
+          metadataServiceTemplate:
+            enabled: false # enable here to run it in a cell instead
+            override:
+                service:
+                  metadata:
+                    annotations:
+                      metallb.universe.tf/address-pool: internalapi
+                      metallb.universe.tf/allow-shared-ip: internalapi
+                      metallb.universe.tf/loadBalancerIPs: 172.17.0.$(( 79 + ${CELL##*cell} ))
+                  spec:
+                    type: LoadBalancer
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=true
+          conductorServiceTemplate:
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=true
+EOF
+done
+
+cat > oscp-patch.yaml << EOF
 spec:
   nova:
     enabled: true
@@ -33,6 +77,7 @@ spec:
       route: {}
     template:
       secret: osp-secret
+      apiDatabaseAccount: nova-api
       apiServiceTemplate:
         override:
           service:
@@ -67,37 +112,25 @@ spec:
           disable_compute_service_check_for_ffu=true
       cellTemplates:
         cell0:
+          hasAPIAccess: true
+          cellDatabaseAccount: nova-cell0
+          cellDatabaseInstance: openstack
+          cellMessageBusInstance: rabbitmq
           conductorServiceTemplate:
             customServiceConfig: |
               [workarounds]
               disable_compute_service_check_for_ffu=true
-        cell1:
-          metadataServiceTemplate:
-            enabled: false # enable here to run it in a cell instead
-            override:
-                service:
-                  metadata:
-                    annotations:
-                      metallb.universe.tf/address-pool: internalapi
-                      metallb.universe.tf/allow-shared-ip: internalapi
-                      metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-                  spec:
-                    type: LoadBalancer
-            customServiceConfig: |
-              [workarounds]
-              disable_compute_service_check_for_ffu=true
-          conductorServiceTemplate:
-            customServiceConfig: |
-              [workarounds]
-              disable_compute_service_check_for_ffu=true
-'
+EOF
+cat celltemplates >> oscp-patch.yaml
+oc patch openstackcontrolplane openstack -n openstack --type=merge --patch-file=oscp-patch.yaml
 ----
++
 
-. If you are adopting the {compute_service} with the {bare_metal_first_ref}, append the following `novaComputeTemplates` in the `cell1` section of the {compute_service} CR patch:
+. If you are adopting the {compute_service} with the {bare_metal_first_ref}, append the following `novaComputeTemplates` in the each `cellX` section of the {compute_service} CR patch:
 +
 [source,yaml]
 ----
-        cell1:
+        cell<index>:
           novaComputeTemplates:
             standalone:
               customServiceConfig: |
@@ -105,9 +138,11 @@ spec:
                 host = <hostname>
                 [workarounds]
                 disable_compute_service_check_for_ffu=true
+              computeDriver: ironic.IronicDriver
+        ...
 ----
 +
-* Replace <hostname> with the hostname of the node that is running the `ironic` Compute driver in the source cloud.
+* Replace `<hostname>` with the hostname of the node that is running the `ironic` Compute driver in the source cloud.
 
 . Wait for the CRs for the Compute control plane services to be ready:
 +
@@ -117,7 +152,7 @@ $ oc wait --for condition=Ready --timeout=300s Nova/nova
 +
 [NOTE]
 The local Conductor services are started for each cell, while the superconductor runs in `cell0`.
-Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Compute services until the external data plane is imported, and until Compute services are fast-forward upgraded. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane] and xref:performing-a-fast-forward-upgrade-on-compute-services_data-plane[Performing a fast-forward upgrade on Compute services].
+Note that `disable_compute_service_check_for_ffu` is mandatory for all imported Compute services until the external data plane is imported, and until Compute services are fast-forward upgraded. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane] and xref:performing-a-fast-forward-upgrade-on-compute-services_data-plane[Upgrading Compute services].
 
 .Verification
 
@@ -131,19 +166,34 @@ $ openstack server list
 +
 ** Compare the outputs with the topology-specific configuration in xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
 
-* Query the superconductor to check that `cell1` exists, and compare it to pre-adoption values:
+* Query the superconductor to check that the expected cells exist, and compare it to pre-adoption values:
 +
 ----
-. ~/.source_cloud_exported_variables
-echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS
-oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 |'
+$ for CELL in $(echo $CELLS); do
+  set +u
+  . ~/.source_cloud_exported_variables_$CELL
+  set -u
+  RCELL=$CELL
+  [ "$CELL" = "default" ] && RCELL=$DEFAULT_CELL_NAME
+
+  echo "comparing $CELL to $RCELL"
+  echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS | grep -F "| $CELL |"
+  oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F "| $RCELL |"
+done
 ----
 +
-The following changes are expected:
+The following changes are expected, for each cell `X`:
 +
-** The `cell1` `nova` database and username become `nova_cell1`.
-** The default cell is renamed to `cell1`.
+** The `cellX` `nova` database and username become `nova_cellX`.
+** The `default` cell is renamed to `DEFAULT_CELL_NAME` (it may retain the original name, if there are multiple cells).
+** RabbitMQ transport URL no longer uses `guest`.
 ** RabbitMQ transport URL no longer uses `guest`.
 
 [NOTE]
+====
 At this point, the {compute_service} control plane services do not control the existing {compute_service} workloads. The control plane manages the data plane only after the data adoption process is completed. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].
+====
+
+To import external Compute services to the {rhos_acro} data plane, you must upgrade them first.
+See xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane], and
+See xref:performing-a-fast-forward-upgrade-on-compute-services_data-plane[Upgrading Compute services].
