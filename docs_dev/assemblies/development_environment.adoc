@@ -114,10 +114,10 @@ cat << EOF > /tmp/addtional_nets.json
 EOF
 export EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(jq -c . /tmp/addtional_nets.json)
 export STANDALONE_COMPUTE_DRIVER=ironic
-export NTP_SERVER=pool.ntp.org  # Only necessary if not on the RedHat network ...
 export EDPM_COMPUTE_CEPH_ENABLED=false  # Optional
 export EDPM_COMPUTE_CEPH_NOVA=false # Optional
 export EDPM_COMPUTE_SRIOV_ENABLED=false # Without this the standalone deploy fails when compute driver is ironic.
+export NTP_SERVER=<ntp server>  # Default pool.ntp.org do not work in RedHat network, set this var as per the environment
 ----
 
 [Note]
