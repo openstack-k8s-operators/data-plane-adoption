@@ -7,7 +7,7 @@ ifdef::context[:parent-context: {context}]
 = Migrating the {object_storage} to {rhos_long_noacro} nodes
 If you are using the {rhos_prev_long} {object_storage_first_ref} as an Object Storage service, you must migrate your Object Storage service to {rhos_long_noacro} nodes. If you are using the Object Storage API of the Ceph Object Gateway (RGW), you can skip this chapter.
 
-The data migration happens replica by replica. For example, if you start with 3 replicas, you only move 1 one of them at a time to ensure that the remaining 2 replicas are still available and that you can use the {object_storage} during the migration.
+The data migration happens replica by replica. For example, if you have 3 replicas, move them one at a time to ensure that the other 2 replicas are still operational, which enables you to continue to use the {object_storage} during the migration.
 
 [NOTE]
 Data migration to the new deployment is a long-running process that executes mostly in the background. The {object_storage} replicators move data from old to new nodes, which might take a long time depending on the amount of storage used. To reduce downtime, you can use the old nodes if they are running and continue with adopting other services while waiting for the migration to complete. Performance might be degraded due to the amount of replication traffic in the network.
