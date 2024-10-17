@@ -12,12 +12,7 @@ it is important to plan it carefully. The general network requirements for the
 
 [NOTE]
 For more information about the network architecture and configuration, see
-link:https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/18.0-dev-preview/html/deploying_red_hat_openstack_platform_18.0_development_preview_3_on_red_hat_openshift_container_platform/assembly_preparing-rhocp-for-rhosp[_Deploying Red Hat OpenStack Platform 18.0 Development Preview 3 on Red Hat OpenShift Container Platform_] and link:https://docs.openshift.com/container-platform/4.15/networking/about-networking.html[About
-networking] in _OpenShift Container Platform 4.15 Documentation_. This document will address concerns specific to adoption.
-
-// TODO: update the openstack link with the final documentation
-
-// TODO: should we parametrize the version in the links somehow?
+link:{deploying-rhoso}/assembly_preparing-rhocp-for-rhoso[Preparing Red Hat OpenShift Container Platform for {rhos_long_noacro}] in the _ {deploying-rhoso-t}_guide and link:{defaultOCPURL}/networking/about-networking.html[About networking].
 
 When adopting a new {OpenStackShort} deployment, it is important to align the network
 configuration with the adopted cluster to maintain connectivity for existing
