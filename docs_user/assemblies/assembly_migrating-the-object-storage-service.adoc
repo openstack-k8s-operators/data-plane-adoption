@@ -10,7 +10,7 @@ If you are using the {rhos_prev_long} {object_storage_first_ref} as an Object St
 The data migration happens replica by replica. For example, if you start with 3 replicas, you only move 1 one of them at a time to ensure that the remaining 2 replicas are still available and that you can use the {object_storage} during the migration.
 
 [NOTE]
-Data migration to the new deployment is a long-running process that runs mostly in the background. The {object_storage} replicators move data from old to new nodes, but depending on the amount of used storage, this might take a long time. To reduce downtime, you can use the old nodes if they are running and continue with adopting other services in the meantime. Performance might be degraded due to the amount of replication traffic in the network.
+Data migration to the new deployment is a long-running process that executes mostly in the background. The {object_storage} replicators move data from old to new nodes, which might take a long time depending on the amount of storage used. To reduce downtime, you can use the old nodes if they are running and continue with adopting other services while waiting for the migration to complete. Performance might be degraded due to the amount of replication traffic in the network.
 
 
 include::../modules/proc_migrating-object-storage-data-to-rhoso-nodes.adoc[leveloffset=+1]
