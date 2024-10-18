@@ -10,7 +10,7 @@ For Hyperconverged Infrastructure (HCI) or dedicated Storage nodes, you must mig
 
 .Prerequisites
 
-* Complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_ceph-prerequisites[{Ceph} prerequisites].
+* Complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_configuring-network[{Ceph} prerequisites].
 
 include::../modules/proc_migrating-the-rgw-backends.adoc[leveloffset=+1]
 

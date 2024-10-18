@@ -12,7 +12,7 @@ Copy the {rhos_component_storage_file_first_ref} configuration from the {rhos_pr
 * The database migration is complete. For more information, see xref:migrating-databases-to-mariadb-instances_migrating-databases[Migrating databases to MariaDB instances].
 * The {rhocp_long} nodes where the `manila-share` service is to be deployed can reach the management network that the storage system is in.
 * If the deployment uses CephFS through NFS as a storage back end, a new clustered Ceph NFS service is deployed on the {CephCluster} cluster with the help
-of Ceph orchestrator. For more information, see xref:creating-a-ceph-nfs-cluster_migrating-databases[Creating a Ceph NFS cluster].
+of Ceph orchestrator. For more information, see xref:creating-a-ceph-nfs-cluster_ceph-prerequisites[Creating a Ceph NFS cluster].
 * Services such as the {identity_service_first_ref} and memcached are available prior to adopting the Shared File Systems services.
 * If you enabled tenant-driven networking by setting `driver_handles_share_servers=True`, the {networking_first_ref} is deployed.
 ifeval::["{build}" != "downstream"]
