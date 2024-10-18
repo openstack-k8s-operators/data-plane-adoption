@@ -106,6 +106,8 @@ $ oc wait --for=condition=Ready pod/ovn-copy-data --timeout=30s
 ----
 
 . Back up your OVN databases:
+[IMPORTANT]
+In case your podified control plane has a different subnet than the tripleo deployment, you need to add an iptable rule to allow your traffic from the podified subnet.
 * If you did not enable TLS everywhere, run the following command:
 +
 ----
