@@ -14,7 +14,7 @@ the Compute nodes for an HCI environment or dedicated storage nodes.
 
 .Prerequisites
 
-* Complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_ceph-prerequisites[{Ceph} prerequisites].
+* Complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_configuring-network[{Ceph} prerequisites].
 
 include::../modules/proc_migrating-mgr-from-controller-nodes.adoc[leveloffset=+1]
 

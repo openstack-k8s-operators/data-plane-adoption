@@ -22,7 +22,7 @@ In this procedure, you migrate and relocate the Ceph Monitoring components to fr
 
 .Prerequisites
 
-* Complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_ceph-prerequisites[{Ceph} prerequisites].
+* Complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_configuring-network[{Ceph} prerequisites].
 
 
 include::../assemblies/assembly_migrating-monitoring-stack-to-target-nodes.adoc[leveloffset=+1]
