@@ -1,4 +1,0 @@
-resources:
-- openstack_control_plane_ospdo.yaml
-patchesStrategicMerge:
-- tls_overrides.yaml

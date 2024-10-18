@@ -32,6 +32,6 @@
         MARIADB_CLIENT_ANNOTATIONS="-n {{ org_namespace }}"
         CONTROLLER_NODE={{ controller_node.stdout }}
 
-- name: set default NS to {{ osp18_namespace }}
+- name: set default NS to {{ rhoso_namespace }}
   ansible.builtin.shell: |
-    oc project {{ osp18_namespace }}
+    oc project {{ rhoso_namespace }}

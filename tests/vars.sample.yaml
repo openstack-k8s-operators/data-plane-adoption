@@ -66,6 +66,6 @@ telemetry_adoption: true
 ospdo_src: false
 
 # rhoso namespace
-osp18_namespace: "openstack"
+rhoso_namespace: "openstack"
 # director operator namespace
 org_namespace: "ospdo_openstack"

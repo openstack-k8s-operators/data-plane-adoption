@@ -8,7 +8,7 @@
       kind: Secret
       metadata:
           name: dataplane-adoption-secret
-          namespace: {{ osp18_namespace }}
+          namespace: {{ rhoso_namespace }}
       data:
           ssh-privatekey: |
       $(oc exec -n {{ org_namespace }} -t openstackclient openstackclient -- cat /home/cloud-admin/.ssh/id_rsa | base64 | sed 's/^/        /')
@@ -27,6 +27,6 @@
     kind: Secret
     metadata:
     name: libvirt-secret
-    namespace: {{ osp18_namespace }}
+    namespace: {{ rhoso_namespace }}
     type: Opaque
     EOF

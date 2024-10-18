@@ -39,12 +39,12 @@
       name: mariadb-copy-data
       annotations:
         openshift.io/scc: anyuid
-        k8s.v1.cni.cncf.io/networks: {{ custom_networks | default('internalapi') }}
+        k8s.v1.cni.cncf.io/networks: {{ copy_pods_custom_networks | default('internalapi') }}
       namespace: {{ org_namespace| default('openstack') }}
       labels:
         app: adoption
     spec:
-      {{ custom_spec|default('') }}
+      {{ copy_pods_custom_spec|default('') }}
       containers:
       - image: $MARIADB_IMAGE
         command: [ "sh", "-c", "sleep infinity"]

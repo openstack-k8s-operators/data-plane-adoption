@@ -2,7 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc project {{ osp18_namespace|default('openstack') }}
+    oc project {{ rhoso_namespace|default('openstack') }}
 
 - name: create osp-secret
   ansible.builtin.shell: |
@@ -66,7 +66,7 @@
 
 - name: create tmp directory
   ansible.builtin.command:
-    cmd: mkdir -p ../config/tmp
+    cmd: mkdir -p "{{ dpa_tests_dir |default('..')}}/config/tmp"
 
 - name: template out the controlplane deployment
   ansible.builtin.template:
@@ -74,6 +74,7 @@
     dest: "../config/tmp/test_deployment.yaml"
     mode: '644'
     force: true
+  when: not ospdo_src| bool
 
 - name: when periodic, create OpenStackVersion CR with container overrides
   when:
@@ -85,7 +86,7 @@
     - name: template out the OpenStackVersion deployment with container overrides
       ansible.builtin.template:
         src: openstack_version.j2
-        dest: "../config/openstack_version_overrides.yaml"
+        dest: "{{ dpa_tests_dir |default('..') }}/config/openstack_version_overrides.yaml"
         mode: '644'
         force: true
 
@@ -107,11 +108,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    mkdir -p tmp
-    oc kustomize base > tmp/test_deployment.yaml
-    oc apply -f tmp/test_deployment.yaml
-  args:
-    chdir: "../config"
+    oc apply -f ../config/tmp/test_deployment.yaml
   when: not ospdo_src| bool
 
 - name: wait for services to start up
