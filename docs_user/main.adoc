@@ -4,13 +4,10 @@
 :icons: font
 :compat-mode:
 :doctype: book
-:context: osp
+:context: adoption-rhoso
 
 include::adoption-attributes.adoc[]
 
-ifeval::["{build}" == "downstream"]
-include::rhoso_attributes.adoc[]
-endif::[]
 
 include::assemblies/assembly_rhoso-180-adoption-overview.adoc[leveloffset=+1]
 
