@@ -143,6 +143,24 @@
     $CONTROLLER2_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
     $CONTROLLER3_SSH sudo systemctl stop tripleo_ovn_cluster_northd.service
 
+# If ovn_adoption is done using scenario A (different networks between podified
+# and tripleo deployments) in order to be able to dump OVN database an iptable
+# filter allowing traffic from podified network is needed. Adding the rules
+# no matter the scenario to simplify logic and on a non-scenario-A environment
+# this rule shouldn't harm.
+- name: Add iptables rule to allow podified internalapi trafic to controllers
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    $CONTROLLER1_SSH sudo iptables -I INPUT -s 172.17.1.0/24 -p tcp -m tcp --dport 6641 -m conntrack --ctstate NEW -m comment --comment \'121 OVN DB server and cluster ports for 172.17.1.0/24 ipv4\' -j ACCEPT
+    $CONTROLLER1_SSH sudo iptables -I INPUT -s 172.17.1.0/24 -p tcp -m tcp --dport 6642 -m conntrack --ctstate NEW -m comment --comment \'121 OVN DB server and cluster ports for 172.17.1.0/24 ipv4\' -j ACCEPT
+    $CONTROLLER2_SSH sudo iptables -I INPUT -s 172.17.1.0/24 -p tcp -m tcp --dport 6641 -m conntrack --ctstate NEW -m comment --comment \'121 OVN DB server and cluster ports for 172.17.1.0/24 ipv4\' -j ACCEPT
+    $CONTROLLER2_SSH sudo iptables -I INPUT -s 172.17.1.0/24 -p tcp -m tcp --dport 6642 -m conntrack --ctstate NEW -m comment --comment \'121 OVN DB server and cluster ports for 172.17.1.0/24 ipv4\' -j ACCEPT
+    $CONTROLLER3_SSH sudo iptables -I INPUT -s 172.17.1.0/24 -p tcp -m tcp --dport 6641 -m conntrack --ctstate NEW -m comment --comment \'121 OVN DB server and cluster ports for 172.17.1.0/24 ipv4\' -j ACCEPT
+    $CONTROLLER3_SSH sudo iptables -I INPUT -s 172.17.1.0/24 -p tcp -m tcp --dport 6642 -m conntrack --ctstate NEW -m comment --comment \'121 OVN DB server and cluster ports for 172.17.1.0/24 ipv4\' -j ACCEPT
+
 - name: dump OVN databases using tcp connection
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
