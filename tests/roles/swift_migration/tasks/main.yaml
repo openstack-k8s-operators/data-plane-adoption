@@ -18,7 +18,11 @@
 - name: wait until all pods are ready
   ansible.builtin.shell: |
     {{ oc_header }}
-    oc wait pods --for condition=Ready -l component=swift-storage
+    oc wait pods --for condition=Ready --timeout=60s -l component=swift-storage
+  register: swift_storage_ready_result
+  until: swift_storage_ready_result is success
+  retries: 60
+  delay: 2
 
 - name: set standalone node weight to 0 in swift rings
   ansible.builtin.shell: |
