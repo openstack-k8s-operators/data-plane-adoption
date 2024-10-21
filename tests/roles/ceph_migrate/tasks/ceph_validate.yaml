@@ -52,6 +52,7 @@
       when: pct | float < 100
 
 - name: Validate the Ceph Cluster release
+  when: check_ceph_release | default(false) | bool
   block:
     - name: MonMap
       ansible.builtin.debug:
@@ -60,8 +61,8 @@
 
     - name: ansible.builtin.fail if Ceph <= Quincy
       ansible.builtin.fail:
-        msg: "Ceph version is <= Reef"
-      when: ceph.monmap.min_mon_release_name != "quincy"
+        msg: "Ceph version is != Reef"
+      when: ceph.monmap.min_mon_release_name != "reef"
 
 - name: Mons are in quorum
   block:
