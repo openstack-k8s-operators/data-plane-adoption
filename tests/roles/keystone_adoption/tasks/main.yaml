@@ -69,7 +69,7 @@
       ${BASH_ALIASES[openstack]} service list | awk "/ $service /{ print \$2; }" | xargs -r ${BASH_ALIASES[openstack]} service delete || true
     done
 
-- name: debug token
+- name: Print session test token
   ansible.builtin.debug:
     var: before_adoption_token
 
@@ -77,15 +77,27 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    OS_TOKEN={{ before_adoption_token.stdout }}
-    alias openstack="oc exec -t openstackclient -- openstack"
-    ${BASH_ALIASES[openstack]} endpoint list
+
+    alias openstack="oc exec -t openstackclient -- env -u OS_CLOUD - OS_AUTH_URL={{ auth_url }} OS_AUTH_TYPE=token OS_TOKEN={{ before_adoption_token.stdout }} openstack"
+
+    if ${BASH_ALIASES[openstack]} endpoint list 2>&1 | grep "Failed to validate token"; then
+      exit 1
+    else
+      exit 0
+    fi
+  register: adoption_token_result
+
+- name: Print credentials test token
+  ansible.builtin.debug:
+    var: before_adoption_token
 
 - name: Verify that pre-adoption credential stills the same
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
+
     alias openstack="oc exec -t openstackclient -- openstack"
+
     ${BASH_ALIASES[openstack]} credential show {{ before_adoption_credential.stdout }} -f value -c blob
   register: after_adoption_credential
   failed_when: after_adoption_credential.stdout != 'test'
