@@ -76,13 +76,7 @@ spec:
   rgw_frontend_port: 8090 <3>
   rgw_realm: default
   rgw_zone: default
-  rgw_frontend_ssl_certificate: | <4>
-     -----BEGIN PRIVATE KEY-----
-     ...
-     -----END PRIVATE KEY-----
-     -----BEGIN CERTIFICATE-----
-     ...
-     -----END CERTIFICATE-----
+  rgw_frontend_ssl_certificate: ... <4>
   ssl: true
 ----
 +

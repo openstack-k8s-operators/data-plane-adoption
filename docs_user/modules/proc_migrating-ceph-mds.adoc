@@ -37,7 +37,6 @@ manila_metadata  metadata   152M   141G
   	STANDBY MDS
 mds.controller-0.anwiwd
 mds.controller-1.cwzhog
-MDS version: ceph version 17.2.6-100.el9cp (ea4e3ef8df2cf26540aae06479df031dcfc80343) quincy (stable)
 ----
 
 . Retrieve more detailed information on the Ceph File System (CephFS) MDS status:
