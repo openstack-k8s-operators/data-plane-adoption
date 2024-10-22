@@ -102,13 +102,7 @@ spec:
   monitor_port: 8898
   virtual_interface_networks:
     - <external_network>
-  ssl_cert: |
-     -----BEGIN CERTIFICATE-----
-     ...
-     -----END CERTIFICATE-----
-     -----BEGIN PRIVATE KEY-----
-     ...
-     -----END PRIVATE KEY-----
+  ssl_cert: ...
 ----
 +
 * Replace `<external_network>` with your external network, for example, `10.0.0.0/24`. For more information, see xref:completing-prerequisites-for-migrating-ceph-rgw_ceph-prerequisites[Completing prerequisites for migrating {Ceph} RGW].
