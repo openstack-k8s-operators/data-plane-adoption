@@ -1,2 +1,3 @@
 # manila_backend can be 'cephfs' or 'cephnfs'
 manila_backend: cephfs
+ganesha_default_path: "/etc/ganesha/ganesha.conf"
