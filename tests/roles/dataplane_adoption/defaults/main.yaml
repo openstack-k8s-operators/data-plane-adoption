@@ -270,6 +270,14 @@ dataplane_cr: |
           edpm_ovs_packages:
           - openvswitch3.3
 
+          {% if use_hugepages|bool +%}
+          edpm_default_mounts:
+            - path: /dev/hugepages2M
+              opts: pagesize=2M
+              fstype: hugetlbfs
+              group: hugetlbfs
+          {%+ endif +%}
+
           # ovn-controller settings
           edpm_ovn_bridge_mappings: ["datacentre:{{ neutron_physical_bridge_name }}"]
           edpm_ovn_bridge: br-int

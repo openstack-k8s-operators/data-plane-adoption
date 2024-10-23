@@ -72,6 +72,9 @@ ${BASH_ALIASES[openstack]} image show cirros || \
 # Create flavor
 ${BASH_ALIASES[openstack]} flavor show m1.small || \
     ${BASH_ALIASES[openstack]} flavor create --ram 512 --vcpus 1 --disk 1 --ephemeral 1 m1.small
+if [ "${EDPM_CONFIGURE_HUGEPAGES:-false}" = "true" ] ; then
+    ${BASH_ALIASES[openstack]} flavor set m1.small --property hw:mem_page_size=2MB
+fi
 
 # Create networks
 ${BASH_ALIASES[openstack]} network show private || ${BASH_ALIASES[openstack]} network create private --share
