@@ -34,6 +34,11 @@ test-with-ceph:  ## Launch test suite with ceph
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
 
+test-tripleo-requirements: TEST_OUTFILE := tests/logs/test_tripleo_requirements_out_$(shell date +%FT%T%Z).log
+test-tripleo-requirements:  ## Launch test suite related to the ceph migration
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_CEPH_OVERRIDES) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_tripleo_adoption_requirements.yaml 2>&1 | tee $(TEST_OUTFILE)
+
 test-ceph-migration: TEST_OUTFILE := tests/logs/test_ceph_migration_out_$(shell date +%FT%T%Z).log
 test-ceph-migration:  ## Launch test suite related to the ceph migration
 	mkdir -p tests/logs

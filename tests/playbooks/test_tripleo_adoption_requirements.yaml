@@ -1,0 +1,38 @@
+- name: TripleO adoption requirements
+  hosts: "{{ groups['overcloud'][0] | default([]) }}"
+  gather_facts: true
+  tasks:
+    # Propagate StorageNFS network
+    - name: Propagate Storage NFS network
+      block:
+        - name: Load Ceph data
+          when:
+            - (manila_backend | default("cephfs")) == "cephnfs"
+          ansible.builtin.import_role:
+            name: ceph_migrate
+            tasks_from: ceph_load
+          tags:
+            - ceph_load
+            - manila_adoption
+
+        - name: Propagate Storage NFS network
+          when:
+            - propagate_storage_nfs | bool | default(false)
+            - target_nodes | default([]) | length > 0
+          ansible.builtin.include_role:
+            name: ceph_migrate
+            tasks_from: propagate_storage_nfs
+          loop: "{{ target_nodes }}"
+          tags:
+            - manila_adoption
+
+        # Create the Ceph-NFS cluster
+        - name: Create a ceph nfs cluster
+          when:
+            - (manila_backend | default("cephfs")) == "cephnfs"
+            - ceph_nfs_vip is defined
+          ansible.builtin.include_role:
+            name: ceph_migrate
+            tasks_from: nfs
+          tags:
+            - manila_adoption
