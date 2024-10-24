@@ -56,6 +56,19 @@ ironic_adoption: false
 # Run pre-adoption validation before the deploying
 run_pre_adoption_validation: true
 
+# Supported storage backends for Cinder
+supported_volume_backends: #CUSTOMIZE_THIS
+  - ceph
+  - iscsi
+  - nfs
+  - fc
+
+supported_backup_backends: #CUSTOMIZE_THIS
+  - ceph
+  - s3
+  - nfs
+  - swift
+
 # Whether the adopted node will host compute services
 compute_adoption: true
 
