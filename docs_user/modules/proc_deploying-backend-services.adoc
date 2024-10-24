@@ -6,7 +6,7 @@ Create the `OpenStackControlPlane` custom resource (CR) with the basic back-end 
 
 .Prerequisites
 
-* The cloud that you want to adopt is running, and it is on the {OpenStackShort} {rhos_prev_ver} release.
+* The cloud that you want to adopt is running, and it is on the latest minor version of {OpenStackShort} {rhos_prev_ver}.
 * All control plane and data plane hosts of the source cloud are running, and continue to run throughout the adoption procedure.
 * The `openstack-operator` is deployed, but `OpenStackControlPlane` is
 not deployed.
