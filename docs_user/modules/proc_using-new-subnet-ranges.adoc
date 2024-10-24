@@ -35,9 +35,19 @@ Repeat this configuration for other networks that need to use different subnets 
 . Apply the new configuration to every {OpenStackShort} node:
 +
 ----
-$ openstack overcloud node provision
---stack <stack>
---network_config
+(undercloud)$ openstack overcloud network provision \
+ [--templates <templates_directory> \]
+ --output  <deployment_file> \
+ /home/stack/templates/<networks_definition_file>
+----
++
+----
+(undercloud)$ openstack overcloud node provision \
+ [--templates <templates_directory> \]
+ --stack <stack> \
+ --network-config \
+ --output <deployment_file> \
+ /home/stack/templates/<node_definition_file>
 ----
 +
 [NOTE]
