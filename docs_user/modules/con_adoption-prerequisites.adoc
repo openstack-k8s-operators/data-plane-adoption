@@ -37,6 +37,10 @@ Tools::
 * Install the `oc` command line tool on your workstation.
 * Install the `podman` command line tool on your workstation.
 
+{OpenStackShort} {rhos_prev_ver} release::
+
+* The {OpenStackShort} {rhos_prev_ver} cloud is updated to the latest minor version of the {rhos_prev_ver} release.
+
 {OpenStackShort} {rhos_prev_ver} hosts::
 
 * All control plane and data plane hosts of the {OpenStackShort} {rhos_prev_ver} cloud are up and running, and continue to run throughout the adoption procedure.
