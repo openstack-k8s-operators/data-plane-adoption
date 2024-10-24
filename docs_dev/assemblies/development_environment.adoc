@@ -158,6 +158,8 @@ EDPM_COMPUTE_CEPH_ENABLED=false TLS_ENABLED=true DNS_DOMAIN=ooo.test make standa
 
 This will disable the Ceph deployment, as the CI is not deploying with Ceph.
 
+To configure hugepages, use `EDPM_CONFIGURE_HUGEPAGES=true`.
+
 === Snapshot/revert
 
 When the deployment of the Standalone OpenStack is finished, it's a

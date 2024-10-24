@@ -32,8 +32,12 @@ ${BASH_ALIASES[openstack]} image show cirros || \
     ${BASH_ALIASES[openstack]} image create --container-format bare --disk-format $DISK_FORMAT cirros < /tmp/$RAW
 
 # Create flavor
+HPARGS=" "
+if [ "${EDPM_CONFIGURE_HUGEPAGES:-false}" = "true" ] ; then
+    HPARGS="set huge_pages --property hw:mem_page_size=2MB"
+fi
 ${BASH_ALIASES[openstack]} flavor show m1.small || \
-    ${BASH_ALIASES[openstack]} flavor create --ram 512 --vcpus 1 --disk 1 --ephemeral 1 m1.small
+    ${BASH_ALIASES[openstack]} flavor create $HPARGS --ram 512 --vcpus 1 --disk 1 --ephemeral 1 m1.small
 
 # Create networks
 ${BASH_ALIASES[openstack]} network show private || ${BASH_ALIASES[openstack]} network create private --share
