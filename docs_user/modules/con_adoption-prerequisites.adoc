@@ -39,7 +39,7 @@ Tools::
 
 {OpenStackShort} {rhos_prev_ver} release::
 
-* The {OpenStackShort} {rhos_prev_ver} cloud is updated to the latest patch release.
+* The {OpenStackShort} {rhos_prev_ver} cloud is updated to the latest minor version of the {rhos_prev_ver} release.
 
 {OpenStackShort} {rhos_prev_ver} hosts::
 
