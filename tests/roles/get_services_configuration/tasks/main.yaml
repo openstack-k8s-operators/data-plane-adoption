@@ -34,13 +34,6 @@
         mysqlcheck --all-databases -h "${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" | grep -v OK)
     }
     run_mysqlcheck
-    if [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" != "" ]; then
-      # Try mysql_upgrade to fix mysqlcheck failure
-      MYSQL_UPGRADE=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-      mysql_upgrade -v -h "${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}")
-      # rerun mysqlcheck to check if problem is resolved
-      run_mysqlcheck
-    fi
     echo "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"
   failed_when: _mysqlnok_check.stdout != ''
   register: _mysqlnok_check
