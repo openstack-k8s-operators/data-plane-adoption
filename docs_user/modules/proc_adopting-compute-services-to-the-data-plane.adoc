@@ -81,24 +81,60 @@ EOF
 +
 * If `neutron-sriov-nic-agent` is running on your {compute_service} nodes, ensure that the physical device mappings match the values that are defined in the `OpenStackDataPlaneNodeSet` custom resource (CR). For more information, see xref:pulling-configuration-from-tripleo-deployment_adopt-control-plane[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
 
-* You have defined the shell variables to run the script that runs the fast-forward upgrade:
+* You have defined the shell variables to run the script that runs the upgrade:
 +
 ----
-PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
-CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //'
+$ CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //'
 
-alias openstack="oc exec -t openstackclient -- openstack"
-declare -A computes
-export computes=(
-  ["standalone.localdomain"]="192.168.122.100"
+$ alias openstack="oc exec -t openstackclient -- openstack"
+
+$ DEFAULT_CELL_NAME="cell3" <1>
+$ RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
+
+$ declare -A COMPUTES_CELL1
+$ export COMPUTES_CELL1=( <2>
+  ["standalone.localdomain"]="192.168.122.100" <3>
+  # ... <4>
+)
+$ declare -A COMPUTES_CELL2
+$ export COMPUTES_CELL2=(
   # ...
 )
+$ declare -A COMPUTES_CELL3
+$ export COMPUTES_CELL3=(
+  # ... <5>
+)
+# ...
+
+$ NODESETS=""
+$ for CELL in $(echo $RENAMED_CELLS); do
+  ref="COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
+  eval names=\${!${ref}[@]}
+  [ -z "$names" ] && continue <6>
+  NODESETS="'openstack-${CELL}', $NODESETS"
+done
+$ NODESETS="[${NODESETS%,*}]"
 ----
 +
-** Replace `["standalone.localdomain"]="192.168.122.100"` with the name and IP address of the {compute_service} node.
+<1> The source cloud default cell takes a new `$DEFAULT_CELL_NAME`. In a multi-cell adoption scenario, it may either retain its original name `default`, or become created as a last `cell<X>`.
+<2> For each cell, adjust <["standalone.localdomain"]="192.168.122.100">, and complete `COMPUTES_CELL_<X>` data with the names and IP addresses of the {compute_service} nodes.
+<3> If your deployment has a custom DNS Domain, put it in for FQDN of the nodes. The given values will be used in the dataplane node sets' `spec.nodes.<NODE NAME>.hostName`.
+<4> Assign all {compute_service} nodes from the source cloud `cell1` cell into `COMPUTES_CELL1`, and so on.
+<5> Assign all {compute_service} nodes from the source cloud `default` cell into `openstack-<X>`,
+where `<X>` is the `DEFAULT_CELL_NAME` environment variable value (here, it equals 'cell3').
+<6> Cells not containing compute nodes will be omitted as no node sets for it should be created.
+
 +
 [NOTE]
-Do not set a value for the `CEPH_FSID` parameter if the local storage back end is configured by the {compute_service} for libvirt. The storage back end must match the source cloud storage back end. You cannot change the storage back end during adoption.
+Do not set a value for the `CEPH_FSID` parameter, if the local storage back end is configured by the {compute_service} for libvirt. The storage back end must match the source cloud storage back end. You cannot change the storage back end during adoption.
+
+* A standalone TripleO only creates a default cell, so you should define that instead:
++
+----
+$ DEFAULT_CELL_NAME="cell1"
+$ RENAMED_CELLS="cell1"
+----
++
 
 .Procedure
 
@@ -147,43 +183,35 @@ rm -f id*
 cd -
 ----
 
-. If you use a local storage back end for libvirt, create a `nova-compute-extra-config` service to remove pre-fast-forward workarounds and configure Compute services to use a local storage back end:
+. Create a configuration map which should become common for all cells
+* To configure a local storage back end for libvirt:
+
 +
-[source,yaml]
-----
 $ oc apply -f - <<EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nova-extra-config
+  name: nova-cells-global-config
   namespace: openstack
-data:
-  19-nova-compute-cell1-workarounds.conf: |
+data: <1>
+  99-nova-compute-cells-workarounds.conf: | <2>
     [workarounds]
     disable_compute_service_check_for_ffu=true
 EOF
 ----
 +
+<1> The `data` resources in the `ConfigMap` provide cell-specific configuration files.
+<2> There is a requirement to index the <*.conf> files from '03' to '99', based on its precedence.
+Whereis a <99-*.conf> takes top precedence. Indexes below '03' are reserved for internal use.
+
 [NOTE]
-The secret `nova-cell<X>-compute-config` auto-generates for each
-`cell<X>`. You must specify values for the `nova-cell<X>-compute-config` and `nova-migration-ssh-key` parameters for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
+====
+You should never delete, nor overwrite, the cell1's default `nova-extra-config` configuration map assigned to its default dataplane service 'nova'.
+Adopting a live cloud might require other configurations to carry over for Nova EDPM services stored in that configuration map, without overwriting or losing them.
+====
 
-. If TLS Everywhere is enabled, append the following content to the `OpenStackDataPlaneService` CR:
-+
-[source,yaml]
-----
-  tlsCerts:
-    contents:
-      - dnsnames
-      - ips
-    networks:
-      - ctlplane
-    issuer: osp-rootca-issuer-internal
-  caCerts: combined-ca-bundle
-  edpmServiceType: nova
-----
+* To configure a Ceph back end for libvirt:
 
-. If you use a Ceph back end for libvirt, create a `nova-compute-extra-config` service to remove pre-fast-forward upgrade workarounds and configure Compute services to use a Ceph back end:
 +
 [source,yaml]
 ----
@@ -191,10 +219,10 @@ $ oc apply -f - <<EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nova-extra-config
+  name: nova-cells-global-config
   namespace: openstack
 data:
-  19-nova-compute-cell1-workarounds.conf: |
+  99-nova-compute-cells-workarounds.conf: |
     [workarounds]
     disable_compute_service_check_for_ffu=true
   03-ceph-nova.conf: |
@@ -210,7 +238,75 @@ data:
 EOF
 ----
 +
-The resources in the `ConfigMap` contain cell-specific configurations.
+
+. Create dataplane services for Nova cells to enable pre-upgrade workarounds,
+and to configure the {compute_service} services for a picked storage back end:
+
++
+[source,yaml]
+----
+for CELL in $(echo $RENAMED_CELLS); do
+  oc apply -f - <<EOF
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: nova-$CELL
+spec:
+  dataSources: <1>
+    - secretRef:
+        name: nova-$CELL-compute-config <2>
+    - secretRef:
+        name: nova-migration-ssh-key <3>
+    - configMapRef:
+        name: nova-cells-global-config
+        optional: true
+  playbook: osp.edpm.nova
+  caCerts: combined-ca-bundle
+  edpmServiceType: nova
+  containerImageFields:
+  - NovaComputeImage
+  - EdpmIscsidImage
+EOF
+  done
+----
++
+
+* If TLS Everywhere is enabled, append the following content to the `OpenStackDataPlaneService` CR:
++
+[source,yaml]
+----
+  tlsCerts:
+    contents:
+      - dnsnames
+      - ips
+    networks:
+      - ctlplane
+    issuer: osp-rootca-issuer-internal
+  caCerts: combined-ca-bundle
+  edpmServiceType: nova
+----
++
+<1> To enable a local metadata services for a cell<N>, append a `spec.dataSources.secretRef` to reference
+an additional auto-generated `nova-cell<N>-metadata-neutron-config` secret. You should have also set
+`spec.nova.template.cellTemplates.cell<N>.metadataServiceTemplate.enable` in the `OpenStackControlPlane/openstack` CR.
+<2> The secret `nova-cell<N>-compute-config` auto-generates for each `cell<N>`.
+<3> You must append the `nova-cell<N>-compute-config` and `nova-migration-ssh-key` references for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
+
+* For simple configuration overrides, we do not need a custom dataplane service. However, to reconfigure the cell `cell1` in general,
+the safest option would be always creating a custom service, and a dedicated configuration map for it.
+
+[NOTE]
+The cell `cell1` is already managed with the default `OpenStackDataPlaneService` called `nova`
+and its `nova-extra-config` configuration map. Do not change the default dataplane service 'nova' definition.
+The changes will be lost, when the {rhos_long} operator becomes updated with OLM.
+
+* When a cell spans multiple node sets, you might want to name the custom `OpenStackDataPlaneService` resources like
+`nova-cell1-nfv` and `nova-cell1-enterprise`. Then the auto-generated configmaps would be named
+`nova-cell1-nfv-extra-config` and `nova-cell1-enterprise-extra-config`.
+
+[NOTE]
+Different configurations for nodes in multiple node sets of the same cell are not covered in this guide.
 
 ifeval::["{build}" == "downstream"]
 . Create a secret for the subscription manager and a secret for the Red Hat registry:
@@ -236,18 +332,60 @@ data:
 EOF
 ----
 endif::[]
++
 
-. Deploy the `OpenStackDataPlaneNodeSet` CR:
+[NOTE]
+The `subscription-manager` secret does not need to be referenced in `OpenStackDataPlaneService`'s `spec.dataSources` data.
+It is already passed in via a node-specific `OpenStackDataPlaneNodeSet` data in `spec.nodeTemplate.ansible.ansibleVarsFrom`.
+
+
+. Create the dataplane node sets definitions for each cell:
+
 +
 [source,yaml]
 ----
-$ oc apply -f - <<EOF
+$ declare -A names
+$ for CELL in $(echo $RENAMED_CELLS); do
+  ref="COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
+  eval names=\${!${ref}[@]}
+  [ -z "$names" ] && continue
+  ind=0
+  rm -f computes-$CELL
+  for compute in $names; do
+    ip="${ref}['$compute']"
+    cat >> computes-$CELL << EOF
+    ${compute}:
+      hostName: $compute
+      ansible:
+        ansibleHost: $compute
+      networks: <1>
+      - defaultRoute: true
+        fixedIP: ${!ip}
+        name: ctlplane
+        subnetName: subnet1
+      - name: internalapi
+        subnetName: subnet1
+      - name: storage
+        subnetName: subnet1
+      - name: tenant
+        subnetName: subnet1
+EOF
+    ind=$(( ind + 1 ))
+  done
+
+  test -f computes-$CELL || continue
+  if [ "$CELL" = "cell1" ]; then
+    GLOBAL="- ssh-known-hosts"
+  else
+    GLOBAL=" "
+  fi
+  cat > nodeset-${CELL}.yaml <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneNodeSet
 metadata:
-  name: openstack
+  name: openstack-$CELL <2>
 spec:
-  tlsEnabled: false <1>
+  tlsEnabled: false <3>
   networkAttachments:
       - ctlplane
   preProvisioned: true
@@ -258,36 +396,22 @@ spec:
     - validate-network
     - install-os
     - configure-os
-    - ssh-known-hosts
+    $GLOBAL
     - run-os
     - reboot-os
     - install-certs
-    - libvirt
-    - nova
     - ovn
     - neutron-metadata
-    - telemetry
+    - libvirt
+    - nova-$CELL
+    - telemetry <4>
   env:
     - name: ANSIBLE_CALLBACKS_ENABLED
       value: "profile_tasks"
     - name: ANSIBLE_FORCE_COLOR
       value: "True"
-  nodes:
-    standalone:
-      hostName: standalone <2>
-      ansible:
-        ansibleHost: ${computes[standalone.localdomain]}
-      networks:
-      - defaultRoute: true
-        fixedIP: ${computes[standalone.localdomain]}
-        name: ctlplane
-        subnetName: subnet1
-      - name: internalapi
-        subnetName: subnet1
-      - name: storage
-        subnetName: subnet1
-      - name: tenant
-        subnetName: subnet1
+    - name: ANSIBLE_VERBOSITY
+      value: 3
   nodeTemplate:
     ansibleSSHPrivateKeySecret: dataplane-adoption-secret
     ansible:
@@ -343,7 +467,7 @@ endif::[]
         #
         # These vars are for the network config templates themselves and are
         # considered EDPM network defaults.
-        neutron_physical_bridge_name: br-ctlplane
+        neutron_physical_bridge_name: br-ctlplane <5>
         neutron_public_interface_name: eth0
 
         # edpm_nodes_validation
@@ -351,7 +475,7 @@ endif::[]
         edpm_nodes_validation_validate_gateway_icmp: false
 
         # edpm ovn-controller configuration
-        edpm_ovn_bridge_mappings: <bridge_mappings> <3>
+        edpm_ovn_bridge_mappings: <bridge_mappings> <6>
         edpm_ovn_bridge: br-int
         edpm_ovn_encap_type: geneve
         ovn_monitor_all: true
@@ -407,69 +531,99 @@ endif::[]
         # Do not attempt OVS major upgrades here
         edpm_ovs_packages:
         - openvswitch3.1
+  nodes:
 EOF
+  cat computes-$CELL >> nodeset-${CELL}.yaml
+done
 ----
 +
-<1> If TLS Everywhere is enabled, change `spec:tlsEnabled` to `true`.
-<2> If your deployment has a custom DNS Domain, modify the `spec:nodes:[NODE NAME]:hostName` to use fqdn for the node.
-<3> Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
+<1> The networks composition must match the source cloud configuration to avoid dataplane connectivity downtime. The ctlplane network must come first.
+<2> Use node sets names, like `openstack-cell1`, `openstack-cell2`. Only create node sets for cells containing compute nodes.
+<3> If TLS Everywhere is enabled, change `spec.tlsEnabled` to `true`.
+<4> If not adopting the telemetry services, omit it from the services list.
+<5> The bridge name and other OVN and Neutron specific values must match the source cloud configuration to avoid dataplane connectivity downtime.
+<6> Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
 
-. Ensure that you use the same `ovn-controller` settings in the `OpenStackDataPlaneNodeSet` CR that you used in the {compute_service} nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
+[NOTE]
+The global service `ssh-known-hosts` may only be defined for a single node set.
+
+* Ensure that you use the same `ovn-controller` settings in the `OpenStackDataPlaneNodeSet` CR that you used in the {compute_service} nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
 +
 ----
-ovs-vsctl list Open .
+$ ovs-vsctl list Open .
 ...
 external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings=<bridge_mappings>, ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
 ...
 ----
 +
-* Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
+Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`
+
+. Deploy the `OpenStackDataPlaneNodeSet` CRs for each Nova compute cell
++
+----
+$ for CELL in $(echo $RENAMED_CELLS); do
+  test -f nodeset-${CELL}.yaml || continue
+  oc apply -f nodeset-${CELL}.yaml
+done
+----
 
 . If you use a Ceph back end for {block_storage_first_ref}, prepare the adopted data plane workloads:
 +
 [source,yaml]
 ----
-$ oc patch osdpns/openstack --type=merge --patch "
-spec:
-  services:
-    - bootstrap
-    - download-cache
-    - configure-network
-    - validate-network
-    - install-os
-    - configure-os
-    - ssh-known-hosts
-    - run-os
-    - reboot-os
-    - ceph-client
-    - install-certs
-    - ovn
-    - neutron-metadata
-    - libvirt
-    - nova
-    - telemetry
-  nodeTemplate:
-    extraMounts:
-    - extraVolType: Ceph
-      volumes:
-      - name: ceph
-        secret:
-          secretName: ceph-conf-files
-      mounts:
-      - name: ceph
-        mountPath: "/etc/ceph"
-        readOnly: true
-"
+$ for CELL in $(echo $RENAMED_CELLS); do
+  test -f nodeset-${CELL}.yaml || continue
+  if [ "$CELL" = "cell1" ]; then
+    GLOBAL="- ssh-known-hosts"
+  else
+    GLOBAL=" "
+  fi
+
+  oc patch osdpns/openstack-$CELL --type=merge --patch "
+  spec:
+    services:
+      - bootstrap
+      - download-cache
+      - configure-network
+      - validate-network
+      - install-os
+      - ceph-hci-pre
+      - configure-os
+      $GLOBAL
+      - run-os
+      - reboot-os
+      - ceph-client
+      - install-certs
+      - ovn
+      - neutron-metadata
+      - libvirt
+      - nova-$CELL
+      - telemetry
+    nodeTemplate:
+      extraMounts:
+      - extraVolType: Ceph
+        volumes:
+        - name: ceph
+          secret:
+            secretName: ceph-conf-files
+        mounts:
+        - name: ceph
+          mountPath: "/etc/ceph"
+          readOnly: true
+  "
+done
 ----
 +
 [NOTE]
-Ensure that you use the same list of services from the original `OpenStackDataPlaneNodeSet` CR, except for the inserted `ceph-client` service.
+Ensure that you use the same list of services from the original `OpenStackDataPlaneNodeSet` CR, except for the inserted `ceph-client` and `ceph-hci-pre` services.
 
 . Optional: Enable `neutron-sriov-nic-agent` in the `OpenStackDataPlaneNodeSet` CR:
 +
 [source,yaml]
 ----
-$ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
+$ for CELL in $(echo $RENAMED_CELLS); do
+  test -f nodeset-${CELL}.yaml || continue
+  oc patch openstackdataplanenodeset openstack-$CELL --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
@@ -486,20 +640,23 @@ $ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
     "op": "add",
     "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_hypervisors",
     "value": "dummy-dev:standalone.localdomain"
-  }
-]'
+  }]'
+  done
 ----
 
 . Optional: Enable `neutron-dhcp` in the `OpenStackDataPlaneNodeSet` CR:
 +
 [source,yaml]
 ----
-$ oc patch openstackdataplanenodeset openstack --type='json' --patch='[
+$ for CELL in $(echo $RENAMED_CELLS); do
+  test -f nodeset-${CELL}.yaml || continue
+  oc patch openstackdataplanenodeset openstack-$CELL --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
     "value": "neutron-dhcp"
   }]'
+done
 ----
 +
 [NOTE]
@@ -543,8 +700,7 @@ kind: OpenStackDataPlaneDeployment
 metadata:
   name: openstack-pre-adoption
 spec:
-  nodeSets:
-  - openstack
+  nodeSets: $NODESETS
   servicesOverride:
   - pre-adoption-validation
 EOF
@@ -606,8 +762,7 @@ kind: OpenStackDataPlaneDeployment
 metadata:
   name: tripleo-cleanup
 spec:
-  nodeSets:
-  - openstack
+  nodeSets: $NODESETS
   servicesOverride:
   - tripleo-cleanup
 EOF
@@ -623,8 +778,7 @@ kind: OpenStackDataPlaneDeployment
 metadata:
   name: openstack
 spec:
-  nodeSets:
-  - openstack
+  nodeSets: $NODESETS
 EOF
 ----
 +
@@ -662,6 +816,12 @@ $ oc exec openstackclient -- openstack network agent list
 | a4f1b584-16f1-4937-b2b0-28102a3f6eaa | OVN Controller agent         | standalone.localdomain |                   | :-)   | UP    | ovn-controller             |
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
 ----
+
+[NOTE]
+====
+After the data plane adoption completed, {OpenStackPreviousInstaller} cell controllers should be decomissioned.
+To become new cell compute nodes, they must be re-provisioned, then scaled-out, or added into additional node sets of corresponding cells.
+====
 
 .Next steps
 

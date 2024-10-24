@@ -187,6 +187,102 @@ https://openstack-k8s-operators.github.io/data-plane-adoption/dev/#_reset_the_en
 
 '''
 
+== Deploying TripleO With Multiple Cells
+
+A TripleO Standalone setup creates only a single Nova v2 cell, with a combined controller and compute services on it.
+In order to deploy multiple compute cells for adoption testing (without Ceph), create a 5 VMs, with the following requirements met:
+
+* Named `edpm-compute-0` .. `edpm-compute-4`.
+* Running RHEL 9.2, with RHOSP 17.1 repositiries configured.
+* Can login via SSH without a password as the root user, from the hypervisor host.
+* User `zuul` is created, and can sudo without a password, and login via SSH without a password, from the hypervisor host.
+* User `zuul` can login to `edpm-compute-1`, `edpm-compute-2`, `edpm-compute-3`, `edpm-compute-4` nodes via SSH without a password, from the `edpm-compute-0` node,
+by using the generated `/home/zuul/.ssh/id_rsa` private key.
+* RedHat registry credentials are exported on the hypervisor host.
+
+Adjust the following commands for a repositories configuration tool of your choice:
+
+[,bash]
+----
+export RH_REGISTRY_USER="<insert your registry.redhat.io user>"
+export RH_REGISTRY_PWD="<insert your registry.redhat.io password>"
+
+DEFAULT_CELL_NAME="cell3" <1>
+RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
+
+cd ~/install_yamls/devsetup
+cat <<EOF > /tmp/osp17_repos
+# Use a tool of your choice:
+# 1. Rhos-release example steps are only available from the internal RedHat network
+# ... skipping download and install steps ...
+# sudo rhos-release -x
+# sudo rhos-release 17.1
+
+# 2. Subscription-manager example steps require an active registration
+# subscription-manager release --set=9.2
+# subscription-manager repos --disable=*
+# sudo subscription-manager repos \
+#   --enable=rhel-9-for-x86_64-baseos-eus-rpms \
+#   --enable=rhel-9-for-x86_64-appstream-eus-rpms \
+#   --enable=rhel-9-for-x86_64-highavailability-eus-rpms \
+#   --enable=openstack-17.1-for-rhel-9-x86_64-rpms \
+#   --enable=rhceph-6-tools-for-rhel-9-x86_64-rpms \
+#   --enable=fast-datapath-for-rhel-9-x86_64-rpms
+
+# firstboot commands
+sudo dnf install -y git curl wget podman python3-tripleoclient openvswitch3.1 NetworkManager-initscripts-updown \
+sudo dnf install -y util-linux cephadm driverctl lvm2 jq nftables iptables-nft openstack-heat-agents \
+  os-net-config python3-libselinux python3-pyyaml rsync tmpwatch sysstat iproute-tc
+sudo dnf install -y puppet-tripleo puppet-headless
+sudo dnf install -y openstack-selinux
+EOF
+
+export CENTOS_9_STREAM_URL=<insert url to rhel-guest-image-9.2.x86_64.qcow2>
+export NTP_SERVER=<insert ntp server of your choice>
+
+export MANILA_ENABLED=false
+export EDPM_COMPUTE_CEPH_ENABLED=false
+export EDPM_COMPUTE_CEPH_NOVA=false
+export EDPM_COMPUTE_CELLS=3
+
+export STANDALONE_EXTRA_CMD="bash -c 'echo \"$RH_REGISTRY_PWD\" > ~/authfile; chmod 0600 ~/authfile; sudo /bin/podman login registry.redhat.io -u \"$RH_REGISTRY_USER\" --password-stdin < ~/authfile'"
+export EDPM_FIRSTBOOT_EXTRA=/tmp/osp17_repos
+export EDPM_TOTAL_NODES=1
+export SKIP_TRIPLEO_REPOS=false
+export EDPM_COMPUTE_NETWORK_IP=192.168.122.1
+export HOST_PRIMARY_RESOLV_CONF_ENTRY=192.168.122.1
+export BASE_DISK_FILENAME="rhel-9-base.qcow2"
+
+EDPM_COMPUTE_SUFFIX=0 IP=192.168.122.100 EDPM_COMPUTE_DISK_SIZE=10 EDPM_COMPUTE_RAM=9 EDPM_COMPUTE_VCPUS=2 make edpm_compute
+EDPM_COMPUTE_SUFFIX=1 IP=192.168.122.103 EDPM_COMPUTE_DISK_SIZE=17 EDPM_COMPUTE_RAM=12 EDPM_COMPUTE_VCPUS=4 make edpm_compute
+EDPM_COMPUTE_SUFFIX=2 IP=192.168.122.106 EDPM_COMPUTE_DISK_SIZE=14 EDPM_COMPUTE_RAM=12 EDPM_COMPUTE_VCPUS=4 make edpm_compute
+EDPM_COMPUTE_SUFFIX=3 IP=192.168.122.107 EDPM_COMPUTE_DISK_SIZE=12 EDPM_COMPUTE_RAM=4 EDPM_COMPUTE_VCPUS=2 make edpm_compute
+EDPM_COMPUTE_SUFFIX=4 IP=192.168.122.109 EDPM_COMPUTE_DISK_SIZE=16 EDPM_COMPUTE_RAM=12 EDPM_COMPUTE_VCPUS=4 make edpm_compute
+
+for n in 0 3 6 7 9; do
+    # w/a bad packages installation, if done by firstboot - resulting in rpm -V check failures in tripleo-ansible
+    ssh -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        root@192.168.122.10${n} dnf install -y openstack-selinux ';' \
+        dnf reinstall -y openstack-selinux
+    ssh -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        root@192.168.122.10${n} useradd --create-home --shell /bin/bash --groups root zuul ';' \
+        mkdir -p /home/zuul/.ssh
+    scp -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.10${n}:/home/zuul/.ssh/id_rsa
+    ssh -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        root@192.168.122.10${n} cp /root/.ssh/authorized_keys /home/zuul/.ssh/authorized_keys
+    ssh -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        root@192.168.122.10${n} chown zuul: /home/zuul/.ssh/*
+    ssh -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        root@192.168.122.10${n} echo "zuul ALL=NOPASSWD:ALL" '>' /etc/sudoers.d/zuul
+done
+
+make tripleo_deploy
+
+for n in 0 1 2 3 4; do make standalone_snapshot EDPM_COMPUTE_SUFFIX=$n; done
+----
+<1> The source cloud default cell takes a new `$DEFAULT_CELL_NAME`. In a multi-cell adoption scenario, it may either retain its original name `default`, or become created as a last `cell<X>`.
+
 == Network routing
 
 Route VLAN20 to have access to the MariaDB cluster:
@@ -219,8 +315,10 @@ installing the package and copying the configuration file from the virtual machi
 
 [,bash]
 ----
-alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=standalone openstack"
+OS_CLOUD_NAME=standalone
+alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=$OS_CLOUD_NAME openstack"
 ----
+For a multi-cell environment, set `OS_CLOUD_NAME` to `overcloud`.
 
 === Virtual machine steps
 
@@ -340,15 +438,28 @@ make openstack
 
 == Performing the adoption procedure
 
-To simplify the adoption procedure, copy the deployment passwords that
+To simplify the adoption procedure with additional cells, copy and rename the deployment passwords that
 you use in copy the deployment passwords that you use in the
 https://openstack-k8s-operators.github.io/data-plane-adoption/user/#deploying-backend-services_migrating-databases[backend
 services deployment phase of the data plane adoption].
 
+For a single-cell standalone TripleO deployment:
 [,bash]
 ----
-scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100:/root/tripleo-standalone-passwords.yaml ~/
+scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100:/root/tripleo-standalone-passwords.yaml ~/overcloud-passwords.yaml
 ----
+
+Further on, this password is going to be referenced as `TRIPLEO_PASSWORDS[default]` for a `default` cell name, in terms of TripleO.
+
+For a source cloud deployment with multiple stacks, change the above command to these:
+[,bash]
+----
+scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa zuul@192.168.122.100:overcloud-deploy/overcloud/overcloud-passwords.yaml ~/
+scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa zuul@192.168.122.100:overcloud-deploy/cell1/cell1-passwords.yaml ~/
+scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa zuul@192.168.122.100:overcloud-deploy/cell2/cell2-passwords.yaml ~/
+----
+Note that all compute cells of the source cloud always share the same database and messaging passwords.
+On the contrary, a generic split-stack topology allows using different passwords files for its stacks.
 
 The development environment is now set up, you can go to the https://openstack-k8s-operators.github.io/data-plane-adoption/[Adoption
 documentation]
@@ -366,8 +477,10 @@ Delete the data-plane and control-plane resources from the CRC vm
 
 [,bash]
 ----
-oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack
-oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack-nova-compute-ffu
+for CELL in $(echo $RENAMED_CELLS); do
+  oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack-$CELL
+  oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack-nova-compute-ffu-$CELL
+done
 oc delete --ignore-not-found=true --wait=false openstackcontrolplane/openstack
 oc patch openstackcontrolplane openstack --type=merge --patch '
 metadata:
@@ -386,12 +499,19 @@ oc delete --wait=false pod mariadb-copy-data || true
 oc delete secret osp-secret || true
 ----
 
-Revert the standalone vm to the snapshotted state
+Revert the standalone vm(s) to the snapshotted state
 
 [,bash]
 ----
 cd ~/install_yamls/devsetup
 make standalone_revert
+----
+
+For a multi-cell deployment, change the above command to these:
+[,bash]
+----
+cd ~/install_yamls/devsetup
+for n in 0 1 2 3 4; do make standalone_revert EDPM_COMPUTE_SUFFIX=$n; done
 ----
 
 Clean up and initialize the storage PVs in CRC vm
@@ -400,7 +520,12 @@ Clean up and initialize the storage PVs in CRC vm
 ----
 cd ..
 for i in {1..3}; do make crc_storage_cleanup crc_storage && break || sleep 5; done
+for CELL in $(echo $RENAMED_CELLS); do
+   oc delete pvc mysql-db-openstack-$CELL-galera-0 --ignore-not-found=true
+   oc delete pvc persistence-rabbitmq-$CELL-server-0 --ignore-not-found=true
+done
 ----
+Use indexes like `*-0`, `*-1` based on the replica counts configured in `oscp/openstack` CR.
 
 '''
 

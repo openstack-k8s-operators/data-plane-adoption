@@ -42,12 +42,9 @@ ADMIN_PASSWORD=SomePassword
 To use the existing {OpenStackShort} deployment password:
 +
 ----
-ifeval::["{build}" != "downstream"]
-ADMIN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
-endif::[]
-ifeval::["{build}" == "downstream"]
-ADMIN_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
-endif::[]
+declare -A TRIPLEO_PASSWORDS
+TRIPLEO_PASSWORDS[default]="$HOME/overcloud-passwords.yaml"
+ADMIN_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
 ----
 * Set the service password variables to match the original deployment.
 Database passwords can differ in the control plane environment, but
@@ -56,38 +53,21 @@ you must synchronize the service account passwords.
 For example, in developer environments with {OpenStackPreviousInstaller} Standalone, the passwords can be extracted:
 +
 ----
-ifeval::["{build}" != "downstream"]
-AODH_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' AodhPassword:' | awk -F ': ' '{ print $2; }')
-BARBICAN_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' BarbicanPassword:' | awk -F ': ' '{ print $2; }')
-CEILOMETER_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CeilometerPassword:' | awk -F ': ' '{ print $2; }')
-CINDER_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' CinderPassword:' | awk -F ': ' '{ print $2; }')
-GLANCE_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' GlancePassword:' | awk -F ': ' '{ print $2; }')
-HEAT_AUTH_ENCRYPTION_KEY=$(cat ~/tripleo-standalone-passwords.yaml | grep ' HeatAuthEncryptionKey:' | awk -F ': ' '{ print $2; }')
-HEAT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' HeatPassword:' | awk -F ': ' '{ print $2; }')
-IRONIC_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' IronicPassword:' | awk -F ': ' '{ print $2; }')
-MANILA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' ManilaPassword:' | awk -F ': ' '{ print $2; }')
-NEUTRON_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NeutronPassword:' | awk -F ': ' '{ print $2; }')
-NOVA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' NovaPassword:' | awk -F ': ' '{ print $2; }')
-OCTAVIA_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' OctaviaPassword:' | awk -F ': ' '{ print $2; }')
-PLACEMENT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' PlacementPassword:' | awk -F ': ' '{ print $2; }')
-SWIFT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' SwiftPassword:' | awk -F ': ' '{ print $2; }')
-endif::[]
-ifeval::["{build}" == "downstream"]
-AODH_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' AodhPassword:' | awk -F ': ' '{ print $2; }')
-BARBICAN_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' BarbicanPassword:' | awk -F ': ' '{ print $2; }')
-CEILOMETER_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' CeilometerPassword:' | awk -F ': ' '{ print $2; }')
-CINDER_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' CinderPassword:' | awk -F ': ' '{ print $2; }')
-GLANCE_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' GlancePassword:' | awk -F ': ' '{ print $2; }')
-HEAT_AUTH_ENCRYPTION_KEY=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' HeatAuthEncryptionKey:' | awk -F ': ' '{ print $2; }')
-HEAT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' HeatPassword:' | awk -F ': ' '{ print $2; }')
-IRONIC_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' IronicPassword:' | awk -F ': ' '{ print $2; }')
-MANILA_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' ManilaPassword:' | awk -F ': ' '{ print $2; }')
-NEUTRON_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' NeutronPassword:' | awk -F ': ' '{ print $2; }')
-NOVA_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' NovaPassword:' | awk -F ': ' '{ print $2; }')
-OCTAVIA_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' OctaviaPassword:' | awk -F ': ' '{ print $2; }')
-PLACEMENT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' PlacementPassword:' | awk -F ': ' '{ print $2; }')
-SWIFT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' SwiftPassword:' | awk -F ': ' '{ print $2; }')
-endif::[]
+AODH_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' AodhPassword:' | awk -F ': ' '{ print $2; }')
+BARBICAN_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' BarbicanPassword:' | awk -F ': ' '{ print $2; }')
+CEILOMETER_METERING_SECRET=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' CeilometerMeteringSecret:' | awk -F ': ' '{ print $2; }')
+CEILOMETER_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' CeilometerPassword:' | awk -F ': ' '{ print $2; }')
+CINDER_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' CinderPassword:' | awk -F ': ' '{ print $2; }')
+GLANCE_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' GlancePassword:' | awk -F ': ' '{ print $2; }')
+HEAT_AUTH_ENCRYPTION_KEY=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' HeatAuthEncryptionKey:' | awk -F ': ' '{ print $2; }')
+HEAT_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' HeatPassword:' | awk -F ': ' '{ print $2; }')
+IRONIC_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' IronicPassword:' | awk -F ': ' '{ print $2; }')
+MANILA_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' ManilaPassword:' | awk -F ': ' '{ print $2; }')
+NEUTRON_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' NeutronPassword:' | awk -F ': ' '{ print $2; }')
+NOVA_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' NovaPassword:' | awk -F ': ' '{ print $2; }')
+OCTAVIA_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' OctaviaPassword:' | awk -F ': ' '{ print $2; }')
+PLACEMENT_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' PlacementPassword:' | awk -F ': ' '{ print $2; }')
+SWIFT_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' SwiftPassword:' | awk -F ': ' '{ print $2; }')
 ----
 
 .Procedure
@@ -271,12 +251,19 @@ spec:
       openstack:
         secret: osp-secret
         replicas: 3
-        storageRequest: 500M
+        storageRequest: 5G
       openstack-cell1:
         secret: osp-secret
         replicas: 3
-        storageRequest: 500M
-
+        storageRequest: 5G
+      openstack-cell2:
+        secret: osp-secret
+        replicas: 1
+        storageRequest: 5G
+      openstack-cell3:
+        secret: osp-secret
+        replicas: 1
+        storageRequest: 5G
   memcached:
     enabled: true
     templates:
@@ -324,6 +311,8 @@ spec:
             spec:
               type: LoadBalancer
       rabbitmq-cell1:
+        persistence:
+          storage: 1G
         override:
           service:
             metadata:
@@ -332,7 +321,28 @@ spec:
                 metallb.universe.tf/loadBalancerIPs: 172.17.0.86
             spec:
               type: LoadBalancer
-
+      rabbitmq-cell2:
+        persistence:
+          storage: 1G
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.87
+            spec:
+              type: LoadBalancer
+      rabbitmq-cell3:
+        persistence:
+          storage: 1G
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.88
+            spec:
+              type: LoadBalancer
   telemetry:
     enabled: false
 
@@ -350,13 +360,25 @@ EOF
 +
 <1> Select an existing storage class in your {OpenShiftShort} cluster.
 
+This example provides required infrastructure database and messaging services for a 3 compute cells
+named `cell1`, `cell2`, and `cell3`. Adjust the names, counts, IP addresses, and numbers,
+like `replicas`, `storage`, or `storageRequest`, as needed.
+
 .Verification
 
-. Verify that MariaDB is running:
+* Verify that MariaDB and RabbitMQ are running, for all defined cells:
 +
 ----
-$ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}'
-$ oc get pod openstack-cell1-galera-0 -o jsonpath='{.status.phase}{"\n"}'
+$ RENAMED_CELLS="cell1 cell2 cell3"
+$ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
+$ oc get pod rabbitmq-server-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
+$ for CELL in $(echo $RENAMED_CELLS); do
+    oc get pod openstack-$CELL-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
+    oc get pod rabbitmq-$CELL-server-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
+done
 ----
+
+Futher on, we will be referring to the given cells names via an environment
+variable `RENAMED_CELLS`.
 
 . Verify that you can access the `OpenStackClient` pod. For more information, see link:{defaultURL}/maintaining_the_red_hat_openstack_services_on_openshift_deployment/assembly_accessing-the-rhoso-cloud#proc_accessing-the-OpenStackClient-pod_cloud-access-admin[Accessing the OpenStackClient pod] in _Maintaining the {rhos_long_noacro} deployment_.

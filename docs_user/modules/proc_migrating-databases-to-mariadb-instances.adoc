@@ -19,16 +19,6 @@ Migrate your databases from the original {rhos_prev_long} ({OpenStackShort}) dep
 * Define the following shell variables. Replace the following example values with values that are correct for your environment:
 +
 ----
-PODIFIED_MARIADB_IP=$(oc get svc --selector "mariadb/name=openstack" -ojsonpath='{.items[0].spec.clusterIP}')
-PODIFIED_CELL1_MARIADB_IP=$(oc get svc --selector "mariadb/name=openstack-cell1" -ojsonpath='{.items[0].spec.clusterIP}')
-PODIFIED_DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
-
-# The CHARACTER_SET and collation should match the source DB
-# if the do not then it will break foreign key relationships
-# for any tables that are created in the future as part of db sync
-CHARACTER_SET=utf8
-COLLATION=utf8_general_ci
-
 ifeval::["{build}" != "downstream"]
 STORAGE_CLASS=crc-csi-hostpath-provisioner
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
@@ -37,29 +27,105 @@ ifeval::["{build}" == "downstream"]
 STORAGE_CLASS=local-storage
 MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
 endif::[]
-# Replace with your environment's MariaDB Galera cluster VIP and backend IPs:
-SOURCE_MARIADB_IP=172.17.0.2
-declare -A SOURCE_GALERA_MEMBERS
-SOURCE_GALERA_MEMBERS=(
+
+CELLS="default cell1 cell2"
+DEFAULT_CELL_NAME="cell3"
+RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
+
+# The CHARACTER_SET and collation should match the source DB
+# if the do not then it will break foreign key relationships
+# for any tables that are created in the future as part of db sync
+CHARACTER_SET=utf8
+COLLATION=utf8_general_ci
+
+declare -A PODIFIED_DB_ROOT_PASSWORD
+for CELL in $(echo "super $RENAMED_CELLS"); do
+  PODIFIED_DB_ROOT_PASSWORD[$CELL]=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+done
+
+declare -A PODIFIED_MARIADB_IP
+for CELL in $(echo "super $RENAMED_CELLS"); do
+  if [ "$CELL" = "super" ]; then
+    PODIFIED_MARIADB_IP[$CELL]=$(oc get svc --selector "mariadb/name=openstack" -ojsonpath='{.items[0].spec.clusterIP}')
+  else
+    PODIFIED_MARIADB_IP[$CELL]=$(oc get svc --selector "mariadb/name=openstack-$CELL" -ojsonpath='{.items[0].spec.clusterIP}')
+  fi
+done
+
+declare -A TRIPLEO_PASSWORDS
+for CELL in $(echo $CELLS); do
+  if [ "$CELL" = "default" ]; then
+    TRIPLEO_PASSWORDS[default]="$HOME/overcloud-passwords.yaml"
+  else
+    # in a split-stack source cloud, it should take a stack-specific passwords file instead
+    TRIPLEO_PASSWORDS[$CELL]="$HOME/overcloud-passwords.yaml"
+  fi
+done
+
+declare -A SOURCE_DB_ROOT_PASSWORD
+for CELL in $(echo $CELLS); do
+  SOURCE_DB_ROOT_PASSWORD[$CELL]=$(cat ${TRIPLEO_PASSWORDS[$CELL]} | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
+done
+
+declare -A SOURCE_MARIADB_IP
+SOURCE_MARIADB_IP[default]=*<galera cluster VIP>*
+SOURCE_MARIADB_IP[cell1]=*<galera cell1 cluster VIP>*
+SOURCE_MARIADB_IP[cell2]=*<galera cell2 cluster VIP>*
+# ...
+
+declare -A SOURCE_GALERA_MEMBERS_DEFAULT
+SOURCE_GALERA_MEMBERS_DEFAULT=(
   ["standalone.localdomain"]=172.17.0.100
+  # [...]=...
+)
+declare -A SOURCE_GALERA_MEMBERS_CELL1
+SOURCE_GALERA_MEMBERS_CELL1=(
   # ...
 )
-ifeval::["{build}" != "downstream"]
-SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
-endif::[]
-ifeval::["{build}" == "downstream"]
-SOURCE_DB_ROOT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
+declare -A SOURCE_GALERA_MEMBERS_CELL2
+SOURCE_GALERA_MEMBERS_CELL2=(
+  # ...
 )
-endif::[]
+# ...
 ----
 +
-To get the value to set `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller node:
+Here, `CELLS` and `RENAMED_CELLS` represent changes that are going to be made
+after importing databases: the `default` cell takes a new name from `DEFAULT_CELL_NAME`.
+In a multi-cell adoption scenario, it may retain its original 'default' name as well.
+
+Note that the `super` is not a cell, but the top-scope Nova
+API "upcall" database instance. A super conductor connects to that database.
+In this guide, the upcall and cells' databases are going to use the same password
+defined in `osp-secret`. Old passwords are only needed to prepare the data exports.
+
+To get the values for `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller and CellController nodes:
 +
 ----
-$ grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep bind
+$ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep bind
 ----
 
+To get the values for `SOURCE_GALERA_MEMBERS_*`, query the puppet-generated configurations in a Controller and CellController nodes:
++
+----
+$ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep server
+----
+
+The source cloud always uses the same password for cells' databases by design.
+For that reason, we chose to use the same passwords file for all cells' stacks.
+There is a split-stack topology, however, that allows using different passwords
+files for each stack.
+
 * Prepare the MariaDB adoption helper pod:
+
+
+. Create a temporary folder to store the adoption helper pod. Choose storage requests that fit the MySQL database size:
+A standalone TripleO only creates a 'default' cell, which should be the only `CELLS` value for such a case
+(and `DEFAULT_CELL_NAME` should be `cell1`).
+
+** For each cell defined in `CELLS`
+*** Replace `["standalone.localdomain"]="172.17.0.100"`, and complete `SOURCE_GALERA_MEMBERS_*` with the names of MariaDB Galera cluster members and its IP address.
+*** Replace `SOURCE_MARIADB_IP[*]= ...`, and complete the records lists for the cell names and VIP addresses of MariaDB Galera clusters.
+*** Replace `SOURCE_GALERA_MEMBERS_*[*]= ...`, and complete the records lists for the cell names and IP addresses of MariaDB Galera cluster members.
 
 . Create a temporary volume claim and a pod for the database data copy. Edit the volume claim storage request if necessary, to give it enough space for the overcloud databases:
 +
@@ -118,106 +184,128 @@ $ oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
 
 .Procedure
 
-. Check that the source Galera database cluster members are online and synced:
+. Check that the source Galera database cluster(s) members are online and synced:
 +
 ----
-for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
-  echo "Checking for the database node $i WSREP status Synced"
-  oc rsh mariadb-copy-data mysql \
-    -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" \
-    -e "show global status like 'wsrep_local_state_comment'" | \
-    grep -qE "\bSynced\b"
+for CELL in $(echo $CELLS); do
+  MEMBERS=SOURCE_GALERA_MEMBERS_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')[@]
+  for i in "${!MEMBERS}"; do
+    echo "Checking for the database node $i WSREP status Synced"
+    oc rsh mariadb-copy-data mysql \
+      -h "$i" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" \
+      -e "show global status like 'wsrep_local_state_comment'" | \
+      grep -qE "\bSynced\b"
+  done
 done
 ----
++
+Each additional Nova v2 cell runs a dedicated Galera database cluster, so the checking is done for all of it.
 
 . Get the count of source databases with the `NOK` (not-OK) status:
 +
 ----
-$ oc rsh mariadb-copy-data mysql -h "${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" -e "SHOW databases;"
+for CELL in $(echo $CELLS); do
+  oc rsh mariadb-copy-data mysql -h "${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e "SHOW databases;"
+end
 ----
 
 . Check that `mysqlcheck` had no errors:
 +
 ----
-. ~/.source_cloud_exported_variables
-test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ] && echo "OK" || echo "CHECK FAILED"
+$ for CELL in $(echo $CELLS); do
+  set +u
+  . ~/.source_cloud_exported_variables_$CELL
+  set -u
+done
+$ test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "x$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = "x " ] && echo "OK" || echo "CHECK FAILED"
 ----
 
-. Test the connection to the control plane databases:
+. Test the connection to the control plane "upcall" and cells' databases:
 +
 ----
-$ oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
-    mysql -rsh "$PODIFIED_MARIADB_IP" -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
-$ oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
-    mysql -rsh "$PODIFIED_CELL1_MARIADB_IP" -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
+for CELL in $(echo "super $RENAMED_CELLS"); do
+  oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
+    mysql -rsh "${PODIFIED_MARIADB_IP[$CELL]}" -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" -e 'SHOW databases;'
+done
 ----
 +
 [NOTE]
-You must transition {compute_service_first_ref} services that are imported later into a superconductor architecture by deleting the old service records in the cell databases, starting with `cell1`. New records are registered with different hostnames provided by the {compute_service} operator. All Compute services, except the Compute agent, have no internal state, and their service records can be safely deleted. You also need to rename the former `default` cell to `cell1`.
+You must transition {compute_service_first_ref} services that are imported later into a superconductor architecture by deleting the old service records in the cell databases, starting with `cell1`. New records are registered with different hostnames provided by the {compute_service} operator. All Compute services, except the Compute agent, have no internal state, and their service records can be safely deleted. You also need to rename the former `default` cell to `DEFAULT_CELL_NAME`.
 
 . Create a dump of the original databases:
 +
 ----
-$ oc rsh mariadb-copy-data << EOF
-  mysql -h"${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" \
-  -N -e "show databases" | grep -E -v "schema|mysql|gnocchi|aodh" | \
-  while read dbname; do
-    echo "Dumping \${dbname}";
-    mysqldump -h"${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" \
-      --single-transaction --complete-insert --skip-lock-tables --lock-tables=0 \
-      "\${dbname}" > /backup/"\${dbname}".sql;
-   done
+$ for CELL in $(echo $CELLS); do
+  oc rsh mariadb-copy-data << EOF
+    mysql -h"${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" \
+    -N -e "show databases" | grep -E -v "schema|mysql|gnocchi|aodh" | \
+    while read dbname; do
+      echo "Dumping $CELL cell \${dbname}";
+      mysqldump -h"${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" \
+        --single-transaction --complete-insert --skip-lock-tables --lock-tables=0 \
+        "\${dbname}" > /backup/"${CELL}.\${dbname}".sql;
+    done
 EOF
+done
 ----
++
+Note filtering the information and performance schema tables.
+Gnocchi is no longer used as a metric store as well
 
 . Restore the databases from `.sql` files into the control plane MariaDB:
 +
 ----
-$ oc rsh mariadb-copy-data << EOF
-  # db schemas to rename on import
-  declare -A db_name_map
-  db_name_map['nova']='nova_cell1'
-  db_name_map['ovs_neutron']='neutron'
-  db_name_map['ironic-inspector']='ironic_inspector'
+$ for CELL in $(echo $CELLS); do
+  RCELL=$CELL
+  [ "$CELL" = "default" ] && RCELL=$DEFAULT_CELL_NAME
+  oc rsh mariadb-copy-data << EOF
 
-  # db servers to import into
-  declare -A db_server_map
-  db_server_map['default']=${PODIFIED_MARIADB_IP}
-  db_server_map['nova_cell1']=${PODIFIED_CELL1_MARIADB_IP}
+    declare -A db_name_map
+    db_name_map['nova']="nova_$RCELL"
+    db_name_map['ovs_neutron']='neutron'
+    db_name_map['ironic-inspector']='ironic_inspector'
 
-  # db server root password map
-  declare -A db_server_password_map
-  db_server_password_map['default']=${PODIFIED_DB_ROOT_PASSWORD}
-  db_server_password_map['nova_cell1']=${PODIFIED_DB_ROOT_PASSWORD}
+    declare -A db_server_map
+    db_server_map['default']=${PODIFIED_MARIADB_IP['super']}
+    db_server_map["nova_$RCELL"]=${PODIFIED_MARIADB_IP[$RCELL]}
 
-  cd /backup
-  for db_file in \$(ls *.sql); do
-    db_name=\$(echo \${db_file} | awk -F'.' '{ print \$1; }')
-    if [[ -v "db_name_map[\${db_name}]" ]]; then
-      echo "renaming \${db_name} to \${db_name_map[\${db_name}]}"
-      db_name=\${db_name_map[\${db_name}]}
+    declare -A db_server_password_map
+    db_server_password_map['default']=${PODIFIED_DB_ROOT_PASSWORD['super']}
+    db_server_password_map["nova_$RCELL"]=${PODIFIED_DB_ROOT_PASSWORD[$RCELL]}
+
+    cd /backup
+    for db_file in \$(ls ${CELL}.*.sql); do
+      db_name=\$(echo \${db_file} | awk -F'.' '{ print \$2; }')
+      renamed_db_file="${RCELL}_new.\${db_name}.sql"
+      mv -f \${db_file} \${renamed_db_file}
+      if [[ -v "db_name_map[\${db_name}]" ]]; then
+        echo "renaming $CELL cell \${db_name} to $RCELL \${db_name_map[\${db_name}]}"
+        db_name=\${db_name_map[\${db_name}]}
+      fi
+      db_server=\${db_server_map["default"]}
+      if [[ -v "db_server_map[\${db_name}]" ]]; then
+        db_server=\${db_server_map[\${db_name}]}
+      fi
+      db_password=\${db_server_password_map['default']}
+      if [[ -v "db_server_password_map[\${db_name}]" ]]; then
+        db_password=\${db_server_password_map[\${db_name}]}
+      fi
+      echo "creating $RCELL cell \${db_name} in \${db_server}"
+      mysql -h"\${db_server}" -uroot "-p\${db_password}" -e \
+        "CREATE DATABASE IF NOT EXISTS \${db_name} DEFAULT \
+        CHARACTER SET ${CHARACTER_SET} DEFAULT COLLATE ${COLLATION};"
+      echo "importing $RCELL cell \${db_name} into \${db_server} from \${renamed_db_file}"
+      mysql -h "\${db_server}" -uroot "-p\${db_password}" "\${db_name}" < "\${renamed_db_file}"
+    done
+
+    if [ "$CELL" = "default" ] ; then
+      mysql -h "\${db_server_map['default']}" -uroot -p"\${db_server_password_map['default']}" -e \
+        "update nova_api.cell_mappings set name='$DEFAULT_CELL_NAME' where name='default';"
     fi
-    db_server=\${db_server_map["default"]}
-    if [[ -v "db_server_map[\${db_name}]" ]]; then
-      db_server=\${db_server_map[\${db_name}]}
-    fi
-    db_password=\${db_server_password_map['default']}
-    if [[ -v "db_server_password_map[\${db_name}]" ]]; then
-      db_password=\${db_server_password_map[\${db_name}]}
-    fi
-    echo "creating \${db_name} in \${db_server}"
-    mysql -h"\${db_server}" -uroot "-p\${db_password}" -e \
-      "CREATE DATABASE IF NOT EXISTS \${db_name} DEFAULT \
-      CHARACTER SET ${CHARACTER_SET} DEFAULT COLLATE ${COLLATION};"
-    echo "importing \${db_name} into \${db_server}"
-    mysql -h "\${db_server}" -uroot "-p\${db_password}" "\${db_name}" < "\${db_file}"
-  done
-
-  mysql -h "\${db_server_map['default']}" -uroot -p"\${db_server_password_map['default']}" -e \
-    "update nova_api.cell_mappings set name='cell1' where name='default';"
-  mysql -h "\${db_server_map['nova_cell1']}" -uroot -p"\${db_server_password_map['nova_cell1']}" -e \
-    "delete from nova_cell1.services where host not like '%nova-cell1-%' and services.binary != 'nova-compute';"
+    mysql -h "\${db_server_map["nova_$RCELL"]}" -uroot -p"\${db_server_password_map["nova_$RCELL"]}" -e \
+      "delete from nova_${RCELL}.services where host not like '%nova_${RCELL}-%' and services.binary != 'nova-compute';"
 EOF
+done
 ----
 
 .Verification
@@ -228,39 +316,39 @@ For more information, see xref:proc_retrieving-topology-specific-service-configu
 . Check that the databases are imported correctly:
 +
 ----
-. ~/.source_cloud_exported_variables
-
-# use 'oc exec' and 'mysql -rs' to maintain formatting
-dbs=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;')
-echo $dbs | grep -Eq '\bkeystone\b' && echo "OK" || echo "CHECK FAILED"
-
-# ensure neutron db is renamed from ovs_neutron
-echo $dbs | grep -Eq '\bneutron\b'
-echo $PULL_OPENSTACK_CONFIGURATION_DATABASES | grep -Eq '\bovs_neutron\b' && echo "OK" || echo "CHECK FAILED"
-
-# ensure nova cell1 db is extracted to a separate db server and renamed from nova to nova_cell1
-c1dbs=$(oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;')
-echo $c1dbs | grep -Eq '\bnova_cell1\b' && echo "OK" || echo "CHECK FAILED"
-
-# ensure default cell renamed to cell1, and the cell UUIDs retained intact
-novadb_mapped_cells=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" \
+$ set +u
+$ . ~/.source_cloud_exported_variables_default
+$ set -u
+$ dbs=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD['super']}" -e 'SHOW databases;')
+$ echo $dbs | grep -Eq '\bkeystone\b' && echo "OK" || echo "CHECK FAILED"
+$ echo $dbs | grep -Eq '\bneutron\b'
+$ echo "${PULL_OPENSTACK_CONFIGURATION_DATABASES[@]}" | grep -Eq '\bovs_neutron\b' && echo "OK" || echo "CHECK FAILED"
+$ novadb_mapped_cells=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD['super']}" \
   nova_api -e 'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')
-uuidf='\S{8,}-\S{4,}-\S{4,}-\S{4,}-\S{12,}'
-left_behind=$(comm -23 \
+$ uuidf='\S{8,}-\S{4,}-\S{4,}-\S{4,}-\S{12,}'
+$ left_behind=$(comm -23 \
   <(echo $PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS | grep -oE " $uuidf \S+") \
   <(echo $novadb_mapped_cells | tr -s "| " " " | grep -oE " $uuidf \S+"))
-changed=$(comm -13 \
+$ changed=$(comm -13 \
   <(echo $PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS | grep -oE " $uuidf \S+") \
   <(echo $novadb_mapped_cells | tr -s "| " " " | grep -oE " $uuidf \S+"))
-test $(grep -Ec ' \S+$' <<<$left_behind) -eq 1 && echo "OK" || echo "CHECK FAILED"
-default=$(grep -E ' default$' <<<$left_behind)
-test $(grep -Ec ' \S+$' <<<$changed) -eq 1 && echo "OK" || echo "CHECK FAILED"
-grep -qE " $(awk '{print $1}' <<<$default) cell1$" <<<$changed && echo "OK" || echo "CHECK FAILED"
+$ test $(grep -Ec ' \S+$' <<<$left_behind) -eq 1 && echo "OK" || echo "CHECK FAILED"
+$ default=$(grep -E ' default$' <<<$left_behind)
+$ test $(grep -Ec ' \S+$' <<<$changed) -eq 1 && echo "OK" || echo "CHECK FAILED"
+$ grep -qE " $(awk '{print $1}' <<<$default) ${DEFAULT_CELL_NAME}$" <<<$changed && echo "OK" || echo "CHECK FAILED"
 
-# ensure the registered Compute service name has not changed
-novadb_svc_records=$(oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot "-p$PODIFIED_DB_ROOT_PASSWORD" \
-  nova_cell1 -e "select host from services where services.binary='nova-compute' order by host asc;")
-diff -Z <(echo $novadb_svc_records) <(echo $PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES) && echo "OK" || echo "CHECK FAILED"
+$ for CELL in $(echo $CELLS | grep -v default); do
+  set +u
+  . ~/.source_cloud_exported_variables_$CELL
+  set -u
+  RCELL=$CELL
+  [ "$CELL" = "default" ] && RCELL=$DEFAULT_CELL_NAME
+  c1dbs=$(oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p${PODIFIED_DB_ROOT_PASSWORD[$RCELL]} -e 'SHOW databases;')
+  echo $c1dbs | grep -Eq "\bnova_${CELL}\b" && echo "OK" || echo "CHECK FAILED"
+  novadb_svc_records=$(oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p${PODIFIED_DB_ROOT_PASSWORD[$RCELL]} \
+    nova_$CELL -e "select host from services where services.binary='nova-compute' order by host asc;")
+  diff -Z <(echo $novadb_svc_records) <(echo ${PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]}) && echo "OK" || echo "CHECK FAILED"
+done
 ----
 
 . Delete the `mariadb-data` pod and the `mariadb-copy-data` persistent volume claim that contains the database backup:
