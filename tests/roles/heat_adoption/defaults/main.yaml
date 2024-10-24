@@ -13,5 +13,6 @@ heat_patch: |
         passwordSelectors:
           authEncryptionKey: HeatAuthEncryptionKey
           service: HeatPassword
+          stackDomainAdminPassword: HeatStackDomainAdminPassword
         rabbitMqClusterName: rabbitmq
         serviceUser: heat
