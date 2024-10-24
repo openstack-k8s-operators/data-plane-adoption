@@ -36,7 +36,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod --selector=alertmanager=metric-storage -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc wait pod --for condition=Ready --selector=alertmanager=metric-storage
   register: alertmanager_running_result
   until: alertmanager_running_result is success
   retries: 60
@@ -46,7 +46,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod --selector=prometheus=metric-storage -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc wait pod --for condition=Ready --selector=prometheus=metric-storage
   register: prometheus_running_result
   until: prometheus_running_result is success
   retries: 60
@@ -62,7 +62,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod --selector=service=ceilometer -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc wait pod --for condition=Ready --selector=service=ceilometer
   register: ceilometer_running_result
   until: ceilometer_running_result is success
   retries: 60
