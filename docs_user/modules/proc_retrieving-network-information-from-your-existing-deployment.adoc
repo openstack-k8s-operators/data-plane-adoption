@@ -8,7 +8,10 @@ deployment. After you retrieve your network configuration, you have the followin
 * A list of isolated networks that are used in the existing deployment.
 * For each of the isolated networks, the VLAN tag and IP ranges used for
   dynamic address allocation.
-* A list of existing IP address allocations that are used in the environment. You later exclude these addresses from the allocation pools available for the new control plane services.
+* A list of existing IP address allocations that are used in the environment.
+  When reusing the existing subnet ranges to host the new control plane
+  services, these addresses are excluded from the corresponding allocation
+  pools.
 
 .Procedure
 
@@ -28,7 +31,11 @@ deployment. After you retrieve your network configuration, you have the followin
       allocation_pools: [{'start': '172.17.0.4', 'end': '172.17.0.250'}]
 ----
 
-. Retrieve the VLAN tag that is used in the `vlan` key and the IP range in the `ip_subnet` key for each isolated network from the `network_data.yaml` file. The IP range is later split into separate pools for control plane services and load balancer IP addresses.
+. Retrieve the VLAN tag that is used in the `vlan` key and the IP range in the
+  `ip_subnet` key for each isolated network from the `network_data.yaml` file.
+  When reusing subnet ranges from the existing deployment for the new control
+  plane services, the ranges are split into separate pools for control
+  plane services and load-balancer IP addresses.
 
 . Use the `tripleo-ansible-inventory.yaml` file to determine the list of IP addresses that are already consumed in the adopted environment. For each listed host in the file, make a note of the IP and VIP addresses that are consumed by the node. For example:
 +
@@ -51,7 +58,7 @@ standalone:
 +
 [NOTE]
 In this example, the `172.17.0.2` and `172.17.0.100` values are
-consumed but are not available for the new control plane services until the adoption is complete.
+consumed and are not available for the new control plane services until the adoption is complete.
 
 . Repeat this procedure for each isolated network and each host in the
 configuration.

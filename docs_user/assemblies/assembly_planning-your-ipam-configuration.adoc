@@ -6,10 +6,15 @@ ifdef::context[:parent-context: {context}]
 
 = Planning your IPAM configuration
 
-In a {rhos_long} deployment, each service that is deployed on the {rhocp_long} worker nodes requires an IP address from the IP Address Management (IPAM) pool. In a {rhos_prev_long} ({OpenStackShort}) deployment, all services that are hosted on a Controller node shared the same IP address.
+In a {rhos_long} deployment, each service that is deployed on the {rhocp_long}
+worker nodes requires an IP address from the IP Address Management (IPAM) pool.
+In a {rhos_prev_long} ({OpenStackShort}) deployment, all services that are
+hosted on a Controller node share the same IP address.
 
-Since the new control plane deployment has different requirements as to the
-The RHOSO control plane has different requirements for the number of IP addresses that are made available for services. Therefore, you cannot use the IP ranges from the existing {rhos_acro} environment in the RHOSO control plane.
+The {rhos_acro} control plane has different requirements for the number of IP
+addresses that are made available for services. Depending on the size of the IP
+ranges that are used in the existing {rhos_acro} deployment, you might reuse
+these ranges for the {rhos_acro} control plane.
 
 The total number of IP addresses that are required for the new control plane services in each isolated network is calculated as the sum of the following:
 
