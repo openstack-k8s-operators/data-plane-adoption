@@ -36,3 +36,13 @@
   register: manila_responding_result
   until: manila_responding_result is success
   retries: 15
+
+- name: Create default share type
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+    ${BASH_ALIASES[openstack]} share type create {{ share_type_name }} {{ driver_handles_share_servers }}
+  vars:
+    share_type_name: default
+    driver_handles_share_servers: false
