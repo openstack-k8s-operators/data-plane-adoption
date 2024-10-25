@@ -23,7 +23,7 @@ include::../modules/proc_adopting-image-service-with-object-storage-backend.adoc
 
 include::../modules/proc_adopting-image-service-with-block-storage-backend.adoc[leveloffset=+1]
 
-include::../modules/proc_adopting-image-service-with-nfs-backend.adoc[leveloffset=+1]
+//include::../modules/proc_adopting-image-service-with-nfs-backend.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-image-service-with-ceph-backend.adoc[leveloffset=+1]
 

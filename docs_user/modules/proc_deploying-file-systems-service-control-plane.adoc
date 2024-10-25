@@ -115,61 +115,61 @@ __EOF__
 <4> Ensure that the names of the back ends (`share_backend_name`) are the same as they were in {OpenStackShort} {rhos_prev_ver}.
 <5> Ensure that the appropriate storage management network is specified in the `networkAttachments` section. For example, the `manilaShares` instance with the CephFS back-end driver is connected to the `storage` network.
 <6> If you need to add extra files to any of the services, you can use `extraMounts`. For example, when using {Ceph}, you can add the {rhos_component_storage_file} Ceph user's keyring file as well as the `ceph.conf` configuration file.
-+
-The following example patch file uses CephFS through NFS:
-+
-[source,yaml]
-----
-$ cat << __EOF__ > ~/manila.patch
-spec:
-  manila:
-    enabled: true
-    apiOverride:
-      route: {}
-    template:
-      databaseInstance: openstack
-      secret: osp-secret
-      manilaAPI:
-        replicas: 3
-        customServiceConfig: |
-          [DEFAULT]
-          enabled_share_protocols = cephfs
-        override:
-          service:
-            internal:
-              metadata:
-                annotations:
-                  metallb.universe.tf/address-pool: internalapi
-                  metallb.universe.tf/allow-shared-ip: internalapi
-                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-              spec:
-                type: LoadBalancer
-      manilaScheduler:
-        replicas: 3
-      manilaShares:
-        cephfs:
-          replicas: 1
-          customServiceConfig: |
-            [DEFAULT]
-            enabled_share_backends = cephfs
-            host = hostgroup
-            [cephfs]
-            driver_handles_share_servers=False
-            share_backend_name=tripleo_ceph
-            share_driver=manila.share.drivers.cephfs.driver.CephFSDriver
-            cephfs_conf_path=/etc/ceph/ceph.conf
-            cephfs_auth_id=openstack
-            cephfs_cluster_name=ceph
-            cephfs_protocol_helper_type=NFS
-            cephfs_nfs_cluster_id=cephfs
-            cephfs_ganesha_server_ip=172.17.5.47
-          networkAttachments:
-              - storage
-__EOF__
-----
-+
-* Prior to adopting the `manilaShares` service for CephFS through NFS, ensure that you create a clustered Ceph NFS service. The name of the service must be `cephfs_nfs_cluster_id`. The `cephfs_nfs_cluster_id` option is set with the name of the NFS cluster created on {Ceph}.
-* The `cephfs_ganesha_server_ip` option is preserved from the configuration on the {OpenStackShort} {rhos_prev_ver} environment.
+//+
+//The following example patch file uses CephFS through NFS:
+//+
+//[source,yaml]
+//----
+//$ cat << __EOF__ > ~/manila.patch
+//spec:
+//  manila:
+//    enabled: true
+//    apiOverride:
+//      route: {}
+//    template:
+//      databaseInstance: openstack
+//      secret: osp-secret
+//      manilaAPI:
+//        replicas: 3
+//        customServiceConfig: |
+//          [DEFAULT]
+//         enabled_share_protocols = cephfs
+//        override:
+//          service:
+//            internal:
+//              metadata:
+//                annotations:
+//                  metallb.universe.tf/address-pool: internalapi
+//                  metallb.universe.tf/allow-shared-ip: internalapi
+//                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+//             spec:
+//                type: LoadBalancer
+//      manilaScheduler:
+//        replicas: 3
+//      manilaShares:
+//        cephfs:
+//          replicas: 1
+//          customServiceConfig: |
+//            [DEFAULT]
+//            enabled_share_backends = cephfs
+//            host = hostgroup
+//            [cephfs]
+//            driver_handles_share_servers=False
+//            share_backend_name=tripleo_ceph
+//            share_driver=manila.share.drivers.cephfs.driver.CephFSDriver
+//            cephfs_conf_path=/etc/ceph/ceph.conf
+//            cephfs_auth_id=openstack
+//            cephfs_cluster_name=ceph
+//            cephfs_protocol_helper_type=NFS
+//            cephfs_nfs_cluster_id=cephfs
+//            cephfs_ganesha_server_ip=172.17.5.47
+//         networkAttachments:
+//             - storage
+//__EOF__
+//----
+//+
+//* Prior to adopting the `manilaShares` service for CephFS through NFS, ensure that you create a clustered Ceph NFS service. The name of the service must be `cephfs_nfs_cluster_id`. The `cephfs_nfs_cluster_id` option is set with the name of the NFS cluster created on {Ceph}.
+//* The `cephfs_ganesha_server_ip` option is preserved from the configuration on the {OpenStackShort} {rhos_prev_ver} environment.
 
 . Patch the `OpenStackControlPlane` CR:
 +
