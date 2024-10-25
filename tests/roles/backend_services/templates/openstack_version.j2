@@ -24,7 +24,9 @@ spec:
     edpmIscsidImage: {{ container_registry }}/{{ container_namespace }}/openstack-iscsid:{{ container_tag }}
     edpmLogrotateCrondImage: {{ container_registry }}/{{ container_namespace }}/openstack-cron:{{ container_tag }}
     edpmMultipathdImage: {{ container_registry }}/{{ container_namespace }}/openstack-multipathd:{{ container_tag }}
+    edpmNeutronDhcpAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-neutron-dhcp-agent:{{ container_tag }}
     edpmNeutronMetadataAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-neutron-metadata-agent-ovn:{{ container_tag }}
+    edpmNeutronOvnAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-neutron-ovn-agent:{{ container_tag }}
     edpmNeutronSriovAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-neutron-sriov-agent:{{ container_tag }}
     edpmOvnBgpAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-bgp-agent:{{ container_tag }}
     glanceAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-glance-api:{{ container_tag }}
