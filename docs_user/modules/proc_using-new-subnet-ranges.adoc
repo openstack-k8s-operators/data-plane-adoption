@@ -50,6 +50,12 @@ Repeat this configuration for other networks that need to use different subnets 
  /home/stack/templates/<node_definition_file>
 ----
 +
+* Optional: Include the `--templates` option to use your own templates instead of the default templates located in `/usr/share/openstack-tripleo-heat-templates`. Replace `<templates_directory>` with the path to the directory that contains your templates.
+* Replace `<stack>` with the name of the stack for which the bare-metal nodes are provisioned. If not specified, the default is `overcloud`.
+* Include the `--network-config` optional argument to provide the network definitions to the `cli-overcloud-node-network-config.yaml` Ansible playbook. The `cli-overcloud-node-network-config.yaml` playbook uses the `os-net-config` tool to apply the network configuration on the deployed nodes. If you do not use `--network-config` to provide the network definitions, then you must configure the `{{role.name}}NetworkConfigTemplate` parameters in your `network-environment.yaml` file, otherwise the default network definitions are used.
+* Replace `<deployment_file>` with the name of the heat environment file to generate for inclusion in the deployment command, for example `/home/stack/templates/overcloud-baremetal-deployed.yaml`.
+* Replace `<node_definition_file>` with the name of your node definition file, for example, `overcloud-baremetal-deploy.yaml`. Ensure that the `network_config_update` variable is set to `true` in the node definition file.
++
 [NOTE]
 Network configuration changes are not applied by default to avoid
 the risk of network disruption. You must enforce the changes by setting the
