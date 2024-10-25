@@ -22,9 +22,10 @@ endif::[]
 . Retrieve the existing `auth_encryption_key` and `service` passwords. You use these passwords to patch the `osp-secret`. In the following example, the `auth_encryption_key` is used as `HeatAuthEncryptionKey` and the `service` password is used as `HeatPassword`:
 +
 ----
-[stack@rhosp17 ~]$ grep -E 'HeatPassword|HeatAuth' ~/overcloud-deploy/overcloud/overcloud-passwords.yaml
+[stack@rhosp17 ~]$ grep -E 'HeatPassword|HeatAuth|HeatStackDomainAdmin' ~/overcloud-deploy/overcloud/overcloud-passwords.yaml
   HeatAuthEncryptionKey: Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2
   HeatPassword: dU2N0Vr2bdelYH7eQonAwPfI3
+  HeatStackDomainAdminPassword: dU2N0Vr2bdelYH7eQonAwPfI3
 ----
 
 . Log in to a Controller node and verify the `auth_encryption_key` value in use:
@@ -66,6 +67,7 @@ spec:
       passwordSelectors:
         authEncryptionKey: HeatAuthEncryptionKey
         service: HeatPassword
+        stackDomainAdminPassword: HeatStackDomainAdminPassword
 '
 ----
 

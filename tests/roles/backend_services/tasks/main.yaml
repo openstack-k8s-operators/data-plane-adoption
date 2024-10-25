@@ -50,6 +50,7 @@
     {% if heat_password %}
         oc set data secret/osp-secret "HeatPassword={{ heat_password }}"
         oc set data secret/osp-secret "HeatAuthEncryptionKey={{ heat_auth_encryption_key }}"
+        oc set data secret/osp-secret "HeatStackDomainAdminPassword={{ heat_stack_domain_admin_password }}"
     {% endif %}
     {% if manila_password %}
         oc set data secret/osp-secret "ManilaPassword={{ manila_password }}"
