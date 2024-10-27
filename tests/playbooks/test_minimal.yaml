@@ -58,9 +58,6 @@
     - role: horizon_adoption
       tags:
         - horizon_adoption
-    - role: heat_adoption
-      tags:
-        - heat_adoption
     - role: telemetry_adoption
       tags:
         - telemetry_adoption
