@@ -78,3 +78,12 @@ telemetry_adoption: true
 # Whether to adopt Octavia
 octavia_adoption: true
 enable_octavia: true
+
+# Whether source env is OSPD Director Operator
+# i.e. https://github.com/openstack-k8s-operators/osp-director-operator
+ospdo_src: false
+
+# rhoso namespace
+rhoso_namespace: "openstack"
+# director operator namespace
+org_namespace: "ospdo_openstack"
