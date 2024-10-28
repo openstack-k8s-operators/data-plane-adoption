@@ -1,0 +1,37 @@
+- name: set OSPdO env vars
+  block:
+  - name: register source_mariadb_ip
+    ansible.builtin.shell: |
+      oc -n {{ org_namespace }} get cm tripleo-exports-default -o json | jq -r '.data["ctlplane-export.yaml"]'| sed -e '0,/ MysqlInternal/d' | sed -n '0,/host_nobrackets/s/^.*host_nobrackets\:\s*\(.*\)$/\1/p'
+    register: source_mariadb_ip
+
+  - name: register controller node
+    no_log: "{{ use_no_log }}"
+    ansible.builtin.shell: |
+      oc get vmi -n{{ org_namespace }} -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
+    register: controller_node
+
+  - name: register source_db_root_pass
+    no_log: "{{ use_no_log }}"
+    ansible.builtin.shell: |
+      oc get secret -n {{ org_namespace }} tripleo-passwords -o jsonpath='{.data.*}'| base64 -d |grep MysqlRootPassword|sed 's/.*: //g'
+    register: source_db_root_pass
+
+  - name: set src MariaDB copy shell vars
+    no_log: "{{ use_no_log }}"
+    ansible.builtin.set_fact:
+      mariadb_copy_shell_vars_src: |
+        MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
+        STORAGE_CLASS=host-nfs-storageclass
+        SOURCE_MARIADB_IP={{ source_mariadb_ip.stdout }}
+        declare -A SOURCE_GALERA_MEMBERS
+        SOURCE_GALERA_MEMBERS=(
+        ["standalone.localdomain"]={{ source_mariadb_ip.stdout }}
+        )
+        SOURCE_DB_ROOT_PASSWORD={{ source_db_root_pass.stdout }}
+        MARIADB_CLIENT_ANNOTATIONS="-n {{ org_namespace }}"
+        CONTROLLER_NODE={{ controller_node.stdout }}
+
+- name: set default NS to {{ rhoso_namespace }}
+  ansible.builtin.shell: |
+    oc project {{ rhoso_namespace }}

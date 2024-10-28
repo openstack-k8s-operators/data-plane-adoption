@@ -2,6 +2,12 @@
   ansible.builtin.include_tasks:
     file: env_vars_src.yaml
 
+- name: execute alternative tasks when source env is OSPdO
+  ansible.builtin.include_role:
+    name: mariadb_copy
+    tasks_from: env_vars_src_ospdo.yaml
+  when: ospdo_src| bool
+
 - name: get the destination database service environment variables
   ansible.builtin.include_tasks:
     file: env_vars_dst.yaml
@@ -18,6 +24,7 @@
     kind: PersistentVolumeClaim
     metadata:
       name: mariadb-data
+      namespace: {{ org_namespace| default('openstack') }}
     spec:
       storageClassName: $STORAGE_CLASS
       accessModes:
@@ -32,10 +39,12 @@
       name: mariadb-copy-data
       annotations:
         openshift.io/scc: anyuid
-        k8s.v1.cni.cncf.io/networks: internalapi
+        k8s.v1.cni.cncf.io/networks: {{ copy_pods_custom_networks | default('internalapi') }}
+      namespace: {{ org_namespace| default('openstack') }}
       labels:
         app: adoption
     spec:
+      {{ copy_pods_custom_spec|default('') }}
       containers:
       - image: $MARIADB_IMAGE
         command: [ "sh", "-c", "sleep infinity"]
@@ -62,7 +71,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait --for condition=Ready pod/mariadb-copy-data --timeout=10s
+    oc wait --for condition=Ready -n {{ org_namespace| default('openstack') }} pod/mariadb-copy-data --timeout=10s
   register: mariadb_data_pod_result
   until: mariadb_data_pod_result is success
   retries: 25
@@ -76,7 +85,7 @@
     {{ mariadb_copy_shell_vars_src }}
     for i in "${!SOURCE_GALERA_MEMBERS[@]}"; do
       echo "Checking for the database node $i WSREP status Synced"
-      oc rsh mariadb-copy-data mysql \
+      oc rsh -n {{ org_namespace| default('openstack') }} mariadb-copy-data mysql \
         -h "${SOURCE_GALERA_MEMBERS[$i]}" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" \
         -e "show global status like 'wsrep_local_state_comment'" | \
         grep -qE "\bSynced\b"
