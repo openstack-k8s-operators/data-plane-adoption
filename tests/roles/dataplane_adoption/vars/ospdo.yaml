@@ -8,18 +8,18 @@ edpm_nodes:
             ansibleHost: 172.22.0.170
             ansibleUser: cloud-admin
         networks:
-          - name: ctlplane
-            fixedIP: 172.22.0.170
-            subnetName: ctlplane
-          - name: internalapi
-            fixedIP: 172.17.0.170
-            subnetName: internalapi
-          - name: storage
-            fixedIP: 172.18.0.170
-            subnetName: storage
-          - name: tenant
-            fixedIP: 172.20.0.170
-            subnetName: tenant
+            - name: ctlplane
+              fixedIP: 172.22.0.170
+              subnetName: ctlplane
+            - name: internalapi
+              fixedIP: 172.17.0.170
+              subnetName: internalapi
+            - name: storage
+              fixedIP: 172.18.0.170
+              subnetName: storage
+            - name: tenant
+              fixedIP: 172.20.0.170
+              subnetName: tenant
     compute-1:
         # Use a FQDN here to avoid issues with value specified in netconfig.yaml
         hostName: compute-1.osptest.test.metalkube.org
@@ -27,18 +27,18 @@ edpm_nodes:
             ansibleHost: 172.22.0.180
             ansibleUser: cloud-admin
         networks:
-          - name: ctlplane
-            fixedIP: 172.22.0.180
-            subnetName: ctlplane
-          - name: internalapi
-            fixedIP: 172.17.0.180
-            subnetName: internalapi
-          - name: storage
-            fixedIP: 172.18.0.180
-            subnetName: storage
-          - name: tenant
-            fixedIP: 172.20.0.180
-            subnetName: tenant
+            - name: ctlplane
+              fixedIP: 172.22.0.180
+              subnetName: ctlplane
+            - name: internalapi
+              fixedIP: 172.17.0.180
+              subnetName: internalapi
+            - name: storage
+              fixedIP: 172.18.0.180
+              subnetName: storage
+            - name: tenant
+              fixedIP: 172.20.0.180
+              subnetName: tenant
 
 edpm_network_config_template: |
  ---
