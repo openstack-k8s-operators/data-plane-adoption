@@ -29,8 +29,8 @@ test-minimal:  ## Launch minimal test suite
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
 
-test_ospdo_pre_dataplane: TEST_OUTFILE := tests/logs/test_minimal_out_$(shell date +%FT%T%Z).log
-test_ospdo_pre_dataplane:
+test_ospdo_controlplane: TEST_OUTFILE := tests/logs/test_minimal_out_$(shell date +%FT%T%Z).log
+test_ospdo_controlplane:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e ospdo_src=True --skip-tags "pull_openstack_configuration,dataplane_adoption" -e @$(TEST_VARS) -e @$(TEST_SECRETS) tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
 
