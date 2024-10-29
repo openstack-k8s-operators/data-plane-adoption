@@ -4,22 +4,26 @@
     osc_header: |
       alias openstack="oc exec -t openstackclient -- openstack"
 
-- name: Verify that the volumes have correct name, status and size
-  when: prelaunch_test_instance|bool
+- name: Verify that the volumes and snapshots have correct name, status and size
+  when:
+    - prelaunch_test_instance|bool
+    - cinder_volume_backend in supported_volume_backends
   ansible.builtin.shell: |
     {{ osc_header }}
     ${BASH_ALIASES[openstack]} volume list -c Name -c Status -c Size -f value | grep "disk in-use 1"
     ${BASH_ALIASES[openstack]} volume list -c Name -c Status -c Size -f value | grep "boot-volume in-use 1"
+    ${BASH_ALIASES[openstack]} volume snapshot list -c Name -c Status -c Size -f value | grep "snapshot available 1"
   register: cinder_verify_volumes
   until: cinder_verify_volumes is success
   retries: 10
   delay: 2
 
-- name: verify the snapshot and backup of disk volume
-  when: prelaunch_test_instance|bool
+- name: verify the backup of disk volume
+  when:
+    - prelaunch_test_instance|bool
+    - cinder_backup_backend in supported_backup_backends
   ansible.builtin.shell: |
     {{ osc_header }}
-    ${BASH_ALIASES[openstack]} volume snapshot list -c Name -c Status -c Size -f value | grep "snapshot available 1"
     ${BASH_ALIASES[openstack]} volume backup list -c Name -c Status -c Size -f value | grep "backup available 1"
   register: cinder_verify_resources
   until: cinder_verify_resources is success
