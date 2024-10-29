@@ -19,7 +19,7 @@ swift_password: ''
 dns_lb_ip: 192.168.122.80
 dns_server_ip: 192.168.122.1
 
-#ospdo env:
+# ospdo env:
 # Whether source env is OSPD Director Operator
 # i.e. https://github.com/openstack-k8s-operators/osp-director-operator
 ospdo_src: false
