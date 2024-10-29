@@ -105,5 +105,5 @@ neutron_public_interface_name: nic3
 edpm_ovn_bridge_mappings: datacentre:br-ex
 
 edpm_sshd_allowed_ranges:
-  - 192.168.122.0/24
-  - 172.22.0.0/24
+    - 192.168.122.0/24
+    - 172.22.0.0/24
