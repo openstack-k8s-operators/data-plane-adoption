@@ -2,7 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc project {{ rhoso_namespace|default('openstack') }}
+    oc project {{ rhoso_namespace }}
 
 - name: create osp-secret
   ansible.builtin.shell: |
@@ -67,7 +67,7 @@
 
 - name: create tmp directory
   ansible.builtin.command:
-    cmd: mkdir -p "{{ dpa_tests_dir | default('..')}}/config/tmp"
+    cmd: mkdir -p "{{ dpa_tests_dir }}/config/tmp"
 
 - name: template out the controlplane deployment
   ansible.builtin.template:
@@ -87,7 +87,7 @@
     - name: template out the OpenStackVersion deployment with container overrides
       ansible.builtin.template:
         src: openstack_version.j2
-        dest: "{{ dpa_tests_dir | default('..') }}/config/openstack_version_overrides.yaml"
+        dest: "{{ dpa_tests_dir }}/config/openstack_version_overrides.yaml"
         mode: '644'
         force: true
 
@@ -97,7 +97,7 @@
         {{ oc_header }}
         oc apply -f openstack_version_overrides.yaml
       args:
-        chdir: "{{ dpa_tests_dir | default('..') }}/config"
+        chdir: "{{ dpa_tests_dir }}/config"
 
 - name: execute alternative tasks when source env is ODPdO
   ansible.builtin.include_tasks: ospdo_backend_services.yaml
