@@ -4,6 +4,20 @@
     {{ oc_header }}
     oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_scheduler_api_patch }}'
 
+- name: Get the default volume type from 17.1
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    CONTROLLER1_SSH="{{ controller1_ssh }}"
+    $CONTROLLER1_SSH "python3 -c \"import configparser; c = configparser.ConfigParser(); c.read('/var/lib/config-data/puppet-generated/cinder/etc/cinder/cinder.conf'); print(c['DEFAULT']['default_volume_type'])\""
+  register: default_type
+
+- name: Patch the default volume type in openstackcontrolplane CR
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge -p '{"spec":{"cinder":{"template":{"customServiceConfig":"[DEFAULT]\ndefault_volume_type = \"{{ default_type.stdout }}\" \n"}}}}'
+
 - name: Deploy cinder-volume if necessary
   when: cinder_volume_backend | default('') != ''
   ansible.builtin.include_tasks: volume_backend.yaml
