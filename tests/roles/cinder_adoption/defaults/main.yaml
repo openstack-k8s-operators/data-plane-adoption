@@ -55,6 +55,27 @@ cinder_volume_backend_patch: |
               rbd_flatten_volume_from_snapshot=False
               report_discard_supported=True
 
+cinder_volume_backend_nfs_patch: |
+  spec:
+    cinder:
+      enabled: true
+      template:
+        cinderVolumes:
+          volume1:
+            networkAttachments:
+            - storage
+            replicas: 1
+            customServiceConfig: |
+              [tripleo_nfs]
+              backend_host=hostgroup
+              volume_backend_name=tripleo_nfs
+              volume_driver=cinder.volume.drivers.nfs.NfsDriver
+              nfs_snapshot_support=true
+              nas_secure_file_operations=false
+              nas_secure_file_permissions=false
+            customServiceConfigSecrets:
+            - cinder-volume-nfs-secrets
+
 cinder_backup_ceph_patch: |
   spec:
     cinder:
