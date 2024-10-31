@@ -33,3 +33,16 @@ ovn_nic_mapping_patch: |
         ovnController:
           nicMappings:
             baremetal: baremetal
+
+dpa_dir: "../.."
+dpa_tests_dir: "{{ dpa_dir }}/tests"
+
+# ospdo env:
+# Whether source env is OSPD Director Operator
+# i.e. https://github.com/openstack-k8s-operators/osp-director-operator
+ospdo_src: false
+# rhoso namespace
+rhoso_namespace: "openstack"
+# director operator namespace
+org_namespace: "ospdo_openstack"
+# adoption repo default location
