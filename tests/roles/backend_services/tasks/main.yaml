@@ -2,7 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc project openstack
+    oc project {{ rhoso_namespace }}
 
 - name: create osp-secret
   ansible.builtin.shell: |
@@ -10,6 +10,12 @@
     {{ oc_header }}
     cd {{ install_yamls_path }}
     make input
+
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.include_tasks: ospdo_backend_services.yaml
+  when: ospdo_src| bool
+  vars:
+    get_svc_pass: true
 
 - name: set service passwords
   no_log: "{{ use_no_log }}"
@@ -61,7 +67,7 @@
 
 - name: create tmp directory
   ansible.builtin.command:
-    cmd: mkdir -p ../config/tmp
+    cmd: mkdir -p "{{ dpa_tests_dir }}/config/tmp"
 
 - name: template out the controlplane deployment
   ansible.builtin.template:
@@ -69,6 +75,7 @@
     dest: "../config/tmp/test_deployment.yaml"
     mode: '644'
     force: true
+  when: not ospdo_src| bool
 
 - name: when periodic, create OpenStackVersion CR with container overrides
   when:
@@ -80,7 +87,7 @@
     - name: template out the OpenStackVersion deployment with container overrides
       ansible.builtin.template:
         src: openstack_version.j2
-        dest: "../config/openstack_version_overrides.yaml"
+        dest: "{{ dpa_tests_dir }}/config/openstack_version_overrides.yaml"
         mode: '644'
         force: true
 
@@ -90,15 +97,20 @@
         {{ oc_header }}
         oc apply -f openstack_version_overrides.yaml
       args:
-        chdir: "../config"
+        chdir: "{{ dpa_tests_dir }}/config"
+
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.include_tasks: ospdo_backend_services.yaml
+  when: ospdo_src| bool
+  vars:
+    deploy_ctlplane_ospdo: true
 
 - name: Deploy the podified control plane
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     oc apply -f ../config/tmp/test_deployment.yaml
-  # args:
-  #   chdir: "../config"
+  when: not ospdo_src| bool
 
 - name: wait for services to start up
   ansible.builtin.shell: |
