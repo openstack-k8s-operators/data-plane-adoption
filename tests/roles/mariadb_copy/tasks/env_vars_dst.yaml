@@ -2,14 +2,14 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get svc --selector "mariadb/name=openstack" -n {{ rhoso_namespace | default('openstack') }} -ojsonpath='{.items[0].spec.clusterIP}'
+    oc get svc --selector "mariadb/name=openstack" -n {{ rhoso_namespace }} -ojsonpath='{.items[0].spec.clusterIP}'
   register: podified_mariadb_ip_result
 
 - name: get podified cell1 MariaDB IP
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get svc --selector "mariadb/name=openstack-cell1" -n {{ rhoso_namespace | default('openstack') }} -ojsonpath='{.items[0].spec.clusterIP}'
+    oc get svc --selector "mariadb/name=openstack-cell1" -n {{ rhoso_namespace }} -ojsonpath='{.items[0].spec.clusterIP}'
   register: podified_cell1_mariadb_ip_result
 
 - name: set MariaDB copy shell vars
@@ -19,7 +19,7 @@
       PODIFIED_MARIADB_IP={{ podified_mariadb_ip_result.stdout }}
       PODIFIED_CELL1_MARIADB_IP={{ podified_cell1_mariadb_ip_result.stdout }}
       PODIFIED_DB_ROOT_PASSWORD="{{ podified_db_root_password }}"
-      MARIADB_CLIENT_ANNOTATIONS="-n {{ rhoso_namespace| default('openstack') }}"
+      MARIADB_CLIENT_ANNOTATIONS="-n {{ rhoso_namespace }}"
 
       # The CHARACTER_SET and collation should match the source DB
       # if the do not then it will break foreign key relationships
