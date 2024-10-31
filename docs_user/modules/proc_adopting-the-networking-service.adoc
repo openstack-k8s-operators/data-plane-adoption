@@ -50,6 +50,21 @@ spec:
 '
 ----
 
+* Note: If neutron-dhcp-agent was used in the OSP-17.1 deployment and should still be used after adoption, please enable also dhcp_agent_notification for neutron-api service.
+This can be done with patch:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  neutron:
+    template:
+      customServiceConfig: |
+        [DEFAULT]
+        dhcp_agent_notification = True
+'
+----
+
+
 .Verification
 
 * Inspect the resulting {networking_service} pods:
