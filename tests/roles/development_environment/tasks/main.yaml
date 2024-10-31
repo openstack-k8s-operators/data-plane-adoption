@@ -12,6 +12,30 @@
       export CINDER_BACKUP_BACKEND_CONFIGURED={{ cinder_backup_backend_configured | string | lower }}
       {{ lookup('ansible.builtin.file', prelaunch_test_instance_script) }}
 
+- name: Start and setup ping test
+  when:
+    - prelaunch_test_instance|bool
+    - ping_test|bool
+  block:
+    - name: Start the ping test to the VM instance.
+      vars:
+        fip: 192.168.122.20
+      ansible.builtin.shell:
+        cmd: |
+          ping -D {{ fip }} &> {{ ping_test_log_file }} &
+    - name: Create stop l3 agent connectivity check scripts.
+      ansible.builtin.template:
+        src: "stop_ping.sh.j2"
+        dest: "{{ stop_ping_script }}"
+        mode: "0775"
+    - name: Remember that the ping test is running.
+      ansible.builtin.set_fact:
+        stop_ping_script: "{{ stop_ping_script }}"
+        # We need to remember those two when the role's default values
+        # are used, ie not set from loaded variable file.
+        prelaunch_test_instance: "{{ prelaunch_test_instance }}"
+        ping_test: "{{ ping_test }}"
+
 - name: creates Barbican secret
   no_log: "{{ use_no_log }}"
   when: prelaunch_test_instance|bool and prelaunch_barbican_secret|default(false)

@@ -1,0 +1,33 @@
+- name: Stop ping test
+  hosts: localhost
+  gather_facts: false
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  tasks:
+    - name: Stop the ping test and validate the result.
+      when:
+        - prelaunch_test_instance | default(false) | bool
+        - ping_test | default(false) | bool
+      block:
+        - name: Stop the ping and register the result.
+          ansible.builtin.command: "{{ stop_ping_script }}"
+          register: ping_result
+          changed_when: ping_result.rc == 0
+          failed_when: false
+          no_log: true
+        - name: Ping failure below threshold.
+          ansible.builtin.debug:
+            msg: >-
+              WARNING: Ping test succeed, but some ping loss occured:
+                {{ ping_result.stdout }}
+          when: ping_result.rc == 64
+        - name: Ping failure beyond threshold.
+          ansible.builtin.fail:
+            msg: >-
+              Script failed with exit code {{ ping_result.rc }}.
+              Stdout:
+              {{ ping_result.stdout_lines | join(' ') }}
+              . Stderr:
+              {{ ping_result.stderr_lines | join(' ') }}
+          when: ping_result.rc not in [0, 64]
