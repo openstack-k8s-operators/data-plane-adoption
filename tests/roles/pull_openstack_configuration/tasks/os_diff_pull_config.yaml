@@ -9,7 +9,7 @@
   become: true
   ansible.builtin.shell: |
     dnf -y install golang
-  when: go_version_res.rc == 1
+  when: go_version_res.rc != 0
 
 - name: Clone os-diff to install it from source.
   failed_when: false
