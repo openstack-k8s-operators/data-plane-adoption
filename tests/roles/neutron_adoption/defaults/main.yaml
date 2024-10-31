@@ -6,6 +6,9 @@ neutron_config_patch: |
       apiOverride:
         route: {}
       template:
+        customServiceConfig: |
+          [DEFAULT]
+          dhcp_agent_notification = True
         override:
           service:
             internal:
