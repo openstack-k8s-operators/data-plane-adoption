@@ -1,8 +1,14 @@
-- name: deploy podified Cinder scheduler and API
+- name: deploy podified Cinder API
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_scheduler_api_patch }}'
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_api_patch }}'
+
+- name: deploy podified Cinder scheduler
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_scheduler_patch }}'
 
 - name: Get the default volume type from 17.1
   ansible.builtin.shell: |

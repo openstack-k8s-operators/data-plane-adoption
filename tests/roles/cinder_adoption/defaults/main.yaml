@@ -3,7 +3,7 @@
 cinder_volume_backend: ""
 cinder_backup_backend: ""
 
-cinder_scheduler_api_patch: |
+cinder_api_patch: |
   spec:
     cinder:
       enabled: true
@@ -24,6 +24,9 @@ cinder_scheduler_api_patch: |
                     metallb.universe.tf/loadBalancerIPs: 172.17.0.80
                 spec:
                   type: LoadBalancer
+        cinderScheduler:
+          # Avoid deploying scheduler until we clean up old services
+          replicas: 0
         cinderBackup:
           networkAttachments:
           - storage
@@ -33,6 +36,14 @@ cinder_scheduler_api_patch: |
             networkAttachments:
             - storage
             replicas: 0 # no volumes by default
+
+cinder_scheduler_patch: |
+  spec:
+    cinder:
+      enabled: true
+      template:
+        cinderScheduler:
+          replicas: 1
 
 cinder_volume_backend_patch: |
   spec:
