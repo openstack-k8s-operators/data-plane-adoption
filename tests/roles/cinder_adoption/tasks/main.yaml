@@ -4,6 +4,46 @@
     {{ oc_header }}
     oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_api_patch }}'
 
+- name: wait for Cinder API to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait pod --for condition=Ready -l component=cinder-api
+  register: cinder_api_running
+  until: cinder_api_running is success
+  retries: 60
+  delay: 2
+
+# Ignoring "-o pipefail" to avoid errors in grep which are non-fatal
+- name: Get cinder-backup down services
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    set -eux
+    oc exec -t openstackclient -- openstack volume service list --service cinder-backup -f value | grep "down" | awk '{ print $2 }'
+  register: backup_down_services
+
+- name: Remove old cinder-backup service
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t cinder-api-0 -c cinder-api -- cinder-manage service remove cinder-backup "{{ item }}"
+  loop: "{{ backup_down_services.stdout_lines }}"
+
+# Ignoring "-o pipefail" to avoid errors in grep which are non-fatal
+- name: Get cinder-scheduler down services
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    set -eux
+    oc exec -t openstackclient -- openstack volume service list --service cinder-scheduler -f value | grep "down" | awk '{ print $2 }'
+  register: scheduler_down_services
+
+- name: Remove old cinder-scheduler service
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t cinder-api-0 -c cinder-api -- cinder-manage service remove cinder-scheduler "{{ item }}"
+  loop: "{{ scheduler_down_services.stdout_lines }}"
+
 - name: deploy podified Cinder scheduler
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -37,7 +77,6 @@
     {{ shell_header }}
     {{ oc_header }}
     oc wait pod --for condition=Ready -l component=cinder-scheduler
-    oc wait pod --for condition=Ready -l component=cinder-api
     [ -z "{{ cinder_volume_backend }}" ] || oc wait pod --for condition=Ready -l component=cinder-volume
     [ -z "{{ cinder_backup_backend }}" ] || oc wait pod --for condition=Ready -l component=cinder-backup
   register: cinder_running_result
@@ -86,36 +125,6 @@
   until: cinder_running_result is success
   retries: 5
   delay: 2
-
-- name: Get cinder-backup down services
-  when: cinder_backup_backend != ''
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc exec -t openstackclient -- openstack volume service list --service cinder-backup --sort-column "Updated At" -c Host -f value | head -n -1
-  register: backup_down_services
-
-- name: Remove old cinder-backup service
-  when: cinder_backup_backend != ''
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc exec -t cinder-scheduler-0 -- cinder-manage service remove cinder-backup "{{ item }}"
-  loop: "{{ backup_down_services.stdout_lines }}"
-
-- name: Get cinder-scheduler down services
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc exec -t openstackclient -- openstack volume service list --service cinder-scheduler --sort-column "Updated At" -c Host -f value | head -n -1
-  register: scheduler_down_services
-
-- name: Remove old cinder-scheduler service
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc exec -t cinder-scheduler-0 -- cinder-manage service remove cinder-scheduler "{{ item }}"
-  loop: "{{ scheduler_down_services.stdout_lines }}"
 
 - name: Cinder online data migrations
   ansible.builtin.shell: |
