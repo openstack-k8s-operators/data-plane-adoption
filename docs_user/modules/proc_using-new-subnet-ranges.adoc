@@ -8,6 +8,9 @@ You must size the new subnet appropriately to accommodate the new control
 plane services. There are no specific requirements for the
 existing deployment allocation pools that are already consumed by the {OpenStackShort} environment.
 
+[IMPORTANT]
+Defining a new subnet for Storage and Storage management it is not supported. As Nova and Ceph don't allow modifying those networks during adoption.
+
 In the following procedure, you configure `NetworkAttachmentDefinition` custom resources (CRs) to use a different subnet from what is configured in the `network_config` section of the `OpenStackDataPlaneNodeSet` CR for the same networks. The new range in the `NetworkAttachmentDefinition` CR is used for control plane services, while the existing range in the `OpenStackDataPlaneNodeSet` CR is used to manage IP Address Management (IPAM) for data plane nodes.
 
 The values that are used in the following procedure are examples. Use values that are specific to your configuration.
