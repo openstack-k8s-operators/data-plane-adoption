@@ -1,0 +1,37 @@
+[id="adopting-octavia-amphorae_{context}"]
+
+= {loadbalancer_service} data plane adoption
+At this point all services on the new control plane should be running except
+the {loadbalancer_service} services
+
+== Clean up old neutron ports
+This deletes the old management port.
+
+[source,bash]
+----
+HM_PORTID="$(openstack port list --device-owner Octavia:health-mgr -f value -c ID)"
+openstack port delete "$HM_PORTID"
+----
+
+== Enabling the {loadbalancer_service} in OpenShift
+Run the following command in order to enable the {loadbalancer_service} CR
+and to finish the adoption process for {loadbalancer_service}.
+
+[source,bash]
+----
+oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  octavia:
+    enabled: true
+    template: {}
+'
+----
+
+[NOTE]
+====
+Because no heartbeats from the amphorae were recorded in the database since
+the {loadbalancer_service} services were stopped at the beginning of
+the adoption process all amphorae will get failed over by the new control
+plane. This process ensures that amphorae get updated to using the new
+amphora image.
+====

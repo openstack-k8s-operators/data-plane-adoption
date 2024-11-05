@@ -29,15 +29,7 @@ These commands convert the existing single CA configuration into a dual CA confi
 // == TODO: Other things
 // TODO
 
-== Enabling the {loadbalancer_service} in OpenShift
-Run the following command in order to enable the {loadbalancer_service} CR.
-
-[source,bash]
-----
-$ oc patch openstackcontrolplane openstack --type=merge --patch '
-spec:
-  octavia:
-    enabled: true
-    template: {}
-'
-----
+== Final steps
+Octavia services must remain disabled until data plane adoption is finished in
+order to avoid amphora failovers before the data plane adoption steps were
+finished.
