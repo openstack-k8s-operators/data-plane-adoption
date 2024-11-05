@@ -13,7 +13,7 @@
     {{ shell_header }}
     {{ oc_header }}
     {{ oc_login_command }}
-    oc patch -n openstack openstackversion openstack \
+    oc patch -n {{ rhoso_namespace }} openstackversion openstack \
       --type='json' -p='[{
       "op":"replace", "path":"/spec/customContainerImages/ansibleeeImage",
       "value": "{{ ansibleee_runner_img | default('quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest')}}"}]'
@@ -23,12 +23,17 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc project openstack
+    oc project {{ rhoso_namespace }}
 
 - name: Include RHEV vars
   ansible.builtin.include_vars:
     file: rhev.yaml
   when: platform_rhev|default(false)
+
+- name: Include OSPdO vars
+  ansible.builtin.include_vars:
+    file: ospdo.yaml
+  when: ospdo_src| bool
 
 - name: ensure IPAM is configured
   no_log: "{{ use_no_log }}"
@@ -51,6 +56,10 @@
   register: edpm_privatekey
   when: edpm_encoded_privatekey is undefined
 
+- name: execute alternative tasks when source env is ODPdO
+  ansible.builtin.include_tasks: ospdo_dataplane.yaml
+  when: ospdo_src| bool
+
 - name: create dataplane-adoption-secret.yaml
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -64,6 +73,7 @@
     data:
         ssh-privatekey: "{{ edpm_encoded_privatekey | default(edpm_privatekey.content) }}"
     EOF
+  when: not ospdo_src| bool
 
 - name: generate an ssh key-pair nova-migration-ssh-key secret
   when: compute_adoption|bool
@@ -74,7 +84,7 @@
     cd "$(mktemp -d)"
     ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
     oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
-    -n openstack \
+    -n  {{ rhoso_namespace }} \
     --from-file=ssh-privatekey=id \
     --from-file=ssh-publickey=id.pub \
     --type kubernetes.io/ssh-auth
@@ -94,7 +104,7 @@
     kind: ConfigMap
     metadata:
       name: nova-extra-config
-      namespace: openstack
+      namespace:  {{ rhoso_namespace }}
     data:
       19-nova-compute-cell1-workarounds.conf: |
         [workarounds]
@@ -115,7 +125,7 @@
     kind: ConfigMap
     metadata:
       name: nova-extra-config
-      namespace: openstack
+      namespace: {{ rhoso_namespace }}
     data:
       19-nova-compute-cell1-workarounds.conf: |
         [workarounds]
