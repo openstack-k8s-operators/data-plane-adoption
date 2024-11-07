@@ -4,7 +4,7 @@
 {{ mariadb_copy_shell_vars_src }}
 {{ mariadb_copy_shell_vars_dst }}
 
-oc rsh -n "{{ org_namespace }}" mariadb-copy-data << EOF
+oc rsh -n {{ rhoso_namespace }} mariadb-copy-data << EOF
   # db schemas to rename on import
   declare -A db_name_map
   db_name_map['nova']='nova_cell1'

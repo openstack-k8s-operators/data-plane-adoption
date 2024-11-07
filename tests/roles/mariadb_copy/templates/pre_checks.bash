@@ -5,7 +5,7 @@
 {{ mariadb_copy_shell_vars_dst }}
 
 # Test connection to podified DBs (show databases)
-oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} --image $MARIADB_IMAGE -i --rm --restart=Never -- \
-    mysql -rsh "$PODIFIED_MARIADB_IP" -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
-oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} --image $MARIADB_IMAGE -i --rm --restart=Never -- \
+oc run mariadb-client -n {{ rhoso_namespace }} ${MARIADB_CLIENT_ANNOTATIONS} --image $MARIADB_IMAGE -i --rm --restart=Never -- \
+    mysql -rsh "$PODIFIED_MARIADB_IP" -n {{ rhoso_namespace }} -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
+oc run mariadb-client -n {{ rhoso_namespace }} ${MARIADB_CLIENT_ANNOTATIONS} --image $MARIADB_IMAGE -i --rm --restart=Never -- \
     mysql -rsh "$PODIFIED_CELL1_MARIADB_IP" -uroot -p"$PODIFIED_DB_ROOT_PASSWORD" -e 'SHOW databases;'
