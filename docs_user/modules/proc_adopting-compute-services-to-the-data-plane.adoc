@@ -213,7 +213,7 @@ EOF
 The resources in the `ConfigMap` contain cell-specific configurations.
 
 ifeval::["{build}" == "downstream"]
-. Create a secret for the subscription manager and a secret for the Red Hat registry:
+. Create a secret for the subscription manager:
 +
 [source,yaml]
 ----
@@ -225,16 +225,20 @@ metadata:
 data:
   username: <base64_encoded_username>
   password: <base64_encoded_password>
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: redhat-registry
-data:
-  username: <registry_username>
-  password: <registry_password>
 EOF
 ----
++
+* Replace `<base64_encoded_username>` and `<base64_encoded_password>`  with strings that are base64-encoded.
+
+. Create a secret for the Red Hat registry:
++
+----
+$ oc create secret generic redhat-registry \
+--from-literal edpm_container_registry_logins='{"registry.redhat.io": {"<registry_username>": "<registry_password>"}}'
+----
++
+* Replace `<registry_username>` with the applicable user name.
+* Replace `<registry_password>` with the applicable password.
 endif::[]
 
 . Deploy the `OpenStackDataPlaneNodeSet` CR:
@@ -297,8 +301,7 @@ ifeval::["{build}" == "downstream"]
       - prefix: subscription_manager_
         secretRef:
           name: subscription-manager
-      - prefix: registry_
-        secretRef:
+      - secretRef:
           name: redhat-registry
 endif::[]
       ansibleVars:
@@ -396,7 +399,6 @@ ifeval::["{build}" == "downstream"]
           # here we only ensuring that decontainerized libvirt can start
           dnf -y upgrade openstack-selinux
           rm -f /run/virtlogd.pid
-          podman login -u {{ registry_username }} -p {{ registry_password }} registry.redhat.io
 endif::[]
 
         gather_facts: false
