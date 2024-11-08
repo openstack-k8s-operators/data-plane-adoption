@@ -1,5 +1,18 @@
 prelaunch_test_instance: true
 prelaunch_test_instance_script: pre_launch.bash
+# Ping test activation flag, note that it needs
+# prelaunch_test_instance as well.
+ping_test: false
+# Relative to
+# ~/src/github.com/openstack-k8s-operators/data-plane-adoption/tests/playbooks
+# Collected in
+# /controller/data-plane-adoption-tests-repo/data-plane-adoption/tests/logs
+ping_test_log_file: ../logs/ping_results.log
+stop_ping_script: ../stop_ping.sh
+# max cut in seconds
+ping_test_loss_threshold: 0
+# max cut in percent
+ping_test_loss_threshold_percent: 0
 edpm_privatekey_path: ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa
 run_pre_adoption_validation: true
 os_cloud_name: standalone

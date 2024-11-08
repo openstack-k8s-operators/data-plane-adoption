@@ -1,0 +1,80 @@
+#!/bin/bash
+#
+# Script which stops the ICMP connectivity check on validates that
+# there is no packet loss.
+set -eu -o pipefail
+
+# In seconds.
+LOSS_THRESHOLD={{ ping_test_loss_threshold }}
+LOSS_THRESHOLD_PERCENT={{ ping_test_loss_threshold_percent }}
+
+# Return total cut time in seconds
+function get_cut_time()
+{
+    local start=$(head -2 $PING_RESULT_LOG | tail -1 | grep -o '\[[^.]*' | tr -d '[[]]')
+    local end=$(tail -n 5 $PING_RESULT_LOG | head -1 | grep -o '\[[^.]*' | tr -d '[[]]')
+    awk -vstart=$start -vend=$end -vpr=${PING_RESULT} \
+        'BEGIN{res=(end - start)*pr/100;print res}'
+}
+
+# Convert Unix datetime in the ping result file into human readable
+# one to ease debugging. Timezone will be local to the host and might
+# need further adjustmente to match time on the deloyment.
+function convert_ping_result_date()
+{
+    local ping_file="${1:?'Provide a file'}"
+    awk -F'[][]' \
+    '{if (NF>1) {
+        cmd="date -d @"$2" +\"%Y-%m-%d %H:%M:%S.%3N %Z\"";
+        cmd|getline date;
+        close(cmd);
+        $2="[" date "]";
+        }
+      print $0; }' "${ping_file}" > "${ping_file%.*}"-hr.log
+}
+
+# kill the ping process
+kill -s INT $(/usr/sbin/pidof ping)
+
+# print the ping results
+PING_RESULT_LOG={{ ping_test_log_file }}
+tail -2 $PING_RESULT_LOG
+
+# if only one packet is lost, test succeeded, avoid false positive.
+TRANSMITTED=$(grep 'packet loss' $PING_RESULT_LOG | sed 's/^\([0-9]*\) packets transmitted,.*/\1/')
+RECEIVED=$(grep 'packet loss' $PING_RESULT_LOG | sed 's/.*packets transmitted, \([0-9]*\) received,.*/\1/')
+if [ $(( ${TRANSMITTED} - ${RECEIVED} )) -eq 1 ]; then
+    echo "Only one ping was not replied during the update/upgrade - test succeeded"
+    exit 0
+fi
+
+# check results
+PING_RESULT=$( grep 'packet loss' $PING_RESULT_LOG | sed 's/.*,\s\(.*\)%.*$/\1/' )
+CUT_TIME=$(get_cut_time)
+# awk (10 > 1) returns 1, !1, returns 0.
+if awk "BEGIN {exit !(${CUT_TIME} > ${LOSS_THRESHOLD})}"; then
+    LC_NUMERIC=C \
+              printf "Ping loss higher than %.0f seconds detected (%.0f seconds)\n" \
+              ${LOSS_THRESHOLD} ${CUT_TIME}
+    convert_ping_result_date "${PING_RESULT_LOG}"
+    exit 1
+fi
+# Failsafe for very short task where time is small because total time
+# is low: 10% packet loss of a tasks that last 1min is 6seconds.  So
+# if the loss_threshold is 10seconds, then we would succeed even if
+# it's a 10% packet loss. This ensure that we do fail for those tasks.
+if awk "BEGIN {exit !(${PING_RESULT} > ${LOSS_THRESHOLD_PERCENT})}"; then
+    LC_NUMERIC=C \
+              printf "Ping loss higher than %.0f %% detected (%.0f %%)\n" \
+              ${LOSS_THRESHOLD_PERCENT} ${PING_RESULT}
+    convert_ping_result_date "${PING_RESULT_LOG}"
+    exit 1
+fi
+
+# Finally if there's any cut even if below the thresholds, we still
+# convert the file to human readable format to ease debugging.
+if awk "BEGIN {exit !(${PING_RESULT} > 0)}" || \
+        awk "BEGIN {exit !(${CUT_TIME} > 0)}"; then
+    convert_ping_result_date "${PING_RESULT_LOG}"
+    exit 64
+fi
