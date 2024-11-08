@@ -8,16 +8,17 @@ You must size the new subnet appropriately to accommodate the new control
 plane services. There are no specific requirements for the
 existing deployment allocation pools that are already consumed by the {OpenStackShort} environment.
 
-In the following procedure, you configure `NetworkAttachmentDefinition` custom resources (CRs) to use a different subnet from what is configured in the `network_config` section of the `OpenStackDataPlaneNodeSet` CR for the same networks. The range in the `NetworkAttachmentDefinition` CR is used for control plane services, while the new range in the `OpenStackDataPlaneNodeSet` CR is used to manage IP Address Management (IPAM) for data plane nodes.
+[IMPORTANT]
+Defining a new subnet for Storage and Storage management it is not supported. As Nova and Ceph don't allow modifying those networks during adoption.
+
+In the following procedure, you configure `NetworkAttachmentDefinition` custom resources (CRs) to use a different subnet from what is configured in the `network_config` section of the `OpenStackDataPlaneNodeSet` CR for the same networks. The new range in the `NetworkAttachmentDefinition` CR is used for control plane services, while the existing range in the `OpenStackDataPlaneNodeSet` CR is used to manage IP Address Management (IPAM) for data plane nodes.
 
 The values that are used in the following procedure are examples. Use values that are specific to your configuration.
 
-[IMPORTANT]
-Do not change {OpenStackShort} node IP addresses during the adoption process. List the IP addresses in the `fixedIP` fields for each node entry in the `nodes` section of the `OpenStackDataPlaneNodeSet` CR.
-
 .Procedure
 
-. In the `NetworkAttachmentDefinition` CR, configure host routes on the {OpenStackShort} nodes for the control plane subnets. For example:
+
+. Configure link local routes on the existing deployment nodes for the control plane subnets. This is done through {OpenStackPreviousInstaller} configuration:
 +
 ----
 network_config:
@@ -32,15 +33,31 @@ network_config:
 <1> The new control plane subnet.
 <2> The control plane IP address of the existing data plane node.
 +
-Repeat this step for other networks that need to use different subnets for the new and existing parts of the deployment.
+Repeat this configuration for other networks that need to use different subnets for the new and existing parts of the deployment.
 
 . Apply the new configuration to every {OpenStackShort} node:
 +
 ----
-$ openstack overcloud node provision
---stack <stack>
---network_config
+(undercloud)$ openstack overcloud network provision \
+ [--templates <templates_directory> \]
+ --output  <deployment_file> \
+ /home/stack/templates/<networks_definition_file>
 ----
++
+----
+(undercloud)$ openstack overcloud node provision \
+ [--templates <templates_directory> \]
+ --stack <stack> \
+ --network-config \
+ --output <deployment_file> \
+ /home/stack/templates/<node_definition_file>
+----
++
+* Optional: Include the `--templates` option to use your own templates instead of the default templates located in `/usr/share/openstack-tripleo-heat-templates`. Replace `<templates_directory>` with the path to the directory that contains your templates.
+* Replace `<stack>` with the name of the stack for which the bare-metal nodes are provisioned. If not specified, the default is `overcloud`.
+* Include the `--network-config` optional argument to provide the network definitions to the `cli-overcloud-node-network-config.yaml` Ansible playbook. The `cli-overcloud-node-network-config.yaml` playbook uses the `os-net-config` tool to apply the network configuration on the deployed nodes. If you do not use `--network-config` to provide the network definitions, then you must configure the `{{role.name}}NetworkConfigTemplate` parameters in your `network-environment.yaml` file, otherwise the default network definitions are used.
+* Replace `<deployment_file>` with the name of the heat environment file to generate for inclusion in the deployment command, for example `/home/stack/templates/overcloud-baremetal-deployed.yaml`.
+* Replace `<node_definition_file>` with the name of your node definition file, for example, `overcloud-baremetal-deploy.yaml`. Ensure that the `network_config_update` variable is set to `true` in the node definition file.
 +
 [NOTE]
 Network configuration changes are not applied by default to avoid
@@ -54,11 +71,11 @@ the risk of network disruption. You must enforce the changes by setting the
 172.31.0.0/24 via 192.168.122.100 dev br-ctlplane
 ----
 
-. To configure similar routes for the existing subnet for the control plane services that are attached to the networks, add `routes` entries to the `NodeNetworkConfigurationPolicy` CRs for each network. For example:
+. You also must configure link local routes to existing deployment on {rhos_long} worker nodes. This is achieved by adding `routes` entries to the `NodeNetworkConfigurationPolicy` CRs for each network. For example:
 +
 ----
-      - destination: 192.168.122.0/24 <1>
-        next-hop-interface: ospbr <2>
+  - destination: 192.168.122.0/24 <1>
+    next-hop-interface: ospbr <2>
 ----
 <1> The original subnet of the isolated network on the data plane.
 <2> The {rhocp_long} worker network interface that corresponds to the isolated network on the data plane.
@@ -70,9 +87,7 @@ As a result, the following route is added to your {OpenShiftShort} nodes:
 192.168.122.0/24 dev ospbr proto static scope link
 ----
 +
-At this point, you can ping the adopted nodes from the {OpenShiftShort} nodes by using the existing subnet IP addresses.
-
-. During the data plane adoption, in the `network_config` section of the `OpenStackDataPlaneNodeSet` CR, add link local routes to the new subnets. For example:
+. Later, during the data plane adoption, in the `network_config` section of the `OpenStackDataPlaneNodeSet` CR, add the same link local routes for the new control plane subnet ranges. For example:
 +
 ----
   nodeTemplate:
@@ -89,7 +104,7 @@ At this point, you can ping the adopted nodes from the {OpenShiftShort} nodes by
             ...
 ----
 
-. List the previous IP addresses as `ansibleHost` and `fixedIP`. For example:
+. List the IP addresses that are used for the data plane nodes in the existing deployment as `ansibleHost` and `fixedIP`. For example:
 +
 ----
   nodes:
@@ -104,15 +119,18 @@ At this point, you can ping the adopted nodes from the {OpenShiftShort} nodes by
         name: ctlplane
         subnetName: subnet1
 ----
++
+[IMPORTANT]
+Do not change {OpenStackShort} node IP addresses during the adoption process. List previously used IP addresses in the `fixedIP` fields for each node entry in the `nodes` section of the `OpenStackDataPlaneNodeSet` CR.
 
-. Expand the SSH range for the firewall configuration to include both subnets:
+. Expand the SSH range for the firewall configuration to include both subnets to allow SSH access to data plane nodes from both subnets:
 +
 ----
-        edpm_sshd_allowed_ranges:
-        - 192.168.122.0/24
-        - 172.31.0.0/24
+  edpm_sshd_allowed_ranges:
+  - 192.168.122.0/24
+  - 172.31.0.0/24
 ----
 +
 This provides SSH access from the new subnet to the {OpenStackShort} nodes as well as the {OpenStackShort} subnets.
 
-. Optional: Set `edpm_network_config_update: true` to enforce the changes that you are applying to the nodes:
+. Set `edpm_network_config_update: true` to enforce the changes that you are applying to the nodes.

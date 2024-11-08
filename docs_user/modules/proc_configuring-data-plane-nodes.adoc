@@ -4,7 +4,7 @@
 
 Data plane nodes are configured by the OpenStack Operator and your `OpenStackDataPlaneNodeSet` custom resources (CRs). The `OpenStackDataPlaneNodeSet` CRs define your desired network configuration for the nodes.
 
-Your {rhos_long} network configuration should reflect the existing {rhos_prev_long} ({OpenStackShort}) network setup. You must pull the `net_config.yaml` files from each {OpenStackShort} node and reuse them when you define the `OpenStackDataPlaneNodeSet` CRs. The format of the configuration does not change, so you can put network templates under `edpm_network_config_template` variables, either for all nodes or for each node.
+Your {rhos_long} network configuration should reflect the existing {rhos_prev_long} ({OpenStackShort}) network setup. You must pull the `network_data.yaml` files from each {OpenStackShort} node and reuse them when you define the `OpenStackDataPlaneNodeSet` CRs. The format of the configuration does not change, so you can put network templates under `edpm_network_config_template` variables, either for all nodes or for each node.
 
 To ensure that the latest network configuration is used during the data plane adoption, you should also set `edpm_network_config_update: true` in the `nodeTemplate` field of the `OpenStackDataPlaneNodeSet` CR.
 
