@@ -13,12 +13,8 @@ The following features are considered a Technology Preview and have not been tes
 * iSCSI, NFS, and FC-based drivers for {block_storage_first_ref}
 * The following {compute_service_first_ref} features:
 ** Compute hosts with `/var/lib/nova/instances` on NFS
-** Hugepages
-** Emulator thread policies
 ** NUMA aware vswitches
-** CPU pinning
 ** PCI passthrough by flavor
-** {networking_first_ref} single root I/O virtualization (SR-IOV) ports
 ** SR-IOV trusted virtual functions
 ** RX and TX queue sizes
 ** vGPU
