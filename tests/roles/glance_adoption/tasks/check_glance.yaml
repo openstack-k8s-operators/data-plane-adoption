@@ -4,19 +4,7 @@
       ansible.builtin.shell: |
         {{ shell_header }}
         {{ oc_header }}
-
-        STATUS=$(oc get pod --selector=service=glance -o jsonpath='{.items[*].status.phase}{"\n"}');
-        code=1
-        IFS=" " read -r -a STATUS <<< "$STATUS"
-        for i in "${STATUS[@]}"; do
-            if echo "$i" | grep -v Running; then
-                # if at least one instance is not Running, return
-                exit $code
-            else
-                code=0
-            fi
-        done
-        exit $code
+        oc wait pod --for condition=Ready --selector=service=glance
       register: glance_running_result
       until: glance_running_result is success
       retries: 60
