@@ -2,7 +2,7 @@
 
 = Stopping infrastructure management and Compute services
 
-You must stop cloud Controller nodes, database nodes, and messaging nodes on the {rhos_prev_long} {rhos_prev_ver} control plane. Do not stop nodes that are running the Compute, Storage, or Networker roles on the control plane.
+You must stop cloud database nodes, and messaging nodes on the {rhos_prev_long} {rhos_prev_ver} control plane. Do not stop nodes that are running the Compute, Storage, Networker or Controller(if running `OVN Controller Gateway agent` network agent) roles on the control plane.
 
 The following procedure applies to a single node standalone {OpenStackPreviousInstaller} deployment. You must remove conflicting repositories and packages from your Compute hosts, so that you can install libvirt packages when these hosts are adopted as data plane nodes, where modular libvirt daemons are no longer running in podman containers.
 
