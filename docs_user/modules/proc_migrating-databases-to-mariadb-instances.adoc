@@ -172,7 +172,7 @@ EOF
 . Restore the databases from `.sql` files into the control plane MariaDB:
 +
 ----
-$ oc rsh mariadb-copy-data << EOF
+$ oc rsh -n {pod_ns} mariadb-copy-data << EOF
   # db schemas to rename on import
   declare -A db_name_map
   db_name_map['nova']='nova_cell1'
