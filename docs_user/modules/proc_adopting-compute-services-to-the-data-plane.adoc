@@ -515,6 +515,8 @@ spec:
   serviceUser: neutron
    ...
       customServiceConfig: |
+          [DEFAULT]
+          dhcp_agent_notification = True
           [ovn]
           disable_ovn_dhcp_for_baremetal_ports = true
 ----

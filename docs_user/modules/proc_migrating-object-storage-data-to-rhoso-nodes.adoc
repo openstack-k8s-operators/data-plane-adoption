@@ -17,7 +17,7 @@ The {object_storage_first_ref} migration involves the following steps:
 * For DNS servers, ensure that all existing nodes are able to resolve the hostnames of the {rhocp_long} pods, for example, by using the external IP of the DNSMasq service as the nameserver in `/etc/resolv.conf`:
 +
 ----
-$ oc get service dnsmasq-dns -o jsonpath="{.status.loadBalancer.ingress[0].ip}" | CONTROLLER1_SSH tee /etc/resolv.conf
+$ oc get service dnsmasq-dns -o jsonpath="{.status.loadBalancer.ingress[0].ip}" | $CONTROLLER1_SSH sudo tee /etc/resolv.conf
 ----
 * Track the current status of the replication by using the `swift-dispersion` tool:
 +
@@ -92,8 +92,8 @@ ssh commands for your existing nodes that store the {object_storage} data:
 +
 ----
 $ oc extract --confirm cm/swift-ring-files
-CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
-CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
+$CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
+$CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
 ----
 
 . Track the replication progress by using the `swift-dispersion-report` tool:
@@ -125,8 +125,8 @@ swift-ring-tool rebalance
 swift-ring-tool push'
 
 $ oc extract --confirm cm/swift-ring-files
-CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
-CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
+$CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
+$CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
 ----
 +
 Monitor the `swift-dispersion-report` output again, wait until all copies are found, and then repeat this step until all your replicas are moved to the new nodes.
@@ -155,5 +155,5 @@ $ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring
 . Confirm that there are no more `\*.db` or `*.data` files in the `/srv/node` directory on the nodes:
 +
 ----
-$ CONTROLLER1_SSH "find /srv/node/ -type f -name '*.db' -o -name '*.data' | wc -l"
+$CONTROLLER1_SSH "find /srv/node/ -type f -name '*.db' -o -name '*.data' | wc -l"
 ----
