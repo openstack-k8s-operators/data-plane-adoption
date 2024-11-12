@@ -68,6 +68,8 @@ spec:
 $ oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 
+. Complete xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane]
+
 . Remove the pre-fast-forward upgrade workarounds from the Compute data plane services:
 +
 [source,yaml]
