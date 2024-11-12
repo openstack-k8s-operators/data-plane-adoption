@@ -34,7 +34,7 @@ MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalap
 To get the value to set `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller node:
 +
 ----
-$ grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep bind
+$ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep bind
 ----
 
 .Procedure
