@@ -22,7 +22,8 @@ ifeval::["{build}" == "downstream"]
 STORAGE_CLASS=local-storage
 OVSDB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-ovn-base-rhel9:18.0
 endif::[]
-SOURCE_OVSDB_IP=172.17.0.100
+SOURCE_OVSDB_IP=172.17.0.100 # For IPv4
+SOURCE_OVSDB_IP=[fd00:bbbb::100] # For IPv6
 ----
 +
 To get the value to set `SOURCE_OVSDB_IP`, query the puppet-generated configurations in a Controller node:
@@ -165,6 +166,13 @@ $ oc wait --for=jsonpath='{.status.phase}'=Running pod --selector=service=ovsdbs
 ----
 PODIFIED_OVSDB_NB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-nb-0" -ojsonpath='{.items[0].spec.clusterIP}')
 PODIFIED_OVSDB_SB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-sb-0" -ojsonpath='{.items[0].spec.clusterIP}')
+----
+
+.+ When using IPv6, adjust the address to the format expected by `ovsdb-*` tools:
+
+----
+PODIFIED_OVSDB_NB_IP=[$PODIFIED_OVSDB_NB_IP]
+PODIFIED_OVSDB_SB_IP=[$PODIFIED_OVSDB_SB_IP]
 ----
 
 . Upgrade the database schema for the backup files:
