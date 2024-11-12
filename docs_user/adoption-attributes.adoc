@@ -12,7 +12,7 @@ ifeval::["{build}" != "downstream"]
 :OpenShiftShort: OCP
 :ocp_curr_ver: 4.16
 :rhos_curr_ver: Antelope
-:rhos_prev_ver: Wallaby
+:rhos_prev_ver:
 :rhos_z_stream: 0
 :rhel_curr_ver: 9.4
 :rhel_prev_ver: 9.2
