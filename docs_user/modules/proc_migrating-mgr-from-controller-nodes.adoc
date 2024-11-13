@@ -28,6 +28,27 @@ $ sudo iptables-save
 $ sudo systemctl restart iptables
 ----
 +
+. If `nftables` is used in the existing deployment, edit `/etc/nftables/tripleo-rules.nft`
+and add the following content:
++
+----
+# 113 ceph_mgr {'dport': ['6800-7300', 8444]}
+add rule inet filter TRIPLEO_INPUT tcp dport { 6800-7300,8444 } ct state new counter accept comment "113 ceph_mgr"
+----
+
+. Save the file.
+
+. Restart the `nftables` service:
++
+----
+$ sudo systemctl restart nftables
+----
+
+. Verify that the rules are applied:
++
+----
+$ sudo nft list ruleset | grep ceph_mgr
+----
 . Prepare the target node to host the new Ceph Manager daemon, and add the `mgr`
 label to the target node:
 +
@@ -41,7 +62,10 @@ $ ceph orch host label add <target_node> mgr; done
 +
 [source,yaml]
 ----
-$ sudo cephadm shell -- ceph orch ls --export mgr > mgr.yaml
+
+$ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+$ mkdir -p ${SPEC_DIR}
+$ sudo cephadm shell -- ceph orch ls --export mgr > ${SPEC_DIR}/mgr
 ----
 
 . Edit the retrieved spec and add the `label: mgr` section to the `placement`
@@ -55,11 +79,12 @@ placement:
   label: mgr
 ----
 
-. Save the spec in the `/tmp/mgr.yaml` file.
-. Apply the spec with `cephadm`` by using the Ceph Orchestrator:
+. Save the spec.
+. Apply the spec with `cephadm` by using the Ceph Orchestrator:
 +
 ----
-$ sudo cephadm shell -m /tmp/mgr.yaml -- ceph orch apply -i /mnt/mgr.yaml
+$ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+$ sudo cephadm shell -m ${SPEC_DIR}/mgr -- ceph orch apply -i /mnt/mgr
 ----
 
 .Verification
@@ -67,8 +92,8 @@ $ sudo cephadm shell -m /tmp/mgr.yaml -- ceph orch apply -i /mnt/mgr.yaml
 . Verify that the new Ceph Manager daemons are created in the target nodes:
 +
 ----
-$ ceph orch ps | grep -i mgr
-$ ceph -s
+$ sudo cephadm shell -- ceph orch ps | grep -i mgr
+$ sudo cephadm shell -- ceph -s
 ----
 +
 The Ceph Manager daemon count should match the number of hosts where the `mgr` label is added.
