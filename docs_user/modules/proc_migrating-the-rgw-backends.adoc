@@ -10,15 +10,15 @@ The following procedure assumes that you have three target nodes, `cephstorage-0
 . Add the RGW label to the {Ceph} nodes that you want to migrate your RGW back ends to:
 +
 ----
-$ ceph orch host label add cephstorage-0 rgw;
-$ ceph orch host label add cephstorage-1 rgw;
-$ ceph orch host label add cephstorage-2 rgw;
+$ sudo cephadm shell -- ceph orch host label add cephstorage-0 rgw;
+$ sudo cephadm shell -- ceph orch host label add cephstorage-1 rgw;
+$ sudo cephadm shell -- ceph orch host label add cephstorage-2 rgw;
 
 Added label rgw to host cephstorage-0
 Added label rgw to host cephstorage-1
 Added label rgw to host cephstorage-2
 
-[ceph: root@controller-0 /]# ceph orch host ls
+$ sudo cephadm shell -- ceph orch host ls
 
 HOST       	ADDR       	LABELS      	STATUS
 cephstorage-0  192.168.24.54  osd rgw
@@ -37,11 +37,14 @@ ifeval::["{build}" != "downstream"]
   and change the RGW back-end port to `8090` to avoid conflicts with the Ceph ingress daemon front-end port.
 endif::[]
 ifeval::["{build}" != "upstream"]
-. Locate the RGW spec:
+. Locate the RGW spec and dump in the spec directory:
 endif::[]
 +
 ----
-[root@controller-0 heat-admin]# cat rgw
+$ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+$ mkdir -p ${SPEC_DIR}
+$ sudo cephadm shell -- ceph orch ls --export rgw > ${SPEC_DIR}/rgw
+$ cat ${SPEC_DIR}/rgw
 
 networks:
 - 172.17.3.0/24
@@ -88,8 +91,8 @@ spec:
 . Apply the new RGW spec by using the orchestrator CLI:
 +
 ----
-$ cephadm shell -m /home/ceph-admin/specs/rgw
-$ cephadm shell -- ceph orch apply -i /mnt/rgw
+$ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+$ sudo cephadm shell -m ${SPEC_DIR}/rgw -- ceph orch apply -i /mnt/rgw
 ----
 +
 This command triggers the redeploy, for example:
@@ -115,6 +118,30 @@ rgw.rgw.cephstorage-2.krycit  cephstorage-2  172.17.3.81:8090  running (13s)
 ----
 $ iptables -I INPUT -p tcp -m tcp --dport 8080 -m conntrack --ctstate NEW -m comment --comment "ceph rgw ingress" -j ACCEPT
 $ iptables -I INPUT -p tcp -m tcp --dport 8090 -m conntrack --ctstate NEW -m comment --comment "ceph rgw backends" -j ACCEPT
+$ sudo iptables-save
+$ sudo systmectl restart iptables
+----
+
+. If `nftables` is used in the existing deployment, edit `/etc/nftables/tripleo-rules.nft`
+and add the following content:
++
+----
+# 100 ceph_rgw {'dport': ['8080','8090']}
+add rule inet filter TRIPLEO_INPUT tcp dport { 8080,8090 } ct state new counter accept comment "100 ceph_rgw"
+----
+
+. Save the file.
+
+. Restart the `nftables` service:
++
+----
+$ sudo systemctl restart nftables
+----
+
+. Verify that the rules are applied:
++
+----
+$ sudo nft list ruleset | grep ceph_rgw
 ----
 
 . From a Controller node, such as `controller-0`, try to reach the RGW back ends:
