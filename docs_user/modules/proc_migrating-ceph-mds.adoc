@@ -19,13 +19,13 @@ endif::[]
 . Verify that the {CephCluster} cluster is healthy and check the MDS status:
 +
 ----
-[ceph: root@controller-0 /]# ceph fs ls
+$ sudo cephadm shell -- ceph fs ls
 name: cephfs, metadata pool: manila_metadata, data pools: [manila_data ]
 
-[ceph: root@controller-0 /]# ceph mds stat
+$ sudo cephadm shell -- ceph mds stat
 cephfs:1 {0=mds.controller-2.oebubl=up:active} 2 up:standby
 
-[ceph: root@controller-0 /]# ceph fs status cephfs
+$ sudo cephadm shell -- ceph fs status cephfs
 
 cephfs - 0 clients
 ======
@@ -42,7 +42,7 @@ mds.controller-1.cwzhog
 . Retrieve more detailed information on the Ceph File System (CephFS) MDS status:
 +
 ----
-[ceph: root@controller-0 /]# ceph fs dump
+$ sudo cephadm shell -- ceph fs dump
 
 e8
 enable_multiple, ever_enabled_multiple: 1,1
@@ -88,11 +88,11 @@ dumped fsmap epoch 8
 . Check the OSD blocklist and clean up the client list:
 +
 ----
-[ceph: root@controller-0 /]# ceph osd blocklist ls
+$ sudo cephadm shell -- ceph osd blocklist ls
 ..
 ..
-for item in $(ceph osd blocklist ls | awk '{print $0}'); do
-     ceph osd blocklist rm $item;
+for item in $(sudo cephadm shell -- ceph osd blocklist ls | awk '{print $1}'); do
+     sudo cephadm shell -- ceph osd blocklist rm $item;
 done
 ----
 +
@@ -108,23 +108,13 @@ Ordinarily, a blocklisted client cannot reconnect to the servers; you must unmou
 ----
 [ceph: root@controller-0 /]# ceph orch host ls
 HOST                        ADDR           LABELS          STATUS
-cephstorage-0.redhat.local  192.168.24.25  osd mds
-cephstorage-1.redhat.local  192.168.24.50  osd mds
-cephstorage-2.redhat.local  192.168.24.47  osd mds
+cephstorage-0.redhat.local  192.168.24.25  osd
+cephstorage-1.redhat.local  192.168.24.50  osd
+cephstorage-2.redhat.local  192.168.24.47  osd
 controller-0.redhat.local   192.168.24.24  _admin mgr mon
 controller-1.redhat.local   192.168.24.42  mgr _admin mon
 controller-2.redhat.local   192.168.24.37  mgr _admin mon
 6 hosts in cluster
-
-[ceph: root@controller-0 /]# ceph orch ls --export mds
-service_type: mds
-service_id: mds
-service_name: mds.mds
-placement:
-  hosts:
-  - controller-0.redhat.local
-  - controller-1.redhat.local
-  - controller-2.redhat.local
 ----
 
 . Apply the MDS labels to the target nodes:
@@ -138,7 +128,7 @@ done
 . Verify that all the hosts have the MDS label:
 +
 ----
-[tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls
+$ sudo cephadm shell -- ceph orch host ls
 
 HOST                    	ADDR       	   LABELS
 cephstorage-0.redhat.local  192.168.24.11  osd mds
@@ -152,7 +142,10 @@ controller-2.redhat.local   192.168.24.10  mon _admin mgr mds
 . Dump the current MDS spec:
 +
 ----
-[ceph: root@controller-0 /]# ceph orch ls --export mds > mds.yaml
+
+$ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+$ mkdir -p ${SPEC_DIR}
+$ sudo cephadm shell -- ceph orch ls --export mds > ${SPEC_DIR}/mds
 ----
 
 . Edit the retrieved spec and replace the `placement.hosts` section with
@@ -169,8 +162,10 @@ placement:
 . Use the `ceph orchestrator` to apply the new MDS spec:
 +
 ----
-$ sudo cephadm shell -m mds.yaml -- ceph orch apply -i /mnt/mds.yaml
-Scheduling new mds deployment …
+$ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+$ sudo cephadm shell -m ${SPEC_DIR}/mds -- ceph orch apply -i /mnt/mds
+
+Scheduling new mds deployment ...
 ----
 +
 This results in an increased number of MDS daemons.
@@ -178,7 +173,7 @@ This results in an increased number of MDS daemons.
 . Check the new standby daemons that are temporarily added to the CephFS:
 +
 ----
-$ ceph fs dump
+$ sudo cephadm shell -- ceph fs dump
 
 Active
 
@@ -202,14 +197,17 @@ It is possible to elect a dedicated MDS as "active" for a particular file system
 When failing over MDS daemons, cluster monitors prefer standby daemons with `mds_join_fs` equal to the file system name with the failed rank. If no standby exists with `mds_join_fs` equal to the file system name, it chooses an unqualified standby as a replacement.
 +
 ----
-$ ceph config set mds.mds.cephstorage-0.fqcshx mds_join_fs cephfs
+$ sudo cephadm shell -- ceph config set mds.mds.cephstorage-0.fqcshx mds_join_fs cephfs
 ----
+
+* Replace `mds.mds.cephstorage-0.fqcshx` with the daemon deployed on
+  `cephstorage-0` that was retrieved from the previous step.
 
 . Remove the labels from the Controller nodes and force the MDS failover to the
 target node:
 +
 ----
-$ for i in 0 1 2; do ceph orch host label rm "controller-$i.redhat.local" mds; done
+$ for i in 0 1 2; do sudo cephadm shell -- ceph orch host label rm "controller-$i.redhat.local" mds; done
 
 Removed label mds from host controller-0.redhat.local
 Removed label mds from host controller-1.redhat.local
@@ -221,7 +219,7 @@ The switch to the target node happens in the background. The new active MDS is t
 . Check the result of the failover and the new deployed daemons:
 +
 ----
-$ ceph fs dump
+$ sudo cephadm shell -- ceph fs dump
 …
 …
 standby_count_wanted    1
@@ -234,14 +232,14 @@ Standby daemons:
 [mds.mds.cephstorage-1.jkvomp{-1:499760} state up:standby seq 1 join_fscid=1 addr [v2:172.17.3.135:6820/452139733,v1:172.17.3.135:6821/452139733] compat {c=[1],r=[1],i=[7ff]}]
 
 
-$ ceph orch ls
+$ sudo cephadm shell -- ceph orch ls
 
 NAME                     PORTS   RUNNING  REFRESHED  AGE  PLACEMENT
 crash                                6/6  10m ago    10d  *
 mds.mds                          3/3  10m ago    32m  label:mds
 
 
-$ ceph orch ps | grep mds
+$ sudo cephadm shell -- ceph orch ps | grep mds
 
 
 mds.mds.cephstorage-0.fqcshx  cephstorage-0.redhat.local                     running (79m)     3m ago  79m    27.2M        -  17.2.6-100.el9cp  1af7b794f353  2a2dc5ba6d57
