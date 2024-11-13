@@ -60,6 +60,9 @@
     - role: cinder_adoption
       tags:
         - cinder_adoption
+    - role: octavia_adoption
+      tags:
+        - octavia_adoption
     - role: horizon_adoption
       tags:
         - horizon_adoption

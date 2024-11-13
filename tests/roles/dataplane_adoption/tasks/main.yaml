@@ -458,11 +458,10 @@
   ansible.builtin.include_tasks:
     file: neutron_verify.yaml
 
-
-- name: Adopt Octavia Certificates Wallaby->Antelope FFU
+- name: Adopted Octavia post-checks
   when: octavia_adoption|bool
   ansible.builtin.include_tasks:
-    file: octavia_certs.yaml
+    file: octavia_verify.yaml
 
 - name: Adopted Cinder post-checks
   ansible.builtin.include_tasks:

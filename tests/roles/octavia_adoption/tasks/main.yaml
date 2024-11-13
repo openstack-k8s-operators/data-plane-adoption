@@ -1,0 +1,19 @@
+- name: Adopt Octavia Amphora certificates
+  when: octavia_adoption is true
+  ansible.builtin.include_tasks:
+    file: octavia_certs.yaml
+
+- name: Adopt Octavia Amphora SSH public key
+  when: octavia_adoption is true
+  ansible.builtin.include_tasks:
+    file: octavia_ssh.yaml
+
+- name: Adopt Octavia services
+  when: octavia_adoption is true
+  ansible.builtin.include_tasks:
+    file: octavia_cr_config.yaml
+
+- name: Cleanup old Octavia resources
+  when: octavia_adoption is true
+  ansible.builtin.include_tasks:
+    file: octavia_cleanup.yaml
