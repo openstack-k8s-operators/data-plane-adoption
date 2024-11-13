@@ -15,6 +15,10 @@ include::modules/proc_migrating-tls-everywhere.adoc[leveloffset=+1]
 
 include::assemblies/assembly_migrating-databases-to-the-control-plane.adoc[leveloffset=+1]
 
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+include::assemblies/assembly_ospdo-scale-down-pre-database-adoption.adoc[leveloffset=+1]
+endif::[]
+
 include::assemblies/assembly_adopting-openstack-control-plane-services.adoc[leveloffset=+1]
 
 include::assemblies/assembly_adopting-the-data-plane.adoc[leveloffset=+1]
