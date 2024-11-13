@@ -24,6 +24,9 @@ netconfig_networks:
             start: 172.17.0.100
         cidr: 172.17.0.0/24
         vlan: 20
+        routes:
+        - destination: 172.17.1.0/24
+          nexthop: 172.17.0.100
   - name: External
     dnsDomain: external.example.com
     subnets:
@@ -60,6 +63,9 @@ netconfig_networks:
             start: 172.19.0.100
         cidr: 172.19.0.0/24
         vlan: 22
+        routes:
+        - destination: 172.19.1.0/24
+          nexthop: 172.19.0.100
 registry_name: "quay.io"
 registry_namespace: "podified-antelope-centos9"
 image_tag: "current-podified"
