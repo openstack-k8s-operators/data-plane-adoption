@@ -23,6 +23,7 @@ function get_cut_time()
 function convert_ping_result_date()
 {
     local ping_file="${1:?'Provide a file'}"
+    local ping_file_hr="${ping_file%.*}"-hr.txt
     awk -F'[][]' \
     '{if (NF>1) {
         cmd="date -d @"$2" +\"%Y-%m-%d %H:%M:%S.%3N %Z\"";
@@ -30,7 +31,8 @@ function convert_ping_result_date()
         close(cmd);
         $2="[" date "]";
         }
-      print $0; }' "${ping_file}" > "${ping_file%.*}"-hr.log
+      print $0; }' "${ping_file}" > "${ping_file_hr}"
+    chmod 0664 "${ping_file_hr}"
 }
 
 # kill the ping process
@@ -39,6 +41,9 @@ kill -s INT $(/usr/sbin/pidof ping)
 # print the ping results
 PING_RESULT_LOG={{ ping_test_log_file }}
 tail -2 $PING_RESULT_LOG
+
+# Make sure the log files are readable by every user.
+chmod 0664 "${PING_RESULT_LOG}"
 
 # if only one packet is lost, test succeeded, avoid false positive.
 TRANSMITTED=$(grep 'packet loss' $PING_RESULT_LOG | sed 's/^\([0-9]*\) packets transmitted,.*/\1/')
