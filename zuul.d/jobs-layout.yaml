@@ -3,6 +3,7 @@
     name: openstack-k8s-operators/data-plane-adoption
     github-check:
       jobs:
+        - noop
         - adoption-standalone-to-crc-ceph
         - adoption-standalone-to-crc-no-ceph
         - adoption-docs-preview
