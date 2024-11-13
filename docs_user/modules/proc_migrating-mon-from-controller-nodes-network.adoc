@@ -56,8 +56,8 @@ $ sudo os-net-config -c /etc/os-net-config/config.yaml
 $ ip -o a | grep 172.17.3.60
 ----
 
-. From the source node, ping the ip address that is migrated to the target node
-  and confirm that it is still reachable:
+. From the Ceph client node, `controller-0`, ping the IP address that is
+  migrated to the target node and confirm that it is still reachable:
 +
 ----
 [controller-0]$ ping -c 3 172.17.3.60
