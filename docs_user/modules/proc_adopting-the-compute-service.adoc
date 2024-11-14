@@ -147,3 +147,7 @@ The following changes are expected:
 
 [NOTE]
 At this point, the {compute_service} control plane services do not control the existing {compute_service} workloads. The control plane manages the data plane only after the data adoption process is completed. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].
+
+[IMPORTANT]
+To import external Compute services to the {rhos_acro} data plane, you must upgrade them first.
+For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane], and xref:performing-a-fast-forward-upgrade-on-compute-services_data-plane[Performing a fast-forward upgrade on Compute services].

@@ -55,7 +55,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: ovn-data
 spec:
-  storageClassName: $STORAGE_CLASS_NAME
+  storageClassName: $STORAGE_CLASS
   accessModes:
     - ReadWriteOnce
   resources:
@@ -105,7 +105,7 @@ EOF
 $ oc wait --for=condition=Ready pod/ovn-copy-data --timeout=30s
 ----
 
-. If podified internalapi cidr is different than source internalapi cidr, add an iptables accept rule on controllers:
+. If the podified internalapi cidr is different than the source internalapi cidr, add an iptables accept rule on the Controller nodes:
 +
 ----
 $ $CONTROLLER1_SSH sudo iptables I INPUT -s {PODIFIED_INTERNALAPI_NETWORK} p tcp -m tcp --dport 6641 -m conntrack --ctstate NEW -j ACCEPT
@@ -149,7 +149,6 @@ spec:
       ovnController:
         networkAttachment: tenant
         nodeSelector:
-          node: non-existing-node-name
 '
 ----
 

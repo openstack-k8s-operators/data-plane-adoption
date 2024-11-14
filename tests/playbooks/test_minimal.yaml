@@ -78,3 +78,6 @@
     - role: dataplane_adoption
       tags:
         - dataplane_adoption
+
+- name: Stop the ping test
+  import_playbook: _stop_ping_test.yaml

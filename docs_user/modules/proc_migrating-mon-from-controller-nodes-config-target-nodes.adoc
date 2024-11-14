@@ -30,9 +30,38 @@ $ sudo iptables-save
 $ sudo systemctl restart iptables
 ----
 
-. To migrate the existing Ceph Monitors to the target {Ceph} nodes, create the following {Ceph} spec from the first Ceph Monitor, or the first Controller node, and add the `label:mon` section to the `placement` section:
+. If `nftables` is used in the existing deployment, edit `/etc/nftables/tripleo-rules.nft`
+and add the following content:
 +
-[source,yaml]
+----
+# 110 ceph_mon {'dport': [6789, 3300, '9100']}
+add rule inet filter TRIPLEO_INPUT tcp dport { 6789,3300,9100 } ct state new counter accept comment "110 ceph_mon"
+----
+
+. Save the file.
+
+. Restart the `nftables` service:
++
+----
+$ sudo systemctl restart nftables
+----
+
+. Verify that the rules are applied:
++
+----
+$ sudo nft list ruleset | grep ceph_mon
+----
+
+. To migrate the existing Ceph Monitors to the target {Ceph} nodes, retrieve the {Ceph} mon spec from the first Ceph Monitor, or the first Controller node:
++
+----
+$ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+$ mkdir -p ${SPEC_DIR}
+$ sudo cephadm shell -- ceph orch ls --export mon > ${SPEC_DIR}/mon
+----
+
+. Add the `label:mon` section to the `placement` section:
++
 ----
 service_type: mon
 service_id: mon
@@ -40,49 +69,42 @@ placement:
   label: mon
 ----
 
-. Save the spec in the `/tmp/mon.yaml` file.
+. Save the spec.
 
 . Apply the spec with `cephadm` by using the Ceph Orchestrator:
 +
 ----
-$ sudo cephadm shell -m /tmp/mon.yaml
-$ ceph orch apply -i /mnt/mon.yaml
+$ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+$ sudo cephadm shell -m ${SPEC_DIR}/mon -- ceph orch apply -i /mnt/mon
 ----
 
-. Apply the `mon` label to the remaining {Ceph} target nodes to ensure that
+. Extend the `mon` label to the remaining {Ceph} target nodes to ensure that
 quorum is maintained during the migration process:
 +
 ----
-declare -A target_nodes
-
-target_nodes[mon]="oc0-ceph-0 oc0-ceph-1 oc0-ceph2"
-
-mon_nodes="${target_nodes[mon]}"
-IFS=' ' read -r -a mons <<< "$mon_nodes"
-
-for node in "${mons[@]}"; do
-    ceph orch host add label $node mon
-    ceph orch host add label $node _admin
+for item in $(sudo cephadm shell --  ceph orch host ls --format json | jq -r '.[].hostname'); do
+    sudo cephadm shell -- ceph orch host label add  $item mon;
+    sudo cephadm shell -- ceph orch host label add  $item _admin;
 done
 ----
 +
 [NOTE]
-Applying the `mon.yaml` spec allows the existing strategy to use `labels`
-instead of `hosts`. As a result, any node with the `mon` label can host a Ceph
-Monitor daemon. Perform this step only once to avoid multiple iterations when multiple Ceph Monitors are migrated.
+Applying the `mon` spec allows the existing strategy to use `labels` instead of `hosts`.
+As a result, any node with the `mon` label can host a Ceph Monitor daemon.
+Perform this step only once to avoid multiple iterations when multiple Ceph Monitors are migrated.
 
 . Check the status of the {CephCluster} and the Ceph Orchestrator daemons list.
 Ensure that Ceph Monitors are in a quorum and listed by the `ceph orch` command:
 +
 ----
-# ceph -s
+$ sudo cephadm shell -- ceph -s
   cluster:
     id:     f6ec3ebe-26f7-56c8-985d-eb974e8e08e3
     health: HEALTH_OK
 
   services:
-    mon: 6 daemons, quorum oc0-controller-0,oc0-controller-1,oc0-controller-2,oc0-ceph-0,oc0-ceph-1,oc0-ceph-2 (age 19m)
-    mgr: oc0-controller-0.xzgtvo(active, since 32m), standbys: oc0-controller-1.mtxohd, oc0-controller-2.ahrgsk
+    mon: 6 daemons, quorum controller-0,controller-1,controller-2,ceph-0,ceph-1,ceph-2 (age 19m)
+    mgr: controller-0.xzgtvo(active, since 32m), standbys: controller-1.mtxohd, controller-2.ahrgsk
     osd: 8 osds: 8 up (since 12m), 8 in (since 18m); 1 remapped pgs
 
   data:
@@ -93,14 +115,55 @@ Ensure that Ceph Monitors are in a quorum and listed by the `ceph orch` command:
 ----
 +
 ----
-[ceph: root@oc0-controller-0 /]# ceph orch host ls
+$ sudo cephadm shell -- ceph orch host ls
 HOST              ADDR           LABELS          STATUS
-oc0-ceph-0        192.168.24.14  osd mon _admin
-oc0-ceph-1        192.168.24.7   osd mon _admin
-oc0-ceph-2        192.168.24.8   osd mon _admin
-oc0-controller-0  192.168.24.15  _admin mgr mon
-oc0-controller-1  192.168.24.23  _admin mgr mon
-oc0-controller-2  192.168.24.13  _admin mgr mon
+ceph-0        192.168.24.14  osd mon mgr _admin
+ceph-1        192.168.24.7   osd mon mgr _admin
+ceph-2        192.168.24.8   osd mon mgr _admin
+controller-0  192.168.24.15  _admin mgr mon
+controller-1  192.168.24.23  _admin mgr mon
+controller-2  192.168.24.13  _admin mgr mon
+----
+
+. Set up a Ceph client on the first Controller node that is used during the rest
+of the procedure to interact with {Ceph}. Set up an additional IP address on the
+storage network that is used to interact with {Ceph} when the first Controller
+node is decommissioned:
+
+.. Back up the content of `/etc/ceph` in the `ceph_client_backup` directory.
++
+----
+$ mkdir -p $HOME/ceph_client_backup
+$ sudo cp -R /etc/ceph/* $HOME/ceph_client_backup
+----
+
+.. Edit `/etc/os-net-config/config.yaml` and add `- ip_netmask: 172.17.3.200`
+  after the IP address on the VLAN that belongs to the storage network. Replace
+  `172.17.3.200` with any other available IP address on the storage network
+  that can be statically assigned to `controller-0`.
+
+.. Save the file and refresh the `controller-0` network configuration:
++
+----
+$ sudo os-net-config -c /etc/os-net-config/config.yaml
+----
+
+.. Verify that the IP address is present in the Controller node:
++
+----
+$ ip -o a | grep 172.17.3.200
+----
+
+.. Ping the IP address and confirm that it is reachable:
++
+----
+$ ping -c 3 172.17.3.200
+----
+
+.. Verify that you can interact with the {Ceph} cluster:
++
+----
+$ sudo cephadm shell -c $HOME/ceph_client_backup/ceph.conf -k $HOME/ceph_client_backup/ceph.client.admin.keyring -- ceph -s
 ----
 
 .Next steps

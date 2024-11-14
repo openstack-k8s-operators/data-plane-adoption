@@ -7,7 +7,7 @@ ping_test: false
 # ~/src/github.com/openstack-k8s-operators/data-plane-adoption/tests/playbooks
 # Collected in
 # /controller/data-plane-adoption-tests-repo/data-plane-adoption/tests/logs
-ping_test_log_file: ../logs/ping_results.log
+ping_test_log_file: ../logs/ping_results.txt
 stop_ping_script: ../stop_ping.sh
 # max cut in seconds
 ping_test_loss_threshold: 0

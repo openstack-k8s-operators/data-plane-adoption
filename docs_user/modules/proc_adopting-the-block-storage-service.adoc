@@ -21,7 +21,7 @@ $CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/cinder/etc/cinder/cin
 
 .Procedure
 
-. Create a new file, for example, `cinder.patch`, and apply the configuration:
+. Create a new file, for example, `cinder_api.patch`, and apply the configuration:
 +
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch-file=<patch_name>
@@ -29,7 +29,7 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file=<patch_name
 +
 * Replace `<patch_name>` with the name of your patch file.
 +
-The following example shows a `cinder.patch` file for an RBD deployment:
+The following example shows a `cinder_api.patch` file:
 +
 [source,yaml]
 ----
@@ -75,6 +75,61 @@ spec:
           [DEFAULT]
           default_volume_type=tripleo
       cinderScheduler:
+        replicas: 0
+      cinderBackup:
+        networkAttachments:
+        - storage
+        replicas: 0
+      cinderVolumes:
+        ceph:
+          networkAttachments:
+          - storage
+          replicas: 0
+----
+
+. Retrieve the list of the previous scheduler and backup services:
++
+----
+$ openstack volume service list
+
++------------------+------------------------+------+---------+-------+----------------------------+
+| Binary           | Host                   | Zone | Status  | State | Updated At                 |
++------------------+------------------------+------+---------+-------+----------------------------+
+| cinder-scheduler | standalone.localdomain | nova | enabled | down  | 2024-11-04T17:47:14.000000 |
+| cinder-backup    | standalone.localdomain | nova | enabled | down  | 2024-11-04T17:47:14.000000 |
+| cinder-volume    | hostgroup@tripleo_ceph | nova | enabled | down  | 2024-11-04T17:47:14.000000 |
++------------------+------------------------+------+---------+-------+----------------------------+
+----
+
+. Remove services for hosts that are in the `down` state:
++
+----
+$ oc exec -t cinder-api-0 -c cinder-api -- cinder-manage service remove <service_binary> <service_host>
+----
++
+* Replace `<service_binary>` with the name of the binary, for example, `cinder-backup`.
+* Replace `<service_host>` with the host name, for example, `cinder-backup-0`.
++
+
+. Deploy the scheduler, backup and volume services.
++
+* Create another file, for example, `cinder_services.patch`, and apply the configuration.
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file=<patch_name>
+----
++
+* Replace `<patch_name>` with the name of your patch file.
++
+* The following example shows a `cinder_services.patch` file for an RBD deployment:
++
+[source,yaml]
+----
+spec:
+  cinder:
+    enabled: true
+    template:
+      cinderScheduler:
         replicas: 1
       cinderBackup:
         networkAttachments:
@@ -103,7 +158,7 @@ spec:
             report_discard_supported=True
 ----
 
-. Retrieve the list of the previous scheduler and backup services:
+. Check if all the services are up and running.
 +
 ----
 $ openstack volume service list
@@ -111,22 +166,11 @@ $ openstack volume service list
 +------------------+------------------------+------+---------+-------+----------------------------+
 | Binary           | Host                   | Zone | Status  | State | Updated At                 |
 +------------------+------------------------+------+---------+-------+----------------------------+
-| cinder-backup    | standalone.localdomain | nova | enabled | down  | 2023-06-28T11:00:59.000000 |
-| cinder-scheduler | standalone.localdomain | nova | enabled | down  | 2023-06-28T11:00:29.000000 |
 | cinder-volume    | hostgroup@tripleo_ceph | nova | enabled | up    | 2023-06-28T17:00:03.000000 |
 | cinder-scheduler | cinder-scheduler-0     | nova | enabled | up    | 2023-06-28T17:00:02.000000 |
 | cinder-backup    | cinder-backup-0        | nova | enabled | up    | 2023-06-28T17:00:01.000000 |
 +------------------+------------------------+------+---------+-------+----------------------------+
 ----
-
-. Remove services for hosts that are in the `down` state:
-+
-----
-$ oc exec -it cinder-scheduler-0 -- cinder-manage service remove <service_binary> <service_host>
-----
-+
-* Replace `<service_binary>` with the name of the binary, for example, `cinder-backup`.
-* Replace `<service_host>` with the host name, for example, `cinder-backup-0`.
 
 . Apply the DB data migrations:
 +

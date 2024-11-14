@@ -80,10 +80,11 @@ ifeval::["{build}" == "downstream"]
 endif::[]
 ----
 
-. Create a file called `rgw_ingress` in the `/home/ceph-admin/specs/` directory in `controller-0`:
+. Create a file called `rgw_ingress` in `controller-0`:
 +
 ----
-$ sudo vim /home/ceph-admin/specs/rgw_ingress
+$ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+$ vim ${SPEC_DIR}/rgw_ingress
 ----
 
 . Paste the following content into the `rgw_ingress` file:
@@ -111,14 +112,14 @@ spec:
 . Apply the `rgw_ingress` spec by using the Ceph orchestrator CLI:
 +
 ----
-$ cephadm shell -m /home/ceph-admin/specs/rgw_ingress
-$ cephadm shell -- ceph orch apply -i /mnt/rgw_ingress
+$ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
+$ cephadm shell -m ${SPEC_DI}/rgw_ingress -- ceph orch apply -i /mnt/rgw_ingress
 ----
 
 . Wait until the ingress is deployed and query the resulting endpoint:
 +
 ----
-[ceph: root@controller-0 /]# ceph orch ls
+$ sudo cephadm shell -- ceph orch ls
 
 NAME                 	PORTS            	RUNNING  REFRESHED  AGE  PLACEMENT
 crash                                         	6/6  6m ago 	3d   *
@@ -131,7 +132,7 @@ rgw.rgw   ?:8090          3/3  37s ago	4m   label:rgw
 ----
 +
 ----
-[ceph: root@controller-0 /]# curl  10.0.0.89:8080
+$ curl 10.0.0.89:8080
 
 ---
 <?xml version="1.0" encoding="UTF-8"?><ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>anonymous</ID><DisplayName></DisplayName></Owner><Buckets></Buckets></ListAllMyBucketsResult>[ceph: root@controller-0 /]#

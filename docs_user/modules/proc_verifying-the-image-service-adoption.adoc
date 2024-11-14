@@ -42,7 +42,7 @@ ceph.conf
 . Check that the service is active, and that the endpoints are updated in the {OpenStackShort} CLI:
 +
 ----
-$ oc rsh openstackclient -n openstackclient
+$ oc rsh openstackclient
 $ openstack service list | grep image
 
 | fc52dbffef36434d906eeb99adfc6186 | glance    | image        |
