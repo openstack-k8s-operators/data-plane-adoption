@@ -17,6 +17,8 @@ before you adopt your main environment.
 
 include::../modules/con_adoption-limitations.adoc[leveloffset=+1]
 
+include::../modules/con_known-issues-adoption.adoc[leveloffset=+1]
+
 include::../modules/con_adoption-prerequisites.adoc[leveloffset=+1]
 
 include::../modules/con_adoption-guidelines.adoc[leveloffset=+1]
