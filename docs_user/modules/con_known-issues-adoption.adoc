@@ -1,0 +1,11 @@
+[id="known-issues-adoption_{context}"]
+
+= Known issues
+
+Review the following known issues that might affect a successful adoption:
+
+.Adoption of combined Controller/Networker nodes not verified
+
+Red Hat has not verified a process for adoption of a {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} environment where Controller and Networker roles are composed together on Controller nodes. If your {OpenStackShort} {rhos_prev_ver} environment does use combined Controller/Networker roles on the Controller nodes, the documented adoption process will not produce the expected results.
+
+Adoption of {OpenStackShort} {rhos_prev_ver} environments that use dedicated Networker nodes has been verified to work as documented.
