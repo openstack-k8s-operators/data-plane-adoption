@@ -11,7 +11,7 @@
     oc wait pod --for condition=Ready -l component=cinder-api
   register: cinder_api_running
   until: cinder_api_running is success
-  retries: 60
+  retries: 90
   delay: 2
 
 # Ignoring "-o pipefail" to avoid errors in grep which are non-fatal
