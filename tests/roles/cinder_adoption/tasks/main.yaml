@@ -19,7 +19,7 @@
   ansible.builtin.shell: |
     {{ oc_header }}
     set -eux
-    oc exec -t openstackclient -- openstack volume service list --service cinder-backup -f value | grep "down" | awk '{ print $2 }'
+    oc exec -t openstackclient -- openstack volume service list --service cinder-backup -c Host -f value
   register: backup_down_services
 
 - name: Remove old cinder-backup service
@@ -34,7 +34,7 @@
   ansible.builtin.shell: |
     {{ oc_header }}
     set -eux
-    oc exec -t openstackclient -- openstack volume service list --service cinder-scheduler -f value | grep "down" | awk '{ print $2 }'
+    oc exec -t openstackclient -- openstack volume service list --service cinder-scheduler -c Host -f value
   register: scheduler_down_services
 
 - name: Remove old cinder-scheduler service
