@@ -44,7 +44,7 @@
       {{ shell_header }}
       {{ openstack_command }} secret store --name testSecret --payload 'TestPayload'
 
-- name: saves a fernet token
+- name: Issue session fernet token
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell:
     cmd: |
@@ -52,11 +52,7 @@
       {{ openstack_command }} token issue -f value -c id
   register: before_adoption_token
 
-- name: debug token
-  ansible.builtin.debug:
-    var: before_adoption_token
-
-- name: create credential for sanity checking its value after adoption
+- name: Create credential for sanity checking its value after adoption
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell:
     cmd: |
