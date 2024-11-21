@@ -137,4 +137,4 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc exec -it cinder-scheduler-0 -- cinder-manage db online_data_migrations
+    oc exec -t cinder-api-0 -c cinder-api -- cinder-manage db online_data_migrations
