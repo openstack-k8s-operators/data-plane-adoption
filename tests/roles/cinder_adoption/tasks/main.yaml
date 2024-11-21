@@ -14,6 +14,18 @@
   retries: 60
   delay: 2
 
+- name: check that Cinder is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+    ${BASH_ALIASES[openstack]} endpoint list | grep cinder
+    ${BASH_ALIASES[openstack]} volume type list
+  register: cinder_responding_result
+  until: cinder_responding_result is success
+  retries: 60
+  delay: 2
+
 - name: Get cinder-backup down services
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -88,18 +100,6 @@
   when: cinder_volume_backend | default('') != '' or cinder_backup_backend | default('') != ''
   ansible.builtin.pause:
      seconds: 90
-
-- name: check that Cinder is reachable and its endpoints are defined
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    alias openstack="oc exec -t openstackclient -- openstack"
-    ${BASH_ALIASES[openstack]} endpoint list | grep cinder
-    ${BASH_ALIASES[openstack]} volume type list
-  register: cinder_responding_result
-  until: cinder_responding_result is success
-  retries: 60
-  delay: 2
 
 - name: wait for Cinder volume to be up and ready
   when: cinder_volume_backend != ''
