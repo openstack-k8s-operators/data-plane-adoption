@@ -105,7 +105,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc exec -t openstackclient -- openstack volume service list --service cinder-scheduler | grep ' up '
+    oc exec -t openstackclient -- openstack volume service list --service cinder-scheduler -c State -f value | grep 'up'
   register: cinder_scheduler_running_result
   until: cinder_scheduler_running_result is success
   retries: 5
@@ -116,7 +116,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc exec -t openstackclient -- openstack volume service list --service cinder-volume | grep ' up '
+    oc exec -t openstackclient -- openstack volume service list --service cinder-volume -c State -f value | grep 'up'
   register: cinder_running_result
   until: cinder_running_result is success
   retries: 5
@@ -127,7 +127,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc exec -t openstackclient -- openstack volume service list --service cinder-backup | grep ' up '
+    oc exec -t openstackclient -- openstack volume service list --service cinder-backup -c State -f value | grep 'up'
   register: cinder_running_result
   until: cinder_running_result is success
   retries: 5
