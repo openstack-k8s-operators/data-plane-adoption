@@ -2,14 +2,14 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get svc --selector "mariadb/name=openstack" -ojsonpath='{.items[0].spec.clusterIP}'
+    oc get svc --selector "mariadb/name=openstack" -n {{ rhoso_namespace }} -ojsonpath='{.items[0].spec.clusterIP}'
   register: podified_mariadb_ip_result
 
 - name: get podified cell1 MariaDB IP
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get svc --selector "mariadb/name=openstack-cell1" -ojsonpath='{.items[0].spec.clusterIP}'
+    oc get svc --selector "mariadb/name=openstack-cell1" -n {{ rhoso_namespace }} -ojsonpath='{.items[0].spec.clusterIP}'
   register: podified_cell1_mariadb_ip_result
 
 - name: set MariaDB copy shell vars

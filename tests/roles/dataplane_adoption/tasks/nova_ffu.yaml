@@ -8,7 +8,7 @@
     {{ shell_header }}
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_dst }}
-    oc exec openstack-cell1-galera-0 -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
+    oc exec openstack-cell1-galera-0 -n {{ rhoso_namespace }} -c galera -- mysql -rs -uroot -p$PODIFIED_DB_ROOT_PASSWORD \
       -e "select a.version from nova_cell1.services a join nova_cell1.services b where a.version!=b.version and a.binary='nova-compute';"
   register: records_check_results
   until: records_check_results.rc == 0 and records_check_results.stdout_lines | length == 0

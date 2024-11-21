@@ -3,3 +3,17 @@ mariadb_copy_tmp_dir: tmp/mariadb
 storage_reclaim_policy: delete
 source_galera_members: |-
   ["{{ edpm_node_hostname }}"]={{ source_mariadb_ip|default(external_mariadb_ip) }}
+
+dpa_dir: "../.."
+dpa_tests_dir: "{{ dpa_dir }}/tests"
+
+mysql_client_override: ""
+
+# ospdo env:
+# Whether source env is OSPD Director Operator
+# i.e. https://github.com/openstack-k8s-operators/osp-director-operator
+ospdo_src: false
+# rhoso namespace
+rhoso_namespace: "openstack"
+# director operator namespace
+org_namespace: "openstack"
