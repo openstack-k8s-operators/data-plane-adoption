@@ -101,6 +101,16 @@
   ansible.builtin.pause:
      seconds: 90
 
+- name: wait for Cinder scheduler to be up and ready
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t openstackclient -- openstack volume service list --service cinder-scheduler | grep ' up '
+  register: cinder_scheduler_running_result
+  until: cinder_scheduler_running_result is success
+  retries: 5
+  delay: 2
+
 - name: wait for Cinder volume to be up and ready
   when: cinder_volume_backend != ''
   ansible.builtin.shell: |
