@@ -14,11 +14,10 @@
   retries: 60
   delay: 2
 
-# Ignoring "-o pipefail" to avoid errors in grep which are non-fatal
 - name: Get cinder-backup down services
   ansible.builtin.shell: |
+    {{ shell_header }}
     {{ oc_header }}
-    set -eux
     oc exec -t openstackclient -- openstack volume service list --service cinder-backup -c Host -f value
   register: backup_down_services
 
@@ -29,11 +28,10 @@
     oc exec -t cinder-api-0 -c cinder-api -- cinder-manage service remove cinder-backup "{{ item }}"
   loop: "{{ backup_down_services.stdout_lines }}"
 
-# Ignoring "-o pipefail" to avoid errors in grep which are non-fatal
 - name: Get cinder-scheduler down services
   ansible.builtin.shell: |
+    {{ shell_header }}
     {{ oc_header }}
-    set -eux
     oc exec -t openstackclient -- openstack volume service list --service cinder-scheduler -c Host -f value
   register: scheduler_down_services
 
@@ -96,7 +94,6 @@
     {{ shell_header }}
     {{ oc_header }}
     alias openstack="oc exec -t openstackclient -- openstack"
-
     ${BASH_ALIASES[openstack]} endpoint list | grep cinder
     ${BASH_ALIASES[openstack]} volume type list
   register: cinder_responding_result
