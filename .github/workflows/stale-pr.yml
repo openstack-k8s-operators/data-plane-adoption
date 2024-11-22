@@ -1,6 +1,6 @@
 ---
 name: Manage stale PRs
-on:
+on:  # yamllint disable-line rule:truthy
   schedule:
     - cron: '30 1 * * *'
 
