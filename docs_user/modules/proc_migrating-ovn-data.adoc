@@ -131,7 +131,7 @@ $ oc exec ovn-copy-data -- bash -c "ovsdb-client backup --ca-cert=/etc/pki/tls/m
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack-galera-network-isolation --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   ovn:
     enabled: true
@@ -215,7 +215,7 @@ $ oc exec -it ovsdbserver-sb-0 -- ovn-sbctl list Chassis
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack-galera-network-isolation --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   ovn:
     enabled: true
@@ -229,7 +229,7 @@ spec:
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack-galera-network-isolation --type=json -p="[{'op': 'remove', 'path': '/spec/ovn/template/ovnController/nodeSelector'}]"
+$ oc patch openstackcontrolplane openstack --type=json -p="[{'op': 'remove', 'path': '/spec/ovn/template/ovnController/nodeSelector'}]"
 ----
 +
 [NOTE]
