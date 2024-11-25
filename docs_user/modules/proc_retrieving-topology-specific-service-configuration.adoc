@@ -9,13 +9,6 @@ Before you migrate your databases to the {rhos_long} control plane, retrieve the
 * To compare your {OpenStackShort} database with the adopted {rhos_acro} database
 
 .Prerequisites
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
-
-:pod_annotations: '${MARIADB_CLIENT_ANNOTATIONS}'
-endif::[]
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
-:pod_annotations: '--overrides="$RUN_OVERRIDES" -n "${OSPDO_NAMESPACE}"'
-endif::[]
 
 * Define the following shell variables. Replace the example values with values that are correct for your environment:
 +
