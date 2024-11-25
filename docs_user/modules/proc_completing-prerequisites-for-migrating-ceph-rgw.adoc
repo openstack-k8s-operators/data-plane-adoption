@@ -52,10 +52,10 @@ Full List of Resources:
 2: enp1s0	inet 192.168.24.45/24 brd 192.168.24.255 scope global enp1s0\   	valid_lft forever preferred_lft forever
 2: enp1s0	inet 192.168.24.46/32 brd 192.168.24.255 scope global enp1s0\   	valid_lft forever preferred_lft forever
 7: br-ex	inet 10.0.0.122/24 brd 10.0.0.255 scope global br-ex\   	valid_lft forever preferred_lft forever <1>
-8: vlan70	inet 172.17.5.22/24 brd 172.17.5.255 scope global vlan70\   	valid_lft forever preferred_lft forever <2>
+8: vlan70	inet 172.17.5.22/24 brd 172.17.5.255 scope global vlan70\   	valid_lft forever preferred_lft forever
 8: vlan70	inet 172.17.5.94/32 brd 172.17.5.255 scope global vlan70\   	valid_lft forever preferred_lft forever
 9: vlan50	inet 172.17.2.140/24 brd 172.17.2.255 scope global vlan50\   	valid_lft forever preferred_lft forever
-10: vlan30	inet 172.17.3.73/24 brd 172.17.3.255 scope global vlan30\   	valid_lft forever preferred_lft forever
+10: vlan30	inet 172.17.3.73/24 brd 172.17.3.255 scope global vlan30\   	valid_lft forever preferred_lft forever <2>
 10: vlan30	inet 172.17.3.68/32 brd 172.17.3.255 scope global vlan30\   	valid_lft forever preferred_lft forever
 11: vlan20	inet 172.17.1.88/24 brd 172.17.1.255 scope global vlan20\   	valid_lft forever preferred_lft forever
 12: vlan40	inet 172.17.4.24/24 brd 172.17.4.255 scope global vlan40\   	valid_lft forever preferred_lft forever
@@ -99,10 +99,13 @@ listen ceph_rgw
 7: br-ex	inet 10.0.0.106/24 brd 10.0.0.255 scope global br-ex\   	valid_lft forever preferred_lft forever
 ...
 ----
++
+[NOTE]
+If the target nodes are not managed by director, you cannot use this procedure to configure the network. An administrator must manually configure all the required networks.
 
 . Propagate the HAProxy front-end network to {CephCluster} nodes.
 
-.. Change the NIC template that you use to define the `ceph-storage` network interfaces and add the new config section:
+.. In the NIC template that you use to define the `ceph-storage` network interfaces, add the new config section in the {Ceph} network configuration template file, for example, `/home/stack/composable_roles/network/nic-configs/ceph-storage.j2`:
 +
 [source,yaml]
 ----
@@ -139,13 +142,16 @@ network_config:
   addresses:
   - ip_netmask: {{ external_ip }}/{{ external_cidr }}
   routes: {{ external_host_routes }}
-  members:
+  members: []
   - type: interface
     name: nic3
     primary: true
 ----
 
-.. Add the External Network to the `baremetal.yaml` file that is used by `metalsmith`:
+.. Add the External Network to the bare metal file, for example, `/home/stack/composable_roles/network/baremetal_deployment.yaml` that is used by `metalsmith`:
++
+[NOTE]
+Ensure that 'network_config_update' is enabled for network propagation to the target nodes when `os-net-config` is triggered.
 +
 [source,yaml]
 ----
@@ -163,6 +169,7 @@ network_config:
   profile: ceph-storage
   network_config:
       template: /home/stack/composable_roles/network/nic-configs/ceph-storage.j2
+      network_config_update: true
   networks:
   - network: ctlplane
       vif: true
@@ -177,10 +184,10 @@ network_config:
 (undercloud) [stack@undercloud-0]$
 
 openstack overcloud node provision
-   -o overcloud-baremetal-deployed-0.yaml
-   --stack overcloud
-   --network-config -y
-  $PWD/network/baremetal_deployment.yaml
+   -o overcloud-baremetal-deployed-0.yaml \
+   --stack overcloud \
+   --network-config -y \
+  $PWD/composable_roles/network/baremetal_deployment.yaml
 ----
 
 .. Verify that the new network is configured on the {CephCluster} nodes:
