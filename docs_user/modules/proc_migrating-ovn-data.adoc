@@ -238,8 +238,8 @@ Running OVN gateways on {OpenShiftShort} nodes might be prone to data plane down
 . Delete the `ovn-data` helper pod and the temporary `PersistentVolumeClaim` that is used to store OVN database backup files:
 +
 ----
-$ oc delete pod ovn-copy-data
-$ oc delete pvc ovn-data
+$ oc delete --ignore-not-found=true pod ovn-copy-data
+$ oc delete --ignore-not-found=true pvc ovn-data
 ----
 +
 [NOTE]
