@@ -2,7 +2,7 @@
 
 = Scaling down director Operator resources
 
-Before you migrate your databases to the control plane, you must scale down and remove director Operator (OSPdO) resources in order to use the {rhos_long} resources.
+Before you migrate your databases to the control plane, you must scale down and remove OpenStack director Operator (OSPdO) resources in order to use the {rhos_long} resources.
 
 .Procedure
 
@@ -154,7 +154,7 @@ EOF
 
 $ oc apply -f /tmp/node3_nncp.yaml
 ----
-. Get the remaining OSPdO resources and delete everything. Do not delete the `OpenStackBaremetalSets` and `OpenStackProvisionServer` resources:
+. Delete the remaining OSPdO resources. Do not delete the `OpenStackBaremetalSets` and `OpenStackProvisionServer` resources:
 +
 ----
 $ for i in $(oc get crd | grep osp-director | grep -v baremetalset | grep -v provisionserver | awk {'print $1'}); do echo Deleting $i...; oc delete $i -n openstack --all; done
@@ -188,7 +188,7 @@ $ compute_bmh_list=$(oc get bmh -n openshift-machine-api |grep compute|awk '{pri
 $ for bmh_compute in $compute_bmh_list;do oc annotate bmh -n openshift-machine-api $bmh_compute baremetalhost.metal3.io/detached="";done
 $ oc delete bmh -n openshift-machine-api $bmh_compute;done
 ----
-. Delete the OSPdO Operator Lifecycle Manager resources to remove OpenStack director Operator:
+. Delete the OSPdO Operator Lifecycle Manager resources to remove OSPdO:
 +
 ----
 $ oc delete subscription osp-director-operator -n openstack
