@@ -408,7 +408,7 @@ endif::[]
 
         # Do not attempt OVS major upgrades here
         edpm_ovs_packages:
-        - openvswitch3.1
+        - openvswitch3.3
 EOF
 ----
 +

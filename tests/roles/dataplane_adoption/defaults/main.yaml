@@ -264,7 +264,7 @@ dataplane_cr: |
 
           # Do not attempt OVS major upgrades here
           edpm_ovs_packages:
-          - openvswitch3.1
+          - openvswitch3.3
 
           # ovn-controller settings
           edpm_ovn_bridge_mappings: ["datacentre:{{ neutron_physical_bridge_name }}"]
@@ -357,7 +357,7 @@ networker_cr: |
           edpm_sshd_allowed_ranges: {{ edpm_sshd_allowed_ranges }}
           # Do not attempt OVS major upgrades here
           edpm_ovs_packages:
-          - openvswitch3.1
+          - openvswitch3.3
           # ovn-controller settings
           edpm_ovn_bridge_mappings: ["datacentre:{{ neutron_physical_bridge_name }}"]
           edpm_ovn_bridge: br-int
