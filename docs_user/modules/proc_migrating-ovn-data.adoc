@@ -109,8 +109,8 @@ $ oc wait --for=condition=Ready pod/ovn-copy-data --timeout=30s
 . If the podified internalapi cidr is different than the source internalapi cidr, add an iptables accept rule on the Controller nodes:
 +
 ----
-$ $CONTROLLER1_SSH sudo iptables I INPUT -s {PODIFIED_INTERNALAPI_NETWORK} p tcp -m tcp --dport 6641 -m conntrack --ctstate NEW -j ACCEPT
-$ $CONTROLLER1_SSH sudo iptables I INPUT -s {PODIFIED_INTERNALAPI_NETWORK} p tcp -m tcp --dport 6642 -m conntrack --ctstate NEW -j ACCEPT
+$ $CONTROLLER1_SSH sudo iptables -I INPUT -s {PODIFIED_INTERNALAPI_NETWORK} -p tcp -m tcp --dport 6641 -m conntrack --ctstate NEW -j ACCEPT
+$ $CONTROLLER1_SSH sudo iptables -I INPUT -s {PODIFIED_INTERNALAPI_NETWORK} -p tcp -m tcp --dport 6642 -m conntrack --ctstate NEW -j ACCEPT
 ----
 
 . Back up your OVN databases:
