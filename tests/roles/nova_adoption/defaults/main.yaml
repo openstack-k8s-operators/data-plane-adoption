@@ -3,52 +3,15 @@ ironic_adoption: false
 nova_libvirt_backend: local
 
 nova_libvirt_patch: |
-  spec:
-    nova:
-      enabled: true
-      apiOverride:
-        route: {}
-      template:
-        secret: osp-secret
-        apiServiceTemplate:
-          override:
-            service:
-              internal:
-                metadata:
-                  annotations:
-                    metallb.universe.tf/address-pool: internalapi
-                    metallb.universe.tf/allow-shared-ip: internalapi
-                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-                spec:
-                  type: LoadBalancer
-          customServiceConfig: |
-            [workarounds]
-            disable_compute_service_check_for_ffu=true
-        metadataServiceTemplate:
-          enabled: true # deploy single nova metadata on the top level
-          override:
-            service:
-              metadata:
-                annotations:
-                  metallb.universe.tf/address-pool: internalapi
-                  metallb.universe.tf/allow-shared-ip: internalapi
-                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-              spec:
-                type: LoadBalancer
-          customServiceConfig: |
-            [workarounds]
-            disable_compute_service_check_for_ffu=true
-        schedulerServiceTemplate:
-          customServiceConfig: |
-            [workarounds]
-            disable_compute_service_check_for_ffu=true
-        cellTemplates:
-          cell0:
-            conductorServiceTemplate:
-              customServiceConfig: |
-                [workarounds]
-                disable_compute_service_check_for_ffu=true
-          cell1:
+  {{ cells_env }}
+  rm -f celltemplates
+  for CELL in $(echo $RENAMED_CELLS); do
+    cat >> celltemplates << EOF
+          ${CELL}:
+            hasAPIAccess: true
+            cellDatabaseAccount: nova-$CELL
+            cellDatabaseInstance: openstack-$CELL
+            cellMessageBusInstance: rabbitmq-$CELL
             metadataServiceTemplate:
               enabled: false # enable here to run it in a cell instead
               override:
@@ -57,7 +20,7 @@ nova_libvirt_patch: |
                       annotations:
                         metallb.universe.tf/address-pool: internalapi
                         metallb.universe.tf/allow-shared-ip: internalapi
-                        metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                        metallb.universe.tf/loadBalancerIPs: 172.17.0.$(( 79 + ${CELL##*cell} ))
                     spec:
                       type: LoadBalancer
               customServiceConfig: |
@@ -67,7 +30,65 @@ nova_libvirt_patch: |
               customServiceConfig: |
                 [workarounds]
                 disable_compute_service_check_for_ffu=true
+  EOF
+  done
 
+  cat > oscp-patch.yaml << EOF
+  spec:
+    nova:
+      enabled: true
+      apiOverride:
+        route: {}
+      template:
+        secret: osp-secret
+        apiDatabaseAccount: nova-api
+        apiServiceTemplate:
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                spec:
+                  type: LoadBalancer
+          customServiceConfig: |
+            [workarounds]
+            disable_compute_service_check_for_ffu=true
+        metadataServiceTemplate:
+          enabled: true # deploy single nova metadata on the top level
+          override:
+            service:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+          customServiceConfig: |
+            [workarounds]
+            disable_compute_service_check_for_ffu=true
+        schedulerServiceTemplate:
+          customServiceConfig: |
+            [workarounds]
+            disable_compute_service_check_for_ffu=true
+        cellTemplates:
+          cell0:
+            hasAPIAccess: true
+            cellDatabaseAccount: nova-cell0
+            cellDatabaseInstance: openstack
+            cellMessageBusInstance: rabbitmq
+            conductorServiceTemplate:
+              customServiceConfig: |
+                [workarounds]
+                disable_compute_service_check_for_ffu=true
+  EOF
+  cat celltemplates >> oscp-patch.yaml
+
+# NOTE(bogdando): no exact commands provided in docs for nova-ironic,
+# so we can use ansible/jinja2 features to simplify testing these
 nova_ironic_patch: |
   spec:
     nova:
@@ -76,6 +97,7 @@ nova_ironic_patch: |
         route: {}
       template:
         secret: osp-secret
+        apiDatabaseAccount: nova-api
         apiServiceTemplate:
           override:
             service:
@@ -114,16 +136,23 @@ nova_ironic_patch: |
               customServiceConfig: |
                 [workarounds]
                 disable_compute_service_check_for_ffu=true
-          cell1:
+          {%+ for cell in renamed_cells +%}
+          {{ cell }}:
+            hasAPIAccess: true
+            cellDatabaseAccount: nova-cell{{ loop.index }}
+            cellDatabaseInstance: openstack-cell{{ loop.index }}
+            cellMessageBusInstance: rabbitmq-cell{{ loop.index }}
             conductorServiceTemplate:
               customServiceConfig: |
                 [workarounds]
                 disable_compute_service_check_for_ffu=true
+            {%+ if ironic_adoption|bool and cell in source_ironic_nodes +%}
             novaComputeTemplates:
-              standalone:
+              {%+ for n in source_ironic_nodes[cell] +%}
+              {{ n.template }}:
                 customServiceConfig: |
                   [DEFAULT]
-                  host = standalone.localdomain
+                  host = {{ n.name }}
                   [workarounds]
                   disable_compute_service_check_for_ffu=true
                 replicas: 1
@@ -131,6 +160,9 @@ nova_ironic_patch: |
                 computeDriver: ironic.IronicDriver
                 networkAttachments:
                   - internalapi
+              {%+ endfor +%}
+            {%+ endif +%}
+          {%+ endfor +%}
 
 remove_ffu_workaround_patch: |
   spec:
@@ -154,15 +186,26 @@ remove_ffu_workaround_patch: |
               customServiceConfig: |
                 [workarounds]
                 disable_compute_service_check_for_ffu=false
-          cell1:
+          {%+ for cell in renamed_cells +%}
+          {{ cell }}:
             conductorServiceTemplate:
               customServiceConfig: |
                 [workarounds]
                 disable_compute_service_check_for_ffu=false
+            {%+ if ironic_adoption|bool and cell in source_ironic_nodes +%}
             novaComputeTemplates:
-              standalone:
+              {%+ for n in source_ironic_nodes[cell] +%}
+              {{ n.template }}:
                 customServiceConfig: |
                   [DEFAULT]
-                  host = standalone.localdomain
+                  host = {{ n.name }}
                   [workarounds]
                   disable_compute_service_check_for_ffu=false
+                replicas: 1
+                resources: {}
+                computeDriver: ironic.IronicDriver
+                networkAttachments:
+                  - internalapi
+              {%+ endfor +%}
+            {%+ endif +%}
+          {%+ endfor +%}
