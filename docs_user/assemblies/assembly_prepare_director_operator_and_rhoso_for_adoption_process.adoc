@@ -55,13 +55,6 @@ configure OSPdO to use a single {OpenStackShort} Controller node:
 
 .. Disable stonith:
 +
-
-
-. If you are using a combination master/worker cluster with a high availability OSPdO environment,
-configure OSPdO to use a single {OpenStackShort} Controller node:
-
-.. Disable stonith:
-+
 ----
 $ stonith_resources=$(sudo pcs stonith status|grep Started|awk '{print $2}')
 for in in stonith_resources ;do CONTROLLER1_SSH sudo pcs stonith disable ;done
@@ -104,7 +97,7 @@ When you deploy a {rhos_long} environment by using two Red Hat OpenShift Contain
 * Install {rhos_acro} operators.
 .Procedure
 
-. Get the names of the other two nodes that we will use for RHOSO
+. Save the hostnames of the remaining two nodes to the `RHOSO_NODES` variable:
 +
 ----
 $ RHOSO_NODES=$(oc get nodes -o name | grep -v $CONTROLLER_NODE | sed 's#node/##g' | tr '\n' ' ')
@@ -384,7 +377,7 @@ EOF
 +
 * Replace `<RHOSO18_NAMESPACE>` with your OpenStack 18 namespace.
 
-. Make sure `OVNKubernetes IPForwarding` is enabled:
+. Ensure that the `OVNKubernetes IPForwarding` field is set to to `enabled`:
 +
 ----
 $ oc patch network.operator cluster -p '{"spec":{"defaultNetwork":{"ovnKubernetesConfig":{"gatewayConfig":{"ipForwarding": "Global"}}}}}' --type=merge
