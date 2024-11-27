@@ -191,11 +191,15 @@ dataplane_cr: |
       {%+ endif +%}
     env:
       - name: ANSIBLE_CALLBACKS_ENABLED
-        value: "profile_tasks"
+        value: "ansible.posix.profile_tasks,yaml"
       - name: ANSIBLE_FORCE_COLOR
         value: "True"
+      - name: ANSIBLE_DISPLAY_ARGS_TO_STDOUT
+        value: "True"
+      - name: ANSIBLE_SSH_ARGS
+        value: "-C -o ControlMaster=auto -o ControlPersist=80s"
       - name: ANSIBLE_VERBOSITY
-        value: "{{ dataplane_verbosity | default ('3') }}"
+        value: "{{ dataplane_verbosity | default ('1') }}"
     nodes: {{ edpm_nodes }}
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
@@ -312,11 +316,15 @@ networker_cr: |
       - neutron-metadata
     env:
       - name: ANSIBLE_CALLBACKS_ENABLED
-        value: "profile_tasks"
+        value: "ansible.posix.profile_tasks,yaml"
       - name: ANSIBLE_FORCE_COLOR
         value: "True"
+      - name: ANSIBLE_DISPLAY_ARGS_TO_STDOUT
+        value: "True"
+      - name: ANSIBLE_SSH_ARGS
+        value: "-C -o ControlMaster=auto -o ControlPersist=80s"
       - name: ANSIBLE_VERBOSITY
-        value: "{{ dataplane_verbosity | default ('3') }}"
+        value: "{{ dataplane_verbosity | default ('1') }}"
     nodes: {{ edpm_nodes_networker }}
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
