@@ -387,10 +387,12 @@ endif::[]
         replicas: 1
 EOF
 ----
-
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
 * Replace <address_pool> with the name of your network definition.
 * Replace <loadBalancer_IP> with the LoadBalancer IP address.
 * Replace <networkAttachment_name> with the name of your network.
+endif::[]
+
 +
 <1> Select an existing storage class in your {OpenShiftShort} cluster.
 
