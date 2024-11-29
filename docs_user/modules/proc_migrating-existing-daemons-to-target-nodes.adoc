@@ -31,7 +31,7 @@ controller-2.redhat.local   192.168.24.10  mon _admin mgr monitoring
 . Remove the labels from the Controller nodes:
 +
 ----
-$ for i in 0 1 2; do ceph orch host label rm "controller-$i.redhat.local" monitoring; done
+$ for i in 0 1 2; do sudo cephadm shell -- ceph orch host label rm "controller-$i.redhat.local" monitoring; done
 
 Removed label monitoring from host controller-0.redhat.local
 Removed label monitoring from host controller-1.redhat.local

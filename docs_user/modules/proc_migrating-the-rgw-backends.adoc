@@ -119,7 +119,7 @@ rgw.rgw.cephstorage-2.krycit  cephstorage-2  172.17.3.81:8090  running (13s)
 $ iptables -I INPUT -p tcp -m tcp --dport 8080 -m conntrack --ctstate NEW -m comment --comment "ceph rgw ingress" -j ACCEPT
 $ iptables -I INPUT -p tcp -m tcp --dport 8090 -m conntrack --ctstate NEW -m comment --comment "ceph rgw backends" -j ACCEPT
 $ sudo iptables-save
-$ sudo systmectl restart iptables
+$ sudo systemctl restart iptables
 ----
 
 . If `nftables` is used in the existing deployment, edit `/etc/nftables/tripleo-rules.nft`

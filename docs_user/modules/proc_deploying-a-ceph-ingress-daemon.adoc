@@ -113,7 +113,7 @@ spec:
 +
 ----
 $ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
-$ cephadm shell -m ${SPEC_DI}/rgw_ingress -- ceph orch apply -i /mnt/rgw_ingress
+$ cephadm shell -m ${SPEC_DIR}/rgw_ingress -- ceph orch apply -i /mnt/rgw_ingress
 ----
 
 . Wait until the ingress is deployed and query the resulting endpoint:
