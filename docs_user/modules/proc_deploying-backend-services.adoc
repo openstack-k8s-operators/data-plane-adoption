@@ -112,6 +112,13 @@ you use `install_yamls`:
 make input
 ----
 endif::[]
+
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+----
+$ oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
+----
+endif::[]
+
 ifeval::["{build}" == "downstream"]
 . Create the {OpenStackShort} secret. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/{rhos_curr_ver}/html-single/deploying_red_hat_openstack_services_on_openshift/index#proc_providing-secure-access-to-the-RHOSO-services_preparing[Providing secure access to the Red Hat OpenStack Services on OpenShift services] in _Deploying Red Hat OpenStack Services on OpenShift_.
 endif::[]
@@ -224,9 +231,17 @@ spec:
         service:
           metadata:
             annotations:
+ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+
               metallb.universe.tf/address-pool: ctlplane
               metallb.universe.tf/allow-shared-ip: ctlplane
               metallb.universe.tf/loadBalancerIPs: 192.168.122.80
+endif::[]
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+              metallb.universe.tf/address-pool: <address_pool>
+              metallb.universe.tf/allow-shared-ip: <address_pool>
+              metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP>
+endif::[]
           spec:
             type: LoadBalancer
       options:
@@ -297,6 +312,7 @@ spec:
   ovn:
     enabled: false
     template:
+ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
       ovnController:
         networkAttachment: tenant
         nodeSelector:
@@ -310,7 +326,22 @@ spec:
         ovndbcluster-sb:
           dbType: SB
           networkAttachment: internalapi
-
+endif::[]
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+      ovnController:
+        networkAttachment: tenant
+        nodeSelector:
+          node: non-existing-node-name
+      ovnNorthd:
+        replicas: 0
+      ovnDBCluster:
+        ovndbcluster-nb:
+          dbType: NB
+          networkAttachment: <networkAttachment_name>
+        ovndbcluster-sb:
+          dbType: SB
+          networkAttachment: <networkAttachment_name>
+endif::[]
   placement:
     enabled: false
     template: {}
@@ -331,8 +362,14 @@ spec:
           service:
             metadata:
               annotations:
+ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
                 metallb.universe.tf/address-pool: internalapi
                 metallb.universe.tf/loadBalancerIPs: 172.17.0.86
+endif::[]
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+                metallb.universe.tf/address-pool: <networkAttachment_name>
+                metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP>
+endif::[]
             spec:
               type: LoadBalancer
 
@@ -350,6 +387,12 @@ spec:
         replicas: 1
 EOF
 ----
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+* Replace <address_pool> with the name of your network definition.
+* Replace <loadBalancer_IP> with the LoadBalancer IP address.
+* Replace <networkAttachment_name> with the name of your network.
+endif::[]
+
 +
 <1> Select an existing storage class in your {OpenShiftShort} cluster.
 

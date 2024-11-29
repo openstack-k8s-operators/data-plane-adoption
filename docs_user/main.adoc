@@ -11,6 +11,10 @@ include::adoption-attributes.adoc[]
 
 include::assemblies/assembly_rhoso-180-adoption-overview.adoc[leveloffset=+1]
 
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+include::assemblies/assembly_prepare_director_operator_for_adoption_process.adoc[leveloffset=+1]
+endif::[]
+
 include::modules/proc_migrating-tls-everywhere.adoc[leveloffset=+1]
 
 include::assemblies/assembly_migrating-databases-to-the-control-plane.adoc[leveloffset=+1]
