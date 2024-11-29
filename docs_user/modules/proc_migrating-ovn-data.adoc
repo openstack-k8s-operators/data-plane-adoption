@@ -33,7 +33,16 @@ $ grep -rI 'ovn_[ns]b_conn' /var/lib/config-data/puppet-generated/
 ----
 
 .Procedure
-
++
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+. Get the {OpenShiftShort} master node that contains the {OpenStackShort} Controller:
++
+----
+$ oc get vmi -n $<ospdo_namespace> -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
+----
++
+* Replace `<ospdo_namespace>` with your OSPdO namespace.
+endif::[]
 . Prepare a temporary `PersistentVolume` claim and the helper pod for the OVN backup. Adjust the storage requests for a large database, if needed:
 +
 [source,yaml]
@@ -54,6 +63,9 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+  namespace: $OSPDO_NAMESPACE
+endif::[]
   name: ovn-data
 spec:
   storageClassName: $STORAGE_CLASS
@@ -69,10 +81,21 @@ metadata:
   name: ovn-copy-data
   annotations:
     openshift.io/scc: anyuid
+ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
     k8s.v1.cni.cncf.io/networks: internalapi
+endif::[]
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+  '[{"name": "internalapi-static", "namespace": $<ospdo_namespace>, "ips": ["<internalapi-static-ips>"]}]'
+endif::[]
   labels:
     app: adoption
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+  namespace: $OSPDO_NAMESPACE
+endif::[]
 spec:
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+  nodeName: '{{ <ocp_node_holding_controller> }}'
+endif::[]
   containers:
   - image: $OVSDB_IMAGE
     command: [ "sh", "-c", "sleep infinity"]
@@ -99,11 +122,20 @@ spec:
       secretName: ovn-data-cert
 EOF
 ----
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
++
+* Replace `<ocp_node_holding_controller>` with the {OpenStackShort} node that contains the Controller.
+endif::[]
 
 . Wait for the pod to be ready:
 +
 ----
+ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
 $ oc wait --for=condition=Ready pod/ovn-copy-data --timeout=30s
+endif::[]
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+$ oc wait --for=condition=Ready -n $OSPDO_NAMESPACE pod/ovn-copy-data --timeout=30s
+endif::[]
 ----
 
 . If the podified internalapi cidr is different than the source internalapi cidr, add an iptables accept rule on the Controller nodes:
@@ -117,8 +149,14 @@ $ $CONTROLLER1_SSH sudo iptables -I INPUT -s {PODIFIED_INTERNALAPI_NETWORK} -p t
 * If you did not enable TLS everywhere, run the following command:
 +
 ----
+ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
+endif::[]
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+$ oc exec -n $OSPDO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
+$ oc exec -n $OSPDO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
+endif::[]
 ----
 * If you enabled TLS everywhere, run the following command:
 +
@@ -193,8 +231,14 @@ $ oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema --ca-cert=/etc/pki/t
 .. If you did not enable TLS everywhere, use the following command:
 +
 ----
+ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
+endif::[]
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+$ oc exec -n $RHOSO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
+$ oc exec -n $RHOSO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
+endif::[]
 ----
 
 .. If you enabled TLS everywhere, use the following command:

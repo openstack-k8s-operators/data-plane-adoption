@@ -172,7 +172,12 @@ EOF
 . Restore the databases from `.sql` files into the control plane MariaDB:
 +
 ----
+ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
 $ oc rsh mariadb-copy-data << EOF
+endif::[]
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+$ oc rsh -n $OSPDO_NAMESPACE mariadb-copy-data << EOF
+endif::[]
   # db schemas to rename on import
   declare -A db_name_map
   db_name_map['nova']='nova_cell1'
