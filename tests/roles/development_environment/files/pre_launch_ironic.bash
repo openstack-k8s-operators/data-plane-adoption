@@ -37,16 +37,20 @@ function wait_image_active() {
 
 # If the snapshot was reverted, and time is way off we get SSL issues in agent<->ironic connection
 # Workaround by restarting chronyd.service
-ssh -i $EDPM_PRIVATEKEY_PATH root@192.168.122.100 systemctl restart chronyd.service
-ssh -i $EDPM_PRIVATEKEY_PATH root@192.168.122.100 chronyc -a makestep
+if [[ "${PRE_LAUNCH_IRONIC_RESTART_CHRONY,,}" != "false" ]]; then
+  ssh -i $EDPM_PRIVATEKEY_PATH root@192.168.122.100 systemctl restart chronyd.service
+  ssh -i $EDPM_PRIVATEKEY_PATH root@192.168.122.100 chronyc -a makestep
+fi
 
 # Enroll baremetal nodes
-pushd ${INSTALL_YAMLS_PATH}/devsetup
-make --silent bmaas_generate_nodes_yaml | tail -n +2 | tee /tmp/ironic_nodes.yaml
-popd
+if [[ "${ENROLL_BMAAS_IRONIC_NODES,,}" != "false" ]]; then
+  pushd ${INSTALL_YAMLS_PATH}/devsetup
+  make --silent bmaas_generate_nodes_yaml | tail -n +2 | tee /tmp/ironic_nodes.yaml
+  popd
 
-scp -i $EDPM_PRIVATEKEY_PATH /tmp/ironic_nodes.yaml root@192.168.122.100:/root/ironic_nodes.yaml
-ssh -i $EDPM_PRIVATEKEY_PATH root@192.168.122.100 OS_CLOUD=standalone openstack baremetal create /root/ironic_nodes.yaml
+  scp -i $EDPM_PRIVATEKEY_PATH /tmp/ironic_nodes.yaml root@192.168.122.100:/root/ironic_nodes.yaml
+  ssh -i $EDPM_PRIVATEKEY_PATH root@192.168.122.100 OS_CLOUD=standalone openstack baremetal create /root/ironic_nodes.yaml
+fi
 
 export IRONIC_PYTHON_AGENT_RAMDISK_ID=$(${BASH_ALIASES[openstack]} image show deploy-ramdisk -c id -f value)
 export IRONIC_PYTHON_AGENT_KERNEL_ID=$(${BASH_ALIASES[openstack]} image show deploy-kernel -c id -f value)
