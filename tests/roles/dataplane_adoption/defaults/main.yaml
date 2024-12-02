@@ -195,7 +195,7 @@ dataplane_cr: |
       - name: ANSIBLE_FORCE_COLOR
         value: "True"
       - name: ANSIBLE_VERBOSITY
-        value: "{{ dataplane_verbosity | default ('3') }}"
+        value: "{{ dataplane_verbosity | default ('2') }}"
     nodes: {{ edpm_nodes }}
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
@@ -304,7 +304,7 @@ networker_cr: |
       - name: ANSIBLE_FORCE_COLOR
         value: "True"
       - name: ANSIBLE_VERBOSITY
-        value: "{{ dataplane_verbosity | default ('3') }}"
+        value: "{{ dataplane_verbosity | default ('2') }}"
     nodes: {{ edpm_nodes_networker }}
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
