@@ -79,7 +79,6 @@
   ansible.builtin.shell: |
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
-    {{ pull_openstack_configuration_ssh_shell_vars }}
     unset PULL_OPENSTACK_CONFIGURATION_DATABASES
     unset PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK
     unset PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES

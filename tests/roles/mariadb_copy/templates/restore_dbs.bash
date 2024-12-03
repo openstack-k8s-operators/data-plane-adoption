@@ -7,7 +7,7 @@
 for CELL in $(echo $CELLS); do
   RCELL=$CELL
   [ "$CELL" = "default" ] && RCELL=$DEFAULT_CELL_NAME
-  oc rsh -n {{ rhoso_namespace }} mariadb-copy-data << EOF
+  oc rsh -n $NAMESPACE mariadb-copy-data << EOF
     # db schemas to rename on import
     declare -A db_name_map
     db_name_map['nova']="nova_$RCELL"
