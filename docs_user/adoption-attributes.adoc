@@ -149,6 +149,11 @@ ifeval::["{build}" == "downstream"]
 :telemetry: Telemetry service
 endif::[]
 
+ifeval::["{build}-{build_variant}" == "downstream-ospdo"]
+:OpenStackPreviousInstaller: director_operator
+endif::[]
+
+
 // Common URLs. Do not override. Do not delete.
 :base_url: https://access.redhat.com/documentation
 :defaultURL: https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/{rhos_curr_ver}/html
