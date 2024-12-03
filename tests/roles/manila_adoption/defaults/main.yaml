@@ -1,2 +1,5 @@
 # manila_backend can be 'cephfs' or 'cephnfs'
 manila_backend: cephfs
+os_net_conf_path: "/etc/os-net-config/config.yaml"
+manila_storagenfs_nic: "nic2"
+manila_storagenfs_vlan_id: "70"
