@@ -5,6 +5,9 @@ use_no_log: false
 # Whether the adopted node will host compute services
 compute_adoption: true
 
+# Whether adopting OSPDo or Director based TripleO deployment
+deploy_ctlplane_ospdo: false
+
 # The names of cells on the target cloud
 renamed_cells: "{{ [default_cell_name] + cells | difference(['default']) }}"
 
@@ -31,6 +34,7 @@ cells_env: |
 
 # Headers for DB client CLI image
 mariadb_image_env: |
+  STORAGE_CLASS={{ storage_class_name }}
   MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 
 # Header for the source databases initial clusters members health check
@@ -62,22 +66,29 @@ mariadb_passwords_env: |-
   done
 
 # Header for the source database access
+# TODO: Env vars for OSPDo case are also configured in env_vars_src_ospdo.yaml. Move them here, eventually?
+# OSPDo RUN_OVERRIDES definition exists only in docs (missing in code?).
+# NOTE: in a split-stack source cloud, each stack passwords should come from a stack-specific passwords file,
+# but different passwords are not supported in a multi-cell deployment
 mariadb_copy_shell_vars_src: |-
   {{ shell_header }}
+
+  PASSWORD_FILE="$HOME/overcloud-passwords.yaml"
+  NAMESPACE={{ deploy_ctlplane_ospdo | bool | ternary(rhoso_namespace, org_namespace) }}
+
   {{ mariadb_image_env }}
   {{ cells_env }}
-  MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
-  STORAGE_CLASS={{ storage_class_name }}
 
   declare -A TRIPLEO_PASSWORDS
   for CELL in $(echo $CELLS); do
-    if [ "$CELL" = "default" ]; then
-      TRIPLEO_PASSWORDS[default]="$HOME/overcloud-passwords.yaml"
-    else
-      # in a split-stack source cloud, it should take a stack-specific passwords file instead
-      TRIPLEO_PASSWORDS[$CELL]="$HOME/overcloud-passwords.yaml"
-    fi
+      TRIPLEO_PASSWORDS[$CELL]="$TRIPLEO_PASSWORD"
   done
+
+  RUN_OVERRIDES=' '
+  MARIADB_CLIENT_ANNOTATIONS={{ deploy_ctlplane_ospdo | bool | ternary("-n $NAMESPACE", "--annotations=k8s.v1.cni.cncf.io/networks=internalapi") }}
+  MARIADB_RUN_OVERRIDES={{ deploy_ctlplane_ospdo | bool | ternary("--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS", "$MARIADB_CLIENT_ANNOTATIONS") }}
+
+  {{ pull_openstack_configuration_ssh_shell_vars }}
 
   declare -A SOURCE_DB_ROOT_PASSWORD
   for CELL in $(echo $CELLS); do
@@ -95,6 +106,8 @@ mariadb_copy_shell_vars_dst: |
   {{ oc_header }}
   {{ mariadb_image_env }}
   {{ cells_env }}
+
+  NAMESPACE={{ deploy_ctlplane_ospdo | bool | ternary(rhoso_namespace, org_namespace) }}
 
   # The CHARACTER_SET and collation should match the source DB
   # if the do not then it will break foreign key relationships
