@@ -15,7 +15,7 @@ Migrate the data in the OVN databases from the original {rhos_prev_long} deploym
 +
 ----
 ifeval::["{build}" != "downstream"]
-STORAGE_CLASS_NAME=crc-csi-hostpath-provisioner
+STORAGE_CLASS_NAME=local-storage
 OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
 endif::[]
 ifeval::["{build}" == "downstream"]
