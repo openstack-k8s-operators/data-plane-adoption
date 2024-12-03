@@ -29,7 +29,10 @@ endif::[]
 ifeval::["{build}" == "downstream"]
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 endif::[]
+endif::[]
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
 MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
+endif::[]
 ----
 +
 To get the value to set `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller node:
@@ -57,6 +60,7 @@ ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
 export CONTROLLER1_SSH="oc -n $OSPDO_NAMESPACE rsh -c openstackclient openstackclient ssh controller-0.ctlplane"
 ----
 * With OSPdO, the `mariadb-client` needs to run on the same {rhocp_long} node where the {OpenStackShort} Controller node is running. In addition, the `internalapi-static` network needs to be attached to the pod.
+* You can only have a single Nova compute cell deployed on the source cloud.
 ----
 export PASSWORD_FILE="tripleo-passwords.yaml"
 export OSPDO_NAMESPACE="openstack"
