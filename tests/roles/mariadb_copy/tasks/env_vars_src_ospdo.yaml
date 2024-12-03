@@ -17,6 +17,7 @@
         oc get secret -n {{ org_namespace }} tripleo-passwords -o jsonpath='{.data.*}'| base64 -d |grep MysqlRootPassword|sed 's/.*: //g'
       register: source_db_root_pass
 
+    # FIXME: OSPDo RUN_OVERRIDES definition exists only in docs (missing in code?).
     - name: set src MariaDB copy shell vars
       no_log: "{{ use_no_log }}"
       ansible.builtin.set_fact:
