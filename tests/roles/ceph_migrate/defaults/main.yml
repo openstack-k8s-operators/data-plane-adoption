@@ -30,10 +30,15 @@ ceph_timeout: 30
 # updated
 ceph_wait_mon_timeout: 10
 ceph_keep_mon_ipaddr: true
-ceph_firewall: false
-firewall_path:
+
+# firewall section
+ceph_firewall_enabled: false
+ceph_iptables_path:
   - "/etc/sysconfig/iptables"
   - "/etc/sysconfig/ip6tables"
+ceph_nftables_path:
+  - "/etc/nftables/tripleo-rules.nft"
+ceph_firewall_type: nftables
 
 # DEFAULT Ceph Reef container images
 ceph_haproxy_container_image: "quay.io/ceph/haproxy:2.3"
