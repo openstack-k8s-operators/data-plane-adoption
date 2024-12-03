@@ -17,18 +17,14 @@ CELLS="default cell1 cell2" <1>
 
 <-- FIXME: this is broken now -->
 ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
-CELLS="default cell1 cell2" <1>
+CELLS="default cell1 cell2"
 ifeval::["{build}" != "downstream"]
 CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 endif::[]
 ifeval::["{build}" == "downstream"]
-CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*" <1>
+CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
 MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
-endif::[]
-endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
-MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
 endif::[]
 declare -A TRIPLEO_PASSWORDS
 for CELL in $(echo $CELLS); do
@@ -63,18 +59,32 @@ declare -A SOURCE_DB_ROOT_PASSWORD
 for CELL in $(echo $CELLS); do
   SOURCE_DB_ROOT_PASSWORD[$CELL]=$(cat ${TRIPLEO_PASSWORDS[$CELL]} | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 done
-
-declare -A SOURCE_MARIADB_IP <2>
+endif::[]
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+CELLS="default"
+MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
+endif::[]
+declare -A SOURCE_MARIADB_IP
 SOURCE_MARIADB_IP[default]=*<galera cluster VIP>*
+ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
 SOURCE_MARIADB_IP[cell1]=*<galera cell1 cluster VIP>*
 SOURCE_MARIADB_IP[cell2]=*<galera cell2 cluster VIP>*
+endif::[]
 # ...
 ----
 +
-<1> Complete `CONTROLLER1_SSH` settings with SSH connection details for any non-cell controller of the source {OpenStackPreviousInstaller} cloud.
-<2> For each cell defined in `CELLS`, replace `SOURCE_MARIADB_IP[*]= ...`, and complete the records lists for the cell names and VIP addresses of MariaDB Galera clusters, include cells, of the source {OpenStackPreviousInstaller} cloud.
-
-To get the values for `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller and CellController node:
+ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+* Complete `CONTROLLER1_SSH` settings with SSH connection details for any non-cell controller of the source {OpenStackPreviousInstaller} cloud.
+endif::[]
+* For each cell defined in `CELLS`, replace `SOURCE_MARIADB_IP[*]= ...`, and complete the records lists for the cell names and VIP addresses of MariaDB Galera clusters, include cells, of the source {OpenStackPreviousInstaller} cloud.
+ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+* You can only have a single Nova compute cell deployed on the source cloud.
+endif::[]
+* To get the values for `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller
+ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+and CellController
+endif::[]
+node:
 +
 ----
 $ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep bind
@@ -103,15 +113,12 @@ endif::[]
         mysql -rsh "${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e 'SHOW databases;')
 done
 
-<-- FIXME: this is broken now -->
 ----
-endif::[]
 ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
 ----
 export CONTROLLER1_SSH="oc -n $OSPDO_NAMESPACE rsh -c openstackclient openstackclient ssh controller-0.ctlplane"
 ----
 * With OSPdO, the `mariadb-client` needs to run on the same {rhocp_long} node where the {OpenStackShort} Controller node is running. In addition, the `internalapi-static` network needs to be attached to the pod.
-* You can only have a single Nova compute cell deployed on the source cloud.
 ----
 export PASSWORD_FILE="tripleo-passwords.yaml"
 export OSPDO_NAMESPACE="openstack"
@@ -129,16 +136,20 @@ base64 -d >"${PASSWORD_FILE}"
 $ export CONTROLLER_NODE=$(oc get vmi -ojson | jq -r '.items[0].status.nodeName')
 $ export SOURCE_OVN_OVSDB_IP=172.17.0.160 # get this from the source OVN DB
 
-$ export SOURCE_DB_ROOT_PASSWORD=$(grep <"${PASSWORD_FILE}" ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }') || {
+$ for CELL in $(echo $CELLS); do
+    SOURCE_DB_ROOT_PASSWORD[$CELL]=$(grep <"${PASSWORD_FILE}" ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }') || {
     echo "Failed to get the source DB root password"
     exit 1
-}
+    }
+done
 ----
 . Find the mysql service IP in the `ctlplane-export.yaml` section of the `tripleo-exports-default` ConfigMap:
 +
 ----
 $ cpexport=$(oc -n "${OSPDO_NAMESPACE}" get cm tripleo-exports-default -o json | jq -r '.data["ctlplane-export.yaml"]')
-$ export SOURCE_MARIADB_IP=$(echo "$cpexport" | sed -e '0,/ MysqlInternal/d' | sed -n '0,/host_nobrackets/s/^.*host_nobrackets\:\s*\(.*\)$/\1/p')
+$ for CELL in $(echo $CELLS); do
+    SOURCE_MARIADB_IP[$CELL]=$(echo "$cpexport" | sed -e '0,/ MysqlInternal/d' | sed -n '0,/host_nobrackets/s/^.*host_nobrackets\:\s*\(.*\)$/\1/p')
+done
 +
 $ export MARIADB_IMAGE='quay.io/podified-antelope-centos9/openstack-mariadb:current-podified'
 +
@@ -175,9 +186,10 @@ $ export PULL_OPENSTACK_CONFIGURATION_DATABASES="$(oc run mariadb-client -q --im
 endif::[]
 +
 [NOTE]
-<-- /end FIXME: this is broken now -->
 The `nova`, `nova_api`, and `nova_cell0` databases are inlcuded in the same database host for the main overcloud Heat stack.
+ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
 Additional cells use the `nova` database of their local Galera clusters.
+endif::[]
 
 . Run `mysqlcheck` on the {OpenStackShort} database to check for inaccuracies:
 +
