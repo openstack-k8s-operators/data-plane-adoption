@@ -30,7 +30,7 @@ CHARACTER_SET=utf8
 COLLATION=utf8_general_ci
 
 ifeval::["{build}" != "downstream"]
-STORAGE_CLASS=crc-csi-hostpath-provisioner
+STORAGE_CLASS=local-storage
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 endif::[]
 ifeval::["{build}" == "downstream"]
