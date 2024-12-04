@@ -195,13 +195,14 @@ dataplane_cr: |
       - name: ANSIBLE_FORCE_COLOR
         value: "True"
       - name: ANSIBLE_VERBOSITY
-        value: "{{ dataplane_verbosity | default ('3') }}"
+        value: "{{ dataplane_verbosity | default ('2') }}"
     nodes: {{ edpm_nodes }}
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
       ansible:
         ansibleUser: {{ edpm_user }}
         ansibleVars:
+          edpm_container_manage_clean_orphans: false
           edpm_bootstrap_release_version_package: []
           os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
           os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
@@ -303,13 +304,14 @@ networker_cr: |
       - name: ANSIBLE_FORCE_COLOR
         value: "True"
       - name: ANSIBLE_VERBOSITY
-        value: "{{ dataplane_verbosity | default ('3') }}"
+        value: "{{ dataplane_verbosity | default ('2') }}"
     nodes: {{ edpm_nodes_networker }}
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
       ansible:
         ansibleUser: {{ edpm_user }}
         ansibleVars:
+          edpm_container_manage_clean_orphans: false
           edpm_bootstrap_release_version_package: []
           os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
           os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
