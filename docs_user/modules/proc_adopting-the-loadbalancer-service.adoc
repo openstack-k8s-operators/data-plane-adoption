@@ -34,6 +34,15 @@ dual CA configuration.
 include::../../tests/roles/dataplane_adoption/tasks/octavia_certs.yaml[lines="7..83",indent=0]
 ----
 
+. (Optional) Public SSH key of Amphorae
++
+These commands will copy the existing public SSH key that can be used for connecting to the amphorae and installs it in Openshift.
++
+[source,bash]
+----
+include::../../tests/roles/dataplane_adoption/tasks/octavia_ssh.yaml[lines="7..20",indent=0]
+----
+
 . Add the octavia interfaces to each NodeNetworkConfigurationPolicy.
 +
 The following command adds the network interface that is being
