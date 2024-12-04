@@ -36,8 +36,7 @@ ceph_firewall_enabled: false
 ceph_iptables_path:
   - "/etc/sysconfig/iptables"
   - "/etc/sysconfig/ip6tables"
-ceph_nftables_path:
-  - "/etc/nftables/tripleo-rules.nft"
+ceph_nftables_path: "/etc/nftables/tripleo-rules.nft"
 ceph_firewall_type: nftables
 
 # DEFAULT Ceph Reef container images
