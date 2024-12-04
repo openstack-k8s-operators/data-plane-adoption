@@ -161,6 +161,12 @@ $ openstack endpoint list | grep load-balancer
 
 == Clean up old resources
 
+. Change the ONBOOT option in the network script for the management interface to no.
++
+Connect to each of the controllers on the old control plane, open the configuration script for the management interface
+(e.g. `/etc/sysconfig/network-scripts/ifcfg-o-hm0`, the exact name depends on the previous `OctaviaMgmtPortDevName` setting).
+Change the line `ONBOOT=yes` to `ONBOOT=no` so the interface does not get enabled automatically on reboot anymore.
+
 . Delete old flavors that have been migrated
 +
 [source,bash]
