@@ -39,7 +39,7 @@ The Ceph Monitor daemons are marked as `unmanaged`, and you can now redeploy the
 . Delete the existing Ceph Monitor on the target node:
 +
 ----
-$ sudo cephadm shell -- ceph orch daemon add rm mon.<target_node> --force
+$ sudo cephadm shell -- ceph orch daemon rm mon.<target_node> --force
 ----
 +
 * Replace `<target_node>` with the hostname of the target node that is included in the {Ceph} cluster.
@@ -84,7 +84,7 @@ The new Ceph Monitor runs on the target node with the original IP address.
 . Identify the running `mgr`:
 +
 ----
-$ sudo cephadm shell --  mgr stat
+$ sudo cephadm shell -- ceph mgr stat
 ----
 +
 . Refresh the Ceph Manager information by force-failing it:
@@ -101,5 +101,5 @@ $ sudo cephadm shell -- ceph orch reconfig osd.default_drive_group
 
 .Next steps
 
-Repeat the procedure for each node that you want to decommission.
+Repeat the procedure starting from step xref:draining-the-source-node_{context}[Draining the source node] for each node that you want to decommission.
 Proceed to the next step xref:verifying-the-cluster-after-ceph-mon-migration_{context}[Verifying the {CephCluster} cluster after Ceph Monitor migration].

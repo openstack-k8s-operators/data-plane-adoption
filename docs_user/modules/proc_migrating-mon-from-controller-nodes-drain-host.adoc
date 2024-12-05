@@ -2,7 +2,7 @@
 
 = Draining the source node
 
-Drain the existing Controller nodes and remove the source node host from the {CephCluster} cluster.
+Drain the source node and remove the source node host from the {CephCluster} cluster.
 
 .Procedure
 
@@ -19,7 +19,7 @@ $ sudo cp -R /etc/ceph $HOME/ceph_client_backup
 $ sudo cephadm shell -- ceph mgr stat
 ----
 
-. Fail the `ceph-mgr` if it is active on the source node or target node:
+. Fail the `ceph-mgr` if it is active on the source node:
 +
 ----
 $ sudo cephadm shell -- ceph mgr fail <mgr_instance>
@@ -31,28 +31,28 @@ $ sudo cephadm shell -- ceph mgr fail <mgr_instance>
 +
 ----
 $ for label in mon mgr _admin; do
-    sudo cephadm shell -- ceph orch host rm label <source_node> $label;
+    sudo cephadm shell -- ceph orch host label rm <source_node> $label;
 done
 ----
 +
 * Replace `<source_node>` with the hostname of the source node.
 
-. Remove the running Ceph Monitor daemon from the source node:
+. Optional: Ensure that you remove the Ceph Monitor daemon from the source node if it is still running:
 +
 ----
-$ sudo cephadm shell -- ceph orch daemon rm mon.<source_node> --force"
+$ sudo cephadm shell -- ceph orch daemon rm mon.<source_node> --force
 ----
 
-. Drain the source node:
+. Drain the source node to remove any leftover daemons:
 +
 ----
-$ sudo cephadm shell -- ceph drain <source_node>
+$ sudo cephadm shell -- ceph orch host drain <source_node>
 ----
 
 . Remove the source node host from the {CephCluster} cluster:
 +
 ----
-$ sudo cephadm shell -- ceph orch host rm <source_node> --force"
+$ sudo cephadm shell -- ceph orch host rm <source_node> --force
 ----
 +
 [NOTE]
