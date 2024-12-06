@@ -97,6 +97,9 @@ mariadb_copy_shell_vars_src: |-
   {% endfor %}
 
 # Header for the destination database access
+# The CHARACTER_SET and collation should match the source DB
+# if the do not then it will break foreign key relationships
+# for any tables that are created in the future as part of db sync
 mariadb_copy_shell_vars_dst: |
   {{ shell_header }}
   {{ oc_header }}
@@ -105,9 +108,6 @@ mariadb_copy_shell_vars_dst: |
 
   NAMESPACE={{ deploy_ctlplane_ospdo | bool | ternary(rhoso_namespace, org_namespace) }}
 
-  # The CHARACTER_SET and collation should match the source DB
-  # if the do not then it will break foreign key relationships
-  # for any tables that are created in the future as part of db sync
   CHARACTER_SET=utf8
   COLLATION=utf8_general_ci
 
