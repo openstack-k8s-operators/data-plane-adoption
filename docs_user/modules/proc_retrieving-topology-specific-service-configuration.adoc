@@ -27,19 +27,19 @@ $ declare -A TRIPLEO_PASSWORDS
 ifeval::["{build_variant}" != "ospdo"]
 $ CELLS="default cell1 cell2"
 $ for CELL in $(echo $CELLS); do
-    TRIPLEO_PASSWORDS[$CELL]="$TRIPLEO_PASSWORD"
-done
+>    TRIPLEO_PASSWORDS[$CELL]="$PASSWORD_FILE"
+> done
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
 $ CELLS="default"
 $ for CELL in $(echo $CELLS); do
-    oc get secret tripleo-passwords -n $NAMESPACE -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' | base64 -d >"$TRIPLEO_PASSWORDS[$CELL]"
-done
+>     oc get secret tripleo-passwords -n $NAMESPACE -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' | base64 -d >"$TRIPLEO_PASSWORDS[$CELL]"
+> done
 endif::[]
 $ declare -A SOURCE_DB_ROOT_PASSWORD
 $ for CELL in $(echo $CELLS); do
-    SOURCE_DB_ROOT_PASSWORD[$CELL]=$(cat ${TRIPLEO_PASSWORDS[$CELL]} | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
-done
+>     SOURCE_DB_ROOT_PASSWORD[$CELL]=$(cat ${TRIPLEO_PASSWORDS[$CELL]} | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
+> done
 ----
 +
 ifeval::["{build_variant}" == "ospdo"]
@@ -59,29 +59,29 @@ $ export SOURCE_OVN_OVSDB_IP=172.17.0.160 # get this from the source OVN DB
 $ cpexport=$(oc -n "${NAMESPACE}" get cm tripleo-exports-default -o json | jq -r '.data["ctlplane-export.yaml"]')
 $ declare -A SOURCE_MARIADB_IP
 $ for CELL in $(echo $CELLS); do
-    SOURCE_MARIADB_IP[$CELL]=$(echo "$cpexport" | sed -e '0,/ MysqlInternal/d' | sed -n '0,/host_nobrackets/s/^.*host_nobrackets\:\s*\(.*\)$/\1/p')
-done
+>     SOURCE_MARIADB_IP[$CELL]=$(echo "$cpexport" | sed -e '0,/ MysqlInternal/d' | sed -n '0,/host_nobrackets/s/^.*host_nobrackets\:\s*\(.*\)$/\1/p')
+> done
 $ RUN_OVERRIDES='{
-    "apiVersion": "v1",
-    "metadata": {
-        "annotations": {
-            "k8s.v1.cni.cncf.io/networks": "[{\"name\": \"internalapi-static\",\"namespace\": \"openstack\", \"ips\":[\"172.17.0.99/24\"]}]"
-        }
-    },
-    "spec": {
-        "nodeName": "'"$CONTROLLER_NODE"'",
-        "securityContext": {
-            "allowPrivilegeEscalation": false,
-            "capabilities": {
-                "drop": ["ALL"]
-            },
-            "runAsNonRoot": true,
-            "seccompProfile": {
-                "type": "RuntimeDefault"
-            }
-        }
-    }
-}'
+>     "apiVersion": "v1",
+>     "metadata": {
+>         "annotations": {
+>             "k8s.v1.cni.cncf.io/networks": "[{\"name\": \"internalapi-static\",\"namespace\": \"openstack\", \"ips\":[\"172.17.0.99/24\"]}]"
+>         }
+>     },
+>     "spec": {
+>         "nodeName": "'"$CONTROLLER_NODE"'",
+>         "securityContext": {
+>             "allowPrivilegeEscalation": false,
+>             "capabilities": {
+>                 "drop": ["ALL"]
+>             },
+>             "runAsNonRoot": true,
+>             "seccompProfile": {
+>                 "type": "RuntimeDefault"
+>             }
+>         }
+>     }
+> }'
 ----
 +
 * With OSPdO, the `mariadb-client` needs to run on the same {rhocp_long} node where the {OpenStackShort} Controller node is running. In addition, the `internalapi-static` network needs to be attached to the pod.
@@ -152,9 +152,9 @@ oc project openstack
 $ unset PULL_OPENSTACK_CONFIGURATION_DATABASES
 $ declare -xA PULL_OPENSTACK_CONFIGURATION_DATABASES
 $ for CELL in $(echo $CELLS); do
-    PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]=$(oc run mariadb-client-1-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-        mysql -rsh "${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e 'SHOW databases;')
-done
+>     PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]=$(oc run mariadb-client-1-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>         mysql -rsh "${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e 'SHOW databases;')
+> done
 ----
 +
 [NOTE]
@@ -169,21 +169,20 @@ endif::[]
 $ unset PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK
 $ declare -xA PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK
 $ run_mysqlcheck() {
-    PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc run mariadb-client-2-$1 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-        mysqlcheck --all-databases -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" | grep -v OK)
-}
+>     PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc run mariadb-client-2-$1 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>         mysqlcheck --all-databases -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" | grep -v OK)
+> }
 $ for CELL in $(echo $CELLS); do
-    run_mysqlcheck $CELL
-done
+>     run_mysqlcheck $CELL
+> done
 $ if [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" != "" ]; then
-    # Try mysql_upgrade to fix mysqlcheck failure
-    for CELL in $(echo $CELLS); do
-        MYSQL_UPGRADE=$(oc run mariadb-client-3 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-            mysql_upgrade -v -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}")
-        # rerun mysqlcheck to check if problem is resolved
-        run_mysqlcheck
-    done
-fi
+>     for CELL in $(echo $CELLS); do
+>         MYSQL_UPGRADE=$(oc run mariadb-client-3 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>             mysql_upgrade -v -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}")
+>         # rerun mysqlcheck to check if problem is resolved
+>         run_mysqlcheck
+>     done
+> fi
 ----
 +
 
@@ -202,10 +201,10 @@ export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client-
 $ unset PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES
 $ declare -xA PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES
 $ for CELL in $(echo $CELLS); do
-    PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]=$(oc run mariadb-client-4-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-        mysql -rsh "${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e \
-            "select host from nova.services where services.binary='nova-compute';")
-done
+>     PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]=$(oc run mariadb-client-4-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>         mysql -rsh "${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e \
+>             "select host from nova.services where services.binary='nova-compute';")
+> done
 ----
 +
 
@@ -230,22 +229,22 @@ $ declare -xA PULL_OPENSTACK_CONFIGURATION_DATABASES
 $ declare -xA PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK
 $ declare -xA PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES
 $ for CELL in $(echo $CELLS); do
-    cat > ~/.source_cloud_exported_variables_$CELL << EOF
-PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]="$(oc run mariadb-client-5-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-    mysql -rsh ${SOURCE_MARIADB_IP[$CELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$CELL]} -e 'SHOW databases;')"
-PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK[$CELL]="$(oc run mariadb-client-6-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-    mysqlcheck --all-databases -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p${SOURCE_DB_ROOT_PASSWORD[$CELL]} | grep -v OK)"
-PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]="$(oc run mariadb-client-7-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-    mysql -rsh ${SOURCE_MARIADB_IP[$CELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$CELL]} -e \
-    "select host from nova.services where services.binary='nova-compute';")"
-EOF
-    done
+>     cat > ~/.source_cloud_exported_variables_$CELL << EOF
+> PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]="$(oc run mariadb-client-5-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>     mysql -rsh ${SOURCE_MARIADB_IP[$CELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$CELL]} -e 'SHOW databases;')"
+> PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK[$CELL]="$(oc run mariadb-client-6-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>     mysqlcheck --all-databases -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p${SOURCE_DB_ROOT_PASSWORD[$CELL]} | grep -v OK)"
+> PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]="$(oc run mariadb-client-7-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>     mysql -rsh ${SOURCE_MARIADB_IP[$CELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$CELL]} -e \
+>     "select host from nova.services where services.binary='nova-compute';")"
+> EOF
+> done
 $ cat >> ~/.source_cloud_exported_variables_default << EOF
-PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="$(oc run mariadb-client-2 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-    mysql -rsh ${SOURCE_MARIADB_IP['default']} -uroot -p${SOURCE_DB_ROOT_PASSWORD['default']} -e \
-    'select uuid,name,transport_url,database_connection,disabled from nova_api.cell_mappings;' || echo None)"
-PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$($CONTROLLER1_SSH sudo podman exec -it nova_conductor nova-manage cell_v2 list_cells)"
-EOF
+> PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="$(oc run mariadb-client-2 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>     mysql -rsh ${SOURCE_MARIADB_IP['default']} -uroot -p${SOURCE_DB_ROOT_PASSWORD['default']} -e \
+>     'select uuid,name,transport_url,database_connection,disabled from nova_api.cell_mappings;' || echo None)"
+> PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$($CONTROLLER1_SSH sudo podman exec -it nova_conductor nova-manage cell_v2 list_cells)"
+> EOF
 $ chmod 0600 ~/.source_cloud_exported_variables*
 ----
 +

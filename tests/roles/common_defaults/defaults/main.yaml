@@ -74,14 +74,14 @@ mariadb_copy_shell_vars_src: |-
   {{ shell_header }}
 
   PASSWORD_FILE="$HOME/overcloud-passwords.yaml"
-  NAMESPACE={{ deploy_ctlplane_ospdo | bool | ternary(rhoso_namespace, org_namespace) }}
+  NAMESPACE={{ deploy_ctlplane_ospdo | bool | ternary(org_namespace, rhoso_namespace ) }}
 
   {{ mariadb_image_env }}
   {{ cells_env }}
 
   declare -A TRIPLEO_PASSWORDS
   for CELL in $(echo $CELLS); do
-      TRIPLEO_PASSWORDS[$CELL]="$TRIPLEO_PASSWORD"
+      TRIPLEO_PASSWORDS[$CELL]="$PASSWORD_FILE"
   done
 
   RUN_OVERRIDES=' '
@@ -101,6 +101,9 @@ mariadb_copy_shell_vars_src: |-
   {% endfor %}
 
 # Header for the destination database access
+# The CHARACTER_SET and collation should match the source DB
+# if the do not then it will break foreign key relationships
+# for any tables that are created in the future as part of db sync
 mariadb_copy_shell_vars_dst: |
   {{ shell_header }}
   {{ oc_header }}
@@ -109,9 +112,6 @@ mariadb_copy_shell_vars_dst: |
 
   NAMESPACE={{ deploy_ctlplane_ospdo | bool | ternary(rhoso_namespace, org_namespace) }}
 
-  # The CHARACTER_SET and collation should match the source DB
-  # if the do not then it will break foreign key relationships
-  # for any tables that are created in the future as part of db sync
   CHARACTER_SET=utf8
   COLLATION=utf8_general_ci
 
