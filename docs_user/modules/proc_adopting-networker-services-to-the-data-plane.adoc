@@ -46,6 +46,9 @@ spec:
       - ctlplane
   preProvisioned: true
   services:
+ifeval::["{build}" == "downstream"]
+    - redhat
+endif::[]
     - bootstrap
     - download-cache
     - configure-network
@@ -83,13 +86,23 @@ spec:
       ansibleUser: root
 ifeval::["{build}" == "downstream"]
       ansibleVarsFrom:
-      - prefix: subscription_manager_
-        secretRef:
+      - secretRef:
           name: subscription-manager
       - secretRef:
           name: redhat-registry
 endif::[]
       ansibleVars:
+ifeval::["{build}" == "downstream"]
+        rhc_release: 9.2
+        rhc_repositories:
+            - {name: "*", state: disabled}
+            - {name: "rhel-9-for-x86_64-baseos-eus-rpms", state: enabled}
+            - {name: "rhel-9-for-x86_64-appstream-eus-rpms", state: enabled}
+            - {name: "rhel-9-for-x86_64-highavailability-eus-rpms", state: enabled}
+            - {name: "openstack-17.1-for-rhel-9-x86_64-rpms", state: enabled}
+            - {name: "fast-datapath-for-rhel-9-x86_64-rpms", state: enabled}
+            - {name: "openstack-dev-preview-for-rhel-9-x86_64-rpms", state: enabled}
+endif::[]
         edpm_bootstrap_release_version_package: []
         # edpm_network_config
         # Default nic config template for a EDPM node
@@ -172,13 +185,6 @@ ifeval::["{build}" != "downstream"]
           update-crypto-policies --set FIPS:NO-ENFORCE-EMS
           ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
           rm -rf repo-setup-main
-endif::[]
-ifeval::["{build}" == "downstream"]
-        edpm_bootstrap_command: |
-          subscription-manager register --username {{ subscription_manager_username }} --password {{ subscription_manager_password }}
-          subscription-manager release --set=9.2
-          subscription-manager repos --disable=*
-          subscription-manager repos --enable=rhel-9-for-x86_64-baseos-eus-rpms --enable=rhel-9-for-x86_64-appstream-eus-rpms --enable=rhel-9-for-x86_64-highavailability-eus-rpms --enable=openstack-17.1-for-rhel-9-x86_64-rpms --enable=fast-datapath-for-rhel-9-x86_64-rpms --enable=openstack-dev-preview-for-rhel-9-x86_64-rpms
 endif::[]
 
         gather_facts: false
