@@ -218,20 +218,13 @@ The resources in the `ConfigMap` contain cell-specific configurations.
 ifeval::["{build}" == "downstream"]
 . Create a secret for the subscription manager:
 +
-[source,yaml]
 ----
-$ oc apply -f - <<EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: subscription-manager
-data:
-  username: <base64_encoded_username>
-  password: <base64_encoded_password>
-EOF
+$ oc create secret generic subscription-manager \
+--from-literal rhc_auth='{"login": {"username": "<subscription_manager_username>", "password": "<subscription_manager_password>"}}'
 ----
 +
-* Replace `<base64_encoded_username>` and `<base64_encoded_password>`  with strings that are base64-encoded.
+* Replace `<subscription_manager_username>` with the applicable user name.
+* Replace `<subscription_manager_password>` with the applicable password.
 
 . Create a secret for the Red Hat registry:
 +
@@ -259,6 +252,9 @@ spec:
       - ctlplane
   preProvisioned: true
   services:
+ifeval::["{build}" == "downstream"]
+    - redhat
+endif::[]
     - bootstrap
     - download-cache
     - configure-network
@@ -301,13 +297,23 @@ spec:
       ansibleUser: root
 ifeval::["{build}" == "downstream"]
       ansibleVarsFrom:
-      - prefix: subscription_manager_
-        secretRef:
+      - secretRef:
           name: subscription-manager
       - secretRef:
           name: redhat-registry
 endif::[]
       ansibleVars:
+ifeval::["{build}" == "downstream"]
+        rhc_release: 9.2
+        rhc_repositories:
+            - {name: "*", state: disabled}
+            - {name: "rhel-9-for-x86_64-baseos-eus-rpms", state: enabled}
+            - {name: "rhel-9-for-x86_64-appstream-eus-rpms", state: enabled}
+            - {name: "rhel-9-for-x86_64-highavailability-eus-rpms", state: enabled}
+            - {name: "openstack-17.1-for-rhel-9-x86_64-rpms", state: enabled}
+            - {name: "fast-datapath-for-rhel-9-x86_64-rpms", state: enabled}
+            - {name: "openstack-dev-preview-for-rhel-9-x86_64-rpms", state: enabled}
+endif::[]
         edpm_bootstrap_release_version_package: []
         # edpm_network_config
         # Default nic config template for a EDPM node
@@ -394,10 +400,6 @@ ifeval::["{build}" != "downstream"]
 endif::[]
 ifeval::["{build}" == "downstream"]
         edpm_bootstrap_command: |
-          subscription-manager register --username {{ subscription_manager_username }} --password {{ subscription_manager_password }}
-          subscription-manager release --set=9.2
-          subscription-manager repos --disable=*
-          subscription-manager repos --enable=rhel-9-for-x86_64-baseos-eus-rpms --enable=rhel-9-for-x86_64-appstream-eus-rpms --enable=rhel-9-for-x86_64-highavailability-eus-rpms --enable=openstack-17.1-for-rhel-9-x86_64-rpms --enable=fast-datapath-for-rhel-9-x86_64-rpms --enable=openstack-dev-preview-for-rhel-9-x86_64-rpms
           # FIXME: perform dnf upgrade for other packages in EDPM ansible
           # here we only ensuring that decontainerized libvirt can start
           dnf -y upgrade openstack-selinux
@@ -437,6 +439,9 @@ external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-b
 $ oc patch osdpns/openstack --type=merge --patch "
 spec:
   services:
+ifeval::["{build}" == "downstream"]
+    - redhat
+endif::[]
     - bootstrap
     - download-cache
     - configure-network
