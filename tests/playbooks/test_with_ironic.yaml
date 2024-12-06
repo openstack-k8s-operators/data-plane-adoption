@@ -26,6 +26,7 @@
   vars:
     ironic_adoption: true
     nova_libvirt_backend: local
+    prelaunch_test_instance_script: pre_launch_ironic.bash
   roles:
     - role: development_environment
     - role: backend_services

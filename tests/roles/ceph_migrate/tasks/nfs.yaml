@@ -21,6 +21,6 @@
   become: true
   ansible.builtin.command: |
     {{ ceph_cli }} nfs cluster create {{ cephfs_name | default('cephfs') }} \
-    --ingress --virtual-ip={{ ceph_nfs_vip }} \
-    --ingress-mode=haproxy-protocol '--placement=label=nfs'
+    '--placement=label:nfs' --ingress --virtual-ip={{ ceph_nfs_vip }} \
+    --ingress-mode=haproxy-protocol
   changed_when: false

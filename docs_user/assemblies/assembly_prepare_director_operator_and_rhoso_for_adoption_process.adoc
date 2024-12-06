@@ -1,0 +1,423 @@
+ifdef::context[:parent-context: {context}]
+
+[id="prepare-director-operator-and-rhoso-for-adoption-process_{context}"]
+
+:context: prepare-director-operator
+
+= Preparing director Operator for adoption
+
+Before you adopt your Red Hat OpenStack Platform (RHOSP) director Operator (OSPdO) deployment, you must prepare the Controller nodes for adoption to the RHOSO environment.
+
+Before you adopt your Red Hat OpenStack Platform (RHOSP) director Operator (OSPdO) deployment, you must prepare the Controller nodes for adoption to the RHOSO environment.
+
+[NOTE]
+====
+The following procedure uses a single {rhocp_long} cluster that is shared by the source OSPdO environment and a destination {rhos_acro} environment. Two {OpenShiftShort} master nodes are transferred to the {rhos_acro} environment, leaving OSPdO with one node for the duration of the adoption process. After adoption, the remaining node can be used by the {rhos_acro}  environment as well.
+====
+.Procedure
+
+. Log in to the {OpenShift } environment where {OpenStackShort} OSPdO is deployed and change to the project that hosts your {OpenStackShort} deployment:
++
+----
+$ oc project openstack
+----
+
+. Define the common environment variables:
+----
+export PASSWORD_FILE="tripleo-passwords.yaml"
+
+export RHOSO18_NAMESPACE="rhoso18"
+
+export OSPDO_NAMESPACE="openstack"
+
+export OS_CLIENT="oc exec -c openstackclient -t openstackclient -- "
+
+export CONTROLLER_SSH="oc rsh -n $OSPDO_NAMESPACE -c openstackclient openstackclient ssh controller-0.ctlplane"
+
+export CONTROLLER1_SSH="oc -n $OSPDO_NAMESPACE rsh -c openstackclient openstackclient ssh controller-0.ctlplane"
+export CONTROLLER2_SSH=
+export CONTROLLER3_SSH=
+
+export OSPDO_INTERNAL_API_NET="internalapi"
+
+export STORAGE_CLASS=$(oc get -n $OSPDO_NAMESPACE pvc openstackclient-hosts -o jsonpath='{.spec.storageClassName}')
+----
+
+. Get the name of the node where the current {OpenStackShort} Controller virtual machine (VM) is running:
++
+----
+$ export CONTROLLER_NODE=$(oc -n $OSPDO_NAMESPACE get vmi -ojson | jq -r '.items[0].status.nodeName')
+----
+
+
+. If you are using a combination master/worker cluster with a high availability OSPdO environment,
+configure OSPdO to use a single {OpenStackShort} Controller node:
+
+.. Disable stonith:
++
+----
+$ stonith_resources=$(sudo pcs stonith status|grep Started|awk '{print $2}')
+for in in stonith_resources ;do CONTROLLER1_SSH sudo pcs stonith disable ;done
+----
+.. Put non-Controller nodes in maintenance:
++
+----
+$CONTROLLER1_SSH sudo pcs node maintenance <controller-1> <controller-2>
+----
++
+* Replace `<controller-1>` and `<controller-2>` with the names of the Controller nodes in your environment.
+
+.. Update the quorum for single node:
++
+----
+$CONTROLLER1_SSH sudo systemctl stop corosync
+$CONTROLLER2_SSH sudo systemctl stop corosync
+$CONTROLLER3_SSH sudo systemctl stop corosync
+$CONTROLLER1_SSH sudo pcs quorum update last_man_standing=1 wait_for_all=1
+$CONTROLLER1_SSH sudo systemctl restart corosync
+----
+.. Restart the Pacemaker cluster:
++
+----
+$CONTROLLER1_SSH sudo pcs cluster stop
+$CONTROLLER1_SSH sudo pcs cluster start
+----
+.. Remove the OSPdO node network configuration policies from the other two nodes that are not running the Controller VM by placing a `nodeSelector` on the {OpenShiftShort} node that contains the Controller VM:
++
+----
+$ for i in br-ctlplane br-ex br-osp; do oc patch osnetconfig openstacknetconfig --type json -p '[{"op": "replace", "path": "/spec/attachConfigurations/'$i'/nodeNetworkConfigurationPolicy/nodeSelector", "value": {"kubernetes.io/hostname": "'$CONTROLLER_NODE'"}}]'; done
+----
+
+== Preparing RHOSO for adoption
+
+When you deploy a {rhos_long} environment by using two Red Hat OpenShift Container Platform master nodes, you must perform the following actions:
+* Create a new namespace for {rhos_acro} installation.
+* Create custom node network configuration policies.
+* Create  `NetworkAttachmentDefinition` custom resources for each isolated network.
+* Install {rhos_acro} operators.
+.Procedure
+
+. Save the hostnames of the remaining two nodes to the `RHOSO_NODES` variable:
++
+----
+$ RHOSO_NODES=$(oc get nodes -o name | grep -v $CONTROLLER_NODE | sed 's#node/##g' | tr '\n' ' ')
+----
+. Extract nodes to be used for OSP 18 installation and label nodes.
++
+----
+$ export RHOSO18_NODE1=$(echo "${RHOSO_NODES}" | cut -d ' ' -f 1)
+$ export RHOSO18_NODE2=$(echo "${RHOSO_NODES}" | cut -d ' ' -f 2)
+$ oc label nodes "${RHOSO18_NODE1}" type=openstack
+$ oc label nodes "${RHOSO18_NODE2}" type=openstack
+----
+
+. Create a new namespace to use to install {rhos_acro}. You must install {rhos_acro} in a different namespace from OSPdO:
++
+----
+$ oc get namespace ${RHOSO18_NAMESPACE} 2>/dev/null || {
+    oc create namespace ${RHOSO18_NAMESPACE} || {
+        echo "Failed to create namespace ${RHOSO18_NAMESPACE}"
+        exit 1
+    }
+}
+----
+
+. Create custom node network configuration policies for RHOSO:
++
+[NOTE]
+The node network configuration policies use the `nodeSelector` attribute to be constrained to `OSP18_NODE1/2`.  The new node network configuration policy mirrors the existing node network configuration policies.  In the following example, the subnets ranges are reused.  In addition, OSPdO’s use of bridges for the control and external interfaces is duplicated.
++
+----
+$ oc apply -f - <<EOF
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  labels:
+    osp/interface: enp7s0
+  name: enp7s0-<RHOSO18_NODE1>
+spec:
+  desiredState:
+    dns-resolver:
+      config:
+        search: []
+        server:
+        - 172.22.0.1
+    interfaces:
+    - description: internalapi vlan interface
+      name: enp7s0.20
+      state: up
+      type: vlan
+      vlan:
+        base-iface: enp7s0
+        id: 20
+        reorder-headers: true
+      ipv4:
+        address:
+        - ip: 172.17.0.5
+          prefix-length: 24
+        enabled: true
+        dhcp: false
+      ipv6:
+        enabled: false
+    - description: storage vlan interface
+      name: enp7s0.30
+      state: up
+      type: vlan
+      vlan:
+        base-iface: enp7s0
+        id: 30
+        reorder-headers: true
+      ipv4:
+        address:
+        - ip: 172.18.0.5
+          prefix-length: 24
+        enabled: true
+        dhcp: false
+      ipv6:
+        enabled: false
+    - description: tenant vlan interface
+      name: enp7s0.50
+      state: up
+      type: vlan
+      vlan:
+        base-iface: enp7s0
+        id: 50
+        reorder-headers: true
+      ipv4:
+        address:
+        - ip: 172.19.0.5
+          prefix-length: 24
+        enabled: true
+        dhcp: false
+      ipv6:
+        enabled: false
+    - description: storagemgmt vlan interface
+      name: enp7s0.40
+      state: up
+      type: vlan
+      vlan:
+        base-iface: enp7s0
+        id: 40
+        reorder-headers: true
+      ipv4:
+        address:
+        - ip: 172.20.0.5
+          prefix-length: 24
+        enabled: true
+        dhcp: false
+      ipv6:
+        enabled: false
+    - description: Configuring Bridge ospbr with interface enp1s0
+      name: br-ctlplane
+      mtu: 1500
+      type: linux-bridge
+      state: up
+      bridge:
+        options:
+          stp:
+            enabled: false
+        port:
+          - name: enp1s0
+            vlan: {}
+      ipv4:
+        address:
+        - ip: 172.22.0.51
+          prefix-length: 24
+        enabled: true
+        dhcp: false
+      ipv6:
+        enabled: false
+    - description: external bridge
+      name: br-external
+      type: linux-bridge
+      mtu: 1500
+      ipv6:
+        enabled: false
+      ipv4:
+        enabled: false
+      bridge:
+        options:
+          stp:
+            enabled: false
+        port:
+        - name: enp6s0
+  nodeSelector:
+    kubernetes.io/hostname: <RHOSO18_NODE1>
+    node-role.kubernetes.io/worker: ""
+EOF
+----
+
+* Replace `<RHOSO18_NODE1>` with the name of your node.
++
+. Apply a `NetworkAttachmentDefinition` custom resource for OpenStack 18 for each isolated network to attach the service pods to the networks:
++
+----
+$ oc apply -f - <<EOF
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ctlplane
+  namespace: <RHOSO18_NAMESPACE>
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "ctlplane",
+      "type": "bridge",
+      "master": "br-ctlplane",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.22.0.0/24",
+        "range_start": "172.22.0.30",
+        "range_end": "172.22.0.70"
+      }
+    }
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: internalapi
+  namespace: <RHOSO18_NAMESPACE>
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "internalapi",
+      "type": "macvlan",
+      "master": "enp7s0.20",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.17.0.0/24",
+        "range_start": "172.17.0.30",
+        "range_end": "172.17.0.70"
+      }
+    }
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: external
+  namespace: <RHOSO18_NAMESPACE>
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "external",
+      "type": "macvlan",
+      "master": "br-external",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "10.0.0.0/24",
+        "range_start": "10.0.0.30",
+        "range_end": "10.0.0.70"
+      }
+    }
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: storage
+  namespace: $<RHOSO18_NAMESPACE>
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "storage",
+      "type": "macvlan",
+      "master": "enp7s0.30",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.18.0.0/24",
+        "range_start": "172.18.0.30",
+        "range_end": "172.18.0.70"
+      }
+    }
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: storagemgmt
+  namespace: <RHOSO18_NAMESPACE>
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "storagemgmt",
+      "type": "macvlan",
+      "master": "enp7s0.40",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.19.0.0/24",
+        "range_start": "172.19.0.30",
+        "range_end": "172.19.0.70"
+      }
+    }
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: tenant
+  namespace: <RHOSO18_NAMESPACE>
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "tenant",
+      "type": "macvlan",
+      "master": "enp7s0.50",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.20.0.0/24",
+        "range_start": "172.20.0.30",
+        "range_end": "172.20.0.70"
+      }
+    }
+EOF
+----
++
+* Replace `<RHOSO18_NAMESPACE>` with your OpenStack 18 namespace.
+
+. Ensure that the `OVNKubernetes IPForwarding` field is set to to `enabled`:
++
+----
+$ oc patch network.operator cluster -p '{"spec":{"defaultNetwork":{"ovnKubernetesConfig":{"gatewayConfig":{"ipForwarding": "Global"}}}}}' --type=merge
+----
+
+. Extract and save passwords from OSPdO:
++
+----
+$ oc get secret tripleo-passwords -n $OSPDO_NAMESPACE -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' | base64 -d >"${PASSWORD_FILE}" || {
+    echo "ERROR: Failed to extract passwords from OSPdO"
+    exit 1
+}
+----
+
+. Install the {rhos_acro} operators:
++
+----
+$ git clone https://github.com/openstack-k8s-operators/install_yamls.git
+cd install_yamls
+BMO_SETUP=false NETWORK_ISOLATION=false NAMESPACE=${RHOSO18_NAMESPACE} make openstack
+BMO_SETUP=false NETWORK_ISOLATION=false make metallb
+----
+
+
+. Apply the `IPAddressPool` resource that matches the new OpenStack 18 deployment to configure which IPs can be used as virtual IPs (VIPs):
++
+----
+$ oc apply -f - <<EOF
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+...
+----
+
+. Apply the `L2Advertisement` resource to define how the VIPs are announced:
++
+----
+$ cat << EOF | oc apply -f -
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+----
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]
