@@ -95,6 +95,18 @@ ${BASH_ALIASES[openstack]} server show test || {
     ${BASH_ALIASES[openstack]} server add floating ip test 192.168.122.20
 }
 
+if [ "$PING_TEST_VM" = "true" ]; then
+    # Create a floating IP
+    ${BASH_ALIASES[openstack]} floating ip show 192.168.122.21 || \
+        ${BASH_ALIASES[openstack]} floating ip create public --floating-ip-address 192.168.122.21
+
+    # Create a test-ping instance
+    ${BASH_ALIASES[openstack]} server show test-ping || {
+      ${BASH_ALIASES[openstack]} server create --flavor m1.small --image cirros --nic net-id=private test-ping --wait
+      ${BASH_ALIASES[openstack]} server add floating ip test-ping 192.168.122.21
+    }
+fi
+
 # Create security groups
 ${BASH_ALIASES[openstack]} security group rule list --protocol icmp --ingress -f json | grep -q '"IP Range": "0.0.0.0/0"' || \
     ${BASH_ALIASES[openstack]} security group rule create --protocol icmp --ingress --icmp-type -1 $(${BASH_ALIASES[openstack]} security group list --project admin -f value -c ID)
