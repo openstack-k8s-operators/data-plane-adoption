@@ -148,7 +148,10 @@ network_config:
     primary: true
 ----
 
-.. Add the External Network to the baremetal file, for example, `/home/stack/composable_roles/network/baremetal_deployment.yaml` that is used by `metalsmith`. Also 'network_config_update' should be enabled for network propogation to target nodes during `os-net-config`:
+.. Add the External Network to the bare metal file, for example, `/home/stack/composable_roles/network/baremetal_deployment.yaml` that is used by `metalsmith`:
++
+[NOTE]
+Ensure that  'network_config_update' is enabled for network propagation to the target nodes when `os-net-config` is triggered.
 +
 [source,yaml]
 ----
