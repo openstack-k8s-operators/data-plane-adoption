@@ -13,6 +13,9 @@ You must deploy this service on the `StorageNFS` isolated network so that you ca
 You can deploy the new clustered NFS service on your existing CephStorage nodes or HCI nodes, or on new hardware that you enrolled in the {Ceph} cluster.
 
 . If you deployed your {Ceph} nodes with {OpenStackPreviousInstaller}, propagate the `StorageNFS` network to the target nodes where the `ceph-nfs` service is deployed.
++
+[NOTE]
+If the target nodes are not managed by director, you cannot use this procedure to configure the network. An administrator must manually configure all the required networks.
 .. Identify the node definition file, `overcloud-baremetal-deploy.yaml`, that is used in the {OpenStackShort} environment.
 ifeval::["{build}" != "upstream"]
 For more information about identifying the `overcloud-baremetal-deploy.yaml` file, see link:{customizing-rhoso}/index#assembly_customizing-overcloud-networks[Customizing overcloud networks] in _{customizing-rhoso-t}_.
@@ -101,9 +104,8 @@ $ ceph orch host label add <hostname> nfs
 $ ceph nfs cluster create cephfs \
     "label:nfs" \
     --ingress \
-    --virtual-ip=<VIP>
+    --virtual-ip=<VIP> \
     --ingress-mode=haproxy-protocol
-}}
 ----
 +
 * Replace `<VIP>` with the VIP for the Ceph NFS service.
