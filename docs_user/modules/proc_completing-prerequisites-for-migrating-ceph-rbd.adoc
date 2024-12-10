@@ -16,7 +16,7 @@ endif::[]
 * The {Ceph} cluster is healthy, and the `ceph -s` command returns `HEALTH_OK`.
 * Run `os-net-config` on the bare metal node and configure additional networks:
 .. If target nodes are `CephStorage`, ensure that the network is defined in the
-baremetal file for the `CephStorage` nodes, for example, `/home/stack/composable_roles/network/baremetal_deployment.yaml`:
+bare metal file for the `CephStorage` nodes, for example, `/home/stack/composable_roles/network/baremetal_deployment.yaml`:
 +
 [source,yaml]
 ----
