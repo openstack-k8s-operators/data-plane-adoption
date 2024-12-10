@@ -1,5 +1,7 @@
 set -e
 
+alias openstack="$OPENSTACK_COMMAND"
+
 function wait_node_state() {
   local node_state=$1
   local retries=50
