@@ -26,9 +26,9 @@ $ STORAGE_CLASS=local-storage
 $ MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
 endif::[]
 
-$ CELLS="default cell1 cell2"
-$ DEFAULT_CELL_NAME="cell3"
-$ RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
+$ CELLS="default"
+$ DEFAULT_CELL_NAME="cell1"
+$ RENAMED_CELLS="$DEFAULT_CELL_NAME"
 
 $ NAMESPACE="openstack"
 
