@@ -23,7 +23,7 @@ $ MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.
 endif::[]
 $ declare -A TRIPLEO_PASSWORDS
 ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
-$ CELLS="default"
+$ CELLS="default cell1 cell2"
 $ for CELL in $(echo $CELLS); do
 >    TRIPLEO_PASSWORDS[$CELL]="$PASSWORD_FILE"
 > done

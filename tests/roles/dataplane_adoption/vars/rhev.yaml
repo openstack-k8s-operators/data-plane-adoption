@@ -39,6 +39,7 @@ netconfig_networks:
 edpm_node_hostname: compute-0.redhat.local
 edpm_node2_hostname: compute-1.redhat.local
 edpm_user: stack
+# Overrides nodes for a single cell1 setup
 edpm_nodes:
   cell1:
     compute-0:
