@@ -32,6 +32,42 @@ cells_env: |
   DEFAULT_CELL_NAME={{ default_cell_name }}
   RENAMED_CELLS="{{ renamed_cells | join(' ') }}"
 
+# Header for osdp nodesets names evaluation
+nodesets_env: |
+  {{ edpm_computes_shell_vars_src }}
+
+  NODESETS=""
+  for CELL in $(echo $RENAMED_CELLS); do
+    ref="COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
+    eval names=\${!${ref}[@]}
+    [ -z "$names" ] && continue
+    NODESETS="'openstack-${CELL}', $NODESETS"
+  done
+  NODESETS="[${NODESETS%,*}{% if edpm_nodes_networker is defined %}, 'openstack-networker'{% endif %}]"
+
+nodesets_env_oc: |
+  {{ shell_header }}
+  {{ oc_header }}
+  {{ cells_env }}
+
+  NODESETS=""
+  for CELL in $(echo $RENAMED_CELLS); do
+    oc get Openstackdataplanenodeset openstack-${CELL} || continue
+    NODESETS="'openstack-${CELL}', $NODESETS"
+  done
+  NODESETS="[${NODESETS%,*}]"
+
+# Header for custom nova osdp services names evaluation
+nova_services_env: |
+  {{ shell_header }}
+  {{ cells_env }}
+
+  NOVASERVICES=""
+  for CELL in $(echo $RENAMED_CELLS); do
+    NOVASERVICES="'nova-${CELL}', $NOVASERVICES"
+  done
+  NOVASERVICES="[${NOVASERVICES%,*}]"
+
 # Headers for DB client CLI image
 mariadb_image_env: |
   STORAGE_CLASS={{ storage_class_name }}
@@ -129,6 +165,20 @@ mariadb_copy_shell_vars_dst: |
       PODIFIED_MARIADB_IP[$CELL]=$(oc get svc --selector "mariadb/name=openstack-$CELL" -ojsonpath='{.items[0].spec.clusterIP}')
     fi
   done
+
+# Header for the destination cloud EDPM Nova cell computes FDQN and IP pairs, per a cell
+edpm_computes_shell_vars_src: |-
+  {{ shell_header }}
+  {{ cells_env }}
+
+  {% for cell in renamed_cells %}
+  declare -A COMPUTES_{{ cell.upper() }}
+  COMPUTES_{{ cell.upper() }}=(
+    {%- for v in edpm_nodes[cell] | default({}) %}
+    ["{{ edpm_nodes[cell][v].hostName }}"]={{ edpm_nodes[cell][v].ansible.ansibleHost }}
+    {% endfor -%}
+  )
+  {% endfor %}
 
 pull_openstack_configuration_ssh_shell_vars: |
   CONTROLLER1_SSH="{{ controller1_ssh }}"
