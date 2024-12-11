@@ -12,6 +12,7 @@
       export CINDER_BACKUP_BACKEND_CONFIGURED={{ cinder_backup_backend_configured | string | lower }}
       export ENROLL_BMAAS_IRONIC_NODES={{ enroll_ironic_bmaas_nodes | string | lower }}
       export PRE_LAUNCH_IRONIC_RESTART_CHRONY={{ pre_launch_ironic_restart_chrony | string | lower }}
+      export PING_TEST_VM={{ ping_test | string | lower }}
       {{ lookup('ansible.builtin.file', prelaunch_test_instance_script) }}
 
 - name: Start and setup ping test
@@ -21,7 +22,7 @@
   block:
     - name: Start the ping test to the VM instance.
       vars:
-        fip: 192.168.122.20
+        fip: 192.168.122.21
       ansible.builtin.shell:
         cmd: |
           ping -D {{ fip }} &> {{ ping_test_log_file }} &
