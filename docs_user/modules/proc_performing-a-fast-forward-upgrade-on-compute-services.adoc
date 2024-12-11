@@ -27,7 +27,7 @@ done
 
 .Procedure
 
-. Wait for cell1 Compute data plane services version to update:
+. Wait for {compute_service} data plane services version updated for all cells:
 +
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
@@ -47,17 +47,10 @@ Review any errors in the nova Compute agent logs on the data plane, and the `nov
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
-spec:
-  nova:
-    template:
-      cellTemplates:
-        cell0:
-          conductorServiceTemplate:
-            customServiceConfig: |
-              [workarounds]
-              disable_compute_service_check_for_ffu=false
-        cell1:
+$ rm -f celltemplates
+$ for CELL in $(echo $RENAMED_CELLS); do
+  cat >> celltemplates << EOF
+        ${CELL}:
           metadataServiceTemplate:
             customServiceConfig: |
               [workarounds]
@@ -66,6 +59,13 @@ spec:
             customServiceConfig: |
               [workarounds]
               disable_compute_service_check_for_ffu=false
+EOF
+done
+
+$ cat > oscp-patch.yaml << EOF
+spec:
+  nova:
+    template:
       apiServiceTemplate:
         customServiceConfig: |
           [workarounds]
@@ -78,7 +78,39 @@ spec:
         customServiceConfig: |
           [workarounds]
           disable_compute_service_check_for_ffu=false
-'
+      cellTemplates:
+        cell0:
+          conductorServiceTemplate:
+            customServiceConfig: |
+              [workarounds]
+              disable_compute_service_check_for_ffu=false
+EOF
+$ cat celltemplates >> oscp-patch.yaml
+----
++
+
+* If you are adopting the {compute_service} with the {bare_metal_first_ref}, append the following `novaComputeTemplates` in the needed `cell<N>` section(s) of the {compute_service} CR patch:
++
+[source,yaml]
+----
+        cell<N>:
+          novaComputeTemplates:
+            <hostname>: <1>
+              customServiceConfig: |
+                [DEFAULT]
+                host = <hostname>
+                [workarounds]
+                disable_compute_service_check_for_ffu=true
+              computeDriver: ironic.IronicDriver
+        ...
+----
++
+<1> Replace `<hostname>` with the hostname of the node that is running the `ironic` Compute driver in the source cloud cell<N>.
+
+. Apply the patch file
++
+----
+$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch-file=oscp-patch.yaml
 ----
 
 . Wait until the Compute control plane services CRs are ready:
@@ -93,49 +125,43 @@ $ oc wait --for condition=Ready --timeout=300s Nova/nova
 +
 [source,yaml]
 ----
-$ oc apply -f - <<EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nova-extra-config
-  namespace: openstack
-data:
-  20-nova-compute-cell1-workarounds.conf: |
-    [workarounds]
-    disable_compute_service_check_for_ffu=false
+$ oc patch cm nova-cells-global-config --type=json -p='[{"op": "replace", "path": "/data/99-nova-compute-cells-workarounds.conf", "value": "[workarounds]\n"}]'
+$ for CELL in $(echo $RENAMED_CELLS); do
+  oc get Openstackdataplanenodeset openstack-${CELL} || continue
+  oc apply -f - <<EOF
 ---
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
-  name: openstack-nova-compute-ffu
+  name: openstack-nova-compute-ffu-$CELL
   namespace: openstack
 spec:
   nodeSets:
-    - openstack
+    - openstack-${CELL}
   servicesOverride:
-    - nova
+    - nova-${CELL}
+backoffLimit: 3
 EOF
+done
 ----
 +
-[NOTE]
-The service included in the `servicesOverride` key must match the name of the service that you included in the `OpenStackDataPlaneNodeSet` CR. For example, if you use a custom service called `nova-custom`, ensure that you add it to the `servicesOverride` key.
 
-. Wait for the Compute data plane services to be ready:
+. Wait for the Compute data plane services to be ready for all cells:
 +
 ----
-$ oc wait --for condition=Ready openstackdataplanedeployment/openstack-nova-compute-ffu --timeout=5m
+$ oc wait --for condition=Ready openstackdataplanedeployments --all --timeout=5m
 ----
 
-. Run Compute database online migrations to complete the fast-forward upgrade:
+. Run Compute database online migrations to complete the upgrade:
 +
 ----
 $ oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
-$ oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
+$ for CELL in $(echo $RENAMED_CELLS); do
+  oc exec -it nova-${CELL}-conductor-0 -- nova-manage db online_data_migrations
+done
 ----
 
-.Verification
-
-. Discover the Compute hosts in the cell:
+. Discover Compute hosts in the cells:
 +
 ----
 $ oc rsh nova-cell0-conductor-0 nova-manage cell_v2 discover_hosts --verbose
