@@ -106,6 +106,13 @@ $ export COMPUTES_CELL3=(
 )
 # ...
 
+$ declare -A COMPUTES_API_CELL1
+$ export COMPUTES_API_CELL1=( <2>
+  ["standalone.localdomain"]="172.17.0.100"
+  # ...
+)
+# ...
+
 $ NODESETS=""
 $ for CELL in $(echo $RENAMED_CELLS); do
   ref="COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
@@ -118,9 +125,9 @@ $ NODESETS="[${NODESETS%,*}]"
 +
 <1> The source cloud `default` cell takes a new `DEFAULT_CELL_NAME` on the destined cloud after adoption.
 In a multi-cell adoption scenario, you may either retain its original name `default`, or create as `cell<X>`, by providing the incremented index of the last cell in the source cloud (which is, by adding a 1 to it).
-<2> For each cell, adjust <["standalone.localdomain"]="192.168.122.100">, and complete `COMPUTES_CELL_<X>` data with the names and IP addresses of the {compute_service} nodes.
+<2> For each cell, adjust <["standalone.localdomain"]="x.x.x.x">, and complete `COMPUTES_CELL<X>` and `COMPUTES_API_CELL<X>` data with the names and IP addresses of the {compute_service} nodes connected to the `ctlplane` and `internalapi` networks. Do not specify a real FQDN defined for each network, always use the same host name for each of its connected networks. Providing IP addresses and names of the hosts on remaining networks of the source cloud should be covered the similar way. Or you can adjust the generated files manually as shown below.
 <3> If your deployment has a custom DNS Domain, put it in for FQDN of the nodes. The given values will be used in the dataplane node sets' `spec.nodes.<NODE NAME>.hostName`.
-<4> Assign all {compute_service} nodes from the source cloud `cell1` cell into `COMPUTES_CELL1`, and so on.
+<4> Assign all {compute_service} nodes from the source cloud `cell1` cell into `COMPUTES_*CELL1`, and so on.
 <5> Assign all {compute_service} nodes from the source cloud `default` cell into `openstack-<X>`,
 where `<X>` is the `DEFAULT_CELL_NAME` environment variable value (here, it equals 'cell3').
 <6> Cells not containing compute nodes will be omitted as no node sets for it should be created.
@@ -370,11 +377,13 @@ $ declare -A names
 $ for CELL in $(echo $RENAMED_CELLS); do
   ref="COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
   eval names=\${!${ref}[@]}
+  ref_api="COMPUTES_API_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
   [ -z "$names" ] && continue
   ind=0
   rm -f computes-$CELL
   for compute in $names; do
     ip="${ref}['$compute']"
+    ip_api="${ref_api}['$compute']"
     cat >> computes-$CELL << EOF
     ${compute}:
       hostName: $compute <1>
@@ -387,6 +396,7 @@ $ for CELL in $(echo $RENAMED_CELLS); do
         subnetName: subnet1
       - name: internalapi
         subnetName: subnet1
+        fixedIP: ${!ip_api}
       - name: storage
         subnetName: subnet1
       - name: tenant
@@ -567,7 +577,7 @@ done
 ----
 +
 <1> If your deployment has a custom DNS Domain, modify the `spec:nodes:[NODE NAME]:hostName` to use fqdn for the node.
-<2> The networks composition must match the source cloud configuration to avoid dataplane connectivity downtime. The ctlplane network must come first.
+<2> The networks composition must match the source cloud configuration to avoid dataplane connectivity downtime. The ctlplane network must come first. The above commands only retain IP addresses for the hosts on `ctlplane` and `internalapi` networks. Complete it the same way for other networks, or update the resulted files manually.
 <3> Use node sets names, like `openstack-cell1`, `openstack-cell2`. Only create node sets for cells containing compute nodes.
 <4> If TLS Everywhere is enabled, change `spec.tlsEnabled` to `true`.
 <5> If not adopting the telemetry services, omit it from the services list.

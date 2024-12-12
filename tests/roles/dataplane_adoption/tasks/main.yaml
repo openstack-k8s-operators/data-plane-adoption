@@ -207,11 +207,13 @@
     for CELL in $(echo $RENAMED_CELLS); do
       ref="COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
       eval names=\${!${ref}[@]}
+      ref_api="COMPUTES_API_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
       [ -z "$names" ] && continue
       ind=0
       rm -f computes-$CELL
       for compute in $names; do
         ip="${ref}['$compute']"
+        ip_api="${ref_api}['$compute']"
         cat >> computes-$CELL << EOF
         ${compute}:
           hostName: $compute
@@ -224,6 +226,7 @@
             subnetName: subnet1
           - name: internalapi
             subnetName: subnet1
+            fixedIP: ${!ip_api}
           - name: storage
             subnetName: subnet1
           - name: tenant

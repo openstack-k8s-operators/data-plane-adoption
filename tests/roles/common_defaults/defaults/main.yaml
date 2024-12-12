@@ -167,6 +167,7 @@ mariadb_copy_shell_vars_dst: |
   done
 
 # Header for the destination cloud EDPM Nova cell computes FDQN and IP pairs, per a cell
+# NOTE: Assume inernalapi network comes with an index 1. Ignore FQDN on a network to simply bind IPs by a hostname.
 edpm_computes_shell_vars_src: |-
   {{ shell_header }}
   {{ cells_env }}
@@ -176,6 +177,12 @@ edpm_computes_shell_vars_src: |-
   COMPUTES_{{ cell.upper() }}=(
     {%- for v in edpm_nodes[cell] | default({}) %}
     ["{{ edpm_nodes[cell][v].hostName }}"]={{ edpm_nodes[cell][v].ansible.ansibleHost }}
+    {% endfor -%}
+  )
+  declare -A COMPUTES_API_{{ cell.upper() }}
+  COMPUTES_API_{{ cell.upper() }}=(
+    {%- for v in edpm_nodes[cell] | default({}) %}
+    ["{{ edpm_nodes[cell][v].hostName }}"]={{ edpm_nodes[cell][v].networks[1].fixedIP|default("") }}
     {% endfor -%}
   )
   {% endfor %}
