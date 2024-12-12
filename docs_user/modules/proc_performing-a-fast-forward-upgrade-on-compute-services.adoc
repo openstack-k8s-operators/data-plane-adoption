@@ -10,7 +10,8 @@ You must upgrade the Compute services from {rhos_prev_long} {rhos_prev_ver} to {
 
 . Prerequisites
 
-* Define the shell variables necessary to apply the fast-forward upgrade commands, for each Nova Compute cell.
+* Define the shell variables necessary to apply the fast-forward upgrade commands for each {compute_service} cell.
+
 +
 ----
 DEFAULT_CELL_NAME="cell1"

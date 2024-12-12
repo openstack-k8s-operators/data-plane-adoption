@@ -43,7 +43,7 @@ $ for CELL in $(echo $CELLS); do
 ----
 +
 ifeval::["{build_variant}" == "ospdo"]
-* You can only have a single Nova compute cell deployed on the source cloud.
+* You can only deploy a single {compute service} cell on the source cloud.
 
 . Get the name of the {OpenShiftShort} node where the {OpenStackShort} Controller virtual machine is running:
 +
@@ -51,7 +51,6 @@ ifeval::["{build_variant}" == "ospdo"]
 $ export CONTROLLER_NODE=$(oc get vmi -ojson | jq -r '.items[0].status.nodeName')
 $ export SOURCE_OVN_OVSDB_IP=172.17.0.160 # get this from the source OVN DB
 ----
-+
 
 . Find the mysql service IP in the `ctlplane-export.yaml` section of the `tripleo-exports-default` ConfigMap:
 +
@@ -84,7 +83,7 @@ $ RUN_OVERRIDES='{
 > }'
 ----
 +
-* With OSPdO, the `mariadb-client` needs to run on the same {rhocp_long} node where the {OpenStackShort} Controller node is running. In addition, the `internalapi-static` network needs to be attached to the pod.
+* The `mariadb-client` needs to run on the same {rhocp_long} node where the {OpenStackShort} Controller node is running. In addition, the `internalapi-static` network needs to be attached to the pod.
 endif::[]
 
 . Define the following shell variables. Replace the example values with values that are correct for your environment:
@@ -119,8 +118,8 @@ $ SOURCE_MARIADB_IP[cell2]=*<galera cell2 cluster VIP>*
 endif::[]
 ----
 +
-* Complete `CONTROLLER1_SSH` settings with SSH connection details for any non-cell controller of the source {OpenStackPreviousInstaller} cloud.
-* For each cell defined in `CELLS`, replace `SOURCE_MARIADB_IP[*]= ...`, and complete the records lists for the cell names and VIP addresses of MariaDB Galera clusters, include cells, of the source {OpenStackPreviousInstaller} cloud.
+* Provide `CONTROLLER1_SSH` settings with SSH connection details for any non-cell Controller of the source {OpenStackPreviousInstaller} cloud.
+* For each cell that is defined in `CELLS`, replace `SOURCE_MARIADB_IP[*]= ...`, with the records lists for the cell names and VIP addresses of MariaDB Galera clusters, including the cells, of the source {OpenStackPreviousInstaller} cloud.
 * To get the values for `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller
 ifeval::["{build_variant}" != "ospdo"]
 and CellController
@@ -133,10 +132,7 @@ $ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | gre
 +
 
 [NOTE]
-The source cloud always uses the same password for cells' databases by design.
-For that reason, we chose to use the same passwords file for all cells' stacks.
-There is a split-stack topology, however, that allows using different passwords
-files for each stack.
+The source cloud always uses the same password for cells databases. For that reason, the same passwords file is used for all cells stacks. However, split-stack topology allows using different passwords files for each stack.
 
 .Procedure
 
@@ -158,7 +154,7 @@ $ for CELL in $(echo $CELLS); do
 ----
 +
 [NOTE]
-The `nova`, `nova_api`, and `nova_cell0` databases are inlcuded in the same database host for the main overcloud Heat stack.
+The `nova`, `nova_api`, and `nova_cell0` databases are included in the same database host for the main overcloud {orchestration_first_ref} stack.
 ifeval::["{build_variant}" != "ospdo"]
 Additional cells use the `nova` database of their local Galera clusters.
 endif::[]
@@ -184,7 +180,6 @@ $ if [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" != "" ]; then
 >     done
 > fi
 ----
-+
 
 . Get the {compute_service_first_ref} cell mappings:
 +
@@ -193,7 +188,6 @@ export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client-
     mysql -rsh "${SOURCE_MARIADB_IP['default]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD['default']}" nova_api -e \
     'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')
 ----
-+
 
 . Get the hostnames of the registered Compute services:
 +
@@ -206,7 +200,6 @@ $ for CELL in $(echo $CELLS); do
 >             "select host from nova.services where services.binary='nova-compute';")
 > done
 ----
-+
 
 . Get the list of the mapped {compute_service} cells:
 +
@@ -250,9 +243,7 @@ $ for CELL in $(echo $CELLS); do
 $ chmod 0600 ~/.source_cloud_exported_variables*
 ----
 +
-<1> If `neutron-sriov-nic-agent` agents are running in your {OpenStackShort} deployment, get the configuration to use for the data plane adoption
+<1> If `neutron-sriov-nic-agent` agents are running in your {OpenStackShort} deployment, get the configuration to use for the data plane adoption.
 
 [NOTE]
-====
-This configuration will be required later, during the data plane adoption post-checks.
-====
+This configuration and the exported variables are required later, during the data plane adoption post-checks.

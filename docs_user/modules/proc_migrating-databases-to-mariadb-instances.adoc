@@ -26,13 +26,13 @@ $ STORAGE_CLASS=local-storage
 $ MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
 endif::[]
 
-$ CELLS="default"
+$ CELLS="default" <1>
 $ DEFAULT_CELL_NAME="cell1"
 $ RENAMED_CELLS="$DEFAULT_CELL_NAME"
 
 $ NAMESPACE="openstack"
 
-$ CHARACTER_SET=utf8 # <1>
+$ CHARACTER_SET=utf8 # <2>
 $ COLLATION=utf8_general_ci
 
 $ declare -A PODIFIED_DB_ROOT_PASSWORD
@@ -65,14 +65,14 @@ $ for CELL in $(echo $CELLS); do
 > done
 
 $ declare -A SOURCE_MARIADB_IP
-$ SOURCE_MARIADB_IP[default]=*<galera cluster VIP>*
-$ SOURCE_MARIADB_IP[cell1]=*<galera cell1 cluster VIP>*
-$ SOURCE_MARIADB_IP[cell2]=*<galera cell2 cluster VIP>*
+$ SOURCE_MARIADB_IP[default]=*<galera cluster VIP>* <3>
+$ SOURCE_MARIADB_IP[cell1]=*<galera cell1 cluster VIP>* <4>
+$ SOURCE_MARIADB_IP[cell2]=*<galera cell2 cluster VIP>* <5>
 # ...
 
 $ declare -A SOURCE_GALERA_MEMBERS_DEFAULT
 $ SOURCE_GALERA_MEMBERS_DEFAULT=(
->   ["standalone.localdomain"]=172.17.0.100
+>   ["standalone.localdomain"]=172.17.0.100 <6>
 >   # [...]=...
 > )
 $ declare -A SOURCE_GALERA_MEMBERS_CELL1
@@ -85,45 +85,35 @@ $ SOURCE_GALERA_MEMBERS_CELL2=(
 > )
 ----
 +
-<1> The CHARACTER_SET and collation should match the source DB, if the do not then it will break foreign key relationships for any tables that are created in the future as part of db sync.
+<1> `CELLS` and `RENAMED_CELLS` represent changes that are going to be made after you import the databases. The `default` cell takes a new name from `DEFAULT_CELL_NAME`.
+In a multi-cell adoption scenario, `default` cell might retain its original 'default' name as well.
+<2> The `CHARACTER_SET` variable and collation should match the source database. If they do not match, then foreign key relationships break for any tables that are created in the future as part of database sync.
+<3> Add data in  `SOURCE_MARIADB_IP[*]= ...` for each cell that is defined in `CELLS`. Provide records for the cell names and VIP addresses of MariaDB Galera clusters.
+<4> Replace `<galera_cell1_cluster_VIP>` with the VIP of your galera cell1 cluster.
+<5> Replace `<galera_cell2_cluster_VIP>` with the VIP of your galera cell2 cluster, and so on.
+<6> For each cell defined in `CELLS`, in `SOURCE_GALERA_MEMBERS_CELL<X>`, add the names of the MariaDB Galera cluster members and its IP address. Replace `["standalone.localdomain"]="172.17.0.100"` with the real hosts data.
 
-Here, `CELLS` and `RENAMED_CELLS` represent changes that are going to be made
-after importing databases: the `default` cell takes a new name from `DEFAULT_CELL_NAME`.
-In a multi-cell adoption scenario, it may retain its original 'default' name as well.
+[NOTE]
+A standalone {OpenStackPreviousInstaller} environment only creates a 'default' cell, which should be the only `CELLS` value in this case. The `DEFAULT_CELL_NAME` value should be `cell1`.
 
-Note that the `super` is not a cell, but the top-scope Nova
-API "upcall" database instance. A super conductor connects to that database.
-In this guide, the upcall and cells' databases are going to use the same password
-defined in `osp-secret`. Old passwords are only needed to prepare the data exports.
+[NOTE]
+The `super` is the top-scope Nova API upcall database instance. A super conductor connects to that database. In subsequent examples, the upcall and cells databases use the same password that is defined in `osp-secret`. Old passwords are only needed to prepare the data exports.
 
-To get the values for `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller and CellController nodes:
+To get the values for `SOURCE_MARIADB_IP`, query the puppet-generated configurations in the Controller and CellController nodes:
 +
 ----
 $ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep bind
 ----
 
-To get the values for `SOURCE_GALERA_MEMBERS_*`, query the puppet-generated configurations in a Controller and CellController nodes:
+* To get the values for `SOURCE_GALERA_MEMBERS_*`, query the puppet-generated configurations in the Controller and CellController nodes:
 +
 ----
 $ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep server
 ----
-
-The source cloud always uses the same password for cells' databases by design.
-For that reason, we chose to use the same passwords file for all cells' stacks.
-There is a split-stack topology, however, that allows using different passwords
-files for each stack.
++
+The source cloud always uses the same password for cells databases. For that reason, the same passwords file is used for all cells stacks. However, split-stack topology allows using different passwords files for each stack.
 
 * Prepare the MariaDB adoption helper pod:
-
-
-. Create a temporary folder to store the adoption helper pod. Choose storage requests that fit the MySQL database size:
-A standalone TripleO only creates a 'default' cell, which should be the only `CELLS` value for such a case
-(and `DEFAULT_CELL_NAME` should be `cell1`).
-
-** For each cell defined in `CELLS`
-*** Replace `["standalone.localdomain"]="172.17.0.100"`, and complete `SOURCE_GALERA_MEMBERS_*` with the names of MariaDB Galera cluster members and its IP address.
-*** Replace `SOURCE_MARIADB_IP[*]= ...`, and complete the records lists for the cell names and VIP addresses of MariaDB Galera clusters.
-*** Replace `SOURCE_GALERA_MEMBERS_*[*]= ...`, and complete the records lists for the cell names and IP addresses of MariaDB Galera cluster members.
 
 . Create a temporary volume claim and a pod for the database data copy. Edit the volume claim storage request if necessary, to give it enough space for the overcloud databases:
 +
@@ -182,7 +172,7 @@ $ oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
 
 .Procedure
 
-. Check that the source Galera database cluster(s) members are online and synced:
+. Check that the source Galera database clusters in each cell have its members online and synced:
 +
 ----
 $ for CELL in $(echo $CELLS); do
@@ -197,7 +187,7 @@ $ for CELL in $(echo $CELLS); do
 > done
 ----
 +
-Each additional Nova v2 cell runs a dedicated Galera database cluster, so the checking is done for all of it.
+Each additional {compute_service_first_ref} v2 cell runs a dedicated Galera database cluster, so the command checks each cell.
 
 . Get the count of source databases with the `NOK` (not-OK) status:
 +
@@ -218,7 +208,7 @@ $ for CELL in $(echo $CELLS); do
 $ test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "x$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = "x " ] && echo "OK" || echo "CHECK FAILED"
 ----
 
-. Test the connection to the control plane "upcall" and cells' databases:
+. Test the connection to the control plane upcall and cells databases:
 +
 ----
 $ for CELL in $(echo "super $RENAMED_CELLS"); do
@@ -228,7 +218,7 @@ $ for CELL in $(echo "super $RENAMED_CELLS"); do
 ----
 +
 [NOTE]
-You must transition {compute_service_first_ref} services that are imported later into a superconductor architecture by deleting the old service records in the cell databases, starting with `cell1`. New records are registered with different hostnames provided by the {compute_service} operator. All Compute services, except the Compute agent, have no internal state, and their service records can be safely deleted. You also need to rename the former `default` cell to `DEFAULT_CELL_NAME`.
+You must transition Compute services that you import later into a superconductor architecture by deleting the old service records in the cell databases, starting with `cell1`. New records are registered with different hostnames that are provided by the {compute_service} operator. All Compute services, except the Compute agent, have no internal state, and you can safely delete their service records. You also need to rename the former `default` cell to `DEFAULT_CELL_NAME`.
 
 . Create a dump of the original databases:
 +
@@ -314,12 +304,12 @@ $ for CELL in $(echo $CELLS); do
 > done
 ----
 +
-<1> Defines which common databases to rename, when importing it
-<2> Defines which cells' databases to import, and how to rename it, if needed.
-<3> Omits importing cells' special `cell0` databases as we cannot consolidate its contents during adoption.
-<4> Defines which databases to import into which servers (usually dedicated for cells).
-<5> Defines root passwords map for database servers (we can only use the same password for now).
-<6> Asigns which databases to import into which hosts, when extracting databases from `default` cell.
+<1> Defines which common databases to rename when importing them.
+<2> Defines which cells databases to import, and how to rename them, if needed.
+<3> Omits importing special `cell0` databases of the cells, as its contents cannot be consolidated during adoption.
+<4> Defines which databases to import into which servers, usually dedicated for cells.
+<5> Defines the root passwords map for database servers. You can only use the same password for now.
+<6> Assigns which databases to import into which hosts when extracting databases from the `default` cell.
 
 .Verification
 
@@ -364,11 +354,11 @@ $ for CELL in $(echo $RENAMED_CELLS); do <3>
 > done
 ----
 +
-<1> Ensures Neutron database is renamed from `ovs_neutron`
-<2> Ensures `default`` cell is renamed to `$DEFAULT_CELL_NAME``, and the cell UUIDs retained intact
-<3> Ensures the registered Compute services names have not changed
-<4> Ensures Nova cells' DBs are extracted to separate database servers, and renamed from nova to nova_cell<X>
-<5> Ensures the registered Compute service name has not changed
+<1> Ensures that the {networking_first_ref} database is renamed from `ovs_neutron`.
+<2> Ensures that the `default` cell is renamed to `$DEFAULT_CELL_NAME`, and the cell UUIDs are retained.
+<3> Ensures that the registered Compute services names have not changed.
+<4> Ensures {compute_service} cells databases are extracted to separate database servers, and renamed from `nova` to `nova_cell<X>`.
+<5> Ensures that the registered {compute_service} name has not changed.
 
 . Delete the `mariadb-data` pod and the `mariadb-copy-data` persistent volume claim that contains the database backup:
 +

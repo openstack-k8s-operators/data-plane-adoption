@@ -64,9 +64,9 @@ for CELL in $(echo $CELLS); do
 EOF
 done
 
-# <1> Defines which common databases to rename, when importing it
-# <2> Defines which cells' databases to import, and how to rename it, if needed.
-# <3> Omits importing cells' special `cell0` databases as we cannot consolidate its contents during adoption.
-# <4> Defines which databases to import into which servers (usually dedicated for cells).
-# <5> Defines root passwords map for database servers (we can only use the same password for now).
-# <6> Asigns which databases to import into which hosts, when extracting databases from `default` cell.
+# <1> Defines which common databases to rename when importing them.
+# <2> Defines which cells databases to import, and how to rename them, if needed.
+# <3> Omits importing special `cell0` databases of the cells, as its contents cannot be consolidated during adoption.
+# <4> Defines which databases to import into which servers, usually dedicated for cells.
+# <5> Defines the root passwords map for database servers. You can only use the same password for now.
+# <6> Assigns which databases to import into which hosts when extracting databases from the `default` cell.

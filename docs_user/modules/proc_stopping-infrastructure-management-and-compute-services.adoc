@@ -29,7 +29,7 @@ EDPM_PRIVATEKEY_PATH="<path_to_SSH_key>" <2>
 endif::[]
 ----
 +
-<1> Complete `CONTROLLER<X>_SSH` settings with SSH connection details for all controllers, including cell controllers, of the source {OpenStackPreviousInstaller} cloud.
+<1> In the `CONTROLLER<X>_SSH` settings, provide SSH connection details for all Controller nodes, including cell Controller nodes, of the source {OpenStackPreviousInstaller} cloud.
 ifeval::["{build}" == "downstream"]
 <2> Replace `<path_to_SSH_key>` with the path to your SSH key.
 endif::[]

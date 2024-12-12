@@ -36,8 +36,8 @@ for CELL in $(echo $RENAMED_CELLS); do # <3>
   diff -Z <(echo "x$novadb_svc_records") <(echo "x${PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[@]}") && echo "OK" || echo "CHECK FAILED" # <5>
 done
 
-# <1> Ensures Neutron database is renamed from `ovs_neutron`
-# <2> Ensures `default`` cell is renamed to `$DEFAULT_CELL_NAME``, and the cell UUIDs retained intact
-# <3> Ensures the registered Compute services names have not changed
-# <4> Ensures Nova cells' DBs are extracted to separate database servers, and renamed from nova to nova_cell<X>
-# <5> Ensures the registered Compute service name has not changed
+# <1> Ensures that the {networking_first_ref} database is renamed from `ovs_neutron`.
+# <2> Ensures that the `default` cell is renamed to `$DEFAULT_CELL_NAME`, and the cell UUIDs are retained.
+# <3> Ensures that the registered Compute services names have not changed.
+# <4> Ensures {compute_service} cells databases are extracted to separate database servers, and renamed from `nova` to `nova_cell<X>`.
+# <5> Ensures that the registered {compute_service} name has not changed.

@@ -403,13 +403,12 @@ ifeval::["{build_variant}" == "ospdo"]
 
 endif::[]
 
-This example provides required infrastructure database and messaging services for a 1 compute cell
-named `cell1`. Adjust the names, counts, IP addresses, and numbers,
-like `replicas`, `storage`, or `storageRequest`, as needed.
+This example provides the required infrastructure database and messaging services for 1 Compute cell
+named `cell1`. Adjust the names, counts, IP addresses, and numbers, such as for `replicas`, `storage`, or `storageRequest`, as needed.
 
 .Verification
 
-* Verify that MariaDB and RabbitMQ are running, for all defined cells:
+* Verify that MariaDB and RabbitMQ are running for all defined cells:
 +
 ----
 $ RENAMED_CELLS="cell1"
@@ -420,7 +419,7 @@ $ for CELL in $(echo $RENAMED_CELLS); do
     oc get pod rabbitmq-$CELL-server-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
 done
 ----
-Futher on, we will be referring to the given cells names via an environment
-variable `RENAMED_CELLS`.
++
+The given cells names are later referred to by using the environment variable `RENAMED_CELLS`.
 
 * Verify that you can access the `OpenStackClient` pod. For more information, see link:{defaultURL}/maintaining_the_red_hat_openstack_services_on_openshift_deployment/assembly_accessing-the-rhoso-cloud#proc_accessing-the-OpenStackClient-pod_cloud-access-admin[Accessing the OpenStackClient pod] in _Maintaining the {rhos_long_noacro} deployment_.
