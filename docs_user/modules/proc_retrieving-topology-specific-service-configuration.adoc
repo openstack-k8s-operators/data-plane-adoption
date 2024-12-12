@@ -243,8 +243,8 @@ $ chmod 0600 ~/.source_cloud_exported_variables*
 ----
 +
 <1> If `neutron-sriov-nic-agent` agents are running in your {OpenStackShort} deployment, get the configuration to use for the data plane adoption
-
++
 [NOTE]
 ====
-This configuration will be required later, during the data plane adoption post-checks.
+This configuration is required later, during the data plane adoption post-checks.
 ====
