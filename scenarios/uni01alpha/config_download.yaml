@@ -85,8 +85,8 @@ parameter_defaults:
   # this value 'uni01alpha'.
   IronicInspectorSubnets:
     osp-controller-uni01alpha-0:
-      - ip_range: 172.20.0.210,172.20.0.219
+      - ip_range: 172.20.1.210,172.20.1.219
     osp-controller-uni01alpha-1:
-      - ip_range: 172.20.0.220,172.20.0.229
+      - ip_range: 172.20.1.220,172.20.1.229
     osp-controller-uni01alpha-2:
-      - ip_range: 172.20.0.230,172.20.0.239
+      - ip_range: 172.20.1.230,172.20.1.239
