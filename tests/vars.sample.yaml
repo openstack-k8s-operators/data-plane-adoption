@@ -21,6 +21,7 @@ source_mariadb_ip:
 # Defaults provided for a single-cell case.
 # Provide for each cell on the target cloud, considering default_cell_name value.
 # The defined 'networks' connections must match netconfig_networks which manages NetConfig CR
+# to retain fixed IPs, provide values matching the source TripleO deployment
 edpm_nodes:
   cell1:
     standalone:
@@ -33,6 +34,8 @@ edpm_nodes:
           name: ctlplane
           subnetName: subnet1
         - name: internalapi
+          # uncomment to retain the source cloud fixed IP value
+          #fixedIP: 172.17.0.100
           subnetName: subnet2
         - name: storage
           subnetName: subnet3
