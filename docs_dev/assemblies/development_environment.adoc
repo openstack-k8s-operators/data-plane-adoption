@@ -3,7 +3,7 @@
 The Adoption development environment utilizes
 https://github.com/openstack-k8s-operators/install_yamls[install_yamls]
 for CRC VM creation and for creation of the VM that hosts the source
-Wallaby (or OSP 17.1) OpenStack in Standalone configuration.
+OSP 17.1 OpenStack in Standalone configuration.
 
 == Preparing the host
 
@@ -139,24 +139,6 @@ to create a virtual machine (edpm-compute-0) connected to the isolated networks.
 To use OSP 17.1 content to deploy TripleO Standalone, follow the
 https://url.corp.redhat.com/devel-rhoso-adoption[guide for setting up downstream content]
 for `make standalone`.
-
-To use Wallaby content instead, run the following:
-
-[,bash]
-----
-cd ~/install_yamls/devsetup
-make standalone
-----
-
-To deploy using TLS everywhere enabled, instead run:
-
-[,bash]
-----
-cd ~/install_yamls/devsetup
-EDPM_COMPUTE_CEPH_ENABLED=false TLS_ENABLED=true DNS_DOMAIN=ooo.test make standalone
-----
-
-This will disable the Ceph deployment, as the CI is not deploying with Ceph.
 
 === Snapshot/revert
 
