@@ -79,3 +79,14 @@ parameter_defaults:
         host_routes: []
         name: ctlplane-subnet
         ip_version: 4
+  IronicInspectorInterface: br-baremetal
+  # Since we need predictable node names to be able to set this paremeter,
+  # it a requirement to set the ci-framework parameter cifmw_run_id with
+  # this value 'uni01alpha'.
+  IronicInspectorSubnets:
+    osp-controller-uni01alpha-0:
+      - ip_range: 172.20.1.210,172.20.1.219
+    osp-controller-uni01alpha-1:
+      - ip_range: 172.20.1.220,172.20.1.229
+    osp-controller-uni01alpha-2:
+      - ip_range: 172.20.1.230,172.20.1.239
