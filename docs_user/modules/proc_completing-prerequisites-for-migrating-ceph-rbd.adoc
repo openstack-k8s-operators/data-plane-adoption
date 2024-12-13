@@ -16,7 +16,7 @@ endif::[]
 * The {Ceph} cluster is healthy, and the `ceph -s` command returns `HEALTH_OK`.
 * Run `os-net-config` on the bare metal node and configure additional networks:
 .. If target nodes are `CephStorage`, ensure that the network is defined in the
-`metalsmith.yaml` for the `CephStorage` nodes:
+bare metal file for the `CephStorage` nodes, for example, `/home/stack/composable_roles/network/baremetal_deployment.yaml`:
 +
 [source,yaml]
 ----
@@ -28,7 +28,7 @@ name: oc0-ceph-0
 - hostname: oc0-ceph-1
 name: oc0-ceph-1
 defaults:
-/networks:
+networks:
 - network: ctlplane
 vif: true
 - network: storage_cloud_0
