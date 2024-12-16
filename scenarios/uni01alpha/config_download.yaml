@@ -79,6 +79,12 @@ parameter_defaults:
         host_routes: []
         name: ctlplane-subnet
         ip_version: 4
+  NeutronFlatNetworks:
+    - datacentre
+    - baremetal
+  NeutronBridgeMappings:
+    - datacentre:br-ex
+    - baremetal:br-baremetal
   IronicInspectorInterface: br-baremetal
   # Since we need predictable node names to be able to set this paremeter,
   # it a requirement to set the ci-framework parameter cifmw_run_id with

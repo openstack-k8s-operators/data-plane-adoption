@@ -63,3 +63,7 @@ stacks:
       - osp-computes
       - osp-controllers
       - osp-networkers
+    post_oc_run:
+      - name: Ironic post overcloud deploy
+        type: playbook
+        source: adoption_ironic_post_oc.yml
