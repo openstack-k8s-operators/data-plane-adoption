@@ -11,10 +11,18 @@ IP address migration assumes that the target nodes are originally deployed by
 // w/ an EDPM node that has already been adopted.
 .Procedure
 
-. Get the original Ceph Monitor IP address from the existing `/etc/ceph/ceph.conf` file on the `mon_host` line, for example:
+. Get the original Ceph Monitor IP addresses from `$HOME/ceph_client_backup/ceph.conf` file on the `mon_host` line, for example:
 +
 ----
 mon_host = [v2:172.17.3.60:3300/0,v1:172.17.3.60:6789/0] [v2:172.17.3.29:3300/0,v1:172.17.3.29:6789/0] [v2:172.17.3.53:3300/0,v1:172.17.3.53:6789/0]
+----
+
+. Match the IP address retrieved in the previous step with the storage network IP addresses on the source node, and find the Ceph Monitor IP address:
++
+----
+[tripleo-admin@controller-0 ~]$ ip -o -4 a | grep 172.17.3
+9: vlan30    inet 172.17.3.60/24 brd 172.17.3.255 scope global vlan30\       valid_lft forever preferred_lft forever
+9: vlan30    inet 172.17.3.13/32 brd 172.17.3.255 scope global vlan30\       valid_lft forever preferred_lft forever
 ----
 
 . Confirm that the Ceph Monitor IP address is present in the `os-net-config` configuration that is located in the `/etc/os-net-config` directory on the source node:
