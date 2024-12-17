@@ -1,5 +1,3 @@
 edpm_node_hostname: standalone.localdomain
 install_yamls_path: /home/zuul/src/github.com/openstack-k8s-operators/install_yamls/
 edpm_privatekey_path: "{{ install_yamls_path }}/out/edpm/ansibleee-ssh-key-id_rsa"
-edpm_computes: |-
-  ["{{ edpm_node_hostname }}"]="{{ edpm_node_ip }}"
