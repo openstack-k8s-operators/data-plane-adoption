@@ -6,10 +6,6 @@
       CONTROLLER2_SSH="{{ controller2_ssh }}"
       CONTROLLER3_SSH="{{ controller3_ssh }}"
       EDPM_PRIVATEKEY_PATH="{{ edpm_privatekey_path }}"
-      declare -A computes
-      computes=(
-        {{ edpm_computes }}
-      )
 
 - name: stop pacemaker services
   no_log: "{{ use_no_log }}"

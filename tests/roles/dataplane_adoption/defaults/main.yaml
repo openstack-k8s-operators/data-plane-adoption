@@ -69,25 +69,24 @@ default_timesync_ntp_servers:
 edpm_node_hostname: standalone.localdomain
 edpm_user: root
 edpm_nodes:
-  standalone:
-    hostName: "{{ edpm_node_hostname }}"
-    ansible:
-      ansibleHost: "{{ edpm_node_ip }}"
-    networks:
-      - defaultRoute: true
-        fixedIP: "{{ edpm_node_ip }}"
-        name: ctlplane
-        subnetName: subnet1
-      - name: internalapi
-        subnetName: subnet1
-      - name: storage
-        subnetName: subnet1
-      - name: tenant
-        subnetName: subnet1
-      - name: storagemgmt
-        subnetName: subnet1
-edpm_computes: |-
-  ["{{ edpm_node_hostname }}"]="{{ edpm_node_ip }}"
+  cell1:
+    standalone:
+      hostName: "{{ edpm_node_hostname }}"
+      ansible:
+        ansibleHost: "{{ edpm_node_ip }}"
+      networks:
+        - defaultRoute: true
+          fixedIP: "{{ edpm_node_ip }}"
+          name: ctlplane
+          subnetName: subnet1
+        - name: internalapi
+          subnetName: subnet1
+        - name: storage
+          subnetName: subnet1
+        - name: tenant
+          subnetName: subnet1
+        - name: storagemgmt
+          subnetName: subnet1
 # The variables inside edpm_network_config_template are evaluated based
 # on the OpenstackDataplaneNodeSet inventory. For adding a variable to the invetory,
 # please add it to OpenstackDataplaneNodeSet.nodeTemplate.ansibleVars
