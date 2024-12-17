@@ -1,6 +1,21 @@
-- name: deploy podified Cinder volume
+- name: deploy podified Cinder volume with ceph
   when: cinder_volume_backend == 'ceph'
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_volume_backend_patch }}'
+
+- name: deploy podified Cinder volume with netapp NFS
+  when: cinder_volume_backend == 'ontap-nfs'
+  block:
+    - name: Create ontap secret
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        cat {{ role_path }}/files/cinder-volume-ontap-secrets.yaml | oc apply -f -
+
+    - name: Configure netapp NFS backend
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc patch openstackcontrolplane openstack --type=merge --patch-file={{ role_path }}/files/cinder_netapp_nfs.yaml
