@@ -62,9 +62,7 @@
         msg: "Active mgr: {{ mgr.active_name }}"
 
     - name: Fail mgr if active in the current node
-      become: true
-      ansible.builtin.command:
-        "{{ ceph_cli }} mgr fail {{ mgr.active_name }}"
+      ansible.builtin.include_tasks: fail_mgr.yaml
       when:
         - mgr.active_name | length > 0
         - mgr.active_name | regex_search(cur_mon | split('.') | first) or mgr.active_name | regex_search(target_node | split('.') | first)
@@ -182,7 +180,7 @@
     - name: reconfig osds
       ansible.builtin.command: "{{ ceph_cli }} orch reconfig osd.default_drive_group "
     - name: force-fail ceph mgr
-      ansible.builtin.command: "{{ ceph_cli }} mgr fail"
+      ansible.builtin.include_tasks: fail_mgr.yaml
 
 - name: MON - Manage mons
   # root privileges required to run cephadm
