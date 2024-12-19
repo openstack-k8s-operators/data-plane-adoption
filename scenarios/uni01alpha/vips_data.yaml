@@ -12,3 +12,7 @@
   ip_address: 192.168.122.100
   subnet: ctlplane-subnet
   dns_name: overcloud
+- name: ironic_vip
+  network: ironic
+  ip_address: 172.20.1.99
+  subnet: ironic_subnet

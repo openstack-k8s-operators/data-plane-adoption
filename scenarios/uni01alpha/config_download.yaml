@@ -10,6 +10,7 @@ resource_registry:
   OS::TripleO::Controller::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
   OS::TripleO::Controller::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
   OS::TripleO::Controller::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  OS::TripleO::Controller::Ports::IronicPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_ironic.yaml
   OS::TripleO::Networker::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
   OS::TripleO::Networker::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
   OS::TripleO::Services::CeilometerAgentCentral: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-central-container-puppet.yaml
@@ -96,3 +97,7 @@ parameter_defaults:
       - ip_range: 172.20.1.220,172.20.1.229
     osp-controller-uni01alpha-2:
       - ip_range: 172.20.1.230,172.20.1.239
+  ServiceNetMap:
+    IronicApiNetwork: ironic
+    IronicNetwork: ironic
+    IronicInspectorNetwork: ironic

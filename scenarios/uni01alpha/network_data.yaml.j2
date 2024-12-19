@@ -49,7 +49,8 @@
 
 - name: Ironic
   mtu: 1500
-  name_lower: Ironic
+  vip: true
+  name_lower: ironic
   dns_domain: ironic.{{ cloud_domain }}.
   subnets:
     ironic_subnet:
