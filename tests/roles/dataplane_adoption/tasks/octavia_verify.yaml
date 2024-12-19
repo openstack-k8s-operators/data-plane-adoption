@@ -1,0 +1,24 @@
+---
+- name: set Octavia services shell vars
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.set_fact:
+    octavia_header: |
+      alias openstack="oc exec -t openstackclient -- openstack"
+
+- name: get networks named lb-mgmt-net
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ ocavia_header }}
+    output=$(${BASH_ALIASES[openstack]} network list | grep lb-mgmt-net)
+    [ "$(echo "$output" | wc -l)" -eq 1 ] && echo PASS
+  register: octavia_mgmt_network_result
+
+- name: verify that one network lb-mgmt-net exists
+  when: octavia_adoption|bool
+  ansible.builtin.assert:
+    that:
+      - octavia_mgmt_network_result.stdout == 'PASS'
+    fail_msg: "verification of lb-mgmt-net network failed"
+    success_msg: "verification of lb-mgmt-net network succeeded"
+
+# todo: verify more
