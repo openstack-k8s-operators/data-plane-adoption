@@ -69,25 +69,24 @@ default_timesync_ntp_servers:
 edpm_node_hostname: standalone.localdomain
 edpm_user: root
 edpm_nodes:
-  standalone:
-    hostName: "{{ edpm_node_hostname }}"
-    ansible:
-      ansibleHost: "{{ edpm_node_ip }}"
-    networks:
-      - defaultRoute: true
-        fixedIP: "{{ edpm_node_ip }}"
-        name: ctlplane
-        subnetName: subnet1
-      - name: internalapi
-        subnetName: subnet1
-      - name: storage
-        subnetName: subnet1
-      - name: tenant
-        subnetName: subnet1
-      - name: storagemgmt
-        subnetName: subnet1
-edpm_computes: |-
-  ["{{ edpm_node_hostname }}"]="{{ edpm_node_ip }}"
+  cell1:
+    standalone:
+      hostName: "{{ edpm_node_hostname }}"
+      ansible:
+        ansibleHost: "{{ edpm_node_ip }}"
+      networks:
+        - defaultRoute: true
+          fixedIP: "{{ edpm_node_ip }}"
+          name: ctlplane
+          subnetName: subnet1
+        - name: internalapi
+          subnetName: subnet1
+        - name: storage
+          subnetName: subnet1
+        - name: tenant
+          subnetName: subnet1
+        - name: storagemgmt
+          subnetName: subnet1
 # The variables inside edpm_network_config_template are evaluated based
 # on the OpenstackDataplaneNodeSet inventory. For adding a variable to the invetory,
 # please add it to OpenstackDataplaneNodeSet.nodeTemplate.ansibleVars
@@ -163,7 +162,7 @@ dataplane_cr: |
   apiVersion: dataplane.openstack.org/v1beta1
   kind: OpenStackDataPlaneNodeSet
   metadata:
-    name: openstack
+    name: openstack-cell1
   spec:
     tlsEnabled: {{ enable_tlse }}
     networkAttachments:
@@ -200,7 +199,7 @@ dataplane_cr: |
         value: "-C -o ControlMaster=auto -o ControlPersist=80s"
       - name: ANSIBLE_VERBOSITY
         value: "{{ dataplane_verbosity | default ('1') }}"
-    nodes: {{ edpm_nodes }}
+    nodes: {{ edpm_nodes["cell1"] }}
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
       ansible:
