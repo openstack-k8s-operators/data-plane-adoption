@@ -4,3 +4,10 @@
     {{ shell_header }}
     {{ oc_header }}
     oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_volume_backend_patch }}'
+
+- name: deploy podified Cinder volume
+  when: cinder_volume_backend == 'nfs'
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_volume_backend_nfs_patch }}'
