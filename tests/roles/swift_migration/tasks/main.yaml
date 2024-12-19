@@ -1,3 +1,9 @@
+- name: Get list of current Swift storage node IPs
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get > /dev/null 2>&1 ; swift-ring-builder object.builder search _ | tail -n +2 | awk "{print \$4}" | sort -u'
+  register: swift_node_list_result
+
 - name: setup nameserver on standalone node
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -29,7 +35,9 @@
     {{ oc_header }}
     oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
     swift-ring-tool get
-    swift-ring-tool drain 172.20.0.100
+    while read -r node; do
+      swift-ring-tool drain ${node}
+    done <<< "{{ swift_node_list_result.stdout }}"
     swift-ring-tool forced_rebalance
     swift-ring-tool push'
 
@@ -104,6 +112,8 @@
     CONTROLLER1_SSH="{{ controller1_ssh }}"
     oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
     swift-ring-tool get
-    swift-ring-tool remove 172.20.0.100
+    while read -r node; do
+      swift-ring-tool drain ${node}
+    done <<< "{{ swift_node_list_result.stdout }}"
     swift-ring-tool rebalance
     swift-ring-tool push'
