@@ -16,6 +16,7 @@ You can deploy the new clustered NFS service on your existing CephStorage nodes 
 +
 [NOTE]
 If the target nodes are not managed by director, you cannot use this procedure to configure the network. An administrator must manually configure all the required networks.
+
 .. Identify the node definition file, `overcloud-baremetal-deploy.yaml`, that is used in the {OpenStackShort} environment.
 ifeval::["{build}" != "upstream"]
 For more information about identifying the `overcloud-baremetal-deploy.yaml` file, see link:{customizing-rhoso}/index#assembly_customizing-overcloud-networks[Customizing overcloud networks] in _{customizing-rhoso-t}_.
