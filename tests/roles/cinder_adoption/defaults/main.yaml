@@ -45,7 +45,7 @@ cinder_scheduler_patch: |
         cinderScheduler:
           replicas: 1
 
-cinder_volume_backend_patch: |
+cinder_volume_ceph_backend_patch: |
   spec:
     cinder:
       enabled: true
@@ -65,6 +65,26 @@ cinder_volume_backend_patch: |
               rbd_pool=volumes
               rbd_flatten_volume_from_snapshot=False
               report_discard_supported=True
+
+cinder_volume_ontap_backend_patch: |
+  spec:
+    cinder:
+      enabled: true
+      template:
+        cinderVolumes:
+          volume1:
+            networkAttachments:
+            - storage
+            replicas: 1
+            customServiceConfig: |
+              [ontap]
+              volume_backend_name=ontap
+              volume_driver=cinder.volume.drivers.netapp.common.NetAppDriver
+              netapp_server_hostname=10.46.84.4
+              netapp_server_port=80
+              netapp_storage_protocol=iscsi
+              netapp_storage_family=ontap_cluster
+              consistencygroup_support=True
 
 cinder_backup_ceph_patch: |
   spec:

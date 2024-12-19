@@ -1,6 +1,33 @@
-- name: deploy podified Cinder volume
+- name: deploy podified Cinder volume with ceph
   when: cinder_volume_backend == 'ceph'
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_volume_backend_patch }}'
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_volume_ceph_backend_patch }}'
+
+- name: deploy podified Cinder volume with netapp iSCSI
+  when: cinder_volume_backend == 'ontap'
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_volume_ontap_backend_patch }}'
+
+- name: Add ontap secret
+  when: cinder_volume_backend == 'ontap'
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: ontap-secret-conf
+      namespace: openstack
+    type: Opaque
+    data:
+      cinder.conf: |
+        netapp_login = cifmw_user
+        netapp_password = cifmw_pass
+        netapp_vserver = vserver-rhos-qe
+        netapp_pool_name_search_pattern = (cinder_iscsi_uni07_eta_pool)
+    EOF
