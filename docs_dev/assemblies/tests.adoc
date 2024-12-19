@@ -25,9 +25,13 @@ work out of the box. The comments in the YAML files will guide you
 regarding the expected values. You may want to double check that
 these variables suit your environment:
  ** `install_yamls_path`
- ** `tripleo_passwords`
- ** `controller*_ssh`
+ ** `controller*_ssh`       (for each {OpenStackPreviousInstaller} controller in each Heat stack on the source cloud)
+ ** `tripleo_passwords`     (for each {OpenStackPreviousInstaller} Heat stack on the source cloud)
+ ** `source_galera_members` (for each cell controller on the source cloud)
+ ** `source_mariadb_ip`     (for each cell controller on the source cloud)
+ ** `edpm_nodes`            (for each cell compute node on the destination)
  ** `edpm_privatekey_path`
+ ** `source_ovndb_ip``
  ** `timesync_ntp_servers`
 
 == Running the tests
