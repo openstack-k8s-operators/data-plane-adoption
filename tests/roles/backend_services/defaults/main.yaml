@@ -29,5 +29,5 @@ ospdo_src: false
 # rhoso namespace
 rhoso_namespace: "openstack"
 # director operator namespace
-org_namespace: "openstack"
+org_namespace: "ospdo_openstack"
 # adoption repo default location
