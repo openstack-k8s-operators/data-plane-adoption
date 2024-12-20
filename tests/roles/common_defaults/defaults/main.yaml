@@ -65,6 +65,9 @@ mariadb_passwords_env: |-
     PODIFIED_DB_ROOT_PASSWORD[$CELL]=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
   done
 
+namespace_env: |-
+  NAMESPACE={{ deploy_ctlplane_ospdo | bool | ternary(org_namespace, rhoso_namespace ) }}
+
 # Header for the source database access
 # TODO: Env vars for OSPDo case are also configured in env_vars_src_ospdo.yaml. Move them here, eventually?
 # OSPDo RUN_OVERRIDES definition exists only in docs (missing in code?).
@@ -74,7 +77,7 @@ mariadb_copy_shell_vars_src: |-
   {{ shell_header }}
 
   PASSWORD_FILE="$HOME/overcloud-passwords.yaml"
-  NAMESPACE={{ deploy_ctlplane_ospdo | bool | ternary(org_namespace, rhoso_namespace ) }}
+  {{ namespace_env }}
 
   {{ mariadb_image_env }}
   {{ cells_env }}
@@ -109,8 +112,7 @@ mariadb_copy_shell_vars_dst: |
   {{ oc_header }}
   {{ mariadb_image_env }}
   {{ cells_env }}
-
-  NAMESPACE={{ deploy_ctlplane_ospdo | bool | ternary(rhoso_namespace, org_namespace) }}
+  {{ namespace_env }}
 
   CHARACTER_SET=utf8
   COLLATION=utf8_general_ci

@@ -7,7 +7,7 @@
 # Gnocchi is no longer used as a metric store, skip dumping gnocchi database as well
 # Migrating Aodh alarms from previous release is not supported, hence skip aodh database
 for CELL in $(echo $CELLS); do
-  oc rsh  -n "{{ org_namespace }}" mariadb-copy-data << EOF
+  oc rsh -n $NAMESPACE mariadb-copy-data << EOF
     mysql -h"${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" \
     -N -e "show databases" | grep -E -v "schema|mysql|gnocchi|aodh" | \
     while read dbname; do
