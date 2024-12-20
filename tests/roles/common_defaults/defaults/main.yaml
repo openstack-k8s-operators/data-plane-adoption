@@ -89,7 +89,7 @@ mariadb_copy_shell_vars_src: |-
 
   RUN_OVERRIDES=' '
   MARIADB_CLIENT_ANNOTATIONS={{ deploy_ctlplane_ospdo | bool | ternary("-n $NAMESPACE", "--annotations=k8s.v1.cni.cncf.io/networks=internalapi") }}
-  MARIADB_RUN_OVERRIDES={{ deploy_ctlplane_ospdo | bool | ternary("--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS", "$MARIADB_CLIENT_ANNOTATIONS") }}
+  MARIADB_RUN_OVERRIDES={{ deploy_ctlplane_ospdo | bool | ternary("--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS {{ mysql_client_override }}", "$MARIADB_CLIENT_ANNOTATIONS") }}
 
   {{ pull_openstack_configuration_ssh_shell_vars }}
 
