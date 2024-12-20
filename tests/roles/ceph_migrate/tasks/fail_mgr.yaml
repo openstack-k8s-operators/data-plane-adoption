@@ -1,0 +1,38 @@
+# Get a client using -v /home/tripleo-admin/ceph_config:/etc/ceph:z as input
+- name: Refresh ceph_cli
+  ansible.builtin.include_tasks: ceph_cli.yaml
+  vars:
+    ceph_config_home: "{{ ceph_config_tmp_client_home }}"
+    ceph_fsid: "{{ mon_dump.fsid }}"
+    ceph_cluster: ceph
+
+- name: Force fail ceph mgr
+  become: true
+  ansible.builtin.command: "{{ ceph_cli }} mgr fail"
+
+- name: Wait for cephadm to reconcile
+  ansible.builtin.pause:
+    seconds: "{{ ceph_wait_mon_timeout }}"
+
+- name: Get the ceph orchestrator status with
+  become: true
+  ansible.builtin.command: "{{ ceph_cli }} orch status --format json"
+  register: ceph_orch_status
+  async: 30
+  poll: 1
+  failed_when: false
+
+- name: Restart ceph active mgr if ceph orch is not responding
+  become: true
+  when:
+    - ceph_orch_status.msg is defined
+    - '"Timeout exceeded" in ceph_orch_status.msg'
+  block:
+    - name: Restart the active mgr
+      ansible.builtin.command: "{{ ceph_cli }} mgr fail"
+      # This time we fail because something is wrong
+    - name: Fail if ceph orchestrator is still not responding
+      ansible.builtin.command: "{{ ceph_cli }} orch status --format json"
+      become: true
+      async: 30
+      poll: 1
