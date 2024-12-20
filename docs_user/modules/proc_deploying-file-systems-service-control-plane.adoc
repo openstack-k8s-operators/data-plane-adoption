@@ -44,6 +44,10 @@ $ CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/manila/etc/manila/ma
 
 . Create a patch file for the `OpenStackControlPlane` CR to deploy the {rhos_component_storage_file}. The following example `manila.patch` file uses native CephFS:
 +
+[NOTE]
+If you are using IPv6, remember to change the load balancer IP to one that is correct in your environment. +
+E.g: `metallb.universe.tf/loadBalancerIPs:  fd00:bbbb::80`
++
 [source,yaml]
 ----
 $ cat << __EOF__ > ~/manila.patch

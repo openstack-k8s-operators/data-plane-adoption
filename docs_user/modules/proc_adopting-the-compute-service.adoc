@@ -23,6 +23,10 @@ $ alias openstack="oc exec -t openstackclient -- openstack"
 [NOTE]
 This procedure assumes that {compute_service} metadata is deployed on the top level and not on each cell level. If the {OpenStackShort} deployment has a per-cell metadata deployment, adjust the following patch as needed. You cannot run the metadata service in `cell0`.
 +
+[NOTE]
+If you are using IPv6, remember to change the load balancer IPs to one that is correct in your environment. +
+E.g: `metallb.universe.tf/loadBalancerIPs:  fd00:bbbb::80`
++
 [source,yaml]
 ----
 $ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '

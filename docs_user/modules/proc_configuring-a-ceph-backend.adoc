@@ -54,6 +54,10 @@ EOF
 +
 The content of the file should be similar to the following example:
 +
+[NOTE]
+If using IPv6, `mon_host` will use brackets like on the following example: +
+`mon_host = [v2:[fd00:cccc::100]:3300/0,v1:[fd00:cccc::100]:6789/0]`
++
 [source,yaml]
 ----
 apiVersion: v1

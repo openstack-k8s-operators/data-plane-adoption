@@ -11,6 +11,8 @@ Before you migrate your databases to the {rhos_long} control plane, retrieve the
 .Prerequisites
 
 * Define the following shell variables. Replace the example values with values that are correct for your environment:
+[NOTE]
+If you need to use IPv6, declare `SOURCE_MARIADB_IP` *without* brackets (e.g. `SOURCE_MARIADB_IP=fd00:bbbb::2`)
 +
 ----
 ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
@@ -39,6 +41,13 @@ $ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | gre
 ----
 
 .Procedure
+
+. Make sure you are on the `openstack` namespace.
++
+----
+oc project openstack
+----
++
 
 . Export the shell variables for the following outputs and test the connection to the {OpenStackShort} database:
 +
@@ -121,6 +130,17 @@ endif::[]
 +
 [NOTE]
 The `nova`, `nova_api`, and `nova_cell0` databases are included in the same database host.
++
+[WARNING]
+====
+In case that this command fail, it may be due to the fact that the MariaDB container needs a bit more time. If that happens, you can use a sleep:
+
+----
+export PULL_OPENSTACK_CONFIGURATION_DATABASES=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+    bash -c 'sleep 5 && mysql -rsh '$SOURCE_MARIADB_IP' -uroot -p'$SOURCE_DB_ROOT_PASSWORD' -e "SHOW databases;"')
+----
+====
+
 
 . Run `mysqlcheck` on the {OpenStackShort} database to check for inaccuracies:
 +

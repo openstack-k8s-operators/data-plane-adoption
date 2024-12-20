@@ -11,6 +11,10 @@ Adopt the {image_service_first_ref} that you deployed with a {Ceph} back end. Us
 the `openstack` namespace and that the `extraMounts` property of the
 `OpenStackControlPlane` custom resource (CR) is configured properly. For more information, see xref:configuring-a-ceph-backend_migrating-databases[Configuring a Ceph back end].
 +
+[NOTE]
+If you are using IPv6, remember to change the load balancer IP to one that is correct in your environment. +
+E.g: `metallb.universe.tf/loadBalancerIPs:  fd00:bbbb::80`
++
 ----
 $ cat << EOF > glance_patch.yaml
 spec:

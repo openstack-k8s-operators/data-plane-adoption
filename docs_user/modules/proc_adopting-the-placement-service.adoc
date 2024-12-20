@@ -13,6 +13,10 @@ To adopt the Placement service, you patch an existing `OpenStackControlPlane` cu
 
 * Patch the `OpenStackControlPlane` CR to deploy the Placement service:
 +
+[NOTE]
+If you are using IPv6, remember to change the load balancer IP to one that is correct in your environment. +
+E.g: `metallb.universe.tf/loadBalancerIPs:  fd00:bbbb::80`
++
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:

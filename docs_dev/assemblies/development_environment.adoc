@@ -39,6 +39,12 @@ make download_tools
 
 == Deploying CRC
 
+[WARNING]
+If you want to deploy using IPv6, our current way of deploying a
+lightweight OCP environment is with Single Node Openshift (SNO) instead of CRC.
+See section at the bottom of the page for IPv6 development environment
+deployment.
+
 === CRC environment for virtual workloads
 
 [,bash]
@@ -567,3 +573,239 @@ https://openstack-k8s-operators.github.io/data-plane-adoption/user/#adopting-the
 may now follow other Data Plane Adoption procedures described in the
 https://openstack-k8s-operators.github.io/data-plane-adoption[documentation].
 The same pattern can be applied to other services.
+
+== Deploying an IPv6 environment
+
+In order to perform an adoption with IPv6, we will need an Openshift node (SNO
+instead of CRC in this case), an IPv6 control plane Openstack environment, and
+some extra settings we will see through this section.
+
+=== IPv6 Lab
+
+As a prerrequisite, make sure you have `systemd-resolved` configured for DNS
+resolution.
+
+[,bash]
+----
+dnf install -y systemd-resolved
+systemctl enable --now systemd-resolved
+ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+----
+
+We should also have Virtualization Tools installed (`libvirt` and `qemu`), and
+the username you are going to use added to the `libvirt` and `qemu` group.
+
+[,bash]
+----
+sudo usermod -a -G libvirt,qemu <username>
+----
+
+Furthermore, you should have an RSA key generated to use as identification to
+access your SNO.
+
+If you did not have libvirt installed, there is a chance that you don't have a
+default pool defined in libvirt. If that is the case, you can define it with
+the following commands
+
+[,bash]
+----
+cat > /tmp/default-pool.xml <<EOF
+<pool type='dir'>
+  <name>default</name>
+  <target>
+    <path>/var/lib/libvirt/images</path>
+    <permissions>
+      <mode>0711</mode>
+      <owner>0</owner>
+      <group>0</group>
+      <label>system_u:object_r:virt_image_t:s0</label>
+    </permissions>
+  </target>
+</pool>
+EOF
+sudo virsh pool-define  default-pool.xml
+sudo virsh pool-start default
+----
+
+Once all the prerrequisites are present, you can go ahead and use the `install_yamls`
+repository to install the IPv6Lab from the `devsetup` folder. Steps are taken from the
+https://github.com/openstack-k8s-operators/install_yamls/tree/main/devsetup[install_yamls devsetup README]:
+
+[,bash]
+----
+cd <install_yamls_root_path>/devsetup
+export NETWORK_ISOLATION_NET_NAME=net-iso
+export NETWORK_ISOLATION_IPV4=false
+export NETWORK_ISOLATION_IPV6=true
+export NETWORK_ISOLATION_INSTANCE_NAME=sno
+export NETWORK_ISOLATION_IP_ADDRESS=fd00:aaaa::10
+export NNCP_INTERFACE=enp7s0
+
+make ipv6_lab # Set up the needed networking setup (NAT64 bridge)
+
+make network_isolation_bridge # Create the network-isolation network
+
+make attach_default_interface # Attach the network-isolation bridge to SNO
+----
+
+To be able to access the SNO lab you need to source the SNO environment. After that you will be able to use `oc` commands:
+
+[,bash]
+----
+source /home/<user>/.ipv6lab/sno_env
+oc login -u admin -p 12345678 https://api.sno.lab.example.com:6443
+----
+You can also ssh the SNO for debugging purposes:
+[,bash]
+----
+ssh -i ~/.ssh/id_rsa core@fd00:aaaa::10
+----
+
+=== Deploying TripleO Standalone with IPv6
+
+[WARNING]
+There is still no official setup, but in this https://github.com/karelyatin/install_yamls/commit/8151634183fe1302383a98e0e9f0779b68232ad6[fork of install_yamls]
+there is a commit that can be used in order to deploy it successfully.
+
+The steps to deploy would be (assuming you are using https://github.com/karelyatin/install_yamls/commit/8151634183fe1302383a98e0e9f0779b68232ad6[this commit]):
+
+[,bash]
+----
+sudo chmod 777 /var/lib/libvirt/images #This might be needed to download the images
+cat > /tmp/additional_nets.json <<EOF
+[
+  {
+    "type": "network",
+    "name": "net-iso",
+    "standalone_config": {
+      "type": "linux_bridge",
+      "name": "net-iso",
+      "mtu": 1500,
+      "ip_subnet": "fd00:aaaa::1/64",
+      "allocation_pools": [
+        {
+          "start": "fd00:aaaa::100",
+          "end": "fd00:aaaa::150"
+        }
+      ]
+    }
+  }
+]
+EOF
+
+export EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(cat /tmp/additional_nets.json | jq -c)
+export NETWORK_ISOLATION_NET_NAME=nat64
+CRC_POOL=/var/lib/libvirt/images  NTP_SERVER="fd00:abcd:abcd:fc00::2" make standalone
+----
+
+Once the Standalone is deployed you can access it with
+
+[,bash]
+----
+ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@fd00:aaaa::100
+----
+
+Snapshots and reverts can be done just as stated on the general adoption section.
+
+=== IPv6 Network routing
+
+First, we need to know which bridge we will use for EDPM.
+
+[,bash]
+----
+sudo virsh dumpxml edpm-compute-0 | grep -oP "(?<=bridge=').*(?=')"
+EDPM_BRIDGE=net-iso
+----
+
+When searching for bridges on the compute you might see more than one. This is
+because one is meant to have all the network isolation `net-iso` and the other
+one is `nat64`, for external routing. In ipv4 environment we would only have
+one.
+
+
+Route VLAN20 to have access to the MariaDB cluster:
+
+[,bash]
+----
+sudo ip link add link $EDPM_BRIDGE name vlan20 type vlan id 20
+sudo ip addr add dev vlan20 fd00:bbbb::222/64
+sudo ip link set up dev vlan20
+----
+
+To adopt the Swift service as well, route VLAN23 to have access to the storage backend services:
+
+[,bash]
+----
+sudo ip link add link $EDPM_BRIDGE name vlan23 type vlan id 23
+sudo ip addr add dev vlan23 fd00:dede::222/64
+sudo ip link set up dev vlan23
+----
+
+[WARNING]
+
+If you want to test your adoption using FIPs you will need to add IPv4 routing
+to your IPv6 environment. This is achieved by adding an IPv4 address from the
+192.168.122.0/24 range to br-ctlplane in the standalone and another one to
+net-iso in the host. You also need to configure correctly the routes in both.
+
+In order to be able to use floating IPs, this an example of how configuration
+could look.
+
+On the host:
+[,bash]
+----
+ip a show net-iso
+# Output
+9: net-iso: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 52:54:00:f9:af:e4 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.3/24 scope global net-iso
+       valid_lft forever preferred_lft forever
+    inet6 fd00:aaaa::1/64 scope global
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fef9:afe4/64 scope link
+       valid_lft forever preferred_lft forever
+
+ip route
+# Output
+<other routes>
+192.168.122.0/24 dev net-iso proto kernel scope link src 192.168.122.3
+----
+
+On the standalone:
+[,bash]
+----
+ip a show br-ctlplane
+# Output
+5: br-ctlplane: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN g
+roup default qlen 1000
+    link/ether 52:54:00:46:72:c6 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.4/24 scope global br-ctlplane
+       valid_lft forever preferred_lft forever
+    inet6 fd00:aaaa::99/128 scope global
+       valid_lft forever preferred_lft forever
+    inet6 fd00:aaaa::100/64 scope global
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fe46:72c6/64 scope link
+       valid_lft forever preferred_lft forever
+
+ip route
+# Output
+192.168.122.0/24 dev br-ctlplane proto kernel scope link src 192.168.122.4
+----
+
+=== Further steps
+
+From here, the steps should be similar to the IPv4 adoption. Note that every
+command that requires access to the standalone VM via SSH (i.e. when creating a workload) should be done using
+a different address:
+
+[,bash]
+----
+OS_CLOUD_IP=fd00:aaaa::100
+----
+
+And, when installing operators, use:
+[,bash]
+----
+scp -6 -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@[fd00:aaaa::100]:/root/tripleo-standalone-passwords.yaml ~/
+----

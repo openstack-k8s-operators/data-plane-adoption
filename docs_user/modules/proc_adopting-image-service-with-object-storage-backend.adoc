@@ -31,6 +31,10 @@ spec
 
 . Create a new file, for example, `glance_swift.patch`, and include the following content:
 +
+[NOTE]
+If you are using IPv6, remember to change the load balancer IP to one that is correct in your environment. +
+E.g: `metallb.universe.tf/loadBalancerIPs:  fd00:bbbb::80`
++
 ----
 spec:
   glance:

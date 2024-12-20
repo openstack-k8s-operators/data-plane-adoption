@@ -34,7 +34,11 @@ $ alias openstack="oc exec -t openstackclient -- openstack"
 
 . Patch the `OpenStackControlPlane` custom resource (CR) to deploy the {bare_metal}:
 +
-[source,yaml]
+[NOTE]
+If you are using IPv6, remember to change the load balancer IP to one that is correct in your environment. +
+E.g: `metallb.universe.tf/loadBalancerIPs:  fd00:bbbb::80`
++
+[source,bash]
 ----
 $ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
 spec:

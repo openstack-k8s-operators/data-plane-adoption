@@ -62,6 +62,10 @@ tenant        true          false             ["172.19.0.80-172.19.0.90"]
 
 . Adopt the {image_service} and create a new `default` `GlanceAPI` instance that is connected with the existing NFS share:
 +
+[NOTE]
+If you are using IPv6, remember to change the load balancer IP to one that is correct in your environment. +
+E.g: `metallb.universe.tf/loadBalancerIPs:  fd00:bbbb::80`
++
 ----
 $ cat << EOF > glance_nfs_patch.yaml
 

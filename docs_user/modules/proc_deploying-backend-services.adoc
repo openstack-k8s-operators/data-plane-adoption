@@ -199,6 +199,22 @@ spec:
 . Deploy the `OpenStackControlPlane` CR. Ensure that you only enable the DNS, MariaDB, Memcached, and RabbitMQ services. All other services must
 be disabled:
 +
+[NOTE]
+====
+If you are using IPv6, remember to change the load balancer IPs to ones that are correct in your environment.
+----
+...
+metallb.universe.tf/allow-shared-ip: ctlplane
+metallb.universe.tf/loadBalancerIPs: fd00:aaaa::80
+...
+metallb.universe.tf/address-pool: internalapi
+metallb.universe.tf/loadBalancerIPs: fd00:bbbb::85
+...
+metallb.universe.tf/address-pool: internalapi
+metallb.universe.tf/loadBalancerIPs: fd00:bbbb::86
+----
+====
++
 [source,yaml]
 ----
 oc apply -f - <<EOF
