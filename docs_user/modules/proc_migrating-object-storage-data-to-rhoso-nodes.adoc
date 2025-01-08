@@ -63,16 +63,17 @@ $ oc wait pods --for condition=Ready -l component=swift-storage
 . From the current rings, get the storage management IP addresses of the nodes to drain:
 +
 ----
-$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-ring-builder object.builder' | tail -n +7 | awk '{print $4}' | sort -u
+$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-ring-builder object.builder search _' | tail -n +2 | awk '{print $4}' | sort -u
+
 ----
 +
 The output looks similar to the following:
 +
 ----
-172.20.0.100:6200
-swift-storage-0.swift-storage.openstack.svc:6200
-swift-storage-1.swift-storage.openstack.svc:6200
-swift-storage-2.swift-storage.openstack.svc:6200
+172.20.0.100
+swift-storage-0.swift-storage.openstack.svc
+swift-storage-1.swift-storage.openstack.svc
+swift-storage-2.swift-storage.openstack.svc
 ----
 
 . Drain the old nodes. In the following example, the old node `172.20.0.100` is drained:
