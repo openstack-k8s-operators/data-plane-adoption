@@ -27,22 +27,22 @@ help: ## Display this help.
 test-minimal: TEST_OUTFILE := tests/logs/test_minimal_out_$(shell date +%FT%T%Z).log
 test-minimal:  ## Launch minimal test suite
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 test_ospdo_controlplane: TEST_OUTFILE := tests/logs/test_minimal_out_$(shell date +%FT%T%Z).log
 test_ospdo_controlplane:
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e ospdo_src=True --skip-tags "pull_openstack_configuration,dataplane_adoption" -e @$(TEST_VARS) -e @$(TEST_SECRETS) tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e ospdo_src=True --skip-tags "pull_openstack_configuration,dataplane_adoption" -e @$(TEST_SECRETS) -e @$(TEST_VARS)  tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 test_ospdo_dataplane: TEST_OUTFILE := tests/logs/test_minimal_out_$(shell date +%FT%T%Z).log
 test_ospdo_dataplane:
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e ospdo_src=True --tags "pull_openstack_configuration,dataplane_adoption" -e @$(TEST_VARS) -e @$(TEST_SECRETS) tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e ospdo_src=True --tags "pull_openstack_configuration,dataplane_adoption" -e @$(TEST_SECRETS) -e @$(TEST_VARS)  tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 test-with-ceph: TEST_OUTFILE := tests/logs/test_with_ceph_out_$(shell date +%FT%T%Z).log
 test-with-ceph:  ## Launch test suite with ceph
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 test-tripleo-requirements: TEST_OUTFILE := tests/logs/test_tripleo_requirements_out_$(shell date +%FT%T%Z).log
 test-tripleo-requirements:  ## Launch test suite related to the ceph migration
@@ -57,22 +57,22 @@ test-ceph-migration:  ## Launch test suite related to the ceph migration
 test-swift-migration: TEST_OUTFILE := tests/logs/test_swift_migration_out_$(shell date +%FT%T%Z).log
 test-swift-migration:
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_swift_migration.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_swift_migration.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 test-rollback-minimal: TEST_OUTFILE := tests/logs/test_rollback_minimal_out_$(shell date +%FT%T%Z).log
 test-rollback-minimal:
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_rollback_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_rollback_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 test-rollback-with-ceph: TEST_OUTFILE := tests/logs/test_rollback_with_ceph_out_$(shell date +%FT%T%Z).log
 test-rollback-with-ceph:
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_rollback_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_rollback_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 test-with-ironic: TEST_OUTFILE := tests/logs/test_with_ironic_out_$(shell date +%FT%T%Z).log
 test-with-ironic: ## Launch test suite with Ironic
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) tests/playbooks/test_with_ironic.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  tests/playbooks/test_with_ironic.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 ##@ DOCS
 
