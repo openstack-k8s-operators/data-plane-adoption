@@ -5,7 +5,7 @@
 During the adoption process the {loadbalancer_first_ref} service
 must stay disabled in the new control plane.
 
-== Control plane adoption steps
+.Procedure
 
 . Create an alias for the `openstack` command
 +
@@ -23,13 +23,10 @@ Use the
 ----
 $ CONTROLLER1_SCP=$(echo "$CONTROLLER1_SSH" | sed 's/^ssh/scp/g')
 ----
+
+. Run the following set of commands to regenerate the keys and certificates and install the data in {rhocp_long}. These commands convert the existing single certificate authority (CA) configuration into a
+dual CA configuration:
 +
-Then run the following set of commands in order to regenerate the
-keys and certificates and install the data in OpenShift. These
-commands convert the existing single CA configuration into a
-dual CA configuration.
-+
-[source,bash]
 ----
 include::../../tests/roles/octavia_adoption/tasks/octavia_certs.yaml[lines="7..83",indent=0]
 ----
@@ -43,17 +40,10 @@ These commands will copy the existing public SSH key that can be used for connec
 include::../../tests/roles/octavia_adoption/tasks/octavia_ssh.yaml[lines="7..20",indent=0]
 ----
 
-. Add the octavia interfaces to each NodeNetworkConfigurationPolicy.
+. Add the {loadbalancer_service} interfaces to each `NodeNetworkConfigurationPolicy` custom resource (CR). The following command adds the network interface to use as the VLAN base interface for the management network for network isolation on the {OpenShiftShort} nodes:
 +
-The following command adds the network interface that is being
-used as the VLAN base interface for the management network
-(in this example `enp6s0`) for network isolation on the OpenShift nodes.
-Please replace `enp6s0` with the name of the network interface in your
-OpenShift setup. The correct mtu value depends on the requirements of your environment and might need to be changed as well.
-+
-[source,bash]
 ----
-oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read ; do
+$ oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read ; do
     oc patch -n openstack nncp $REPLY --type=merge --patch '
     spec:
       desiredState:
@@ -63,7 +53,7 @@ oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read ; do
           state: up
           type: vlan
           vlan:
-            base-iface: enp6s0
+            base-iface: <enp6s0> <1>
             id: 24
         - bridge:
             options:
@@ -72,21 +62,19 @@ oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read ; do
             port:
             - name: enp6s0.24
           description: Configuring bridge octbr
-          mtu: 1500
+          mtu: <1500> <2>
           name: octbr
           state: up
           type: linux-bridge
     '
 done
 ----
++
+<1> Replace `<enp6s0>` with the name of the network interface in your {OpenShiftShort} setup.
+<2> Replace `<1500>` with the `mtu `value in your environment.
 
-. Configure the network attachment definition
+. Configure the {loadbalancer_service} network attachment definition to connect pods that manage load balancer virtual machines (amphorae) and the OpenvSwitch pods that are managed by the OVN operator:
 +
-The `octavia` network attachment is needed to connect pods
-that manage amphorae
-and the OpenvSwitch pods (managed by the OVN operator):
-+
-[source,bash]
 ----
 $ cat >> octavia-nad.yaml << EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
@@ -120,9 +108,8 @@ EOF_CAT
 $ oc apply -n openstack -f octavia-nad.yaml
 ----
 
-. Enable the {loadbalancer_service} service in OpenShift
+. Enable the {loadbalancer_service} service in {OpenShiftShort}:
 +
-[source,bash]
 ----
 $ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
 spec:
@@ -150,17 +137,14 @@ spec:
 '
 ----
 
-. Wait for the {loadbalancer_service} control plane services CRs to become ready
+. Wait for the {loadbalancer_service} control plane services CRs to be ready:
 +
-[source,bash]
 ----
 $ oc wait --for condition=Ready --timeout=600s octavia.octavia.openstack.org/octavia
 ----
-+
 
-. Ensure the {loadbalancer_service} service is registered in the {identity_service}:
+. Ensure that the {loadbalancer_service} is registered in the {identity_service}:
 +
-[source,bash]
 ----
 $ openstack service list | grep load-balancer
 | bd078ca6f90c4b86a48801f45eb6f0d7 | octavia   | load-balancer |
@@ -169,7 +153,6 @@ $ openstack endpoint list | grep load-balancer
 | ff3222b4621843669e89843395213049 | regionOne | octavia      | load-balancer | True    | internal  | http://octavia-internal.openstack.svc:9876                            |
 ----
 
-== Clean up old resources
 
 . Change the ONBOOT option in the network script for the management interface to no.
 +
@@ -177,9 +160,8 @@ Connect to each of the controllers on the old control plane, open the configurat
 (e.g. `/etc/sysconfig/network-scripts/ifcfg-o-hm0`, the exact name depends on the previous `OctaviaMgmtPortDevName` setting).
 Change the line `ONBOOT=yes` to `ONBOOT=no` so the interface does not get enabled automatically on reboot anymore.
 
-. Delete old flavors that have been migrated
+. Delete old flavors that are migrated to the new control plane:
 +
-[source,bash]
 ----
 $ openstack flavor list --all | grep octavia
 | 484c351a-57ca-4a4b-8e6e-93d31596fec5 | octavia-amphora-4vcpus   | 4096 |    3 |         0 |     4 | False     |
@@ -193,9 +175,8 @@ $ openstack flavor list --all | grep octavia
 | cf9d1d80-5680-4ed8-a051-e8ec4c5871e0 | octavia-amphora        | 1024 |    3 |         0 |     1 | False     |
 ----
 
-. Delete old octavia flavors that have been migrated
+. Delete old {loadbalancer_service} flavors that are migrated to the new control plane:
 +
-[source,bash]
 ----
 $ openstack loadbalancer flavor list
 +--------------------------------------+--------------------------+--------------------------------------+---------+
@@ -215,9 +196,8 @@ $ openstack loadbalancer flavor list
 +--------------------------------------+----------------+--------------------------------------+---------+
 ----
 
-. Delete old flavorprofile that have been migrated
+. Delete old flavor profiles that are migrated to the new control plane:
 +
-[source,bash]
 ----
 $ openstack loadbalancer flavorprofile list
 +--------------------------------------+----------------------------------+---------------+
@@ -237,12 +217,11 @@ $ openstack loadbalancer flavorprofile list
 +--------------------------------------+----------------+---------------+
 ----
 
-. Delete the old management network ports
+. Delete the old management network ports:
 +
 The first command stores the network ID of the old management network in the
-variable WALLABY_LB_MGMT_NET_ID for later use. Then all ports that are used in the network get deleted.
+variable `WALLABY_LB_MGMT_NET_ID` for later use. Then, all ports that are used in the network get deleted.
 +
-[source,bash]
 ----
 $ for net_id in $(openstack network list -f value -c ID --name lb-mgmt-net); do desc=$(openstack network show "$net_id" -f value -c description); [ -z "$desc" ] && WALLABY_LB_MGMT_NET_ID="$net_id" ; done
 $ echo $WALLABY_LB_MGMT_NET_ID
@@ -250,16 +229,14 @@ $ echo $WALLABY_LB_MGMT_NET_ID
 $ for id in $(openstack port list --network "$WALLABY_LB_MGMT_NET_ID" -f value -c ID) ; do openstack port delete "$id" ; done
 ----
 
-. Delete the old management network
+. Delete the old management network:
 +
-[source,bash]
 ----
 $ openstack network delete "$WALLABY_LB_MGMT_NET_ID"
 ----
 
-. Verify only one lb-mgmt-net and one lb-mgmt-subnet exists
+. Verify that only one `lb-mgmt-net` and one `lb-mgmt-subnet` exists:
 +
-[source,bash]
 ----
 $ openstack network list | grep lb-mgmt-net
 | fe470c29-0482-4809-9996-6d636e3feea3 | lb-mgmt-net          | 6a881091-097d-441c-937b-5a23f4f243b7 |
