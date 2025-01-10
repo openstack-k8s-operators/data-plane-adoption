@@ -36,7 +36,7 @@
         # Try mysql_upgrade to fix mysqlcheck failure
         for CELL in $(echo $CELLS); do
             MYSQL_UPGRADE=$(oc run mariadb-client-3-$CELL ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-                mysql_upgrade -v -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}")
+                mysql_upgrade --skip-version-check -v -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}")
             # rerun mysqlcheck to check if problem is resolved
             run_mysqlcheck
         done
