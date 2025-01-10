@@ -1,5 +1,5 @@
 BUILD ?= upstream
-BUILD_VARIANT ?=
+ABUILD_VARIANT ?=
 BUILD_VARIANT_WITH_SEPARATOR ?= $(if $(strip $(BUILD_VARIANT)),-$(BUILD_VARIANT),)
 BUILD_DIR = ../docs_build
 ROOTDIR = $(realpath .)
