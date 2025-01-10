@@ -175,7 +175,7 @@ EOF
 ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
 $ oc rsh mariadb-copy-data << EOF
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 $ oc rsh -n $OSPDO_NAMESPACE mariadb-copy-data << EOF
 endif::[]
   # db schemas to rename on import

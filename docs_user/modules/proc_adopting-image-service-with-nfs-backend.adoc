@@ -130,7 +130,6 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_nfs_
 $ oc get pods -l service=glance
 NAME                      READY   STATUS    RESTARTS
 glance-default-single-0   3/3     Running   0
-```
 ----
 
 * Ensure that the description of the pod reports the following output:

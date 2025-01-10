@@ -34,7 +34,7 @@ $ grep -rI 'ovn_[ns]b_conn' /var/lib/config-data/puppet-generated/
 
 .Procedure
 +
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 . Get the {OpenShiftShort} master node that contains the {OpenStackShort} Controller:
 +
 ----
@@ -63,7 +63,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
   namespace: $OSPDO_NAMESPACE
 endif::[]
   name: ovn-data
@@ -84,16 +84,16 @@ metadata:
 ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
     k8s.v1.cni.cncf.io/networks: internalapi
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
   '[{"name": "internalapi-static", "namespace": $<ospdo_namespace>, "ips": ["<internalapi-static-ips>"]}]'
 endif::[]
   labels:
     app: adoption
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
   namespace: $OSPDO_NAMESPACE
 endif::[]
 spec:
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
   nodeName: '{{ <ocp_node_holding_controller> }}'
 endif::[]
   containers:
@@ -122,7 +122,7 @@ endif::[]
       secretName: ovn-data-cert
 EOF
 ----
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 +
 * Replace `<ocp_node_holding_controller>` with the {OpenStackShort} node that contains the Controller.
 endif::[]
@@ -133,7 +133,7 @@ endif::[]
 ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
 $ oc wait --for=condition=Ready pod/ovn-copy-data --timeout=30s
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 $ oc wait --for=condition=Ready -n $OSPDO_NAMESPACE pod/ovn-copy-data --timeout=30s
 endif::[]
 ----
@@ -153,7 +153,7 @@ ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 $ oc exec -n $OSPDO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
 $ oc exec -n $OSPDO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
 endif::[]
@@ -235,7 +235,7 @@ ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 $ oc exec -n $RHOSO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
 $ oc exec -n $RHOSO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
 endif::[]

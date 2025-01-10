@@ -113,7 +113,7 @@ make input
 ----
 endif::[]
 
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 ----
 $ oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
 ----
@@ -237,7 +237,7 @@ ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
               metallb.universe.tf/allow-shared-ip: ctlplane
               metallb.universe.tf/loadBalancerIPs: 192.168.122.80
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
               metallb.universe.tf/address-pool: <address_pool>
               metallb.universe.tf/allow-shared-ip: <address_pool>
               metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP>
@@ -327,7 +327,7 @@ ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
           dbType: SB
           networkAttachment: internalapi
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
       ovnController:
         networkAttachment: tenant
         nodeSelector:
@@ -366,7 +366,7 @@ ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
                 metallb.universe.tf/address-pool: internalapi
                 metallb.universe.tf/loadBalancerIPs: 172.17.0.86
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
                 metallb.universe.tf/address-pool: <networkAttachment_name>
                 metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP>
 endif::[]
@@ -387,7 +387,7 @@ endif::[]
         replicas: 1
 EOF
 ----
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 * Replace <address_pool> with the name of your network definition.
 * Replace <loadBalancer_IP> with the LoadBalancer IP address.
 * Replace <networkAttachment_name> with the name of your network.
