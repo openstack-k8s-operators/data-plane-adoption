@@ -102,11 +102,13 @@ spec:
     template:
       ovnDBCluster:
         ovndbcluster-nb:
+          replicas: 3
           dbType: NB
           storageClass: {{ ospdo_storage_class.stdout }}
           storageRequest: 10G
           networkAttachment: internalapi{{ osp18_ns_suffix }}
         ovndbcluster-sb:
+          replicas: 3
           storageClass: {{ ospdo_storage_class.stdout }}
           dbType: SB
           storageRequest: 10G

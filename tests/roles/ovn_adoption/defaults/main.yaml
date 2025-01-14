@@ -10,10 +10,12 @@ ovs_db_patch: |
       template:
         ovnDBCluster:
           ovndbcluster-nb:
+            replicas: 3
             dbType: NB
             storageRequest: 10G
             networkAttachment: internalapi
           ovndbcluster-sb:
+            replicas: 3
             dbType: SB
             storageRequest: 10G
             networkAttachment: internalapi
