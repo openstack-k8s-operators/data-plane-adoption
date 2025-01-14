@@ -23,6 +23,8 @@ $ oc project openstack
 ----
 
 . Define the common environment variables:
++
++
 ----
 export PASSWORD_FILE="tripleo-passwords.yaml"
 
