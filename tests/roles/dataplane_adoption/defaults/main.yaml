@@ -178,7 +178,7 @@ dataplane_cr: |
       - validate-network
       - install-os
       - configure-os
-      $GLOBAL
+      - ssh-known-hosts
       - run-os
       - reboot-os
       - install-certs

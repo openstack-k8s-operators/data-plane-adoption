@@ -46,8 +46,8 @@ for CELL in $(echo $RENAMED_CELLS); do
         ${CELL}:
           hasAPIAccess: true
           cellDatabaseAccount: nova-$CELL
-          cellDatabaseInstance: openstack-$CELL
-          cellMessageBusInstance: rabbitmq-$CELL
+          cellDatabaseInstance: openstack-$CELL <1>
+          cellMessageBusInstance: rabbitmq-$CELL <2>
           metadataServiceTemplate:
             enabled: false # enable here to run it in a cell instead
             override:
@@ -86,7 +86,7 @@ spec:
                 annotations:
                   metallb.universe.tf/address-pool: internalapi
                   metallb.universe.tf/allow-shared-ip: internalapi
-                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80 <1>
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80 <3>
               spec:
                 type: LoadBalancer
         customServiceConfig: |
@@ -125,7 +125,9 @@ cat celltemplates >> oscp-patch.yaml
 oc patch openstackcontrolplane openstack -n openstack --type=merge --patch-file=oscp-patch.yaml
 ----
 +
-<1> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
+<1> The `cellDatabaseInstance` is the database instance that is used by the cell. The database instance names must match the names defined for OpenStackControlPlane created earlier in xref:deploying-backend-services_{context}[Deploying back-end services].
+<2> The `cellMessageBusInstance` is the message bus instance that is used by the cell. The message bus instance names must match the names defined for OpenStackControlPlane created earlier.
+<3> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
 
 . If you are adopting the {compute_service} with the {bare_metal_first_ref}, append the following `novaComputeTemplates` in the each `cellX` section of the {compute_service} CR patch:
 +
