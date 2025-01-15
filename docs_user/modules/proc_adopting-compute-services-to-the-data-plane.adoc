@@ -209,7 +209,7 @@ data: <1>
 EOF
 ----
 +
-<1> The `data` resources in the `ConfigMap` provide cell-specific configuration files.
+<1> The `data` resources in the `ConfigMap` provides configuration files for all cells.
 <2> There is a requirement to index the <*.conf> files from '03' to '99', based on its precedence.
 Whereis a <99-*.conf> takes top precedence. Indexes below '03' are reserved for internal use.
 
@@ -266,7 +266,6 @@ spec:
         name: nova-migration-ssh-key <3>
     - configMapRef:
         name: nova-cells-global-config
-        optional: true
   playbook: osp.edpm.nova
   caCerts: combined-ca-bundle
   edpmServiceType: nova
@@ -295,10 +294,13 @@ EOF
 ----
 +
 <1> To enable a local metadata services for a cell<N>, append a `spec.dataSources.secretRef` to reference
-an additional auto-generated `nova-cell<N>-metadata-neutron-config` secret. You should have also set
-`spec.nova.template.cellTemplates.cell<N>.metadataServiceTemplate.enable` in the `OpenStackControlPlane/openstack` CR.
+an additional auto-generated `nova-cell<N>-metadata-neutron-config` secret. According to xref:adopting-the-compute-service_{context}[Adopting the Compute service] guide, you should also set
+`spec.nova.template.cellTemplates.cell<N>.metadataServiceTemplate.enable` in the `OpenStackControlPlane/openstack` CR. You may either configure a single top level metadata, or you should define a per cell metadata for each cell.
 <2> The secret `nova-cell<N>-compute-config` auto-generates for each `cell<N>`.
 <3> You must append the `nova-cell<N>-compute-config` and `nova-migration-ssh-key` references for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
+
+[NOTE]
+For simplicity, we share the same `nova-migration-ssh-key` key across cells. You should use different keys for different cells.
 
 * For simple configuration overrides, we do not need a custom dataplane service. However, to reconfigure the cell `cell1` in general,
 the safest option would be always creating a custom service, and a dedicated configuration map for it.
@@ -313,7 +315,7 @@ The changes will be lost, when the {rhos_long} operator becomes updated with OLM
 `nova-cell1-nfv-extra-config` and `nova-cell1-enterprise-extra-config`.
 
 [NOTE]
-Different configurations for nodes in multiple node sets of the same cell are not covered in this guide.
+Different configurations for nodes in multiple node sets of the same cell are also supported, albeit not covered in this guide.
 
 ifeval::["{build}" == "downstream"]
 . Create a secret for the subscription manager:
@@ -381,11 +383,6 @@ EOF
   done
 
   test -f computes-$CELL || continue
-  if [ "$CELL" = "cell1" ]; then
-    GLOBAL="- ssh-known-hosts"
-  else
-    GLOBAL=" "
-  fi
   cat > nodeset-${CELL}.yaml <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneNodeSet
@@ -406,7 +403,7 @@ endif::[]
     - validate-network
     - install-os
     - configure-os
-    $GLOBAL
+    - ssh-known-hosts
     - run-os
     - reboot-os
     - install-certs
@@ -558,9 +555,6 @@ done
 <5> The bridge name and other OVN and Neutron specific values must match the source cloud configuration to avoid dataplane connectivity downtime.
 <6> Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
 
-[NOTE]
-The global service `ssh-known-hosts` may only be defined for a single node set.
-
 * Ensure that you use the same `ovn-controller` settings in the `OpenStackDataPlaneNodeSet` CR that you used in the {compute_service} nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
 +
 ----
@@ -587,12 +581,6 @@ done
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
   test -f nodeset-${CELL}.yaml || continue
-  if [ "$CELL" = "cell1" ]; then
-    GLOBAL="- ssh-known-hosts"
-  else
-    GLOBAL=" "
-  fi
-
   oc patch osdpns/openstack-$CELL --type=merge --patch "
   spec:
     services:
@@ -606,7 +594,7 @@ endif::[]
       - install-os
       - ceph-hci-pre
       - configure-os
-      $GLOBAL
+      - ssh-known-hosts
       - run-os
       - reboot-os
       - ceph-client
@@ -724,6 +712,10 @@ spec:
   - pre-adoption-validation
 EOF
 ----
++
+
+[NOTE]
+If you created different migration SSH keys for different OpenStackDataPlaneService CRs, you should also define a separate `OpenStackDataPlaneDeployment` CR for each nodeset (or nodesets) representing a cell.
 
 .. When the validation is finished, confirm that the status of the Ansible EE pods is `Completed`:
 +
