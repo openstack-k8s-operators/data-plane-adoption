@@ -84,9 +84,9 @@ $ export SOURCE_DB_ROOT_PASSWORD=$(grep <"${PASSWORD_FILE}" ' MysqlRootPassword:
 ----
 $ cpexport=$(oc -n "${OSPDO_NAMESPACE}" get cm tripleo-exports-default -o json | jq -r '.data["ctlplane-export.yaml"]')
 $ export SOURCE_MARIADB_IP=$(echo "$cpexport" | sed -e '0,/ MysqlInternal/d' | sed -n '0,/host_nobrackets/s/^.*host_nobrackets\:\s*\(.*\)$/\1/p')
-+
+
 $ export MARIADB_IMAGE='quay.io/podified-antelope-centos9/openstack-mariadb:current-podified'
-+
+
 $ RUN_OVERRIDES='{
     "apiVersion": "v1",
     "metadata": {

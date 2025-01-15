@@ -33,18 +33,14 @@ $ grep -rI 'ovn_[ns]b_conn' /var/lib/config-data/puppet-generated/
 ----
 
 .Procedure
-+
 ifeval::["{build_variant}" == "ospdo"]
 . Get the {OpenShiftShort} master node that contains the {OpenStackShort} Controller:
-+
 ----
 $ oc get vmi -n $<ospdo_namespace> -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
 ----
-+
 * Replace `<ospdo_namespace>` with your OSPdO namespace.
 endif::[]
 . Prepare a temporary `PersistentVolume` claim and the helper pod for the OVN backup. Adjust the storage requests for a large database, if needed:
-+
 [source,yaml]
 ----
 $ oc apply -f - <<EOF
@@ -123,7 +119,6 @@ endif::[]
 EOF
 ----
 ifeval::["{build_variant}" == "ospdo"]
-+
 * Replace `<ocp_node_holding_controller>` with the {OpenStackShort} node that contains the Controller.
 endif::[]
 
@@ -205,7 +200,7 @@ PODIFIED_OVSDB_NB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name
 PODIFIED_OVSDB_SB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-sb-0" -ojsonpath='{.items[0].spec.clusterIP}')
 ----
 
-.+ When using IPv6, adjust the address to the format expected by `ovsdb-*` tools:
+.When using IPv6, adjust the address to the format expected by `ovsdb-*` tools:
 
 ----
 PODIFIED_OVSDB_NB_IP=[$PODIFIED_OVSDB_NB_IP]

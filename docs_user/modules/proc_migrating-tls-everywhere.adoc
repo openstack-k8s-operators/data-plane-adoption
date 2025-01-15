@@ -51,12 +51,8 @@ endif::[]
 $ IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
 ----
 +
-----
 * The `-L` option lists all certificates.
-+
 * The `-d` option specifies where the certificates are stored.
-+
-----
 The command produces an output similar to the following example:
 +
 ----
