@@ -33,7 +33,9 @@ SOURCE_DB_ROOT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.y
 endif::[]
 MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
 ----
++
 To get the value to set `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller node:
++
 ----
 $ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep bind
 ----
@@ -43,7 +45,7 @@ $ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | gre
 . Export the shell variables for the following outputs and test the connection to the {OpenStackShort} database:
 +
 ----
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{OpenStackPreviousInstaller}" != "director Operator"]
 export PULL_OPENSTACK_CONFIGURATION_DATABASES=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
@@ -125,7 +127,7 @@ The `nova`, `nova_api`, and `nova_cell0` databases are included in the same data
 . Run `mysqlcheck` on the {OpenStackShort} database to check for inaccuracies:
 +
 ----
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{OpenStackPreviousInstaller}" != "director Operator"]
 export PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
@@ -138,7 +140,7 @@ echo "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"
 . Get the {compute_service_first_ref} cell mappings:
 +
 ----
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{OpenStackPreviousInstaller}" != "director Operator"]
 export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
@@ -152,7 +154,7 @@ echo "$PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS"
 . Get the hostnames of the registered Compute services:
 +
 ----
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{OpenStackPreviousInstaller}" != "director Operator"]
 export PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]

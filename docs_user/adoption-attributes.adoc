@@ -150,7 +150,7 @@ ifeval::["{build}" == "downstream"]
 endif::[]
 
 ifeval::["{build}-{build_variant}" == "downstream-ospdo"]
-:OpenStackPreviousInstaller: director_operator
+:OpenStackPreviousInstaller: director Operator
 endif::[]
 
 

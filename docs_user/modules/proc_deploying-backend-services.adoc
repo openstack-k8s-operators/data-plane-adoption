@@ -231,16 +231,16 @@ spec:
         service:
           metadata:
             annotations:
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{OpenStackPreviousInstaller}" != "director Operator"]
 
               metallb.universe.tf/address-pool: ctlplane
               metallb.universe.tf/allow-shared-ip: ctlplane
               metallb.universe.tf/loadBalancerIPs: 192.168.122.80
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
-              metallb.universe.tf/address-pool: <address_pool>
-              metallb.universe.tf/allow-shared-ip: <address_pool>
-              metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP>
+              metallb.universe.tf/address-pool: <address_pool> <2>
+              metallb.universe.tf/allow-shared-ip: <address_pool> <2>
+              metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP> <3>
 endif::[]
           spec:
             type: LoadBalancer
@@ -312,7 +312,7 @@ endif::[]
   ovn:
     enabled: false
     template:
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{OpenStackPreviousInstaller}" != "director Operator"]
       ovnController:
         networkAttachment: tenant
         nodeSelector:
@@ -337,10 +337,10 @@ ifeval::["{build_variant}" == "ospdo"]
       ovnDBCluster:
         ovndbcluster-nb:
           dbType: NB
-          networkAttachment: <networkAttachment_name>
+          networkAttachment: <networkAttachment_name> <4>
         ovndbcluster-sb:
           dbType: SB
-          networkAttachment: <networkAttachment_name>
+          networkAttachment: <networkAttachment_name> <4>
 endif::[]
   placement:
     enabled: false
@@ -362,13 +362,13 @@ endif::[]
           service:
             metadata:
               annotations:
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{OpenStackPreviousInstaller}" != "director Operator"]
                 metallb.universe.tf/address-pool: internalapi
                 metallb.universe.tf/loadBalancerIPs: 172.17.0.86
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
-                metallb.universe.tf/address-pool: <networkAttachment_name>
-                metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP>
+                metallb.universe.tf/address-pool: <networkAttachment_name> <4>
+                metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP> <3>
 endif::[]
             spec:
               type: LoadBalancer
@@ -388,13 +388,13 @@ endif::[]
 EOF
 ----
 ifeval::["{build_variant}" == "ospdo"]
-* Replace <address_pool> with the name of your network definition.
-* Replace <loadBalancer_IP> with the LoadBalancer IP address.
-* Replace <networkAttachment_name> with the name of your network.
-endif::[]
-
 +
 <1> Select an existing storage class in your {OpenShiftShort} cluster.
+ifeval::["{build_variant}" == "ospdo"]
+<2> Replace `<address_pool>` with the name of your network definition.
+<3> Replace `<loadBalancer_IP>` with the LoadBalancer IP address.
+<4> Replace `<networkAttachment_name>` with the name of your network.
+endif::[]
 
 .Verification
 
