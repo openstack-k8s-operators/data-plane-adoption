@@ -19,8 +19,8 @@ CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@1
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 ----
 endif::[]
-ifeval::["{build}" == "downstream"]
 ----
+ifeval::["{build}" == "downstream"]
 CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
 MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
 endif::[]
