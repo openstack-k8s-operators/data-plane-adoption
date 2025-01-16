@@ -1,0 +1,59 @@
+---
+- name: Storage
+  mtu: 1500
+  vip: true
+  name_lower: storage
+  dns_domain: storage.{{ cloud_domain }}.
+  service_net_map_replace: storage
+  subnets:
+    storage_subnet:
+      vlan: 21
+      ip_subnet: '172.18.0.0/24'
+      allocation_pools: [{'start': '172.18.0.120', 'end': '172.18.0.250'}]
+
+- name: InternalApi
+  mtu: 1500
+  vip: true
+  name_lower: internal_api
+  dns_domain: internal-api.{{ cloud_domain }}.
+  service_net_map_replace: internal_api
+  subnets:
+    internal_api_subnet:
+      vlan: 20
+      ip_subnet: '172.17.0.0/24'
+      allocation_pools: [{'start': '172.17.0.120', 'end': '172.17.0.250'}]
+
+- name: Tenant
+  mtu: 1500
+  vip: false  # Tenant network does not use VIPs
+  name_lower: tenant
+  dns_domain: tenant.{{ cloud_domain }}.
+  service_net_map_replace: tenant
+  subnets:
+    tenant_subnet:
+      vlan: 22
+      ip_subnet: '172.19.0.0/24'
+      allocation_pools: [{'start': '172.19.0.120', 'end': '172.19.0.250'}]
+
+- name: Octavia
+  mtu: 1500
+  vip: false
+  name_lower: octavia
+  dns_domain: octavia.{{ cloud_domain }}.
+  subnets:
+    octavie_subnet:
+      ip_subnet: 172.23.0.0/24
+      allocation_pools:
+        - start: 172.23.0.200
+          end: 172.23.0.250
+
+- name: Ironic
+  mtu: 1500
+  name_lower: Ironic
+  dns_domain: ironic.{{ cloud_domain }}.
+  subnets:
+    ironic_subnet:
+      ip_subnet: 172.20.0.0/24
+      allocation_pools:
+        - start: 172.20.0.200
+          end: 172.20.0.250
