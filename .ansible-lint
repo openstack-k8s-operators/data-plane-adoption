@@ -1,5 +1,7 @@
 profile: production
 exclude_paths:
+    - .venv/
+    - .github/ # Not Ansible, just YAML
     - mkdocs.yml
     - docs/
     - tests/config/
@@ -12,6 +14,7 @@ skip_list:
     - name[casing] # do we want that one for consistency? maybe?
     - no-changed-when # any point adding changed_when: false in all our shell?
     - command-instead-of-shell
+    - jinja[spacing]  # We don't really want to get that one. Too picky
 strict: false
 quiet: false
 verbosity: 2
