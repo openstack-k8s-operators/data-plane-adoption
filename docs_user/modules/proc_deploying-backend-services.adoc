@@ -114,8 +114,9 @@ make input
 endif::[]
 
 ifeval::["{build_variant}" == "ospdo"]
-----
-$ oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
+++
++----
++$ oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
 ----
 endif::[]
 
