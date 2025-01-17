@@ -4,6 +4,9 @@
 - name: Adoption
   hosts: "{{ adoption_host | default('localhost') }}"
   gather_facts: false
+  #testing purpose, will be removed later
+  vars:
+    cinder_volume_backend: nfs_netapp
   force_handlers: true
   module_defaults:
     ansible.builtin.shell:
