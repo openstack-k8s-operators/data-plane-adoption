@@ -121,6 +121,8 @@ spec:
   rabbitmq:
     templates:
       rabbitmq:
+        persistence:
+          storage: 1Gi
         override:
           service:
             metadata:
@@ -130,6 +132,8 @@ spec:
             spec:
               type: LoadBalancer
       rabbitmq-cell1:
+        persistence:
+          storage: 1Gi
         override:
           service:
             metadata:
@@ -138,7 +142,6 @@ spec:
                 metallb.universe.tf/loadBalancerIPs: 172.17.0.86
             spec:
               type: LoadBalancer
-
   telemetry:
     enabled: false
 
