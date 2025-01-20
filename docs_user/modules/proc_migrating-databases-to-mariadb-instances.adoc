@@ -40,6 +40,7 @@ endif::[]
 # Replace with your environment's MariaDB Galera cluster VIP and backend IPs:
 SOURCE_MARIADB_IP=172.17.0.2
 declare -A SOURCE_GALERA_MEMBERS
+# If using IPv6, don't declare addresses within brackets
 SOURCE_GALERA_MEMBERS=(
   ["standalone.localdomain"]=172.17.0.100
   # ...
