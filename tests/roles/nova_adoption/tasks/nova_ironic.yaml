@@ -2,20 +2,19 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '{{ nova_ironic_patch}}'
+    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '{{ nova_ironic_patch }}'
 
-
-- name: wait for Nova control plane services' CRs to become ready
+- name: wait until the Compute control plane services CRs are ready
   ansible.builtin.include_tasks:
     file: wait.yaml
 
-- name: Remove FFU workarounds
+- name: remove the pre-fast-forward upgrade workarounds from the Compute data plane services
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '{{ remove_ffu_workaround_patch }}'
 
-- name: wait for Nova control plane services' CRs to become ready
+- name: wait until the Compute control plane services CRs are ready
   ansible.builtin.include_tasks:
     file: wait.yaml
 
