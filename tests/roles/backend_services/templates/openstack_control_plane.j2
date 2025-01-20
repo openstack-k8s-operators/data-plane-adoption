@@ -108,9 +108,11 @@ spec:
         replicas: 0
       ovnDBCluster:
         ovndbcluster-nb:
+          replicas: 3
           dbType: NB
           networkAttachment: internalapi
         ovndbcluster-sb:
+          replicas: 3
           dbType: SB
           networkAttachment: internalapi
 
