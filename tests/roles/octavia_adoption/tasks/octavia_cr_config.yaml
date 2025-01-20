@@ -1,0 +1,120 @@
+- name: Add the octavia interfaces to each NodeNetworkConfigurationPolicy
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read ; do
+    oc patch -n openstack nncp $REPLY --type=merge --patch '
+    spec:
+      desiredState:
+        interfaces:
+        - description: Octavia vlan host interface
+          name: enp6s0.24
+          state: up
+          type: vlan
+          vlan:
+            base-iface: enp6s0
+            id: 24
+        - bridge:
+            options:
+              stp:
+                enabled: false
+            port:
+            - name: enp6s0.24
+          description: Configuring bridge octbr
+          mtu: 1500
+          name: octbr
+          state: up
+          type: linux-bridge
+    '
+    done
+
+- name: Configure the network attachment definition
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    cat >> octavia-nad.yaml << EOF_CAT
+    apiVersion: k8s.cni.cncf.io/v1
+    kind: NetworkAttachmentDefinition
+    metadata:
+      labels:
+        osp/net: octavia
+      name: octavia
+      namespace: openstack
+    spec:
+      config: |
+        {
+          "cniVersion": "0.3.1",
+          "name": "octavia",
+          "type": "bridge",
+          "bridge": "octbr",
+          "ipam": {
+            "type": "whereabouts",
+            "range": "172.23.0.0/24",
+            "range_start": "172.23.0.30",
+            "range_end": "172.23.0.70",
+            "routes": [
+              {
+                "dst": "172.24.0.0/16",
+                "gw" : "172.23.0.150"
+              }
+            ]
+          }
+        }
+    EOF_CAT
+    oc apply -n openstack -f octavia-nad.yaml
+
+- name: Enable the octavia service in OpenShift
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    # FIXME: debug only. remove.
+    oc project
+
+    oc patch -n openstack openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      ovn:
+        template:
+          ovnController:
+            networkAttachment: tenant
+            nicMappings:
+              octavia: octbr
+      octavia:
+        enabled: true
+        template:
+          apacheContainerImage: registry.redhat.io/rhel8/httpd-24:latest
+          amphoraImageContainerImage: quay.io/gthiemonge/octavia-amphora-image
+          octaviaHousekeeping:
+            networkAttachments:
+              - octavia
+          octaviaHealthManager:
+            networkAttachments:
+              - octavia
+          octaviaWorker:
+            networkAttachments:
+              - octavia
+    '
+
+- name: Wait for the octavia control plane service CRs to become ready
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc wait --for condition=Ready --timeout=60s octavia.octavia.openstack.org/octavia
+  register: octavia_crs_ready_result
+  until: octavia_crs_ready_result is success
+  retries: 60
+  delay: 2
+
+- name: check that Octavia is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+    ${BASH_ALIASES[openstack]} endpoint list | grep octavia
+  register: octavia_responding_result
+  until: octavia_responding_result is success
+  retries: 60
+  delay: 2

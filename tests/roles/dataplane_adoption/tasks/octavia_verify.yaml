@@ -1,0 +1,88 @@
+---
+- name: set Octavia services shell vars
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.set_fact:
+    octavia_header: |
+      alias openstack="oc exec -t openstackclient -- openstack"
+
+- name: get nova flavors for octavia
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ octavia_header }}
+    output=$(${BASH_ALIASES[openstack]} flavor list --all | grep octavia)
+    [ "$(echo "$output" | wc -l)" -eq 2 ] && echo PASS
+  register: octavia_novaflavor_result
+
+- name: verify nova flavors for octavia
+  when: octavia_adoption|bool
+  ansible.builtin.assert:
+    that:
+      - octavia_novaflavor_result.stdout == 'PASS'
+    fail_msg: "verification of nova flavors for octavia failed"
+    success_msg: "verification of nova flavors for octavia succeeded"
+
+# TODO(tweining): This fail upstream because the quay.io image contains only
+# one amp image
+# - name: get octavia flavors for octavia
+#   ansible.builtin.shell: |
+#     {{ shell_header }}
+#     {{ octavia_header }}
+#     output=$(${BASH_ALIASES[openstack]} loadbalancer flavor list -f value)
+#     [ "$(echo "$output" | wc -l)" -eq 2 ] && echo PASS
+#   register: octavia_octaviaflavor_result
+
+# - name: verify octavia flavors for octavia
+#   when: octavia_adoption|bool
+#   ansible.builtin.assert:
+#     that:
+#       - octavia_octaviaflavor_result.stdout == 'PASS'
+#     fail_msg: "verification of octavia flavors for octavia failed"
+#     success_msg: "verification of octavia flavors for octavia succeeded"
+
+# - name: get flavorprofiles for octavia
+#   ansible.builtin.shell: |
+#     {{ shell_header }}
+#     {{ octavia_header }}
+#     output=$(${BASH_ALIASES[openstack]} loadbalancer flavorprofile list -f value)
+#     [ "$(echo "$output" | wc -l)" -eq 2 ] && echo PASS
+#   register: octavia_flavorprofiles_result
+
+# - name: verify flavorprofiles for octavia
+#   when: octavia_adoption|bool
+#   ansible.builtin.assert:
+#     that:
+#       - octavia_flavorprofiles_result.stdout == 'PASS'
+#     fail_msg: "verification of flavorprofiles for octavia failed"
+#     success_msg: "verification of flavorprofiles for octavia succeeded"
+
+- name: get networks named lb-mgmt-net
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ octavia_header }}
+    output=$(${BASH_ALIASES[openstack]} network list | grep lb-mgmt-net)
+    [ "$(echo "$output" | wc -l)" -eq 1 ] && echo PASS
+  register: octavia_mgmt_network_result
+
+- name: verify that one network lb-mgmt-net exists
+  when: octavia_adoption|bool
+  ansible.builtin.assert:
+    that:
+      - octavia_mgmt_network_result.stdout == 'PASS'
+    fail_msg: "verification of lb-mgmt-net network failed"
+    success_msg: "verification of lb-mgmt-net network succeeded"
+
+- name: get subnets named lb-mgmt-subnet
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ octavia_header }}
+    output=$(${BASH_ALIASES[openstack]} subnet list | grep lb-mgmt-subnet)
+    [ "$(echo "$output" | wc -l)" -eq 1 ] && echo PASS
+  register: octavia_mgmt_subnet_result
+
+- name: verify that one subnet lb-mgmt-subnet exists
+  when: octavia_adoption|bool
+  ansible.builtin.assert:
+    that:
+      - octavia_mgmt_subnet_result.stdout == 'PASS'
+    fail_msg: "verification of subnet lb-mgmt-subnet failed"
+    success_msg: "verification of subnet lb-mgmt-subnet succeeded"
