@@ -61,7 +61,7 @@ $ oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read ; do
             port:
             - name: enp6s0.24
           description: Configuring bridge octbr
-          mtu: <1500> <2>
+          mtu: 1500 <2>
           name: octbr
           state: up
           type: linux-bridge
@@ -70,7 +70,7 @@ done
 ----
 +
 <1> Replace `<enp6s0>` with the name of the network interface in your {OpenShiftShort} setup.
-<2> Replace `<1500>` with the `mtu `value in your environment.
+<2> Replace `1500` with the `mtu` value in your environment.
 
 . Configure the {loadbalancer_service} network attachment definition to connect pods that manage load balancer virtual machines (amphorae) and the OpenvSwitch pods that are managed by the OVN operator:
 +
@@ -153,11 +153,19 @@ $ openstack endpoint list | grep load-balancer
 ----
 
 
-. Change the ONBOOT option in the network script for the management interface to no.
+. Change the `ONBOOT` option in the network script for the management interface to `no`:
+
+.. Connect to each of the Controller nodes on the old control plane, for example, `overcloud-controller-0`.
+
+.. Open the configuration script for the management interface. For example:
 +
-Connect to each of the controllers on the old control plane, open the configuration script for the management interface
-(e.g. `/etc/sysconfig/network-scripts/ifcfg-o-hm0`, the exact name depends on the previous `OctaviaMgmtPortDevName` setting).
-Change the line `ONBOOT=yes` to `ONBOOT=no` so the interface does not get enabled automatically on reboot anymore.
+----
+$ sudo vi /etc/sysconfig/network-scripts/ifcfg-o-hm0
+----
++
+The exact name of the script depends on the previous `OctaviaMgmtPortDevName` setting.
+
+.. Change `ONBOOT=yes` to `ONBOOT=no` so that the interface does not get enabled automatically on reboot:
 
 . Delete old flavors that are migrated to the new control plane:
 +
