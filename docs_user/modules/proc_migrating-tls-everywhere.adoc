@@ -39,15 +39,15 @@ endif::[]
 
 . To locate the CA certificate and key, list all the certificates inside your NSSDB:
 +
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
-To locate the CA certificate and key, list all the certificates inside your NSSDB. If you installed OSPdO by using director-dev-tools, the server host runs the freeipa server as a container:
+ifeval::["{build_variant}" == "ospdo"]
+If you installed OSPdO by using director-dev-tools, the server host runs the freeipa server as a container:
 +
 ----
 $ IPA_SSH="podman exec -ti freeipa-server"
 ----
 endif::[]
 ----
-$IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
+$ IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
 ----
 +
 * The `-L` option lists all certificates.

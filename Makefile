@@ -91,6 +91,7 @@ docs: docs-dependencies docs-user-all-variants docs-dev ## Build documentation
 docs-user-all-variants:
 	cd docs_user; BUILD=upstream $(MAKE) html
 	cd docs_user; BUILD=downstream $(MAKE) html
+	cd docs_user; BUILD=downstream BUILD_VARIANT=ospdo $(MAKE) html
 
 docs-user:
 	cd docs_user; $(MAKE) html

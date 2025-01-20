@@ -20,15 +20,17 @@ ifeval::["{build}" != "downstream"]
 defined] already. Replace the following example values with values that are correct for your environment:
 +
 ----
-CONTROLLER1_SSH="ssh -i <path to SSH key> root@<node IP>"
+$ CONTROLLER1_SSH="ssh -i <path to SSH key> root@<node IP>"
 ----
++
 endif::[]
 ifeval::["{build}" != "upstream"]
 * The `CONTROLLER1_SSH` environment variable is defined and points to the {OpenStackShort} Controller node. Replace the following example values with values that are correct for your environment:
 +
 ----
-CONTROLLER1_SSH="ssh -i <path to SSH key> root@<node IP>"
+$ CONTROLLER1_SSH="ssh -i <path to SSH key> root@<node IP>"
 ----
++
 endif::[]
 
 .Procedure

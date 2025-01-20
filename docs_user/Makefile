@@ -1,10 +1,12 @@
 BUILD ?= upstream
+ABUILD_VARIANT ?=
+BUILD_VARIANT_WITH_SEPARATOR ?= $(if $(strip $(BUILD_VARIANT)),-$(BUILD_VARIANT),)
 BUILD_DIR = ../docs_build
 ROOTDIR = $(realpath .)
 NAME = adoption-user
 DEST_DIR = $(BUILD_DIR)/$(NAME)
-DEST_HTML = $(DEST_DIR)/index-$(BUILD).html
-DEST_PDF = $(BUILD_DIR)/$(NAME)-$(BUILD).pdf
+DEST_HTML = $(DEST_DIR)/index-$(BUILD)$(BUILD_VARIANT_WITH_SEPARATOR).html
+DEST_PDF = $(BUILD_DIR)/$(NAME)-$(BUILD)$(BUILD_VARIANT_WITH_SEPARATOR).pdf
 IMAGES_DIR = $(DEST_DIR)/images
 IMAGES_TS = $(DEST_DIR)/.timestamp-images
 MAIN_SOURCE = main.adoc
@@ -45,7 +47,7 @@ watch-html:
 		$(MAKE) html; \
 	done
 
-open-html: html
+open-html: htmlf
 	${BROWSER_OPEN} "file://$(realpath $(ROOTDIR)/$(DEST_HTML))"
 
 open-pdf: pdf
@@ -56,7 +58,7 @@ $(IMAGES_TS): $(IMAGES)
 	touch $(IMAGES_TS)
 
 $(DEST_HTML): $(ALL_SOURCES)
-	$(BUNDLE_EXEC) asciidoctor -a source-highlighter=highlightjs -a highlightjs-languages="yaml,bash" -a highlightjs-theme="monokai" --failure-level WARN -a build=$(BUILD) -b xhtml5 -d book -o $@ $(MAIN_SOURCE)
+	$(BUNDLE_EXEC) asciidoctor -a source-highlighter=highlightjs -a highlightjs-languages="yaml,bash" -a highlightjs-theme="monokai" --failure-level WARN -a build=$(BUILD) -a build_variant=$(BUILD_VARIANT) -b xhtml5 -d book -o $@ $(MAIN_SOURCE)
 
 $(DEST_PDF): $(ALL_SOURCES)
-	$(BUNDLE_EXEC) asciidoctor-pdf -a build=$(BUILD) -d book -o $@ $(MAIN_SOURCE) $(IMAGES)
+	$(BUNDLE_EXEC) asciidoctor-pdf -a build=$(BUILD) -a build_variant=$(BUILD_VARIANT) -d book -o $@ $(MAIN_SOURCE) $(IMAGES)
