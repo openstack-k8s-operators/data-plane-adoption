@@ -63,6 +63,46 @@
       {{ openstack_command }} credential create admin test -f value -c id
   register: before_adoption_credential
 
+- name: Tobiko
+  when: neutron_qe_test | default('false') | bool
+  environment:
+    OS_CLOUD_IP: "{{ standalone_ip | default(edpm_node_ip) }}"
+  block:
+    # Temporal - tobiko installation task
+    - name: tobiko installation
+      ansible.builtin.shell: |
+          ssh ${OS_CLOUD_IP} "set -o pipefail && mkdir -p ~/src/x && cd ~/src/x && git clone https://github.com/redhat-openstack/tobiko.git"
+
+    - name: virtcustomize installation
+      ansible.builtin.shell: |
+          ssh ${OS_CLOUD_IP} "set -o pipefail && sudo dnf install -y libguestfs-tools-c"
+
+    - name: upload tobiko-playbook.yaml to the undercloud
+      delegate_to: "{{ standalone_ip | default(edpm_node_ip) }}"
+      vars:
+        tobiko_playbook: |
+          - name: Playbook to run tobiko from the undercloud pre-adoption
+            hosts: localhost
+            tasks:
+              - name: "download images"
+                ansible.builtin.include_role:
+                  name: tobiko-download-images
+              - name: "initialize test execution"
+                ansible.builtin.include_role:
+                  name: tobiko-configure
+              - name: "run tests"
+                ansible.builtin.include_role:
+                  name: tobiko-run
+      ansible.builtin.copy:
+        mode: a+r
+        content: "{{ tobiko_playbook }}"
+        dest: ~/src/x/tobiko/tobiko-playbook.yaml
+    - name: Run Tobiko from the undercloud
+      delegate_to: "{{ standalone_ip | default(edpm_node_ip) }}"
+      ansible.builtin.shell:
+        chdir: ~/src/x/tobiko/
+        cmd: ansible-playbook tobiko-playbook.yaml -e test_workflow=create-resources
+
 - name: create resources script
   when: neutron_qe_test | default('false') | bool
   environment:
