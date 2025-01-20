@@ -30,11 +30,9 @@ $ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring
 The output might show a md5 mismatch until approximately 2 minutes after pushing the new rings. After the 2 minutes, the output looks similar to the following example:
 +
 ----
-[...]
 Oldest completion was 2024-03-14 16:53:27 (3 minutes ago) by 172.20.0.100:6000.
 Most recent completion was 2024-03-14 16:56:38 (12 seconds ago) by swift-storage-0.swift-storage.openstack.svc:6200.
 ===============================================================================
 [2024-03-14 16:56:50] Checking ring md5sums
 4/4 hosts matched, 0 error[s] while checking hosts.
-[...]
 ----

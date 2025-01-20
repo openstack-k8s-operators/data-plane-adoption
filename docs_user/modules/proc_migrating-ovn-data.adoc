@@ -33,14 +33,12 @@ $ grep -rI 'ovn_[ns]b_conn' /var/lib/config-data/puppet-generated/
 ----
 
 .Procedure
-+
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
-. Get the {OpenShiftShort} master node that contains the {OpenStackShort} Controller:
+ifeval::["{build_variant}" == "ospdo"]
+. Get the {OpenShiftShort} master node that contains the {OpenStackShort} Controller node:
 +
 ----
 $ oc get vmi -n $<ospdo_namespace> -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
 ----
-+
 * Replace `<ospdo_namespace>` with your OSPdO namespace.
 endif::[]
 . Prepare a temporary `PersistentVolume` claim and the helper pod for the OVN backup. Adjust the storage requests for a large database, if needed:
@@ -63,7 +61,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
   namespace: $OSPDO_NAMESPACE
 endif::[]
   name: ovn-data
@@ -81,20 +79,20 @@ metadata:
   name: ovn-copy-data
   annotations:
     openshift.io/scc: anyuid
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{build_variant}" != "ospdo"]
     k8s.v1.cni.cncf.io/networks: internalapi
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
   '[{"name": "internalapi-static", "namespace": $<ospdo_namespace>, "ips": ["<internalapi-static-ips>"]}]'
 endif::[]
   labels:
     app: adoption
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
   namespace: $OSPDO_NAMESPACE
 endif::[]
 spec:
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
-  nodeName: '{{ <ocp_node_holding_controller> }}'
+ifeval::["{build_variant}" == "ospdo"]
+  nodeName: '{{ <ocp_node_holding_controller> }}' <1>
 endif::[]
   containers:
   - image: $OVSDB_IMAGE
@@ -122,18 +120,17 @@ endif::[]
       secretName: ovn-data-cert
 EOF
 ----
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
-+
-* Replace `<ocp_node_holding_controller>` with the {OpenStackShort} node that contains the Controller.
+ifeval::["{build_variant}" == "ospdo"]
++ <1> Replace `<ocp_node_holding_controller>` with the {OpenStackShort} node that contains the Controller node.
 endif::[]
 
 . Wait for the pod to be ready:
 +
 ----
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{build_variant}" != "ospdo"]
 $ oc wait --for=condition=Ready pod/ovn-copy-data --timeout=30s
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 $ oc wait --for=condition=Ready -n $OSPDO_NAMESPACE pod/ovn-copy-data --timeout=30s
 endif::[]
 ----
@@ -149,15 +146,16 @@ $ $CONTROLLER1_SSH sudo iptables -I INPUT -s {PODIFIED_INTERNALAPI_NETWORK} -p t
 * If you did not enable TLS everywhere, run the following command:
 +
 ----
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{build_variant}" != "ospdo"]
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 $ oc exec -n $OSPDO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
 $ oc exec -n $OSPDO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client backup tcp:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
 endif::[]
 ----
++
 * If you enabled TLS everywhere, run the following command:
 +
 ----
@@ -205,7 +203,7 @@ PODIFIED_OVSDB_NB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name
 PODIFIED_OVSDB_SB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-sb-0" -ojsonpath='{.items[0].spec.clusterIP}')
 ----
 
-.+ When using IPv6, adjust the address to the format expected by `ovsdb-*` tools:
+. If you are  using IPv6, adjust the address to the format expected by `ovsdb-*` tools:
 
 ----
 PODIFIED_OVSDB_NB_IP=[$PODIFIED_OVSDB_NB_IP]
@@ -231,11 +229,11 @@ $ oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema --ca-cert=/etc/pki/t
 .. If you did not enable TLS everywhere, use the following command:
 +
 ----
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{build_variant}" != "ospdo"]
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 $ oc exec -n $RHOSO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
 $ oc exec -n $RHOSO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
 endif::[]

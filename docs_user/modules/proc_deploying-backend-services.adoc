@@ -113,7 +113,8 @@ make input
 ----
 endif::[]
 
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
++
 ----
 $ oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
 ----
@@ -208,7 +209,12 @@ metadata:
   name: openstack
 spec:
   secret: osp-secret
+ifeval::["{build_variant}" != "ospdo"]
   storageClass: local-storage <1>
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+  storageClass: <storage_class> <1>
+endif::[]
 
   barbican:
     enabled: false
@@ -231,16 +237,16 @@ spec:
         service:
           metadata:
             annotations:
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{build_variant}" != "ospdo"]
 
               metallb.universe.tf/address-pool: ctlplane
               metallb.universe.tf/allow-shared-ip: ctlplane
               metallb.universe.tf/loadBalancerIPs: 192.168.122.80
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
-              metallb.universe.tf/address-pool: <address_pool>
-              metallb.universe.tf/allow-shared-ip: <address_pool>
-              metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP>
+ifeval::["{build_variant}" == "ospdo"]
+              metallb.universe.tf/address-pool: <address_pool> <2>
+              metallb.universe.tf/allow-shared-ip: <address_pool> <2>
+              metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP> <3>
 endif::[]
           spec:
             type: LoadBalancer
@@ -312,7 +318,7 @@ endif::[]
   ovn:
     enabled: false
     template:
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{build_variant}" != "ospdo"]
       ovnController:
         networkAttachment: tenant
         nodeSelector:
@@ -327,7 +333,7 @@ ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
           dbType: SB
           networkAttachment: internalapi
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
       ovnController:
         networkAttachment: tenant
         nodeSelector:
@@ -337,10 +343,10 @@ ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
       ovnDBCluster:
         ovndbcluster-nb:
           dbType: NB
-          networkAttachment: <networkAttachment_name>
+          networkAttachment: <networkAttachment_name> <4>
         ovndbcluster-sb:
           dbType: SB
-          networkAttachment: <networkAttachment_name>
+          networkAttachment: <networkAttachment_name> <4>
 endif::[]
   placement:
     enabled: false
@@ -362,13 +368,13 @@ endif::[]
           service:
             metadata:
               annotations:
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{build_variant}" != "ospdo"]
                 metallb.universe.tf/address-pool: internalapi
                 metallb.universe.tf/loadBalancerIPs: 172.17.0.86
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
-                metallb.universe.tf/address-pool: <networkAttachment_name>
-                metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP>
+ifeval::["{build_variant}" == "ospdo"]
+                metallb.universe.tf/address-pool: <networkAttachment_name> <4>
+                metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP> <3>
 endif::[]
             spec:
               type: LoadBalancer
@@ -387,14 +393,15 @@ endif::[]
         replicas: 1
 EOF
 ----
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
-* Replace <address_pool> with the name of your network definition.
-* Replace <loadBalancer_IP> with the LoadBalancer IP address.
-* Replace <networkAttachment_name> with the name of your network.
-endif::[]
 
+ifeval::["{build_variant}" == "ospdo"]
 +
-<1> Select an existing storage class in your {OpenShiftShort} cluster.
+<1> Select an existing `<storage_class>`` in your {OpenShiftShort} cluster.
+<2> Replace `<address_pool>` with the name of your network definition.
+<3> Replace `<loadBalancer_IP>` with the LoadBalancer IP address.
+<4> Replace `<networkAttachment_name>` with the name of your network.
+
+endif::[]
 
 .Verification
 

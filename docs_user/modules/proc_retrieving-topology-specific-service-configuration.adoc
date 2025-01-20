@@ -12,12 +12,14 @@ Before you migrate your databases to the {rhos_long} control plane, retrieve the
 
 * Define the following shell variables. Replace the example values with values that are correct for your environment:
 +
+ifeval::["{build_variant}" == "ospdo"]
++
 ----
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
-ifeval::["{build}" != "downstream"]
 CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
+----
 endif::[]
+----
 ifeval::["{build}" == "downstream"]
 CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
 MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
@@ -43,16 +45,16 @@ $ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | gre
 . Export the shell variables for the following outputs and test the connection to the {OpenStackShort} database:
 +
 ----
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{build_variant}" != "ospdo"]
 export PULL_OPENSTACK_CONFIGURATION_DATABASES=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 export PULL_OPENSTACK_CONFIGURATION_DATABASES=$(oc run mariadb-client --overrides="$RUN_OVERRIDES" -n $OSPDO_NAMESPACE -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 endif::[]
     mysql -rsh "$SOURCE_MARIADB_IP" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" -e 'SHOW databases;')
 echo "$PULL_OPENSTACK_CONFIGURATION_DATABASES"
 ----
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 ----
 export CONTROLLER1_SSH="oc -n $OSPDO_NAMESPACE rsh -c openstackclient openstackclient ssh controller-0.ctlplane"
 ----
@@ -84,9 +86,9 @@ $ export SOURCE_DB_ROOT_PASSWORD=$(grep <"${PASSWORD_FILE}" ' MysqlRootPassword:
 ----
 $ cpexport=$(oc -n "${OSPDO_NAMESPACE}" get cm tripleo-exports-default -o json | jq -r '.data["ctlplane-export.yaml"]')
 $ export SOURCE_MARIADB_IP=$(echo "$cpexport" | sed -e '0,/ MysqlInternal/d' | sed -n '0,/host_nobrackets/s/^.*host_nobrackets\:\s*\(.*\)$/\1/p')
-+
+
 $ export MARIADB_IMAGE='quay.io/podified-antelope-centos9/openstack-mariadb:current-podified'
-+
+
 $ RUN_OVERRIDES='{
     "apiVersion": "v1",
     "metadata": {
@@ -125,10 +127,10 @@ The `nova`, `nova_api`, and `nova_cell0` databases are included in the same data
 . Run `mysqlcheck` on the {OpenStackShort} database to check for inaccuracies:
 +
 ----
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{build_variant}" != "ospdo"]
 export PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 export PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc run mariadb-client --overrides="$RUN_OVERRIDES" -n $OSPDO_NAMESPACE -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 endif::[]
     mysqlcheck --all-databases -h $SOURCE_MARIADB_IP -u root -p"$SOURCE_DB_ROOT_PASSWORD" | grep -v OK)
@@ -138,10 +140,10 @@ echo "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"
 . Get the {compute_service_first_ref} cell mappings:
 +
 ----
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{build_variant}" != "ospdo"]
 export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client --overrides="$RUN_OVERRIDES" -n $OSPDO_NAMESPACE -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 endif::[]
     mysql -rsh "${SOURCE_MARIADB_IP}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD}" nova_api -e \
@@ -152,10 +154,10 @@ echo "$PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS"
 . Get the hostnames of the registered Compute services:
 +
 ----
-ifeval::["{OpenStackPreviousInstaller}" != "director_operator"]
+ifeval::["{build_variant}" != "ospdo"]
 export PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES=$(oc run mariadb-client ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
+ifeval::["{build_variant}" == "ospdo"]
 export PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES=$(oc run mariadb-client --overrides="$RUN_OVERRIDES" -n $OSPDO_NAMESPACE -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 endif::[]
     mysql -rsh "$SOURCE_MARIADB_IP" -uroot -p"$SOURCE_DB_ROOT_PASSWORD" nova_api -e \

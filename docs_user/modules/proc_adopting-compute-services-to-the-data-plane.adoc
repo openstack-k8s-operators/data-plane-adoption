@@ -126,8 +126,8 @@ endif::[]
 ifeval::["{build}" == "downstream"]
 $(cat <path_to_SSH_key> | base64 | sed \'s/^/        /')
 endif::[]
-ifeval::["{OpenStackPreviousInstaller}" == "director_operator"]
-      $(oc exec -n $<ospdo_namespace> -t openstackclient openstackclient -- cat /home/cloud-admin/.ssh/id_rsa | base64 | sed 's/^/        /')
+ifeval::["{build_variant}" == "ospdo"]
+      $(oc exec -n $<ospdo_namespace> -t openstackclient openstackclient -- cat /home/cloud-admin/.ssh/id_rsa | base64 | sed \'s/^/        /')
 endif::[]
 EOF
 ----
