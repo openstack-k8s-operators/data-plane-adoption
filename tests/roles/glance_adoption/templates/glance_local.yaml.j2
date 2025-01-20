@@ -6,18 +6,16 @@ spec:
       databaseAccount: glance
       customServiceConfig: |
         [DEFAULT]
-        enabled_backends=default_backend:rbd
+        enabled_backends = default_backend:file
         [glance_store]
-        default_backend=default_backend
+        default_backend = default_backend
         [default_backend]
-        rbd_store_ceph_conf=/etc/ceph/ceph.conf
-        rbd_store_user=openstack
-        rbd_store_pool=images
-        store_description=Ceph glance store backend.
+        filesystem_store_datadir = /var/lib/glance/images/
       storage:
         storageRequest: 10G
       glanceAPIs:
         default:
+          type: single
           replicas: 1
           override:
             service:
@@ -26,7 +24,7 @@ spec:
                   annotations:
                     metallb.universe.tf/address-pool: internalapi
                     metallb.universe.tf/allow-shared-ip: internalapi
-                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                    metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.80
                 spec:
                   type: LoadBalancer
           networkAttachments:
