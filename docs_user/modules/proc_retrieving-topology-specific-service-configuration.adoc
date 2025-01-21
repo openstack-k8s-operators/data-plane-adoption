@@ -55,10 +55,12 @@ endif::[]
 echo "$PULL_OPENSTACK_CONFIGURATION_DATABASES"
 ----
 ifeval::["{build_variant}" == "ospdo"]
++
 ----
 export CONTROLLER1_SSH="oc -n $OSPDO_NAMESPACE rsh -c openstackclient openstackclient ssh controller-0.ctlplane"
 ----
 * With OSPdO, the `mariadb-client` needs to run on the same {rhocp_long} node where the {OpenStackShort} Controller node is running. In addition, the `internalapi-static` network needs to be attached to the pod.
++
 ----
 export PASSWORD_FILE="tripleo-passwords.yaml"
 export OSPDO_NAMESPACE="openstack"

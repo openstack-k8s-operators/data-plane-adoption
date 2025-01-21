@@ -29,7 +29,8 @@ $ oc delete osnetconfig -n openstack --all
 $ oc label nodes <ospdo_vm_master_node> type=openstack
 ----
 +
-* Replace ` <ospdo_vm_master_node>` with the remaining master node that contains the OSPdO VM.
+* Replace `<ospdo_vm_master_node>` with the remaining master node that contains the OSPdO VM.
+
 . Create a node network configuration policy for the third {OpenShiftShort} node. For example:
 +
 ----
@@ -154,33 +155,39 @@ EOF
 
 $ oc apply -f /tmp/node3_nncp.yaml
 ----
+
 . Delete the remaining OSPdO resources. Do not delete the `OpenStackBaremetalSets` and `OpenStackProvisionServer` resources:
 +
 ----
 $ for i in $(oc get crd | grep osp-director | grep -v baremetalset | grep -v provisionserver | awk {'print $1'}); do echo Deleting $i...; oc delete $i -n openstack --all; done
 ----
+
 . Scale down OSPdO to 0 replicas:
 +
 ----
 $ ospdo_csv_ver=$(oc get csv -n openstack -l operators.coreos.com/osp-director-operator.openstack -o json | jq -r '.items[0].metadata.name')
 $ oc patch csv -n openstack $ospdo_csv_ver --type json   -p="[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/replicas", "value": "0"}]"
 ----
+
 . Remove the webhooks from OSPdO:
 +
 ----
 $ oc patch csv $ospdo_csv_ver -n openstack --type json -p="[{"op": "remove", "path": "/spec/webhookdefinitions"}]"
 ----
+
 . Remove the finalizer from the OSPdO `OpenStackBaremetalSet` resource:
 +
 ----
 $ oc patch openstackbaremetalsets.osp-director.openstack.org -n openstack compute --type json -p="[{"op": "remove", "path": "/metadata/finalizers"}]"
 ----
+
 . Delete the `OpenStackBaremetalSet` and `OpenStackProvisionServer` resources:
 +
 ----
 $ oc delete openstackbaremetalsets.osp-director.openstack.org -n openstack --all
 $ oc delete openstackprovisionservers.osp-director.openstack.org -n openstack --all
 ----
+
 . Annotate each {OpenStackShort} Compute `BareMetalHost` resource so that Metal3 does not start the node:
 +
 ----
@@ -188,6 +195,7 @@ $ compute_bmh_list=$(oc get bmh -n openshift-machine-api |grep compute|awk '{pri
 $ for bmh_compute in $compute_bmh_list;do oc annotate bmh -n openshift-machine-api $bmh_compute baremetalhost.metal3.io/detached="";done
 $ oc delete bmh -n openshift-machine-api $bmh_compute;done
 ----
+
 . Delete the OSPdO Operator Lifecycle Manager resources to remove OSPdO:
 +
 ----

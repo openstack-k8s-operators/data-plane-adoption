@@ -1,0 +1,83 @@
+[id="preparing-controller-nodes-for-director-operator-adoption_{context}"]
+
+= Preparing Controller nodes for director Operator adoption
+
+Prepare the Controller nodes in your director Operator (OSPdO) environment for adoption to the {rhos_long} environment.
+
+[NOTE]
+====
+The following procedure uses a single {rhocp_long} cluster that is shared by the source OSPdO environment and a destination {rhos_acro} environment. Two {OpenShiftShort} master nodes are transferred to the {rhos_acro} environment, leaving OSPdO with one node for the duration of the adoption process. After adoption, the remaining node can be used by the {rhos_acro} environment as well.
+====
+
+.Procedure
+
+. Log in to the {OpenShift} environment where {OpenStackShort} OSPdO is deployed and change to the project that hosts your {OpenStackShort} deployment:
++
+----
+$ oc project openstack
+----
+
+. Define the common environment variables:
++
+----
+export PASSWORD_FILE="tripleo-passwords.yaml"
+
+export RHOSO18_NAMESPACE="rhoso18"
+
+export OSPDO_NAMESPACE="openstack"
+
+export OS_CLIENT="oc exec -c openstackclient -t openstackclient -- "
+
+export CONTROLLER_SSH="oc rsh -n $OSPDO_NAMESPACE -c openstackclient openstackclient ssh controller-0.ctlplane"
+
+export CONTROLLER1_SSH="oc -n $OSPDO_NAMESPACE rsh -c openstackclient openstackclient ssh controller-0.ctlplane"
+export CONTROLLER2_SSH=
+export CONTROLLER3_SSH=
+
+export OSPDO_INTERNAL_API_NET="internalapi"
+
+export STORAGE_CLASS=$(oc get -n $OSPDO_NAMESPACE pvc openstackclient-hosts -o jsonpath='{.spec.storageClassName}')
+----
+
+. Get the name of the node where the current {OpenStackShort} Controller virtual machine (VM) is running:
++
+----
+$ export CONTROLLER_NODE=$(oc -n $OSPDO_NAMESPACE get vmi -ojson | jq -r '.items[0].status.nodeName')
+----
+
+. If you are using a combination master/worker cluster with a high availability OSPdO environment, configure OSPdO to use a single {OpenStackShort} Controller node:
+
+.. Disable stonith:
++
+----
+$ stonith_resources=$(sudo pcs stonith status|grep Started|awk '{print $2}')
+for in in stonith_resources ;do CONTROLLER1_SSH sudo pcs stonith disable ;done
+----
+.. Put non-Controller nodes in maintenance:
++
+----
+$CONTROLLER1_SSH sudo pcs node maintenance <controller-1> <controller-2>
+----
++
+* Replace `<controller-1>` and `<controller-2>` with the names of the Controller nodes in your environment.
+
+.. Update the quorum for single node:
++
+----
+$CONTROLLER1_SSH sudo systemctl stop corosync
+$CONTROLLER2_SSH sudo systemctl stop corosync
+$CONTROLLER3_SSH sudo systemctl stop corosync
+$CONTROLLER1_SSH sudo pcs quorum update last_man_standing=1 wait_for_all=1
+$CONTROLLER1_SSH sudo systemctl restart corosync
+----
+.. Restart the Pacemaker cluster:
++
+----
+$CONTROLLER1_SSH sudo pcs cluster stop
+$CONTROLLER1_SSH sudo pcs cluster start
+----
+.. Remove the OSPdO node network configuration policies from the other two nodes that are not running the Controller VM by placing a `nodeSelector` on the {OpenShiftShort} node that contains the Controller VM:
++
+----
+$ for i in br-ctlplane br-ex br-osp; do oc patch osnetconfig openstacknetconfig --type json -p '[{"op": "replace", "path": "/spec/attachConfigurations/'$i'/nodeNetworkConfigurationPolicy/nodeSelector", "value": {"kubernetes.io/hostname": "'$CONTROLLER_NODE'"}}]'; done
+----

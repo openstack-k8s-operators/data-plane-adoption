@@ -46,6 +46,7 @@ If you installed OSPdO by using director-dev-tools, the server host runs the fre
 $ IPA_SSH="podman exec -ti freeipa-server"
 ----
 endif::[]
+
 ----
 $ IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
 ----

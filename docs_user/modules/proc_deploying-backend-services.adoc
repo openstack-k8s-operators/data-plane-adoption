@@ -181,7 +181,7 @@ spec:
       enabled: true
 ----
 
-. If you did not enable TLS-e, in the `spec:tls`` section, set the `enabled` parameter to `false`:
+. If you did not enable TLS-e, in the `spec:tls` section, set the `enabled` parameter to `false`:
 +
 [source,yaml]
 ----
@@ -202,7 +202,7 @@ be disabled:
 +
 [source,yaml]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
 metadata:
@@ -245,7 +245,7 @@ ifeval::["{build_variant}" != "ospdo"]
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
               metallb.universe.tf/address-pool: <address_pool> <2>
-              metallb.universe.tf/allow-shared-ip: <address_pool> <2>
+              metallb.universe.tf/allow-shared-ip: <address_pool>
               metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP> <3>
 endif::[]
           spec:
@@ -346,7 +346,7 @@ ifeval::["{build_variant}" == "ospdo"]
           networkAttachment: <networkAttachment_name> <4>
         ovndbcluster-sb:
           dbType: SB
-          networkAttachment: <networkAttachment_name> <4>
+          networkAttachment: <networkAttachment_name>
 endif::[]
   placement:
     enabled: false
@@ -373,8 +373,8 @@ ifeval::["{build_variant}" != "ospdo"]
                 metallb.universe.tf/loadBalancerIPs: 172.17.0.86
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
-                metallb.universe.tf/address-pool: <networkAttachment_name> <4>
-                metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP> <3>
+                metallb.universe.tf/address-pool: <networkAttachment_name>
+                metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP>
 endif::[]
             spec:
               type: LoadBalancer
@@ -396,7 +396,7 @@ EOF
 
 ifeval::["{build_variant}" == "ospdo"]
 +
-<1> Select an existing `<storage_class>`` in your {OpenShiftShort} cluster.
+<1> Select an existing `<storage_class>` in your {OpenShiftShort} cluster.
 <2> Replace `<address_pool>` with the name of your network definition.
 <3> Replace `<loadBalancer_IP>` with the LoadBalancer IP address.
 <4> Replace `<networkAttachment_name>` with the name of your network.

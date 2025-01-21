@@ -47,7 +47,7 @@ watch-html:
 		$(MAKE) html; \
 	done
 
-open-html: htmlf
+open-html: html
 	${BROWSER_OPEN} "file://$(realpath $(ROOTDIR)/$(DEST_HTML))"
 
 open-pdf: pdf
