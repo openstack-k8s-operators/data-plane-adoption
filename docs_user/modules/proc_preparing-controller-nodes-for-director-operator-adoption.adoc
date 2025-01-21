@@ -11,7 +11,7 @@ The following procedure uses a single {rhocp_long} cluster that is shared by the
 
 .Procedure
 
-. Log in to the {OpenShift} environment where {OpenStackShort} OSPdO is deployed and change to the project that hosts your {OpenStackShort} deployment:
+. Log in to the {OpenShiftShort} environment where {OpenStackShort} OSPdO is deployed and change to the project that hosts your {OpenStackShort} deployment:
 +
 ----
 $ oc project openstack

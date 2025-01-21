@@ -16,7 +16,7 @@ When you deploy a {rhos_long} environment by using two {rhocp_long} master nodes
 ----
 $ RHOSO_NODES=$(oc get nodes -o name | grep -v $CONTROLLER_NODE | sed 's#node/##g' | tr '\n' ' ')
 ----
-. Extract nodes to be used for OSP 18 installation and label nodes.
+. Extract nodes to be used for OSP 18 installation and label nodes:
 +
 ----
 $ export RHOSO18_NODE1=$(echo "${RHOSO_NODES}" | cut -d ' ' -f 1)

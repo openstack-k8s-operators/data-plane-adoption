@@ -393,7 +393,8 @@ endif::[]
         replicas: 1
 EOF
 ----
-
++
+<1> Select an existing `<storage_class>` in your {OpenShiftShort} cluster.
 ifeval::["{build_variant}" == "ospdo"]
 +
 <1> Select an existing `<storage_class>` in your {OpenShiftShort} cluster.
