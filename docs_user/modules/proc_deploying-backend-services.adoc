@@ -210,10 +210,10 @@ metadata:
 spec:
   secret: osp-secret
 ifeval::["{build_variant}" != "ospdo"]
-  storageClass: local-storage <1>
+  storageClass: local-storage
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
-  storageClass: <storage_class> <1>
+  storageClass: <storage_class>
 endif::[]
 
   barbican:
@@ -244,9 +244,9 @@ ifeval::["{build_variant}" != "ospdo"]
               metallb.universe.tf/loadBalancerIPs: 192.168.122.80
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
-              metallb.universe.tf/address-pool: <address_pool> <2>
+              metallb.universe.tf/address-pool: <address_pool>
               metallb.universe.tf/allow-shared-ip: <address_pool>
-              metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP> <3>
+              metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP>
 endif::[]
           spec:
             type: LoadBalancer
@@ -343,7 +343,7 @@ ifeval::["{build_variant}" == "ospdo"]
       ovnDBCluster:
         ovndbcluster-nb:
           dbType: NB
-          networkAttachment: <networkAttachment_name> <4>
+          networkAttachment: <networkAttachment_name>
         ovndbcluster-sb:
           dbType: SB
           networkAttachment: <networkAttachment_name>
@@ -394,13 +394,13 @@ endif::[]
 EOF
 ----
 +
-<1> Select an existing `<storage_class>` in your {OpenShiftShort} cluster.
+* Select an existing `<storage_class>` in your {OpenShiftShort} cluster.
 ifeval::["{build_variant}" == "ospdo"]
 +
-<1> Select an existing `<storage_class>` in your {OpenShiftShort} cluster.
-<2> Replace `<address_pool>` with the name of your network definition.
-<3> Replace `<loadBalancer_IP>` with the LoadBalancer IP address.
-<4> Replace `<networkAttachment_name>` with the name of your network.
+* Select an existing `<storage_class>` in your {OpenShiftShort} cluster.
+* Replace `<address_pool>` with the name of your network definition.
+* Replace `<loadBalancer_IP>` with the LoadBalancer IP address.
+* Replace `<networkAttachment_name>` with the name of your network.
 
 endif::[]
 
