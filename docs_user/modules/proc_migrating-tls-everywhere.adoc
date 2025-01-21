@@ -39,13 +39,6 @@ endif::[]
 
 . To locate the CA certificate and key, list all the certificates inside your NSSDB:
 +
-ifeval::["{build_variant}" == "ospdo"]
-If you installed OSPdO by using director-dev-tools, the server host runs the freeipa server as a container:
-+
-----
-$ IPA_SSH="podman exec -ti freeipa-server"
-----
-endif::[]
 ----
 $ IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
 ----
@@ -65,7 +58,30 @@ Server-Cert cert-pki-ca                                      u,u,u
 subsystemCert cert-pki-ca                                    u,u,u
 auditSigningCert cert-pki-ca                                 u,u,Pu
 ----
+ifeval::["{build_variant}" == "ospdo"]
+. To locate the CA certificate and key, list all the certificates inside your NSSDB. If you installed OSPdO by using director-dev-tools, the server host runs the freeipa server as a container:
++
+----
+$ IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
+$ IPA_SSH="podman exec -ti freeipa-server"
+----
++
+* The `-L` option lists all certificates.
+* The `-d` option specifies where the certificates are stored.
++
+The command produces an output similar to the following example:
++
+----
+Certificate Nickname                                         Trust Attributes
+                                                             SSL,S/MIME,JAR/XPI
 
+caSigningCert cert-pki-ca                                    CTu,Cu,Cu
+ocspSigningCert cert-pki-ca                                  u,u,u
+Server-Cert cert-pki-ca                                      u,u,u
+subsystemCert cert-pki-ca                                    u,u,u
+auditSigningCert cert-pki-ca                                 u,u,Pu
+----
+endif::[]
 . Export the certificate and key from the `/etc/pki/pki-tomcat/alias` directory. The following example uses the `caSigningCert cert-pki-ca` certificate:
 +
 ----

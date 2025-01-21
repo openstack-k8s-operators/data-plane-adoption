@@ -10,9 +10,9 @@ Before you migrate your databases to the {rhos_long} control plane, retrieve the
 
 .Prerequisites
 
-ifeval::["{build}" == "downstream"]
 * Define the following shell variables. Replace the example values with values that are correct for your environment:
 +
+ifeval::["{build}" == "downstream"]
 ----
 CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
 MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
@@ -20,31 +20,15 @@ SOURCE_MARIADB_IP=172.17.0.2
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
 ----
-+
-To get the value to set `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller node:
-+
-----
-$ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep bind
-----
 endif::[]
 ifeval::["{build}" != "downstream"]
-* Define the following shell variables. Replace the example values with values that are correct for your environment:
-+
 ----
 SOURCE_MARIADB_IP=172.17.0.2
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
 ----
-+
-To get the value to set `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller node:
-+
-----
-$ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep bind
-----
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
-* Define the following shell variables. Replace the example values with values that are correct for your environment:
-+
 ----
 CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
@@ -57,13 +41,13 @@ SOURCE_MARIADB_IP=172.17.0.2
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
 ----
+endif::[]
 +
 To get the value to set `SOURCE_MARIADB_IP`, query the puppet-generated configurations in a Controller node:
 +
 ----
 $ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep bind
 ----
-endif::[]
 
 
 .Procedure
