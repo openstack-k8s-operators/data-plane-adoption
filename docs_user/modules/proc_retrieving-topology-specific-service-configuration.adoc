@@ -12,6 +12,12 @@ Before you migrate your databases to the {rhos_long} control plane, retrieve the
 
 * Define the following shell variables. Replace the example values with values that are correct for your environment:
 +
+ifeval::["{build_variant}" == "ospdo"]
+----
+CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
+MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
+----
+endif::[]
 ifeval::["{build}" == "downstream"]
 ----
 CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
@@ -25,20 +31,6 @@ ifeval::["{build}" != "downstream"]
 ----
 SOURCE_MARIADB_IP=172.17.0.2
 SOURCE_DB_ROOT_PASSWORD=$(cat ~/tripleo-standalone-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
-MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
-----
-endif::[]
-ifeval::["{build_variant}" == "ospdo"]
-----
-CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
-MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
-----
-+
-----
-CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
-MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
-SOURCE_MARIADB_IP=172.17.0.2
-SOURCE_DB_ROOT_PASSWORD=$(cat ~/overcloud-deploy/overcloud/overcloud-passwords.yaml | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
 MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
 ----
 endif::[]
