@@ -3,30 +3,42 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read ; do
-    oc patch -n openstack nncp $REPLY --type=merge --patch '
-    spec:
-      desiredState:
-        interfaces:
-        - description: Octavia vlan host interface
-          name: enp6s0.24
-          state: up
-          type: vlan
-          vlan:
-            base-iface: enp6s0
-            id: 24
-        - bridge:
-            options:
-              stp:
-                enabled: false
-            port:
-            - name: enp6s0.24
-          description: Configuring bridge octbr
-          mtu: 1500
-          name: octbr
-          state: up
-          type: linux-bridge
-    '
+    oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read; do
+
+    interfaces=$(oc get nncp $REPLY -o jsonpath="{.spec.desiredState.interfaces[*].name}")
+
+    (echo $interfaces | grep -w -q "octbr|enp6s0.24") || \
+            oc patch -n openstack nncp $REPLY --type json --patch '
+    [{
+        "op": "add",
+        "path": "/spec/desiredState/interfaces/-",
+        "value": {
+          "description": "Octavia VLAN host interface",
+          "name": "enp6s0.24",
+          "state": "up",
+          "type": "vlan",
+          "vlan": {
+            "base-iface": "enp6s0",
+            "id": 24
+            }
+        }
+    },
+    {
+        "op": "add",
+        "path": "/spec/desiredState/interfaces/-",
+        "value": {
+          "description": "Octavia Bridge",
+          "mtu": 1500,
+          "state": "up",
+          "type": "linux-bridge",
+          "name": "octbr",
+          "bridge": {
+            "options": { "stp": { "enabled": "false" } },
+            "port": [ { "name": "enp6s0.24" } ]
+            }
+        }
+    }]'
+
     done
 
 - name: Configure the network attachment definition

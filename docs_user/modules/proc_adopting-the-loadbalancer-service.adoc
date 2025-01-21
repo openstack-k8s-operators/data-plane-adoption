@@ -42,35 +42,47 @@ include::../../tests/roles/octavia_adoption/tasks/octavia_ssh.yaml[lines="7..20"
 . Add the {loadbalancer_service} interfaces to each `NodeNetworkConfigurationPolicy` custom resource (CR). The following command adds the network interface to use as the VLAN base interface for the management network for network isolation on the {OpenShiftShort} nodes:
 +
 ----
-$ oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read ; do
-    oc patch -n openstack nncp $REPLY --type=merge --patch '
-    spec:
-      desiredState:
-        interfaces:
-        - description: Octavia vlan host interface
-          name: enp6s0.24
-          state: up
-          type: vlan
-          vlan:
-            base-iface: <enp6s0> <1>
-            id: 24
-        - bridge:
-            options:
-              stp:
-                enabled: false
-            port:
-            - name: enp6s0.24
-          description: Configuring bridge octbr
-          mtu: 1500 <2>
-          name: octbr
-          state: up
-          type: linux-bridge
-    '
+$ oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read; do
+
+interfaces=$(oc get nncp $REPLY -o jsonpath="{.spec.desiredState.interfaces[*].name}")
+
+(echo $interfaces | grep -w -q "octbr|enp6s0.24") || \
+        oc patch -n openstack nncp $REPLY --type json --patch '
+[{
+    "op": "add",
+    "path": "/spec/desiredState/interfaces/-",
+    "value": {
+      "description": "Octavia VLAN host interface",
+      "name": "enp6s0.24",
+      "state": "up",
+      "type": "vlan",
+      "vlan": {
+        "base-iface": "<enp6s0>", <1>
+        "id": 24
+        }
+    }
+},
+{
+    "op": "add",
+    "path": "/spec/desiredState/interfaces/-",
+    "value": {
+      "description": "Octavia Bridge",
+      "mtu": <mtu>, <2>
+      "state": "up",
+      "type": "linux-bridge",
+      "name": "octbr",
+      "bridge": {
+        "options": { "stp": { "enabled": "false" } },
+        "port": [ { "name": "enp6s0.24" } ]
+        }
+    }
+}]'
+
 done
 ----
 +
 <1> Replace `<enp6s0>` with the name of the network interface in your {OpenShiftShort} setup.
-<2> Replace `1500` with the `mtu` value in your environment.
+<2> Replace `<mtu>` with the `mtu` value in your environment.
 
 . Configure the {loadbalancer_service} network attachment definition to connect pods that manage load balancer virtual machines (amphorae) and the OpenvSwitch pods that are managed by the OVN operator:
 +
