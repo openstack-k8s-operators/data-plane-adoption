@@ -39,6 +39,7 @@ ifeval::["{build_variant}" == "ospdo"]
 ----
 $ oc get vmi -n $<ospdo_namespace> -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
 ----
++
 * Replace `<ospdo_namespace>` with your OSPdO namespace.
 endif::[]
 . Prepare a temporary `PersistentVolume` claim and the helper pod for the OVN backup. Adjust the storage requests for a large database, if needed:
@@ -120,8 +121,9 @@ endif::[]
       secretName: ovn-data-cert
 EOF
 ----
++
 ifeval::["{build_variant}" == "ospdo"]
-+ <1> Replace `<ocp_node_holding_controller>` with the {OpenStackShort} node that contains the Controller node.
+<1> Replace `<ocp_node_holding_controller>` with the {OpenStackShort} node that contains the Controller node.
 endif::[]
 
 . Wait for the pod to be ready:
@@ -204,7 +206,7 @@ PODIFIED_OVSDB_SB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name
 ----
 
 . If you are  using IPv6, adjust the address to the format expected by `ovsdb-*` tools:
-
++
 ----
 PODIFIED_OVSDB_NB_IP=[$PODIFIED_OVSDB_NB_IP]
 PODIFIED_OVSDB_SB_IP=[$PODIFIED_OVSDB_SB_IP]
