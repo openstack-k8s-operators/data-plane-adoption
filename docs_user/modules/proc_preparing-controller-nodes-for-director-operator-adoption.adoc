@@ -51,7 +51,7 @@ $ export CONTROLLER_NODE=$(oc -n $OSPDO_NAMESPACE get vmi -ojson | jq -r '.items
 +
 ----
 $ stonith_resources=$(sudo pcs stonith status|grep Started|awk '{print $2}')
-for in in stonith_resources ;do CONTROLLER1_SSH sudo pcs stonith disable ;done
+for in stonith_resources ;do CONTROLLER1_SSH sudo pcs stonith disable ;done
 ----
 .. Put non-Controller nodes in maintenance:
 +

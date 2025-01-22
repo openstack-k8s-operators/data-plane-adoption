@@ -16,7 +16,7 @@ When you deploy a {rhos_long} environment by using two {rhocp_long} master nodes
 ----
 $ RHOSO_NODES=$(oc get nodes -o name | grep -v $CONTROLLER_NODE | sed 's#node/##g' | tr '\n' ' ')
 ----
-. Extract nodes to be used for OSP 18 installation and label nodes:
+. Extract nodes to be used for {rhos_acro} installation and label nodes:
 +
 ----
 $ export RHOSO18_NODE1=$(echo "${RHOSO_NODES}" | cut -d ' ' -f 1)
@@ -25,7 +25,7 @@ $ oc label nodes "${RHOSO18_NODE1}" type=openstack
 $ oc label nodes "${RHOSO18_NODE2}" type=openstack
 ----
 
-. Create a new namespace to use to install {rhos_acro}. You must install {rhos_acro} in a different namespace from OSPdO:
+. Create a new namespace to use to install {rhos_acro}. You must install {rhos_acro} in a different namespace from director Operator (OSPdO):
 +
 ----
 $ oc get namespace ${RHOSO18_NAMESPACE} 2>/dev/null || {
@@ -39,7 +39,7 @@ $ oc get namespace ${RHOSO18_NAMESPACE} 2>/dev/null || {
 . Create custom node network configuration policies for {rhos_acro}:
 +
 [NOTE]
-The node network configuration policies use the `nodeSelector` attribute to be constrained to `OSP18_NODE1/2`. The new node network configuration policy mirrors the existing node network configuration policies.  In the following example, the subnets ranges are reused. In addition, the OSPdO use of bridges for the control and external interfaces is duplicated.
+The node network configuration policies use the `nodeSelector` attribute to be constrained to `OSP18_NODE1/2`. The new node network configuration policy mirrors the existing node network configuration policies. In the following example, the subnets ranges are reused. In addition, the OSPdO use of bridges for the control and external interfaces is duplicated.
 +
 ----
 $ oc apply -f - <<EOF
@@ -163,7 +163,7 @@ EOF
 
 * Replace `<RHOSO18_NODE1>` with the name of your node.
 +
-. Apply a `NetworkAttachmentDefinition` custom resource for OpenStack 18 for each isolated network to attach the service pods to the networks:
+. Apply a `NetworkAttachmentDefinition` custom resource for {rhos_acro} for each isolated network to attach the service pods to the networks:
 +
 ----
 $ oc apply -f - <<EOF
