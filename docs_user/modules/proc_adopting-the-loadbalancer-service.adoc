@@ -23,8 +23,7 @@ Use the
 $ CONTROLLER1_SCP=$(echo "$CONTROLLER1_SSH" | sed 's/^ssh/scp/g')
 ----
 
-. Run the following set of commands to regenerate the keys and certificates and install the data in {rhocp_long}. These commands convert the existing single certificate authority (CA) configuration into a
-dual CA configuration:
+. Run the following set of commands to regenerate the keys and certificates and install the data in {rhocp_long}. . Convert the existing single certificate authority (CA) configuration into a dual CA configuration. You can use these commands to regenerate the keys and certificates and insert them into {rhocp_long}.
 +
 ----
 include::../../tests/roles/octavia_adoption/tasks/octavia_certs.yaml[lines="7..83",indent=0]
@@ -32,14 +31,14 @@ include::../../tests/roles/octavia_adoption/tasks/octavia_certs.yaml[lines="7..8
 
 . (Optional) Public SSH key of Amphorae
 +
-These commands will copy the existing public SSH key that can be used for connecting to the amphorae and installs it in Openshift.
+These commands copy the existing public SSH key that that you can use for connecting to the amphorae and installs it into Openshift.
 +
 [source,bash]
 ----
 include::../../tests/roles/octavia_adoption/tasks/octavia_ssh.yaml[lines="7..20",indent=0]
 ----
 
-. Add the {loadbalancer_service} interfaces to each `NodeNetworkConfigurationPolicy` custom resource (CR). The following command adds the network interface to use as the VLAN base interface for the management network for network isolation on the {OpenShiftShort} nodes:
+. To isolate the management network, add the network interface for the VLAN base interface:
 +
 ----
 $ oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read; do
@@ -84,7 +83,7 @@ done
 <1> Replace `<enp6s0>` with the name of the network interface in your {OpenShiftShort} setup.
 <2> Replace `<mtu>` with the `mtu` value in your environment.
 
-. Configure the {loadbalancer_service} network attachment definition to connect pods that manage load balancer virtual machines (amphorae) and the OpenvSwitch pods that are managed by the OVN operator:
+. To connect pods that manage load balancer virtual machines (amphorae) and the OpenvSwitch pods that are managed by the OVN operator, configure the {loadbalancer_service} network attachment definition:
 +
 ----
 $ cat >> octavia-nad.yaml << EOF_CAT
@@ -169,15 +168,15 @@ $ openstack endpoint list | grep load-balancer
 
 .. Connect to each of the Controller nodes on the old control plane, for example, `overcloud-controller-0`.
 
-.. Open the configuration script for the management interface. For example:
+.. Open the management interface configuration file in a text editor such as `vi`:
 +
 ----
 $ sudo vi /etc/sysconfig/network-scripts/ifcfg-o-hm0
 ----
 +
-The exact name of the script depends on the previous `OctaviaMgmtPortDevName` setting.
+The script name is based on the previous `OctaviaMgmtPortDevName` setting and might differ in your environment.
 
-.. Change `ONBOOT=yes` to `ONBOOT=no` so that the interface does not get enabled automatically on reboot:
+Change `ONBOOT=yes` to `ONBOOT=no` to ensure that the interface is disabled on reboot:
 
 . Delete old flavors that are migrated to the new control plane:
 +
@@ -238,13 +237,18 @@ $ openstack loadbalancer flavorprofile list
 
 . Delete the old management network ports:
 +
-The first command stores the network ID of the old management network in the
-variable `WALLABY_LB_MGMT_NET_ID` for later use. Then, all ports that are used in the network get deleted.
+Store the network ID of the old management network in the
+variable `WALLABY_LB_MGMT_NET_ID` for later use:
 +
 ----
 $ for net_id in $(openstack network list -f value -c ID --name lb-mgmt-net); do desc=$(openstack network show "$net_id" -f value -c description); [ -z "$desc" ] && WALLABY_LB_MGMT_NET_ID="$net_id" ; done
 $ echo $WALLABY_LB_MGMT_NET_ID
 1e21f9c1-7485-4104-a2f3-eed098ab9cad
+----
+
+. Delete all ports that are used in this network:
++
+----
 $ for id in $(openstack port list --network "$WALLABY_LB_MGMT_NET_ID" -f value -c ID) ; do openstack port delete "$id" ; done
 ----
 
