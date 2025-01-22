@@ -6,34 +6,26 @@ To adopt the {loadbalancer_first_ref}, you patch an existing `OpenStackControlPl
 
 .Procedure
 
-. Create an alias for the `openstack` command
+. Create an alias for the `openstack` command:
 +
-[source,bash]
 ----
 $ alias openstack="oc exec -t openstackclient -- openstack"
 ----
-. Certificates
-+
-Use the
-`CONTROLLER1_SCP` shell variable to set the value of the existing
+. Use the `CONTROLLER1_SCP` shell variable to set the value of the existing
 `CONTROLLER1_SSH` variable:
 +
-[source,bash]
 ----
 $ CONTROLLER1_SCP=$(echo "$CONTROLLER1_SSH" | sed 's/^ssh/scp/g')
 ----
 
-. Run the following set of commands to regenerate the keys and certificates and install the data in {rhocp_long}. . Convert the existing single certificate authority (CA) configuration into a dual CA configuration. You can use these commands to regenerate the keys and certificates and insert them into {rhocp_long}.
+. Run the following set of commands to regenerate the keys and certificates and install the data in {rhocp_long}.  Convert the existing single certificate authority (CA) configuration into a dual CA configuration. You can use these commands to regenerate the keys and certificates and insert them into {rhocp_long}.
 +
 ----
 include::../../tests/roles/octavia_adoption/tasks/octavia_certs.yaml[lines="7..83",indent=0]
 ----
 
-. (Optional) Public SSH key of Amphorae
+. Optional: Copy the existing public SSH key that you can use for connecting to the amphorae and install it into Openshift:
 +
-These commands copy the existing public SSH key that that you can use for connecting to the amphorae and installs it into Openshift.
-+
-[source,bash]
 ----
 include::../../tests/roles/octavia_adoption/tasks/octavia_ssh.yaml[lines="7..20",indent=0]
 ----
