@@ -2,7 +2,7 @@
 
 = Decommissioning the {rhos_prev_long} standalone Ceph NFS service
 
-If your deployment uses CephFS through NFS, you must decommission the {rhos_prev_long}({OpenStackShort}) standalone NFS service. Since future software upgrades do not support the previous NFS service, it is recommended that the decommissioning period is short.
+If your deployment uses CephFS through NFS, you must decommission the {rhos_prev_long}({OpenStackShort}) standalone NFS service. Since future software upgrades do not support the previous NFS service, ensure that the decommissioning period is short.
 
 .Prerequisites
 

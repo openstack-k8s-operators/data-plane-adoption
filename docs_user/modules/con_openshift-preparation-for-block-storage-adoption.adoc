@@ -123,7 +123,7 @@ services run, use a `MachineConfigPool` to limit the effects of the `MachineConf
 ** Only load the `nvme-fabrics` module because it loads the transport-specific modules, such as TCP, RDMA, or FC, as needed.
 +
 ifeval::["{build}" != "downstream"]
-For production deployments that use NVMe-TCP volumes, it is recommended that you use multipathing. For NVMe-TCP volumes {OpenShiftShort} uses native multipathing, called
+For production deployments that use NVMe-TCP volumes, use multipathing. For NVMe-TCP volumes {OpenShiftShort} uses native multipathing, called
 https://nvmexpress.org/faq-items/what-is-ana-nvme-multipathing/[ANA].
 endif::[]
 ifeval::["{build}" != "upstream"]
@@ -139,7 +139,7 @@ $ cat /sys/module/nvme_core/parameters/multipath
 ANA does not use the Linux Multipathing Device Mapper, but {OpenShiftShort} requires `multipathd` to run on Compute nodes for the {compute_service_first_ref} to be able to use multipathing. Multipathing is automatically configured on data plane nodes when they are provisioned.
 
 Multipathing:::
-** Multipathing is recommended for iSCSI and FC protocols. To configure multipathing on these protocols, you perform the following tasks:
+** Use multipathing for iSCSI and FC protocols. To configure multipathing on these protocols, you perform the following tasks:
 *** Prepare the {OpenShiftShort} hosts
 *** Configure the Block Storage services
 *** Prepare the {compute_service} nodes

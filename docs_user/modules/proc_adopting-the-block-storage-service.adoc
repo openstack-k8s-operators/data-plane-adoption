@@ -176,7 +176,7 @@ $ openstack volume service list
 +
 [NOTE]
 ====
-You are not required to run the data migrations at this step, but you must run them before the next upgrade. However, for adoption, it is recommended to run the migrations now to ensure that there are no issues before you run production workloads on the deployment.
+You are not required to run the data migrations at this step, but you must run them before the next upgrade. However, for adoption, you can run the migrations now to ensure that there are no issues before you run production workloads on the deployment.
 ====
 +
 ----
