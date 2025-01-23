@@ -19,6 +19,8 @@ To complete the {image_service} adoption, ensure that your environment meets the
 * You have a Single Node OpenShift or OpenShift Local that is running in the {rhocp_long} cluster.
 * Optional: You can reach an internal/external `Ceph` cluster by both `crc` and {OpenStackPreviousInstaller}.
 
+If you have image quotas in {OpenStackShort} {rhos_prev_ver}, these quotas are transferred to {rhos_long} {rhos_curr_ver} because the image quota system in {rhos_curr_ver} is disabled by default. For more information about enabling image quotas in {rhos_curr_ver}, see link:{defaultURL}/customizing_persistent_storage/assembly_glance-customizing-the-image-service_customizing-cinder#assembly_glance-configuring-quotas_configuring-glance[Configuring image quotas] in _Customizing persistent storage_. If you enable image quotas in {rhos_acro} {rhos_curr_ver}, the new quotas replace the legacy quotas from {OpenStackShort} {rhos_prev_ver}.
+
 include::../modules/proc_adopting-image-service-with-object-storage-backend.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-image-service-with-block-storage-backend.adoc[leveloffset=+1]
