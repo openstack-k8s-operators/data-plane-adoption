@@ -1,5 +1,5 @@
 name: Build Docs
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
   push:
     branches:
