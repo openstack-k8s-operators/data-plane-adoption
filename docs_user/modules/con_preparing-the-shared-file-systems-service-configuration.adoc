@@ -117,7 +117,7 @@ spec:
 ----
 +
 The name of the `OpenStackVersion` CR must match the name of your `OpenStackControlPlane` CR.
-* If you are providing sensitive information, such as passwords, hostnames, and usernames, it is recommended to use {OpenShiftShort} secrets, and the `customServiceConfigSecrets` key. You can use `customConfigSecrets` in any service. If you use third party storage that requires credentials, create a secret that is referenced in the manila CR/patch file by using the `customServiceConfigSecrets` key. For example:
+* If you are providing sensitive information, such as passwords, hostnames, and usernames, use {OpenShiftShort} secrets, and the `customServiceConfigSecrets` key. You can use `customConfigSecrets` in any service. If you use third party storage that requires credentials, create a secret that is referenced in the manila CR/patch file by using the `customServiceConfigSecrets` key. For example:
 
 . Create a file that includes the secrets, for example, `netapp_secrets.conf`:
 +
