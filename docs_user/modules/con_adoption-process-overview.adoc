@@ -21,3 +21,4 @@ Familiarize yourself with the steps of the adoption process and the optional pos
 
 * Optional: Run tempest to verify that the entire adoption process is working properly. For more information, see link:{defaultURL}/validating_and_troubleshooting_the_deployed_cloud/index[Validating and troubleshooting the deployed cloud].
 * Optional: Perform a minor update from RHEL 9.2 to 9.4. You can perform a minor update any time after you complete the adoption procedure. For more information, see link:{defaultURL}/updating_your_environment_to_the_latest_maintenance_release/index[Updating your environment to the latest maintenance release].
+* Optional: Verify that you migrated all services from the Controller nodes, and then power off the nodes. If any services are still running in the Controller nodes, such as Open Virtual Networking (ML2/OVN), {object_storage_first_ref}, or {Ceph}, do not power off the nodes. 
