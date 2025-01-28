@@ -327,9 +327,11 @@ ifeval::["{build_variant}" != "ospdo"]
         replicas: 0
       ovnDBCluster:
         ovndbcluster-nb:
+          replicas: 3
           dbType: NB
           networkAttachment: internalapi
         ovndbcluster-sb:
+          replicas: 3
           dbType: SB
           networkAttachment: internalapi
 endif::[]
@@ -342,9 +344,11 @@ ifeval::["{build_variant}" == "ospdo"]
         replicas: 0
       ovnDBCluster:
         ovndbcluster-nb:
+          replicas: 3
           dbType: NB
           networkAttachment: <networkAttachment_name>
         ovndbcluster-sb:
+          replicas: 3
           dbType: SB
           networkAttachment: <networkAttachment_name>
 endif::[]
