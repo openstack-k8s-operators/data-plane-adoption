@@ -321,6 +321,7 @@ cd ..  # back to install_yamls
 make crc_storage
 make input
 make openstack
+make openstack_init
 ----
 
 '''
