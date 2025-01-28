@@ -56,7 +56,13 @@ ServicesToStart=("tripleo_horizon.service"
                  "tripleo_ceilometer_agent_notification.service"
                  "tripleo_ovn_cluster_north_db_server.service"
                  "tripleo_ovn_cluster_south_db_server.service"
-                 "tripleo_ovn_cluster_northd.service")
+                 "tripleo_ovn_cluster_northd.service"
+                 "tripleo_octavia_api.service"
+                 "tripleo_octavia_health_manager.service"
+                 "tripleo_octavia_rsyslog.service"
+                 "tripleo_octavia_driver_agent.service"
+                 "tripleo_octavia_housekeeping.service"
+                 "tripleo_octavia_worker.service")
 
 PacemakerResourcesToStart=("galera-bundle"
                            "haproxy-bundle"

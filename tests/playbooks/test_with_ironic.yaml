@@ -41,4 +41,5 @@
     - role: ironic_adoption
     - role: placement_adoption
     - role: nova_adoption
+    - role: octavia_adoption
     - role: stop_remaining_services

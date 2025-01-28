@@ -19,14 +19,14 @@
     chmod 700 private
     ${CONTROLLER1_SCP}:/var/lib/config-data/puppet-generated/octavia/etc/octavia/certs/private/cakey.pem private/server_ca.key.pem
     chmod 400 private/server_ca.key.pem
-    ${CONTROLLER1_SCP}:/tmp/octavia-ssl/client-.pem certs/old_client_cert.pem
-    ${CONTROLLER1_SCP}:/tmp/octavia-ssl/index.txt* ./
-    ${CONTROLLER1_SCP}:/tmp/octavia-ssl/serial* ./
-    ${CONTROLLER1_SCP}:/tmp/octavia-ssl/openssl.cnf ../
+    ${CONTROLLER1_SCP}:{{ octavia_ssh_path }}/client-.pem certs/old_client_cert.pem
+    ${CONTROLLER1_SCP}:{{ octavia_ssh_path }}/index.txt* ./
+    ${CONTROLLER1_SCP}:{{ octavia_ssh_path }}/serial* ./
+    ${CONTROLLER1_SCP}:{{ octavia_ssh_path }}/openssl.cnf ../
     openssl req -config ../openssl.cnf -key private/server_ca.key.pem -new -passin env:SERVER_CA_PASSPHRASE -x509 -days 18250 -sha256 -extensions v3_ca -out certs/server_ca.cert.pem -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com"
 
     # Set up the new client CA
-    sed -i "s|^dir\s\+=\s\+\"/tmp/octavia-ssl\"|dir = \"$CERT_MIGRATE_PATH/client_ca\"|" ../openssl.cnf
+    sed -i "s|^dir\s\+=\s\+\"{{ octavia_ssh_path }}\"|dir = \"$CERT_MIGRATE_PATH/client_ca\"|" ../openssl.cnf
     cd ${CERT_MIGRATE_PATH}
     mkdir -p client_ca
     cd client_ca
