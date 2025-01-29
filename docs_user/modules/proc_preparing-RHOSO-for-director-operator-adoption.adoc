@@ -312,6 +312,7 @@ $ oc get secret tripleo-passwords -n $OSPDO_NAMESPACE -o json | jq -r '.data["tr
 $ git clone https://github.com/openstack-k8s-operators/install_yamls.git
 cd install_yamls
 BMO_SETUP=false NETWORK_ISOLATION=false NAMESPACE=${RHOSO18_NAMESPACE} make openstack
+BMO_SETUP=false NETWORK_ISOLATION=false NAMESPACE=${RHOSO18_NAMESPACE} make openstack_init
 BMO_SETUP=false NETWORK_ISOLATION=false make metallb
 ----
 
