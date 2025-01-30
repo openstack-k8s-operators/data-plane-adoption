@@ -18,13 +18,13 @@ $ alias openstack="oc exec -t openstackclient -- openstack"
 $ CONTROLLER1_SCP=$(echo "$CONTROLLER1_SSH" | sed 's/^ssh/scp/g')
 ----
 
-. Run the following set of commands to regenerate the keys and certificates and install the data in {rhocp_long}.  Convert the existing single certificate authority (CA) configuration into a dual CA configuration. You can use these commands to regenerate the keys and certificates and insert them into {rhocp_long}.
+. Run the following set of commands to regenerate the keys and certificates and install the data in {rhocp_long}. Convert the existing single certificate authority (CA) configuration into a dual CA configuration. You can use these commands to regenerate the keys and certificates and insert them into {OpenShiftShort}:
 +
 ----
 include::../../tests/roles/octavia_adoption/tasks/octavia_certs.yaml[lines="7..83",indent=0]
 ----
 
-. Optional: Copy the existing public SSH key that you can use for connecting to the amphorae and install it into Openshift:
+. Optional: Copy the existing public SSH key that you can use for connecting to the amphorae and install it into {OpenShiftShort}:
 +
 ----
 include::../../tests/roles/octavia_adoption/tasks/octavia_ssh.yaml[lines="7..20",indent=0]
@@ -110,7 +110,7 @@ EOF_CAT
 $ oc apply -n openstack -f octavia-nad.yaml
 ----
 
-. Enable the {loadbalancer_service} service in {OpenShiftShort}:
+. Enable the {loadbalancer_service} in {OpenShiftShort}:
 +
 ----
 $ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
@@ -155,8 +155,7 @@ $ openstack endpoint list | grep load-balancer
 | ff3222b4621843669e89843395213049 | regionOne | octavia      | load-balancer | True    | internal  | http://octavia-internal.openstack.svc:9876                            |
 ----
 
-
-. Change the `ONBOOT` option in the network script for the management interface to `no`:
+. Change the `ONBOOT` option in the network script for the management interface to `no` to ensure that the interface is disabled on reboot:
 
 .. Connect to each of the Controller nodes on the old control plane, for example, `overcloud-controller-0`.
 
@@ -167,8 +166,6 @@ $ sudo vi /etc/sysconfig/network-scripts/ifcfg-o-hm0
 ----
 +
 The script name is based on the previous `OctaviaMgmtPortDevName` setting and might differ in your environment.
-
-Change `ONBOOT=yes` to `ONBOOT=no` to ensure that the interface is disabled on reboot:
 
 . Delete old flavors that are migrated to the new control plane:
 +
@@ -227,10 +224,7 @@ $ openstack loadbalancer flavorprofile list
 +--------------------------------------+----------------+---------------+
 ----
 
-. Delete the old management network ports:
-+
-Store the network ID of the old management network in the
-variable `WALLABY_LB_MGMT_NET_ID` for later use:
+. Delete the old management network ports. Store the network ID of the old management network in the variable `WALLABY_LB_MGMT_NET_ID` to use later:
 +
 ----
 $ for net_id in $(openstack network list -f value -c ID --name lb-mgmt-net); do desc=$(openstack network show "$net_id" -f value -c description); [ -z "$desc" ] && WALLABY_LB_MGMT_NET_ID="$net_id" ; done

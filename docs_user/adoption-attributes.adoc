@@ -40,8 +40,8 @@ ifeval::["{build}" != "downstream"]
 :networking_service: Networking service
 
 //OpenStack Loadbalancer service (octavia)
-:loadbalancer_first_ref: Loadbalancer service (octavia)
-:loadbalancer_service: Loadbalancer service
+:loadbalancer_first_ref: Load-balancing service (octavia)
+:loadbalancer_service: Load-balancing service
 
 //Object Storage service (swift)
 :object_storage_first_ref: Object Storage service (swift)
@@ -114,8 +114,8 @@ ifeval::["{build}" == "downstream"]
 :networking_service: Networking service
 
 //OpenStack Loadbalancer service (octavia)
-:loadbalancer_first_ref: Loadbalancer service (octavia)
-:loadbalancer_service: Loadbalancer service
+:loadbalancer_first_ref: Load-balancing service (octavia)
+:loadbalancer_service: Load-balancing service
 
 //Object Storage service (swift)
 :object_storage_first_ref: Object Storage service (swift)
