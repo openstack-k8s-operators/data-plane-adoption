@@ -84,9 +84,16 @@ parameter_defaults:
   NeutronFlatNetworks:
     - datacentre
     - baremetal
-  NeutronBridgeMappings:
-    - datacentre:br-ex
-    - baremetal:br-baremetal
+  ControllerParameters:
+    NeutronBridgeMappings:
+      - datacentre:br-ex
+      - baremetal:br-baremetal
+  NetworkerParameters:
+    NeutronBridgeMappings:
+      - datacentre:br-ex
+  ComputeParameters:
+    NeutronBridgeMappings:
+      - datacentre:br-ex
   IronicInspectorInterface: br-baremetal
   # Since we need predictable node names to be able to set this paremeter,
   # it a requirement to set the ci-framework parameter cifmw_run_id with
