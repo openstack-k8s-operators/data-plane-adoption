@@ -100,7 +100,7 @@ ifeval::["{build}" == "downstream"]
 //Identity service (keystone)
 :identity_service_first_ref: Identity service (keystone)
 :identity_service: Identity service
- 
+
 //Shared File Systems service (manila)
 :rhos_component_storage_file_first_ref: Shared File Systems service (manila)
 :rhos_component_storage_file: Shared File Systems service
