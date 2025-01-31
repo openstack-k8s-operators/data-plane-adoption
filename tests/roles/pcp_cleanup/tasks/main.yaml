@@ -28,6 +28,11 @@
       oc delete ${secret} -n openstack;
     done
 
+    # Make pvs available if they are released
+    oc get pv -o json | jq -r '.items[] | select(.status.phase == "Released") | .metadata.name' | \
+      xargs -I{} oc patch pv {} --type='merge' -p '{"spec":{"claimRef": null}}'
+
+    # Delete IT certificates
     oc delete --ignore-not-found issuer rootca-internal
     oc delete --ignore-not-found secret rootca-internal
 
