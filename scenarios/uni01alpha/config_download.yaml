@@ -83,11 +83,11 @@ parameter_defaults:
         ip_version: 4
   NeutronFlatNetworks:
     - datacentre
-    - baremetal
+    - ironic
   ControllerParameters:
     NeutronBridgeMappings:
       - datacentre:br-ex
-      - baremetal:br-baremetal
+      - ironic:br-baremetal
   NetworkerParameters:
     NeutronBridgeMappings:
       - datacentre:br-ex
