@@ -2,6 +2,9 @@
 
 = Configuring new subnet ranges
 
+[NOTE]
+If you are using IPv6, you can most likely reuse existing subnet ranges, which you can check in the section <<reusing-existing-subnet-ranges_{context}>>.
+
 You can define new IP ranges for control plane services that belong to a different subnet that is not used in the existing cluster. Then you configure link local IP routing between the existing and new subnets to enable existing and new service deployments to communicate. This involves using the {OpenStackPreviousInstaller} mechanism on a pre-adopted cluster to configure additional link local routes. This enables the data plane deployment to reach out to {rhos_prev_long} ({OpenStackShort}) nodes by using the existing subnet addresses. You can use new subnet ranges with any existing subnet configuration, and when the existing cluster subnet ranges do not have enough free IP addresses for the new control plane services.
 
 You must size the new subnet appropriately to accommodate the new control
