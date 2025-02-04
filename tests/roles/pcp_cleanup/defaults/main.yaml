@@ -1,5 +1,5 @@
 # Whether the cleanup should be run or not.
-pcp_cleanup_enabled: true
+pcp_cleanup_enabled: false
 
 # Whether 'make crc_storage_cleanup' + 'make crc_storage' should be
 # run before running the test suite.
