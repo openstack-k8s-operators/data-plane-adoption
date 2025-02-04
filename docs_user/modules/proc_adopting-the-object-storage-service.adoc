@@ -46,10 +46,6 @@ EOF
 
 . Patch the `OpenStackControlPlane` custom resource to deploy the {object_storage}:
 +
-[NOTE]
-If you use IPv6, remember to change the load balancer IP in the yaml below to the load balancer IP from your environment, for example,
-`metallb.universe.tf/loadBalancerIPs:  fd00:bbbb::80`.
-+
 [source,yaml]
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
@@ -79,16 +75,17 @@ spec:
                 annotations:
                   metallb.universe.tf/address-pool: internalapi
                   metallb.universe.tf/allow-shared-ip: internalapi
-                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80 <2>
               spec:
                 type: LoadBalancer
-        networkAttachments: <2>
+        networkAttachments: <3>
         - storage
 '
 ----
 +
 <1> Must match the {rhos_acro} deployment storage class.
-<2> Must match the network attachment for the previous {object_storage} configuration from the {OpenStackShort} deployment.
+<2> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
+<3> Must match the network attachment for the previous {object_storage} configuration from the {OpenStackShort} deployment.
 
 .Verification
 

@@ -419,7 +419,7 @@ ifeval::["{build_variant}" == "ospdo"]
 +
 * Select an existing `<storage_class>` in your {OpenShiftShort} cluster.
 * Replace `<address_pool>` with the name of your network definition.
-* Replace `<loadBalancer_IP>` with the LoadBalancer IP address.
+* Replace `<loadBalancer_IP>` with the LoadBalancer IP address. 
 * Replace `<networkAttachment_name>` with the name of your network.
 
 endif::[]

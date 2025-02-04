@@ -62,10 +62,6 @@ tenant        true          false             ["172.19.0.80-172.19.0.90"]
 
 . Adopt the {image_service} and create a new `default` `GlanceAPI` instance that is connected with the existing NFS share:
 +
-[NOTE]
-If you use IPv6, remember to change the load balancer IP in the yaml below to the load balancer IP from your environment, for example,
-`metallb.universe.tf/loadBalancerIPs:  fd00:bbbb::80`.
-+
 ----
 $ cat << EOF > glance_nfs_patch.yaml
 
@@ -81,8 +77,8 @@ spec:
       volumes:
       - name: nfs
         nfs:
-          path: <exported_path>
-          server: <ip_address>
+          path: <exported_path> <1>
+          server: <ip_address> <2>
     name: r1
     region: r1
   glance:
@@ -109,7 +105,7 @@ spec:
                   annotations:
                     metallb.universe.tf/address-pool: internalapi
                     metallb.universe.tf/allow-shared-ip: internalapi
-                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80 <3>
                 spec:
                   type: LoadBalancer
           networkAttachments:
@@ -117,8 +113,9 @@ spec:
 EOF
 ----
 +
-* Replace `<ip_address>` with the IP address that you use to reach the `nfs-server`.
-* Replace `<exported_path>` with the exported path in the `nfs-server`.
+<1> Replace `<exported_path>` with the exported path in the `nfs-server`.
+<2> Replace `<ip_address>` with the IP address that you use to reach the `nfs-server`.
+<3> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
 
 . Patch the `OpenStackControlPlane` CR to deploy the {image_service} with an NFS back end:
 +
