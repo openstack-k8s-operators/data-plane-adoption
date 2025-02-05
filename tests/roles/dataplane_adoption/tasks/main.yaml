@@ -43,6 +43,7 @@
     spec:
       networks: {{ netconfig_networks }}
     EOF
+  when: configure_ipam | bool
 
 - name: Slurp the private key
   no_log: "{{ use_no_log }}"
