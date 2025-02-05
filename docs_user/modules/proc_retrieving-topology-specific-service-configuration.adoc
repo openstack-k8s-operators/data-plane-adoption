@@ -12,7 +12,7 @@ Before you migrate your databases to the {rhos_long} control plane, retrieve the
 
 * Define the following shell variables. Replace the example values with values that are correct for your environment:
 [NOTE]
-If you need to use IPv6, declare `SOURCE_MARIADB_IP` *without* brackets (e.g. `SOURCE_MARIADB_IP=fd00:bbbb::2`)
+If you use IPv6, define the `SOURCE_MARIADB_IP` value without brackets. For example, `SOURCE_MARIADB_IP=fd00:bbbb::2`.
 +
 ifeval::["{build_variant}" == "ospdo"]
 ----
@@ -47,12 +47,11 @@ $ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | gre
 
 .Procedure
 
-. Ensure you are on the `openstack` namespace:
+. Ensure that you are using the `openstack` namespace:
 +
 ----
-oc project openstack
+$ oc project openstack
 ----
-
 
 . Export the shell variables for the following outputs and test the connection to the {OpenStackShort} database:
 +
