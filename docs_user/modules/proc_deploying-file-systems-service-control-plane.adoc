@@ -59,7 +59,7 @@ spec:
       databaseAccount: manila
       secret: osp-secret
       manilaAPI:
-        replicas: 3 
+        replicas: 3
         customServiceConfig: |
           [DEFAULT]
           enabled_share_protocols = cephfs
@@ -74,10 +74,10 @@ spec:
               spec:
                 type: LoadBalancer
       manilaScheduler:
-        replicas: 3 
+        replicas: 3
       manilaShares:
         cephfs:
-          replicas: 1 
+          replicas: 1
           customServiceConfig: |
             [DEFAULT]
             enabled_share_backends = tripleo_ceph
