@@ -47,7 +47,7 @@
       set -e
     }
 
-    ${BASH_ALIASES[openstack]} server create baremetal-test-post-adoption --flavor baremetal --image Fedora-Cloud-Base-38 --nic net-id=provisioning
+    ${BASH_ALIASES[openstack]} server create baremetal-test-post-adoption --flavor baremetal --image CentOS-Stream-GenericCloud-x86_64-9 --nic net-id=provisioning
     wait_server_active baremetal-test-post-adoption
 
     # Check instance status and network connectivity
