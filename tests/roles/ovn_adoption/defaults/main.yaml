@@ -34,7 +34,7 @@ ovn_nic_mapping_patch: |
       template:
         ovnController:
           nicMappings:
-            baremetal: baremetal
+            ironic: baremetal
 
 dpa_dir: "../.."
 dpa_tests_dir: "{{ dpa_dir }}/tests"
