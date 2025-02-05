@@ -59,7 +59,7 @@ spec:
       databaseAccount: manila
       secret: osp-secret
       manilaAPI:
-        replicas: 3 <1>
+        replicas: 3 
         customServiceConfig: |
           [DEFAULT]
           enabled_share_protocols = cephfs
@@ -70,30 +70,30 @@ spec:
                 annotations:
                   metallb.universe.tf/address-pool: internalapi
                   metallb.universe.tf/allow-shared-ip: internalapi
-                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80 <2>
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80 <1>
               spec:
                 type: LoadBalancer
       manilaScheduler:
-        replicas: 3 <3>
+        replicas: 3 
       manilaShares:
         cephfs:
-          replicas: 1 <4>
+          replicas: 1 
           customServiceConfig: |
             [DEFAULT]
             enabled_share_backends = tripleo_ceph
             host = hostgroup
             [cephfs]
             driver_handles_share_servers=False
-            share_backend_name=cephfs <5>
+            share_backend_name=cephfs <2>
             share_driver=manila.share.drivers.cephfs.driver.CephFSDriver
             cephfs_conf_path=/etc/ceph/ceph.conf
             cephfs_auth_id=openstack
             cephfs_cluster_name=ceph
             cephfs_volume_mode=0755
             cephfs_protocol_helper_type=CEPHFS
-          networkAttachments: <6>
+          networkAttachments: <3>
               - storage
-      extraMounts: <7>
+      extraMounts: <4>
       - name: v1
         region: r1
         extraVol:
@@ -111,13 +111,10 @@ spec:
 __EOF__
 ----
 +
-<1> Set the replica count of the `manilaAPI` service to 3.
-<2> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
-<3> Set the replica count of the `manilaScheduler` service to 3.
-<4> Set the replica count of the `manilaShares` service to 1.
-<5> Ensure that the names of the back ends (`share_backend_name`) are the same as they were in {OpenStackShort} {rhos_prev_ver}.
-<6> Ensure that the appropriate storage management network is specified in the `networkAttachments` section. For example, the `manilaShares` instance with the CephFS back-end driver is connected to the `storage` network.
-<7> If you need to add extra files to any of the services, you can use `extraMounts`. For example, when using {Ceph}, you can add the {rhos_component_storage_file} Ceph user's keyring file as well as the `ceph.conf` configuration file.
+<1> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
+<2> Ensure that the names of the back ends (`share_backend_name`) are the same as they were in {OpenStackShort} {rhos_prev_ver}.
+<3> Ensure that you specify the appropriate storage management network in the `networkAttachments` section. For example, the `manilaShares` instance with the CephFS back-end driver is connected to the `storage` network.
+<4> If you need to add extra files to any of the services, you can use `extraMounts`. For example, when using {Ceph}, you can add the {rhos_component_storage_file} Ceph user's keyring file as well as the `ceph.conf` configuration file.
 +
 The following example patch file uses CephFS through NFS:
 +

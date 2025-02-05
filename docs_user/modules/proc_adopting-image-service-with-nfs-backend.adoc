@@ -114,7 +114,7 @@ EOF
 ----
 +
 <1> Replace `<exported_path>` with the exported path in the `nfs-server`.
-<2> Replace `<ip_address>` with the IP address that you use to reach the `nfs-server`.
+<2> Replace `<ip_address>` with the IP address that you use to communicate with the `nfs-server`.
 <3> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
 
 . Patch the `OpenStackControlPlane` CR to deploy the {image_service} with an NFS back end:
