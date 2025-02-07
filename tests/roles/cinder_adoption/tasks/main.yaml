@@ -14,11 +14,22 @@
   retries: 60
   delay: 2
 
-# Ignoring "-o pipefail" to avoid errors in grep which are non-fatal
+- name: check that Cinder is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+    ${BASH_ALIASES[openstack]} endpoint list | grep cinder
+    ${BASH_ALIASES[openstack]} volume type list
+  register: cinder_responding_result
+  until: cinder_responding_result is success
+  retries: 60
+  delay: 2
+
 - name: Get cinder-backup down services
   ansible.builtin.shell: |
+    {{ shell_header }}
     {{ oc_header }}
-    set -eux
     oc exec -t openstackclient -- openstack volume service list --service cinder-backup -c Host -f value
   register: backup_down_services
 
@@ -29,11 +40,10 @@
     oc exec -t cinder-api-0 -c cinder-api -- cinder-manage service remove cinder-backup "{{ item }}"
   loop: "{{ backup_down_services.stdout_lines }}"
 
-# Ignoring "-o pipefail" to avoid errors in grep which are non-fatal
 - name: Get cinder-scheduler down services
   ansible.builtin.shell: |
+    {{ shell_header }}
     {{ oc_header }}
-    set -eux
     oc exec -t openstackclient -- openstack volume service list --service cinder-scheduler -c Host -f value
   register: scheduler_down_services
 
@@ -91,17 +101,14 @@
   ansible.builtin.pause:
      seconds: 90
 
-- name: check that Cinder is reachable and its endpoints are defined
+- name: wait for Cinder scheduler to be up and ready
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    alias openstack="oc exec -t openstackclient -- openstack"
-
-    ${BASH_ALIASES[openstack]} endpoint list | grep cinder
-    ${BASH_ALIASES[openstack]} volume type list
-  register: cinder_responding_result
-  until: cinder_responding_result is success
-  retries: 60
+    oc exec -t openstackclient -- openstack volume service list --service cinder-scheduler -c State -f value | grep 'up'
+  register: cinder_scheduler_running_result
+  until: cinder_scheduler_running_result is success
+  retries: 5
   delay: 2
 
 - name: wait for Cinder volume to be up and ready
@@ -109,7 +116,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc exec -t openstackclient -- openstack volume service list --service cinder-volume | grep ' up '
+    oc exec -t openstackclient -- openstack volume service list --service cinder-volume -c State -f value | grep 'up'
   register: cinder_running_result
   until: cinder_running_result is success
   retries: 5
@@ -120,7 +127,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc exec -t openstackclient -- openstack volume service list --service cinder-backup | grep ' up '
+    oc exec -t openstackclient -- openstack volume service list --service cinder-backup -c State -f value | grep 'up'
   register: cinder_running_result
   until: cinder_running_result is success
   retries: 5
@@ -130,4 +137,4 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc exec -it cinder-scheduler-0 -- cinder-manage db online_data_migrations
+    oc exec -t cinder-api-0 -c cinder-api -- cinder-manage db online_data_migrations
