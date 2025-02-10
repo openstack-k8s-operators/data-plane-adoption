@@ -73,12 +73,17 @@ ${BASH_ALIASES[openstack]} flavor create baremetal --ram 1024 --vcpus 1 --disk 1
   --property capabilities:boot_mode="uefi"
 
 # Create image
-IMG=Fedora-Cloud-Base-38-1.6.x86_64.qcow2
-URL=https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/$IMG
+IMG=CentOS-Stream-GenericCloud-x86_64-9-latest.x86_64.qcow2
+URL=https://cloud.centos.org/centos/9-stream/x86_64/images/$IMG
 curl --silent --show-error -o /tmp/${IMG} -L $URL
 DISK_FORMAT=$(qemu-img info /tmp/${IMG} | grep "file format:" | awk '{print $NF}')
-${BASH_ALIASES[openstack]} image create --container-format bare --disk-format ${DISK_FORMAT} Fedora-Cloud-Base-38 < /tmp/${IMG}
-wait_image_active Fedora-Cloud-Base-38
+${BASH_ALIASES[openstack]} image create \
+  --container-format bare \
+  --disk-format ${DISK_FORMAT} \
+  --property hw_firmware_type=uefi \
+  --property hw_machine_type=q35 \
+  CentOS-Stream-GenericCloud-x86_64-9 < /tmp/${IMG}
+wait_image_active CentOS-Stream-GenericCloud-x86_64-9
 
 
 export BAREMETAL_NODES=$(${BASH_ALIASES[openstack]} baremetal node list -c UUID -f value)
@@ -107,7 +112,7 @@ sleep 60
 
 # Create an instance on baremetal
 ${BASH_ALIASES[openstack]} server show baremetal-test || {
-    ${BASH_ALIASES[openstack]} server create baremetal-test --flavor baremetal --image Fedora-Cloud-Base-38 --nic net-id=provisioning --wait
+    ${BASH_ALIASES[openstack]} server create baremetal-test --flavor baremetal --image CentOS-Stream-GenericCloud-x86_64-9 --nic net-id=provisioning --wait
 }
 
 # Wait for node to boot
