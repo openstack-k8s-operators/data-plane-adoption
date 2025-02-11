@@ -72,13 +72,13 @@ test-rollback-with-ceph:
 #To run playbook that only runs control_plane_rollback role.
 test-rollback-only-minimal: TEST_OUTFILE := tests/logs/test_rollback_only_minimal_out_$(shell date +%FT%T%Z).log
 test-rollback-only-minimal:
-        mkdir -p tests/logs
-        ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_rollback_minimal.yaml --tag=control_plane_rollback 2>&1 | tee $(TEST_OUTFILE)
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_rollback_minimal.yaml --tag=control_plane_rollback 2>&1 | tee $(TEST_OUTFILE)
 
 test-rollback-only-with-ceph: TEST_OUTFILE := tests/logs/test_rollback_only_with_ceph_out_$(shell date +%FT%T%Z).log
 test-rollback-only-with-ceph:
-        mkdir -p tests/logs
-        ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_rollback_with_ceph.yaml --tag=control_plane_rollback 2>&1 | tee $(TEST_OUTFILE)
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_rollback_with_ceph.yaml --tag=control_plane_rollback 2>&1 | tee $(TEST_OUTFILE)
 
 test-with-ironic: TEST_OUTFILE := tests/logs/test_with_ironic_out_$(shell date +%FT%T%Z).log
 test-with-ironic: ## Launch test suite with Ironic
