@@ -21,7 +21,7 @@ prelaunch_barbican_secret: false
 reset_crc_storage: true
 
 # Pre-launch test VM instance on the source cloud
-prelaunch_test_instance: false
+prelaunch_test_instance: true
 
 storage_class_name: local-storage #CUSTOMIZE_THIS
 storage_reclaim_policy: delete # or retain
