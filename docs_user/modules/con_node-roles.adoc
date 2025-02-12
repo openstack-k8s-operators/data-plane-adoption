@@ -10,6 +10,10 @@ are running, in {OpenShift} ({OpenShiftShort}) or external to it.
 When adopting a {OpenStackPreviousInstaller} {rhos_prev_long} ({OpenStackShort}) your `Compute` nodes will directly become
 external nodes, so there should not be much additional planning needed there.
 Your `Networker` nodes will also become external nodes.
+In most cases your `Controller` nodes would also become external nodes to avoid dataplane outage during adoption. This is because when there are no
+dedicated `Networker` nodes in {OpenStackPreviousInstaller}, `Controller` nodes act as OVN gateway chassis i.e external SNAT and Centralized
+Floating IP(if DVR disabled) traffic goes through these nodes and removing these nodes during adoption will lead to some outage and this
+should be avoided. Such disruption should be planned post adoption.
 
 In many deployments being adopted the `Controller` nodes will require some
 thought because you have many {OpenShiftShort} nodes where the Controller services

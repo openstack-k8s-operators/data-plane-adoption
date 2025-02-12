@@ -2,7 +2,7 @@
 
 = Adopting Networker services to the {rhos_acro} data plane
 
-Adopt the Networker nodes in your existing {rhos_prev_long} deployment to the {rhos_long} data plane. You decide which services you want to run on the Networker nodes, and create a separate `OpenStackDataPlaneNodeSet` custom resource (CR) for the Networker nodes. You might also decide to implement the following options if they apply to your environment:
+Adopt the Networker services in your existing {rhos_prev_long} deployment to the {rhos_long} data plane. The `Networker` services could be running on `Conroller` nodes or dedicated `Networker` nodes. You decide which services you want to run on the Networker nodes, and create a separate `OpenStackDataPlaneNodeSet` custom resource (CR) for the Networker nodes. You might also decide to implement the following options if they apply to your environment:
 
 * Depending on your topology, you might need to run the `neutron-metadata` service on the nodes, specifically when you want to serve metadata to SR-IOV ports that are hosted on Compute nodes.
 
@@ -10,28 +10,50 @@ Adopt the Networker nodes in your existing {rhos_prev_long} deployment to the {r
 
 * Optional: You can run the `neutron-dhcp` service on your Networker nodes instead of your Compute nodes. You might not need to use `neutron-dhcp` with OVN, unless your deployment uses DHCP relays, or advanced DHCP options that are supported by dnsmasq but not by the OVN DHCP implementation.
 
+Adopt each Controller or Networker node in your existing {rhos_prev_long} deployment to the {rhos_long} when your node is set as an OVN chassis gateway. Any node with
+parameter set to `enable-chassis-as-gw` is considered OVN gateway chassis. In this case, such nodes will become edpm networker nodes after adoption.
+
+. Check for the nodes where `OVN Controller Gateway agent` agents are running. The list of agents varies depending on the services you enabled:
++
+----
+$ oc exec openstackclient -- openstack network agent list
++--------------------------------------+------------------------------+--------------------------+-------------------+-------+-------+----------------------------+
+| ID                                   | Agent Type                   | Host                     | Availability Zone | Alive | State | Binary                     |
++--------------------------------------+------------------------------+--------------------------+-------------------+-------+-------+----------------------------+
+| e5075ee0-9dd9-4f0a-a42a-6bbdf1a6111c | OVN Controller Gateway agent | controller-0.localdomain |                   | XXX   | UP    | ovn-controller             |
+| f3112349-054c-403a-b00a-e219238192b8 | OVN Controller agent         | compute-0.localdomain    |                   | XXX   | UP    | ovn-controller             |
+| af9dae2d-1c1c-55a8-a743-f84719f6406d | OVN Metadata agent           | compute-0.localdomain    |                   | XXX   | UP    | neutron-ovn-metadata-agent |
+| 51a11df8-a66e-47a2-aec0-52eb8589626c | OVN Controller Gateway agent | controller-1.localdomain |                   | XXX   | UP    | ovn-controller             |
+| bb817e5e-7832-410a-9e67-934dac8c602f | OVN Controller Gateway agent | controller-2.localdomain |                   | XXX   | UP    | ovn-controller             |
++--------------------------------------+------------------------------+--------------------------+-------------------+-------+-------+----------------------------+
+----
+
 .Prerequisites
 
-* Define the shell variable. The following value is an example
-from a single node standalone {OpenStackPreviousInstaller} deployment:
+* Define the shell variable. Based on above agent list output,
+controller-0, controller-1, controller-2 are our target
+hosts. If you have both `Controller` and `Networker` nodes running
+networker services then add all those hosts below.
 +
 [subs=+quotes]
 ----
 declare -A networkers
-networkers=(
-  ["standalone.localdomain"]="192.168.122.100"
+networkers+=(
+  ["controller-0.localdomain"]="192.168.122.100"
+  ["controller-1.localdomain"]="192.168.122.101"
+  ["controller-2.localdomain"]="192.168.122.102"
   # ...
 )
 ----
 +
-** Replace `["standalone.localdomain"]="192.168.122.100"` with the name and IP address of the Networker node.
+** Replace `["<node-name>"]="192.168.122.100"` with the name and IP address of the corresponding Networker or Controller node as per your environment.
 
 .Procedure
 
-. Deploy the `OpenStackDataPlaneNodeSet` CR for your Networker nodes:
+. Deploy the `OpenStackDataPlaneNodeSet` CR for your nodes:
 +
 [NOTE]
-You can reuse most of the `nodeTemplate` section from the `OpenStackDataPlaneNodeSet` CR that is designated for your Compute nodes. You can omit some of the variables because of the limited set of services that are running on Networker nodes.
+You can reuse most of the `nodeTemplate` section from the `OpenStackDataPlaneNodeSet` CR that is designated for your Compute nodes. You can omit some of the variables because of the limited set of services that are running on the Networker nodes.
 +
 [source,yaml]
 ----
@@ -65,13 +87,43 @@ endif::[]
     - name: ANSIBLE_FORCE_COLOR
       value: "True"
   nodes:
-    standalone:
-      hostName: standalone
+    controller-0:
+      hostName: controller-0
       ansible:
-        ansibleHost: ${networkers[standalone.localdomain]}
+        ansibleHost: ${networkers[controller-0.localdomain]}
       networks:
       - defaultRoute: true
-        fixedIP: ${networkers[standalone.localdomain]}
+        fixedIP: ${networkers[controller-0.localdomain]}
+        name: ctlplane
+        subnetName: subnet1
+      - name: internalapi
+        subnetName: subnet1
+      - name: storage
+        subnetName: subnet1
+      - name: tenant
+        subnetName: subnet1
+    controller-1:
+      hostName: controller-1
+      ansible:
+        ansibleHost: ${networkers[controller-1.localdomain]}
+      networks:
+      - defaultRoute: true
+        fixedIP: ${networkers[controller-1.localdomain]}
+        name: ctlplane
+        subnetName: subnet1
+      - name: internalapi
+        subnetName: subnet1
+      - name: storage
+        subnetName: subnet1
+      - name: tenant
+        subnetName: subnet1
+    controller-2:
+      hostName: controller-2
+      ansible:
+        ansibleHost: ${networkers[controller-2.localdomain]}
+      networks:
+      - defaultRoute: true
+        fixedIP: ${networkers[controller-2.localdomain]}
         name: ctlplane
         subnetName: subnet1
       - name: internalapi
@@ -210,7 +262,7 @@ EOF
 ----
 ovs-vsctl list Open .
 ...
-external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings=<bridge_mappings>, ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-cms-options=enable-chassis-as-gw, ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
+external_ids        : {hostname=controller-0.localdomain, ovn-bridge=br-int, ovn-bridge-mappings=<bridge_mappings>, ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-cms-options=enable-chassis-as-gw, ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
 ...
 ----
 +
@@ -319,11 +371,13 @@ $ oc wait --for condition=Ready osdpns/<networker_CR_name> --timeout=30m
 +
 ----
 $ oc exec openstackclient -- openstack network agent list
-+--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
-| ID                                   | Agent Type                   | Host                   | Availability Zone | Alive | State | Binary                     |
-+--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
-| 174fc099-5cc9-4348-b8fc-59ed44fcfb0e | DHCP agent                   | standalone.localdomain | nova              | :-)   | UP    | neutron-dhcp-agent         |
-| 10482583-2130-5b0d-958f-3430da21b929 | OVN Metadata agent           | standalone.localdomain |                   | :-)   | UP    | neutron-ovn-metadata-agent |
-| a4f1b584-16f1-4937-b2b0-28102a3f6eaa | OVN Controller Gateway agent | standalone.localdomain |                   | :-)   | UP    | ovn-controller             |
-+--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
++--------------------------------------+------------------------------+--------------------------+-------------------+-------+-------+----------------------------+
+| ID                                   | Agent Type                   | Host                     | Availability Zone | Alive | State | Binary                     |
++--------------------------------------+------------------------------+--------------------------+-------------------+-------+-------+----------------------------+
+| e5075ee0-9dd9-4f0a-a42a-6bbdf1a6111c | OVN Controller Gateway agent | controller-0.localdomain |                   | :-)   | UP    | ovn-controller             |
+| f3112349-054c-403a-b00a-e219238192b8 | OVN Controller agent         | compute-0.localdomain    |                   | :-)   | UP    | ovn-controller             |
+| af9dae2d-1c1c-55a8-a743-f84719f6406d | OVN Metadata agent           | compute-0.localdomain    |                   | :-)   | UP    | neutron-ovn-metadata-agent |
+| 51a11df8-a66e-47a2-aec0-52eb8589626c | OVN Controller Gateway agent | controller-1.localdomain |                   | :-)   | UP    | ovn-controller             |
+| bb817e5e-7832-410a-9e67-934dac8c602f | OVN Controller Gateway agent | controller-2.localdomain |                   | :-)   | UP    | ovn-controller             |
++--------------------------------------+------------------------------+--------------------------+-------------------+-------+-------+----------------------------+
 ----

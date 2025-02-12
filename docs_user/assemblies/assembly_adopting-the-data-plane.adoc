@@ -11,7 +11,7 @@ Adopting the {rhos_long} data plane involves the following steps:
 . Stop any remaining services on the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} control plane.
 . Deploy the required custom resources.
 . Perform a fast-forward upgrade on Compute services from {OpenStackShort} {rhos_prev_ver} to {rhos_acro} {rhos_curr_ver}.
-. If applicable, adopt Networker nodes to the {rhos_acro} data plane.
+. Adopt Networker services to the {rhos_acro} data plane.
 
 [WARNING]
 After the {rhos_acro} control plane manages the newly deployed data plane, you must not re-enable services on the {OpenStackShort} {rhos_prev_ver} control plane and data plane. If you re-enable services, workloads are managed by two control planes or two data planes, resulting in data corruption, loss of control of existing workloads, inability to start new workloads, or other issues.
