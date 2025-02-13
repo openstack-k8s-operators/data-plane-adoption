@@ -1,3 +1,4 @@
+{% raw %}
 spec:
   glance:
     enabled: true
@@ -31,7 +32,8 @@ spec:
                   annotations:
                     metallb.universe.tf/address-pool: internalapi
                     metallb.universe.tf/allow-shared-ip: internalapi
-                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+{% endraw %}
+                    metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.80
               spec:
                 type: LoadBalancer
           networkAttachments:

@@ -1,21 +1,28 @@
+{% raw %}
 spec:
   glance:
     enabled: true
+    apiOverrides:
+      default:
+        route: {}
     template:
       databaseInstance: openstack
-      databaseAccount: glance
+      storage:
+        storageRequest: 10G
       customServiceConfig: |
         [DEFAULT]
-        enabled_backends = default_backend:file
+        enabled_backends = default_backend:swift
         [glance_store]
         default_backend = default_backend
         [default_backend]
-        filesystem_store_datadir = /var/lib/glance/images/
-      storage:
-        storageRequest: 10G
+        swift_store_create_container_on_put = True
+        swift_store_auth_version = 3
+        swift_store_auth_address = {{ .KeystoneInternalURL }}
+        swift_store_endpoint_type = internalURL
+        swift_store_user = service:glance
+        swift_store_key = {{ .ServicePassword }}
       glanceAPIs:
         default:
-          type: single
           replicas: 1
           override:
             service:
@@ -24,7 +31,8 @@ spec:
                   annotations:
                     metallb.universe.tf/address-pool: internalapi
                     metallb.universe.tf/allow-shared-ip: internalapi
-                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+{% endraw %}
+                    metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.80
                 spec:
                   type: LoadBalancer
           networkAttachments:
