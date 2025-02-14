@@ -55,18 +55,18 @@ parameter_defaults:
   ComputeHCICount: 3
   NeutronGlobalPhysnetMtu: 1350
   CinderLVMLoopDeviceSize: 20480
-  CloudName: overcloud.localdomain
-  CloudNameInternal: overcloud.internalapi.localdomain
-  CloudNameStorage: overcloud.storage.localdomain
-  CloudNameStorageManagement: overcloud.storagemgmt.localdomain
-  CloudNameCtlplane: overcloud.ctlplane.localdomain
-  CloudDomain: localdomain
+  CloudName: overcloud.example.com
+  CloudNameInternal: overcloud.internalapi.example.com
+  CloudNameStorage: overcloud.storage.example.com
+  CloudNameStorageManagement: overcloud.storagemgmt.example.com
+  CloudNameCtlplane: overcloud.ctlplane.example.com
+  CloudDomain: example.com
   NetworkConfigWithAnsible: false
   ControllerHostnameFormat: '%stackname%-controller-%index%'
   ComputeHCIHostnameFormat: '%stackname%-computehci-%index%'
   CtlplaneNetworkAttributes:
     network:
-      dns_domain: localdomain
+      dns_domain: example.com
       mtu: 1500
       name: ctlplane
       tags:
