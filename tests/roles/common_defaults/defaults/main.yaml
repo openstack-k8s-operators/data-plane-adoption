@@ -1,3 +1,18 @@
+# Whether to use no_log on tasks which may output potentially
+# sensitive data.
+use_no_log: false
+
+# Whether the adopted node will host compute services
+compute_adoption: true
+
+# Whether adopting OSPDo or Director based TripleO deployment
+deploy_ctlplane_ospdo: false
+
+# The names of cells on the target cloud
+renamed_cells: "{{ [default_cell_name] + cells | difference(['default']) }}"
+
+## Env headers (should be the same as provided in the docs, as the best effort)
+
 # Header to apply in 'shell' module invocations. If overriding, at
 # least 'set -e' should be kept to ensure that scripts that fail
 # somewhere in the middle will also fail the whole Ansible run as
@@ -5,12 +20,118 @@
 shell_header: |
   set -euxo pipefail
 
-# Whether to use no_log on tasks which may output potentially
-# sensitive data.
-use_no_log: false
+# Snippet to get the desired 'oc' command onto $PATH.
+oc_header: |
+  eval $(crc oc-env)
 
-# Whether the adopted node will host compute services
-compute_adoption: true
+# Header for a Compute cells names evaluation for the source and destination cloud
+# and renaming of the default cell from tripleo
+# NOTE: 'super' is not a cell, but a reference for the top-scope "upcall" API on main controllers
+cells_env: |
+  CELLS="{{ cells | join(' ') }}"
+  DEFAULT_CELL_NAME={{ default_cell_name }}
+  RENAMED_CELLS="{{ renamed_cells | join(' ') }}"
+
+# Headers for DB client CLI image
+mariadb_image_env: |
+  STORAGE_CLASS={{ storage_class_name }}
+  MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
+
+# Header for the source databases initial clusters members health check
+mariadb_members_env: |-
+  {{ shell_header }}
+  {{ cells_env }}
+
+  {% for cell in cells %}
+  declare -A SOURCE_GALERA_MEMBERS_{{ cell.upper() }}
+  SOURCE_GALERA_MEMBERS_{{ cell.upper() }}=(
+  {% if source_galera_members is string %}
+  {{ source_galera_members }}
+  {% else %}
+  {% for n in source_galera_members[cell] | default([]) %}
+    [{{ n.name|quote }}]={{ n.ip|quote }}
+  {% endfor %}
+  {% endif %}
+  )
+  {% endfor %}
+
+# Headers for the destination databases access passwords
+mariadb_passwords_env: |-
+  {{ shell_header }}
+  {{ cells_env }}
+
+  declare -A PODIFIED_DB_ROOT_PASSWORD
+  for CELL in $(echo "super $RENAMED_CELLS"); do
+    PODIFIED_DB_ROOT_PASSWORD[$CELL]=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+  done
+
+namespace_env: |-
+  NAMESPACE={{ deploy_ctlplane_ospdo | bool | ternary(org_namespace, rhoso_namespace ) }}
+
+# Header for the source database access
+# TODO: Env vars for OSPDo case are also configured in env_vars_src_ospdo.yaml. Move them here, eventually?
+# OSPDo RUN_OVERRIDES definition exists only in docs (missing in code?).
+# NOTE: in a split-stack source cloud, each stack passwords should come from a stack-specific passwords file,
+# but different passwords are not supported in a multi-cell deployment
+mariadb_copy_shell_vars_src: |-
+  {{ shell_header }}
+
+  PASSWORD_FILE="$HOME/overcloud-passwords.yaml"
+  {{ namespace_env }}
+
+  {{ mariadb_image_env }}
+  {{ cells_env }}
+
+  declare -A TRIPLEO_PASSWORDS
+  for CELL in $(echo $CELLS); do
+      TRIPLEO_PASSWORDS[$CELL]="$PASSWORD_FILE"
+  done
+
+  RUN_OVERRIDES=' '
+  MARIADB_CLIENT_ANNOTATIONS={{ deploy_ctlplane_ospdo | bool | ternary("-n $NAMESPACE", "--annotations=k8s.v1.cni.cncf.io/networks=internalapi") }}
+  MARIADB_RUN_OVERRIDES={{ deploy_ctlplane_ospdo | bool | ternary("--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS {{ mysql_client_override }}", "$MARIADB_CLIENT_ANNOTATIONS") }}
+
+  {{ pull_openstack_configuration_ssh_shell_vars }}
+
+  declare -A SOURCE_DB_ROOT_PASSWORD
+  for CELL in $(echo $CELLS); do
+    SOURCE_DB_ROOT_PASSWORD[$CELL]=$(cat ${TRIPLEO_PASSWORDS[$CELL]} | grep ' MysqlRootPassword:' | awk -F ': ' '{ print $2; }')
+  done
+
+  declare -A SOURCE_MARIADB_IP
+  {% for cell in cells %}
+  SOURCE_MARIADB_IP[{{ cell }}]={% if source_mariadb_ip is string %}{% set ip = source_mariadb_ip %}{% else %}{% set ip = source_mariadb_ip[cell] %}{% endif %}{{ ip }}
+  {% endfor %}
+
+# Header for the destination database access
+# The CHARACTER_SET and collation should match the source DB
+# if the do not then it will break foreign key relationships
+# for any tables that are created in the future as part of db sync
+mariadb_copy_shell_vars_dst: |
+  {{ shell_header }}
+  {{ oc_header }}
+  {{ mariadb_image_env }}
+  {{ cells_env }}
+  {{ namespace_env }}
+
+  CHARACTER_SET=utf8
+  COLLATION=utf8_general_ci
+
+  {{ mariadb_passwords_env }}
+
+  declare -A PODIFIED_MARIADB_IP
+  for CELL in $(echo "super $RENAMED_CELLS"); do
+    if [ "$CELL" = "super" ]; then
+      PODIFIED_MARIADB_IP[$CELL]=$(oc get svc --selector "mariadb/name=openstack" -ojsonpath='{.items[0].spec.clusterIP}')
+    else
+      PODIFIED_MARIADB_IP[$CELL]=$(oc get svc --selector "mariadb/name=openstack-$CELL" -ojsonpath='{.items[0].spec.clusterIP}')
+    fi
+  done
+
+pull_openstack_configuration_ssh_shell_vars: |
+  CONTROLLER1_SSH="{{ controller1_ssh }}"
+  CONTROLLER2_SSH="{{ controller2_ssh }}"
+  CONTROLLER3_SSH="{{ controller3_ssh }}"
 
 # Whether to adopt Octavia
 enable_octavia: true

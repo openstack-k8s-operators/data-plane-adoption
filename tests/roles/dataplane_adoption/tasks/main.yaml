@@ -185,7 +185,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch osdpns/openstack --type=merge --patch "
+    oc patch osdpns/openstack-cell1 --type=merge --patch "
     spec:
       services:
         - bootstrap
@@ -224,7 +224,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackdataplanenodeset openstack --type='json' --patch='[
+    oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
       {
         "op": "add",
         "path": "/spec/services/-",
@@ -251,7 +251,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackdataplanenodeset openstack --type='json' --patch='[
+    oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
       {
         "op": "add",
         "path": "/spec/services/-",
@@ -288,7 +288,7 @@
           name: openstack-pre-adoption
         spec:
           nodeSets:
-          - openstack
+          - openstack-cell1
           {%+ if edpm_nodes_networker is defined or edpm_networker_deploy +%}
           - openstack-networker
           {%+ endif +%}
@@ -355,7 +355,7 @@
           name: tripleo-cleanup
         spec:
           nodeSets:
-          - openstack
+          - openstack-cell1
           {%+ if edpm_nodes_networker is defined or edpm_networker_deploy +%}
           - openstack-networker
           {%+ endif +%}
@@ -406,7 +406,7 @@
       name: openstack
     spec:
       nodeSets:
-      - openstack
+      - openstack-cell1
       {%+ if edpm_nodes_networker is defined or edpm_networker_deploy +%}
       - openstack-networker
       {%+ endif +%}

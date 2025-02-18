@@ -1,6 +1,7 @@
 - name: get service passwords
   ansible.builtin.shell: |
      oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
+     cp ~/tripleo-standalone-passwords.yaml ~/overcloud-passwords.yaml
   when: get_svc_pass| default(false) | bool
 
 - name: get OSPdO storage storageClass
