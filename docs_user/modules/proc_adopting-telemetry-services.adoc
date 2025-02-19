@@ -16,7 +16,7 @@ You cannot automatically migrate old data because different back ends are used. 
 
 .Procedure
 
-. Patch the `OpenStackControlPlane` CR to deploy `cluster-observability-operator`:
+. Install the `OpenStackControlPlane`:
 +
 ----
 $ oc create -f - <<EOF
@@ -43,7 +43,7 @@ $ oc wait --for jsonpath="{.status.phase}"=Succeeded csv --namespace=openshift-o
 . Patch the `OpenStackControlPlane` CR to deploy Ceilometer services:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   telemetry:
     enabled: true
@@ -60,7 +60,7 @@ spec:
 . Enable the metrics storage back end:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   telemetry:
     template:
@@ -82,12 +82,12 @@ spec:
 . Verify that the `alertmanager` and `prometheus` pods are available:
 +
 ----
-$ oc get pods -l alertmanager=metric-storage -n openstack
+$ oc get pods -l alertmanager=metric-storage -n $RHOSO18_NAMESPACE
 NAME                            READY   STATUS    RESTARTS   AGE
 alertmanager-metric-storage-0   2/2     Running   0          46s
 alertmanager-metric-storage-1   2/2     Running   0          46s
 
-$ oc get pods -l prometheus=metric-storage -n openstack
+$ oc get pods -l prometheus=metric-storage -n $RHOSO18_NAMESPACE
 NAME                          READY   STATUS    RESTARTS   AGE
 prometheus-metric-storage-0   3/3     Running   0          46s
 ----
@@ -95,8 +95,8 @@ prometheus-metric-storage-0   3/3     Running   0          46s
 . Inspect the resulting Ceilometer pods:
 +
 ----
-CEILOMETETR_POD=`oc get pods -l service=ceilometer -n openstack | tail -n 1 | cut -f 1 -d' '`
-oc exec -t $CEILOMETETR_POD -c ceilometer-central-agent -- cat /etc/ceilometer/ceilometer.conf
+CEILOMETETR_POD=`oc get pods -l service=ceilometer -n $RHOSO18_NAMESPACE | tail -n 1 | cut -f 1 -d' '`
+oc -n $RHOSO18_NAMESPACE exec -t $CEILOMETETR_POD -c ceilometer-central-agent -- cat /etc/ceilometer/ceilometer.conf
 ----
 
 . Inspect enabled pollsters:
@@ -108,7 +108,7 @@ $ oc get secret ceilometer-config-data -o jsonpath="{.data['polling\.yaml\.j2']}
 . Optional: Override default pollsters according to the requirements of your environment:
 +
 ----
-$ oc patch openstackcontrolplane controlplane --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane controlplane --type=merge --patch '
 spec:
   telemetry:
     template:
@@ -132,7 +132,7 @@ spec:
 . Optional: Patch the `OpenStackControlPlane` CR to include `logging`:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   telemetry:
     template:

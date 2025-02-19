@@ -19,7 +19,7 @@ data:
 kind: Secret
 metadata:
   name: keystone
-  namespace: openstack
+  namespace: $RHOSO18_NAMESPACE
 type: Opaque
 EOF
 ----
@@ -29,7 +29,7 @@ EOF
 . Patch the `OpenStackControlPlane` CR to deploy the {identity_service}:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   keystone:
     enabled: true
@@ -53,10 +53,21 @@ spec:
 +
 <1> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
 
+
+. Replace the loadBalancerIPs with the appropriate VIP,
+  Wait for openstackcontrolplane to be Ready:
++
+----
+  oc wait openstackcontrolplane openstack -n ${RHOSO18_NAMESPACE} --for condition=Ready --timeout=600s || {
+    echo "Failed to wait for openstackcontrolplane to be Ready"
+    exit 1
+  }
+----
++
 . Create an alias to use the `openstack` command in the {rhos_long} deployment:
 +
 ----
-$ alias openstack="oc exec -t openstackclient -- openstack"
+$ alias openstack="oc -n $RHOSO18_NAMESPACE exec -t openstackclient -- openstack"
 ----
 
 . Remove services and endpoints that still point to the {OpenStackShort}

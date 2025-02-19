@@ -31,7 +31,7 @@ done
 +
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
-  oc exec openstack-$CELL-galera-0 -n $NAMESPACE -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
+  oc -n $RHOSO18_NAMESPACE exec openstack-$CELL-galera-0 -n $NAMESPACE -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
     -e "select a.version from nova_${CELL}.services a join nova_${CELL}.services b where a.version!=b.version and a.binary='nova-compute';"
 done
 ----
@@ -47,7 +47,7 @@ Review any errors in the nova Compute agent logs on the data plane, and the `nov
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack -n openstack --type=merge --patch '
 spec:
   nova:
     template:
@@ -84,10 +84,10 @@ spec:
 . Wait until the Compute control plane services CRs are ready:
 +
 ----
-$ oc wait --for condition=Ready --timeout=300s Nova/nova
+$ oc -n $RHOSO18_NAMESPACE wait --for condition=Ready --timeout=300s Nova/nova
 ----
 
-. Complete the steps in xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].
+. Make sure to complete the steps in xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].
 
 . Remove the pre-fast-forward upgrade workarounds from the Compute data plane services:
 +
@@ -98,7 +98,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nova-extra-config
-  namespace: openstack
+  namespace: $RHOSO18_NAMESPACE
 data:
   20-nova-compute-cell1-workarounds.conf: |
     [workarounds]
@@ -108,7 +108,7 @@ apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
   name: openstack-nova-compute-ffu
-  namespace: openstack
+  namespace: $RHOSO18_NAMESPACE
 spec:
   nodeSets:
     - openstack
@@ -123,14 +123,14 @@ The service included in the `servicesOverride` key must match the name of the se
 . Wait for the Compute data plane services to be ready:
 +
 ----
-$ oc wait --for condition=Ready openstackdataplanedeployment/openstack-nova-compute-ffu --timeout=5m
+$ oc -n $RHOSO18_NAMESPACE wait --for condition=Ready openstackdataplanedeployment/openstack-nova-compute-ffu --timeout=5m
 ----
 
 . Run Compute database online migrations to complete the fast-forward upgrade:
 +
 ----
-$ oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
-$ oc exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
+$ oc -n $RHOSO18_NAMESPACE exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
+$ oc -n $RHOSO18_NAMESPACE exec -it nova-cell1-conductor-0 -- nova-manage db online_data_migrations
 ----
 
 .Verification

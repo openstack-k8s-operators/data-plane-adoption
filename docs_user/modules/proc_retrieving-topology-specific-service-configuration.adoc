@@ -105,7 +105,7 @@ $ MARIADB_CLIENT_ANNOTATIONS="-n $NAMESPACE"
 $ MARIADB_RUN_OVERRIDES="--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS"
 
 $ CONTROLLER1_SSH="oc -n $NAMESPACE rsh -c openstackclient openstackclient ssh controller-0.ctlplane"
-$ oc get secret tripleo-passwords -n $NAMESPACE -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' |
+$ oc get secret tripleo-passwords -n $NAMESPACE -o json | jq -r '.data["tripleo-"]' |
 base64 -d >"${PASSWORD_FILE}"
 endif::[]
 
@@ -148,7 +148,7 @@ oc project openstack
 $ unset PULL_OPENSTACK_CONFIGURATION_DATABASES
 $ declare -xA PULL_OPENSTACK_CONFIGURATION_DATABASES
 $ for CELL in $(echo $CELLS); do
->     PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]=$(oc run mariadb-client-1-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>     PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]=$(oc run mariadb-client-1-$CELL ${MARIADB_RUN_OVERRIDES} -n "${OSPDO_NAMESPACE}" -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 >         mysql -rsh "${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e 'SHOW databases;')
 > done
 ----
