@@ -4,6 +4,11 @@
 
 To help you manage the configuration for your {OpenStackPreviousInstaller} and {rhos_prev_long} ({OpenStackShort}) services, you can compare the configuration files between your {OpenStackPreviousInstaller} deployment and the {rhos_long} cloud by using the os-diff tool.
 
+ifeval::["{build_variant}" == "ospdo"]
+[NOTE]
+ At this time Os-diff does not support director Operator.
+endif::[]
+
 .Prerequisites
 
 * Golang is installed and configured on your environment:

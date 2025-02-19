@@ -54,7 +54,7 @@ __EOF__
 . Patch the `OpenStackControlPlane` custom resource:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/<manila.patch>
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch-file=~/<manila.patch>
 ----
 * Replace `<manila.patch>` with the name of your patch file.
 
@@ -64,10 +64,10 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/<manila.p
 You can defer this step until after {rhos_acro} {rhos_curr_ver} is operational. During this time, you cannot decommission the Controller nodes.
 +
 ----
-$ sudo pcs resource disable ceph-nfs
-$ sudo pcs resource disable ip-<VIP>
-$ sudo pcs resource unmanage ceph-nfs
-$ sudo pcs resource unmanage ip-<VIP>
+$CONTROLLER_SSH sudo pcs resource disable ceph-nfs
+$CONTROLLER_SSH sudo pcs resource disable ip-<VIP>
+$CONTROLLER_SSH sudo pcs resource unmanage ceph-nfs
+$CONTROLLER_SSH sudo pcs resource unmanage ip-<VIP>
 ----
 +
 * Replace `<VIP>` with the IP address assigned to the `ceph-nfs` service in your environment.

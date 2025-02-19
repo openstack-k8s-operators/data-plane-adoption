@@ -19,7 +19,7 @@ To adopt services that enable autoscaling, you patch an existing `OpenStackContr
 . Patch the `OpenStackControlPlane` CR to deploy the autoscaling services:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   telemetry:
     enabled: true
@@ -40,7 +40,7 @@ spec:
 . Inspect the aodh pods:
 +
 ----
-$ AODH_POD=`oc get pods -l service=aodh -n openstack | tail -n 1 | cut -f 1 -d' '`
+$ AODH_POD=`oc -n $RHOSO18_NAMESPACE  get pods -l service=aodh -n openstack | tail -n 1 | cut -f 1 -d' '`
 $ oc exec -t $AODH_POD -c aodh-api -- cat /etc/aodh/aodh.conf
 ----
 

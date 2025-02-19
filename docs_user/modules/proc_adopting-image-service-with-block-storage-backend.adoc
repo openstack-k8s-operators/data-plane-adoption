@@ -91,5 +91,5 @@ cinder-volume-75cb47f65-92rxq   3/3     Running   0
 . Patch the `GlanceAPI` service that is deployed in the control plane:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch-file=glance_cinder.patch
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch-file=glance_cinder.patch
 ----

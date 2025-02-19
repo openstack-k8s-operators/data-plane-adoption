@@ -35,7 +35,7 @@ $ alias openstack="oc exec -t openstackclient -- openstack"
 . Patch the `OpenStackControlPlane` custom resource (CR) to deploy the {bare_metal}:
 +
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack -n openstack --type=merge --patch '
 spec:
   ironic:
     enabled: true
@@ -96,16 +96,16 @@ spec:
 . Wait for the {bare_metal} control plane services CRs to become ready:
 +
 ----
-$ oc wait --for condition=Ready --timeout=300s ironics.ironic.openstack.org ironic
+$ oc -n $RHOSO18_NAMESPACE wait --for condition=Ready --timeout=300s ironics.ironic.openstack.org ironic
 ----
 
 . Verify that the individual services are ready:
 +
 ----
-$ oc wait --for condition=Ready --timeout=300s ironicapis.ironic.openstack.org ironic-api
-$ oc wait --for condition=Ready --timeout=300s ironicconductors.ironic.openstack.org ironic-conductor
-$ oc wait --for condition=Ready --timeout=300s ironicinspectors.ironic.openstack.org ironic-inspector
-$ oc wait --for condition=Ready --timeout=300s ironicneutronagents.ironic.openstack.org ironic-ironic-neutron-agent
+$ oc -n $RHOSO18_NAMESPACE wait --for condition=Ready --timeout=300s ironicapis.ironic.openstack.org ironic-api
+$ oc -n $RHOSO18_NAMESPACE wait --for condition=Ready --timeout=300s ironicconductors.ironic.openstack.org ironic-conductor
+$ oc -n $RHOSO18_NAMESPACE wait --for condition=Ready --timeout=300s ironicinspectors.ironic.openstack.org ironic-inspector
+$ oc -n $RHOSO18_NAMESPACE wait --for condition=Ready --timeout=300s ironicneutronagents.ironic.openstack.org ironic-ironic-neutron-agent
 ----
 
 . Update the DNS Nameservers on the provisoning, cleaning, and rescue networks:
@@ -130,7 +130,7 @@ If the `openstack baremetal node list` command output reports an incorrect power
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack -n openstack --type=merge --patch '
 spec:
   ironic:
     enabled: true

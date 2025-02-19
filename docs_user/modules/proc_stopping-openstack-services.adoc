@@ -19,11 +19,20 @@ You should not stop the infrastructure management services yet, such as:
 * Ensure that there no long-running tasks that require the services that you plan to stop, such as instance live migrations, volume migrations, volume creation, backup and restore, attaching, detaching, and other similar operations:
 +
 ----
-openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
-openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
-openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \|' | grep -vi error
-openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
-openstack image list -c ID -c Status |grep -E '\| .+ing \|'
+ifeval::["{build_variant}" == "ospdo"]
+${OS_CLIENT} openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
+${OS_CLIENT} openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
+${OS_CLIENT} openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \|' | grep -vi error
+${OS_CLIENT} openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
+${OS_CLIENT} openstack image list -c ID -c Status |grep -E '\| .+ing \|'
+endif::[]
+ifeval::["{build_variant}" != "ospdo"]
+$ openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
+$ openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
+$ openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \|' | grep -vi error
+$ openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
+$ openstack image list -c ID -c Status |grep -E '\| .+ing \|'
+endif::[]
 ----
 * Collect the services topology-specific configuration. For more information, see xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
 * Define the following shell variables. The values are examples and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Replace these example values with values that are correct for your environment:
@@ -31,12 +40,10 @@ openstack image list -c ID -c Status |grep -E '\| .+ing \|'
 [subs=+quotes]
 ----
 ifeval::["{build}" != "downstream"]
-CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
+$CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 endif::[]
 ifeval::["{build}" == "downstream"]
-CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<controller-1 IP>*" <1>
-CONTROLLER2_SSH="ssh -i *<path to SSH key>* root@*<controller-2 IP>*"
-CONTROLLER3_SSH="ssh -i *<path to SSH key>* root@*<controller-3 IP>*"
+$CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<controller-1 IP>*" <1>
 endif::[]
 ----
 * Specify the IP addresses of all Controller nodes, for example:
@@ -44,12 +51,12 @@ endif::[]
 [subs=+quotes]
 ----
 ifeval::["{build}" != "downstream"]
-CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.103"
+$CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.103"
 CONTROLLER2_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.106"
 CONTROLLER3_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.109"
 endif::[]
 ifeval::["{build}" == "downstream"]
-CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<controller-1 IP>*" <2>
+$CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<controller-1 IP>*" <2>
 CONTROLLER2_SSH="ssh -i *<path to SSH key>* root@*<controller-2 IP>*"
 CONTROLLER3_SSH="ssh -i *<path to SSH key>* root@*<controller-3 IP>*"
 # ...
@@ -136,7 +143,7 @@ PacemakerResourcesToStop=("openstack-cinder-volume"
                           "openstack-manila-share")
 
 echo "Stopping systemd OpenStack services"
-for service in ${ServicesToStop[*]}; do
+for service in ${ServicesToStop[@]}; do
     for i in {1..3}; do
         SSH_CMD=CONTROLLER${i}_SSH
         if [ ! -z "${!SSH_CMD}" ]; then
@@ -149,9 +156,15 @@ for service in ${ServicesToStop[*]}; do
 done
 
 echo "Checking systemd OpenStack services"
-for service in ${ServicesToStop[*]}; do
+for service in ${ServicesToStop[@]}; do
+    ifeval::["{build_variant}" != "ospdo"]
     for i in {1..3}; do
         SSH_CMD=CONTROLLER${i}_SSH
+    endif::[]
+    ifeval::["{build_variant}" == "ospdo"]
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER_SSH
+    endif::[]
         if [ ! -z "${!SSH_CMD}" ]; then
             if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
                 echo "ERROR: Service $service still running on controller $i"
@@ -159,12 +172,20 @@ for service in ${ServicesToStop[*]}; do
                 echo "OK: Service $service is not running on controller $i"
             fi
         fi
+    ifeval::["{build_variant}" != "ospdo"]
     done
+    endif::[]
 done
 
 echo "Stopping pacemaker OpenStack services"
-for i in {1..3}; do
-    SSH_CMD=CONTROLLER${i}_SSH
+    ifeval::["{build_variant}" != "ospdo"]
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+    endif::[]
+    ifeval::["{build_variant}" == "ospdo"]
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER_SSH
+    endif::[]
     if [ ! -z "${!SSH_CMD}" ]; then
         echo "Using controller $i to run pacemaker commands"
         for resource in ${PacemakerResourcesToStop[*]}; do
@@ -174,14 +195,22 @@ for i in {1..3}; do
             else
                 echo "Service $resource not present"
             fi
-        done
+    ifeval::["{build_variant}" != "ospdo"]
+    done
+    endif::[]
         break
     fi
 done
 
 echo "Checking pacemaker OpenStack services"
-for i in {1..3}; do
-    SSH_CMD=CONTROLLER${i}_SSH
+    ifeval::["{build_variant}" != "ospdo"]
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+    endif::[]
+    ifeval::["{build_variant}" == "ospdo"]
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER_SSH
+    endif::[]
     if [ ! -z "${!SSH_CMD}" ]; then
         echo "Using controller $i to run pacemaker commands"
         for resource in ${PacemakerResourcesToStop[*]}; do
@@ -195,7 +224,9 @@ for i in {1..3}; do
         done
         break
     fi
-done
+    ifeval::["{build_variant}" != "ospdo"]
+    done
+    endif::[]
 ----
 +
 If the status of each service is `OK`, then the services stopped successfully.

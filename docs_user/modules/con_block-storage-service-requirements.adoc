@@ -17,6 +17,9 @@ apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
 metadata:
   name: openstack
+ifeval::["{build_variant}" == "ospdo"]
+namespace: $RHOSO18_NAMESPACE
+endif::[]
 spec:
   cinder:
     enabled: true

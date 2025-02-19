@@ -24,7 +24,7 @@ The following features are considered a Technology Preview and have not been tes
 ** AMD SEV
 ** Direct download from Rados Block Device (RBD)
 ** File-backed memory
-** `Provider.yaml`
+** Multiple data plane node sets
 
 .Unsupported features
 

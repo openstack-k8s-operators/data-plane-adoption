@@ -47,7 +47,7 @@ data:
 kind: Secret
 metadata:
   name: ceph-conf-files
-  namespace: openstack
+  namespace: <RHOSO18_NAMESPACE>
 type: Opaque
 EOF
 ----
@@ -60,7 +60,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: ceph-conf-files
-  namespace: openstack
+  namespace: <RHOSO18_NAMESPACE>
 stringData:
   ceph.client.openstack.keyring: |
     [client.openstack]
@@ -81,7 +81,7 @@ stringData:
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc -n <RHOSO18_NAMESPACE> patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   extraMounts:
     - name: v1

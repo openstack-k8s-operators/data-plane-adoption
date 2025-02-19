@@ -20,7 +20,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: swift-conf
-  namespace: openstack
+  namespace: $RHOSO18_NAMESPACE
 type: Opaque
 data:
   swift.conf: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/swift/etc/swift/swift.conf | base64 -w0)
@@ -36,6 +36,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: swift-ring-files
+  namespace: $RHOSO18_NAMESPACE
 binaryData:
   swiftrings.tar.gz: $($CONTROLLER1_SSH "cd /var/lib/config-data/puppet-generated/swift/etc/swift && tar cz *.builder *.ring.gz backups/ | base64 -w0")
   account.ring.gz: $($CONTROLLER1_SSH "base64 -w0 /var/lib/config-data/puppet-generated/swift/etc/swift/account.ring.gz")
@@ -48,7 +49,7 @@ EOF
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   swift:
     enabled: true
@@ -92,7 +93,7 @@ spec:
 * Inspect the resulting {object_storage} pods:
 +
 ----
-$ oc get pods -l component=swift-proxy
+$ oc -n -n $RHOSO18_NAMESPACE get pods -l component=swift-proxy
 ----
 
 * Verify that the Object Storage proxy service is registered in the {identity_service_first_ref}:

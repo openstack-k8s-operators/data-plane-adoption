@@ -25,12 +25,28 @@ endif::[]
 SOURCE_OVSDB_IP=172.17.0.100 # For IPv4
 SOURCE_OVSDB_IP=[fd00:bbbb::100] # For IPv6
 ----
+ifeval::["{build_variant}" == "ospdo"]
+[NOTE]
+In the case of a disconnected environment Director Operator deployment, use
+OVSDB_IMAGE=registry.redhat.io/rhoso/openstack-ovn-base-rhel9@sha256:967046c6bdb8f55c236085b5c5f9667f0dbb9f3ac52a6560dd36a6bfac051e1f
+ For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#proc_configuring-an-airgapped-environment_air-gapped-environment[Configuring an airgapped environment] in _Deploying an overcloud in a Red Hat OpenShift Container Platform cluster with director Operator_.
+endif::[]
+
 +
+ifeval::["{build_variant}" != "ospdo"]
 To get the value to set `SOURCE_OVSDB_IP`, query the puppet-generated configurations in a Controller node:
 +
 ----
 $ grep -rI 'ovn_[ns]b_conn' /var/lib/config-data/puppet-generated/
 ----
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+Update the IP address value for SOURCE_OVSDB_IP to the internalApi IP address associated with the remaining OSP 17 controller VM. The IP address can be retrieved by the following command:
+----
+$CONTROLLER_SSH ip a s enp4s0
+** Select the non /32 IP address
+----
+endif::[]
 
 .Procedure
 ifeval::["{build_variant}" == "ospdo"]
@@ -52,7 +68,12 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: ovn-data-cert
+ifeval::["{build_variant}" != "ospdo"]
   namespace: openstack
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+  namespace: $OSPDO_NAMESPACE
+endif::[]
 spec:
   commonName: ovn-data-cert
   secretName: ovn-data-cert
@@ -123,7 +144,7 @@ EOF
 ----
 +
 ifeval::["{build_variant}" == "ospdo"]
-<1> Replace `<ocp_node_holding_controller>` with the {OpenStackShort} node that contains the Controller node.
+<1> Replace `<ocp_node_holding_controller>` with the {OpenStackShort} node that contains the Controller VM.
 endif::[]
 
 . Wait for the pod to be ready:
@@ -160,16 +181,29 @@ endif::[]
 +
 * If you enabled TLS everywhere, run the following command:
 +
+ifeval::["{build_variant}" != "ospdo"]
 ----
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client backup --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client backup --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
 ----
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+----
+$ oc -n $OSPDO_NAMESPACE exec ovn-copy-data -- bash -c "ovsdb-client backup --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$SOURCE_OVSDB_IP:6641 > /backup/ovs-nb.db"
+$ oc -n $OSPDO_NAMESPACE exec ovn-copy-data -- bash -c "ovsdb-client backup --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
+----
+endif::[]
 
 . Start the control plane OVN database services prior to import, with `northd` and `ovn-controller` disabled:
 +
 [source,yaml]
 ----
+ifeval::["{build_variant}" == "ospdo"]
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch '
+endif::[]
+ifeval::["{build_variant}" != "ospdo"]
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
+endif::[]
 spec:
   ovn:
     enabled: true
@@ -190,21 +224,35 @@ spec:
       ovnController:
         networkAttachment: tenant
         nodeSelector:
+          node: non-existing-node-name
+
 '
 ----
 
 . Wait for the OVN database services to reach the `Running` phase:
 +
 ----
+ifeval::["{build_variant}" != "ospdo"]
 $ oc wait --for=jsonpath='{.status.phase}'=Running pod --selector=service=ovsdbserver-nb
 $ oc wait --for=jsonpath='{.status.phase}'=Running pod --selector=service=ovsdbserver-sb
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+$ oc -n $RHOSO18_NAMESPACE wait --for=jsonpath='{.status.phase}'=Running pod --selector=service=ovsdbserver-nb
+$ oc -n $RHOSO18_NAMESPACE wait --for=jsonpath='{.status.phase}'=Running pod --selector=service=ovsdbserver-sb
+endif::[]
 ----
 
 . Fetch the OVN database IP addresses on the `clusterIP` service network:
 +
 ----
+ifeval::["{build_variant}" != "ospdo"]
 PODIFIED_OVSDB_NB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-nb-0" -ojsonpath='{.items[0].spec.clusterIP}')
 PODIFIED_OVSDB_SB_IP=$(oc get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-sb-0" -ojsonpath='{.items[0].spec.clusterIP}')
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+PODIFIED_OVSDB_NB_IP=$(oc -n $RHOSO18_NAMESPACE get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-nb-0" -ojsonpath='{.items[0].spec.clusterIP}')
+PODIFIED_OVSDB_SB_IP=$(oc -n $RHOSO18_NAMESPACE get svc --selector "statefulset.kubernetes.io/pod-name=ovsdbserver-sb-0" -ojsonpath='{.items[0].spec.clusterIP}')
+endif::[]
 ----
 
 . If you are  using IPv6, adjust the address to the format expected by `ovsdb-*` tools:
@@ -218,15 +266,27 @@ PODIFIED_OVSDB_SB_IP=[$PODIFIED_OVSDB_SB_IP]
 .. If you did not enable TLS everywhere, use the following command:
 +
 ----
+ifeval::["{build_variant}" != "ospdo"]
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB_IP:6641 > /backup/ovs-nb.ovsschema && ovsdb-tool convert /backup/ovs-nb.db /backup/ovs-nb.ovsschema"
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6642 > /backup/ovs-sb.ovsschema && ovsdb-tool convert /backup/ovs-sb.db /backup/ovs-sb.ovsschema"
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+$ oc -n $RHOSO18_NAMESPACE exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_NB_IP:6641 > /backup/ovs-nb.ovsschema && ovsdb-tool convert /backup/ovs-nb.db /backup/ovs-nb.ovsschema"
+$ oc -n $RHOSO18_NAMESPACE exec ovn-copy-data -- bash -c "ovsdb-client get-schema tcp:$PODIFIED_OVSDB_SB_IP:6642 > /backup/ovs-sb.ovsschema && ovsdb-tool convert /backup/ovs-sb.db /backup/ovs-sb.ovsschema"
+endif::[]
 ----
 
 .. If you enabled TLS everywhere, use the following command:
 +
 ----
+ifeval::["{build_variant}" != "ospdo"]
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_NB_IP:6641 > /backup/ovs-nb.ovsschema && ovsdb-tool convert /backup/ovs-nb.db /backup/ovs-nb.ovsschema"
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_SB_IP:6642 > /backup/ovs-sb.ovsschema && ovsdb-tool convert /backup/ovs-sb.db /backup/ovs-sb.ovsschema"
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+$ oc -n $RHOSO18_NAMESPACE exec ovn-copy-data -- bash -c "ovsdb-client get-schema --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_NB_IP:6641 > /backup/ovs-nb.ovsschema && ovsdb-tool convert /backup/ovs-nb.db /backup/ovs-nb.ovsschema"
+$ oc -n $RHOSO18_NAMESPACE exec ovn-copy-data -- bash -c "ovsdb-client get-schema --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_SB_IP:6642 > /backup/ovs-sb.ovsschema && ovsdb-tool convert /backup/ovs-sb.db /backup/ovs-sb.ovsschema"
+endif::[]
 ----
 
 . Restore the database backup to the new OVN database servers:
@@ -246,22 +306,39 @@ endif::[]
 .. If you enabled TLS everywhere, use the following command:
 +
 ----
+ifeval::["{build_variant}" != "ospdo"]
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client restore --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client restore --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+$ oc -n $RHOSO18_NAMESPACE exec ovn-copy-data -- bash -c "ovsdb-client restore --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
+$ oc -n $RHOSO18_NAMESPACE exec ovn-copy-data -- bash -c "ovsdb-client restore --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
+endif::[]
 ----
 
 . Check that the data was successfully migrated by running the following commands against the new database servers, for example:
 +
 ----
+ifeval::["{build_variant}" != "ospdo"]
 $ oc exec -it ovsdbserver-nb-0 -- ovn-nbctl show
 $ oc exec -it ovsdbserver-sb-0 -- ovn-sbctl list Chassis
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+$ oc -n $RHOSO18_NAMESPACE exec -it ovsdbserver-nb-0 -- ovn-nbctl show
+$ oc -n $RHOSO18_NAMESPACE exec -it ovsdbserver-sb-0 -- ovn-sbctl list Chassis
+endif::[]
 ----
 
 . Start the control plane `ovn-northd` service to keep both OVN databases in sync:
 +
 [source,yaml]
 ----
+ifeval::["{build_variant}" != "ospdo"]
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch '
+endif::[]
 spec:
   ovn:
     enabled: true
@@ -275,7 +352,12 @@ spec:
 +
 [source,yaml]
 ----
+ifeval::["{build_variant}" != "ospdo"]
 $ oc patch openstackcontrolplane openstack --type=json -p="[{'op': 'remove', 'path': '/spec/ovn/template/ovnController/nodeSelector'}]"
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=json -p="[{'op': 'remove', 'path': '/spec/ovn/template/ovnController/nodeSelector'}]"
+endif::[]
 ----
 +
 [NOTE]
@@ -284,8 +366,14 @@ Running OVN gateways on {OpenShiftShort} nodes might be prone to data plane down
 . Delete the `ovn-data` helper pod and the temporary `PersistentVolumeClaim` that is used to store OVN database backup files:
 +
 ----
+ifeval::["{build_variant}" != "ospdo"]
 $ oc delete --ignore-not-found=true pod ovn-copy-data
 $ oc delete --ignore-not-found=true pvc ovn-data
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+$ oc -n $RHOSO18_NAMESPACE delete --ignore-not-found=true pod ovn-copy-data
+$ oc -n $RHOSO18_NAMESPACE delete --ignore-not-found=true pvc ovn-data
+endif::[]
 ----
 +
 [NOTE]
@@ -299,21 +387,33 @@ ServicesToStop=("tripleo_ovn_cluster_north_db_server.service"
 
 echo "Stopping systemd OpenStack services"
 for service in ${ServicesToStop[*]}; do
+ifeval::["{build_variant}" != "ospdo"]
     for i in {1..3}; do
         SSH_CMD=CONTROLLER${i}_SSH
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+        SSH_CMD=CONTROLLER_SSH
+endif::[]
         if [ ! -z "${!SSH_CMD}" ]; then
             echo "Stopping the $service in controller $i"
             if ${!SSH_CMD} sudo systemctl is-active $service; then
                 ${!SSH_CMD} sudo systemctl stop $service
             fi
         fi
+ifeval::["{build_variant}" != "ospdo"]
     done
+endif::[]
 done
 
 echo "Checking systemd OpenStack services"
 for service in ${ServicesToStop[*]}; do
+ifeval::["{build_variant}" != "ospdo"]
     for i in {1..3}; do
         SSH_CMD=CONTROLLER${i}_SSH
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+        SSH_CMD=CONTROLLER_SSH
+endif::[]
         if [ ! -z "${!SSH_CMD}" ]; then
             if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
                 echo "ERROR: Service $service still running on controller $i"
@@ -321,6 +421,8 @@ for service in ${ServicesToStop[*]}; do
                 echo "OK: Service $service is not running on controller $i"
             fi
         fi
+ifeval::["{build_variant}" != "ospdo"]
     done
+endif::[]
 done
 ----

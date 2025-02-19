@@ -24,7 +24,7 @@ $CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/cinder/etc/cinder/cin
 . Create a new file, for example, `cinder_api.patch`, and apply the configuration:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch-file=<patch_name>
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch-file=<patch_name>
 ----
 +
 * Replace `<patch_name>` with the name of your patch file.
@@ -118,7 +118,7 @@ $ oc exec -t cinder-api-0 -c cinder-api -- cinder-manage service remove <service
 * Create another file, for example, `cinder_services.patch`, and apply the configuration:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch-file=<patch_name>
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch-file=<patch_name>
 ----
 +
 * Replace `<patch_name>` with the name of your patch file.
@@ -239,7 +239,7 @@ You are not required to run the data migrations at this step, but you must run t
 ====
 +
 ----
-$ oc exec -it cinder-scheduler-0 -- cinder-manage db online_data_migrations
+$ oc -n $RHOSO18_NAMESPACE exec -it cinder-scheduler-0 -- cinder-manage db online_data_migrations
 ----
 
 .Verification

@@ -42,6 +42,7 @@ ADMIN_PASSWORD=SomePassword
 To use the existing {OpenStackShort} deployment password:
 +
 ----
+
 declare -A TRIPLEO_PASSWORDS
 TRIPLEO_PASSWORDS[default]="$HOME/overcloud-passwords.yaml"
 ADMIN_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' AdminPassword:' | awk -F ': ' '{ print $2; }')
@@ -53,6 +54,12 @@ you must synchronize the service account passwords.
 For example, in developer environments with {OpenStackPreviousInstaller} Standalone, the passwords can be extracted:
 +
 ----
+ifeval::["{build_variant}" == "ospdo"]
+oc get secret tripleo-passwords -n $OSPDO_NAMESPACE -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' | base64 -d > "${TRIPLEO_PASSWORDS}"|| {
+    echo "ERROR: Failed to extract passwords from OSPdO"
+    exit 1
+}
+endif::[]
 AODH_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' AodhPassword:' | awk -F ': ' '{ print $2; }')
 BARBICAN_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' BarbicanPassword:' | awk -F ': ' '{ print $2; }')
 CEILOMETER_METERING_SECRET=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' CeilometerMeteringSecret:' | awk -F ': ' '{ print $2; }')
@@ -77,7 +84,7 @@ SWIFT_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' SwiftPassword:' | aw
 control plane to be deployed:
 +
 ----
-$ oc project openstack
+$ oc project <RHOSO18_NAMESPACE>
 ----
 
 ifeval::["{build}" != "downstream"]
@@ -89,13 +96,6 @@ you use `install_yamls`:
 ----
 # in install_yamls
 make input
-----
-endif::[]
-
-ifeval::["{build_variant}" == "ospdo"]
-+
-----
-$ oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
 ----
 endif::[]
 
@@ -141,6 +141,7 @@ apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
 metadata:
   name: openstack
+  namespace: <RHOSO18_NAMESPACE>
 spec:
   tls:
     podLevel:
@@ -168,6 +169,7 @@ apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
 metadata:
   name: openstack
+  namespace: <RHOSO18_NAMESPACE>
 spec:
   tls:
     podLevel:
@@ -202,6 +204,7 @@ apiVersion: core.openstack.org/v1beta1
 kind: OpenStackControlPlane
 metadata:
   name: openstack
+  namespace: <RHOSO18_NAMESPACE>
 spec:
   secret: osp-secret
 ifeval::["{build_variant}" != "ospdo"]

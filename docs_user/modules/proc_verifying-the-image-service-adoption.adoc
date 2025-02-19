@@ -17,8 +17,8 @@ If no line appears, then the configuration is correct.
 . Inspect the resulting {image_service} pods:
 +
 ----
-GLANCE_POD=`oc get pod |grep glance-default | cut -f 1 -d' ' | head -n 1`
-oc exec -t $GLANCE_POD -c glance-api -- cat /etc/glance/glance.conf.d/02-config.conf
+GLANCE_POD=`oc -n $RHOSO18_NAMESPACE get pod |grep glance-default | cut -f 1 -d' ' | head -n 1`
+oc -n $RHOSO18_NAMESPACE exec -t $GLANCE_POD -c glance-api -- cat /etc/glance/glance.conf.d/02-config.conf
 
 [DEFAULT]
 enabled_backends=default_backend:rbd
@@ -34,7 +34,7 @@ store_description=Ceph glance store backend.
 . If you use a {Ceph} back end, ensure that the {Ceph} secrets are mounted:
 +
 ----
-$ oc exec -t $GLANCE_POD -c glance-api -- ls /etc/ceph
+$ oc -n $RHOSO18_NAMESPACE exec -t $GLANCE_POD -c glance-api -- ls /etc/ceph
 ceph.client.openstack.keyring
 ceph.conf
 ----
@@ -42,7 +42,7 @@ ceph.conf
 . Check that the service is active, and that the endpoints are updated in the {OpenStackShort} CLI:
 +
 ----
-$ oc rsh openstackclient
+$ oc -n $RHOSO18_NAMESPACE rsh openstackclient
 $ openstack service list | grep image
 
 | fc52dbffef36434d906eeb99adfc6186 | glance    | image        |

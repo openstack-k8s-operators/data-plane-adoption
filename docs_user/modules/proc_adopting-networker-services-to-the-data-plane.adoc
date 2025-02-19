@@ -62,6 +62,7 @@ apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneNodeSet
 metadata:
   name: openstack-networker
+  namespace: $RHOSO18_NAMESPACE
 spec:
   tlsEnabled: false <1>
   networkAttachments:
@@ -72,7 +73,6 @@ ifeval::["{build}" == "downstream"]
     - redhat
 endif::[]
     - bootstrap
-    - download-cache
     - configure-network
     - validate-network
     - install-os
@@ -272,7 +272,7 @@ external_ids        : {hostname=controller-0.localdomain, ovn-bridge=br-int, ovn
 +
 [source,yaml]
 ----
-$ oc patch openstackdataplanenodeset <networker_CR_name> --type='json' --patch='[
+$ oc-n $RHOSO18_NAMESPACE -n $RHOSO18_NAMESPACE patch openstackdataplanenodeset <networker_CR_name> --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
@@ -305,6 +305,7 @@ apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
   name: openstack-pre-adoption-networker
+  namespace: $RHOSO18_NAMESPACE
 spec:
   nodeSets:
   - openstack-networker
@@ -316,17 +317,17 @@ EOF
 .. When the validation is finished, confirm that the status of the Ansible EE pods is `Completed`:
 +
 ----
-$ watch oc get pod -l app=openstackansibleee
+$ watch oc -n $RHOSO18_NAMESPACE get pod -l app=openstackansibleee
 ----
 +
 ----
-$ oc logs -l app=openstackansibleee -f --max-log-requests 20
+$ oc -n $RHOSO18_NAMESPACE logs -l app=openstackansibleee -f --max-log-requests 20
 ----
 
 .. Wait for the deployment to reach the `Ready` status:
 +
 ----
-$ oc wait --for condition=Ready openstackdataplanedeployment/openstack-pre-adoption-networker --timeout=10m
+$ oc -n $RHOSO18_NAMESPACE wait --for condition=Ready openstackdataplanedeployment/openstack-pre-adoption-networker --timeout=10m
 ----
 
 . Deploy the `OpenStackDataPlaneDeployment` CR for Networker nodes:
@@ -338,6 +339,7 @@ apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
   name: openstack-networker
+  namespace: $RHOSO18_NAMESPACE
 spec:
   nodeSets:
   - openstack-networker
@@ -352,17 +354,17 @@ Alternatively, you can include the Networker node set in the `nodeSets` list bef
 . Confirm that all the Ansible EE pods reach a `Completed` status:
 +
 ----
-$ watch oc get pod -l app=openstackansibleee
+$ watch oc -n $RHOSO18_NAMESPACE get pod -l app=openstackansibleee
 ----
 +
 ----
-$ oc logs -l app=openstackansibleee -f --max-log-requests 20
+$ oc -n $RHOSO18_NAMESPACE logs -l app=openstackansibleee -f --max-log-requests 20
 ----
 
 . Wait for the data plane node set to reach the `Ready` status:
 +
 ----
-$ oc wait --for condition=Ready osdpns/<networker_CR_name> --timeout=30m
+$ oc -n $RHOSO18_NAMESPACE wait --for condition=Ready osdpns/<networker_CR_name> --timeout=30m
 ----
 +
 * Replace `<networker_CR_name>` with the name of the CR that you deployed for your Networker nodes, for example, `openstack-networker`.
@@ -370,7 +372,7 @@ $ oc wait --for condition=Ready osdpns/<networker_CR_name> --timeout=30m
 . Verify that the {networking_first_ref} agents are running. The list of agents varies depending on the services you enabled:
 +
 ----
-$ oc exec openstackclient -- openstack network agent list
+$ oc -n $RHOSO18_NAMESPACE exec openstackclient -- openstack network agent list
 +--------------------------------------+------------------------------+--------------------------+-------------------+-------+-------+----------------------------+
 | ID                                   | Agent Type                   | Host                     | Availability Zone | Alive | State | Binary                     |
 +--------------------------------------+------------------------------+--------------------------+-------------------+-------+-------+----------------------------+

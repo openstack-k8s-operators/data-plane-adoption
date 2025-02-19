@@ -7,7 +7,7 @@ ifdef::context[:parent-context: {context}]
 = Configuring the network for the {rhos_long_noacro} deployment
 
 When you adopt a new {rhos_long} deployment, you must align the network
-configuration with the adopted cluster to maintain connectivity for existing
+configuration with the adopted source cluster to maintain connectivity for existing
 workloads.
 
 Perform the following tasks to incorporate the existing network configuration:

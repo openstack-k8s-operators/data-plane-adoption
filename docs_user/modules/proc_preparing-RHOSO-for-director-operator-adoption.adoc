@@ -315,6 +315,8 @@ BMO_SETUP=false NETWORK_ISOLATION=false NAMESPACE=${RHOSO18_NAMESPACE} make open
 BMO_SETUP=false NETWORK_ISOLATION=false NAMESPACE=${RHOSO18_NAMESPACE} make openstack_init
 BMO_SETUP=false NETWORK_ISOLATION=false make metallb
 ----
+[NOTE]
+ This step can also be achieved by following the Openstack Service On Openshift procedure, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html-single/deploying_red_hat_openstack_services_on_openshift/index#assembly_installing-and-preparing-the-Operators[Installing the Openstack Operator].
 
 
 . Apply the `IPAddressPool` resource that matches the new OpenStack 18 deployment to configure which IPs can be used as virtual IPs (VIPs):
