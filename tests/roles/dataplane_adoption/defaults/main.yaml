@@ -4,6 +4,7 @@ supported_backup_backends: []
 supported_volume_backends: []
 edpm_networker_deploy: false
 configure_ipam: true
+libvirt_password: ''
 netconfig_networks:
   - name: ctlplane
     dnsDomain: ctlplane.example.com
