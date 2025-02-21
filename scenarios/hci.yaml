@@ -3,7 +3,7 @@ undercloud:
   config:
     - section: DEFAULT
       option: undercloud_hostname
-      value: undercloud.localdomain
+      value: undercloud.example.com
     - section: DEFAULT
       option: undercloud_timezone
       value: UTC
@@ -22,7 +22,7 @@ undercloud:
   undercloud_parameters_override: "hci/hieradata_overrides_undercloud.yaml"
   undercloud_parameters_defaults: "hci/undercloud_parameter_defaults.yaml"
   ctlplane_vip: 192.168.122.98
-cloud_domain: "localdomain"
+cloud_domain: "example.com"
 hostname_groups_map:
   # map ansible groups in the inventory to role hostname format for
   # 17.1 deployment
