@@ -62,3 +62,7 @@ consumed and are not available for the new control plane services until the adop
 
 . Repeat this procedure for each isolated network and each host in the
 configuration.
+
+ifeval::["{build}-{build_variant}" == "downstream-ospdo"]
+For Director Operator network configurations please consult the documentation.For more information, see link :https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#assembly_creating-networks-with-director-operator[creating-networks-with-director-operator].
+endif::[]

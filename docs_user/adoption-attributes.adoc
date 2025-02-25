@@ -82,6 +82,7 @@ ifeval::["{build}" == "downstream"]
 :rhos_acro: RHOSO
 :rhos_prev_long: Red{nbsp}Hat OpenStack Platform
 :OpenStackShort: RHOSP
+:directorOperatorShort: OSPdO
 :rhos_curr_ver: 18.0
 :rhos_prev_ver: 17.1
 :rhos_z_stream: 0
