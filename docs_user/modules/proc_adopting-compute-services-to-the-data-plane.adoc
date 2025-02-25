@@ -148,6 +148,30 @@ oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-
 rm -f id*
 cd -
 ----
++
+
+. If TLS Everywhere is enabled, set LIBVIRT_PASSWORD to match the existing {OpenStackShort} deployment password:
++
+----
+declare -A TRIPLEO_PASSWORDS
+TRIPLEO_PASSWORDS[default]="$HOME/overcloud-passwords.yaml"
+LIBVIRT_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' LibvirtTLSPassword:' | awk -F ': ' '{ print $2; }')
+LIBVIRT_PASSWORD_BASE64=$(echo -n "$LIBVIRT_PASSWORD" | base64)
+----
+* Create libvirt-secret when TLS-e is enabled.
+[source,yaml]
+----
+$ oc apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: libvirt-secret
+  namespace: openstack
+type: Opaque
+data:
+  LibvirtPassword: ${LIBVIRT_PASSWORD_BASE64}
+EOF
+----
 
 . If you use a local storage back end for libvirt, create a `nova-compute-extra-config` service to remove pre-fast-forward workarounds and configure Compute services to use a local storage back end:
 +

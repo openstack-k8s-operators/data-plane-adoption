@@ -92,6 +92,25 @@
     rm -f id*
     cd -
 
+- name: create libvirt-secret
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: Secret
+    metadata:
+        name: libvirt-secret
+        namespace: openstack
+    type: Opaque
+    data:
+      LibvirtPassword: {{ libvirt_password | b64encode }}
+    EOF
+  when:
+    - not ospdo_src| bool
+    - libvirt_password | length > 0
+
 - name: create a Nova Compute Extra Config service (no ceph backend in use)
   when:
     - compute_adoption|bool
