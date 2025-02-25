@@ -24,7 +24,7 @@ $ CONTROLLER1_SCP=$(echo "$CONTROLLER1_SSH" | sed 's/^ssh/scp/g')
 include::../../tests/roles/octavia_adoption/tasks/octavia_certs.yaml[lines="7..83",indent=0]
 ----
 
-. Optional: Copy the existing public SSH key that you can use for connecting to the amphorae and install it into {OpenShiftShort}:
+. Optional: Copy the existing public SSH key that you can use for connecting to the amphorae and install it into {OpenShiftShort}. Replace `{{ octavia_ssh_pubkey_path }}` with the path that was configured using the `OctaviaAmphoraSshKeyFile` parameter in the previous deployment (the default is `/etc/octavia/ssh/octavia_id_rsa`):
 +
 ----
 include::../../tests/roles/octavia_adoption/tasks/octavia_ssh.yaml[lines="7..20",indent=0]
