@@ -123,7 +123,7 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file=<patch_name
 +
 * Replace `<patch_name>` with the name of your patch file.
 +
-* The following example shows a `cinder_services.patch` file for an RBD deployment:
+* The following example shows a `cinder_services.patch` file for a Ceph RBD deployment:
 +
 [source,yaml]
 ----
@@ -159,7 +159,64 @@ spec:
             rbd_flatten_volume_from_snapshot=False
             report_discard_supported=True
 ----
-
++
+. Configure the NetApp NFS Block Storage volume service:
+.. Create secrets that includes sensitive information such as hostnames, passwords, and usernames to access the third-party NetApp NFS storage. You can find the credentials in the `cinder.conf` file that was generated from the {OpenStackPreviousInstaller} deployment.
++
+[source,yaml]
+----
+$ oc apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    service: cinder
+    component: cinder-volume
+  name: cinder-volume-ontap-secrets
+type: Opaque
+stringData:
+  ontap-cinder-secrets: |
+    [ontap-nfs]
+    netapp_login= netapp_username
+    netapp_password= netapp_password
+    netapp_vserver= netapp_vserver
+    nas_host= netapp_nfsip
+    nas_share_path=/netapp_nfspath
+    netapp_pool_name_search_pattern=(netapp_poolpattern)
+EOF
+----
+.. Patch the `OpenStackControlPlane` CR to deploy NetApp NFS Block Storage volume backend:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file=<cinder_netappNFS.patch>
+----
++
+* The following example shows a `cinder_netappNFS.patch` file that configures a NetApp NFS Block Storage volume service:
++
+[source,yaml]
+----
+spec:
+  cinder:
+    enabled: true
+    template:
+      cinderVolumes:
+        ontap-nfs:
+          networkAttachments:
+            - storage
+          customServiceConfig: |
+            [ontap-nfs]
+            volume_backend_name=ontap-nfs
+            volume_driver=cinder.volume.drivers.netapp.common.NetAppDriver
+            nfs_snapshot_support=true
+            nas_secure_file_operations=false
+            nas_secure_file_permissions=false
+            netapp_server_hostname= netapp_backendip
+            netapp_server_port=80
+            netapp_storage_protocol=nfs
+            netapp_storage_family=ontap_cluster
+          customServiceConfigSecrets:
+          - cinder-volume-ontap-secrets
+----
 . Check if all the services are up and running.
 +
 ----
