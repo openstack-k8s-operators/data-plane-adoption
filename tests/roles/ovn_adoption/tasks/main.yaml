@@ -263,9 +263,8 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc exec ovsdbserver-nb-0 ovn-nbctl show
-    oc exec ovsdbserver-sb-0 ovn-sbctl show
-
+    oc exec ovsdbserver-nb-0 -- ovn-nbctl show
+    oc exec ovsdbserver-sb-0 -- ovn-sbctl show
   register: ovn_show_responding_result
 
 - name: stop old ovn ovsdb services
