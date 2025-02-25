@@ -29,7 +29,9 @@ these variables suit your environment:
  ** `tripleo_passwords`     (for each {OpenStackPreviousInstaller} Heat stack on the source cloud)
  ** `source_galera_members` (for each cell controller on the source cloud)
  ** `source_mariadb_ip`     (for each cell controller on the source cloud)
+ ** `edpm_nodes`            (for each cell compute node on the destination)
  ** `edpm_privatekey_path`
+ ** `source_ovndb_ip``
  ** `timesync_ntp_servers`
 
 == Running the tests
