@@ -165,11 +165,11 @@ sh-5.1# mount
 $ oc rsh openstackclient
 $ openstack image list
 
-sh-5.1$  curl -L -o /tmp/cirros-0.5.2-x86_64-disk.img http://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
+sh-5.1$  curl -L -o /tmp/cirros-0.6.3-x86_64-disk.img http://download.cirros-cloud.net/0.6.3/cirros-0.6.3-x86_64-disk.img
 ...
 ...
 
-sh-5.1$ openstack image create --container-format bare --disk-format raw --file /tmp/cirros-0.5.2-x86_64-disk.img cirros
+sh-5.1$ openstack image create --container-format bare --disk-format raw --file /tmp/cirros-0.6.3-x86_64-disk.img cirros
 ...
 ...
 

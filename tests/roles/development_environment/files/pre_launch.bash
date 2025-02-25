@@ -56,8 +56,8 @@ function create_bfv_volume() {
 }
 
 # Create Image
-IMG=cirros-0.5.2-x86_64-disk.img
-URL=http://download.cirros-cloud.net/0.5.2/$IMG
+IMG=cirros-0.6.3-x86_64-disk.img
+URL=http://download.cirros-cloud.net/0.6.3/$IMG
 DISK_FORMAT=qcow2
 RAW=$IMG
 curl -L -# $URL > /tmp/$IMG
