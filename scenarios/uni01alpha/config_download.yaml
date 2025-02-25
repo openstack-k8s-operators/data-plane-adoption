@@ -109,3 +109,4 @@ parameter_defaults:
     IronicApiNetwork: ironic
     IronicNetwork: ironic
     IronicInspectorNetwork: ironic
+  IronicCleaningDiskErase: metadata
