@@ -27,10 +27,23 @@ include::../../tests/roles/octavia_adoption/tasks/octavia_certs.yaml[lines="7..8
 . Optional: Copy the existing public SSH key that you can use for connecting to the amphorae and install it into {OpenShiftShort}:
 +
 ----
-include::../../tests/roles/octavia_adoption/tasks/octavia_ssh.yaml[lines="7..20",indent=0]
+    ${CONTROLLER1_SCP}:<octavia_ssh_pubkey_path> $HOME/octavia_sshkey.pub
+
+    # Install new data in k8s
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: octavia-ssh-pubkey
+      namespace: openstack
+    data:
+      key: $(cat $HOME/octavia_sshkey.pub)
+    EOF
+
+    rm -f $HOME/octavia_sshkey.pub
 ----
 +
-Replace `{{ octavia_ssh_pubkey_path }}` with the path that you configured by using the `OctaviaAmphoraSshKeyFile` parameter in the previous deployment. The default path is `/etc/octavia/ssh/octavia_id_rsa` as shown in this example:
+Replace `<octavia_ssh_pubkey_path>` with the path that you configured by using the `OctaviaAmphoraSshKeyFile` parameter in the previous deployment. The default path is `/etc/octavia/ssh/octavia_id_rsa`. For example:
 +
 ----
 parameter_defaults:
