@@ -4,7 +4,7 @@ alias openstack="$OPENSTACK_COMMAND"
 
 function wait_node_state() {
   local node_state=$1
-  local retries=50
+  local retries=120
   local counter=0
   set +e
   until ! ${BASH_ALIASES[openstack]} baremetal node list -f value -c "Provisioning\ State" | grep -P "^(?!${node_state}).*$"; do
