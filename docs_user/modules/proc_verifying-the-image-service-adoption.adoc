@@ -68,9 +68,9 @@ ifeval::["{build}" != "downstream"]
 +
 ----
 (openstack)$ alias openstack="oc exec -t openstackclient -- openstack"
-(openstack)$ curl -L -o /tmp/cirros-0.5.2-x86_64-disk.img http://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
-    qemu-img convert -O raw /tmp/cirros-0.5.2-x86_64-disk.img /tmp/cirros-0.5.2-x86_64-disk.img.raw
-    openstack image create --container-format bare --disk-format raw --file /tmp/cirros-0.5.2-x86_64-disk.img.raw cirros2
+(openstack)$ curl -L -o /tmp/cirros-0.6.3-x86_64-disk.img http://download.cirros-cloud.net/0.6.3/cirros-0.6.3-x86_64-disk.img
+    qemu-img convert -O raw /tmp/cirros-0.6.3-x86_64-disk.img /tmp/cirros-0.6.3-x86_64-disk.img.raw
+    openstack image create --container-format bare --disk-format raw --file /tmp/cirros-0.6.3-x86_64-disk.img.raw cirros2
     openstack image list
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
