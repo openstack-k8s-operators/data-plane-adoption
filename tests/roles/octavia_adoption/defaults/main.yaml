@@ -1,2 +1,4 @@
 octavia_ssh_pubkey_path: /root/.ssh/id_ecdsa.pub
 octavia_ssh_path: /tmp/octavia-ssl
+# rhoso namespace
+rhoso_namespace: "openstack"

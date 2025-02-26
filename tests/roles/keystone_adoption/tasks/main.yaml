@@ -13,7 +13,7 @@
     kind: Secret
     metadata:
       name: keystone
-      namespace: openstack
+      namespace: {{ rhoso_namespace }}
     type: Opaque
     EOF
 
