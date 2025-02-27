@@ -158,7 +158,9 @@ TRIPLEO_PASSWORDS[default]="$HOME/overcloud-passwords.yaml"
 LIBVIRT_PASSWORD=$(cat ${TRIPLEO_PASSWORDS[default]} | grep ' LibvirtTLSPassword:' | awk -F ': ' '{ print $2; }')
 LIBVIRT_PASSWORD_BASE64=$(echo -n "$LIBVIRT_PASSWORD" | base64)
 ----
-* Create libvirt-secret when TLS-e is enabled.
+
+.. Create libvirt-secret when TLS-e is enabled:
++
 [source,yaml]
 ----
 $ oc apply -f - <<EOF
@@ -333,9 +335,9 @@ ifeval::["{build}" == "downstream"]
             - {name: "rhel-9-for-x86_64-baseos-eus-rpms", state: enabled}
             - {name: "rhel-9-for-x86_64-appstream-eus-rpms", state: enabled}
             - {name: "rhel-9-for-x86_64-highavailability-eus-rpms", state: enabled}
-            - {name: "openstack-17.1-for-rhel-9-x86_64-rpms", state: enabled}
+            - {name: "rhoso-18.0-for-rhel-9-x86_64-rpms", state: enabled}
             - {name: "fast-datapath-for-rhel-9-x86_64-rpms", state: enabled}
-            - {name: "openstack-dev-preview-for-rhel-9-x86_64-rpms", state: enabled}
+            - {name: "rhceph-7-tools-for-rhel-9-x86_64-rpms", state: enabled}
 endif::[]
         edpm_bootstrap_release_version_package: []
         # edpm_network_config

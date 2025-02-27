@@ -23,7 +23,7 @@ $ MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podi
 endif::[]
 ifeval::["{build}" == "downstream"]
 $ STORAGE_CLASS=local-storage
-$ MARIADB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-mariadb-rhel9:18.0
+$ MARIADB_IMAGE=registry.redhat.io/rhoso/openstack-mariadb-rhel9:18.0
 endif::[]
 
 $ CELLS="default" <1>

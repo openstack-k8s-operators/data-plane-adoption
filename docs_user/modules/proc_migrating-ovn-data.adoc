@@ -20,7 +20,7 @@ OVSDB_IMAGE=quay.io/podified-antelope-centos9/openstack-ovn-base:current-podifie
 endif::[]
 ifeval::["{build}" == "downstream"]
 STORAGE_CLASS=local-storage
-OVSDB_IMAGE=registry.redhat.io/rhosp-dev-preview/openstack-ovn-base-rhel9:18.0
+OVSDB_IMAGE=registry.redhat.io/rhoso/openstack-ovn-base-rhel9:18.0
 endif::[]
 SOURCE_OVSDB_IP=172.17.0.100 # For IPv4
 SOURCE_OVSDB_IP=[fd00:bbbb::100] # For IPv6
