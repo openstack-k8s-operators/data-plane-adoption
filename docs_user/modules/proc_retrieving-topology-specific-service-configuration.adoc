@@ -21,7 +21,7 @@ ifeval::["{build}" != "downstream"]
 $ MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 endif::[]
 ifeval::["{build}" == "downstream"]
-$ MARIADB_IMAGE=registry.redhat.io/rhoso/openstack-mariadb-rhel9:version-tag
+$ MARIADB_IMAGE=registry.redhat.io/rhoso/openstack-mariadb-rhel9:18.0
 endif::[]
 $ declare -A TRIPLEO_PASSWORDS
 ifeval::["{build_variant}" != "ospdo"]
