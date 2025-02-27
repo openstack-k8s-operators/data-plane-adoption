@@ -209,6 +209,8 @@ dataplane_cr: |
           edpm_bootstrap_release_version_package: []
           os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
           os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
+          # Don't cleanup if os-net-config is not setting all networks and routes
+          edpm_network_config_nonconfigured_cleanup: "{{ dataplane_os_net_config_set_route | default(true) | bool }}"
           os_net_config_dns: {{ dataplane_os_net_config_dns | default("") }}
           edpm_bootstrap_command: |
             {{ edpm_bootstrap_command| indent(10) }}
@@ -334,6 +336,8 @@ networker_cr: |
           edpm_bootstrap_release_version_package: []
           os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
           os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
+          # Don't cleanup if os-net-config is not setting all networks and routes
+          edpm_network_config_nonconfigured_cleanup: "{{ dataplane_os_net_config_set_route | default(true) | bool }}"
           os_net_config_dns: {{ dataplane_os_net_config_dns | default("") }}
           edpm_bootstrap_command: |
             {{ edpm_bootstrap_command| indent(10) }}
