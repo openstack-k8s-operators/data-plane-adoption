@@ -8,7 +8,7 @@
     kind: Secret
     metadata:
       name: swift-conf
-      namespace: openstack
+      namespace: {{ rhoso_namespace }}
     type: Opaque
     data:
       swift.conf: $($CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/swift/etc/swift/swift.conf | base64 -w0)

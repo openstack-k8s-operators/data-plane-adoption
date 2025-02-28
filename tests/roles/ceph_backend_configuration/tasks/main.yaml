@@ -31,7 +31,7 @@
     kind: Secret
     metadata:
       name: ceph-conf-files
-      namespace: openstack
+      namespace: {{ rhoso_namespace }}
     type: Opaque
     EOF
 

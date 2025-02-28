@@ -57,7 +57,7 @@
     kind: Secret
     metadata:
       name: octavia-certs-secret
-      namespace: openstack
+      namespace: {{ rhoso_namespace }}
     type: Opaque
     data:
       server_ca.key.pem:  $(cat ${CERT_MIGRATE_PATH}/server_ca/private/server_ca.key.pem | base64 -w0)
@@ -71,7 +71,7 @@
     kind: Secret
     metadata:
       name: octavia-ca-passphrase
-      namespace: openstack
+      namespace: {{ rhoso_namespace }}
     type: Opaque
     data:
       server-ca-passphrase: $(echo $SERVER_CA_PASSPHRASE | base64 -w0)

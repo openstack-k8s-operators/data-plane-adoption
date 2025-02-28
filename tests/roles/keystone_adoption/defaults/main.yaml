@@ -1,4 +1,6 @@
 ---
+# rhoso namespace
+rhoso_namespace: "openstack"
 keystone_patch: |
   spec:
     keystone:
