@@ -349,7 +349,7 @@ $ for CELL in $(echo $RENAMED_CELLS); do <3>
 >   c1dbs=$(oc exec openstack-$CELL-galera-0 -n $NAMESPACE -c galera -- mysql -rs -uroot -p${PODIFIED_DB_ROOT_PASSWORD[$CELL]} -e 'SHOW databases;') <4>
 >   echo $c1dbs | grep -Eq "\bnova_${CELL}\b" && echo "OK" || echo "CHECK FAILED"
 >   novadb_svc_records=$(oc exec openstack-$CELL-galera-0 -n $NAMESPACE -c galera -- mysql -rs -uroot -p${PODIFIED_DB_ROOT_PASSWORD[$CELL]} \
->     nova_$CELL -e "select host from services where services.binary='nova-compute' order by host asc;")
+>     nova_$CELL -e "select host from services where services.binary='nova-compute' and deleted=0 order by host asc;")
 >   diff -Z <(echo "x$novadb_svc_records") <(echo "x${PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[@]}") && echo "OK" || echo "CHECK FAILED" <5>
 > done
 ----
