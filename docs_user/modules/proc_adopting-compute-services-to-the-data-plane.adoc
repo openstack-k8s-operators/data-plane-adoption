@@ -439,12 +439,18 @@ endif::[]
         # Do not attempt OVS major upgrades here
         edpm_ovs_packages:
         - openvswitch3.3
+        edpm_default_mounts: <4>
+          - path: /dev/hugepages<size>
+            opts: pagesize=<size>
+            fstype: hugetlbfs
+            group: hugetlbfs
 EOF
 ----
 +
 <1> If TLS Everywhere is enabled, change `spec:tlsEnabled` to `true`.
 <2> If your deployment has a custom DNS Domain, modify the `spec:nodes:[NODE NAME]:hostName` to use fqdn for the node.
 <3> Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
+<4> If you need to configure hugepages, adjust `<size>`. To configure multi-sized hugepages, create more items in the list. Note that the mount points must match the source cloud configuration.
 
 . Ensure that you use the same `ovn-controller` settings in the `OpenStackDataPlaneNodeSet` CR that you used in the {compute_service} nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
 +
