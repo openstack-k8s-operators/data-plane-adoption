@@ -15,11 +15,9 @@ Adopt the {image_service_first_ref} that you deployed with an NFS back end. To c
 +
 ----
 
-**GlanceBackend**: file
-
-**GlanceNfsEnabled**: true
-
-**GlanceNfsShare**: 192.168.24.1:/var/nfs
+GlanceBackend: file
+GlanceNfsEnabled: true
+GlanceNfsShare: 192.168.24.1:/var/nfs
 
 ----
 +
@@ -96,7 +94,7 @@ spec:
         storageRequest: 10G
       glanceAPIs:
         default:
-          replicas: 0
+          replicas: 3
           type: single
           override:
             service:
