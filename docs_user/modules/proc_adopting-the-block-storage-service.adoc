@@ -113,9 +113,9 @@ $ oc exec -t cinder-api-0 -c cinder-api -- cinder-manage service remove <service
 * Replace `<service_host>` with the host name, for example, `cinder-backup-0`.
 +
 
-. Deploy the scheduler, backup and volume services.
+. Deploy the scheduler, backup, and volume services:
 +
-* Create another file, for example, `cinder_services.patch`, and apply the configuration.
+* Create another file, for example, `cinder_services.patch`, and apply the configuration:
 +
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch-file=<patch_name>
@@ -161,7 +161,7 @@ spec:
 ----
 +
 . Configure the NetApp NFS Block Storage volume service:
-.. Create secrets that includes sensitive information such as hostnames, passwords, and usernames to access the third-party NetApp NFS storage. You can find the credentials in the `cinder.conf` file that was generated from the {OpenStackPreviousInstaller} deployment.
+.. Create secrets that include sensitive information such as hostnames, passwords, and usernames to access the third-party NetApp NFS storage. You can find the credentials in the `cinder.conf` file that was generated from the {OpenStackPreviousInstaller} deployment.
 +
 [source,yaml]
 ----
@@ -185,7 +185,7 @@ stringData:
     netapp_pool_name_search_pattern=(netapp_poolpattern)
 EOF
 ----
-.. Patch the `OpenStackControlPlane` CR to deploy NetApp NFS Block Storage volume backend:
+.. Patch the `OpenStackControlPlane` CR to deploy NetApp NFS Block Storage volume back end:
 +
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch-file=<cinder_netappNFS.patch>
@@ -217,7 +217,7 @@ spec:
           customServiceConfigSecrets:
           - cinder-volume-ontap-secrets
 ----
-. Check if all the services are up and running.
+. Check if all the services are up and running:
 +
 ----
 $ openstack volume service list
