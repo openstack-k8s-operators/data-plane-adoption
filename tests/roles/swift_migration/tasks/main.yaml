@@ -30,6 +30,11 @@
   retries: 60
   delay: 2
 
+- name: wait until ring configmap includes new pv devices
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    timeout 900s bash -c 'until oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-ring-builder object.builder search --device pv" ; do sleep 60; done'
+
 - name: set standalone node weight to 0 in swift rings
   ansible.builtin.shell: |
     {{ oc_header }}
