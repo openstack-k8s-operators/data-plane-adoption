@@ -53,8 +53,8 @@
         block: |
            # 100 ceph_alertmanager {'dport': [9093]}
            add rule inet filter TRIPLEO_INPUT tcp dport { 9093 } ct state new counter accept comment "100 ceph_alertmanager"
-           # 100 ceph_dashboard {'dport': [8444]}
-           add rule inet filter TRIPLEO_INPUT tcp dport { 8444 } ct state new counter accept comment "100 ceph_dashboard"
+           # 100 ceph_dashboard {'dport': [8443]}
+           add rule inet filter TRIPLEO_INPUT tcp dport { 8443 } ct state new counter accept comment "100 ceph_dashboard"
            # 100 ceph_grafana {'dport': [3100]}
            add rule inet filter TRIPLEO_INPUT tcp dport { 3100 } ct state new counter accept comment "100 ceph_grafana"
            # 100 ceph_prometheus {'dport': [9092]}
