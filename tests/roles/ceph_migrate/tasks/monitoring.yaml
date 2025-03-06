@@ -5,6 +5,25 @@
     ceph_fsid: "{{ mon_dump.fsid }}"
     ceph_cluster: ceph
 
+- name: Set ceph-mgr dashboard port configuration
+  # cephadm runs w/ root privileges
+  become: true
+  block:
+    - name: Set the dashboard port
+      ansible.builtin.command: |
+        {{ ceph_cli }} config set mgr mgr/dashboard/server_port 8443
+      changed_when: false
+    - name: Set the dashboard ssl port
+      ansible.builtin.command: |
+        {{ ceph_cli }} config set mgr mgr/dashboard/ssl_server_port 8443
+      changed_when: false
+    - name: Disable mgr dashboard module (restart)
+      ansible.builtin.command: |
+        {{ ceph_cli }} mgr module disable dashboard
+    - name: Enable mgr dashboard module (restart)
+      ansible.builtin.command: |
+        {{ ceph_cli }} mgr module enable dashboard
+
 # - Expand labels to the whole hostmap
 - name: Apply Monitoring label to the overcloud nodes
   ansible.builtin.import_tasks: labels.yaml
