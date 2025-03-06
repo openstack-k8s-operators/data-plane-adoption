@@ -13,7 +13,7 @@ To adopt the {compute_service_first_ref}, you patch an existing `OpenStackContro
 * You have completed the previous adoption steps.
 * You have defined the following shell variables. Replace the following example values with the values that are correct for your environment:
 ----
-$ alias openstack="oc exec -t openstackclient -- openstack"
+$ alias openstack="oc -n $RHOSO18_NAMESPACE exec -t openstackclient -- openstack"
 ----
 
 .Procedure
@@ -25,7 +25,7 @@ This procedure assumes that {compute_service} metadata is deployed on the top le
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack -n openstack --type=merge --patch '
 spec:
   nova:
     enabled: true
@@ -114,7 +114,7 @@ spec:
 . Wait for the CRs for the Compute control plane services to be ready:
 +
 ----
-$ oc wait --for condition=Ready --timeout=300s Nova/nova
+$ oc -n $RHOSO18_NAMESPACE  wait --for condition=Ready --timeout=300s Nova/nova
 ----
 +
 [NOTE]
@@ -140,7 +140,7 @@ set +u
 . ~/.source_cloud_exported_variables_default
 set -u
 echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS
-oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 |'
+oc -n $RHOSO18_NAMESPACE rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F '| cell1 |'
 ----
 +
 The following changes are expected:

@@ -11,6 +11,9 @@ Planning information::
 * Review the adoption-specific networking requirements. For more information, see xref:configuring-network-for-RHOSO-deployment_planning[Configuring the network for the RHOSO deployment].
 * Review the adoption-specific storage requirements. For more information, see xref:storage-requirements_configuring-network[Storage requirements].
 * Review how to customize your deployed control plane with the services that are required for your environment. For more information, see link:{customizing-rhoso}/index[{customizing-rhoso-t}].
+ifeval::["{build_variant}" == "ospdo"]
+* Familiarize yourself with a disconnected environment deployment. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#proc_configuring-an-airgapped-environment_air-gapped-environment[Configuring an airgapped environment] in _Deploying an overcloud in a Red Hat OpenShift Container Platform cluster with director Operator_.
+endif::[]
 * Familiarize yourself with the following {OpenShiftShort} concepts that are used during adoption:
 ** link:{defaultOCPURL}/nodes/overview-of-nodes[Overview of nodes]
 ** link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors]

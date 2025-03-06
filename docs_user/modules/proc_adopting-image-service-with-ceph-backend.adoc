@@ -54,6 +54,10 @@ EOF
 ====
 If you backed up your {rhos_prev_long} ({OpenStackShort}) services configuration file from the original environment, you can compare it with the confgiuration file that you adopted and ensure that the configuration is correct.
 For more information, see xref:pulling-configuration-from-tripleo-deployment_adopt-control-plane[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
+ifeval::["{build_variant}" == "ospdo"]
+
+* os-diff currently might not support comparing director operator configurations, and the following might not work.
+endif::[]
 
 ----
 os-diff diff /tmp/collect_tripleo_configs/glance/etc/glance/glance-api.conf glance_patch.yaml --crd
@@ -67,5 +71,5 @@ This command produces the difference between both ini configuration files.
 * Patch the `OpenStackControlPlane` CR to deploy the {image_service} with a {Ceph} back end:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_patch.yaml
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch-file glance_patch.yaml
 ----

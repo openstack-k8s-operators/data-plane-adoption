@@ -36,11 +36,11 @@ endif::[]
 In a deployed {OpenStackShort} control plane, you can verify that the network mapping matches with what has been deployed in the {OpenStackPreviousInstaller}-based environment by checking both the `NodeNetworkConfigPolicy` (`nncp`) and the `NetworkAttachmentDefinition` (`net-attach-def`). The following is an example of the output that you should check in the {rhocp_long} environment to make sure that there are no issues with the propagated networks:
 
 ----
-$ oc get nncp
+$ oc -n $RHOSO18_NAMESPACE get nncp
 NAME                        STATUS      REASON
 enp6s0-crc-8cf2w-master-0   Available   SuccessfullyConfigured
 
-$ oc get net-attach-def
+$ oc-n $RHOSO18_NAMESPACE get net-attach-def
 NAME
 ctlplane
 internalapi
@@ -118,7 +118,7 @@ EOF
 . Patch the `OpenStackControlPlane` CR to deploy the {image_service} with an NFS back end:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_nfs_patch.yaml
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch-file glance_nfs_patch.yaml
 ----
 
 .Verification
