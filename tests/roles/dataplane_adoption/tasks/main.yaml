@@ -35,6 +35,11 @@
     file: ospdo.yaml
   when: ospdo_src| bool
 
+- name: Override netconfig_networks if netconfig_networks_override is defined
+  ansible.builtin.set_fact:
+    netconfig_networks: "{{ netconfig_networks_override }}"
+  when: netconfig_networks_override is defined
+
 - name: ensure IPAM is configured
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
