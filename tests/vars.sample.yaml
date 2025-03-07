@@ -93,6 +93,7 @@ supported_backup_backends: #CUSTOMIZE_THIS
 
 # Whether the adopted node will host compute services
 compute_adoption: true
+use_hugepages: false
 
 # Where perform or not telemetry installation during adoption
 telemetry_adoption: true
