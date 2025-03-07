@@ -3,7 +3,7 @@
     {{ mariadb_copy_shell_vars_dst }}
     for CELL in $(echo $RENAMED_CELLS); do
       oc exec openstack-$CELL-galera-0 -n $NAMESPACE -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
-        -e "select a.version from nova_${CELL}.services a join nova_${CELL}.services b where a.version!=b.version and a.binary='nova-compute';"
+        -e "select a.version from nova_${CELL}.services a join nova_${CELL}.services b where a.version!=b.version and a.binary='nova-compute' and a.deleted=0;"
     done
   register: records_check_results
   until: records_check_results.rc == 0 and records_check_results.stdout_lines | length == 0
