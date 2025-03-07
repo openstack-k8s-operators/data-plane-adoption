@@ -54,10 +54,11 @@ $ oc patch openstackcontrolplane openstack --type=merge -p='{"spec":{"swift":{"t
 +
 This command creates three storage instances on the {rhocp_long} cluster that use Persistent Volume Claims.
 
-. Wait until all three pods are running:
+. Wait until all three pods are running and the rings include the new devices:
 +
 ----
 $ oc wait pods --for condition=Ready -l component=swift-storage
+$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-ring-builder object.builder search --device pv'
 ----
 
 . From the current rings, get the storage management IP addresses of the nodes to drain:
