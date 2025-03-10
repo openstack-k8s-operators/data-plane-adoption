@@ -11,6 +11,9 @@ The following features are considered a Technology Preview and have not been tes
 * {bare_metal_first_ref}
 * NFS Ganesha back end for {rhos_component_storage_file_first_ref}
 * iSCSI, NFS, and FC-based drivers for {block_storage_first_ref}
+* {block_storage} back end for the {image_service_first_ref}
+* NFS back end for the {image_service}
+* Third-party drivers for the {rhos_component_storage_file}
 * The following {compute_service_first_ref} features:
 ** Compute hosts with `/var/lib/nova/instances` on NFS
 ** NUMA aware vswitches
