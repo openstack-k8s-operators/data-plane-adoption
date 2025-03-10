@@ -128,7 +128,7 @@ spec:
     templates:
       rabbitmq:
         persistence:
-          storage: 1Gi
+          storage: 3Gi
         override:
           service:
             metadata:
@@ -139,7 +139,7 @@ spec:
               type: LoadBalancer
       rabbitmq-cell1:
         persistence:
-          storage: 1Gi
+          storage: 3Gi
         override:
           service:
             metadata:
