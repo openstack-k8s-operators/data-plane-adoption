@@ -82,6 +82,7 @@ ifeval::["{build}" == "downstream"]
 :rhos_acro: RHOSO
 :rhos_prev_long: Red{nbsp}Hat OpenStack Platform
 :OpenStackShort: RHOSP
+:directorOperatorShort: OSPdO
 :rhos_curr_ver: 18.0
 :rhos_prev_ver: 17.1
 :rhos_z_stream: 0
@@ -149,7 +150,7 @@ ifeval::["{build}" == "downstream"]
 :telemetry: Telemetry service
 endif::[]
 
-ifeval::["{build}-{build_variant}" == "downstream-ospdo"]
+ifeval::["{build_variant}" == "ospdo"]
 :OpenStackPreviousInstaller: director Operator
 endif::[]
 

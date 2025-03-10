@@ -9,7 +9,7 @@ To adopt the {loadbalancer_first_ref}, you patch an existing `OpenStackControlPl
 . Create an alias for the `openstack` command:
 +
 ----
-$ alias openstack="oc exec -t openstackclient -- openstack"
+$ alias openstack="oc -n $RHOSO18_NAMESPACE exec -t openstackclient -- openstack"
 ----
 . Use the `CONTROLLER1_SCP` shell variable to set the value of the existing
 `CONTROLLER1_SSH` variable:
@@ -53,12 +53,12 @@ parameter_defaults:
 . To isolate the management network, add the network interface for the VLAN base interface:
 +
 ----
-$ oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read; do
+$ oc get -n -n $RHOSO18_NAMESPACE  --no-headers nncp | cut -f 1 -d ' ' | while read; do
 
-interfaces=$(oc get nncp $REPLY -o jsonpath="{.spec.desiredState.interfaces[*].name}")
+interfaces=$(oc -n $RHOSO18_NAMESPACE  get nncp $REPLY -o jsonpath="{.spec.desiredState.interfaces[*].name}")
 
 (echo $interfaces | grep -w -q "octbr|enp6s0.24") || \
-        oc patch -n openstack nncp $REPLY --type json --patch '
+        oc patch -n $RHOSO18_NAMESPACE  nncp $REPLY --type json --patch '
 [{
     "op": "add",
     "path": "/spec/desiredState/interfaces/-",
@@ -105,7 +105,7 @@ metadata:
   labels:
     osp/net: octavia
   name: octavia
-  namespace: openstack
+  namespace: $RHOSO18_NAMESPACE
 spec:
   config: |
     {
@@ -127,13 +127,13 @@ spec:
       }
     }
 EOF_CAT
-$ oc apply -n openstack -f octavia-nad.yaml
+$ oc apply -n $RHOSO18_NAMESPACE  -f octavia-nad.yaml
 ----
 
 . Enable the {loadbalancer_service} in {OpenShiftShort}:
 +
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack -n $RHOSO18_NAMESPACE  --type=merge --patch '
 spec:
   ovn:
     template:
@@ -162,7 +162,7 @@ spec:
 . Wait for the {loadbalancer_service} control plane services CRs to be ready:
 +
 ----
-$ oc wait --for condition=Ready --timeout=600s octavia.octavia.openstack.org/octavia
+$ oc -n $RHOSO18_NAMESPACE  wait --for condition=Ready --timeout=600s octavia.octavia.openstack.org/octavia
 ----
 
 . Ensure that the {loadbalancer_service} is registered in the {identity_service}:

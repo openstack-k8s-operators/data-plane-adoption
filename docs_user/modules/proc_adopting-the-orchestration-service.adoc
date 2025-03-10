@@ -46,14 +46,14 @@ UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzIK
 . Patch the `osp-secret` to update the `HeatAuthEncryptionKey` and `HeatPassword` parameters. These values must match the values in the {OpenStackPreviousInstaller} {orchestration} configuration:
 +
 ----
-$ oc patch secret osp-secret --type='json' -p='[{"op" : "replace" ,"path" : "/data/HeatAuthEncryptionKey" ,"value" : "UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzIK"}]'
+$ oc -n $RHOSO18_NAMESPACE patch secret osp-secret --type='json' -p='[{"op" : "replace" ,"path" : "/data/HeatAuthEncryptionKey" ,"value" : "UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzIK"}]'
 secret/osp-secret patched
 ----
 
 . Patch the `OpenStackControlPlane` CR to deploy the {orchestration}:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   heat:
     enabled: true
@@ -67,7 +67,6 @@ spec:
       passwordSelectors:
         authEncryptionKey: HeatAuthEncryptionKey
         service: HeatPassword
-        stackDomainAdminPassword: HeatStackDomainAdminPassword
 '
 ----
 
@@ -76,7 +75,7 @@ spec:
 . Ensure that the statuses of all the CRs are `Setup complete`:
 +
 ----
-$ oc get Heat,HeatAPI,HeatEngine,HeatCFNAPI
+$ oc -n $RHOSO18_NAMESPACE get Heat,HeatAPI,HeatEngine,HeatCFNAPI
 NAME                           STATUS   MESSAGE
 heat.heat.openstack.org/heat   True     Setup complete
 
@@ -93,7 +92,7 @@ heatcfnapi.heat.openstack.org/heat-cfnapi   True     Setup complete
 . Check that the {orchestration} is registered in the {identity_service}:
 +
 ----
-$ oc exec -it openstackclient -- openstack service list -c Name -c Type
+$ oc -n $RHOSO18_NAMESPACE exec -it openstackclient -- openstack service list -c Name -c Type
 +------------+----------------+
 | Name       | Type           |
 +------------+----------------+
@@ -110,7 +109,7 @@ $ oc exec -it openstackclient -- openstack service list -c Name -c Type
 ----
 +
 ----
-$ oc exec -it openstackclient -- openstack endpoint list --service=heat -f yaml
+$ oc -n $RHOSO18_NAMESPACE exec -it openstackclient -- openstack endpoint list --service=heat -f yaml
 - Enabled: true
   ID: 1da7df5b25b94d1cae85e3ad736b25a5
   Interface: public
@@ -130,7 +129,7 @@ $ oc exec -it openstackclient -- openstack endpoint list --service=heat -f yaml
 . Check that the {orchestration} engine services are running:
 +
 ----
-$ oc exec -it openstackclient -- openstack orchestration service list -f yaml
+$ oc -n $RHOSO18_NAMESPACE exec -it openstackclient -- openstack orchestration service list -f yaml
 - Binary: heat-engine
   Engine ID: b16ad899-815a-4b0c-9f2e-e6d9c74aa200
   Host: heat-engine-6d47856868-p7pzz

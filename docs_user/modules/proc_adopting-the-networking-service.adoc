@@ -21,11 +21,11 @@ The {networking_service} adoption is complete if you see the following results:
 ifeval::["{build}" != "downstream"]
 The {networking_service} adoption follows a similar pattern to https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone].
 endif::[]
-
+Identify the custom neutron configuration that has been applied to the existing OSP17.1 cluster and provide that as “CustomServiceConfig” in the patch below.
 * Patch the `OpenStackControlPlane` CR to deploy the {networking_service}:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   neutron:
     enabled: true
@@ -47,6 +47,18 @@ spec:
       secret: osp-secret
       networkAttachments:
       - internalapi
+      customServiceConfig: |
+        [default]
+        global_physnet_mtu = 8950
+        service_plugins=ovn-router,port_forwarding
+        [ml2]
+        mechanism_drivers = ovn,sriovnicswitch
+        extension_drivers=port_numa_affinity_policy,qos
+        [ovn]
+        vhost_sock_dir = /var/lib/vhost_sockets
+        [ml2_type_vlan]
+        network_vlan_ranges = sriov1,sriov2,dpdkdata1
+
 '
 ----
 +
@@ -56,7 +68,7 @@ spec:
 This can be done with patch:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch '
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   neutron:
     template:
@@ -72,7 +84,7 @@ spec:
 * Inspect the resulting {networking_service} pods:
 +
 ----
-NEUTRON_API_POD=`oc get pods -l service=neutron | tail -n 1 | cut -f 1 -d' '`
+NEUTRON_API_POD=`oc -n $RHOSO18_NAMESPACE get pods -l service=neutron | tail -n 1 | cut -f 1 -d' '`
 oc exec -t $NEUTRON_API_POD -c neutron-api -- cat /etc/neutron/neutron.conf
 ----
 

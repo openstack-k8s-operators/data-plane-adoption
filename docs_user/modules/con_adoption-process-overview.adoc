@@ -6,9 +6,13 @@ Familiarize yourself with the steps of the adoption process and the optional pos
 
 .Main adoption process
 
+
 . xref:migrating-tls-everywhere_configuring-network[Migrate TLS everywhere (TLS-e) to the Red Hat OpenStack Services on OpenShift (RHOSO) deployment].
 . xref:migrating-databases-to-the-control-plane_configuring-network[Migrate your existing databases to the new control plane].
 . xref:adopting-openstack-control-plane-services_configuring-network[Adopt your Red Hat OpenStack Platform 17.1 control plane services to the new RHOSO 18.0 deployment].
+ifeval::["{build_variant}" == "ospdo"]
+. xref:ospdo_scale_down_pre_database_adoption_[Scaling down director Operator resources].
+endif::[]
 . xref:adopting-data-plane_adopt-control-plane[Adopt the RHOSO 18.0 data plane].
 . xref:migrating-the-object-storage-service_adopt-control-plane[Migrate the Object Storage service (swift) to the RHOSO nodes].
 . xref:ceph-migration_adopt-control-plane[Migrate the {Ceph} cluster].

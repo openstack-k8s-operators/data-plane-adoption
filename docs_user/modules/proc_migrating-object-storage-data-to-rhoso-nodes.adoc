@@ -49,7 +49,7 @@ Sample represents 100.00% of the object partition space
 // TODO add paragraph / link on EDPM node usage for Swift
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge -p='{"spec":{"swift":{"template":{"swiftStorage":{"replicas": 3}}}}}'
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge -p='{"spec":{"swift":{"template":{"swiftStorage":{"replicas": 3}}}}}'
 ----
 +
 This command creates three storage instances on the {rhocp_long} cluster that use Persistent Volume Claims.
@@ -57,8 +57,8 @@ This command creates three storage instances on the {rhocp_long} cluster that us
 . Wait until all three pods are running and the rings include the new devices:
 +
 ----
-$ oc wait pods --for condition=Ready -l component=swift-storage
-$ oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-ring-builder object.builder search --device pv'
+$ oc -n $RHOSO18_NAMESPACE wait pods --for condition=Ready -l component=swift-storage
+$ oc -n $RHOSO18_NAMESPACE debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-ring-builder object.builder search --device pv'
 ----
 
 . From the current rings, get the storage management IP addresses of the nodes to drain:

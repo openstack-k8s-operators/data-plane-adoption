@@ -174,7 +174,7 @@ __EOF__
 . Patch the `OpenStackControlPlane` CR:
 +
 ----
-$ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/<manila.patch>
+$ oc -n $RHOSO18_NAMESPACE patch openstackcontrolplane openstack --type=merge --patch-file=~/<manila.patch>
 ----
 +
 * Replace `<manila.patch>` with the name of your patch file.
@@ -184,7 +184,7 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file=~/<manila.p
 . Inspect the resulting {rhos_component_storage_file} pods:
 +
 ----
-$ oc get pods -l service=manila
+$ oc -n $RHOSO18_NAMESPACE get pods -l service=manila
 ----
 
 . Check that the Shared File Systems API service is registered in the {identity_service_first_ref}:

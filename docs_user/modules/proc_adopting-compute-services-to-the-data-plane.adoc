@@ -125,9 +125,6 @@ endif::[]
 ifeval::["{build}" == "downstream"]
 $(cat <path_to_SSH_key> | base64 | sed \'s/^/        /')
 endif::[]
-ifeval::["{build_variant}" == "ospdo"]
-      $(oc exec -n $<ospdo_namespace> -t openstackclient openstackclient -- cat /home/cloud-admin/.ssh/id_rsa | base64 | sed \'s/^/        /')
-endif::[]
 EOF
 ----
 +
@@ -141,7 +138,7 @@ endif::[]
 $ cd "$(mktemp -d)"
 ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
 oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
-  -n openstack \
+  -n $RHOSO18_NAMESPACE \
   --from-file=ssh-privatekey=id \
   --from-file=ssh-publickey=id.pub \
   --type kubernetes.io/ssh-auth
@@ -220,7 +217,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nova-extra-config
-  namespace: openstack
+  namespace: $RHOSO18_NAMESPACE
 data:
   19-nova-compute-cell1-workarounds.conf: |
     [workarounds]
@@ -240,6 +237,27 @@ EOF
 +
 The resources in the `ConfigMap` contain cell-specific configurations.
 
+ifeval::["{build_variant}" == "ospdo"]
+. Create Libvirt secret:
++
+----
+$ echo "Create libvirt secret"
+    LIBVIRT_PASSWORD=$(grep <"${PASSWORD_FILE}" ' LibvirtTLSPassword:' | awk -F ': ' '{ print $2; }')
+
+$ oc apply -f - <<EOF
+apiVersion: v1
+data:
+ LibvirtPassword: $(echo -n "${LIBVIRT_PASSWORD}" | base64)
+kind: Secret
+metadata:
+ name: libvirt-secret
+ namespace: ${RHOSO18_NAMESPACE}
+type: Opaque
+EOF
+----
++
+endif::[]
+
 ifeval::["{build}" == "downstream"]
 . Create a secret for the subscription manager:
 +
@@ -254,7 +272,7 @@ $ oc create secret generic subscription-manager \
 . Create a secret for the Red Hat registry:
 +
 ----
-$ oc create secret generic redhat-registry \
+$ oc -n $RHOSO18_NAMESPACE create secret generic redhat-registry \
 --from-literal edpm_container_registry_logins='{"registry.redhat.io": {"<registry_username>": "<registry_password>"}}'
 ----
 +
@@ -271,6 +289,7 @@ apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneNodeSet
 metadata:
   name: openstack-cell1
+  namespace: $RHOSO18_NAMESPACE
 spec:
   tlsEnabled: false <1>
   networkAttachments:
@@ -281,14 +300,12 @@ ifeval::["{build}" == "downstream"]
     - redhat
 endif::[]
     - bootstrap
-    - download-cache
     - configure-network
     - validate-network
     - install-os
     - configure-os
     - ssh-known-hosts
     - run-os
-    - reboot-os
     - install-certs
     - libvirt
     - nova
@@ -461,14 +478,13 @@ external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-b
 +
 [source,yaml]
 ----
-$ oc patch osdpns/openstack-cell1 --type=merge --patch "
+$ oc -n $RHOSO18_NAMESPACE patch osdpns/openstack-cell1 --type=merge --patch "
 spec:
   services:
 ifeval::["{build}" == "downstream"]
     - redhat
 endif::[]
     - bootstrap
-    - download-cache
     - configure-network
     - validate-network
     - install-os
@@ -504,7 +520,7 @@ Ensure that you use the same list of services from the original `OpenStackDataPl
 +
 [source,yaml]
 ----
-$ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
+$ oc -n $RHOSO18_NAMESPACE patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
@@ -529,7 +545,7 @@ $ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
 +
 [source,yaml]
 ----
-$ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
+$ oc -n $RHOSO18_NAMESPACE patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
@@ -565,6 +581,7 @@ apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneService
 metadata:
   name: pre-adoption-validation
+  namespace: $RHOSO18_NAMESPACE
 spec:
   playbook: osp.edpm.pre_adoption_validation
 EOF
@@ -579,6 +596,7 @@ apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
   name: openstack-pre-adoption
+  namespace: $RHOSO18_NAMESPACE
 spec:
   nodeSets:
   - openstack
@@ -590,11 +608,11 @@ EOF
 .. When the validation is finished, confirm that the status of the Ansible EE pods is `Completed`:
 +
 ----
-$ watch oc get pod -l app=openstackansibleee
+$ watch oc -n $RHOSO18_NAMESPACE get pod -l app=openstackansibleee
 ----
 +
 ----
-$ oc logs -l app=openstackansibleee -f --max-log-requests 20
+$ oc -n $RHOSO18_NAMESPACE logs -l app=openstackansibleee -f --max-log-requests 20
 ----
 
 .. Wait for the deployment to reach the `Ready` status:
@@ -628,6 +646,7 @@ apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneService
 metadata:
   name: tripleo-cleanup
+  namespace: $RHOSO18_NAMESPACE
 spec:
   playbook: osp.edpm.tripleo_cleanup
 EOF
@@ -642,6 +661,7 @@ apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
   name: tripleo-cleanup
+  namespace: $RHOSO18_NAMESPACE
 spec:
   nodeSets:
   - openstack
@@ -659,6 +679,7 @@ apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
   name: openstack
+  namespace: $RHOSO18_NAMESPACE
 spec:
   nodeSets:
   - openstack
@@ -674,23 +695,23 @@ add them in the `nodeSets` list in this step, or create separate `OpenStackDataP
 . Confirm that all the Ansible EE pods reach a `Completed` status:
 +
 ----
-$ watch oc get pod -l app=openstackansibleee
+$ watch -n $RHOSO18_NAMESPACE oc get pod -l app=openstackansibleee
 ----
 +
 ----
-$ oc logs -l app=openstackansibleee -f --max-log-requests 20
+$ oc -n $RHOSO18_NAMESPACE logs -l app=openstackansibleee -f --max-log-requests 20
 ----
 
 . Wait for the data plane node set to reach the `Ready` status:
 +
 ----
-$ oc wait --for condition=Ready osdpns/openstack-cell1 --timeout=30m
+$ oc -n $RHOSO18_NAMESPACE wait --for condition=Ready osdpns/openstack-cell1 --timeout=30m
 ----
 
 . Verify that the {networking_first_ref} agents are running:
 +
 ----
-$ oc exec openstackclient -- openstack network agent list
+$ oc -n $RHOSO18_NAMESPACE exec openstackclient -- openstack network agent list
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
 | ID                                   | Agent Type                   | Host                   | Availability Zone | Alive | State | Binary                     |
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
@@ -698,6 +719,19 @@ $ oc exec openstackclient -- openstack network agent list
 | 10482583-2130-5b0d-958f-3430da21b929 | OVN Metadata agent           | standalone.localdomain |                   | :-)   | UP    | neutron-ovn-metadata-agent |
 | a4f1b584-16f1-4937-b2b0-28102a3f6eaa | OVN Controller agent         | standalone.localdomain |                   | :-)   | UP    | ovn-controller             |
 +--------------------------------------+------------------------------+------------------------+-------------------+-------+-------+----------------------------+
+----
+
+. Verify that the hypervisors are UP:
++
+----
+$ oc -n $RHOSO18_NAMESPACE exec openstackclient -- openstack compute service list
+$ oc -n $RHOSO18_NAMESPACE exec openstackclient -- openstack hypervisor list
+----
++
+. Verify that the VMs are running / started:
++
+----
+$ oc -n $RHOSO18_NAMESPACE exec openstackclient -- openstack server lis
 ----
 
 .Next steps
