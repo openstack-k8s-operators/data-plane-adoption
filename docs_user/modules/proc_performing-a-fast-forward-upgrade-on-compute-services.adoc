@@ -8,7 +8,7 @@ You must upgrade the Compute services from {rhos_prev_long} {rhos_prev_ver} to {
 * Remove pre-fast-forward upgrade workarounds from the Compute control plane services and Compute data plane services.
 * Run Compute database online migrations to update live data.
 
-. Prerequisites
+.Prerequisites
 
 * Define the shell variables necessary to apply the fast-forward upgrade commands for each {compute_service} cell.
 
