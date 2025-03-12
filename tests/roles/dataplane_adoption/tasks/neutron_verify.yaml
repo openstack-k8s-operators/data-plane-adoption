@@ -58,6 +58,86 @@
   environment:
     OS_CLOUD_IP: "{{ standalone_ip | default(edpm_node_ip) }}"
   block:
+    # Temporal - tobiko installation task
+    - name: tobiko installation
+      ansible.builtin.shell: |
+          mkdir -p ~/src/x && cd ~/src/x && git clone https://github.com/redhat-openstack/tobiko.git
+    - name: validate tobiko
+      vars:
+        tobiko_yaml: |
+          apiVersion: test.openstack.org/v1beta1
+          kind: Tobiko
+          metadata:
+            name: tobiko-tests
+            namespace: openstack
+          spec:
+            backoffLimit: 0
+            kubeconfigSecretName: tobiko-secret
+            storageClass: local-storage
+          config: |2-
+            [DEFAULT]
+            log_dir = /var/lib/tobiko/tobiko
+            log_file = tobiko.log
+            debug = True
+            [testcase]
+            timeout = 1800.0
+            test_runner_timeout = 14400.0
+            [ubuntu]
+            interface_name = enp3s0
+            image_file = ~/.downloaded-images/ubuntu-minimal
+            customized_image_provided = True
+            image_url = https://softwarefactory-project.io/ubuntu-minimal-customized-enp3s0
+            [keystone]
+            interface = public
+            [advanced_vm]
+            image_url = http://ci-vm-10-0-152-55.hosted.upshift.rdu2.redhat.com/dfg-network/Customized-Fedora-Cloud-Base-Generic-41-1.4.x86_64.qcow2
+            username = fedora
+          numProcesses: 0
+          parallel: false
+          preventCreate: false
+          workflow:
+          - backoffLimit: 0
+            stepName: verify-resources
+            storageClass: local-storage
+            testenv: scenario
+            preventCreate: true
+      ansible.builtin.copy:
+        mode: a+r
+        content: "{{ tobiko_yaml }}"
+        dest: ~/src/x/tobiko/tobiko_yaml.yaml
+
+    - name: run tobiko
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        chdir: ~/src/x/tobiko/
+        cmd: oc apply -f tobiko_yaml.yaml
+
+    - name: tobiko result
+      #TODO - check the tobiko results
+      ansible.builtin.pause:
+        minutes: 1
+
+    - name: tobiko cleanup
+      vars:
+        tobiko_cleanup: |
+          - name: Playbook to cleanup tobiko resources from controller-0
+            hostname: localhost
+            tasks:
+              - name: "cleanup tobiko resources"
+                vars:
+                  openstack_cmd: "oc -n openstack rsh openstackclient openstack"
+                ansible.builtin.include_role:
+                  name: tobiko-cleanup
+      ansible.builtin.copy:
+        mode: a+r
+        content: "{{ tobiko_playbook }}"
+        dest: ~/src/x/tobiko/tobiko_cleanup.yaml
+
+    - name: Run Tobiko cleanup
+      ansible.builtin.shell:
+        chdir: ~/src/x/tobiko/
+        cmd: ansible-playbook tobiko-cleanup.yaml
+
     - name: stop pinger
       ansible.builtin.shell: |
           ssh ${OS_CLOUD_IP} "echo 'exit' > ~/adoption/_pinger_cmd.txt </dev/null"
