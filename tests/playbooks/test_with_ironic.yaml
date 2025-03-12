@@ -30,7 +30,7 @@
   roles:
     - role: development_environment
     - role: backend_services
-    - role: pull_openstack_configuration
+    - role: get_services_configuration
     - role: stop_openstack_services
     - role: mariadb_copy
     - role: ovn_adoption
