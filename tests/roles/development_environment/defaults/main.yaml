@@ -17,6 +17,7 @@ edpm_privatekey_path: ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa
 run_pre_adoption_validation: true
 os_cloud_name: standalone
 source_osp_ssh_user: root
+use_hugepages: false
 # Supported storage backends for Cinder of the source cloud
 # must match those configured for the target cloud
 supported_volume_backends: []

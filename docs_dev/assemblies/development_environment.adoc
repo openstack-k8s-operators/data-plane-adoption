@@ -146,6 +146,13 @@ To use OSP 17.1 content to deploy TripleO Standalone, follow the
 https://url.corp.redhat.com/devel-rhoso-adoption[guide for setting up downstream content]
 for `make standalone`.
 
+[,bash]
+----
+cd ~/install_yamls/devsetup
+EDPM_CONFIGURE_HUGEPAGES=false make standalone <1>
+----
+<1> To configure the host for a simplistic hugepages setup, set `EDPM_CONFIGURE_HUGEPAGES=true`.
+
 === Snapshot/revert
 
 When the deployment of the Standalone OpenStack is finished, it's a
@@ -219,12 +226,14 @@ Create a test VM instance with a test volume attachement:
 cd ~/data-plane-adoption
 export CINDER_VOLUME_BACKEND_CONFIGURED=true <1>
 export CINDER_BACKUP_BACKEND_CONFIGURED=true
+export EDPM_CONFIGURE_HUGEPAGES=false <2>
 export OPENSTACK_COMMAND="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=standalone openstack"
 OS_CLOUD_IP=192.168.122.100 OS_CLOUD_NAME=standalone \
     bash tests/roles/development_environment/files/pre_launch.bash
 ----
 <1> Use `CINDER_*_BACKEND_CONFIGURED=false`, if Cinder Volume or Backup services' storage backends have been not configured for the source cloud,
 or won't be configured for the target cloud. That might be a valid case for some developement setups, but not for a production scenarios.
+<2> To configure the host for a simplistic hugepages setup `EDPM_CONFIGURE_HUGEPAGES=true`. To apply kernel args, you will need to reboot the standalone host after deployment completed.
 
 This also creates a test Cinder volume, a backup from it, and a snapshot of it.
 
