@@ -258,7 +258,7 @@ $ oc create secret generic redhat-registry \
 --from-literal edpm_container_registry_logins='{"registry.redhat.io": {"<registry_username>": "<registry_password>"}}'
 ----
 +
-* Replace `<registry_username>` with the applicable user name.
+* Replace `<registry_username>` with the applicable username.
 * Replace `<registry_password>` with the applicable password.
 endif::[]
 
