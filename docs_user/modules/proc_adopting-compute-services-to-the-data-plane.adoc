@@ -248,7 +248,7 @@ $ oc create secret generic subscription-manager \
 --from-literal rhc_auth='{"login": {"username": "<subscription_manager_username>", "password": "<subscription_manager_password>"}}'
 ----
 +
-* Replace `<subscription_manager_username>` with the applicable user name.
+* Replace `<subscription_manager_username>` with the applicable username.
 * Replace `<subscription_manager_password>` with the applicable password.
 
 . Create a secret for the Red Hat registry:
