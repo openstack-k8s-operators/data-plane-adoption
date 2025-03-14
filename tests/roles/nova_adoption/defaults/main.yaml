@@ -1,4 +1,5 @@
 ironic_adoption: false
+ironic_adoption_remove_ffu_workaround_patch: true
 # Libvirt backends: ceph or local
 nova_libvirt_backend: local
 
