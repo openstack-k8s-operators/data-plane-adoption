@@ -1,6 +1,6 @@
 # NOTE(bogdando): Status phase 'Running' doesn't necessarily mean it IS running in fact.
 # Instead, wait for CR Ready status
-- name: wait for Nova control plane services' CRs to become ready
+- name: wait until the Compute control plane services CRs are ready
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
