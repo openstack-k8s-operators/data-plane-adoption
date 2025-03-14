@@ -2,29 +2,34 @@
 
 = Adoption limitations
 
-Before you proceed with the adoption, check which features are considered a Technology Preview or are unsupported.
+Before you proceed with the adoption, check which features are Technology Previews or unsupported.
 
 .Technology Preview
 
-The following features are considered a Technology Preview and have not been tested within the context of the {rhos_long_noacro} adoption:
+The following features are Technology Previews and have not been tested within the context of the {rhos_long_noacro} adoption:
 
 * {bare_metal_first_ref}
 * NFS Ganesha back end for {rhos_component_storage_file_first_ref}
 * iSCSI, NFS, and FC-based drivers for {block_storage_first_ref}
-* The following {compute_service_first_ref} features:
-** Compute hosts with `/var/lib/nova/instances` on NFS
-** NUMA aware vswitches
-** PCI passthrough by flavor
-** SR-IOV trusted virtual functions
-** RX and TX queue sizes
-** vGPU
-** Virtio multiqueue
-** Emulated virtual Trusted Platform Module (vTPM)
-** UEFI
-** AMD SEV
-** Direct download from Rados Block Device (RBD)
-** File-backed memory
-** `Provider.yaml`
+* {block_storage} back end for the {image_service_first_ref}
+* NFS back end for the {image_service}
+* Third-party drivers for the {rhos_component_storage_file}
+
+The following {compute_service_first_ref} features are Technology Previews:
+
+* Compute hosts with `/var/lib/nova/instances` on NFS
+* NUMA-aware vswitches
+* PCI passthrough by flavor
+* SR-IOV trusted virtual functions
+* RX and TX queue sizes
+* vGPU
+* Virtio multiqueue
+* Emulated virtual Trusted Platform Module (vTPM)
+* UEFI
+* AMD SEV
+* Direct download from Rados Block Device (RBD)
+* File-backed memory
+* `Provider.yaml`
 
 .Unsupported features
 
