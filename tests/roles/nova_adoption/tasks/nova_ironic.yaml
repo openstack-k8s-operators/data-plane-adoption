@@ -9,6 +9,7 @@
     file: wait.yaml
 
 - name: Remove FFU workarounds
+  when: ironic_adoption_remove_ffu_workaround_patch is true
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
