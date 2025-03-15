@@ -50,8 +50,8 @@ $ export CONTROLLER_NODE=$(oc -n $OSPDO_NAMESPACE get vmi -ojson | jq -r '.items
 .. Disable stonith:
 +
 ----
-$ stonith_resources=$(sudo pcs stonith status|grep Started|awk '{print $2}')
-for in stonith_resources ;do CONTROLLER1_SSH sudo pcs stonith disable ;done
+$ stonith_resources=$($CONTROLLER1_SSH sudo pcs stonith status|grep Started|awk '{print $2}')
+for resource in stonith_resources ;do $CONTROLLER1_SSH sudo pcs stonith disable $resource;done
 ----
 .. Put non-Controller nodes in maintenance:
 +
@@ -75,6 +75,40 @@ $CONTROLLER1_SSH sudo systemctl restart corosync
 ----
 $CONTROLLER1_SSH sudo pcs cluster stop
 $CONTROLLER1_SSH sudo pcs cluster start
+----
++
+.. Check that only Controller-0 is started and that the other 2 Controllers are stopped:
++
+----
+$CONTROLLER_SSH sudo pcs status
+----
+.. Check if the {OpenStackShort} control plane is still operational:
++
+----
+$OS_CLIENT openstack compute service list
+----
++
+[NOTE]
+You might need to wait a few minutes for the control plane to get operational. The control plane response slows down after this point.
+.. When Pacemaker is only managing one of the Controllers, delete 2 of the Controller VMs. The following example specifies Controller-1 and Controller-2 VMs for deletion:
++
+----
+$ oc -n openstack annotate vm controller-1 osp-director.openstack.org/delete-host=true
+$ oc -n openstack annotate vm controller-2 osp-director.openstack.org/delete-host=true
+----
+.. Reduce the `roleCount` for the Controller role in the `OpenStackControlPlane` CR to `1`:
++
+----
+$ oc -n openstack patch OpenStackControlPlane overcloud --type json -p '[{"op": "replace", "path":"/spec/virtualMachineRoles/controller/roleCount", "value": 1}]'
+----
+.. Ensure that the `OpenStackClient` pod is running on the same {OpenShiftShort} nodes as the remaining Controller VM. If the `OpenStackClient` pod is not on the same node, then move it by cordoning off the two nodes that have been freed up for {rhos_acro}. Then you delete the `OpenStackClient` pod so that it gets rescheduled on the {OpenShiftShort} node that has the remaining Controller VM. After the pod is moved to the correct node, uncordon all the nodes:
++
+----
+$ oc adm cordon $OSP18_NODE1
+$ oc adm cordon $OSP18_NODE2
+$ oc delete pod openstackclient
+$ oc adm uncordon $OSP18_NODE1
+$ oc adm uncordon $OSP18_NODE2
 ----
 .. Remove the OSPdO node network configuration policies from the other two nodes that are not running the Controller VM by placing a `nodeSelector` on the {OpenShiftShort} node that contains the Controller VM:
 +

@@ -29,7 +29,6 @@ The following {compute_service_first_ref} features are Technology Previews:
 * AMD SEV
 * Direct download from Rados Block Device (RBD)
 * File-backed memory
-* `Provider.yaml`
 
 .Unsupported features
 

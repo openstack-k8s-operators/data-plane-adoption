@@ -26,6 +26,11 @@ $ STORAGE_CLASS=local-storage
 $ MARIADB_IMAGE=registry.redhat.io/rhoso/openstack-mariadb-rhel9:18.0
 endif::[]
 
+ifeval::["{build_variant}" == "ospdo"]
+$ OSPDO_MARIADB_CLIENT_ANNOTATIONS='[{"name": "internalapi-static","ips": ["172.17.0.99/24"]}]'
+$ MARIADB_RUN_OVERRIDES="$OSPDO_MARIADB_CLIENT_ANNOTATIONS"
+endif::[]
+
 $ CELLS="default" <1>
 $ DEFAULT_CELL_NAME="cell1"
 $ RENAMED_CELLS="$DEFAULT_CELL_NAME"
@@ -139,10 +144,18 @@ metadata:
   name: mariadb-copy-data
   annotations:
     openshift.io/scc: anyuid
+ifeval::["{build_variant}" != "ospdo"]
     k8s.v1.cni.cncf.io/networks: internalapi
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+    k8s.v1.cni.cncf.io/networks: '[{"name": internalapi-static, "ips": ["10.2.120.9/24"]}]'
+endif::[]
   labels:
     app: adoption
 spec:
+ifeval::["{build_variant}" == "ospdo"]
+  nodeName: <$CONTROLLER_NODE>
+endif::[]
   containers:
   - image: $MARIADB_IMAGE
     command: [ "sh", "-c", "sleep infinity"]

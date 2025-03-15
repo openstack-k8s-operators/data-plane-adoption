@@ -1,18 +1,98 @@
-[id="ospdo_scale_down_pre_database_adoption_{context}"]
+[id="ospdo-scale-down-pre-database-adoption_{context}"]
 
 = Scaling down director Operator resources
 
 Before you migrate your databases to the control plane, you must scale down and remove OpenStack director Operator (OSPdO) resources in order to use the {rhos_long} resources.
 
-.Procedure
+You must perform the following actions:
 
+* Dump selected data from the existing {OpenStackShort} {rhos_prev_ver} cluster. You use this data to build the custom resources for the data plane adoption.
+* After you extract and save the data, remove the OSPdO control plane and operator.
+
+.Procedure
+. Download the NIC templates:
++
+----
+    # Make temp directory if doesn't exist
+    mkdir -p temp
+    cd temp
+    echo "Extract nic templates"
+    oc get -n "${OSPDO_NAMESPACE}" cm tripleo-tarball -ojson | jq -r '.binaryData."tripleo-tarball.tar.gz"' | base64 -d | tar xzvf -
+    # Revert back to original directory
+    cd -
+----
+. Get the SSH key for accessing the data plane nodes:
++
+----
+    # Make temp directory if doesn't exist
+    mkdir -p temp
+    # Get the SSH key from the openstackclient (osp 17)
+    # to be used later to create the SSH secret for dataplane adoption
+    $OS_CLIENT cat /home/cloud-admin/.ssh/id_rsa > temp/ssh.private
+    $OS_CLIENT cat /home/cloud-admin/.ssh/id_rsa.pub > temp/ssh.pub
+    echo "SSH private and public keys saved in temp/ssh.private and temp/ssh.pub"
+----
+. Get the OVN configuration from each Compute node role, `OpenStackBaremetalSet`. This configuration is  used later to build the `OpenStackDataPlaneNodeSet`(s). Repeat the following step for each `OpenStackBaremetalSet`:
++
+----
+    # Make temp directory if doesn't exist
+    mkdir -p temp
+        #
+        # Query the first node in OSBMS
+        #
+    IP=$(oc -n "${OSPDO_NAMESPACE}" get openstackbaremetalsets.osp-director.openstack.org <<OSBMS-NAME>> -ojson |           jq -r '.status.baremetalHosts| keys[] as $k | .[$k].ipaddresses["ctlplane"]'| awk -F'/' '{print $1}')
+    # Get the OVN parameters
+    oc -n "${OSPDO_NAMESPACE}" exec -c openstackclient openstackclient -- \
+        ssh cloud-admin@${IP} sudo ovs-vsctl -f json --columns=external_ids list Open |
+        jq -r '.data[0][0][1][]|join("=")' | sed -n -E 's/^(ovn.*)+=(.*)+/edpm_\1: \2/p' |
+        grep -v -e ovn-remote -e encap-tos -e openflow -e ofctrl > temp/<<OSBMS-NAME>>.txt
+----
++
+----
+    # Create temp directory if it does not exist
+    mkdir -p temp
+    for name in $(oc -n "${OSPDO_NAMESPACE}" get openstackbaremetalsets.osp-director.openstack.org | awk 'NR > 1 {print $1}'); do
+      oc -n "${OSPDO_NAMESPACE}" get openstackbaremetalsets.osp-director.openstack.org $name -ojson |
+          jq -r '.status.baremetalHosts| "nodes:", keys[] as $k | .[$k].ipaddresses as $a |
+           "  \($k):",
+           "    hostName: \($k)",
+           "    ansible:",
+           "      ansibleHost: \($a["ctlplane"] | sub("/\\d+"; ""))",
+           "    networks:", ($a | to_entries[] | "    - name: \(.key) \n      fixedIP: \(.value | sub("/\\d+"; ""))\n      subnetName: subnet1")' > temp/${name}-nodes.txt
+    done
+----
+. Remove the conflicting repositories and packages from all Compute hosts. Define the OSPdO and {OpenStackShort} {rhos_prev_ver} Pacemaker services that must be stopped:
++
+----
+PacemakerResourcesToStop_dataplane=(
+                "galera-bundle"
+                "haproxy-bundle"
+                "rabbitmq-bundle")
+
+# Stop these PCM services after adopting control
+# plane, but before starting deletion of OSPD0 (osp17) env
+    echo "Stopping pacemaker OpenStack services"
+    SSH_CMD=CONTROLLER_SSH
+    if [ -n "${!SSH_CMD}" ]; then
+        echo "Using controller 0 to run pacemaker commands "
+        for resource in "${PacemakerResourcesToStop_dataplane[@]}"; do
+            if ${!SSH_CMD} sudo pcs resource config "$resource" &>/dev/null; then
+                echo "Stopping $resource"
+                ${!SSH_CMD} sudo pcs resource disable "$resource"
+            else
+                echo "Service $resource not present"
+            fi
+        done
+    fi
+----
 . Scale down the {rhos_acro} OpenStack Operator `controller-manager` to 0 replicas and temporarily delete the `OpenStackControlPlane` `OpenStackClient` pod, so that you can use the OSPdO `controller-manager` to clean up some of its resources. The cleanup is needed to avoid a pod name collision between the OSPdO OpenStackClient and the {rhos_acro} OpenStackClient.
 +
 ----
-$ oc patch csv -n openstack-operators openstack-operator.v0.0.1 --type json   -p="[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/replicas", "value": "0"}]"
+$ oc patch csv -n openstack-operators openstack-operator.v1.0.5 --type json   -p="[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/replicas", "value": "0"}]"
 $ oc delete openstackclients.client.openstack.org --all
 ----
 +
+* Replace the CSV version with the CSV version that is deployed in the cluster.
 . Delete the OSPdO `OpenStackControlPlane` custom resource (CR):
 +
 ----
@@ -192,8 +272,19 @@ $ oc delete openstackprovisionservers.osp-director.openstack.org -n openstack --
 +
 ----
 $ compute_bmh_list=$(oc get bmh -n openshift-machine-api |grep compute|awk '{printf $1 " "}')
-$ for bmh_compute in $compute_bmh_list;do oc annotate bmh -n openshift-machine-api $bmh_compute baremetalhost.metal3.io/detached="";done
-$ oc delete bmh -n openshift-machine-api $bmh_compute;done
+$ for bmh_compute in $compute_bmh_list;do oc annotate bmh -n openshift-machine-api $bmh_compute baremetalhost.metal3.io/detached="";\
+     oc -n openshift-machine-api wait bmh/$bmh_compute --for=jsonpath='{.status.operationalStatus}'=detached --timeout=30s || {
+         echo "ERROR: BMH did not enter detatched state"
+         exit 1
+       }
+done
+----
+. Delete the `BareMetalHost` resource after its operational status is detached:
++
+----
+    for bmh_compute in $compute_bmh_list;do \
+       oc -n openshift-machine-api delete bmh $bmh_compute; \
+    done
 ----
 
 . Delete the OSPdO Operator Lifecycle Manager resources to remove OSPdO:
