@@ -149,7 +149,7 @@ ifeval::["{build}" == "downstream"]
 :telemetry: Telemetry service
 endif::[]
 
-ifeval::["{build}-{build_variant}" == "downstream-ospdo"]
+ifeval::["{build_variant}" == "ospdo"]
 :OpenStackPreviousInstaller: director Operator
 endif::[]
 

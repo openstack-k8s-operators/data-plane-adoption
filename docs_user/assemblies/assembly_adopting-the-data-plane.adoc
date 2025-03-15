@@ -8,7 +8,9 @@ ifdef::context[:parent-context: {context}]
 
 Adopting the {rhos_long} data plane involves the following steps:
 
+ifeval::["{build_variant}" != "ospdo"]
 . Stop any remaining services on the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} control plane.
+endif::[]
 . Deploy the required custom resources.
 . Perform a fast-forward upgrade on Compute services from {OpenStackShort} {rhos_prev_ver} to {rhos_acro} {rhos_curr_ver}.
 . Adopt Networker services to the {rhos_acro} data plane.
