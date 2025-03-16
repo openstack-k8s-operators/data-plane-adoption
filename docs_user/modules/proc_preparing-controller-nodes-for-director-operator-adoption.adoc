@@ -12,6 +12,9 @@ The following procedure uses a single {rhocp_long} cluster that is shared by the
 .Procedure
 
 . Log in to the {OpenShiftShort} environment where {OpenStackShort} OSPdO is deployed and change to the project that hosts your {OpenStackShort} deployment:
+[NOTE]
+In Director Operator adoption you must define which namespace is being used for resources manipulation.
+Since with Director Operator the adopted namespace would be "openstack", the adopting namespace ,for rhoso , would be "rhoso".
 +
 ----
 $ oc project openstack
