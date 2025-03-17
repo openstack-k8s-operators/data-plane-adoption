@@ -18,3 +18,4 @@
     EOF
 
     rm -f $HOME/octavia_sshkey.pub
+  when: "run_octavia_ssh_adoption|bool"
