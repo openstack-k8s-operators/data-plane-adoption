@@ -26,11 +26,24 @@ SOURCE_OVSDB_IP=172.17.0.100 # For IPv4
 SOURCE_OVSDB_IP=[fd00:bbbb::100] # For IPv6
 ----
 +
+ifeval::["{build_variant}" == "ospdo"]
+Update the IP address value for `SOURCE_OVSDB_IP` to the internalApi IP address that is associated with the remaining RHOSP 17 controller VM. The IP address can be retrieved by using the following command:
+----
+$ $CONTROLLER_SSH ip a s enp4s0
+** Select the non /32 IP address
+----
+[NOTE]
+If you use a disconnected environment director Operator deployment, use
+`OVSDB_IMAGE=registry.redhat.io/rhoso/openstack-ovn-base-rhel9@sha256:967046c6bdb8f55c236085b5c5f9667f0dbb9f3ac52a6560dd36a6bfac051e1f`.
+For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#proc_configuring-an-airgapped-environment_air-gapped-environment[Configuring an airgapped environment] in _Deploying an overcloud in a Red Hat OpenShift Container Platform cluster with director Operator_.
+endif::[]
+ifeval::["{build_variant}" != "ospdo"]
 To get the value to set `SOURCE_OVSDB_IP`, query the puppet-generated configurations in a Controller node:
 +
 ----
 $ grep -rI 'ovn_[ns]b_conn' /var/lib/config-data/puppet-generated/
 ----
+endif::[]
 
 .Procedure
 ifeval::["{build_variant}" == "ospdo"]
@@ -299,21 +312,33 @@ ServicesToStop=("tripleo_ovn_cluster_north_db_server.service"
 
 echo "Stopping systemd OpenStack services"
 for service in ${ServicesToStop[*]}; do
+ifeval::["{build_variant}" != "ospdo"]
     for i in {1..3}; do
         SSH_CMD=CONTROLLER${i}_SSH
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+        SSH_CMD=CONTROLLER_SSH
+endif::[]
         if [ ! -z "${!SSH_CMD}" ]; then
             echo "Stopping the $service in controller $i"
             if ${!SSH_CMD} sudo systemctl is-active $service; then
                 ${!SSH_CMD} sudo systemctl stop $service
             fi
         fi
+ifeval::["{build_variant}" != "ospdo"]
     done
+endif::[]
 done
 
 echo "Checking systemd OpenStack services"
 for service in ${ServicesToStop[*]}; do
+ifeval::["{build_variant}" != "ospdo"]
     for i in {1..3}; do
         SSH_CMD=CONTROLLER${i}_SSH
+endif::[]
+ifeval::["{build_variant}" == "ospdo"]
+        SSH_CMD=CONTROLLER_SSH
+endif::[]
         if [ ! -z "${!SSH_CMD}" ]; then
             if ! ${!SSH_CMD} systemctl show $service | grep ActiveState=inactive >/dev/null; then
                 echo "ERROR: Service $service still running on controller $i"
@@ -321,6 +346,8 @@ for service in ${ServicesToStop[*]}; do
                 echo "OK: Service $service is not running on controller $i"
             fi
         fi
+ifeval::["{build_variant}" != "ospdo"]
     done
+endif::[]
 done
 ----
