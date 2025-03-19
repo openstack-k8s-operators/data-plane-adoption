@@ -82,3 +82,70 @@
       ansible.builtin.shell: |
           timeout 20 ssh ${OS_CLOUD_IP} "set -o pipefail && chmod 744 {{ neutron_qe_dir }}/start-pinger.sh && \
           nohup {{ neutron_qe_dir }}/start-pinger.sh > {{ neutron_qe_dir }}/start-pinger.sh.log 2>&1" &
+
+- name: tobiko validate pings, create workloads
+  when: tobiko_qe_test | default('false') | bool
+  environment:
+    OS_CLOUD_IP: "{{ standalone_ip | default(edpm_node_ip) }}"
+  block:
+    # Temporal - tobiko installation task
+    - name: tobiko installation
+      ansible.builtin.shell: |
+          ssh ${OS_CLOUD_IP} "set -o pipefail && mkdir -p ~/src/x && cd ~/src/x && git clone https://github.com/redhat-openstack/tobiko.git"
+
+    - name: oc undercloud installation
+      ansible.builtin.shell: >
+          ssh ${OS_CLOUD_IP} "curl -s -L https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/openshift-client-linux.tar.gz
+          | sudo tar -zxvf - -C /usr/local/bin/"
+
+    - name: copy kube conf to undercloud
+      ansible.builtin.shell: |
+        scp -r ~/.kube/ ${OS_CLOUD_IP}:~
+
+    - name: upload tobiko-playbook.yaml to the undercloud
+      delegate_to: "{{ standalone_ip | default(edpm_node_ip) }}"
+      vars:
+        tobiko_playbook: |
+          - name: Playbook to run tobiko from the undercloud pre-adoption
+            hosts: localhost
+            tasks:
+              - name: "run tests"
+                ansible.builtin.include_role:
+                  name: tobiko-run
+      ansible.builtin.copy:
+        mode: a+r
+        content: "{{ tobiko_playbook }}"
+        dest: ~/src/x/tobiko/tobiko-playbook.yaml
+
+    - name: Add tobiko.conf to the undercloud
+      delegate_to: "{{ standalone_ip | default(edpm_node_ip) }}"
+      vars:
+        tobiko_conf_file: |
+          [DEFAULT]
+          log_dir = /home/zuul/src/x/tobiko/report
+          log_file = tobiko.log
+          debug = true
+          [testcase]
+          test_runner_timeout = 14400.0
+          timeout = 1800.0
+          [advanced_vm]
+          image_url = "https://softwarefactory-project.io/ubuntu-minimal-customized-enp3s0"
+          username: ubuntu
+          [tripleo]
+          undercloud_ssh_hostname = undercloud
+          undercloud_ssh_username = zuul
+          run_background_ping_in_pod = true
+          [keystone]
+          interface = public
+          [neutron]
+          custom_mtu_size = 1292
+      ansible.builtin.copy:
+        mode: a+r
+        content: "{{ tobiko_conf_file }}"
+        dest: ~/src/x/tobiko/tobiko.conf
+
+    - name: Run Tobiko from the undercloud
+      delegate_to: "{{ standalone_ip | default(edpm_node_ip) }}"
+      ansible.builtin.shell:
+        chdir: ~/src/x/tobiko/
+        cmd: ansible-playbook tobiko-playbook.yaml -e test_workflow=create-resources -e pytest_addopts_global="--skipregex='TestFloatingIPLogging|ExtraDhcpOptsPortLoggingTest|NoFipPortTest|StatelessSecurityGroupInstanceTest|StatelessSecurityGroupTest|migrate_server|qos|create_share|extend_share'"
