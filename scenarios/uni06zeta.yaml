@@ -50,6 +50,8 @@ stacks:
       - "/usr/share/openstack-tripleo-heat-templates/environments/podman.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/services/barbican.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/barbican-backend-simple-crypto.yaml"
     network_data_file: "uni06zeta/network_data.yaml.j2"
     vips_data_file: "uni06zeta/vips_data.yaml"
     roles_file: "uni06zeta/roles.yaml"
