@@ -28,12 +28,24 @@ $ sudo iptables-save
 $ sudo systemctl restart iptables
 ----
 +
+[NOTE]
+The default dashboard port for `ceph-mgr` in a greenfield deployment is 8443. With director-deployed {Ceph}, the default port is 8444 because the service ran on the Controller node, and it was necessary to use this port to avoid a conflict. For adoption, update the dashboard port to 8443 in the `ceph-mgr` configuration and firewall rules.
+
+. Log in to `controller-0` and update the dashboard port in the `ceph-mgr` configuration to 8443:
++
+----
+$ sudo cephadm shell
+$ ceph config set mgr mgr/dashboard/server_port 8443
+$ ceph config set mgr mgr/dashboard/ssl_server_port 8443
+$ ceph mgr module disable dashboard
+$ ceph mgr module enable dashboard
+----
 . If `nftables` is used in the existing deployment, edit `/etc/nftables/tripleo-rules.nft`
 and add the following content:
 +
 ----
-# 113 ceph_mgr {'dport': ['6800-7300', 8444]}
-add rule inet filter TRIPLEO_INPUT tcp dport { 6800-7300,8444 } ct state new counter accept comment "113 ceph_mgr"
+# 113 ceph_mgr {'dport': ['6800-7300', 8443]}
+add rule inet filter TRIPLEO_INPUT tcp dport { 6800-7300,8443 } ct state new counter accept comment "113 ceph_mgr"
 ----
 
 . Save the file.
