@@ -86,6 +86,7 @@ ifeval::["{build}" != "downstream"]
 The procedure for this will vary, but in developer/CI environments
 you use `install_yamls`:
 +
+[source,yaml]
 ----
 # in install_yamls
 make input

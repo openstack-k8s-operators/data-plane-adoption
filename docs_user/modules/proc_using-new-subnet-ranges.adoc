@@ -69,6 +69,7 @@ the risk of network disruption. You must enforce the changes by setting the
 
 . Confirm that there are new link local routes to the new subnet on each node. For example:
 +
+[source,yaml]
 ----
 # ip route | grep 172
 172.31.0.0/24 via 192.168.122.100 dev br-ctlplane
@@ -85,6 +86,7 @@ the risk of network disruption. You must enforce the changes by setting the
 +
 As a result, the following route is added to your {OpenShiftShort} nodes:
 +
+[source,yaml]
 ----
 # ip route | grep 192
 192.168.122.0/24 dev ospbr proto static scope link
