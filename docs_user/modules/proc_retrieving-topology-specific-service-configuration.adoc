@@ -139,7 +139,7 @@ The source cloud always uses the same password for cells databases. For that rea
 . Ensure you are on the `openstack` namespace:
 +
 ----
-oc project openstack
+$ oc project openstack
 ----
 
 . Export the shell variables for the following outputs and test the connection to the {OpenStackShort} database:
@@ -152,6 +152,8 @@ $ for CELL in $(echo $CELLS); do
 >         mysql -rsh "${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e 'SHOW databases;')
 > done
 ----
++
+If the connection is successful, the expected output is nothing.
 +
 [NOTE]
 The `nova`, `nova_api`, and `nova_cell0` databases are included in the same database host for the main overcloud {orchestration_first_ref} stack.
@@ -206,9 +208,6 @@ $ for CELL in $(echo $CELLS); do
 ----
 export PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS=$($CONTROLLER1_SSH sudo podman exec -it nova_conductor nova-manage cell_v2 list_cells)
 ----
-+
-[IMPORTANT]
-After the {OpenStackShort} control plane services are shut down, if any of the exported values are lost, re-running the command fails because the control plane services are no longer running on the source cloud, and the data cannot be retrieved. To avoid data loss, preserve the exported values in an environment file before shutting down the control plane services.
 
 . Store the exported variables for future use:
 +
@@ -246,4 +245,4 @@ $ chmod 0600 ~/.source_cloud_exported_variables*
 <1> If `neutron-sriov-nic-agent` agents are running in your {OpenStackShort} deployment, get the configuration to use for the data plane adoption.
 
 [NOTE]
-This configuration and the exported variables are required later, during the data plane adoption post-checks.
+This configuration and the exported values are required later, during the data plane adoption post-checks. After the {OpenStackShort} control plane services are shut down, if any of the exported values are lost, re-running the `export` command fails because the control plane services are no longer running on the source cloud, and the data cannot be retrieved. To avoid data loss, preserve the exported values in an environment file before shutting down the control plane services.
