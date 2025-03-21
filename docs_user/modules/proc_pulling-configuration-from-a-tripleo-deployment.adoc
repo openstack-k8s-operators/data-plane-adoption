@@ -129,16 +129,19 @@ The following command pulls all the configuration files that are included in the
 Note that when the `config.yaml` file is populated automatically you must provide the configuration paths manually for each service.
 ====
 +
+[source,yaml]
 ----
 # will only update the /etc/os-diff/config.yaml
 os-diff pull --update-only
 ----
 +
+[source,yaml]
 ----
 # will update the /etc/os-diff/config.yaml and pull configuration
 os-diff pull --update
 ----
 +
+[source,yaml]
 ----
 # will update the /etc/os-diff/config.yaml and pull configuration
 os-diff pull

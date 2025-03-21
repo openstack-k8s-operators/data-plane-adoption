@@ -33,6 +33,7 @@ $ sudo systemctl restart iptables
 . If `nftables` is used in the existing deployment, edit `/etc/nftables/tripleo-rules.nft`
 and add the following content:
 +
+[source,yaml]
 ----
 # 110 ceph_mon {'dport': [6789, 3300, '9100']}
 add rule inet filter TRIPLEO_INPUT tcp dport { 6789,3300,9100 } ct state new counter accept comment "110 ceph_mon"
