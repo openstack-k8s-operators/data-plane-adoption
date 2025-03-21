@@ -64,6 +64,7 @@ endif::[]
 
 . If your deployment enables CephFS through NFS as a back end for {rhos_component_storage_file_first_ref}, remove the following Pacemaker ordering and co-location constraints that govern the Virtual IP address of the `ceph-nfs` service and the `manila-share` service:
 +
+[source,yaml]
 ----
 # check the co-location and ordering constraints concerning "manila-share"
 sudo pcs constraint list --full
@@ -75,6 +76,7 @@ sudo pcs constraint remove order-ceph-nfs-openstack-manila-share-Optional
 
 . Disable {OpenStackShort} control plane services:
 +
+[source,yaml]
 ----
 # Update the services list to be stopped
 ServicesToStop=("tripleo_aodh_api.service"
