@@ -1,6 +1,7 @@
 ---
 storage_class_name: local-storage
 dns_server_provisioning_ip: 192.168.122.80
+ironic_network: baremetal
 ironic_patch: |
   spec:
     ironic:
@@ -23,8 +24,8 @@ ironic_patch: |
         ironicConductors:
         - replicas: 1
           networkAttachments:
-          - baremetal
-          provisionNetwork: baremetal
+          - {{ ironic_network }}
+          provisionNetwork: {{ ironic_network }}
           storageRequest: 10G
           storageClass: {{ storage_class_name }}
           customServiceConfig: |
@@ -37,9 +38,9 @@ ironic_patch: |
             automated_clean=true
         ironicInspector:
           replicas: 1
-          inspectionNetwork: baremetal
+          inspectionNetwork: {{ ironic_network }}
           networkAttachments:
-          - baremetal
+          - {{ ironic_network }}
           dhcpRanges:
           - name: inspector-0
             cidr: 172.20.1.0/24
