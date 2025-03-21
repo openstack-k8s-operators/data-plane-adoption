@@ -415,16 +415,17 @@ spec:
 
 .Verification
 
-* Verify that MariaDB and RabbitMQ are running for all defined cells:
+* Verify that the MariaDB and RabbitMQ status is `Running` for all defined cells:
 +
+[source,yaml]
 ----
 $ RENAMED_CELLS="cell1 cell2 cell3"
-$ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
-$ oc get pod rabbitmq-server-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
+$ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}'
+$ oc get pod rabbitmq-server-0 -o jsonpath='{.status.phase}{"\n"}'
 $ for CELL in $(echo $RENAMED_CELLS); do
-    oc get pod openstack-$CELL-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
-    oc get pod rabbitmq-$CELL-server-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
-done
+>     oc get pod openstack-$CELL-galera-0 -o jsonpath='{.status.phase}{"\n"}'
+>     oc get pod rabbitmq-$CELL-server-0 -o jsonpath='{.status.phase}{"\n"}'
+> done
 ----
 +
 The given cells names are later referred to by using the environment variable `RENAMED_CELLS`.
