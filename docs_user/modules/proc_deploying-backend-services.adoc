@@ -429,4 +429,11 @@ done
 +
 The given cells names are later referred to by using the environment variable `RENAMED_CELLS`.
 
-* Verify that you can access the `OpenStackClient` pod. For more information, see link:{defaultURL}/maintaining_the_red_hat_openstack_services_on_openshift_deployment/assembly_accessing-the-rhoso-cloud#proc_accessing-the-OpenStackClient-pod_cloud-access-admin[Accessing the OpenStackClient pod] in _Maintaining the {rhos_long_noacro} deployment_.
+* Verify that the `OpenStackControlPlane` CR is waiting for deployment
+  of the `openstackclient` pod:
++
+----
+$ oc get OpenStackControlPlane openstack
+NAME        STATUS    MESSAGE
+openstack   Unknown   OpenStackControlPlane Client not started
+----
