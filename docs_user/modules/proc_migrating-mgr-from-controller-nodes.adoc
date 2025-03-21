@@ -43,6 +43,7 @@ $ ceph mgr module enable dashboard
 . If `nftables` is used in the existing deployment, edit `/etc/nftables/tripleo-rules.nft`
 and add the following content:
 +
+[source,yaml]
 ----
 # 113 ceph_mgr {'dport': ['6800-7300', 8443]}
 add rule inet filter TRIPLEO_INPUT tcp dport { 6800-7300,8443 } ct state new counter accept comment "113 ceph_mgr"

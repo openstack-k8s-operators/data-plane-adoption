@@ -125,6 +125,7 @@ $ sudo systemctl restart iptables
 . If `nftables` is used in the existing deployment, edit `/etc/nftables/tripleo-rules.nft`
 and add the following content:
 +
+[source,yaml]
 ----
 # 100 ceph_rgw {'dport': ['8080','8090']}
 add rule inet filter TRIPLEO_INPUT tcp dport { 8080,8090 } ct state new counter accept comment "100 ceph_rgw"
