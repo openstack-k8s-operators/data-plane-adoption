@@ -3,17 +3,17 @@
     {{ shell_header }}
     {{ oc_header }}
     # Cleanup OpenStackControlPlane object
-    oc delete --ignore-not-found=true osctlplane -l core.openstack.org/openstackcontrolplane -n openstack
+    oc delete --ignore-not-found=true osctlplane -l core.openstack.org/openstackcontrolplane
 
     # Ensure that all pods in openstack namespace are deleted
-    while oc get pod -n openstack | grep -E 'rabbitmq-server-0|openstack-galera-0'; do
+    while oc get pod | grep -E 'rabbitmq-server-0|openstack-galera-0'; do
       sleep 2;
     done
 
     # Cleanup OpenStackDataplane objects
-    oc delete --ignore-not-found=true OpenStackDataPlaneDeployment --all -n openstack
-    oc delete --ignore-not-found=true OpenStackDataPlaneNodeSet --all -n openstack
-    oc delete --ignore-not-found=true OpenStackDataPlaneService --all -n openstack
+    oc delete --ignore-not-found=true OpenStackDataPlaneDeployment --all
+    oc delete --ignore-not-found=true OpenStackDataPlaneNodeSet --all
+    oc delete --ignore-not-found=true OpenStackDataPlaneService --all
 
     # Delete Adoption helper pods
     oc delete --ignore-not-found=true --wait=false pod mariadb-copy-data
@@ -21,11 +21,11 @@
     oc delete --ignore-not-found=true --wait=false pod ovn-copy-data
 
     # Delete secrets
-    for secret in $(oc -o name get secrets -n openstack); do
+    for secret in $(oc -o name get secrets ); do
       echo "Deleting secret ${secret}";
       #(TODO: holser) oc patch can be removed when OSPRH-10262 is merged
       oc patch ${secret} -p '{"metadata":{"finalizers":[]}}' --type=merge
-      oc delete ${secret} -n openstack;
+      oc delete ${secret} ;
     done
 
     # Make pvs available if they are released

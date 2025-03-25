@@ -82,12 +82,12 @@ spec:
 . Verify that the `alertmanager` and `prometheus` pods are available:
 +
 ----
-$ oc get pods -l alertmanager=metric-storage -n openstack
+$ oc get pods -l alertmanager=metric-storage
 NAME                            READY   STATUS    RESTARTS   AGE
 alertmanager-metric-storage-0   2/2     Running   0          46s
 alertmanager-metric-storage-1   2/2     Running   0          46s
 
-$ oc get pods -l prometheus=metric-storage -n openstack
+$ oc get pods -l prometheus=metric-storage
 NAME                          READY   STATUS    RESTARTS   AGE
 prometheus-metric-storage-0   3/3     Running   0          46s
 ----
@@ -95,7 +95,7 @@ prometheus-metric-storage-0   3/3     Running   0          46s
 . Inspect the resulting Ceilometer pods:
 +
 ----
-CEILOMETETR_POD=`oc get pods -l service=ceilometer -n openstack | tail -n 1 | cut -f 1 -d' '`
+CEILOMETETR_POD=`oc get pods -l service=ceilometer | tail -n 1 | cut -f 1 -d' '`
 oc exec -t $CEILOMETETR_POD -c ceilometer-central-agent -- cat /etc/ceilometer/ceilometer.conf
 ----
 
