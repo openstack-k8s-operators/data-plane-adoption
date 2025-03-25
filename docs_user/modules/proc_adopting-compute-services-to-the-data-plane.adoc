@@ -138,7 +138,6 @@ endif::[]
 $ cd "$(mktemp -d)"
 ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
 oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
-  -n openstack \
   --from-file=ssh-privatekey=id \
   --from-file=ssh-publickey=id.pub \
   --type kubernetes.io/ssh-auth

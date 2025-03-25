@@ -18,6 +18,15 @@ endif::[]
 ** link:{defaultOCPURL}/nodes/overview-of-nodes[Overview of nodes]
 ** link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors]
 ** link:{defaultOCPURL}/machine_configuration/index[Machine configuration overview]
+* Make sure to set the correct {rhos_acro} project namespace to execute commands in.
+ifeval::["{build_variant}" == "ospdo"]
+[NOTE]
+In Director Operator adoption the adopted namespace would be "openstack", the adopting namespace would be different i.e. "rhoso".
+endif::[]
+[source, shell]
+----
+$ oc project $NAMESPACE
+----
 
 Back-up information::
 

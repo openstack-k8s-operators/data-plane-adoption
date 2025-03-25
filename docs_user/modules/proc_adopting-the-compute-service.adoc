@@ -25,7 +25,7 @@ This procedure assumes that {compute_service} metadata is deployed on the top le
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   nova:
     enabled: true

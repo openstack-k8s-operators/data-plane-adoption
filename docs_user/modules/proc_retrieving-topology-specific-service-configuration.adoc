@@ -33,7 +33,7 @@ endif::[]
 ifeval::["{build_variant}" == "ospdo"]
 $ CELLS="default"
 $ for CELL in $(echo $CELLS); do
->     oc get secret tripleo-passwords -n $NAMESPACE -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' | base64 -d >"$TRIPLEO_PASSWORDS[$CELL]"
+>     oc get secret tripleo-passwords -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' | base64 -d >"$TRIPLEO_PASSWORDS[$CELL]"
 > done
 endif::[]
 $ declare -A SOURCE_DB_ROOT_PASSWORD
@@ -104,8 +104,8 @@ ifeval::["{build_variant}" == "ospdo"]
 $ MARIADB_CLIENT_ANNOTATIONS="-n $NAMESPACE"
 $ MARIADB_RUN_OVERRIDES="--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS"
 
-$ CONTROLLER1_SSH="oc -n $NAMESPACE rsh -c openstackclient openstackclient ssh controller-0.ctlplane"
-$ oc get secret tripleo-passwords -n $NAMESPACE -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' |
+$ CONTROLLER1_SSH="oc rsh -c openstackclient openstackclient ssh controller-0.ctlplane"
+$ oc get secret tripleo-passwords -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' |
 base64 -d >"${PASSWORD_FILE}"
 endif::[]
 
