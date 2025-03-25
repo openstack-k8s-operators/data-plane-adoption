@@ -425,7 +425,6 @@ data:
 kind: Secret
 metadata:
   name: ceph-conf-files
-  namespace: openstack
 type: Opaque
 EOF
 

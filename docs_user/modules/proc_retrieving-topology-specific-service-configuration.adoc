@@ -16,7 +16,6 @@ If you use IPv6, define the `SOURCE_MARIADB_IP` value without brackets. For exam
 +
 ----
 $ PASSWORD_FILE="$HOME/overcloud-passwords.yaml"
-$ NAMESPACE="openstack"
 ifeval::["{build}" != "downstream"]
 $ MARIADB_IMAGE=quay.io/podified-antelope-centos9/openstack-mariadb:current-podified
 endif::[]
@@ -33,7 +32,7 @@ endif::[]
 ifeval::["{build_variant}" == "ospdo"]
 $ CELLS="default"
 $ for CELL in $(echo $CELLS); do
->     oc get secret tripleo-passwords -n $NAMESPACE -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' | base64 -d >"$TRIPLEO_PASSWORDS[$CELL]"
+>     oc get secret tripleo-passwords -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' | base64 -d >"$TRIPLEO_PASSWORDS[$CELL]"
 > done
 endif::[]
 $ declare -A SOURCE_DB_ROOT_PASSWORD
@@ -55,7 +54,7 @@ $ export SOURCE_OVN_OVSDB_IP=172.17.0.160 # get this from the source OVN DB
 . Find the mysql service IP in the `ctlplane-export.yaml` section of the `tripleo-exports-default` ConfigMap:
 +
 ----
-$ cpexport=$(oc -n "${NAMESPACE}" get cm tripleo-exports-default -o json | jq -r '.data["ctlplane-export.yaml"]')
+$ cpexport=$(oc get cm tripleo-exports-default -o json | jq -r '.data["ctlplane-export.yaml"]')
 $ declare -A SOURCE_MARIADB_IP
 $ for CELL in $(echo $CELLS); do
 >     SOURCE_MARIADB_IP[$CELL]=$(echo "$cpexport" | sed -e '0,/ MysqlInternal/d' | sed -n '0,/host_nobrackets/s/^.*host_nobrackets\:\s*\(.*\)$/\1/p')
@@ -101,11 +100,10 @@ $ CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
 endif::[]
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
-$ MARIADB_CLIENT_ANNOTATIONS="-n $NAMESPACE"
 $ MARIADB_RUN_OVERRIDES="--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS"
 
-$ CONTROLLER1_SSH="oc -n $NAMESPACE rsh -c openstackclient openstackclient ssh controller-0.ctlplane"
-$ oc get secret tripleo-passwords -n $NAMESPACE -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' |
+$ CONTROLLER1_SSH="oc rsh -c openstackclient openstackclient ssh controller-0.ctlplane"
+$ oc get secret tripleo-passwords -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' |
 base64 -d >"${PASSWORD_FILE}"
 endif::[]
 
@@ -135,12 +133,6 @@ $ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | gre
 The source cloud always uses the same password for cells databases. For that reason, the same passwords file is used for all cells stacks. However, split-stack topology allows using different passwords files for each stack.
 
 .Procedure
-
-. Ensure you are on the `openstack` namespace:
-+
-----
-$ oc project openstack
-----
 
 . Export the shell variables for the following outputs and test the connection to the {OpenStackShort} database:
 +
