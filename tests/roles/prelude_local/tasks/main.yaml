@@ -22,3 +22,8 @@
     {{ oc_header }}
     cd {{ install_yamls_path }}
     make namespace
+
+  # This sets the namespace for all of the tasks that follow
+- name: set default NS to {{ rhoso_namespace }}
+  ansible.builtin.shell: |
+    oc project {{ rhoso_namespace }}

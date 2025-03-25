@@ -2,7 +2,6 @@ apiVersion: core.openstack.org/v1beta1
 kind: OpenStackVersion
 metadata:
   name: openstack
-  namespace: openstack
 spec:
   customContainerImages:
     aodhAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-aodh-api:{{ container_tag }}
