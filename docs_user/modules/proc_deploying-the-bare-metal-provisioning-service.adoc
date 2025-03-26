@@ -5,15 +5,22 @@
 To deploy the {bare_metal_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) that has the {bare_metal} disabled. The `ironic-operator` applies the configuration and starts the Bare Metal Provisioning services. After the services are running, the {bare_metal} automatically begins polling the power state of the bare metal nodes that it manages.
 
 [NOTE]
-By default, newer versions of the {bare_metal} contain a more restrictive access control model while also becoming multi-tenant aware. As a result, bare metal nodes might be missing from a `openstack baremetal node list` command after you adopt the {bare_metal}. Your nodes are not deleted. You must set the `owner` field on each bare metal node due to the increased access restrictions in the role-based access control (RBAC) model. Because this involves access controls and the model of use can be site specific, you should identify which project owns the bare metal nodes.
+By default, {rhos_acro} versions {rhos_curr_ver} and later of the {bare_metal} contain a more restrictive access control model while also becoming multi-tenant aware. As a result, bare metal nodes might be missing from a `openstack baremetal node list` command after you adopt the {bare_metal}. Your nodes are not deleted. You must set the `owner` field on each bare metal node due to the increased access restrictions in the role-based access control (RBAC) model. Because this involves access controls and the model of use can be site specific, you should identify which project owns the bare metal nodes.
 
 .Prerequisites
 
-* You have imported the service databases into the control plane MariaDB.
-* The {identity_service_first_ref}, {networking_first_ref}, {image_service_first_ref}, and {block_storage_first_ref} are operational.
+* You have imported the service databases into the control plane database.
+* The {bare_metal} is disabled in the {rhos_acro} {rhos_curr_ver}. The following command should return a string of `false`:
++
+----
+$ oc get openstackcontrolplanes.core.openstack.org <name> -o jsonpath='{.spec.ironic.enabled}'
+----   
++
+* Replace `<name>` with the name of 
+* The {identity_service_first_ref}, {networking_first_ref}, and {image_service_first_ref} are operational.
 +
 [NOTE]
-If you use the {bare_metal} in a Bare Metal as a Service configuration, you have not yet adopted the {compute_service_first_ref}.
+If you use the {bare_metal} in a Bare Metal as a Service configuration, do not adopt the {compute_service_first_ref} yet.
 * For the {bare_metal} conductor services, the services must be able to reach Baseboard Management Controllers of hardware that is configured to be managed by the {bare_metal}. If this hardware is unreachable, the nodes might enter "maintenance" state and be unavailable until connectivity is restored later.
 * You have downloaded the `ironic.conf` file locally:
 +
@@ -108,7 +115,7 @@ $ oc wait --for condition=Ready --timeout=300s ironicinspectors.ironic.openstack
 $ oc wait --for condition=Ready --timeout=300s ironicneutronagents.ironic.openstack.org ironic-ironic-neutron-agent
 ----
 
-. Update the DNS Nameservers on the provisoning, cleaning, and rescue networks:
+. Update the DNS Nameservers on the provisioning, cleaning, and rescue networks:
 +
 [NOTE]
 For name resolution to work for {bare_metal} operations, you must set the DNS nameserver to use the internal DNS servers in the {rhos_acro} control plane:
@@ -157,7 +164,7 @@ customServiceConfig: |
 . After this configuration is applied, the operator restarts the Ironic API service and disables the new RBAC policy that is enabled by default. After the RBAC policy is disabled, you can view bare metal nodes without an `owner` field:
 +
 ----
-$ openstack baremetal node list -f uuid,provision_state,owner
+$ openstack baremetal node list --long -c UUID -c Owner -c 'Provisioning State'
 ----
 
 . Assign all bare metal nodes with no owner to a new project, for example, the admin project:
