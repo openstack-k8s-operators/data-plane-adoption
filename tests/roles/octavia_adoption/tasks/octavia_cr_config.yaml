@@ -3,11 +3,11 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | while read; do
+    oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | grep -v nncp-dns | while read; do
 
     interfaces=$(oc get nncp $REPLY -o jsonpath="{.spec.desiredState.interfaces[*].name}")
 
-    (echo $interfaces | grep -w -q "octbr|enp6s0.24") || \
+    (echo $interfaces | grep -w -q "octbr\|enp6s0.24") || \
             oc patch -n openstack nncp $REPLY --type json --patch '
     [{
         "op": "add",
