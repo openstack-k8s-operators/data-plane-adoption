@@ -31,9 +31,9 @@ $ OSPDO_MARIADB_CLIENT_ANNOTATIONS='[{"name": "internalapi-static","ips": ["172.
 $ MARIADB_RUN_OVERRIDES="$OSPDO_MARIADB_CLIENT_ANNOTATIONS"
 endif::[]
 
-$ CELLS="default" <1>
-$ DEFAULT_CELL_NAME="cell1"
-$ RENAMED_CELLS="$DEFAULT_CELL_NAME"
+$ CELLS="default cell1 cell2" <1>
+$ DEFAULT_CELL_NAME="cell3"
+$ RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
 
 $ NAMESPACE="openstack"
 

@@ -289,6 +289,14 @@ endif::[]
         secret: osp-secret
         replicas: 3
         storageRequest: 5G
+      openstack-cell2:
+        secret: osp-secret
+        replicas: 1
+        storageRequest: 5G
+      openstack-cell3:
+        secret: osp-secret
+        replicas: 1
+        storageRequest: 5G
   memcached:
     enabled: true
     templates:
@@ -372,6 +380,28 @@ ifeval::["{build_variant}" == "ospdo"]
 endif::[]
             spec:
               type: LoadBalancer
+      rabbitmq-cell2:
+        persistence:
+          storage: 1G
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.87
+            spec:
+              type: LoadBalancer
+      rabbitmq-cell3:
+        persistence:
+          storage: 1G
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.88
+            spec:
+              type: LoadBalancer
   telemetry:
     enabled: false
 
@@ -397,15 +427,16 @@ ifeval::["{build_variant}" == "ospdo"]
 
 endif::[]
 
-This example provides the required infrastructure database and messaging services for 1 Compute cell
-named `cell1`. Adjust the names, counts, IP addresses, and numbers, such as for `replicas`, `storage`, or `storageRequest`, as needed.
+This example provides the required infrastructure database and messaging services for 3 Compute cells
+named `cell1`, `cell2`, and `cell3`. Adjust the names, counts, IP addresses, and numbers,
+such as for `replicas`, `storage`, or `storageRequest`, as needed.
 
 .Verification
 
 * Verify that MariaDB and RabbitMQ are running for all defined cells:
 +
 ----
-$ RENAMED_CELLS="cell1"
+$ RENAMED_CELLS="cell1 cell2 cell3"
 $ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
 $ oc get pod rabbitmq-server-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
 $ for CELL in $(echo $RENAMED_CELLS); do

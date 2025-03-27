@@ -16,12 +16,62 @@ source_galera_members:
 source_mariadb_ip:
   default: 172.17.0.2 #CUSTOMIZE_THIS
 
+# EDPM nodes info, for each cell compute (omitting dedicated cell controllers) on the destination cloud.
 # To enable TLS-E, the standalone hostname must be set to standalone.ooo.test
-edpm_node_hostname: standalone.localdomain
+# Defaults provided for a single-cell case.
+# Provide for each cell on the target cloud, considering default_cell_name value.
+# The defined 'networks' connections must match netconfig_networks which manages NetConfig CR
+# to retain fixed IPs, provide values matching the source TripleO deployment
+edpm_nodes:
+  cell1:
+    standalone:
+      hostName: standalone.localdomain
+      ansible:
+        ansibleHost: 192.168.122.100
+      networks:
+        - defaultRoute: true
+          fixedIP: 192.168.122.100
+          name: ctlplane
+          subnetName: subnet1
+        - name: internalapi
+          # uncomment to retain the source cloud fixed IP value
+          #fixedIP: 172.17.0.100
+          subnetName: subnet2
+        - name: storage
+          subnetName: subnet3
+        - name: tenant
+          subnetName: subnet4
+        - name: storagemgmt
+          subnetName: subnet5
 # TODO: There is no reason to change the domain depending on the type of
 # deployment, but we are doing this to keep the CI green when TLS-E is merged.
 # This setting should at some point be switched in the CI to standalone.ooo.test
 # for all types of jobs and removed entirely afterwards.
+
+# For a local libvirt setup outside of CI-framework, enable EDPM net config, and define netconfig_networks
+# That is required to update DNS config in resolv.conf at very least, so that edpm can reach out OCP pods.
+dataplane_os_net_config_set_route: false #CUSTOMIZE_THIS
+netconfig_networks: #CUSTOMIZE_THIS
+  - name: ctlplane
+    dnsDomain: ctlplane.example.com
+    subnets:
+      - name: subnet1
+  - name: internalapi
+    dnsDomain: internalapi.example.com
+    subnets:
+      - name: subnet2
+  - name: storage
+    dnsDomain: storage.example.com
+    subnets:
+      - name: subnet3
+  - name: tenant
+    dnsDomain: tenant.example.com
+    subnets:
+      - name: subnet4
+  - name: storagemgmt
+    dnsDomain: storagemgmt.example.com
+    subnets:
+      - name: subnet5
 
 # If 'true', this flag will create a Barbican secret before the adoption runs
 # and after the adoption it'll be verified with the secret tills exists with
@@ -57,9 +107,6 @@ source_os_diff_config_ip: 192.168.122.100
 # Source OVN DB IP for DB exports on internal_api network.
 source_ovndb_ip: 172.17.0.100 #CUSTOMIZE_THIS
 
-# EDPM node IP
-edpm_node_ip: 192.168.122.100 #CUSTOMIZE_THIS
-
 # NTP servers list
 timesync_ntp_servers:
   # - clock.redhat.com # Will not work outside of RH intranet
@@ -70,6 +117,11 @@ auth_url: http://keystone-public-openstack.apps-crc.testing
 
 # Set this to true if adopting the ironic services (ironic + ironic-inspector + nova w/compute-ironic)
 ironic_adoption: false
+# provide the source cloud Ironic topology, for any cells with Ironic services
+source_ironic_nodes:
+  default:
+    - name: standalone.localdomain
+      template: standalone
 
 # Name of network used in ironic spec networkAttachments and provisionNetwork
 ironic_network: baremetal
@@ -97,6 +149,9 @@ supported_backup_backends: #CUSTOMIZE_THIS
 # Whether the adopted node will host compute services
 compute_adoption: true
 use_hugepages: false
+
+# For a multi-node, should be 'overcloud'
+os_cloud_name: standalone
 
 # Where perform or not telemetry installation during adoption
 telemetry_adoption: true
