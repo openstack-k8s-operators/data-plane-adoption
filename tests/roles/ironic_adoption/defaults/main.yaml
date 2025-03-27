@@ -16,9 +16,9 @@ ironic_patch: |
               internal:
                 metadata:
                   annotations:
-                    metallb.universe.tf/address-pool: internalapi
-                    metallb.universe.tf/allow-shared-ip: internalapi
-                    metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.80
+                    metallb.universe.tf/address-pool: ctlplane
+                    metallb.universe.tf/allow-shared-ip: ctlplane
+                    metallb.universe.tf/loadBalancerIPs: {{ ctlplane_prefix | default('192.168.122') }}.80
                 spec:
                   type: LoadBalancer
         ironicConductors:
