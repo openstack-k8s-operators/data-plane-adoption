@@ -41,6 +41,7 @@ $ alias openstack="oc exec -t openstackclient -- openstack"
 
 . Patch the `OpenStackControlPlane` custom resource (CR) to deploy the {bare_metal}:
 +
+[source,yaml]
 ----
 $ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
 spec:
