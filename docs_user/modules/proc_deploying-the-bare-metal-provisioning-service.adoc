@@ -14,7 +14,7 @@ By default, {rhos_acro} versions {rhos_curr_ver} and later of the {bare_metal} c
 +
 ----
 $ oc get openstackcontrolplanes.core.openstack.org <name> -o jsonpath='{.spec.ironic.enabled}'
-----   
+----
 +
 ** Replace `<name>` with the name of your existing `OpenStackControlPlane` CR, for example, `openstack-control-plane`.
 * The {identity_service_first_ref}, {networking_first_ref}, and {image_service_first_ref} are operational.
@@ -152,7 +152,7 @@ spec:
 '
 ----
 +
-After this configuration is applied, the operator restarts the Ironic API service and disables the new RBAC policy that is enabled by default. 
+After this configuration is applied, the operator restarts the Ironic API service and disables the new RBAC policy that is enabled by default.
 
 . View the bare metal nodes that do not have an owner assigned:
 +
