@@ -16,11 +16,11 @@ By default, {rhos_acro} versions {rhos_curr_ver} and later of the {bare_metal} c
 $ oc get openstackcontrolplanes.core.openstack.org <name> -o jsonpath='{.spec.ironic.enabled}'
 ----   
 +
-* Replace `<name>` with the name of 
+** Replace `<name>` with the name of your existing `OpenStackControlPlane` CR, for example, `openstack-control-plane`.
 * The {identity_service_first_ref}, {networking_first_ref}, and {image_service_first_ref} are operational.
 +
 [NOTE]
-If you use the {bare_metal} in a Bare Metal as a Service configuration, do not adopt the {compute_service_first_ref} yet.
+If you use the {bare_metal} in a Bare Metal as a Service configuration, do not adopt the {compute_service_first_ref} before you adopt the {bare_metal}.
 * For the {bare_metal} conductor services, the services must be able to reach Baseboard Management Controllers of hardware that is configured to be managed by the {bare_metal}. If this hardware is unreachable, the nodes might enter "maintenance" state and be unavailable until connectivity is restored later.
 * You have downloaded the `ironic.conf` file locally:
 +
@@ -151,17 +151,10 @@ spec:
           enforce_new_defaults=false
 '
 ----
-
-. After you set the `owner` field on the bare metal nodes, you can re-enable RBAC by removing the `customServiceConfig` section or by setting the following values to `true`:
 +
-----
-customServiceConfig: |
-  [oslo_policy]
-  enforce_scope=true
-  enforce_new_defaults=true
-----
+After this configuration is applied, the operator restarts the Ironic API service and disables the new RBAC policy that is enabled by default. 
 
-. After this configuration is applied, the operator restarts the Ironic API service and disables the new RBAC policy that is enabled by default. After the RBAC policy is disabled, you can view bare metal nodes without an `owner` field:
+. View the bare metal nodes that do not have an owner assigned:
 +
 ----
 $ openstack baremetal node list --long -c UUID -c Owner -c 'Provisioning State'
@@ -174,7 +167,7 @@ ADMIN_PROJECT_ID=$(openstack project show -c id -f value --domain default admin)
 for node in $(openstack baremetal node list -f json -c UUID -c Owner | jq -r '.[] | select(.Owner == null) | .UUID'); do openstack baremetal node set --owner $ADMIN_PROJECT_ID $node; done
 ----
 
-. Re-apply the default RBAC:
+. Re-apply the default RBAC by removing the `customServiceConfig` section or by setting the following values in the `customServiceConfig` section to `true`. For example:
 +
 [source,yaml]
 ----
