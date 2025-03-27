@@ -165,7 +165,7 @@ $ oc exec ovn-copy-data -- bash -c "ovsdb-client backup --ca-cert=/etc/pki/tls/m
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client backup --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$SOURCE_OVSDB_IP:6642 > /backup/ovs-sb.db"
 ----
 
-. Start the control plane OVN database services prior to import, with `northd` and `ovn-controller` disabled:
+. Start the control plane OVN database services prior to import, with `northd` disabled:
 +
 [source,yaml]
 ----
@@ -187,9 +187,6 @@ spec:
           networkAttachment: internalapi
       ovnNorthd:
         replicas: 0
-      ovnController:
-        networkAttachment: tenant
-        nodeSelector:
 '
 ----
 
@@ -275,8 +272,17 @@ spec:
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack --type=json -p="[{'op': 'remove', 'path': '/spec/ovn/template/ovnController/nodeSelector'}]"
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  ovn:
+    enabled: true
+    template:
+      ovnController:
+        nicMappings:
+          physNet: NIC <1>
 ----
++
+<1> `physNet` is the name of your physical network. `NIC` is the name of the physical interface that is connected to your physical network.
 +
 [NOTE]
 Running OVN gateways on {OpenShiftShort} nodes might be prone to data plane downtime during Open vSwitch upgrades. Consider running OVN gateways on dedicated `Networker` data plane nodes for production deployments instead.
