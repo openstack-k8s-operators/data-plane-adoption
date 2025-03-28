@@ -72,8 +72,7 @@ spec:
 * Inspect the resulting {networking_service} pods:
 +
 ----
-NEUTRON_API_POD=`oc get pods -l service=neutron | tail -n 1 | cut -f 1 -d' '`
-oc exec -t $NEUTRON_API_POD -c neutron-api -- cat /etc/neutron/neutron.conf
+$ oc get pods -l service=neutron
 ----
 
 * Ensure that the `Neutron API` service is registered in the {identity_service}:
