@@ -160,12 +160,11 @@ os_diff_data_dir: tmp/os-diff
 prelaunch_test_instance: true
 telemetry_adoption: true
 
-# nodes data will be templated in as a separate
 dataplane_cr: |
   apiVersion: dataplane.openstack.org/v1beta1
   kind: OpenStackDataPlaneNodeSet
   metadata:
-    name: openstack-$CELL
+    name: openstack-cell1
   spec:
     tlsEnabled: {{ enable_tlse }}
     networkAttachments:
@@ -186,7 +185,7 @@ dataplane_cr: |
       - neutron-metadata
       {%+ if compute_adoption|bool +%}
       - libvirt
-      - nova-$CELL
+      - nova
       {%+ endif +%}
       {% if telemetry_adoption|bool +%}
       - telemetry
@@ -201,7 +200,8 @@ dataplane_cr: |
       - name: ANSIBLE_SSH_ARGS
         value: "-C -o ControlMaster=auto -o ControlPersist=80s"
       - name: ANSIBLE_VERBOSITY
-        value: "{{ dataplane_verbosity | default ('3') }}"
+        value: "{{ dataplane_verbosity | default ('1') }}"
+    nodes: {{ edpm_nodes["cell1"] | default(edpm_nodes) }}
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
       ansible:
@@ -288,7 +288,6 @@ dataplane_cr: |
           ovn_monitor_all: true
           edpm_ovn_remote_probe_interval: 60000
           edpm_ovn_ofctrl_wait_before_clear: 8000
-    nodes:
 
 dpa_dir: "../.."
 dpa_tests_dir: "{{ dpa_dir }}/tests"
