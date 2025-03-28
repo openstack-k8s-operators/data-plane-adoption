@@ -29,12 +29,12 @@ The following {compute_service_first_ref} features are Technology Previews:
 * AMD SEV
 * Direct download from Rados Block Device (RBD)
 * File-backed memory
-* `Provider.yaml`
 
 .Unsupported features
 
 The adoption process does not support the following features:
 
+* {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} multi-cell deployments
 * instanceHA
 * DCN
 * Designate
