@@ -27,3 +27,18 @@
   args:
     chdir: "{{ dpa_tests_dir }}/config"
   when: deploy_ctlplane_ospdo| default(false) | bool
+
+- name: disable tlse in OpenStackControlPlane
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    crname=$(oc get openstackcontrolplane -o name)
+    oc patch ${crname} --type=merge --patch "
+    spec:
+      tls:
+        podLevel:
+          enabled: false
+        ingress:
+          enabled: false
+    "
+  when: not enable_tlse | bool

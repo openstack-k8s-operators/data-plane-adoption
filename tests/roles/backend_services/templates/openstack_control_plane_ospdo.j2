@@ -156,9 +156,8 @@ spec:
   autoscaling:
     enabled: false
     template: {}
-
-  tls:
 {% if enable_tlse %}
+  tls:
     podLevel:
       enabled: true
       internal:
@@ -174,9 +173,4 @@ spec:
       ca:
         customIssuer: rootca-internal
       enabled: true
-{% else %}
-    podLevel:
-      enabled: false
-    ingress:
-      enabled: false
 {% endif %}
