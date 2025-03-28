@@ -1,3 +1,3 @@
 os_cloud_name: standalone
 control_plane_rollback_verify_command: |
-  ssh root@{{ standalone_ip }} OS_CLOUD={{ os_cloud_name }} openstack user list
+  ssh -i {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no root@{{ standalone_ip | default(edpm_node_ip) }} OS_CLOUD={{ os_cloud_name }} openstack user list
