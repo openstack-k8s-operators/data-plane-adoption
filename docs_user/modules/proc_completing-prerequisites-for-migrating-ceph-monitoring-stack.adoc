@@ -19,6 +19,7 @@ ifeval::["{build}" != "upstream"]
 For more information about assigning labels to nodes, review the Red Hat Knowledgebase article https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations].
 endif::[]
 +
+[source,yaml]
 ----
 [tripleo-admin@controller-0 ~]$ sudo cephadm shell -- ceph orch host ls
 
@@ -43,6 +44,7 @@ In case the desired option is to rely on the https://github.com/ceph/ceph/blob/r
 shipped by cephadm, remove the following config options from the {CephCluster} cluster.
 endif::[]
 +
+[source,yaml]
 ----
 $ ceph config dump
 ...
@@ -65,6 +67,7 @@ endif::[]
 
 . Remove the undercloud container images:
 +
+[source,yaml]
 ----
 $ cephadm shell -- ceph config rm mgr mgr/cephadm/container_image_base
 for i in prometheus grafana alertmanager node_exporter; do

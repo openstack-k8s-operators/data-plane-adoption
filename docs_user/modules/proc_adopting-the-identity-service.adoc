@@ -28,6 +28,7 @@ EOF
 
 . Patch the `OpenStackControlPlane` CR to deploy the {identity_service}:
 +
+[source,yaml]
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
@@ -62,6 +63,7 @@ $ alias openstack="oc exec -t openstackclient -- openstack"
 . Remove services and endpoints that still point to the {OpenStackShort}
 control plane, excluding the {identity_service} and its endpoints:
 +
+[source,yaml]
 ----
 $ openstack endpoint list | grep keystone | awk '/admin/{ print $2; }' | xargs ${BASH_ALIASES[openstack]} endpoint delete || true
 
