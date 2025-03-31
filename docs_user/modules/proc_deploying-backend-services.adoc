@@ -170,7 +170,7 @@ spec:
       enabled: false
 ----
 
-. Deploy the `OpenStackControlPlane` CR. Ensure that you only enable the DNS, MariaDB, Memcached, and RabbitMQ services. All other services must
+. Deploy the `OpenStackControlPlane` CR. Ensure that you only enable the DNS, Galera, Memcached, and RabbitMQ services. All other services must
 be disabled:
 +
 [NOTE]
@@ -273,10 +273,6 @@ endif::[]
       manilaAPI: {}
       manilaScheduler: {}
       manilaShares: {}
-
-  mariadb:
-    enabled: false
-    templates: {}
 
   galera:
     enabled: true
