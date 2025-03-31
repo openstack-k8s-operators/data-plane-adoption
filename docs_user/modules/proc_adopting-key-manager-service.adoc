@@ -22,6 +22,7 @@ $ oc set data secret/osp-secret "BarbicanSimpleCryptoKEK=$($CONTROLLER1_SSH "pyt
 
 . Patch the `OpenStackControlPlane` CR to deploy the {key_manager}:
 +
+[source,yaml]
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:

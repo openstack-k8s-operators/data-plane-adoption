@@ -104,7 +104,7 @@ A standalone {OpenStackPreviousInstaller} environment only creates a 'default' c
 [NOTE]
 The `super` is the top-scope Nova API upcall database instance. A super conductor connects to that database. In subsequent examples, the upcall and cells databases use the same password that is defined in `osp-secret`. Old passwords are only needed to prepare the data exports.
 
-To get the values for `SOURCE_MARIADB_IP`, query the puppet-generated configurations in the Controller and CellController nodes:
+* To get the values for `SOURCE_MARIADB_IP`, query the puppet-generated configurations in the Controller and CellController nodes:
 +
 ----
 $ sudo grep -rI 'listen mysql' -A10 /var/lib/config-data/puppet-generated/ | grep bind
@@ -124,7 +124,7 @@ The source cloud always uses the same password for cells databases. For that rea
 +
 [source,yaml]
 ----
-oc apply -f - <<EOF
+$ oc apply -f - <<EOF
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
