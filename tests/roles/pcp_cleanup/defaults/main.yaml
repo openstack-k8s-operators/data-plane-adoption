@@ -8,3 +8,6 @@ reset_crc_storage: false
 # Whether 'make standalone_revert' should be run before
 # running the test suite.
 standalone_revert_enabled: false
+
+pcp_cleanup_required_packages:
+  - jq

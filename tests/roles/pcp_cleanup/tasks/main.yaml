@@ -1,3 +1,9 @@
+- name: Make sure required packages are installed
+  become: true
+  ansible.builtin.dnf:
+    state: present
+    name: "{{ pcp_cleanup_required_packages }}"
+
 - name: clean up any remains of podified deployment
   ansible.builtin.shell: |
     {{ shell_header }}
