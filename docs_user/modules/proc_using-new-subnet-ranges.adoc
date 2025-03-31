@@ -42,18 +42,16 @@ Repeat this configuration for other networks that need to use different subnets 
 +
 ----
 (undercloud)$ openstack overcloud network provision \
- [--templates <templates_directory> \]
  --output  <deployment_file> \
- /home/stack/templates/<networks_definition_file>
+[--templates <templates_directory>]/home/stack/templates/<networks_definition_file>
 ----
 +
 ----
 (undercloud)$ openstack overcloud node provision \
- [--templates <templates_directory> \]
  --stack <stack> \
  --network-config \
  --output <deployment_file> \
- /home/stack/templates/<node_definition_file>
+[--templates <templates_directory>]/home/stack/templates/<node_definition_file>
 ----
 +
 * Optional: Include the `--templates` option to use your own templates instead of the default templates located in `/usr/share/openstack-tripleo-heat-templates`. Replace `<templates_directory>` with the path to the directory that contains your templates.

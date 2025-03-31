@@ -18,12 +18,13 @@ You should not stop the infrastructure management services yet, such as:
 
 * Ensure that there no long-running tasks that require the services that you plan to stop, such as instance live migrations, volume migrations, volume creation, backup and restore, attaching, detaching, and other similar operations:
 +
+[source,yaml]
 ----
-openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
-openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
-openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \|' | grep -vi error
-openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
-openstack image list -c ID -c Status |grep -E '\| .+ing \|'
+$ openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
+$ openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
+$ openstack volume backup list --all-projects -c ID -c Status |grep -E '\| .+ing \|' | grep -vi error
+$ openstack share list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
+$ openstack image list -c ID -c Status |grep -E '\| .+ing \|'
 ----
 * Collect the services topology-specific configuration. For more information, see xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
 * Define the following shell variables. The values are examples and refer to a single node standalone {OpenStackPreviousInstaller} deployment. Replace these example values with values that are correct for your environment:
