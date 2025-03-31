@@ -8,6 +8,7 @@ Complete the following prerequisites before you begin the Ceph Object Gateway (R
 
 . Check the current status of the {Ceph} nodes:
 +
+[source,yaml]
 ----
 (undercloud) [stack@undercloud-0 ~]$ metalsmith list
 
@@ -45,6 +46,7 @@ Full List of Resources:
 
 . Identify the ranges of the storage networks. The following is an example and the values might differ in your environment:
 +
+[source,yaml]
 ----
 [heat-admin@controller-0 ~]$ ip -o -4 a
 
@@ -69,6 +71,7 @@ environment, HAProxy has the front-end Virtual IP (VIP) assigned.
 
 .. Log in to `controller-0` and find the `ceph_rgw` section in the current HAProxy configuration:
 +
+[source,yaml]
 ----
 $ less /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg
 
@@ -92,6 +95,7 @@ listen ceph_rgw
 
 .. Confirm that the network is used as an HAProxy front end. The following example shows that `controller-0` exposes the services by using the external network, which is absent from the {Ceph} nodes. You must propagate the external network through {OpenStackPreviousInstaller}:
 +
+[source,yaml]
 ----
 [controller-0]$ ip -o -4 a
 
@@ -180,6 +184,7 @@ Ensure that 'network_config_update' is enabled for network propagation to the ta
 
 .. Configure the new network on the bare metal nodes:
 +
+[source,yaml]
 ----
 (undercloud) [stack@undercloud-0]$
 
@@ -192,6 +197,7 @@ openstack overcloud node provision
 
 .. Verify that the new network is configured on the {CephCluster} nodes:
 +
+[source,yaml]
 ----
 [root@cephstorage-0 ~]# ip -o -4 a
 

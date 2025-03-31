@@ -411,6 +411,7 @@ named `cell1`. Adjust the names, counts, IP addresses, and numbers, such as for 
 
 * Verify that MariaDB and RabbitMQ are running for all defined cells:
 +
+[source,yaml]
 ----
 $ RENAMED_CELLS="cell1"
 $ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
