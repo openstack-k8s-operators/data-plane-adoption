@@ -71,7 +71,7 @@ environment, HAProxy has the front-end Virtual IP (VIP) assigned.
 
 .. Log in to `controller-0` and find the `ceph_rgw` section in the current HAProxy configuration:
 +
-[source,yaml]
+[source,shell]
 ----
 $ less /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg
 
