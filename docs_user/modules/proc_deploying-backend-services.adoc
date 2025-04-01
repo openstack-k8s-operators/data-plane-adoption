@@ -189,7 +189,7 @@ metallb.universe.tf/loadBalancerIPs: fd00:bbbb::86
 ----
 ====
 +
-[source,yaml]
+[source,shell]
 ----
 $ oc apply -f - <<EOF
 apiVersion: core.openstack.org/v1beta1
