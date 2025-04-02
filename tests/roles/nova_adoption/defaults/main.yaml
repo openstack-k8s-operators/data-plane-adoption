@@ -138,6 +138,10 @@ nova_ironic_patch: |
                 [workarounds]
                 disable_compute_service_check_for_ffu=true
           {%+ for cell in renamed_cells +%}
+          {%- set source_cell_name = cell -%}
+          {%- if cell == default_cell_name -%}
+          {%- set source_cell_name = 'default' -%}
+          {%- endif -%}
           {{ cell }}:
             hasAPIAccess: true
             cellDatabaseAccount: nova-cell{{ loop.index }}
@@ -147,9 +151,9 @@ nova_ironic_patch: |
               customServiceConfig: |
                 [workarounds]
                 disable_compute_service_check_for_ffu=true
-            {%+ if ironic_adoption|bool and cell in source_ironic_nodes +%}
+            {%+ if ironic_adoption|bool and source_cell_name in source_ironic_nodes +%}
             novaComputeTemplates:
-              {%+ for n in source_ironic_nodes[cell] +%}
+              {%+ for n in source_ironic_nodes[source_cell_name] +%}
               {{ n.template }}:
                 customServiceConfig: |
                   [DEFAULT]
@@ -188,14 +192,18 @@ remove_ffu_workaround_patch: |
                 [workarounds]
                 disable_compute_service_check_for_ffu=false
           {%+ for cell in renamed_cells +%}
+          {%- set source_cell_name = cell -%}
+          {%- if cell == default_cell_name -%}
+          {%- set source_cell_name = 'default' -%}
+          {%- endif -%}
           {{ cell }}:
             conductorServiceTemplate:
               customServiceConfig: |
                 [workarounds]
                 disable_compute_service_check_for_ffu=false
-            {%+ if ironic_adoption|bool and cell in source_ironic_nodes +%}
+            {%+ if ironic_adoption|bool and source_cell_name in source_ironic_nodes +%}
             novaComputeTemplates:
-              {%+ for n in source_ironic_nodes[cell] +%}
+              {%+ for n in source_ironic_nodes[source_cell_name] +%}
               {{ n.template }}:
                 customServiceConfig: |
                   [DEFAULT]
