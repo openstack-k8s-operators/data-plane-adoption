@@ -122,7 +122,6 @@ The source cloud always uses the same password for cells databases. For that rea
 
 . Create a temporary volume claim and a pod for the database data copy. Edit the volume claim storage request if necessary, to give it enough space for the overcloud databases:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 ---

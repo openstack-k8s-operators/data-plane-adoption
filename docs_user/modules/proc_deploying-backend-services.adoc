@@ -435,7 +435,6 @@ such as for `replicas`, `storage`, or `storageRequest`, as needed.
 
 * Verify that MariaDB and RabbitMQ are running for all defined cells:
 +
-[source,yaml]
 ----
 $ RENAMED_CELLS="cell1 cell2 cell3"
 $ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
