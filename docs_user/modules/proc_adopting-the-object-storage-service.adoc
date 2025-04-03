@@ -44,6 +44,7 @@ EOF
 
 . Patch the `OpenStackControlPlane` custom resource to deploy the {object_storage}:
 +
+[source,shell]
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
@@ -94,11 +95,13 @@ $ oc get pods -l component=swift-proxy
 
 * Verify that the Object Storage proxy service is registered in the {identity_service_first_ref}:
 +
+[source,shell]
 ----
 $ openstack service list | grep swift
 | b5b9b1d3c79241aa867fa2d05f2bbd52 | swift    | object-store |
 ----
 +
+[source,shell]
 ----
 $ openstack endpoint list | grep swift
 | 32ee4bd555414ab48f2dc90a19e1bcd5 | regionOne | swift        | object-store | True    | public    | https://swift-public-openstack.apps-crc.testing/v1/AUTH_%(tenant_id)s |
@@ -107,6 +110,7 @@ $ openstack endpoint list | grep swift
 
 * Verify that you are able to upload and download objects:
 +
+[source,shell]
 ----
 $ openstack container create test
 +---------------------------------------+-----------+------------------------------------+
