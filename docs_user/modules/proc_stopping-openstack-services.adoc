@@ -18,7 +18,6 @@ You should not stop the infrastructure management services yet, such as:
 
 * Ensure that there no long-running tasks that require the services that you plan to stop, such as instance live migrations, volume migrations, volume creation, backup and restore, attaching, detaching, and other similar operations:
 +
-[source,yaml]
 ----
 $ openstack server list --all-projects -c ID -c Status |grep -E '\| .+ing \|'
 $ openstack volume list --all-projects -c ID -c Status |grep -E '\| .+ing \|'| grep -vi error
