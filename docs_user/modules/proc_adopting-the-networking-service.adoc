@@ -26,7 +26,7 @@ endif::[]
 +
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
-spec:
+ spec:
   neutron:
     enabled: true
     apiOverride:
@@ -47,17 +47,18 @@ spec:
       secret: osp-secret
       networkAttachments:
       - internalapi
-'
+ '
 ----
 +
 <1> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
-
-* Note: If neutron-dhcp-agent was used in the OSP-17.1 deployment and should still be used after adoption, please enable also dhcp_agent_notification for neutron-api service.
-This can be done with patch:
 +
+[NOTE]
+====
+If you used the `neutron-dhcp-agent` in your {OpenStackShort} {rhos_prev_ver} deployment and you still need to use it after adoption, you must enable the `dhcp_agent_notification` for the `neutron-api` service:
+
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
-spec:
+ spec:
   neutron:
     template:
       customServiceConfig: |
@@ -65,7 +66,7 @@ spec:
         dhcp_agent_notification = True
 '
 ----
-
+====
 
 .Verification
 

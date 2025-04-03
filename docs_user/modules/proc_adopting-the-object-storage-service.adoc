@@ -13,7 +13,6 @@ If you are using Object Storage as a service, adopt the {object_storage_first_re
 
 . Create the `swift-conf` secret that includes the {object_storage} hash path suffix and prefix:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
@@ -29,7 +28,6 @@ EOF
 
 . Create the `swift-ring-files` `ConfigMap` that includes the {object_storage} ring files:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
@@ -46,7 +44,6 @@ EOF
 
 . Patch the `OpenStackControlPlane` custom resource to deploy the {object_storage}:
 +
-[source,yaml]
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
@@ -111,7 +108,7 @@ $ openstack endpoint list | grep swift
 * Verify that you are able to upload and download objects:
 +
 ----
-openstack container create test
+$ openstack container create test
 +---------------------------------------+-----------+------------------------------------+
 | account                               | container | x-trans-id                         |
 +---------------------------------------+-----------+------------------------------------+
