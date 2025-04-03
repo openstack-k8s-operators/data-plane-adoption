@@ -244,6 +244,7 @@
   # NOTE(bogdando): omit computes-$CELL insertion as that is a manual operation only needed by docs.
   # Those files are created here only to provide testing coverage of the commands provided in docs.
   # Their contents is irrelevant as the real values come from edpm_nodes, by the below task.
+  # NOTE(bogdando): Assume cell1 must always have at least an only compute node. That is for backwards compatibility with scenarios not aware of multiple cells.
 
 - name: update EDPM nodes data in nodes sets of cells
   no_log: "{{ use_no_log }}"
@@ -251,11 +252,18 @@
     - compute_adoption|bool
   ansible.builtin.shell: |
     {{ shell_header }}
+    {{ cells_env }}
+    {% if 'cell1' not in edpm_nodes %}
+    {% set edpm_nodes_real = {'cell1': edpm_nodes} %}
+    {% else %}
+    {% set edpm_nodes_real = edpm_nodes %}
+    {% endif %}
+
     {% for cell in renamed_cells %}
-    {% if cell in edpm_nodes %}
+    {% if cell in edpm_nodes_real %}
     cat > computes-real-{{ cell }} << EOF
     {% filter indent(width=4) %}
-        {{ edpm_nodes[cell] | to_yaml(indent=2) }}
+        {{ edpm_nodes_real[cell] | to_yaml(indent=2) }}
     {% endfilter %}
     EOF
     cat computes-real-{{ cell }} >> nodeset-{{ cell }}.yaml

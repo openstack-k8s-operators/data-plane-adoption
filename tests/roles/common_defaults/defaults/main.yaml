@@ -36,6 +36,7 @@ cells_env: |
 nodesets_env: |
   {{ edpm_computes_shell_vars_src }}
 
+  set +u
   NODESETS=""
   for CELL in $(echo $RENAMED_CELLS); do
     ref="COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
@@ -43,6 +44,7 @@ nodesets_env: |
     [ -z "$names" ] && continue
     NODESETS="'openstack-${CELL}', $NODESETS"
   done
+  set -u
   NODESETS="[${NODESETS%,*}{% if edpm_nodes_networker is defined %}, 'openstack-networker'{% endif %}]"
 
 nodesets_env_oc: |
@@ -50,11 +52,13 @@ nodesets_env_oc: |
   {{ oc_header }}
   {{ cells_env }}
 
+  set +u
   NODESETS=""
   for CELL in $(echo $RENAMED_CELLS); do
     oc get Openstackdataplanenodeset openstack-${CELL} || continue
     NODESETS="'openstack-${CELL}', $NODESETS"
   done
+  set -u
   NODESETS="[${NODESETS%,*}]"
 
 # Header for custom nova osdp services names evaluation
@@ -62,10 +66,12 @@ nova_services_env: |
   {{ shell_header }}
   {{ cells_env }}
 
+  set +u
   NOVASERVICES=""
   for CELL in $(echo $RENAMED_CELLS); do
     NOVASERVICES="'nova-${CELL}', $NOVASERVICES"
   done
+  set -u
   NOVASERVICES="[${NOVASERVICES%,*}]"
 
 # Headers for DB client CLI image
@@ -167,22 +173,28 @@ mariadb_copy_shell_vars_dst: |
   done
 
 # Header for the destination cloud EDPM Nova cell computes FDQN and IP pairs, per a cell
-# NOTE: Assume inernalapi network comes with an index 1. Ignore FQDN on a network to simply bind IPs by a hostname.
+# NOTE(bogdando): Assume inernalapi network comes with an index 1. Ignore FQDN on a network to simply bind IPs by a hostname.
+# NOTE(bogdando): Assume cell1 must always have at least an only compute node. That is for backwards compatibility with scenarios not aware of multiple cells.
 edpm_computes_shell_vars_src: |-
   {{ shell_header }}
   {{ cells_env }}
+  {% if 'cell1' not in edpm_nodes %}
+  {% set edpm_nodes_real = {'cell1': edpm_nodes} %}
+  {% else %}
+  {% set edpm_nodes_real = edpm_nodes %}
+  {% endif %}
 
   {% for cell in renamed_cells %}
   declare -A COMPUTES_{{ cell.upper() }}
   COMPUTES_{{ cell.upper() }}=(
-    {%- for v in edpm_nodes[cell] | default({}) %}
-    ["{{ edpm_nodes[cell][v].hostName }}"]={{ edpm_nodes[cell][v].ansible.ansibleHost }}
+    {%- for v in edpm_nodes_real[cell] %}
+    ["{{ edpm_nodes_real[cell][v].hostName }}"]={{ edpm_nodes_real[cell][v].ansible.ansibleHost }}
     {% endfor -%}
   )
   declare -A COMPUTES_API_{{ cell.upper() }}
   COMPUTES_API_{{ cell.upper() }}=(
-    {%- for v in edpm_nodes[cell] | default({}) %}
-    ["{{ edpm_nodes[cell][v].hostName }}"]={{ edpm_nodes[cell][v].networks[1].fixedIP|default("") }}
+    {%- for v in edpm_nodes_real[cell] %}
+    ["{{ edpm_nodes_real[cell][v].hostName }}"]={{ edpm_nodes_real[cell][v].networks[1].fixedIP|default("") }}
     {% endfor -%}
   )
   {% endfor %}
