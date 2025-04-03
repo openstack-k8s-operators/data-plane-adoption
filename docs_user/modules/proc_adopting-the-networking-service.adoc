@@ -24,9 +24,10 @@ endif::[]
 
 * Patch the `OpenStackControlPlane` CR to deploy the {networking_service}:
 +
+[source,shell]
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
- spec:
+spec:
   neutron:
     enabled: true
     apiOverride:
@@ -47,7 +48,7 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch '
       secret: osp-secret
       networkAttachments:
       - internalapi
- '
+'
 ----
 +
 <1> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
@@ -56,6 +57,7 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch '
 ====
 If you used the `neutron-dhcp-agent` in your {OpenStackShort} {rhos_prev_ver} deployment and you still need to use it after adoption, you must enable the `dhcp_agent_notification` for the `neutron-api` service:
 
+[source,shell]
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
  spec:
@@ -82,6 +84,7 @@ $ oc get pods -l service=neutron
 $ openstack service list | grep network
 ----
 +
+[source,shell]
 ----
 $ openstack endpoint list | grep network
 
