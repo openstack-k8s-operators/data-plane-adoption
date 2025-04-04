@@ -35,7 +35,6 @@ include::../../tests/roles/octavia_adoption/tasks/octavia_certs.yaml[lines="7..8
     kind: ConfigMap
     metadata:
       name: octavia-ssh-pubkey
-      namespace: openstack
     data:
       key: $(cat $HOME/octavia_sshkey.pub)
     EOF
@@ -53,12 +52,12 @@ parameter_defaults:
 . To isolate the management network, add the network interface for the VLAN base interface:
 +
 ----
-$ oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | grep -v nncp-dns | while read; do
+$ oc get --no-headers nncp | cut -f 1 -d ' ' | grep -v nncp-dns | while read; do
 
 interfaces=$(oc get nncp $REPLY -o jsonpath="{.spec.desiredState.interfaces[*].name}")
 
 (echo $interfaces | grep -w -q "octbr\|enp6s0.24") || \
-        oc patch -n openstack nncp $REPLY --type json --patch '
+        oc patch nncp $REPLY --type json --patch '
 [{
     "op": "add",
     "path": "/spec/desiredState/interfaces/-",
@@ -105,7 +104,6 @@ metadata:
   labels:
     osp/net: octavia
   name: octavia
-  namespace: openstack
 spec:
   config: |
     {
@@ -127,13 +125,13 @@ spec:
       }
     }
 EOF_CAT
-$ oc apply -n openstack -f octavia-nad.yaml
+$ oc apply -f octavia-nad.yaml
 ----
 
 . Enable the {loadbalancer_service} in {OpenShiftShort}:
 +
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   ovn:
     template:

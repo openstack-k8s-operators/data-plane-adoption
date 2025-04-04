@@ -1,5 +1,4 @@
 # rhoso namespace
-rhoso_namespace: "openstack"
 ceph_backend_configuration_patch: |
   spec:
     extraMounts:

@@ -18,7 +18,6 @@
     kind: Issuer
     metadata:
       name: rootca-internal
-      namespace: openstack
       labels:
         osp-rootca-issuer-public: ""
         osp-rootca-issuer-internal: ""

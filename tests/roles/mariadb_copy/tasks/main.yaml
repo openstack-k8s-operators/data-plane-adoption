@@ -15,7 +15,6 @@
     kind: PersistentVolumeClaim
     metadata:
       name: mariadb-data
-      namespace: $NAMESPACE
     spec:
       storageClassName: $STORAGE_CLASS
       accessModes:
@@ -31,7 +30,6 @@
       annotations:
         openshift.io/scc: anyuid
         k8s.v1.cni.cncf.io/networks: {{ copy_pods_custom_networks | default('internalapi') }}
-      namespace: $NAMESPACE
       labels:
         app: adoption
     spec:
@@ -62,8 +60,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    {{ namespace_env }}
-    oc wait --for condition=Ready -n $NAMESPACE pod/mariadb-copy-data --timeout=10s
+    oc wait --for condition=Ready pod/mariadb-copy-data --timeout=10s
   register: mariadb_data_pod_result
   until: mariadb_data_pod_result is success
   retries: 25
@@ -79,7 +76,7 @@
       MEMBERS=SOURCE_GALERA_MEMBERS_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')[@]
       for i in "${!MEMBERS}"; do
         echo "Checking for the database node $i WSREP status Synced"
-        oc rsh  -n $NAMESPACE mariadb-copy-data mysql \
+        oc rsh mariadb-copy-data mysql \
           -h "$i" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" \
           -e "show global status like 'wsrep_local_state_comment'" | \
           grep -qE "\bSynced\b"

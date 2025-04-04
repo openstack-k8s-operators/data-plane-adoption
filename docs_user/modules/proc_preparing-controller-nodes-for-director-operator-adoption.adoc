@@ -22,7 +22,7 @@ $ oc project openstack
 ----
 export PASSWORD_FILE="tripleo-passwords.yaml"
 
-export RHOSO18_NAMESPACE="rhoso18"
+export RHOSO18_NAMESPACE="rhoso"
 
 export OSPDO_NAMESPACE="openstack"
 
