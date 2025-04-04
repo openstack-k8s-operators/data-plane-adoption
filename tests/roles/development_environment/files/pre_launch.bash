@@ -118,7 +118,14 @@ ${BASH_ALIASES[openstack]} security group rule list --protocol tcp --ingress -f 
 
 export FIP=192.168.122.20
 # check connectivity via FIP
-ping -c4 ${FIP}
+TRIES=0
+until ping -D -c1 -W2 "$FIP"; do
+    ((TRIES++)) || true
+    if [ "$TRIES" -gt 20 ]; then
+        echo "Ping timeout"
+        exit 1
+    fi
+done
 
 if [ "$CINDER_VOLUME_BACKEND_CONFIGURED" = "true" ]; then
     create_volume_resources
