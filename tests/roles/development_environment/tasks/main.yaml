@@ -1,3 +1,9 @@
+- name: Make sure required packages are installed
+  become: true
+  ansible.builtin.dnf:
+    state: present
+    name: "{{ development_environment_required_packages }}"
+
 - name: pre-launch test VM instance
   no_log: "{{ use_no_log }}"
   when: prelaunch_test_instance|bool
