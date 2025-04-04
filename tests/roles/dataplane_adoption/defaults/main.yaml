@@ -221,6 +221,7 @@ dataplane_cr: |
           edpm_network_config_template: |
             {{ edpm_network_config_template| indent(10) }}
 
+          edpm_network_config_nmstate: false
           edpm_network_config_hide_sensitive_logs: false
           #
           # These vars are for the network config templates themselves and are
@@ -355,6 +356,7 @@ networker_cr: |
           # nic config template for a EDPM compute node
           edpm_network_config_template: |
             {{ edpm_network_config_template| indent(10) }}
+          edpm_network_config_nmstate: false
           edpm_network_config_hide_sensitive_logs: false
           #
           # These vars are for the network config templates themselves and are
