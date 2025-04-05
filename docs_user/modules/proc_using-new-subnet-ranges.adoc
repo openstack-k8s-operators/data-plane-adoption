@@ -38,6 +38,10 @@ network_config:
 +
 Repeat this configuration for other networks that need to use different subnets for the new and existing parts of the deployment.
 
+ifeval::["{build_variant}" == "ospdo"]
+For more information about director Operator network configurations, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#assembly_creating-networks-with-director-operator[Creating networks with director Operator] in _Deploying an overcloud in a Red Hat OpenShift Container Platform cluster with director Operator_.
+endif::[]
+
 . Apply the new configuration to every {OpenStackShort} node:
 +
 ----
