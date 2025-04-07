@@ -10,6 +10,7 @@
     cinder_volume_backend: ceph
     cinder_backup_backend: ceph
     nova_libvirt_backend: ceph
+    enable_tlse: true
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash
