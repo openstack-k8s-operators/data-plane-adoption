@@ -388,3 +388,7 @@ networker_cr: |
           edpm_ovn_remote_probe_interval: 60000
           edpm_ovn_ofctrl_wait_before_clear: 8000
           edpm_enable_chassis_gw: true
+
+          {% if edpm_container_registry_insecure_registries is defined -%}
+          edpm_container_registry_insecure_registries: {{ edpm_container_registry_insecure_registries }}
+          {% endif -%}
