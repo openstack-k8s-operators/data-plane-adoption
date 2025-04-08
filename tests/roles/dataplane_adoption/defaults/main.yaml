@@ -158,6 +158,7 @@ skip_patching_ansibleee_csv: false
 os_diff_dir: tmp/os-diff
 os_diff_data_dir: tmp/os-diff
 prelaunch_test_instance: true
+test_instance_name: "{{ ironic_adoption | default(false) | ternary('baremetal-test', 'test') }}"
 telemetry_adoption: true
 
 # nodes data will be templated in as a separate
