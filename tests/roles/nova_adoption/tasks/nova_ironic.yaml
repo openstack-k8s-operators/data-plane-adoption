@@ -47,9 +47,9 @@
       set -e
     }
 
-    ${BASH_ALIASES[openstack]} server create baremetal-test-post-adoption --flavor baremetal --image CentOS-Stream-GenericCloud-x86_64-9 --nic net-id=provisioning
-    wait_server_active baremetal-test-post-adoption
+    ${BASH_ALIASES[openstack]} server create baremetal-post-adoption --flavor baremetal --image CentOS-Stream-GenericCloud-x86_64-9 --nic net-id=provisioning
+    wait_server_active baremetal-post-adoption
 
     # Check instance status and network connectivity
-    ${BASH_ALIASES[openstack]} server show baremetal-test-post-adoption
-    ping -c 4 $(${BASH_ALIASES[openstack]} server show baremetal-test-post-adoption -f json -c addresses | jq -r .addresses.provisioning[0])
+    ${BASH_ALIASES[openstack]} server show baremetal-post-adoption
+    ping -c 4 $(${BASH_ALIASES[openstack]} server show baremetal-post-adoption -f json -c addresses | jq -r .addresses.provisioning[0])
