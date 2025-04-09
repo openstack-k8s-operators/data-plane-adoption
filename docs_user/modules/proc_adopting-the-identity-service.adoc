@@ -72,18 +72,16 @@ done
 
 .Verification
 
-. Verify that the setup of the `OpenStackControlPlane` CR is now complete:
-+
-----
-$ oc get OpenStackControlPlane openstack
-NAME        STATUS   MESSAGE
-openstack   True     Setup complete
-----
-
 . Verify that you can access the `OpenStackClient` pod. For more information, see link:{defaultURL}/maintaining_the_red_hat_openstack_services_on_openshift_deployment/assembly_accessing-the-rhoso-cloud#proc_accessing-the-OpenStackClient-pod_cloud-access-admin[Accessing the OpenStackClient pod] in _Maintaining the {rhos_long_noacro} deployment_.
 
 . Confirm that the {identity_service} endpoints are defined and are pointing to the control plane FQDNs:
 +
 ----
 $ openstack endpoint list | grep keystone
+----
+
+. Wait for the `OpenStackControlPlane` resource to become `Ready`:
++
+----
+$ oc wait --for=condition=Ready --timeout=1m OpenStackControlPlane openstack
 ----
