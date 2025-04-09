@@ -72,12 +72,10 @@ done
 
 .Verification
 
-. Verify that the setup of the `OpenStackControlPlane` CR is now complete:
+. Wait for the `OpenStackControlPlane` resource to become `Ready`:
 +
 ----
-$ oc get OpenStackControlPlane openstack
-NAME        STATUS   MESSAGE
-openstack   True     Setup complete
+$ oc wait --for=condition=Ready --timeout=1m OpenStackControlPlane openstack
 ----
 
 . Verify that you can access the `OpenStackClient` pod. For more information, see link:{defaultURL}/maintaining_the_red_hat_openstack_services_on_openshift_deployment/assembly_accessing-the-rhoso-cloud#proc_accessing-the-OpenStackClient-pod_cloud-access-admin[Accessing the OpenStackClient pod] in _Maintaining the {rhos_long_noacro} deployment_.
