@@ -161,7 +161,7 @@ After this configuration is applied, the operator restarts the Ironic API servic
 $ openstack baremetal node list --long -c UUID -c Owner -c 'Provisioning State'
 ----
 
-. Assign all bare metal nodes with no owner to a new project, for example, the admin project:
+. Assign all bare-metal nodes with no owner to a new project, for example, the admin project:
 +
 ----
 ADMIN_PROJECT_ID=$(openstack project show -c id -f value --domain default admin)
