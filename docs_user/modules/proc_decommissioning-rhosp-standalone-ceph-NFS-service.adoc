@@ -20,7 +20,6 @@ Clients that are creating new workloads cannot use share exports through the pre
 [NOTE]
 This restarts the `manila-share` process and removes the export locations that applied to the previous NFS service from all the shares.
 +
-[source,yaml]
 ----
 $ cat << __EOF__ > ~/manila.patch
 spec:

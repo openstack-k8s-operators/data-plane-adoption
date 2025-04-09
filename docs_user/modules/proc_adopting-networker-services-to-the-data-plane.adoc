@@ -55,7 +55,6 @@ networkers+=(
 [NOTE]
 You can reuse most of the `nodeTemplate` section from the `OpenStackDataPlaneNodeSet` CR that is designated for your Compute nodes. You can omit some of the variables because of the limited set of services that are running on the Networker nodes.
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -270,7 +269,6 @@ external_ids        : {hostname=controller-0.localdomain, ovn-bridge=br-int, ovn
 
 . Optional: Enable `neutron-metadata` in the `OpenStackDataPlaneNodeSet` CR:
 +
-[source,yaml]
 ----
 $ oc patch openstackdataplanenodeset <networker_CR_name> --type='json' --patch='[
   {
@@ -284,7 +282,6 @@ $ oc patch openstackdataplanenodeset <networker_CR_name> --type='json' --patch='
 
 . Optional: Enable `neutron-dhcp` in the `OpenStackDataPlaneNodeSet` CR:
 +
-[source,yaml]
 ----
 $ oc patch openstackdataplanenodeset <networker_CR_name> --type='json' --patch='[
   {
@@ -298,7 +295,6 @@ $ oc patch openstackdataplanenodeset <networker_CR_name> --type='json' --patch='
 
 .. Create a `OpenStackDataPlaneDeployment` CR that runs only the validation:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -331,7 +327,6 @@ $ oc wait --for condition=Ready openstackdataplanedeployment/openstack-pre-adopt
 
 . Deploy the `OpenStackDataPlaneDeployment` CR for Networker nodes:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
