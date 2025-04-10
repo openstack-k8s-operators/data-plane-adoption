@@ -1,0 +1,21 @@
+[id="installing-the-systemd-container-package-on-compute-hosts_{context}"]
+
+= Installing the `systemd-container` package on Compute hosts
+
+Before you adopt the {rhos_long} data plane, you must install the `systemd-container` package on all the hypervisors on your Compute hosts. This procedure must be performed on one Compute host at a time.
+
+.Procedure
+
+. If your Compute host is running a virtual machine, live migrate the virtual machine from the host. For more information about live migration, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/performing_a_minor_update_of_red_hat_openstack_platform/assembly_rebooting-the-overcloud_keeping-updated#proc_rebooting-compute-nodes_rebooting-the-overcloud[Rebooting Compute nodes] in _Performing a minor update of Red Hat OpenStack Platform_.
+
+. Install the `systemd-container` on the host:
+** If you upgraded your environment from an earlier version of {rhos_prev_long}, reboot the Compute host to automatically install the `systemd-container`.
+** If you deployed a new RHOSO environment, install the `systemd-container` manually by using the following command. Rebooting the Compute host is not required:
++
+----
+$ sudo dnf -y install systemd-container
+----
+[NOTE]
+If your Compute host is not running a virtual machine, you can install the `systemd-container` automatically or manually.
+
+. Repeat this procedure on each hypervisor one by one.
