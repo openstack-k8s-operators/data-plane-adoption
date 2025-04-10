@@ -31,7 +31,7 @@ Compute::
 
 * Upgrade your Compute nodes to Red Hat Enterprise Linux {rhel_prev_ver}. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/framework_for_upgrades_16.2_to_17.1/index#upgrading-compute-nodes_upgrading-the-compute-node-operating-system[Upgrading all Compute nodes to RHEL 9.2] in _Framework for upgrades (16.2 to 17.1)_.
 * Perform a minor update to the latest {OpenStackShort} version. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/performing_a_minor_update_of_red_hat_openstack_platform/index[Performing a minor update of Red Hat OpenStack Platform].
-* Install the `systemd-container` package on your Compute hosts. For more information, see xref:installing-the-systemd-container-package-on-compute-hosts_{context}[Installing the `systemd-container` package on Compute hosts]. 
+* Install the `systemd-container` package on your Compute hosts. For more information, see xref:installing-the-systemd-container-package-on-compute-hosts_{context}[Installing the `systemd-container` package on Compute hosts].
 
 ML2/OVS::
 
