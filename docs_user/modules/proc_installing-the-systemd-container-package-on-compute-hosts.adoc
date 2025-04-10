@@ -19,5 +19,3 @@ $ sudo dnf -y install systemd-container
 If no virtual machines are running on your Compute hosts, you can install the `systemd-container` automatically or manually.
 
 . Repeat this procedure on each hypervisor one by one.
-
-
