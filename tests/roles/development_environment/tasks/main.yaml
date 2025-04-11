@@ -1,6 +1,8 @@
 - name: pre-launch test VM instance
   no_log: "{{ use_no_log }}"
-  when: prelaunch_test_instance|bool
+  when:
+    - prelaunch_test_instance|bool
+    - "'pre_launch.bash' in prelaunch_test_instance_scripts"
   vars:
     cinder_volume_backend_configured: "{{  cinder_volume_backend in supported_volume_backends }}"
     cinder_backup_backend_configured: "{{  cinder_backup_backend in supported_backup_backends }}"
@@ -11,14 +13,26 @@
       export EDPM_CONFIGURE_HUGEPAGES={{ use_hugepages | string | lower }}
       export CINDER_VOLUME_BACKEND_CONFIGURED={{ cinder_volume_backend_configured | string | lower }}
       export CINDER_BACKUP_BACKEND_CONFIGURED={{ cinder_backup_backend_configured | string | lower }}
+      export PING_TEST_VM={{ ping_test | string | lower }}
+      {{ lookup('ansible.builtin.file', 'pre_launch.bash') }}
+
+- name: pre-launch test Ironic instance
+  no_log: "{{ use_no_log }}"
+  when:
+    - prelaunch_test_instance|bool
+    - "'pre_launch_ironic.bash' in prelaunch_test_instance_scripts"
+  ansible.builtin.shell:
+    cmd: |
+      {{ shell_header }}
+      export OPENSTACK_COMMAND="{{ openstack_command }}"
       export ENROLL_BMAAS_IRONIC_NODES={{ enroll_ironic_bmaas_nodes | string | lower }}
       export PRE_LAUNCH_IRONIC_RESTART_CHRONY={{ pre_launch_ironic_restart_chrony | string | lower }}
-      export PING_TEST_VM={{ ping_test | string | lower }}
-      {{ lookup('ansible.builtin.file', prelaunch_test_instance_script) }}
+      {{ lookup('ansible.builtin.file', 'pre_launch_ironic.bash') }}
 
 - name: Start and setup ping test
   when:
     - prelaunch_test_instance|bool
+    - "'pre_launch.bash' in prelaunch_test_instance_scripts"
     - ping_test|bool
   block:
     - name: Start the ping test to the VM instance.

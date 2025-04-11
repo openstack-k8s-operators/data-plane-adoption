@@ -1,5 +1,6 @@
 prelaunch_test_instance: true
-prelaunch_test_instance_script: pre_launch.bash
+prelaunch_test_instance_scripts:
+  - pre_launch.bash
 # Ping test activation flag, note that it needs
 # prelaunch_test_instance as well.
 ping_test: false
