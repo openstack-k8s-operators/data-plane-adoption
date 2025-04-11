@@ -65,7 +65,10 @@
                     "tripleo_ironic_neutron_agent.service"
                     "tripleo_ironic_api.service"
                     "tripleo_ironic_inspector.service"
-                    "tripleo_ironic_conductor.service")
+                    "tripleo_ironic_conductor.service"
+                    "tripleo_ironic_inspector_dnsmasq.service"
+                    "tripleo_ironic_pxe_http.service"
+                    "tripleo_ironic_pxe_tftp.service")
 
     PacemakerResourcesToStop=("openstack-cinder-volume"
                               "openstack-cinder-backup"
