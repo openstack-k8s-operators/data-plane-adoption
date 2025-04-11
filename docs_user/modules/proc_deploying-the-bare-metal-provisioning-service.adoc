@@ -43,7 +43,7 @@ $ alias openstack="oc exec -t openstackclient -- openstack"
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   ironic:
     enabled: true
@@ -138,7 +138,7 @@ If the `openstack baremetal node list` command output reports an incorrect power
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   ironic:
     enabled: true
@@ -172,7 +172,7 @@ for node in $(openstack baremetal node list -f json -c UUID -c Owner | jq -r '.[
 +
 [source,yaml]
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   ironic:
     enabled: true

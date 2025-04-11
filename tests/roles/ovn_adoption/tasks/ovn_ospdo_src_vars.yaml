@@ -40,7 +40,3 @@
       namespace: {{ org_namespace }}
     type: Opaque
     EOF
-
-- name: set default NS to {{ rhoso_namespace }}
-  ansible.builtin.shell: |
-    oc project {{ rhoso_namespace }}
