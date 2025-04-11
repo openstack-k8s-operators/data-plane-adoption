@@ -8,7 +8,6 @@ Before you proceed with the adoption, check which features are Technology Previe
 
 The following features are Technology Previews and have not been tested within the context of the {rhos_long_noacro} adoption:
 
-* {bare_metal_first_ref}
 * NFS Ganesha back end for {rhos_component_storage_file_first_ref}
 * iSCSI, NFS, and FC-based drivers for {block_storage_first_ref}
 * {block_storage} back end for the {image_service_first_ref}
@@ -29,7 +28,7 @@ The following {compute_service_first_ref} features are Technology Previews:
 * AMD SEV
 * Direct download from Rados Block Device (RBD)
 * File-backed memory
-* `Provider.yaml`
+* Defining custom traits and resource classes in a YAML file
 
 .Unsupported features
 
@@ -45,5 +44,5 @@ The adoption process does not support the following features:
 * The {key_manager} only supports the simple crypto plug-in
 * The {block_storage} only supports RBD back-end adoption
 
-//kgilliga: IPv6 was removed pending the FR2 release. This must be removed downstream as well.
+
 //* When you adopt a {OpenStackShort} {rhos_prev_ver} FIPS environment to {rhos_acro} {rhos_curr_ver}, your adopted cluster remains a FIPS cluster. There is no option to change the FIPS status during adoption. If your cluster is FIPS-enabled, you must deploy a FIPS {rhocp_long} cluster to adopt your {OpenStackShort} {rhos_prev_ver} FIPS control plane. For more information about enabling FIPS in {OpenShiftShort}, see link:{defaultOCPURL}/installing/installation-overview#installing-fips[Support for FIPS cryptography] in the {OpenShiftShort} _Installing_ guide.
