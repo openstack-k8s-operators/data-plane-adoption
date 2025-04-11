@@ -306,15 +306,8 @@ $ oc get secret tripleo-passwords -n $OSPDO_NAMESPACE -o json | jq -r '.data["tr
 }
 ----
 
-. Install the {rhos_acro} operators:
+. Install the {rhos_acro} operators. For more information, see link:{deploying-rhoso}/index#assembly_installing-and-preparing-the-Operators[Installing and preparing the Operators] in _{deploying-rhoso-t}_.
 +
-----
-$ git clone https://github.com/openstack-k8s-operators/install_yamls.git
-cd install_yamls
-BMO_SETUP=false NETWORK_ISOLATION=false NAMESPACE=${RHOSO18_NAMESPACE} make openstack
-BMO_SETUP=false NETWORK_ISOLATION=false NAMESPACE=${RHOSO18_NAMESPACE} make openstack_init
-BMO_SETUP=false NETWORK_ISOLATION=false make metallb
-----
 
 
 . Apply the `IPAddressPool` resource that matches the new OpenStack 18 deployment to configure which IPs can be used as virtual IPs (VIPs):
