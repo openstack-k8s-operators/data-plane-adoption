@@ -28,7 +28,7 @@ The following {compute_service_first_ref} features are Technology Previews:
 * AMD SEV
 * Direct download from Rados Block Device (RBD)
 * File-backed memory
-* Defining custom traits and resource classes in a YAML file
+* Defining a custom inventory of resources in a YAML file, `provider.yaml`
 
 .Unsupported features
 
