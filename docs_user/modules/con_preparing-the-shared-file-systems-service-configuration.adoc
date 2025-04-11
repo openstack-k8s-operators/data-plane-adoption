@@ -121,7 +121,6 @@ The name of the `OpenStackVersion` CR must match the name of your `OpenStackCont
 
 . Create a file that includes the secrets, for example, `netapp_secrets.conf`:
 +
-[source,yaml]
 ----
 $ cat << __EOF__ > ~/netapp_secrets.conf
 

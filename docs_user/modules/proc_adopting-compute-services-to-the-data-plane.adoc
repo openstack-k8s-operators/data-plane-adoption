@@ -201,7 +201,6 @@ LIBVIRT_PASSWORD_BASE64=$(echo -n "$LIBVIRT_PASSWORD" | base64)
 
 .. Create libvirt-secret when TLS-e is enabled:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
@@ -217,7 +216,6 @@ EOF
 
 . Create a configuration map which should become common for all cells. To configure a local storage back end for libvirt:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
@@ -242,7 +240,6 @@ Adopting a live cloud might require other configurations to carry over for Nova 
 
 . To configure a Ceph back end for libvirt:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
@@ -270,9 +267,7 @@ EOF
 
 . Create dataplane services for Nova cells to enable pre-upgrade workarounds,
 and to configure the {compute_service} services for a picked storage back end:
-
 +
-[source,yaml]
 ----
 for CELL in $(echo $RENAMED_CELLS); do
   oc apply -f - <<EOF
@@ -302,7 +297,6 @@ EOF
 
 * If TLS Everywhere is enabled, append the following content to the `OpenStackDataPlaneService` CR:
 +
-[source,yaml]
 ----
   tlsCerts:
     contents:
@@ -369,9 +363,7 @@ It is already passed in via a node-specific `OpenStackDataPlaneNodeSet` data in 
 
 
 . Create the dataplane node sets definitions for each cell:
-
 +
-[source,yaml]
 ----
 $ declare -A names
 $ for CELL in $(echo $RENAMED_CELLS); do
@@ -608,7 +600,6 @@ done
 
 . If you use a Ceph back end for {block_storage_first_ref}, prepare the adopted data plane workloads:
 +
-[source,yaml]
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
   test -f nodeset-${CELL}.yaml || continue
@@ -654,7 +645,6 @@ Ensure that you use the same list of services from the original `OpenStackDataPl
 
 . Optional: Enable `neutron-sriov-nic-agent` in the `OpenStackDataPlaneNodeSet` CR:
 +
-[source,yaml]
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
   test -f nodeset-${CELL}.yaml || continue
@@ -681,7 +671,6 @@ $ for CELL in $(echo $RENAMED_CELLS); do
 
 . Optional: Enable `neutron-dhcp` in the `OpenStackDataPlaneNodeSet` CR:
 +
-[source,yaml]
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
   test -f nodeset-${CELL}.yaml || continue
@@ -697,8 +686,6 @@ done
 [NOTE]
 ====
 To use `neutron-dhcp` with OVN for the {bare_metal_first_ref}, you must set the `disable_ovn_dhcp_for_baremetal_ports` configuration option for the {networking_first_ref}  to `true`.  You can set this configuration in the `NeutronAPI` spec:
-
-[source,yaml]
 ----
 ..
 spec:
@@ -715,7 +702,6 @@ spec:
 
 .. Create the validation service:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -729,7 +715,6 @@ EOF
 
 .. Create a `OpenStackDataPlaneDeployment` CR that runs only the validation:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -781,7 +766,6 @@ to use the same profile as the one set on the {OpenStackShort} {rhos_prev_ver} n
 
 .. Create an `OpenStackDataPlaneService` CR to clean up the data plane services you are adopting:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -795,7 +779,6 @@ EOF
 
 .. Create the `OpenStackDataPlaneDeployment` CR to run the clean-up:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -811,7 +794,6 @@ EOF
 
 . When the clean-up is finished, deploy the `OpenStackDataPlaneDeployment` CR:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
