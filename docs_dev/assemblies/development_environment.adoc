@@ -417,13 +417,13 @@ done
 watch openstack baremetal node list
 
 # Create an instance on baremetal
-openstack server show baremetal-test || {
-    openstack server create baremetal-test --flavor baremetal --image Fedora-Cloud-Base-38 --nic net-id=provisioning --wait
+openstack server show test-baremetal || {
+    openstack server create test-baremetal --flavor baremetal --image Fedora-Cloud-Base-38 --nic net-id=provisioning --wait
 }
 
 # Check instance status and network connectivity
-openstack server show baremetal-test
-ping -c 4 $(openstack server show baremetal-test -f json -c addresses | jq -r .addresses.provisioning[0])
+openstack server show test-baremetal
+ping -c 4 $(openstack server show test-baremetal -f json -c addresses | jq -r .addresses.provisioning[0])
 ----
 
 '''

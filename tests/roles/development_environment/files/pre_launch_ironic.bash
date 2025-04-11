@@ -111,13 +111,13 @@ wait_node_state "available"
 sleep 60
 
 # Create an instance on baremetal
-${BASH_ALIASES[openstack]} server show baremetal-test || {
-    ${BASH_ALIASES[openstack]} server create baremetal-test --flavor baremetal --image CentOS-Stream-GenericCloud-x86_64-9 --nic net-id=provisioning --wait
+${BASH_ALIASES[openstack]} server show test-baremetal || {
+    ${BASH_ALIASES[openstack]} server create test-baremetal --flavor baremetal --image CentOS-Stream-GenericCloud-x86_64-9 --nic net-id=provisioning --wait
 }
 
 # Wait for node to boot
 sleep 60
 
 # Check instance status and network connectivity
-${BASH_ALIASES[openstack]} server show baremetal-test
-ping -c 4 $(${BASH_ALIASES[openstack]} server show baremetal-test -f json -c addresses | jq -r .addresses.provisioning[0])
+${BASH_ALIASES[openstack]} server show test-baremetal
+ping -c 4 $(${BASH_ALIASES[openstack]} server show test-baremetal -f json -c addresses | jq -r .addresses.provisioning[0])
