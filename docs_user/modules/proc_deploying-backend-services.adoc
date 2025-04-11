@@ -26,7 +26,7 @@ endif::[]
 
 * If you enabled TLS everywhere (TLS-e) on the {OpenStackShort} environment, you must copy the `tls` root CA from the {OpenStackShort} environment to the `rootca-internal` issuer.
 
-* There are free PVs available for MariaDB and RabbitMQ.
+* There are free PVs available for Galera and RabbitMQ.
 ifeval::["{build}" != "downstream"]
 +
 For developer/CI environments driven by install_yamls, make sure
@@ -415,18 +415,26 @@ spec:
 
 .Verification
 
-* Verify that MariaDB and RabbitMQ are running for all defined cells:
+* Verify that the Galera and RabbitMQ status is `Running` for all defined cells:
 +
+[source,yaml]
 ----
 $ RENAMED_CELLS="cell1 cell2 cell3"
-$ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
-$ oc get pod rabbitmq-server-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
+$ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}'
+$ oc get pod rabbitmq-server-0 -o jsonpath='{.status.phase}{"\n"}'
 $ for CELL in $(echo $RENAMED_CELLS); do
-    oc get pod openstack-$CELL-galera-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
-    oc get pod rabbitmq-$CELL-server-0 -o jsonpath='{.status.phase}{"\n"}' | grep Running
-done
+>     oc get pod openstack-$CELL-galera-0 -o jsonpath='{.status.phase}{"\n"}'
+>     oc get pod rabbitmq-$CELL-server-0 -o jsonpath='{.status.phase}{"\n"}'
+> done
 ----
 +
 The given cells names are later referred to by using the environment variable `RENAMED_CELLS`.
 
-* Verify that you can access the `OpenStackClient` pod. For more information, see link:{defaultURL}/maintaining_the_red_hat_openstack_services_on_openshift_deployment/assembly_accessing-the-rhoso-cloud#proc_accessing-the-OpenStackClient-pod_cloud-access-admin[Accessing the OpenStackClient pod] in _Maintaining the {rhos_long_noacro} deployment_.
+* Verify that the `OpenStackControlPlane` CR is waiting for deployment
+  of the `openstackclient` pod:
++
+----
+$ oc get OpenStackControlPlane openstack
+NAME        STATUS    MESSAGE
+openstack   Unknown   OpenStackControlPlane Client not started
+----
