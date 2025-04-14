@@ -133,68 +133,8 @@ $ oc set data secret/osp-secret "OctaviaPassword=$OCTAVIA_PASSWORD"
 $ oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
 $ oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 ----
-
-. If you enabled TLS-e in your {OpenStackShort} environment, in the `spec:tls` section, set the `enabled` parameter to `true`:
-+
-[source,yaml]
-----
-apiVersion: core.openstack.org/v1beta1
-kind: OpenStackControlPlane
-metadata:
-  name: openstack
-spec:
-  tls:
-    podLevel:
-      enabled: true
-      internal:
-        ca:
-          customIssuer: rootca-internal
-      libvirt:
-        ca:
-          customIssuer: rootca-internal
-      ovn:
-        ca:
-          customIssuer: rootca-internal
-    ingress:
-      ca:
-        customIssuer: rootca-internal
-      enabled: true
-----
-
-. If you did not enable TLS-e, in the `spec:tls` section, set the `enabled` parameter to `false`:
-+
-[source,yaml]
-----
-apiVersion: core.openstack.org/v1beta1
-kind: OpenStackControlPlane
-metadata:
-  name: openstack
-spec:
-  tls:
-    podLevel:
-      enabled: false
-    ingress:
-      enabled: false
-----
-
 . Deploy the `OpenStackControlPlane` CR. Ensure that you only enable the DNS, Galera, Memcached, and RabbitMQ services. All other services must
 be disabled:
-+
-[NOTE]
-====
-If you use IPv6, change the load balancer IPs to the IPs in your environment:
-----
-...
-metallb.universe.tf/allow-shared-ip: ctlplane
-metallb.universe.tf/loadBalancerIPs: fd00:aaaa::80
-...
-metallb.universe.tf/address-pool: internalapi
-metallb.universe.tf/loadBalancerIPs: fd00:bbbb::85
-...
-metallb.universe.tf/address-pool: internalapi
-metallb.universe.tf/loadBalancerIPs: fd00:bbbb::86
-----
-====
 +
 [source,shell]
 ----
@@ -234,7 +174,6 @@ endif::[]
           metadata:
             annotations:
 ifeval::["{build_variant}" != "ospdo"]
-
               metallb.universe.tf/address-pool: ctlplane
               metallb.universe.tf/allow-shared-ip: ctlplane
               metallb.universe.tf/loadBalancerIPs: 192.168.122.80
@@ -378,6 +317,12 @@ endif::[]
   telemetry:
     enabled: false
 
+  tls:
+    podLevel:
+      enabled: false
+    ingress:
+      enabled: false
+
   swift:
     enabled: false
     template:
@@ -402,6 +347,47 @@ endif::[]
 
 This example provides the required infrastructure database and messaging services for 1 Compute cell
 named `cell1`. Adjust the names, counts, IP addresses, and numbers, such as for `replicas`, `storage`, or `storageRequest`, as needed.
+
+[NOTE]
+====
+If you use IPv6, change the load balancer IPs to the IPs in your environment:
+----
+...
+metallb.universe.tf/allow-shared-ip: ctlplane
+metallb.universe.tf/loadBalancerIPs: fd00:aaaa::80
+...
+metallb.universe.tf/address-pool: internalapi
+metallb.universe.tf/loadBalancerIPs: fd00:bbbb::85
+...
+metallb.universe.tf/address-pool: internalapi
+metallb.universe.tf/loadBalancerIPs: fd00:bbbb::86
+----
+====
+
+[NOTE]
+====
+If you enabled TLS-e in your {OpenStackShort} environment, in the `spec:tls` section set `tls` to the following:
+----
+spec:
+  ...
+  tls:
+    podLevel:
+      enabled: true
+      internal:
+        ca:
+          customIssuer: rootca-internal
+      libvirt:
+        ca:
+          customIssuer: rootca-internal
+      ovn:
+        ca:
+          customIssuer: rootca-internal
+    ingress:
+      ca:
+        customIssuer: rootca-internal
+      enabled: true
+----
+====
 
 .Verification
 
