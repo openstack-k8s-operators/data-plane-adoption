@@ -151,3 +151,14 @@
       -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq-cell1/resources/requests/cpu", "value": 500m}]'
     oc patch ${crname} --type json \
       -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq-cell1/resources/requests/memory", "value": 500Mi}]'
+
+- name: Verify that OpenStackControlPlane is waiting for openstackclient
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc get openstackcontrolplane openstack -o jsonpath='{.status.conditions[?(@.type=="Ready")].message}{"\n"}' | grep 'OpenStackControlPlane Client not started'
+  register: openstack_control_plane_cr_result
+  until: openstack_control_plane_cr_result is success
+  retries: 60
+  delay: 2
