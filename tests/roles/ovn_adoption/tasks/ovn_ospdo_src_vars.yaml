@@ -1,17 +1,17 @@
 - name: get ospdo source_ovndb_ip
   ansible.builtin.shell: |
-    oc -n {{ org_namespace }} get cm tripleo-exports-default  -o yaml | awk '/ovn_dbs_node_ips:/{getline; print $3}'|tr -d '\\n'
+    oc -n {{ director_namespace }} get cm tripleo-exports-default  -o yaml | awk '/ovn_dbs_node_ips:/{getline; print $3}'|tr -d '\\n'
   register: source_ovndb_ip_str
 
 - name: register controller node
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
-    oc get vmi -n{{ org_namespace }} -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
+    oc get vmi -n{{ director_namespace }} -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
   register: controller_node
 
 - name: get OSPdO storage storageClass
   ansible.builtin.shell: |
-    oc get -n {{ org_namespace }} pvc openstackclient-hosts -o jsonpath='{.spec.storageClassName}'
+    oc get -n {{ director_namespace }} pvc openstackclient-hosts -o jsonpath='{.spec.storageClassName}'
   register: ospdo_storage_class
 
 - name: set OVN copy shell vars
@@ -37,6 +37,6 @@
     kind: Secret
     metadata:
       name: ovn-data-cert
-      namespace: {{ org_namespace }}
+      namespace: {{ director_namespace }}
     type: Opaque
     EOF

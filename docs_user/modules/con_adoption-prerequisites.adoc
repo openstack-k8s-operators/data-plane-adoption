@@ -20,7 +20,7 @@ endif::[]
 ** link:{defaultOCPURL}/machine_configuration/index[Machine configuration overview]
 * Make sure to set the correct {rhos_acro} project namespace in which to run commands.
 ifeval::["{build_variant}" == "ospdo"]
-In director Operator adoption, the adopted namespace is `openstack`. The adopting namespace is different, for example, `rhoso`.
+* In director Operator adoption, the source {rhos_prev_long} {rhos_prev_ver} namespace is `openstack`. In order to successfully adopt the {OpenStackShort} {rhos_prev_ver} environment, the destination {rhos_acro} {rhos_curr_ver} namespace must be different, for example, `rhoso`.
 endif::[]
 [source, shell]
 ----

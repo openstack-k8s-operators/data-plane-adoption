@@ -5,8 +5,12 @@ use_no_log: false
 # Whether the adopted node will host compute services
 compute_adoption: true
 
-# Whether adopting OSPDo or Director based TripleO deployment
-deploy_ctlplane_ospdo: false
+# rhoso namespace
+rhoso_namespace: "openstack"
+
+# Whether source env is OSPD Director Operator
+# i.e. https://github.com/openstack-k8s-operators/osp-director-operator
+ospdo_src: false
 
 # The names of cells on the target cloud
 renamed_cells: "{{ [default_cell_name] + cells | difference(['default']) }}"
@@ -84,8 +88,8 @@ mariadb_copy_shell_vars_src: |-
   done
 
   RUN_OVERRIDES=' '
-  MARIADB_CLIENT_ANNOTATIONS={{ deploy_ctlplane_ospdo | bool | ternary("-n $NAMESPACE", "--annotations=k8s.v1.cni.cncf.io/networks=internalapi") }}
-  MARIADB_RUN_OVERRIDES={{ deploy_ctlplane_ospdo | bool | ternary("--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS {{ mysql_client_override }}", "$MARIADB_CLIENT_ANNOTATIONS") }}
+  MARIADB_CLIENT_ANNOTATIONS={{ deploy_ctlplane_ospdo | default(false) | bool | ternary("-n $NAMESPACE", "--annotations=k8s.v1.cni.cncf.io/networks=internalapi") }}
+  MARIADB_RUN_OVERRIDES={{ deploy_ctlplane_ospdo | default(false) | bool | ternary("--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS {{ mysql_client_override }}", "$MARIADB_CLIENT_ANNOTATIONS") }}
 
   OSPDO_MARIADB_CLIENT_ANNOTATIONS='[{"name": "internalapi-static","ips": ["172.17.0.99/24"]}]'
 

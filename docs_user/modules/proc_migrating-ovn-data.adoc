@@ -246,10 +246,6 @@ ifeval::["{build_variant}" != "ospdo"]
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
 $ oc exec ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
 endif::[]
-ifeval::["{build_variant}" == "ospdo"]
-$ oc exec -n $RHOSO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
-$ oc exec -n $RHOSO_NAMESPACE ovn-copy-data -- bash -c "ovsdb-client restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
-endif::[]
 ----
 
 .. If you enabled TLS everywhere, use the following command:
