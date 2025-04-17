@@ -415,7 +415,8 @@ spec:
 
 .Verification
 
-* Verify that the Galera and RabbitMQ status is `Running` for all defined cells:
+* Verify that the Galera and RabbitMQ are running. The output should be
+two `Running` lines per cell:
 +
 [source,yaml]
 ----
