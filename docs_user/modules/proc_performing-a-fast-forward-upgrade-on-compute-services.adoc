@@ -45,7 +45,6 @@ Review any errors in the nova Compute agent logs on the data plane, and the `nov
 
 . Patch the `OpenStackControlPlane` CR to remove the pre-fast-forward upgrade workarounds from the Compute control plane services:
 +
-[source,yaml]
 ----
 $ rm -f celltemplates
 $ for CELL in $(echo $RENAMED_CELLS); do
@@ -88,7 +87,6 @@ EOF
 $ cat celltemplates >> oscp-patch.yaml
 ----
 +
-
 * If you are adopting the {compute_service} with the {bare_metal_first_ref}, append the following `novaComputeTemplates` in the needed `cell<N>` section(s) of the {compute_service} CR patch:
 +
 [source,yaml]
@@ -123,7 +121,6 @@ $ oc wait --for condition=Ready --timeout=300s Nova/nova
 
 . Remove the pre-fast-forward upgrade workarounds from the Compute data plane services:
 +
-[source,yaml]
 ----
 $ oc patch cm nova-cells-global-config --type=json -p='[{"op": "replace", "path": "/data/99-nova-compute-cells-workarounds.conf", "value": "[workarounds]\n"}]'
 $ for CELL in $(echo $RENAMED_CELLS); do
