@@ -161,7 +161,6 @@ LIBVIRT_PASSWORD_BASE64=$(echo -n "$LIBVIRT_PASSWORD" | base64)
 
 .. Create libvirt-secret when TLS-e is enabled:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
@@ -177,7 +176,6 @@ EOF
 
 . If you use a local storage back end for libvirt, create a `nova-compute-extra-config` service to remove pre-fast-forward workarounds and configure Compute services to use a local storage back end:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
@@ -198,7 +196,6 @@ The secret `nova-cell<X>-compute-config` auto-generates for each
 
 . If TLS Everywhere is enabled, append the following content to the `OpenStackDataPlaneService` CR:
 +
-[source,yaml]
 ----
   tlsCerts:
     contents:
@@ -213,7 +210,6 @@ The secret `nova-cell<X>-compute-config` auto-generates for each
 
 . If you use a Ceph back end for libvirt, create a `nova-compute-extra-config` service to remove pre-fast-forward upgrade workarounds and configure Compute services to use a Ceph back end:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
@@ -264,7 +260,6 @@ endif::[]
 
 . Deploy the `OpenStackDataPlaneNodeSet` CR:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -459,7 +454,6 @@ external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-b
 
 . If you use a Ceph back end for {block_storage_first_ref}, prepare the adopted data plane workloads:
 +
-[source,yaml]
 ----
 $ oc patch osdpns/openstack-cell1 --type=merge --patch "
 spec:
@@ -502,7 +496,6 @@ Ensure that you use the same list of services from the original `OpenStackDataPl
 
 . Optional: Enable `neutron-sriov-nic-agent` in the `OpenStackDataPlaneNodeSet` CR:
 +
-[source,yaml]
 ----
 $ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
   {
@@ -527,7 +520,6 @@ $ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
 
 . Optional: Enable `neutron-dhcp` in the `OpenStackDataPlaneNodeSet` CR:
 +
-[source,yaml]
 ----
 $ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
   {
@@ -540,8 +532,6 @@ $ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
 [NOTE]
 ====
 To use `neutron-dhcp` with OVN for the {bare_metal_first_ref}, you must set the `disable_ovn_dhcp_for_baremetal_ports` configuration option for the {networking_first_ref}  to `true`.  You can set this configuration in the `NeutronAPI` spec:
-
-[source,yaml]
 ----
 ..
 spec:
@@ -558,7 +548,6 @@ spec:
 
 .. Create the validation service:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -572,7 +561,6 @@ EOF
 
 .. Create a `OpenStackDataPlaneDeployment` CR that runs only the validation:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -621,7 +609,6 @@ to use the same profile as the one set on the {OpenStackShort} {rhos_prev_ver} n
 
 .. Create an `OpenStackDataPlaneService` CR to clean up the data plane services you are adopting:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -635,7 +622,6 @@ EOF
 
 .. Create the `OpenStackDataPlaneDeployment` CR to run the clean-up:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -652,7 +638,6 @@ EOF
 
 . When the clean-up is finished, deploy the `OpenStackDataPlaneDeployment` CR:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1

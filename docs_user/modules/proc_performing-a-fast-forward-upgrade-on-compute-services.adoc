@@ -45,7 +45,6 @@ Review any errors in the nova Compute agent logs on the data plane, and the `nov
 
 . Patch the `OpenStackControlPlane` CR to remove the pre-fast-forward upgrade workarounds from the Compute control plane services:
 +
-[source,yaml]
 ----
 $ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
 spec:
@@ -91,7 +90,6 @@ $ oc wait --for condition=Ready --timeout=300s Nova/nova
 
 . Remove the pre-fast-forward upgrade workarounds from the Compute data plane services:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
