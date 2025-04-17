@@ -48,7 +48,7 @@
 - name: Apply ceph rgw keystone config
   become: true
   ansible.builtin.command: |
-    echo "{{ ceph_cli }} config set global rgw_keystone_url {{ ceph_keystone_ep }}"
+    "{{ ceph_cli }} config set global rgw_keystone_url {{ ceph_keystone_ep }}"
   changed_when: false
   when:
     - ceph_keystone_ep is defined
