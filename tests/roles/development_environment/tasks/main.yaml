@@ -144,8 +144,8 @@
           test_runner_timeout = 14400.0
           timeout = 1800.0
           [advanced_vm]
-          image_url = "https://softwarefactory-project.io/ubuntu-minimal-customized-enp3s0"
-          username: ubuntu
+          image_url = "https://kaplonski.pl/files/Customized-Fedora-Cloud-Base-Generic-41-1.4.x86_64.qcow2"
+          username: fedora
           [tripleo]
           undercloud_ssh_hostname = undercloud
           undercloud_ssh_username = zuul
