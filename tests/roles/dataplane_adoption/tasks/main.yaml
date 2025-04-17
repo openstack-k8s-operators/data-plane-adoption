@@ -263,7 +263,7 @@
     {% if cell in edpm_nodes_real %}
     cat > computes-real-{{ cell }} << EOF
     {% filter indent(width=4) %}
-        {{ edpm_nodes_real[cell] | to_yaml(indent=2) }}
+        {{ edpm_nodes_real[cell] | default([]) | to_yaml(indent=2) }}
     {% endfilter %}
     EOF
     cat computes-real-{{ cell }} >> nodeset-{{ cell }}.yaml

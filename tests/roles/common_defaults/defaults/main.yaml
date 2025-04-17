@@ -187,13 +187,13 @@ edpm_computes_shell_vars_src: |-
   {% for cell in renamed_cells %}
   declare -A COMPUTES_{{ cell.upper() }}
   COMPUTES_{{ cell.upper() }}=(
-    {%- for v in edpm_nodes_real[cell] %}
+    {%- for v in edpm_nodes_real[cell] | default([]) %}
     ["{{ edpm_nodes_real[cell][v].hostName }}"]={{ edpm_nodes_real[cell][v].ansible.ansibleHost }}
     {% endfor -%}
   )
   declare -A COMPUTES_API_{{ cell.upper() }}
   COMPUTES_API_{{ cell.upper() }}=(
-    {%- for v in edpm_nodes_real[cell] %}
+    {%- for v in edpm_nodes_real[cell] | default([]) %}
     ["{{ edpm_nodes_real[cell][v].hostName }}"]={{ edpm_nodes_real[cell][v].networks[1].fixedIP|default("") }}
     {% endfor -%}
   )
