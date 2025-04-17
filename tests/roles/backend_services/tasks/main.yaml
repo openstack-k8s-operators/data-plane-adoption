@@ -106,7 +106,7 @@
     oc apply -f ../config/tmp/test_deployment.yaml
   when: not ospdo_src| bool
 
-- name: verify that MariaDB and RabbitMQ are running, for all defined cells
+- name: Verify that the Galera and RabbitMQ are running for all defined cells
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
