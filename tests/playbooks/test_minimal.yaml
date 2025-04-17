@@ -2,9 +2,8 @@
   import_playbook: _before_adoption.yaml
 
 - name: Adoption
-  hosts: "{{ adoption_host | default('localhost') }}"
+  hosts: local
   gather_facts: false
-  force_handlers: true
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash

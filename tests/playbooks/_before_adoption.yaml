@@ -1,12 +1,3 @@
-- name: Prelude
-  hosts: localhost
-  gather_facts: false
-  module_defaults:
-    ansible.builtin.shell:
-      executable: /bin/bash
-  roles:
-    - prelude_local
-
 - name: Cleanup
   hosts: localhost
   gather_facts: false
@@ -15,3 +6,12 @@
       executable: /bin/bash
   roles:
     - pcp_cleanup
+
+- name: Prelude
+  hosts: localhost
+  gather_facts: false
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  roles:
+    - prelude_local
