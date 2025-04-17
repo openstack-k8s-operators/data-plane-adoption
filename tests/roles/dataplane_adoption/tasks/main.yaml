@@ -13,7 +13,6 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    {{ oc_login_command }}
     oc patch openstackversion openstack \
       --type='json' -p='[{
       "op":"replace", "path":"/spec/customContainerImages/ansibleeeImage",
