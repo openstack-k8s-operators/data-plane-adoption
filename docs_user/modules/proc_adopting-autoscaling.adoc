@@ -40,7 +40,7 @@ spec:
 . Inspect the aodh pods:
 +
 ----
-$ AODH_POD=`oc get pods -l service=aodh -n openstack | tail -n 1 | cut -f 1 -d' '`
+$ AODH_POD=`oc get pods -l service=aodh | tail -n 1 | cut -f 1 -d' '`
 $ oc exec -t $AODH_POD -c aodh-api -- cat /etc/aodh/aodh.conf
 ----
 

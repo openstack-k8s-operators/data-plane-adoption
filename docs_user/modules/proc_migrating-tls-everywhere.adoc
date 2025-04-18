@@ -100,17 +100,17 @@ With that file, you can also get the certificate and the key by using the `opens
 . Create the secret that contains the root CA:
 +
 ----
-$ oc create secret generic rootca-internal -n openstack
+$ oc create secret generic rootca-internal
 ----
 
 . Import the certificate and the key from FreeIPA:
 +
 ----
-$ oc patch secret rootca-internal -n openstack -p="{\"data\":{\"ca.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
+$ oc patch secret rootca-internal -p="{\"data\":{\"ca.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
 
-$ oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
+$ oc patch secret rootca-internal -p="{\"data\":{\"tls.crt\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nokeys | openssl x509 | base64 -w 0`\"}}"
 
-$ oc patch secret rootca-internal -n openstack -p="{\"data\":{\"tls.key\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl rsa | base64 -w 0`\"}}"
+$ oc patch secret rootca-internal -p="{\"data\":{\"tls.key\": \"`$IPA_SSH openssl pkcs12 -in /tmp/freeipa.p12 -passin file:/etc/pki/pki-tomcat/alias/pwdfile.txt -nocerts -noenc | openssl rsa | base64 -w 0`\"}}"
 ----
 
 . Create the cert-manager issuer and reference the secret:
@@ -122,7 +122,6 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: rootca-internal
-  namespace: openstack
   labels:
     osp-rootca-issuer-public: ""
     osp-rootca-issuer-internal: ""
@@ -145,11 +144,11 @@ $IPA_SSH rm /tmp/freeipa.p12
 * Verify that the necessary resources are created:
 +
 ----
-$ oc get issuers -n openstack
+$ oc get issuers
 ----
 +
 ----
-$ oc get secret rootca-internal -n openstack -o yaml
+$ oc get secret rootca-internal -o yaml
 ----
 
 [NOTE]

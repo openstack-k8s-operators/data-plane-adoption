@@ -2,19 +2,19 @@
   block:
     - name: register source_mariadb_ip
       ansible.builtin.shell: |
-        oc -n {{ org_namespace }} get cm tripleo-exports-default -o json | jq -r '.data["ctlplane-export.yaml"]'| sed -e '0,/ MysqlInternal/d' | sed -n '0,/host_nobrackets/s/^.*host_nobrackets\:\s*\(.*\)$/\1/p'
+        oc -n {{ director_namespace }} get cm tripleo-exports-default -o json | jq -r '.data["ctlplane-export.yaml"]'| sed -e '0,/ MysqlInternal/d' | sed -n '0,/host_nobrackets/s/^.*host_nobrackets\:\s*\(.*\)$/\1/p'
       register: source_mariadb_ip
 
     - name: register controller node
       no_log: "{{ use_no_log }}"
       ansible.builtin.shell: |
-        oc get vmi -n{{ org_namespace }} -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
+        oc get vmi -n{{ director_namespace }} -o jsonpath='{.items[0].metadata.labels.kubevirt\.io/nodeName}'
       register: controller_node
 
     - name: register source_db_root_pass
       no_log: "{{ use_no_log }}"
       ansible.builtin.shell: |
-        oc get secret -n {{ org_namespace }} tripleo-passwords -o jsonpath='{.data.*}'| base64 -d |grep MysqlRootPassword|sed 's/.*: //g'
+        oc get secret -n {{ director_namespace }} tripleo-passwords -o jsonpath='{.data.*}'| base64 -d |grep MysqlRootPassword|sed 's/.*: //g'
       register: source_db_root_pass
 
     # FIXME: OSPDo RUN_OVERRIDES definition exists only in docs (missing in code?).
@@ -32,9 +32,5 @@
           )
           declare -A SOURCE_DB_ROOT_PASSWORD
           SOURCE_DB_ROOT_PASSWORD['default']={{ source_db_root_pass.stdout }}
-          MARIADB_CLIENT_ANNOTATIONS="-n {{ org_namespace }}"
+          MARIADB_CLIENT_ANNOTATIONS="-n {{ director_namespace }}"
           CONTROLLER_NODE={{ controller_node.stdout }}
-
-- name: set default NS to {{ rhoso_namespace }}
-  ansible.builtin.shell: |
-    oc project {{ rhoso_namespace }}

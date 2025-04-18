@@ -42,7 +42,7 @@ $ alias openstack="oc exec -t openstackclient -- openstack"
 . Patch the `OpenStackControlPlane` custom resource (CR) to deploy the {bare_metal}:
 +
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   ironic:
     enabled: true
@@ -136,7 +136,7 @@ If the `openstack baremetal node list` command output reports an incorrect power
 . If any {bare_metal} nodes are missing from the `openstack baremetal node list` command, temporarily disable the new RBAC policy to see the nodes again:
 +
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   ironic:
     enabled: true
@@ -169,7 +169,7 @@ for node in $(openstack baremetal node list -f json -c UUID -c Owner | jq -r '.[
 . Re-apply the default RBAC by removing the `customServiceConfig` section or by setting the following values in the `customServiceConfig` section to `true`. For example:
 +
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
   ironic:
     enabled: true
