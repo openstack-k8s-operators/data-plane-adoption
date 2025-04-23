@@ -39,7 +39,6 @@ The adoption process does not support the following features:
 * Designate
 * {loadbalancer_first_ref}
 * BGP
-* NFS back end for ephemeral {compute_service} virtual machine instances storage
 * Adopting a FIPS environment
 * The {key_manager} only supports the simple crypto plug-in
 * The {block_storage} only supports RBD back-end adoption
