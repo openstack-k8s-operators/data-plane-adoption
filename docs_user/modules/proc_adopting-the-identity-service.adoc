@@ -19,7 +19,6 @@ data:
 kind: Secret
 metadata:
   name: keystone
-  namespace: openstack
 type: Opaque
 EOF
 ----

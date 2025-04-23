@@ -12,7 +12,6 @@
     kind: ConfigMap
     metadata:
       name: octavia-ssh-pubkey
-      namespace: openstack
     data:
       key: $(cat $HOME/octavia_sshkey.pub)
     EOF

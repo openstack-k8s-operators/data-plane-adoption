@@ -1,9 +1,3 @@
-- name: use openstack project
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc project {{ rhoso_namespace }}
-
 - name: create osp-secret
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -126,7 +120,8 @@
   register: mariadb_running_result
   until: mariadb_running_result is success
   retries: 60
-  delay: 2
+  delay: 5
+# TODO- debug value (was 2)
 
 - name: Patch openstack upstream dns server to set the correct value for the environment
   when: upstream_dns is defined

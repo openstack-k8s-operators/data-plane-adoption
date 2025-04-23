@@ -45,7 +45,7 @@ the cluster's compute nodes, then trigger a new pod deployment to pull the
 container image with:
 
 ----
-kubectl delete pod rabbitmq-server-0 -n openstack
+kubectl delete pod rabbitmq-server-0
 ----
 
 And the pod should be able to pull the image successfully.  For more

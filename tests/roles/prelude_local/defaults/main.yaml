@@ -3,3 +3,5 @@
 clone_install_yamls: false
 # Path where install_yamls repo should be found.
 install_yamls_path: "{{ inventory_dir }}/install_yamls"
+# rhoso namespace
+rhoso_namespace: "openstack"
