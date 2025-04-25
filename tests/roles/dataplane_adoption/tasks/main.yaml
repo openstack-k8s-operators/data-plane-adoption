@@ -594,6 +594,10 @@
   ansible.builtin.include_tasks:
     file: nova_verify.yaml
 
+- name: Cleanup non-adopted Neutron and OVN agents
+  ansible.builtin.include_tasks:
+    file: neutron_agents_cleanup.yaml
+
 - name: Adopted Neutron and OVN agents post-checks
   ansible.builtin.include_tasks:
     file: neutron_verify.yaml
