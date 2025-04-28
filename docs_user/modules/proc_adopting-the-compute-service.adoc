@@ -121,7 +121,7 @@ spec:
               disable_compute_service_check_for_ffu=true
 EOF
 cat celltemplates >> oscp-patch.yaml
-oc patch openstackcontrolplane openstack -n openstack --type=merge --patch-file=oscp-patch.yaml
+oc patch openstackcontrolplane openstack  --type=merge --patch-file=oscp-patch.yaml
 ----
 +
 <1> The `cellDatabaseInstance` is the database instance that is used by the cell. The database instance names must match the names defined for OpenStackControlPlane created earlier in xref:deploying-backend-services_{context}[Deploying back-end services].
