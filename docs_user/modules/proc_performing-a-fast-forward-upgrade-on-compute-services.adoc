@@ -103,7 +103,7 @@ data:
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
-  name: openstack-nova-compute-ffu-$CELL
+  name: openstack-nova-compute-ffu
 spec:
   nodeSets:
     - openstack

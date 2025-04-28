@@ -93,13 +93,13 @@ You might need to wait a few minutes for the control plane to get operational. T
 .. When Pacemaker is only managing one of the Controllers, delete 2 of the Controller VMs. The following example specifies Controller-1 and Controller-2 VMs for deletion:
 +
 ----
-$ oc -n openstack annotate vm controller-1 osp-director.openstack.org/delete-host=true
-$ oc -n openstack annotate vm controller-2 osp-director.openstack.org/delete-host=true
+$ oc -n "${OSPDO_NAMESPACE}"annotate vm controller-1 osp-director.openstack.org/delete-host=true
+$ oc -n "${OSPDO_NAMESPACE}"annotate vm controller-2 osp-director.openstack.org/delete-host=true
 ----
 .. Reduce the `roleCount` for the Controller role in the `OpenStackControlPlane` CR to `1`:
 +
 ----
-$ oc -n openstack patch OpenStackControlPlane overcloud --type json -p '[{"op": "replace", "path":"/spec/virtualMachineRoles/controller/roleCount", "value": 1}]'
+$ oc -n "${OSPDO_NAMESPACE}"patch OpenStackControlPlane overcloud --type json -p '[{"op": "replace", "path":"/spec/virtualMachineRoles/controller/roleCount", "value": 1}]'
 ----
 .. Ensure that the `OpenStackClient` pod is running on the same {OpenShiftShort} nodes as the remaining Controller VM. If the `OpenStackClient` pod is not on the same node, then move it by cordoning off the two nodes that have been freed up for {rhos_acro}. Then you delete the `OpenStackClient` pod so that it gets rescheduled on the {OpenShiftShort} node that has the remaining Controller VM. After the pod is moved to the correct node, uncordon all the nodes:
 +

@@ -175,9 +175,9 @@ $ oc apply -f - <<EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nova-cells-global-config
-data: <1>
-  99-nova-compute-cells-workarounds.conf: | <2>
+  name: nova-extra-config
+data:
+  19-nova-compute-cell1-workarounds.conf: |
     [workarounds]
     disable_compute_service_check_for_ffu=true
 EOF
@@ -208,7 +208,7 @@ $ oc apply -f - <<EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nova-cells-global-config
+  name: nova-extra-config
 data:
   19-nova-compute-cell1-workarounds.conf: |
     [workarounds]
