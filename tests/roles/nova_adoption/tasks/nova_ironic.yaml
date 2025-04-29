@@ -2,7 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '{{ nova_ironic_patch }}'
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ nova_ironic_patch }}'
 
 - name: wait until the Compute control plane services CRs are ready
   ansible.builtin.include_tasks:
@@ -13,7 +13,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '{{ remove_ffu_workaround_patch }}'
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ remove_ffu_workaround_patch }}'
 
 - name: wait until the Compute control plane services CRs are ready
   ansible.builtin.include_tasks:

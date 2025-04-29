@@ -42,7 +42,7 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '{{ ironic_disable_rbac_patch }}'
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ ironic_disable_rbac_patch }}'
 
 - name: Wait for Ironic control plane services' CRs to become ready
   ansible.builtin.include_tasks:
@@ -77,7 +77,7 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '{{ ironic_enable_rbac_patch }}'
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ ironic_enable_rbac_patch }}'
 
 - name: Wait for Ironic control plane services' CRs to become ready
   ansible.builtin.include_tasks:

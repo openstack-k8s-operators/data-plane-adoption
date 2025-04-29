@@ -60,7 +60,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch-file=oscp-patch.yaml
+    oc patch openstackcontrolplane openstack --type=merge --patch-file=oscp-patch.yaml
 
 - name: wait until the Compute control plane services CRs are ready
   ansible.builtin.include_role:
