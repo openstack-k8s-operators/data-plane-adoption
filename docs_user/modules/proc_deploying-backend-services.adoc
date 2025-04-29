@@ -93,13 +93,6 @@ make input
 ----
 endif::[]
 
-ifeval::["{build_variant}" == "ospdo"]
-+
-----
-$ oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
-----
-endif::[]
-
 ifeval::["{build}" == "downstream"]
 . Create the {OpenStackShort} secret. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/{rhos_curr_ver}/html-single/deploying_red_hat_openstack_services_on_openshift/index#proc_providing-secure-access-to-the-RHOSO-services_preparing[Providing secure access to the Red Hat OpenStack Services on OpenShift services] in _Deploying Red Hat OpenStack Services on OpenShift_.
 endif::[]
