@@ -282,10 +282,10 @@ endif::[]
     - run-os
     - reboot-os
     - install-certs
-    - libvirt
-    - nova
     - ovn
     - neutron-metadata
+    - libvirt
+    - nova
     - telemetry
   env:
     - name: ANSIBLE_CALLBACKS_ENABLED
