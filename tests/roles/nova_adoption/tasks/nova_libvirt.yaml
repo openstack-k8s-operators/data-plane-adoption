@@ -3,7 +3,7 @@
     {{ shell_header }}
     {{ oc_header }}
     {{ nova_libvirt_patch }}
-    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch-file=oscp-patch.yaml
+    oc patch openstackcontrolplane openstack --type=merge --patch-file=oscp-patch.yaml
 
 - name: wait until the Compute control plane services CRs are ready
   ansible.builtin.include_tasks:

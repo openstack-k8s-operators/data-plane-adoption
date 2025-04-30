@@ -106,7 +106,7 @@ $ cat celltemplates >> oscp-patch.yaml
 . Apply the patch file
 +
 ----
-$ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch-file=oscp-patch.yaml
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file=oscp-patch.yaml
 ----
 
 . Wait until the Compute control plane services CRs are ready:
