@@ -3,7 +3,7 @@
     {{ shell_header }}
     {{ oc_header }}
     # Cleanup OpenStackControlPlane object
-    oc delete --ignore-not-found=true osctlplane -l core.openstack.org/openstackcontrolplane
+    oc delete --ignore-not-found=true OpenStackControlPlane --all || true
 
     # Ensure that all pods in openstack namespace are deleted
     while oc get pod | grep -E 'rabbitmq-server-0|openstack-galera-0'; do
@@ -11,9 +11,9 @@
     done
 
     # Cleanup OpenStackDataplane objects
-    oc delete --ignore-not-found=true OpenStackDataPlaneDeployment --all
-    oc delete --ignore-not-found=true OpenStackDataPlaneNodeSet --all
-    oc delete --ignore-not-found=true OpenStackDataPlaneService --all
+    oc delete --ignore-not-found=true OpenStackDataPlaneDeployment --all || true
+    oc delete --ignore-not-found=true OpenStackDataPlaneNodeSet --all || true
+    oc delete --ignore-not-found=true OpenStackDataPlaneService --all || true
 
     # Delete Adoption helper pods
     oc delete --ignore-not-found=true --wait=false pod mariadb-copy-data
