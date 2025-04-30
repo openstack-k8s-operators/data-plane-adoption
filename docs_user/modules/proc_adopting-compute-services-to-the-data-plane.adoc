@@ -107,7 +107,7 @@ $ export COMPUTES_CELL3=(
 # ...
 
 $ declare -A COMPUTES_API_CELL1
-$ export COMPUTES_API_CELL1=( <2>
+$ export COMPUTES_API_CELL1=(
   ["standalone.localdomain"]="172.17.0.100"
   # ...
 )
@@ -123,16 +123,23 @@ done
 $ NODESETS="[${NODESETS%,*}]"
 ----
 +
-<1> The source cloud `default` cell takes a new `DEFAULT_CELL_NAME` on the destined cloud after adoption.
-In a multi-cell adoption scenario, you may either retain its original name `default`, or create as `cell<X>`, by providing the incremented index of the last cell in the source cloud (which is, by adding a 1 to it).
-<2> For each cell, adjust <["standalone.localdomain"]="x.x.x.x">, and complete `COMPUTES_CELL<X>` and `COMPUTES_API_CELL<X>` data with the names and IP addresses of the {compute_service} nodes connected to the `ctlplane` and `internalapi` networks. Do not specify a real FQDN defined for each network, always use the same host name for each of its connected networks. Providing IP addresses and names of the hosts on remaining networks of the source cloud should be covered the similar way. Or you can adjust the generated files manually as shown below.
-<3> If your deployment has a custom DNS Domain, put it in for FQDN of the nodes. The given values will be used in the dataplane node sets' `spec.nodes.<NODE NAME>.hostName`.
-<4> Assign all {compute_service} nodes from the source cloud `cell1` cell into `COMPUTES_*CELL1`, and so on.
+<1> The source cloud `default` cell acquires a new `DEFAULT_CELL_NAME` on the destination cloud after adoption.
+In a multi-cell adoption scenario, you can retain the original name, `default`, or create a new cell default name, for example, `cell<X>`, by providing the incremented index of the last cell in the source cloud (which is, by adding a 1 to it).
+//Bohdan: Can you clarify what you mean by "adding a 1 to it"? Do you mean that if the last cell in the source cloud was cell5, then you would add a 1 and it would be cell6?
+<2> For each cell, update the <["standalone.localdomain"]="x.x.x.x"> and complete `COMPUTES_CELL<X>` and `COMPUTES_API_CELL<X>` data with the names and IP addresses of the {compute_service} nodes that are connected to the `ctlplane` and `internalapi` networks. Do not specify a real FQDN defined for each network, always use the same host name for each of its connected networks. Providing IP addresses and names of the hosts on remaining networks of the source cloud should be covered the similar way. Or you can adjust the generated files manually as shown below.
+//Bohdan: Are customers supposed to replace the COMPUTES_CELL1, COMPUTES_CELL2, COMPUTES_API_CELL1, etc. with the names of their own compute cells? Or do you mean that customers should replace ["standalone.localdomain"]="192.168.122.100 with the name and IP address of the Compute nodes?
+<3> If your deployment has a custom DNS domain, specify it in the FQDN value of the nodes. The given values are used in the data plane node set `spec.nodes.<NODE NAME>.hostName`.
+//Bohdan: This point corresponds with `["standalone.localdomain"]="192.168.122.100"` in the code block, and I'm not sure how they relate.Also, does the "given values" refer to the custom DNS domain? 
+<4> Assign all {compute_service} nodes from the source cloud `cell1` cell into `COMPUTES_CELL1`, and so on.
+//Bohdan: <4> points to #... in the code block. Is the customer expected to list the Compute nodes from `cell1` there?
 <5> Assign all {compute_service} nodes from the source cloud `default` cell into `openstack-<X>`,
 where `<X>` is the `DEFAULT_CELL_NAME` environment variable value (here, it equals 'cell3').
-<6> Cells not containing compute nodes will be omitted as no node sets for it should be created.
+//Bohdan:So in this example, `cell3` is considered the `DEFAULT_CELL_NAME`? And `openstack-<X>` is what the `default` cell was called in the source cloud?
+<6> Cells that do not contain Compute nodes are omitted because no node sets are created for the cells.
+//Bohdan: <6> in the code block should probably be moved after `NODESETS="'openstack-${CELL}', $NODESETS"`, correct? And can we also describe what is happening in that command? For example: "<6> Creates the node sets for each cell that include Compute nodes. Cells that do not include Compute nodes are omitted because no node sets are created for the cells.
 
-** When you have deployed the source cloud with only a 'default' cell, and want to rename it during adoption, you should define that instead:
+** If you deployed the source cloud with a 'default' cell, and want to rename it during adoption, define the new name that you want to use, as shown in the following example:
+//Bohdan: Don't we already describe this scenario in <1> above? "...or create a new cell default name, for example, `cell<X>`, by providing the incremented index of the last cell in the source cloud..."
 +
 ----
 $ DEFAULT_CELL_NAME="cell1"
@@ -188,7 +195,7 @@ cd -
 ----
 +
 
-. If TLS Everywhere is enabled, set LIBVIRT_PASSWORD to match the existing {OpenStackShort} deployment password:
+. If TLS Everywhere is enabled, set `LIBVIRT_PASSWORD` to match the existing {OpenStackShort} deployment password:
 +
 ----
 declare -A TRIPLEO_PASSWORDS
@@ -211,7 +218,7 @@ data:
 EOF
 ----
 
-. Create a configuration map which should become common for all cells. To configure a local storage back end for libvirt:
+. Create a configuration map to use for all cells to configure a local storage back end for libvirt:
 +
 ----
 $ oc apply -f - <<EOF
@@ -226,15 +233,16 @@ data: <1>
 EOF
 ----
 +
-<1> The `data` resources in the `ConfigMap` provides configuration files for all cells.
-<2> There is a requirement to index the <*.conf> files from '03' to '99', based on its precedence.
-Whereis a <99-*.conf> takes top precedence. Indexes below '03' are reserved for internal use.
+<1> The `data` resources in the `ConfigMap` provide the configuration files for all the cells.
+<2> There is a requirement to index the `<*.conf>` files from '03' to '99', based on precedence. A `<99-*.conf>` file takes the highest precedence, while indexes below '03' are reserved for internal use.
 
 [NOTE]
-You should never delete, nor overwrite, the cell1's default `nova-extra-config` configuration map assigned to its default dataplane service 'nova'.
-Adopting a live cloud might require other configurations to carry over for Nova EDPM services stored in that configuration map, without overwriting or losing them.
+Do not delete or overwrite the cell1 default `nova-extra-config` configuration map that is assigned to its default data plane service 'nova'.
+Adopting a live cloud might require other configurations to carry over for the Nova data plane services that are stored in that configuration map, without overwriting or losing them.
 
-. To configure a Ceph back end for libvirt:
+//Bohdan: Do you mean "overwriting or losing the data plane services"?
+
+. Configure a {Ceph} back end for libvirt:
 +
 ----
 $ oc apply -f - <<EOF
@@ -258,10 +266,9 @@ data:
     rbd_secret_uuid=$CEPH_FSID
 EOF
 ----
-+
 
-. Create dataplane services for Nova cells to enable pre-upgrade workarounds,
-and to configure the {compute_service} services for a picked storage back end:
+. Create data plane services for {compute_service} cells to enable pre-upgrade workarounds, and to configure the Compute services for a picked storage back end:
+//Bohdan: What do you mean by "picked"? A specific storage back end?
 +
 ----
 for CELL in $(echo $RENAMED_CELLS); do
@@ -289,7 +296,6 @@ EOF
   done
 ----
 +
-
 * If TLS Everywhere is enabled, append the following content to the `OpenStackDataPlaneService` CR:
 +
 ----
@@ -305,9 +311,10 @@ EOF
   edpmServiceType: nova
 ----
 +
-<1> To enable a local metadata services for a cell<N>, append a `spec.dataSources.secretRef` to reference
+<1> To enable a local metadata service for cell<N>, append a `spec.dataSources.secretRef` to reference
 an additional auto-generated `nova-cell<N>-metadata-neutron-config` secret. According to xref:adopting-the-compute-service_{context}[Adopting the Compute service] guide, you should also set
 `spec.nova.template.cellTemplates.cell<N>.metadataServiceTemplate.enable` in the `OpenStackControlPlane/openstack` CR. You may either configure a single top level metadata, or you should define a per cell metadata for each cell.
+//Bohdan: What does cell<N> refer to? The default cell or something else?
 <2> The secret `nova-cell<N>-compute-config` auto-generates for each `cell<N>`.
 <3> You must append the `nova-cell<N>-compute-config` and `nova-migration-ssh-key` references for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
 
