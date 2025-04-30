@@ -12,6 +12,7 @@ To adopt the {compute_service_first_ref}, you patch an existing `OpenStackContro
 
 * You have completed the previous adoption steps.
 * You have defined the following shell variables. Replace the following example values with the values that are correct for your environment:
++
 ----
 alias openstack="oc exec -t openstackclient -- openstack"
 
@@ -19,15 +20,14 @@ DEFAULT_CELL_NAME="cell3"
 RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
 ----
 +
-The source cloud 'default' cell takes a new `$DEFAULT_CELL_NAME`. In a multi-cell adoption scenario, it may either retain its original name (`DEFAULT_CELL_NAME=default`), or become renamed into a free for use cell name. Never chose other existing cells names (except 'default') for `DEFAULT_CELL_NAME`.
-
-When you have deployed the source cloud with only a 'default' cell, and want to rename it during adoption, you should define that instead:
+** The source cloud 'default' cell takes a new `$DEFAULT_CELL_NAME`. In a multi-cell adoption scenario, it may either retain its original name (`DEFAULT_CELL_NAME=default`), or become renamed into a free for use cell name. Never chose other existing cells names (except 'default') for `DEFAULT_CELL_NAME`.
+** When you have deployed the source cloud with only a 'default' cell, and want to rename it during adoption, you should define that instead:
 +
 ----
 DEFAULT_CELL_NAME="cell1"
 RENAMED_CELLS="cell1"
 ----
-+
+
 
 .Procedure
 
