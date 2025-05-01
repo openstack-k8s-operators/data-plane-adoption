@@ -94,7 +94,9 @@ $ RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
 $ declare -A COMPUTES_CELL1
 $ export COMPUTES_CELL1=( <2>
   ["standalone.localdomain"]="192.168.122.100" <3>
-  # ... <4>
+  # <compute1> <4>
+  # <compute2>
+  # <compute3>
 )
 $ declare -A COMPUTES_CELL2
 $ export COMPUTES_CELL2=(
@@ -107,7 +109,7 @@ $ export COMPUTES_CELL3=(
 # ...
 
 $ declare -A COMPUTES_API_CELL1
-$ export COMPUTES_API_CELL1=(
+$ export COMPUTES_API_CELL1=( <6>
   ["standalone.localdomain"]="172.17.0.100"
   # ...
 )
@@ -117,37 +119,34 @@ $ NODESETS=""
 $ for CELL in $(echo $RENAMED_CELLS); do
   ref="COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
   eval names=\${!${ref}[@]}
-  [ -z "$names" ] && continue <6>
-  NODESETS="'openstack-${CELL}', $NODESETS"
+  [ -z "$names" ] && continue
+  NODESETS="'openstack-${CELL}', $NODESETS" <7>
 done
 $ NODESETS="[${NODESETS%,*}]"
 ----
 +
 <1> The source cloud `default` cell acquires a new `DEFAULT_CELL_NAME` on the destination cloud after adoption.
-In a multi-cell adoption scenario, you can retain the original name, `default`, or create a new cell default name, for example, `cell<X>`, by providing the incremented index of the last cell in the source cloud (which is, by adding a 1 to it).
-//Bohdan: Can you clarify what you mean by "adding a 1 to it"? Do you mean that if the last cell in the source cloud was cell5, then you would add a 1 and it would be cell6?
-<2> For each cell, update the <["standalone.localdomain"]="x.x.x.x"> and complete `COMPUTES_CELL<X>` and `COMPUTES_API_CELL<X>` data with the names and IP addresses of the {compute_service} nodes that are connected to the `ctlplane` and `internalapi` networks. Do not specify a real FQDN defined for each network, always use the same host name for each of its connected networks. Providing IP addresses and names of the hosts on remaining networks of the source cloud should be covered the similar way. Or you can adjust the generated files manually as shown below.
-//Bohdan: Are customers supposed to replace the COMPUTES_CELL1, COMPUTES_CELL2, COMPUTES_API_CELL1, etc. with the names of their own compute cells? Or do you mean that customers should replace ["standalone.localdomain"]="192.168.122.100 with the name and IP address of the Compute nodes?
-<3> If your deployment has a custom DNS domain, specify it in the FQDN value of the nodes. The given values are used in the data plane node set `spec.nodes.<NODE NAME>.hostName`.
-//Bohdan: This point corresponds with `["standalone.localdomain"]="192.168.122.100"` in the code block, and I'm not sure how they relate.Also, does the "given values" refer to the custom DNS domain? 
-<4> Assign all {compute_service} nodes from the source cloud `cell1` cell into `COMPUTES_CELL1`, and so on.
-//Bohdan: <4> points to #... in the code block. Is the customer expected to list the Compute nodes from `cell1` there?
-<5> Assign all {compute_service} nodes from the source cloud `default` cell into `openstack-<X>`,
-where `<X>` is the `DEFAULT_CELL_NAME` environment variable value (here, it equals 'cell3').
-//Bohdan:So in this example, `cell3` is considered the `DEFAULT_CELL_NAME`? And `openstack-<X>` is what the `default` cell was called in the source cloud?
-<6> Cells that do not contain Compute nodes are omitted because no node sets are created for the cells.
-//Bohdan: <6> in the code block should probably be moved after `NODESETS="'openstack-${CELL}', $NODESETS"`, correct? And can we also describe what is happening in that command? For example: "<6> Creates the node sets for each cell that include Compute nodes. Cells that do not include Compute nodes are omitted because no node sets are created for the cells.
-
-** If you deployed the source cloud with a 'default' cell, and want to rename it during adoption, define the new name that you want to use, as shown in the following example:
-//Bohdan: Don't we already describe this scenario in <1> above? "...or create a new cell default name, for example, `cell<X>`, by providing the incremented index of the last cell in the source cloud..."
+In a multi-cell adoption scenario, you can retain the original name, `default`, or create a new cell default name by providing the incremented index of the last cell in the source cloud. For example, if the incremented index of the last cell is `cell5`, the new cell default name is `cell6`.
+<2> For each cell, update the `<["standalone.localdomain"]="x.x.x.x">` value and the and `COMPUTES_CELL<X>` value with the names and IP addresses of the {compute_service} nodes that are connected to the `ctlplane` and `internalapi` networks. Do not specify a real FQDN defined for each network, always use the same hostname for each of its connected networks. Provide the IP addresses and the names of the hosts on the remaining networks of the source cloud as needed. Or you can manually adjust the files that you generate in step 9 of this procedure.
+<3> If your deployment has a custom DNS domain, specify it in the FQDN value of the nodes. This value is used in the data plane node set `spec.nodes.<NODE NAME>.hostName`.
+<4> Assign all {compute_service} nodes from the source cloud `cell1` cell into `COMPUTES_CELL1`, and so on. Replace `<compute1>`, `<compute2>`, and `<compute3>` with the names of your {compute_service} nodes.
+<5> Assign all {compute_service} nodes from the source cloud `default` cell into `COMPUTES_CELL<X>` and `COMPUTES_API_CELL<X>``, where `<X>` is the `DEFAULT_CELL_NAME` environment variable value. In this example, the `DEFAULT_CELL_NAME` environment variable value equals `cell3`.
+<6> For each cell, update the `<["standalone.localdomain"]="192.168.122.100">` value and the `COMPUTES_API_CELL` value with the names and IP addresses of the {compute_service} nodes that are connected to the `ctlplane` and `internalapi` networks. Do not specify a real FQDN defined for each network. Use the same host name for each of its connected networks. Provide the IP addresses and the names of the hosts on the remaining networks of the source cloud as needed. Or you can manually adjust the files that you generate in step 9 of this procedure.
+<7> Cells that do not contain Compute nodes are omitted from this template because no node sets are created for the cells.
 +
+[NOTE]
+====
+If you deployed the source cloud with a `default` cell, and want to rename it during adoption, define the new name that you want to use, as shown in the following example:
 ----
 $ DEFAULT_CELL_NAME="cell1"
 $ RENAMED_CELLS="cell1"
 ----
-+
+====
+
 [NOTE]
+====
 Do not set a value for the `CEPH_FSID` parameter if the local storage back end is configured by the {compute_service} for libvirt. The storage back end must match the source cloud storage back end. You cannot change the storage back end during adoption.
+====
 
 .Procedure
 
@@ -193,7 +192,6 @@ oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-
 rm -f id*
 cd -
 ----
-+
 
 . If TLS Everywhere is enabled, set `LIBVIRT_PASSWORD` to match the existing {OpenStackShort} deployment password:
 +
@@ -235,12 +233,9 @@ EOF
 +
 <1> The `data` resources in the `ConfigMap` provide the configuration files for all the cells.
 <2> There is a requirement to index the `<*.conf>` files from '03' to '99', based on precedence. A `<99-*.conf>` file takes the highest precedence, while indexes below '03' are reserved for internal use.
-
++
 [NOTE]
-Do not delete or overwrite the cell1 default `nova-extra-config` configuration map that is assigned to its default data plane service 'nova'.
-Adopting a live cloud might require other configurations to carry over for the Nova data plane services that are stored in that configuration map, without overwriting or losing them.
-
-//Bohdan: Do you mean "overwriting or losing the data plane services"?
+If you adopt a live cloud, you might be required to carry over additional configurations for the default `nova` data plane services that are stored in the cell1 default `nova-extra-config` configuration map. Do not delete or overwrite the existing configuration in the `cell1` default `nova-extra-config` configuration map that is assigned to `nova`. Overwriting the configuration can break the data place services that rely on specific contents of the `nova-extra-config` configuration map.
 
 . Configure a {Ceph} back end for libvirt:
 +
@@ -267,12 +262,11 @@ data:
 EOF
 ----
 
-. Create data plane services for {compute_service} cells to enable pre-upgrade workarounds, and to configure the Compute services for a picked storage back end:
-//Bohdan: What do you mean by "picked"? A specific storage back end?
+. Create the data plane services for {compute_service} cells to enable pre-upgrade workarounds, and to configure the Compute services for your chosen storage back end:
 +
 ----
 for CELL in $(echo $RENAMED_CELLS); do
-  oc apply -f - <<EOF
+ $ oc apply -f - <<EOF
 ---
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneService
@@ -311,30 +305,22 @@ EOF
   edpmServiceType: nova
 ----
 +
-<1> To enable a local metadata service for cell<N>, append a `spec.dataSources.secretRef` to reference
-an additional auto-generated `nova-cell<N>-metadata-neutron-config` secret. According to xref:adopting-the-compute-service_{context}[Adopting the Compute service] guide, you should also set
-`spec.nova.template.cellTemplates.cell<N>.metadataServiceTemplate.enable` in the `OpenStackControlPlane/openstack` CR. You may either configure a single top level metadata, or you should define a per cell metadata for each cell.
-//Bohdan: What does cell<N> refer to? The default cell or something else?
-<2> The secret `nova-cell<N>-compute-config` auto-generates for each `cell<N>`.
-<3> You must append the `nova-cell<N>-compute-config` and `nova-migration-ssh-key` references for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
-
+<1> To enable a local metadata service for cell<X>, append a `spec.dataSources.secretRef` to reference an additional auto-generated `nova-cell<X>-metadata-neutron-config` secret. You should also set
+`spec.nova.template.cellTemplates.cell<X>.metadataServiceTemplate.enable` in the `OpenStackControlPlane/openstack` CR, as described in xref:adopting-the-compute-service_{context}[Adopting the Compute service]. You can configure a single top-level metadata, or define the metadata per cell.
+<2> The secret `nova-cell<X>-compute-config` auto-generates for each `cell<X>`.
+<3> You must append the `nova-cell<X>-compute-config` and `nova-migration-ssh-key` references for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
++
 [NOTE]
-For simplicity, we share the same `nova-migration-ssh-key` key across cells. You should use different keys for different cells.
+====
+When creating your data plane services for {compute_service} cells, review the following considerations:
 
-* For simple configuration overrides, we do not need a custom dataplane service. However, to reconfigure the cell `cell1` in general,
-the safest option would be always creating a custom service, and a dedicated configuration map for it.
-
-[NOTE]
-The cell `cell1` is already managed with the default `OpenStackDataPlaneService` called `nova`
-and its `nova-extra-config` configuration map. Do not change the default dataplane service 'nova' definition.
-The changes will be lost, when the {rhos_long} operator becomes updated with OLM.
-
-* When a cell spans multiple node sets, you might want to name the custom `OpenStackDataPlaneService` resources like
-`nova-cell1-nfv` and `nova-cell1-enterprise`. Then the auto-generated configmaps would be named
-`nova-cell1-nfv-extra-config` and `nova-cell1-enterprise-extra-config`.
-
-[NOTE]
-Different configurations for nodes in multiple node sets of the same cell are also supported, albeit not covered in this guide.
+* In this example, the same `nova-migration-ssh-key` key is shared across cells. However, you should use different keys for different cells.
+* For simple configuration overrides, you do not need a custom data plane service. However, to reconfigure the cell, `cell1`,
+the safest option is to create a custom service and a dedicated configuration map for it.
+* The cell, `cell1`, is already managed with the default `OpenStackDataPlaneService` CR called `nova` and its `nova-extra-config` configuration map. Do not change the default data plane service `nova` definition. The changes are lost when the {rhos_acro} operator is updated with OLM.
+* When a cell spans multiple node sets, give the custom `OpenStackDataPlaneService` resources a name that relates to the node set, for example, `nova-cell1-nfv` and `nova-cell1-enterprise`. The auto-generated configuration maps are then named `nova-cell1-nfv-extra-config` and `nova-cell1-enterprise-extra-config`.
+* Different configurations for nodes in multiple node sets of the same cell are also supported, but are not covered in this guide.
+====
 
 ifeval::["{build}" == "downstream"]
 . Create a secret for the subscription manager:
@@ -360,11 +346,11 @@ endif::[]
 +
 
 [NOTE]
-The `subscription-manager` secret does not need to be referenced in `OpenStackDataPlaneService`'s `spec.dataSources` data.
-It is already passed in via a node-specific `OpenStackDataPlaneNodeSet` data in `spec.nodeTemplate.ansible.ansibleVarsFrom`.
+You do not need to reference the `subscription-manager` secret in the `dataSources` field of the `OpenStackDataPlaneService` CR.
+The secret is already passed in with a node-specific `OpenStackDataPlaneNodeSet` CR in the `ansibleVarsFrom` property in the `nodeTemplate` field.
 
 
-. Create the dataplane node sets definitions for each cell:
+. Create the data plane node set definitions for each cell:
 +
 ----
 $ declare -A names
@@ -575,41 +561,42 @@ EOF
 done
 ----
 +
-<1> If your deployment has a custom DNS Domain, modify the `spec:nodes:[NODE NAME]:hostName` to use fqdn for the node.
-<2> The networks composition must match the source cloud configuration to avoid dataplane connectivity downtime. The ctlplane network must come first. The above commands only retain IP addresses for the hosts on `ctlplane` and `internalapi` networks. Complete it the same way for other networks, or update the resulted files manually.
-<3> Use node sets names, like `openstack-cell1`, `openstack-cell2`. Only create node sets for cells containing compute nodes.
-<4> If TLS Everywhere is enabled, change `spec.tlsEnabled` to `true`.
-<5> If not adopting the telemetry services, omit it from the services list.
-<6> The bridge name and other OVN and Neutron specific values must match the source cloud configuration to avoid dataplane connectivity downtime.
+<1> If your deployment has a custom DNS Domain, specify the FQDN for the node.
+<2> The network composition must match the source cloud configuration to avoid data plane connectivity downtime. The `ctlplane` network must come first. The commands only retain IP addresses for the hosts on the `ctlplane` and `internalapi` networks. Repeat this step for other isolated networks, or update the resulting files manually.
+<3> Use node sets names, such as `openstack-cell1`, `openstack-cell2`. Only create node sets for cells that contain Compute nodes.
+<4> If TLS Everywhere is enabled, change `tlsEnabled` to `true`.
+<5> If you are not adopting telemetry services, omit it from the services list.
+<6> The bridge name and other OVN and {networking_service}-specific values must match the source cloud configuration to avoid data plane connectivity downtime.
 <7> Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
-<8> If you need to configure hugepages, adjust `<size>`. To configure multi-sized hugepages, create more items in the list. Note that the mount points must match the source cloud configuration.
-
-* Ensure that you use the same `ovn-controller` settings in the `OpenStackDataPlaneNodeSet` CR that you used in the {compute_service} nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
+<8> To configure huge pages, replace `<size>` with the size of the page. To configure multi-sized huge pages, create more items in the list. Note that the mount points must match the source cloud configuration.
 +
+[NOTE]
+====
+Ensure that you use the same `ovn-controller` settings in the `OpenStackDataPlaneNodeSet` CR that you used in the {compute_service} nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
+
 ----
 $ ovs-vsctl list Open .
 ...
 external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-bridge-mappings=<bridge_mappings>, ovn-chassis-mac-mappings="datacentre:1e:0a:bb:e6:7c:ad", ovn-encap-ip="172.19.0.100", ovn-encap-tos="0", ovn-encap-type=geneve, ovn-match-northd-version=False, ovn-monitor-all=True, ovn-ofctrl-wait-before-clear="8000", ovn-openflow-probe-interval="60", ovn-remote="tcp:ovsdbserver-sb.openstack.svc:6642", ovn-remote-probe-interval="60000", rundir="/var/run/openvswitch", system-id="2eec68e6-aa21-4c95-a868-31aeafc11736"}
 ...
 ----
-+
-Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`
+====
 
-. Deploy the `OpenStackDataPlaneNodeSet` CRs for each Nova compute cell
+. Deploy the `OpenStackDataPlaneNodeSet` CRs for each Compute cell:
 +
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
   test -f nodeset-${CELL}.yaml || continue
-  oc apply -f nodeset-${CELL}.yaml
+$ oc apply -f nodeset-${CELL}.yaml
 done
 ----
 
-. If you use a Ceph back end for {block_storage_first_ref}, prepare the adopted data plane workloads:
+. If you use a {Ceph} back end for {block_storage_first_ref}, prepare the adopted data plane workloads:
 +
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
   test -f nodeset-${CELL}.yaml || continue
-  oc patch osdpns/openstack-$CELL --type=merge --patch "
+$ oc patch osdpns/openstack-$CELL --type=merge --patch "
   spec:
     services:
 ifeval::["{build}" == "downstream"]
@@ -647,14 +634,14 @@ done
 ----
 +
 [NOTE]
-Ensure that you use the same list of services from the original `OpenStackDataPlaneNodeSet` CR, except for the inserted `ceph-client` and `ceph-hci-pre` services.
+Ensure that you use the same list of services from the original `OpenStackDataPlaneNodeSet` CR, except for the `ceph-client` and `ceph-hci-pre` services.
 
 . Optional: Enable `neutron-sriov-nic-agent` in the `OpenStackDataPlaneNodeSet` CR:
 +
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
   test -f nodeset-${CELL}.yaml || continue
-  oc patch openstackdataplanenodeset openstack-$CELL --type='json' --patch='[
+$ oc patch openstackdataplanenodeset openstack-$CELL --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
@@ -680,7 +667,7 @@ $ for CELL in $(echo $RENAMED_CELLS); do
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
   test -f nodeset-${CELL}.yaml || continue
-  oc patch openstackdataplanenodeset openstack-$CELL --type='json' --patch='[
+$ oc patch openstackdataplanenodeset openstack-$CELL --type='json' --patch='[
   {
     "op": "add",
     "path": "/spec/services/-",
@@ -736,7 +723,7 @@ EOF
 +
 
 [NOTE]
-If you created different migration SSH keys for different OpenStackDataPlaneService CRs, you should also define a separate `OpenStackDataPlaneDeployment` CR for each nodeset (or nodesets) representing a cell.
+If you created different migration SSH keys for different `OpenStackDataPlaneService` CRs, you should also define a separate `OpenStackDataPlaneDeployment` CR for each node set or node sets that represent a cell.
 
 .. When the validation is finished, confirm that the status of the Ansible EE pods is `Completed`:
 +
@@ -831,7 +818,7 @@ $ oc logs -l app=openstackansibleee -f --max-log-requests 20
 +
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
-  oc wait --for condition=Ready osdpns/openstack-$CELL --timeout=30m
+$ oc wait --for condition=Ready osdpns/openstack-$CELL --timeout=30m
 done
 ----
 
@@ -850,8 +837,8 @@ $ oc exec openstackclient -- openstack network agent list
 
 [NOTE]
 ====
-After removing all services on {OpenStackPreviousInstaller} cell controllers, you may decomission those.
-To become new cell compute nodes, you should re-provision decomissioned controllers as new EDPM hosts and add them into node sets of corresponding (or new) cells.
+After you remove all the services from the {OpenStackPreviousInstaller} cell controllers, you can decomission the cell controllers.
+To create new cell Compute nodes, you re-provision the decomissioned controllers as new data plane hosts and add them to the node sets of corresponding or new cells.
 ====
 
 .Next steps
