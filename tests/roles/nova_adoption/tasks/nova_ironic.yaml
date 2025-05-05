@@ -13,7 +13,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '{{ remove_ffu_workaround_patch }}'
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ remove_ffu_workaround_patch }}'
 
 - name: wait for Nova control plane services' CRs to become ready
   ansible.builtin.include_tasks:

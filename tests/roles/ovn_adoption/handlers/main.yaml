@@ -2,8 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    {{ namespace_env }}
-    oc delete --ignore-not-found=true pod -n $NAMESPACE ovn-copy-data
-    oc delete --ignore-not-found=true certificate -n $NAMESPACE ovn-data-cert
-    oc delete --ignore-not-found=true secret -n $NAMESPACE ovn-data-cert
-    {% if storage_reclaim_policy.lower() == "delete" %}oc delete pvc --ignore-not-found=true -n $NAMESPACE ovn-data{% endif %}
+    oc delete --ignore-not-found=true pod ovn-copy-data
+    oc delete --ignore-not-found=true certificate ovn-data-cert
+    oc delete --ignore-not-found=true secret ovn-data-cert
+    {% if storage_reclaim_policy.lower() == "delete" %}oc delete pvc --ignore-not-found=true ovn-data{% endif %}

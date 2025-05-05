@@ -96,12 +96,12 @@ $ oc delete openstackclients.client.openstack.org --all
 . Delete the OSPdO `OpenStackControlPlane` custom resource (CR):
 +
 ----
-$ oc delete openstackcontrolplanes.osp-director.openstack.org -n openstack --all
+$ oc delete openstackcontrolplanes.osp-director.openstack.org -n "${OSPDO_NAMESPACE}" --all
 ----
 . Delete the OSPdO `OpenStackNetConfig` CR to remove the associated node network configuration policies:
 +
 ----
-$ oc delete osnetconfig -n openstack --all
+$ oc delete osnetconfig -n "${OSPDO_NAMESPACE}" --all
 ----
 . Label the {OpenShiftShort} node that contains the OSPdO virtual machine (VM):
 +
@@ -239,33 +239,33 @@ $ oc apply -f /tmp/node3_nncp.yaml
 . Delete the remaining OSPdO resources. Do not delete the `OpenStackBaremetalSets` and `OpenStackProvisionServer` resources:
 +
 ----
-$ for i in $(oc get crd | grep osp-director | grep -v baremetalset | grep -v provisionserver | awk {'print $1'}); do echo Deleting $i...; oc delete $i -n openstack --all; done
+$ for i in $(oc get crd | grep osp-director | grep -v baremetalset | grep -v provisionserver | awk {'print $1'}); do echo Deleting $i...; oc delete $i -n "${OSPDO_NAMESPACE}" --all; done
 ----
 
 . Scale down OSPdO to 0 replicas:
 +
 ----
-$ ospdo_csv_ver=$(oc get csv -n openstack -l operators.coreos.com/osp-director-operator.openstack -o json | jq -r '.items[0].metadata.name')
-$ oc patch csv -n openstack $ospdo_csv_ver --type json   -p="[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/replicas", "value": "0"}]"
+$ ospdo_csv_ver=$(oc get csv -n "${OSPDO_NAMESPACE}" -l operators.coreos.com/osp-director-operator.openstack -o json | jq -r '.items[0].metadata.name')
+$ oc patch csv -n "${OSPDO_NAMESPACE}" $ospdo_csv_ver --type json   -p="[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/replicas", "value": "0"}]"
 ----
 
 . Remove the webhooks from OSPdO:
 +
 ----
-$ oc patch csv $ospdo_csv_ver -n openstack --type json -p="[{"op": "remove", "path": "/spec/webhookdefinitions"}]"
+$ oc patch csv $ospdo_csv_ver -n "${OSPDO_NAMESPACE}" --type json -p="[{"op": "remove", "path": "/spec/webhookdefinitions"}]"
 ----
 
 . Remove the finalizer from the OSPdO `OpenStackBaremetalSet` resource:
 +
 ----
-$ oc patch openstackbaremetalsets.osp-director.openstack.org -n openstack compute --type json -p="[{"op": "remove", "path": "/metadata/finalizers"}]"
+$ oc patch openstackbaremetalsets.osp-director.openstack.org -n "${OSPDO_NAMESPACE}" compute --type json -p="[{"op": "remove", "path": "/metadata/finalizers"}]"
 ----
 
 . Delete the `OpenStackBaremetalSet` and `OpenStackProvisionServer` resources:
 +
 ----
-$ oc delete openstackbaremetalsets.osp-director.openstack.org -n openstack --all
-$ oc delete openstackprovisionservers.osp-director.openstack.org -n openstack --all
+$ oc delete openstackbaremetalsets.osp-director.openstack.org -n "${OSPDO_NAMESPACE}" --all
+$ oc delete openstackprovisionservers.osp-director.openstack.org -n "${OSPDO_NAMESPACE}" --all
 ----
 
 . Annotate each {OpenStackShort} Compute `BareMetalHost` resource so that Metal3 does not start the node:
@@ -290,14 +290,14 @@ done
 . Delete the OSPdO Operator Lifecycle Manager resources to remove OSPdO:
 +
 ----
-$ oc delete subscription osp-director-operator -n openstack
-$ oc delete operatorgroup osp-director-operator -n openstack
-$ oc delete catalogsource osp-director-operator-index -n openstack
-$ oc delete csv $ospdo_csv_ver -n openstack
+$ oc delete subscription osp-director-operator -n "${OSPDO_NAMESPACE}"
+$ oc delete operatorgroup osp-director-operator -n "${OSPDO_NAMESPACE}"
+$ oc delete catalogsource osp-director-operator-index -n "${OSPDO_NAMESPACE}"
+$ oc delete csv $ospdo_csv_ver -n "${OSPDO_NAMESPACE}"
 ----
 
 . Scale up the {rhos_acro} OpenStack Operator `controller-manager` to 1 replica so that the associated `OpenStackControlPlane` CR is reconciled and its `OpenStackClient` pod is recreated:
 +
 ----
-$ oc patch csv -n openstack-operators openstack-operator.v0.0.1 --type json   -p="[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/replicas", "value": "1"}]"
+$ oc patch csv -n "${OSPDO_NAMESPACE}"-operators openstack-operator.v0.0.1 --type json   -p="[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/replicas", "value": "1"}]"
 ----

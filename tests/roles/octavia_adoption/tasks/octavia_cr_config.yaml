@@ -3,12 +3,12 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc get -n openstack --no-headers nncp | cut -f 1 -d ' ' | grep -v nncp-dns | while read; do
+    oc get --no-headers nncp | cut -f 1 -d ' ' | grep -v nncp-dns | while read; do
 
     interfaces=$(oc get nncp $REPLY -o jsonpath="{.spec.desiredState.interfaces[*].name}")
 
     (echo $interfaces | grep -w -q "octbr\|enp6s0.24") || \
-            oc patch -n openstack nncp $REPLY --type json --patch '
+            oc patch nncp $REPLY --type json --patch '
     [{
         "op": "add",
         "path": "/spec/desiredState/interfaces/-",
@@ -53,7 +53,6 @@
       labels:
         osp/net: octavia
       name: octavia
-      namespace: openstack
     spec:
       config: |
         {
@@ -75,7 +74,7 @@
           }
         }
     EOF_CAT
-    oc apply -n openstack -f octavia-nad.yaml
+    oc apply -f octavia-nad.yaml
 
 - name: Enable the octavia service in OpenShift
   ansible.builtin.shell: |
@@ -85,7 +84,7 @@
     # FIXME: debug only. remove.
     oc project
 
-    oc patch -n openstack openstackcontrolplane openstack --type=merge --patch '
+    oc patch openstackcontrolplane openstack --type=merge --patch '
     spec:
       ovn:
         template:

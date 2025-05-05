@@ -1,6 +1,5 @@
 ---
 # rhoso namespace
-rhoso_namespace: "openstack"
 swift_patch: |
   spec:
     swift:

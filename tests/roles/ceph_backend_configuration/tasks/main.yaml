@@ -31,7 +31,6 @@
     kind: Secret
     metadata:
       name: ceph-conf-files
-      namespace: {{ rhoso_namespace }}
     type: Opaque
     EOF
 
