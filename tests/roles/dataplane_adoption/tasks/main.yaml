@@ -12,18 +12,10 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    {{ oc_login_command }}
-    oc patch -n {{ rhoso_namespace }} openstackversion openstack \
+    oc patch openstackversion openstack \
       --type='json' -p='[{
       "op":"replace", "path":"/spec/customContainerImages/ansibleeeImage",
       "value": "{{ ansibleee_runner_img | default('quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest')}}"}]'
-
-- name: ensure namespace
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc project {{ rhoso_namespace }}
 
 - name: Include RHEV vars
   ansible.builtin.include_vars:
@@ -85,7 +77,6 @@
     cd "$(mktemp -d)"
     ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
     oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
-    -n  {{ rhoso_namespace }} \
     --from-file=ssh-privatekey=id \
     --from-file=ssh-publickey=id.pub \
     --type kubernetes.io/ssh-auth
@@ -102,7 +93,6 @@
     kind: Secret
     metadata:
         name: libvirt-secret
-        namespace: {{ rhoso_namespace }}
     type: Opaque
     data:
       LibvirtPassword: {{ libvirt_password | b64encode }}
@@ -124,7 +114,6 @@
     kind: ConfigMap
     metadata:
       name: nova-extra-config
-      namespace:  {{ rhoso_namespace }}
     data:
       19-nova-compute-cell1-workarounds.conf: |
         [workarounds]
@@ -145,7 +134,6 @@
     kind: ConfigMap
     metadata:
       name: nova-extra-config
-      namespace: {{ rhoso_namespace }}
     data:
       19-nova-compute-cell1-workarounds.conf: |
         [workarounds]

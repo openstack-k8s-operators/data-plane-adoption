@@ -284,14 +284,6 @@ dataplane_cr: |
 dpa_dir: "../.."
 dpa_tests_dir: "{{ dpa_dir }}/tests"
 
-# ospdo env:
-# Whether source env is OSPD Director Operator
-# i.e. https://github.com/openstack-k8s-operators/osp-director-operator
-ospdo_src: false
-# rhoso namespace
-rhoso_namespace: "openstack"
-# director operator namespace
-org_namespace: "ospdo_openstack"
 # adoption repo default location
 
 networker_cr: |
@@ -379,3 +371,7 @@ networker_cr: |
           edpm_ovn_remote_probe_interval: 60000
           edpm_ovn_ofctrl_wait_before_clear: 8000
           edpm_enable_chassis_gw: true
+
+          {% if edpm_container_registry_insecure_registries is defined -%}
+          edpm_container_registry_insecure_registries: {{ edpm_container_registry_insecure_registries }}
+          {% endif -%}

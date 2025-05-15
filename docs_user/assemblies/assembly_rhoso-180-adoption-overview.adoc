@@ -17,13 +17,15 @@ before you adopt your main environment.
 
 include::../modules/con_adoption-limitations.adoc[leveloffset=+1]
 
-include::../modules/con_known-issues-adoption.adoc[leveloffset=+1]
+//include::../modules/con_known-issues-adoption.adoc[leveloffset=+1]
 
 include::../modules/con_adoption-prerequisites.adoc[leveloffset=+1]
 
 include::../modules/con_adoption-guidelines.adoc[leveloffset=+1]
 
 include::../modules/con_adoption-process-overview.adoc[leveloffset=+1]
+
+include::../modules/proc_installing-the-systemd-container-package-on-compute-hosts.adoc[leveloffset=+1]
 
 include::../modules/con_identity-service-authentication.adoc[leveloffset=+1]
 

@@ -7,7 +7,7 @@
 for CELL in $(echo $CELLS); do
   RCELL=$CELL
   [ "$CELL" = "default" ] && RCELL=$DEFAULT_CELL_NAME
-  oc rsh -n $NAMESPACE mariadb-copy-data << EOF
+  oc rsh mariadb-copy-data << EOF
     declare -A db_name_map # <1>
     db_name_map['nova']="nova_$RCELL"
     db_name_map['ovs_neutron']='neutron'

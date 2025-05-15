@@ -116,7 +116,6 @@ apiVersion: v1
 kind: Secret
 metadata:
     name: dataplane-adoption-secret
-    namespace: openstack
 data:
     ssh-privatekey: |
 ifeval::["{build}" != "downstream"]
@@ -124,9 +123,6 @@ $(cat ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa | base64 | sed \'s/^/   
 endif::[]
 ifeval::["{build}" == "downstream"]
 $(cat <path_to_SSH_key> | base64 | sed \'s/^/        /')
-endif::[]
-ifeval::["{build_variant}" == "ospdo"]
-      $(oc exec -n $<ospdo_namespace> -t openstackclient openstackclient -- cat /home/cloud-admin/.ssh/id_rsa | base64 | sed \'s/^/        /')
 endif::[]
 EOF
 ----
@@ -141,7 +137,6 @@ endif::[]
 $ cd "$(mktemp -d)"
 ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
 oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
-  -n openstack \
   --from-file=ssh-privatekey=id \
   --from-file=ssh-publickey=id.pub \
   --type kubernetes.io/ssh-auth
@@ -161,14 +156,12 @@ LIBVIRT_PASSWORD_BASE64=$(echo -n "$LIBVIRT_PASSWORD" | base64)
 
 .. Create libvirt-secret when TLS-e is enabled:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
 kind: Secret
 metadata:
   name: libvirt-secret
-  namespace: openstack
 type: Opaque
 data:
   LibvirtPassword: ${LIBVIRT_PASSWORD_BASE64}
@@ -177,14 +170,12 @@ EOF
 
 . If you use a local storage back end for libvirt, create a `nova-compute-extra-config` service to remove pre-fast-forward workarounds and configure Compute services to use a local storage back end:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nova-extra-config
-  namespace: openstack
 data:
   19-nova-compute-cell1-workarounds.conf: |
     [workarounds]
@@ -198,7 +189,6 @@ The secret `nova-cell<X>-compute-config` auto-generates for each
 
 . If TLS Everywhere is enabled, append the following content to the `OpenStackDataPlaneService` CR:
 +
-[source,yaml]
 ----
   tlsCerts:
     contents:
@@ -213,14 +203,12 @@ The secret `nova-cell<X>-compute-config` auto-generates for each
 
 . If you use a Ceph back end for libvirt, create a `nova-compute-extra-config` service to remove pre-fast-forward upgrade workarounds and configure Compute services to use a Ceph back end:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nova-extra-config
-  namespace: openstack
 data:
   19-nova-compute-cell1-workarounds.conf: |
     [workarounds]
@@ -264,7 +252,6 @@ endif::[]
 
 . Deploy the `OpenStackDataPlaneNodeSet` CR:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -290,10 +277,10 @@ endif::[]
     - run-os
     - reboot-os
     - install-certs
-    - libvirt
-    - nova
     - ovn
     - neutron-metadata
+    - libvirt
+    - nova
     - telemetry
   env:
     - name: ANSIBLE_CALLBACKS_ENABLED
@@ -459,7 +446,6 @@ external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-b
 
 . If you use a Ceph back end for {block_storage_first_ref}, prepare the adopted data plane workloads:
 +
-[source,yaml]
 ----
 $ oc patch osdpns/openstack-cell1 --type=merge --patch "
 spec:
@@ -502,7 +488,6 @@ Ensure that you use the same list of services from the original `OpenStackDataPl
 
 . Optional: Enable `neutron-sriov-nic-agent` in the `OpenStackDataPlaneNodeSet` CR:
 +
-[source,yaml]
 ----
 $ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
   {
@@ -527,7 +512,6 @@ $ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
 
 . Optional: Enable `neutron-dhcp` in the `OpenStackDataPlaneNodeSet` CR:
 +
-[source,yaml]
 ----
 $ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
   {
@@ -540,8 +524,6 @@ $ oc patch openstackdataplanenodeset openstack-cell1 --type='json' --patch='[
 [NOTE]
 ====
 To use `neutron-dhcp` with OVN for the {bare_metal_first_ref}, you must set the `disable_ovn_dhcp_for_baremetal_ports` configuration option for the {networking_first_ref}  to `true`.  You can set this configuration in the `NeutronAPI` spec:
-
-[source,yaml]
 ----
 ..
 spec:
@@ -558,7 +540,6 @@ spec:
 
 .. Create the validation service:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -572,7 +553,6 @@ EOF
 
 .. Create a `OpenStackDataPlaneDeployment` CR that runs only the validation:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -621,7 +601,6 @@ to use the same profile as the one set on the {OpenStackShort} {rhos_prev_ver} n
 
 .. Create an `OpenStackDataPlaneService` CR to clean up the data plane services you are adopting:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -635,7 +614,6 @@ EOF
 
 .. Create the `OpenStackDataPlaneDeployment` CR to run the clean-up:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -652,7 +630,6 @@ EOF
 
 . When the clean-up is finished, deploy the `OpenStackDataPlaneDeployment` CR:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1

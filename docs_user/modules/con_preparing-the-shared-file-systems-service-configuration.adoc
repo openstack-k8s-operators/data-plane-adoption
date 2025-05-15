@@ -121,7 +121,6 @@ The name of the `OpenStackVersion` CR must match the name of your `OpenStackCont
 
 . Create a file that includes the secrets, for example, `netapp_secrets.conf`:
 +
-[source,yaml]
 ----
 $ cat << __EOF__ > ~/netapp_secrets.conf
 
@@ -134,7 +133,7 @@ __EOF__
 ----
 +
 ----
-$ oc create secret generic osp-secret-manila-netapp --from-file=~/<secret> -n openstack
+$ oc create secret generic osp-secret-manila-netapp --from-file=~/<secret>
 ----
 +
 ** Replace `<secret>` with the name of the file that includes your secrets, for example, `netapp_secrets.conf`.

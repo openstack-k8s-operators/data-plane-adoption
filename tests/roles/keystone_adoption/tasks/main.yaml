@@ -13,7 +13,6 @@
     kind: Secret
     metadata:
       name: keystone
-      namespace: {{ rhoso_namespace }}
     type: Opaque
     EOF
 
@@ -55,6 +54,12 @@
   until: keystone_responding_result is success
   retries: 60
   delay: 2
+
+- name: verify that OpenStackControlPlane setup is complete
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait --for=condition=Ready --timeout=1m OpenStackControlPlane openstack
 
 - name: clean up services and endpoints
   ansible.builtin.shell: |

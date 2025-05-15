@@ -5,8 +5,12 @@ use_no_log: false
 # Whether the adopted node will host compute services
 compute_adoption: true
 
-# Whether adopting OSPDo or Director based TripleO deployment
-deploy_ctlplane_ospdo: false
+# rhoso namespace
+rhoso_namespace: "openstack"
+
+# Whether source env is OSPD Director Operator
+# i.e. https://github.com/openstack-k8s-operators/osp-director-operator
+ospdo_src: false
 
 # The names of cells on the target cloud
 renamed_cells: "{{ [default_cell_name] + cells | difference(['default']) }}"
@@ -65,9 +69,6 @@ mariadb_passwords_env: |-
     PODIFIED_DB_ROOT_PASSWORD[$CELL]=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
   done
 
-namespace_env: |-
-  NAMESPACE={{ deploy_ctlplane_ospdo | bool | ternary(org_namespace, rhoso_namespace ) }}
-
 # Header for the source database access
 # TODO: Env vars for OSPDo case are also configured in env_vars_src_ospdo.yaml. Move them here, eventually?
 # OSPDo RUN_OVERRIDES definition exists only in docs (missing in code?).
@@ -77,7 +78,6 @@ mariadb_copy_shell_vars_src: |-
   {{ shell_header }}
 
   PASSWORD_FILE="$HOME/overcloud-passwords.yaml"
-  {{ namespace_env }}
 
   {{ mariadb_image_env }}
   {{ cells_env }}
@@ -88,8 +88,10 @@ mariadb_copy_shell_vars_src: |-
   done
 
   RUN_OVERRIDES=' '
-  MARIADB_CLIENT_ANNOTATIONS={{ deploy_ctlplane_ospdo | bool | ternary("-n $NAMESPACE", "--annotations=k8s.v1.cni.cncf.io/networks=internalapi") }}
-  MARIADB_RUN_OVERRIDES={{ deploy_ctlplane_ospdo | bool | ternary("--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS {{ mysql_client_override }}", "$MARIADB_CLIENT_ANNOTATIONS") }}
+  MARIADB_CLIENT_ANNOTATIONS={{ deploy_ctlplane_ospdo | default(false) | bool | ternary("-n $NAMESPACE", "--annotations=k8s.v1.cni.cncf.io/networks=internalapi") }}
+  MARIADB_RUN_OVERRIDES={{ deploy_ctlplane_ospdo | default(false) | bool | ternary("--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS {{ mysql_client_override }}", "$MARIADB_CLIENT_ANNOTATIONS") }}
+
+  OSPDO_MARIADB_CLIENT_ANNOTATIONS='[{"name": "internalapi-static","ips": ["172.17.0.99/24"]}]'
 
   {{ pull_openstack_configuration_ssh_shell_vars }}
 
@@ -112,7 +114,6 @@ mariadb_copy_shell_vars_dst: |
   {{ oc_header }}
   {{ mariadb_image_env }}
   {{ cells_env }}
-  {{ namespace_env }}
 
   CHARACTER_SET=utf8
   COLLATION=utf8_general_ci

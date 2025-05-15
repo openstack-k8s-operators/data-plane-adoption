@@ -33,6 +33,7 @@ $ oc get namespace ${RHOSO18_NAMESPACE} 2>/dev/null || {
         echo "Failed to create namespace ${RHOSO18_NAMESPACE}"
         exit 1
     }
+    oc project ${RHOSO18_NAMESPACE}
 }
 ----
 
@@ -171,7 +172,6 @@ apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
   name: ctlplane
-  namespace: <RHOSO18_NAMESPACE>
 spec:
   config: |
     {
@@ -191,7 +191,6 @@ apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
   name: internalapi
-  namespace: <RHOSO18_NAMESPACE>
 spec:
   config: |
     {
@@ -211,7 +210,6 @@ apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
   name: external
-  namespace: <RHOSO18_NAMESPACE>
 spec:
   config: |
     {
@@ -231,7 +229,6 @@ apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
   name: storage
-  namespace: $<RHOSO18_NAMESPACE>
 spec:
   config: |
     {
@@ -251,7 +248,6 @@ apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
   name: storagemgmt
-  namespace: <RHOSO18_NAMESPACE>
 spec:
   config: |
     {
@@ -271,7 +267,6 @@ apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
   name: tenant
-  namespace: <RHOSO18_NAMESPACE>
 spec:
   config: |
     {
@@ -306,15 +301,8 @@ $ oc get secret tripleo-passwords -n $OSPDO_NAMESPACE -o json | jq -r '.data["tr
 }
 ----
 
-. Install the {rhos_acro} operators:
+. Install the {rhos_acro} operators. For more information, see link:{deploying-rhoso}/index#assembly_installing-and-preparing-the-Operators[Installing and preparing the Operators] in _{deploying-rhoso-t}_.
 +
-----
-$ git clone https://github.com/openstack-k8s-operators/install_yamls.git
-cd install_yamls
-BMO_SETUP=false NETWORK_ISOLATION=false NAMESPACE=${RHOSO18_NAMESPACE} make openstack
-BMO_SETUP=false NETWORK_ISOLATION=false NAMESPACE=${RHOSO18_NAMESPACE} make openstack_init
-BMO_SETUP=false NETWORK_ISOLATION=false make metallb
-----
 
 
 . Apply the `IPAddressPool` resource that matches the new OpenStack 18 deployment to configure which IPs can be used as virtual IPs (VIPs):

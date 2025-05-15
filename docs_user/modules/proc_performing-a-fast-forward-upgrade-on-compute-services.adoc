@@ -17,8 +17,6 @@ You must upgrade the Compute services from {rhos_prev_long} {rhos_prev_ver} to {
 DEFAULT_CELL_NAME="cell1"
 RENAMED_CELLS="$DEFAULT_CELL_NAME"
 
-NAMESPACE="openstack"
-
 declare -A PODIFIED_DB_ROOT_PASSWORD
 for CELL in $(echo "super $RENAMED_CELLS"); do
   PODIFIED_DB_ROOT_PASSWORD[$CELL]=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
@@ -31,7 +29,7 @@ done
 +
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
-  oc exec openstack-$CELL-galera-0 -n $NAMESPACE -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
+  oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
     -e "select a.version from nova_${CELL}.services a join nova_${CELL}.services b where a.version!=b.version and a.binary='nova-compute' and a.deleted=0;"
 done
 ----
@@ -45,7 +43,6 @@ Review any errors in the nova Compute agent logs on the data plane, and the `nov
 
 . Patch the `OpenStackControlPlane` CR to remove the pre-fast-forward upgrade workarounds from the Compute control plane services:
 +
-[source,yaml]
 ----
 $ oc patch openstackcontrolplane openstack -n openstack --type=merge --patch '
 spec:
@@ -91,7 +88,6 @@ $ oc wait --for condition=Ready --timeout=300s Nova/nova
 
 . Remove the pre-fast-forward upgrade workarounds from the Compute data plane services:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
@@ -108,7 +104,6 @@ apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
 metadata:
   name: openstack-nova-compute-ffu
-  namespace: openstack
 spec:
   nodeSets:
     - openstack

@@ -19,7 +19,6 @@ data:
 kind: Secret
 metadata:
   name: keystone
-  namespace: openstack
 type: Opaque
 EOF
 ----
@@ -78,4 +77,10 @@ done
 +
 ----
 $ openstack endpoint list | grep keystone
+----
+
+. Wait for the `OpenStackControlPlane` resource to become `Ready`:
++
+----
+$ oc wait --for=condition=Ready --timeout=1m OpenStackControlPlane openstack
 ----

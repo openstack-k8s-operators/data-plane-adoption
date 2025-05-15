@@ -11,10 +11,26 @@ Planning information::
 * Review the adoption-specific networking requirements. For more information, see xref:configuring-network-for-RHOSO-deployment_planning[Configuring the network for the RHOSO deployment].
 * Review the adoption-specific storage requirements. For more information, see xref:storage-requirements_configuring-network[Storage requirements].
 * Review how to customize your deployed control plane with the services that are required for your environment. For more information, see link:{customizing-rhoso}/index[{customizing-rhoso-t}].
+ifeval::["{build_variant}" == "ospdo"]
+* Familiarize yourself with a disconnected environment deployment. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#proc_configuring-an-airgapped-environment_air-gapped-environment[Configuring an airgapped environment] in _Deploying an overcloud in a Red Hat OpenShift Container Platform cluster with director Operator_.
+endif::[]
 * Familiarize yourself with the following {OpenShiftShort} concepts that are used during adoption:
 ** link:{defaultOCPURL}/nodes/overview-of-nodes[Overview of nodes]
 ** link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors]
 ** link:{defaultOCPURL}/machine_configuration/index[Machine configuration overview]
+* Make sure to set the correct {rhos_acro} project namespace in which to run commands.
+ifeval::["{build_variant}" == "ospdo"]
+* In director Operator adoption, the source {rhos_prev_long} {rhos_prev_ver} namespace is `openstack`. In order to successfully adopt the {OpenStackShort} {rhos_prev_ver} environment, the destination {rhos_acro} {rhos_curr_ver} namespace must be different, for example, `rhoso`.
+endif::[]
+[source, shell]
+----
+ifeval::["{build_variant}" == "ospdo"]
+$ oc project rhoso
+endif::[]
+ifeval::["{build_variant}" != "ospdo"]
+$ oc project openstack
+endif::[]
+----
 
 Back-up information::
 
@@ -28,7 +44,7 @@ Compute::
 
 * Upgrade your Compute nodes to Red Hat Enterprise Linux {rhel_prev_ver}. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/framework_for_upgrades_16.2_to_17.1/index#upgrading-compute-nodes_upgrading-the-compute-node-operating-system[Upgrading all Compute nodes to RHEL 9.2] in _Framework for upgrades (16.2 to 17.1)_.
 * Perform a minor update to the latest {OpenStackShort} version. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/performing_a_minor_update_of_red_hat_openstack_platform/index[Performing a minor update of Red Hat OpenStack Platform].
-* If the `systemd-container` package is not installed on your Compute hosts, reboot all hypervisors one by one to install the `systemd-container` package. To avoid interrupting your workloads during the reboot, live migrate virtual machine instances before rebooting a node. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/performing_a_minor_update_of_red_hat_openstack_platform/assembly_rebooting-the-overcloud_keeping-updated#proc_rebooting-compute-nodes_rebooting-the-overcloud[Rebooting Compute nodes] in _Performing a minor update of Red Hat OpenStack Platform_.
+* Install the `systemd-container` package on your Compute hosts. For more information, see xref:installing-the-systemd-container-package-on-compute-hosts_{context}[Installing the `systemd-container` package on Compute hosts].
 
 ML2/OVS::
 
