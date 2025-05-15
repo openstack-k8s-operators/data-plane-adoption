@@ -610,3 +610,8 @@
 - name: Adopted Cinder post-checks
   ansible.builtin.include_tasks:
     file: cinder_verify.yaml
+
+- name: Configure swift to use rgw backend
+  when: ceph_daemons_layout.rgw | default(true) | bool
+  ansible.builtin.include_tasks:
+    file: configure_object.yaml
