@@ -1,0 +1,68 @@
+---
+- name: Storage
+  mtu: 1500
+  vip: true
+  name_lower: storage
+  dns_domain: storage.{{ cloud_domain }}.
+  service_net_map_replace: storage
+  subnets:
+    storage_subnet:
+      vlan: 21
+      ip_subnet: '2620:cf:cf:cccc::/64'
+      allocation_pools: [{'start': '2620:cf:cf:cccc::100', 'end': '2620:cf:cf:cccc::250'}]
+
+- name: InternalApi
+  mtu: 1500
+  vip: true
+  name_lower: internal_api
+  dns_domain: internal-api.{{ cloud_domain }}.
+  service_net_map_replace: internal_api
+  subnets:
+    internal_api_subnet:
+      vlan: 20
+      ip_subnet: '2620:cf:cf:bbbb::/64'
+      allocation_pools: [{'start': '2620:cf:cf:bbbb::100', 'end': '2620:cf:cf:bbbb::250'}]
+
+- name: Tenant
+  mtu: 1500
+  vip: false  # Tenant network does not use VIPs
+  name_lower: tenant
+  dns_domain: tenant.{{ cloud_domain }}.
+  service_net_map_replace: tenant
+  subnets:
+    tenant_subnet:
+      vlan: 22
+      ip_subnet: '2620:cf:cf:eeee::/64'
+      allocation_pools: [{'start': '2620:cf:cf:eeee::100', 'end': '2620:cf:cf:eeee::250'}]
+
+- name: External
+  mtu: 1500
+  vip: true
+  name_lower: external
+  dns_domain: external.{{ cloud_domain }}.
+  service_net_map_replace: external
+  subnets:
+    external_subnet:
+      ip_subnet: '2620:cf:cf:cf02::/64'
+      allocation_pools: [{'start': '2620:cf:cf:cf02::130', 'end': '2620:cf:cf:cf02::250'}]
+
+- name: Ironic
+  mtu: 1500
+  vip: true
+  name_lower: ironic
+  dns_domain: ironic.{{ cloud_domain }}.
+  subnets:
+    ironic_subnet:
+      ip_subnet: 2620:cf:cf:ffff::/64
+      allocation_pools: [{'start': '2620:cf:cf:ffff::30', 'end': '2620:cf:cf:ffff::70'}]
+
+- name: storagemgmt:
+  mtu: 1500
+  vip: true
+  name_lower: storagemgmt
+  dns_domain: storagemgmt.{{ cloud_domain }}.
+  subnets:
+    storagemgmt_subnet:
+      vlan: 23
+      ip_subnet: "2620:cf:cf:dddd::/64"
+      allocation_pools: [{'start': '2620:cf:cf:dddd::100', 'end': '2620:cf:cf:dddd::250'}]
