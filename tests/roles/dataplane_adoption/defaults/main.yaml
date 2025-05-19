@@ -106,6 +106,9 @@ edpm_bootstrap_command: |
   update-crypto-policies --set FIPS:NO-ENFORCE-EMS
   ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
   {%+ if compute_adoption|bool +%}
+  # Exclude ceph-common-18.2.7 as it's pulling newer openssl not compatible
+  # with rhel 9.2 openssh
+  dnf config-manager --setopt centos9-storage.exclude="ceph-common-18.2.7" --save
   # FIXME: perform dnf upgrade for other packages in EDPM ansible
   # here we only ensuring that decontainerized libvirt can start
   dnf -y upgrade openstack-selinux
