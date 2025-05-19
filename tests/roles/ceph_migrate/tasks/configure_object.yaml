@@ -1,0 +1,73 @@
+- name: Set default namespace to {{ rhoso_namespace }}
+  delegate_to: localhost
+  ansible.builtin.shell: |
+    oc project {{ rhoso_namespace }}
+
+- name: Check for existing object store config
+  delegate_to: localhost
+  block:
+    - name: Check if swift is enabled in deployed controlplane
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        oc get $(oc get oscp -o name) -o json| jq .spec.swift.enabled
+      register: swift_in_ctlplane
+
+    # checking swift_endpoints_count will avoid unnecessary errors during ceph deployment re-run
+    - name: Check if swift endpoint is already created
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        oc rsh openstackclient openstack endpoint list | grep 'swift.*object-store' | wc -l
+      register: swift_endpoints_count
+      ignore_errors: true
+
+    - name: Check if swift service is already created
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        oc rsh openstackclient openstack service list | grep 'swift.*object' | wc -l
+      register: swift_services_count
+      ignore_errors: true
+
+- name: Display a note about swift deployment
+  ansible.builtin.debug:
+    msg: "WARNING: Swift is deployed and the endpoint exists already, ceph RGW cannot be configured as object store service"
+  when:
+    - swift_in_ctlplane.stdout | bool
+
+- name: Create swift service
+  delegate_to: localhost
+  ansible.builtin.shell: |
+    oc rsh openstackclient openstack service create --name swift --description 'OpenStack Object Storage' object-store
+  when:
+    - not swift_in_ctlplane.stdout | bool
+    - swift_endpoints_count.stdout == "0"
+    - swift_services_count.stdout == "0"
+
+- name: Configure object store to use rgw
+  delegate_to: localhost
+  when:
+    - not swift_in_ctlplane.stdout | bool
+    - swift_endpoints_count.stdout == "0"
+  block:
+    - name: Capture required UUIDs
+      ansible.builtin.command: "oc rsh openstackclient openstack {{ item.os_command }} show {{ item.os_command_object }} -c id -f value"
+      register: all_uuids
+      loop:
+        - {os_command: 'user', os_command_object: 'swift'}
+        - {os_command: 'service', os_command_object: 'swift'}
+        - {os_command: 'role', os_command_object: 'member'}
+        - {os_command: 'role', os_command_object: 'admin'}
+        - {os_command: 'project', os_command_object: 'admin'}
+        - {os_command: 'user', os_command_object: 'admin'}
+        - {os_command: 'role', os_command_object: 'swiftoperator'}
+        - {os_command: 'project', os_command_object: 'service'}
+
+    - name: Configure swift endpoints to use rgw
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        alias openstack="oc exec -t openstackclient -- openstack"
+
+        ${BASH_ALIASES[openstack]} role add --user {{ all_uuids.results.0.stdout }} --project {{ all_uuids.results.7.stdout }} {{ all_uuids.results.2.stdout }}
+        ${BASH_ALIASES[openstack]} role add --user {{ all_uuids.results.0.stdout }} --project {{ all_uuids.results.7.stdout }} {{ all_uuids.results.3.stdout }}
+        ${BASH_ALIASES[openstack]} endpoint create --region regionOne {{ all_uuids.results.1.stdout }} public http://{{ ceph_rgw_virtual_ips_list[0] | ansible.utils.ipaddr('address') }}:8080/swift/v1/AUTH_%\(tenant_id\)s
+        ${BASH_ALIASES[openstack]} endpoint create --region regionOne {{ all_uuids.results.1.stdout }} internal http://{{ ceph_rgw_virtual_ips_list[0] | ansible.utils.ipaddr('address') }}:8080/swift/v1/AUTH_%\(tenant_id\)s
+        ${BASH_ALIASES[openstack]} role add --project {{ all_uuids.results.4.stdout }} --user {{ all_uuids.results.5.stdout }} {{ all_uuids.results.6.stdout }}
