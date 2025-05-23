@@ -5,3 +5,9 @@
     dump: true
   tags:
     - ceph_dump
+
+- name: Configure Swift to use rgw backend
+  ansible.builtin.include_tasks: configure_object.yaml
+  vars:
+    shell_header: "set -euo pipefail"
+  when: ceph_daemons_layout.rgw | default(true) | bool
