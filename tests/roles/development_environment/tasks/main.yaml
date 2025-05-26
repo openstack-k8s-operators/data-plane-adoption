@@ -154,6 +154,8 @@
           interface = public
           [neutron]
           custom_mtu_size = 1292
+          [podified]
+          iperf3_image: 'quay.io/skaplons/iperf3:latest'
       ansible.builtin.copy:
         mode: a+r
         content: "{{ tobiko_conf_file }}"
@@ -164,3 +166,7 @@
       ansible.builtin.shell:
         chdir: ~/src/x/tobiko/
         cmd: ansible-playbook tobiko-playbook.yaml -e test_workflow=create-resources -e pytest_addopts_global="--skipregex='TestFloatingIPLogging|ExtraDhcpOptsPortLoggingTest|NoFipPortTest|StatelessSecurityGroupInstanceTest|StatelessSecurityGroupTest|migrate_server|qos|create_share|extend_share'"
+
+    - name: copy keys from undercloud for tobiko
+      ansible.builtin.shell: |
+        mkdir -p ~/ci-framework-data/tests/test_operator; scp -r ${OS_CLOUD_IP}:~/.ssh/id_ecdsa* ~/ci-framework-data/tests/test_operator/
