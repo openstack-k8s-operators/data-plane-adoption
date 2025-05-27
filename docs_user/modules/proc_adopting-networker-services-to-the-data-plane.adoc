@@ -347,7 +347,7 @@ Alternatively, you can include the Networker node set in the `nodeSets` list bef
 [NOTE]
 In some cases, agents from the old data plane that are replaced or retired remain in {rhos_acro}. The function these agents provided might be provided by a new agent that is running in {rhos_acro}, or the function might be replaced by other components. For example, DHCP agents might no longer be needed, since OVN DHCP in {rhos_acro} can provide this function.
 
-.. List the agents.
+.. List the agents:
 +
 ----
 $ oc exec openstackclient -- openstack network agent list
