@@ -361,7 +361,7 @@ $ oc exec openstackclient -- openstack network agent list
 +--------------------------------------+------------------------------+--------------------------+-------------------+-------+-------+----------------------------+
 ----
 
-.. If any agent in the list shows `XXX` in the `Alive` field, verify the Host and Agent Type, if the functions of this agent is no longer required, and the agent has been permanently stopped on the {rhos_prev_long} host. Then, delete the agent by running:
+.. If any agent in the list shows `XXX` in the `Alive` field, verify the Host and Agent Type, if the functions of this agent is no longer required, and the agent has been permanently stopped on the {rhos_prev_long} host. Then, delete the agent:
 +
 ----
 $ oc exec openstackclient -- openstack network agent <agent_id>
