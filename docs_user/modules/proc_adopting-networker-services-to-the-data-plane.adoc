@@ -342,6 +342,33 @@ EOF
 [NOTE]
 Alternatively, you can include the Networker node set in the `nodeSets` list before you deploy the main `OpenStackDataPlaneDeployment` CR. You cannot add new node sets to the `OpenStackDataPlaneDeployment` CR after deployment.
 
+. Clean up any {networking_first_ref} agents that are no longer running.
++
+[NOTE]
+In some cases, agents from the old data plane that are replaced or retired remain in {rhos_acro}. The function these agents provided might be provided by a new agent that is running in {rhos_acro}, or the function might be replaced by other components. For example, DHCP agents might no longer be needed, since OVN DHCP in {rhos_acro} can provide this function.
+
+.. List the agents:
++
+----
+$ oc exec openstackclient -- openstack network agent list
++--------------------------------------+------------------------------+--------------------------+-------------------+-------+-------+----------------------------+
+| ID                                   | Agent Type                   | Host                     | Availability Zone | Alive | State | Binary                     |
++--------------------------------------+------------------------------+--------------------------+-------------------+-------+-------+----------------------------+
+| e5075ee0-9dd9-4f0a-a42a-6bbdf1a6111c | OVN Controller Gateway agent | controller-0.localdomain |                   | :-)   | UP    | ovn-controller             |
+| 856960f0-5530-46c7-a331-6eadcba362da | DHCP agent                   | controller-1.localdomain | nova              | XXX   | UP    | neutron-dhcp-agent         |
+| 8bd22720-789f-45b8-8d7d-006dee862bf9 | DHCP agent                   | controller-2.localdomain | nova              | XXX   | UP    | neutron-dhcp-agent         |
+| e584e00d-be4c-4e98-a11a-4ecd87d21be7 | DHCP agent                   | controller-0.localdomain | nova              | XXX   | UP    | neutron-dhcp-agent         |
++--------------------------------------+------------------------------+--------------------------+-------------------+-------+-------+----------------------------+
+----
+
+.. If any agent in the list shows `XXX` in the `Alive` field, verify the Host and Agent Type, if the functions of this agent is no longer required, and the agent has been permanently stopped on the {rhos_prev_long} host. Then, delete the agent:
++
+----
+$ oc exec openstackclient -- openstack network agent <agent_id>
+----
+* Replace `<agent_id>` with the ID of the agent to delete, for example, `856960f0-5530-46c7-a331-6eadcba362da`.
+
+
 .Verification
 
 . Confirm that all the Ansible EE pods reach a `Completed` status:
