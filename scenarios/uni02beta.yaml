@@ -1,0 +1,63 @@
+---
+undercloud:
+  config:
+    - section: DEFAULT
+      option: undercloud_hostname
+      value: undercloud.example.com
+    - section: DEFAULT
+      option: undercloud_timezone
+      value: UTC
+    - section: DEFAULT
+      option: undercloud_debug
+      value: true
+    - section: DEFAULT
+      option: container_cli
+      value: podman
+    - section: DEFAULT
+      option: undercloud_enable_selinux
+      value: false
+    - section: DEFAULT
+      option: generate_service_certificate
+      value: false
+  undercloud_parameters_override: "uni02beta/hieradata_overrides_undercloud.yaml"
+  undercloud_parameters_defaults: "uni02beta/undercloud_parameter_defaults.yaml"
+  ctlplane_vip: 192.168.122.101
+cloud_domain: "example.com"
+hostname_groups_map:
+  # map ansible groups in the inventory to role hostname format for
+  # 17.1 deployment
+  osp-computes: "overcloud-compute"
+  osp-controllers: "overcloud-controller"
+roles_groups_map:
+  # map ansible groups to tripleo Role names
+  osp-computes: "Compute"
+  osp-controllers: "Controller"
+stacks:
+  - stackname: "overcloud"
+    args:
+      - "--override-ansible-cfg /home/zuul/ansible_config.cfg"
+      - "--templates /usr/share/openstack-tripleo-heat-templates"
+      - "--libvirt-type qemu"
+      - "--timeout 90"
+      - "--overcloud-ssh-user zuul"
+      - "--deployed-server"
+      - "--validation-warnings-fatal"
+      - "--disable-validations"
+      - "--heat-type pod"
+      - "--disable-protected-resource-types"
+    vars:
+      - "/usr/share/openstack-tripleo-heat-templates/environments/docker-ha.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/podman.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/cinder-netapp-config.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/manila-netapp-config.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/enable-legacy-telemetry.yaml"
+    network_data_file: "uni02beta/network_data.yaml.j2"
+    vips_data_file: "uni02beta/vips_data.yaml"
+    roles_file: "uni02beta/roles.yaml"
+    ceph_osd_spec_file: "uni02beta/osd_spec.yaml"
+    config_download_file: "uni02beta/config_download.yaml"
+    stack_nodes:
+      - osp-computes
+      - osp-controllers
