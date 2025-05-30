@@ -119,7 +119,7 @@ mariadb_passwords_env: |-
 mariadb_copy_shell_vars_src: |-
   {{ shell_header }}
 
-  PASSWORD_FILE="$HOME/overcloud-passwords.yaml"
+  PASSWORD_FILE="{{ tripleo_passwords['default'] | replace("~", "$HOME") }}"
 
   {{ mariadb_image_env }}
   {{ cells_env }}
