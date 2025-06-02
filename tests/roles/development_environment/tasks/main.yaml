@@ -144,8 +144,8 @@
           test_runner_timeout = 14400.0
           timeout = 1800.0
           [advanced_vm]
-          image_url = "kaplonski.pl/files/Customized-Fedora-Cloud-Base-Generic-41-1.4.x86_64.qcow2"
-          username: fedora
+          image_url = "http://kaplonski.pl/files/Customized-Fedora-Cloud-Base-Generic-41-1.4.x86_64.qcow2"
+          username = fedora
           [tripleo]
           undercloud_ssh_hostname = undercloud
           undercloud_ssh_username = zuul
@@ -156,6 +156,11 @@
           custom_mtu_size = 1292
           [podified]
           iperf3_image: 'quay.io/skaplons/iperf3:latest'
+          [ping]
+          interval = 10
+          [iperf3]
+          interval = 10
+
       ansible.builtin.copy:
         mode: a+r
         content: "{{ tobiko_conf_file }}"
