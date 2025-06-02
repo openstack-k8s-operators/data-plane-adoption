@@ -25,11 +25,11 @@ done
 
 .Procedure
 
-. Wait for {compute_service} data plane services version updated for all cells:
+. Wait for the {compute_service} data plane services version to update for all the cells:
 +
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
-  oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
+$ oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
     -e "select a.version from nova_${CELL}.services a join nova_${CELL}.services b where a.version!=b.version and a.binary='nova-compute' and a.deleted=0;"
 done
 ----
@@ -46,7 +46,7 @@ Review any errors in the nova Compute agent logs on the data plane, and the `nov
 ----
 $ rm -f celltemplates
 $ for CELL in $(echo $RENAMED_CELLS); do
-  cat >> celltemplates << EOF
+$ cat >> celltemplates << EOF
         ${CELL}:
           metadataServiceTemplate:
             customServiceConfig: |
@@ -85,11 +85,11 @@ EOF
 $ cat celltemplates >> oscp-patch.yaml
 ----
 +
-* If you are adopting the {compute_service} with the {bare_metal_first_ref}, append the following `novaComputeTemplates` in the needed `cell<N>` section(s) of the {compute_service} CR patch:
+* If you are adopting the {compute_service} with the {bare_metal_first_ref}, append the following `novaComputeTemplates` in the `cell<X>` section of the {compute_service} CR patch:
 +
 [source,yaml]
 ----
-        cell<N>:
+        cell<X>:
           novaComputeTemplates:
             <hostname>: <1>
               customServiceConfig: |
@@ -101,9 +101,9 @@ $ cat celltemplates >> oscp-patch.yaml
         ...
 ----
 +
-<1> Replace `<hostname>` with the hostname of the node that is running the `ironic` Compute driver in the source cloud cell<N>.
+<1> Replace `<hostname>` with the hostname of the node that is running the `ironic` Compute driver in the source cloud of `cell<X>`.
 
-. Apply the patch file
+. Apply the patch file:
 +
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch-file=oscp-patch.yaml
@@ -122,8 +122,8 @@ $ oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 $ oc patch cm nova-cells-global-config --type=json -p='[{"op": "replace", "path": "/data/99-nova-compute-cells-workarounds.conf", "value": "[workarounds]\n"}]'
 $ for CELL in $(echo $RENAMED_CELLS); do
-  oc get Openstackdataplanenodeset openstack-${CELL} || continue
-  oc apply -f - <<EOF
+$ oc get Openstackdataplanenodeset openstack-${CELL} || continue
+$ oc apply -f - <<EOF
 ---
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
@@ -138,9 +138,8 @@ backoffLimit: 3
 EOF
 done
 ----
-+
 
-. Wait for the Compute data plane services to be ready for all cells:
+. Wait for the Compute data plane services to be ready for all the cells:
 +
 ----
 $ oc wait --for condition=Ready openstackdataplanedeployments --all --timeout=5m
@@ -151,11 +150,11 @@ $ oc wait --for condition=Ready openstackdataplanedeployments --all --timeout=5m
 ----
 $ oc exec -it nova-cell0-conductor-0 -- nova-manage db online_data_migrations
 $ for CELL in $(echo $RENAMED_CELLS); do
-  oc exec -it nova-${CELL}-conductor-0 -- nova-manage db online_data_migrations
+$ oc exec -it nova-${CELL}-conductor-0 -- nova-manage db online_data_migrations
 done
 ----
 
-. Discover Compute hosts in the cells:
+. Discover the Compute hosts in the cells:
 +
 ----
 $ oc rsh nova-cell0-conductor-0 nova-manage cell_v2 discover_hosts --verbose

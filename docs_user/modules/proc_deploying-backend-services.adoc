@@ -367,10 +367,8 @@ ifeval::["{build_variant}" == "ospdo"]
 * Replace `<networkAttachment_name>` with the name of your network.
 
 endif::[]
-
-This example provides the required infrastructure database and messaging services for 3 Compute cells
-named `cell1`, `cell2`, and `cell3`. Adjust the names, counts, IP addresses, and numbers,
-such as for `replicas`, `storage`, or `storageRequest`, as needed.
++
+* This example provides the required infrastructure database and messaging services for 3 Compute cells named `cell1`, `cell2`, and `cell3`. Adjust the values for fields such as `replicas`, `storage`, or `storageRequest`, for each Compute cell as needed.
 
 [NOTE]
 ====
@@ -417,7 +415,6 @@ spec:
 
 * Verify that the Galera and RabbitMQ status is `Running` for all defined cells:
 +
-[source,yaml]
 ----
 $ RENAMED_CELLS="cell1 cell2 cell3"
 $ oc get pod openstack-galera-0 -o jsonpath='{.status.phase}{"\n"}'
