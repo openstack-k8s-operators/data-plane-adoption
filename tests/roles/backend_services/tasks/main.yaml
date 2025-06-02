@@ -123,6 +123,21 @@
   delay: 5
 # TODO- debug value (was 2)
 
+- name: verify that MariaDB and RabbitMQ CR's deployed, for all defined cells
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get {{ item }} -o json | jq -e '[ .items[].status.conditions[] | select(.type == "Ready") | .message] | select(length > 0)  | all(. == "Setup complete")'
+  register: mariadb_cr_result
+  until: mariadb_cr_result.stdout == "true"
+  retries: 60
+  delay: 5
+  failed_when: mariadb_cr_result.rc != 0 and mariadb_cr_result.stdout != "true"
+  changed_when: false
+  loop:
+    - "Galera"
+    - "Rabbitmqs"
+
 - name: Patch openstack upstream dns server to set the correct value for the environment
   when: upstream_dns is defined
   ansible.builtin.shell: |
