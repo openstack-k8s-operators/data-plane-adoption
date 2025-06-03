@@ -133,7 +133,6 @@
   retries: 60
   delay: 5
   failed_when: mariadb_cr_result.rc != 0 and mariadb_cr_result.stdout != "true"
-  changed_when: false
   loop:
     - "Galera"
     - "Rabbitmqs"
