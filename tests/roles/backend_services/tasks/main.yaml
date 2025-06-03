@@ -128,11 +128,11 @@
     {{ shell_header }}
     {{ oc_header }}
     oc get {{ item }} -o json | jq -e '[ .items[].status.conditions[] | select(.type == "Ready") | .message] | select(length > 0)  | all(. == "Setup complete")'
-  register: mariadb_cr_result
-  until: mariadb_cr_result.stdout == "true"
+  register: service_cr_result
+  until: service_cr_result.stdout == "true"
   retries: 60
   delay: 5
-  failed_when: mariadb_cr_result.rc != 0 and mariadb_cr_result.stdout != "true"
+  failed_when: service_cr_result.rc != 0 and service_cr_result.stdout != "true"
   loop:
     - "Galera"
     - "Rabbitmqs"
