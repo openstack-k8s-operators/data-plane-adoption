@@ -18,6 +18,7 @@ heat_stack_domain_admin_password: ''
 swift_password: ''
 dns_lb_ip: 192.168.122.80
 dns_server_ip: 192.168.122.1
+enable_unique_pod_names: false
 
 dpa_dir: "../.."
 dpa_tests_dir: "{{ dpa_dir }}/tests"
