@@ -59,7 +59,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait --for=condition=Ready --timeout=1m OpenStackControlPlane openstack
+    oc wait --for=condition=Ready --timeout=3m OpenStackControlPlane openstack
 
 - name: clean up services and endpoints
   ansible.builtin.shell: |
