@@ -427,6 +427,19 @@ $ for CELL in $(echo $RENAMED_CELLS); do
 +
 The given cells names are later referred to by using the environment variable `RENAMED_CELLS`.
 
+* Ensure that the statuses of all the Rabbitmq and Galera CRs are `Setup complete`:
++
+----
+$ oc get Rabbitmqs,Galera
+NAME                                                                  STATUS   MESSAGE
+rabbitmq.rabbitmq.openstack.org/rabbitmq                              True     Setup complete
+rabbitmq.rabbitmq.openstack.org/rabbitmq-cell1                        True     Setup complete
+
+NAME                                                               READY   MESSAGE
+galera.mariadb.openstack.org/openstack                             True     Setup complete
+galera.mariadb.openstack.org/openstack-cell1                       True     Setup complete
+----
+
 * Verify that the `OpenStackControlPlane` CR is waiting for deployment
   of the `openstackclient` pod:
 +
