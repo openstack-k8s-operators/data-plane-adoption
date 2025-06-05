@@ -126,6 +126,8 @@ $ oc set data secret/osp-secret "OctaviaPassword=$OCTAVIA_PASSWORD"
 $ oc set data secret/osp-secret "PlacementPassword=$PLACEMENT_PASSWORD"
 $ oc set data secret/osp-secret "SwiftPassword=$SWIFT_PASSWORD"
 ----
+
+ifeval::["{build_variant}" != "ospdo"]
 . Deploy the `OpenStackControlPlane` CR. Ensure that you only enable the DNS, Galera, Memcached, and RabbitMQ services. All other services must
 be disabled:
 +
@@ -138,12 +140,7 @@ metadata:
   name: openstack
 spec:
   secret: osp-secret
-ifeval::["{build_variant}" != "ospdo"]
-  storageClass: local-storage
-endif::[]
-ifeval::["{build_variant}" == "ospdo"]
-  storageClass: <storage_class>
-endif::[]
+  storageClass: <storage_class> <1>
 
   barbican:
     enabled: false
@@ -166,16 +163,10 @@ endif::[]
         service:
           metadata:
             annotations:
-ifeval::["{build_variant}" != "ospdo"]
               metallb.universe.tf/address-pool: ctlplane
               metallb.universe.tf/allow-shared-ip: ctlplane
-              metallb.universe.tf/loadBalancerIPs: 192.168.122.80
-endif::[]
-ifeval::["{build_variant}" == "ospdo"]
-              metallb.universe.tf/address-pool: <address_pool>
-              metallb.universe.tf/allow-shared-ip: <address_pool>
-              metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP>
-endif::[]
+              metallb.universe.tf/loadBalancerIPs: 192.168.122.80 <2>
+
           spec:
             type: LoadBalancer
       options:
@@ -220,7 +211,7 @@ endif::[]
         secret: osp-secret
         replicas: 3
         storageRequest: 5G
-      openstack-cell1:
+      openstack-cell1: <3>
         secret: osp-secret
         replicas: 3
         storageRequest: 5G
@@ -249,7 +240,6 @@ endif::[]
   ovn:
     enabled: false
     template:
-ifeval::["{build_variant}" != "ospdo"]
       ovnController:
         networkAttachment: tenant
         nodeSelector:
@@ -265,24 +255,7 @@ ifeval::["{build_variant}" != "ospdo"]
           replicas: 3
           dbType: SB
           networkAttachment: internalapi
-endif::[]
-ifeval::["{build_variant}" == "ospdo"]
-      ovnController:
-        networkAttachment: tenant
-        nodeSelector:
-          node: non-existing-node-name
-      ovnNorthd:
-        replicas: 0
-      ovnDBCluster:
-        ovndbcluster-nb:
-          replicas: 3
-          dbType: NB
-          networkAttachment: <networkAttachment_name>
-        ovndbcluster-sb:
-          replicas: 3
-          dbType: SB
-          networkAttachment: <networkAttachment_name>
-endif::[]
+
   placement:
     enabled: false
     template: {}
@@ -305,14 +278,248 @@ endif::[]
           service:
             metadata:
               annotations:
-ifeval::["{build_variant}" != "ospdo"]
                 metallb.universe.tf/address-pool: internalapi
                 metallb.universe.tf/loadBalancerIPs: 172.17.0.86
+
+            spec:
+              type: LoadBalancer
+      rabbitmq-cell2:
+        persistence:
+          storage: 1G
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.87
+            spec:
+              type: LoadBalancer
+      rabbitmq-cell3:
+        persistence:
+          storage: 1G
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.88
+            spec:
+              type: LoadBalancer
+  telemetry:
+    enabled: false
+  tls: <4>
+    podLevel:
+      enabled: false
+    ingress:
+      enabled: false
+  swift:
+    enabled: false
+    template:
+      swiftRing:
+        ringReplicas: 1
+      swiftStorage:
+        replicas: 0
+      swiftProxy:
+        replicas: 1
+EOF
+----
++
+<1> Select an existing `<storage_class>` in your {OpenShiftShort} cluster.
+<2> Replace `<loadBalancer_IP>` with the LoadBalancer IP address.
+<3> This example provides the required infrastructure database and messaging services for 3 Compute cells named `cell1`, `cell2`, and `cell3`. Adjust the values for fields such as `replicas`, `storage`, or `storageRequest`, for each Compute cell as needed.
+<4> If you enabled TLS-e in your {OpenStackShort} environment, in the `spec:tls` section set `tls` to the following:
++
+----
+spec:
+  ...
+  tls:
+    podLevel:
+      enabled: true
+      internal:
+        ca:
+          customIssuer: rootca-internal
+      libvirt:
+        ca:
+          customIssuer: rootca-internal
+      ovn:
+        ca:
+          customIssuer: rootca-internal
+    ingress:
+      ca:
+        customIssuer: rootca-internal
+      enabled: true
+----
+
+[NOTE]
+====
+If you use IPv6, change the load balancer IPs to the IPs in your environment, for example:
+----
+...
+metallb.universe.tf/allow-shared-ip: ctlplane
+metallb.universe.tf/loadBalancerIPs: fd00:aaaa::80
+...
+metallb.universe.tf/address-pool: internalapi
+metallb.universe.tf/loadBalancerIPs: fd00:bbbb::85
+...
+metallb.universe.tf/address-pool: internalapi
+metallb.universe.tf/loadBalancerIPs: fd00:bbbb::86
+----
+====
 endif::[]
+
 ifeval::["{build_variant}" == "ospdo"]
+. Deploy the `OpenStackControlPlane` CR. Ensure that you only enable the DNS, Galera, Memcached, and RabbitMQ services. All other services must
+be disabled:
++
+[source,shell]
+----
+$ oc apply -f - <<EOF
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+spec:
+  secret: osp-secret
+  storageClass: <storage_class> <1>
+
+
+  barbican:
+    enabled: false
+    template:
+      barbicanAPI: {}
+      barbicanWorker: {}
+      barbicanKeystoneListener: {}
+
+  cinder:
+    enabled: false
+    template:
+      cinderAPI: {}
+      cinderScheduler: {}
+      cinderBackup: {}
+      cinderVolumes: {}
+
+  dns:
+    template:
+      override:
+        service:
+          metadata:
+            annotations:
+              metallb.universe.tf/address-pool: <address_pool> <2>
+              metallb.universe.tf/allow-shared-ip: <address_pool>
+              metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP> <3>
+          spec:
+            type: LoadBalancer
+      options:
+      - key: server
+        values:
+        - 192.168.122.1
+      replicas: 1
+
+  glance:
+    enabled: false
+    template:
+      glanceAPIs: {}
+
+  heat:
+    enabled: false
+    template: {}
+
+  horizon:
+    enabled: false
+    template: {}
+
+  ironic:
+    enabled: false
+    template:
+      ironicConductors: []
+
+  keystone:
+    enabled: false
+    template: {}
+
+  manila:
+    enabled: false
+    template:
+      manilaAPI: {}
+      manilaScheduler: {}
+      manilaShares: {}
+
+  galera:
+    enabled: true
+    templates:
+      openstack:
+        secret: osp-secret
+        replicas: 3
+        storageRequest: 5G
+      openstack-cell1: <4>
+        secret: osp-secret
+        replicas: 3
+        storageRequest: 5G
+      openstack-cell2:
+        secret: osp-secret
+        replicas: 1
+        storageRequest: 5G
+      openstack-cell3:
+        secret: osp-secret
+        replicas: 1
+        storageRequest: 5G
+  memcached:
+    enabled: true
+    templates:
+      memcached:
+        replicas: 3
+
+  neutron:
+    enabled: false
+    template: {}
+
+  nova:
+    enabled: false
+    template: {}
+
+  ovn:
+    enabled: false
+    template:
+      ovnController:
+        networkAttachment: tenant
+        nodeSelector:
+          node: non-existing-node-name
+      ovnNorthd:
+        replicas: 0
+      ovnDBCluster:
+        ovndbcluster-nb:
+          replicas: 3
+          dbType: NB
+          networkAttachment: <networkAttachment_name> <5>
+        ovndbcluster-sb:
+          replicas: 3
+          dbType: SB
+          networkAttachment: <networkAttachment_name>
+
+  placement:
+    enabled: false
+    template: {}
+
+  rabbitmq:
+    templates:
+      rabbitmq:
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.17.0.85
+            spec:
+              type: LoadBalancer
+      rabbitmq-cell1:
+        persistence:
+          storage: 1G
+        override:
+          service:
+            metadata:
+              annotations:
                 metallb.universe.tf/address-pool: <networkAttachment_name>
                 metallb.universe.tf/loadBalancerIPs: <loadBalancer_IP>
-endif::[]
             spec:
               type: LoadBalancer
       rabbitmq-cell2:
@@ -340,7 +547,7 @@ endif::[]
   telemetry:
     enabled: false
 
-  tls:
+  tls: <6>
     podLevel:
       enabled: false
     ingress:
@@ -358,37 +565,13 @@ endif::[]
 EOF
 ----
 +
-* Select an existing `<storage_class>` in your {OpenShiftShort} cluster.
-ifeval::["{build_variant}" == "ospdo"]
+<1> Select an existing `<storage_class>` in your {OpenShiftShort} cluster.
+<2> Replace `<address_pool>` with the name of your network definition.
+<3> Replace `<loadBalancer_IP>` with the LoadBalancer IP address.
+<4> This example provides the required infrastructure database and messaging services for 3 Compute cells named `cell1`, `cell2`, and `cell3`. Adjust the values for fields such as `replicas`, `storage`, or `storageRequest`, for each Compute cell as needed.
+<5> Replace `<networkAttachment_name>` with the name of your network.
+<6> If you enabled TLS-e in your {OpenStackShort} environment, in the `spec:tls` section set `tls` to the following:
 +
-* Select an existing `<storage_class>` in your {OpenShiftShort} cluster.
-* Replace `<address_pool>` with the name of your network definition.
-* Replace `<loadBalancer_IP>` with the LoadBalancer IP address.
-* Replace `<networkAttachment_name>` with the name of your network.
-
-endif::[]
-+
-* This example provides the required infrastructure database and messaging services for 3 Compute cells named `cell1`, `cell2`, and `cell3`. Adjust the values for fields such as `replicas`, `storage`, or `storageRequest`, for each Compute cell as needed.
-
-[NOTE]
-====
-If you use IPv6, change the load balancer IPs to the IPs in your environment:
-----
-...
-metallb.universe.tf/allow-shared-ip: ctlplane
-metallb.universe.tf/loadBalancerIPs: fd00:aaaa::80
-...
-metallb.universe.tf/address-pool: internalapi
-metallb.universe.tf/loadBalancerIPs: fd00:bbbb::85
-...
-metallb.universe.tf/address-pool: internalapi
-metallb.universe.tf/loadBalancerIPs: fd00:bbbb::86
-----
-====
-
-[NOTE]
-====
-If you enabled TLS-e in your {OpenStackShort} environment, in the `spec:tls` section set `tls` to the following:
 ----
 spec:
   ...
@@ -409,7 +592,25 @@ spec:
         customIssuer: rootca-internal
       enabled: true
 ----
+
+[NOTE]
 ====
+If you use IPv6, change the load balancer IPs to the IPs in your environment, for example:
+----
+...
+metallb.universe.tf/allow-shared-ip: ctlplane
+metallb.universe.tf/loadBalancerIPs: fd00:aaaa::80
+...
+metallb.universe.tf/address-pool: internalapi
+metallb.universe.tf/loadBalancerIPs: fd00:bbbb::85
+...
+metallb.universe.tf/address-pool: internalapi
+metallb.universe.tf/loadBalancerIPs: fd00:bbbb::86
+----
+====
+endif::[]
+
+
 
 .Verification
 
