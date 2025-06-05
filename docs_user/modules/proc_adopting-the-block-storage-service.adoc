@@ -52,6 +52,7 @@ spec:
           - secret:
               name: ceph-conf-files
   cinder:
+    uniquePodNames: true
     enabled: true
     apiOverride:
       route: {}

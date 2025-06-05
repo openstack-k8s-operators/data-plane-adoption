@@ -150,6 +150,7 @@ spec:
       barbicanKeystoneListener: {}
 
   cinder:
+    uniquePodNames: true
     enabled: false
     template:
       cinderAPI: {}
@@ -176,6 +177,7 @@ spec:
       replicas: 1
 
   glance:
+    uniquePodNames: true
     enabled: false
     template:
       glanceAPIs: {}

@@ -34,6 +34,7 @@ spec
 ----
 spec:
   glance:
+    uniquePodNames: true
     enabled: true
     apiOverride:
       route: {}
