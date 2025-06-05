@@ -105,8 +105,10 @@
   block:
     # Temporal - tobiko installation task
     - name: tobiko installation
-      ansible.builtin.shell: |
-          ssh ${OS_CLOUD_IP} "set -o pipefail && mkdir -p ~/src/x && cd ~/src/x && git clone https://github.com/redhat-openstack/tobiko.git"
+      ansible.builtin.shell: >
+          ssh ${OS_CLOUD_IP} "set -o pipefail && mkdir -p ~/src/x && cd ~/src/x &&
+          git clone https://github.com/redhat-openstack/tobiko.git &&
+          cd tobiko && git checkout {{ tobiko_version }}"
 
     - name: oc undercloud installation
       ansible.builtin.shell: >
@@ -134,28 +136,6 @@
 
     - name: Add tobiko.conf to the undercloud
       delegate_to: "{{ standalone_ip | default(edpm_node_ip) }}"
-      vars:
-        tobiko_conf_file: |
-          [DEFAULT]
-          log_dir = /home/zuul/src/x/tobiko/report
-          log_file = tobiko.log
-          debug = true
-          [testcase]
-          test_runner_timeout = 14400.0
-          timeout = 1800.0
-          [advanced_vm]
-          image_url = "kaplonski.pl/files/Customized-Fedora-Cloud-Base-Generic-41-1.4.x86_64.qcow2"
-          username: fedora
-          [tripleo]
-          undercloud_ssh_hostname = undercloud
-          undercloud_ssh_username = zuul
-          run_background_ping_in_pod = true
-          [keystone]
-          interface = public
-          [neutron]
-          custom_mtu_size = 1292
-          [podified]
-          iperf3_image: 'quay.io/skaplons/iperf3:latest'
       ansible.builtin.copy:
         mode: a+r
         content: "{{ tobiko_conf_file }}"
@@ -165,7 +145,12 @@
       delegate_to: "{{ standalone_ip | default(edpm_node_ip) }}"
       ansible.builtin.shell:
         chdir: ~/src/x/tobiko/
-        cmd: ansible-playbook tobiko-playbook.yaml -e test_workflow=create-resources -e pytest_addopts_global="--skipregex='TestFloatingIPLogging|ExtraDhcpOptsPortLoggingTest|NoFipPortTest|StatelessSecurityGroupInstanceTest|StatelessSecurityGroupTest|migrate_server|qos|create_share|extend_share'"
+        cmd: >
+          ansible-playbook tobiko-playbook.yaml
+          -e test_workflow={{ tobiko_test_workflow }}
+          {% if tobiko_pytest_addopts -%}
+          -e pytest_addopts_global="{{ tobiko_pytest_addopts }}"
+          {% endif -%}
 
     - name: copy keys from undercloud for tobiko
       ansible.builtin.shell: |
