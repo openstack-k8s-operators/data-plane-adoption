@@ -21,7 +21,7 @@
       ansible.builtin.fail:
         msg: "The (TRIPLEO) gathered Ganesha server IP is malformed"
 
-- name: Deploy Podified Manila
+- name: Deploy Podified Manila - Ceph
   when: manila_backend == "cephfs" or manila_backend == "cephnfs"
   block:
     - name: Generate CR config based on the selected backend
@@ -35,6 +35,10 @@
         {{ shell_header }}
         {{ oc_header }}
         oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/manila_cephfs.yaml
+
+- name: Deploy Podified Manila - Netapp
+  when: manila_backend == "netapp"
+  ansible.builtin.include_tasks: netapp.yaml
 
 - name: Wait for Manila to start up
   ansible.builtin.shell: |
