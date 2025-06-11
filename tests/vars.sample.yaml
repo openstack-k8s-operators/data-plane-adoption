@@ -4,6 +4,9 @@ install_yamls_path: ~/install_yamls #CUSTOMIZE_THIS
 # This flag signifies if TLS Everywhere is enabled on the source cloud
 enable_tlse: false
 
+# This flag enables unique pod names for the adopted OpenStack services.
+enable_unique_pod_names: false
+
 # Source MariaDB Galera cluster members {name:IP} pairs of addresses on internal_api network (also in additional cells) for pre-adoption checks.
 # Defaults provided for a single-cell case. Complete the lists for an HA multi-cell adoption.
 source_galera_members:
