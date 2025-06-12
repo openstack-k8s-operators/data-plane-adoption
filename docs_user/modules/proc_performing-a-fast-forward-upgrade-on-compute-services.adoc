@@ -23,6 +23,8 @@ for CELL in $(echo "super $RENAMED_CELLS"); do
 done
 ----
 
+* Complete the steps in xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].
+
 .Procedure
 
 . Wait for the {compute_service} data plane services version to update for all the cells:
@@ -114,8 +116,6 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file=oscp-patch.
 ----
 $ oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
-
-. Complete the steps in xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].
 
 . Remove the pre-fast-forward upgrade workarounds from the Compute data plane services:
 +
