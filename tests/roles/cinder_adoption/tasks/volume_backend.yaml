@@ -4,3 +4,7 @@
     {{ shell_header }}
     {{ oc_header }}
     oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_volume_backend_patch }}'
+
+- name: deploy podified Cinder volume with netapp NFS
+  when: cinder_volume_backend == 'ontap-nfs'
+  ansible.builtin.include_tasks: cinder_volume_netapp_nfs.yaml
