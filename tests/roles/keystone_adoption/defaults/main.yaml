@@ -22,3 +22,48 @@ keystone_patch: |
                 type: LoadBalancer
         databaseInstance: openstack
         secret: osp-secret
+
+keystone_patch_ldap: |
+  spec:
+    keystone:
+      enabled: true
+      apiOverride:
+        route: {}
+      template:
+        customServiceConfig: |
+          [token]
+          expiration = 360000
+          [identity]
+          domain_specific_drivers_enabled = true
+        extraMounts:
+          - name: v1
+            region: r1
+            extraVol:
+              - propagation:
+                - Keystone
+                extraVolType: Conf
+                volumes:
+                - name: keystone-domains
+                  secret:
+                    secretName: keystone-domains
+                mounts:
+                - name: keystone-domains
+                  mountPath: "/etc/keystone/domains"
+                  readOnly: true
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.80
+              spec:
+                type: LoadBalancer
+        databaseInstance: openstack
+        secret: osp-secret
+
+# IPA-related variables
+edpm_node_hostname: standalone.localdomain
+ipa_admin_password: "fce95318204114530f31f885c9df588f"
+ipa_user_password: "nomoresecrets"
