@@ -1,0 +1,19 @@
+- name: Fail if no nfs_server_addr/nfs_server_path are definied
+  when:
+    - glance_nfs_server_addr is not defined
+    - glance_nfs_server_path is not defined
+  ansible.builtin.fail:
+    msg:
+      - 'glance_nfs_server_addr/glance_nfs_server_path must be defined'
+
+- name: Generate the glance CR config spec based on the selected backend
+  ansible.builtin.template:
+    src: glance_nfs.yaml.j2
+    dest: /tmp/glance_nfs.yaml
+    mode: "0600"
+
+- name: Deploy GlanceAPI with NFS backend
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/glance_nfs.yaml
