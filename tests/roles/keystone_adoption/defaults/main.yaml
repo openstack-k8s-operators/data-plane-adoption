@@ -10,6 +10,23 @@ keystone_patch: |
         customServiceConfig: |
           [token]
           expiration = 360000
+          [identity]
+          domain_specific_drivers_enabled = true
+        extraMounts:
+          - name: v1
+            region: r1
+            extraVol:
+              - propagation:
+                - Keystone
+                extraVolType: Conf
+                volumes:
+                - name: keystone-domains
+                  secret:
+                    secretName: keystone-domains
+                mounts:
+                - name: keystone-domains
+                  mountPath: "/etc/keystone/domains"
+                  readOnly: true
         override:
           service:
             internal:
@@ -22,3 +39,7 @@ keystone_patch: |
                 type: LoadBalancer
         databaseInstance: openstack
         secret: osp-secret
+# IPA-related variables
+edpm_node_hostname: standalone.localdomain
+ipa_admin_password: "fce95318204114530f31f885c9df588f"
+ipa_user_password: "nomoresecrets"
