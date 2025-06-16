@@ -1,0 +1,136 @@
+---
+# Tasks for testing IPA integration with Keystone
+- name: Check if IPA is enabled
+  ansible.builtin.fail:
+    msg: "IPA is not enabled (enable_tlse is not true). Skipping IPA tests."
+  when: enable_tlse is not defined or not enable_tlse
+
+- name: Wait for Keystone to be fully operational
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait pod --for condition=Ready --selector=service=keystone
+  register: keystone_wait_result
+  until: keystone_wait_result is success
+  retries: 60
+  delay: 2
+
+- name: Wait for openstackclient pod to be ready
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait pod --for condition=Ready --selector=service=openstackclient
+  register: osc_wait_result
+  until: osc_wait_result is success
+  retries: 60
+  delay: 2
+
+- name: Get Keystone route
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get route keystone-public -n openstack -o jsonpath='{.spec.host}'
+  register: keystone_route
+
+- name: Create files directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ role_path }}/files"
+    state: directory
+    mode: '0755'
+
+- name: Create IPA test user cloudrc file
+  ansible.builtin.template:
+    src: ipauser.j2
+    dest: "{{ role_path }}/files/ipauser"
+    mode: "0600"
+  vars:
+    auth_url: "https://{{ keystone_route.stdout }}/v3"
+    username: "ipauser1"
+    password: "{{ ipa_user_password }}"
+    domain: "REDHAT"
+
+- name: Copy IPA test user cloudrc to openstackclient pod
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc cp {{ role_path }}/files/ipauser openstackclient:/home/cloud-admin/ipauser
+
+- name: Test IPA user authentication
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t openstackclient -- bash -c "
+      source /home/cloud-admin/ipauser &&
+      export OS_IDENTITY_API_VERSION=3 &&
+      openstack token issue -f value -c id > /dev/null &&
+      echo 'IPA user authentication successful' ||
+      echo 'IPA user authentication failed'"
+  register: ipa_auth_test
+  failed_when: "'IPA user authentication failed' in ipa_auth_test.stdout"
+
+- name: List IPA users via Keystone
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t openstackclient -- bash -c "
+      source /home/cloud-admin/ipauser &&
+      export OS_IDENTITY_API_VERSION=3 &&
+      openstack user list --domain REDHAT"
+  register: ipa_user_list
+
+- name: Verify IPA users are accessible
+  ansible.builtin.assert:
+    that:
+      - "'ipauser1' in ipa_user_list.stdout"
+      - "'ipauser2' in ipa_user_list.stdout"
+      - "'ipauser3' in ipa_user_list.stdout"
+
+- name: List IPA groups via Keystone
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t openstackclient -- bash -c "
+      source /home/cloud-admin/ipauser &&
+      export OS_IDENTITY_API_VERSION=3 &&
+      openstack group list --domain REDHAT"
+  register: ipa_group_list
+
+- name: Verify IPA groups are accessible
+  ansible.builtin.assert:
+    that:
+      - "'grp-openstack' in ipa_group_list.stdout"
+      - "'grp-openstack-admin' in ipa_group_list.stdout"
+      - "'grp-openstack-demo' in ipa_group_list.stdout"
+
+- name: Check ipauser1 in grp-openstack-admin
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t openstackclient -- bash -c "
+      source /home/cloud-admin/ipauser &&
+      export OS_IDENTITY_API_VERSION=3 &&
+      openstack group contains user --group-domain REDHAT --user-domain REDHAT grp-openstack-admin ipauser1"
+  register: user1_group_result
+  failed_when: "'ipauser1 in group grp-openstack-admin' not in user1_group_result.stdout"
+
+- name: Check ipauser2 in grp-openstack-demo
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t openstackclient -- bash -c "
+      source /home/cloud-admin/ipauser &&
+      export OS_IDENTITY_API_VERSION=3 &&
+      openstack group contains user --group-domain REDHAT --user-domain REDHAT grp-openstack-demo ipauser2"
+  register: user2_group_result
+  failed_when: "'ipauser2 in group grp-openstack-demo' not in user2_group_result.stdout"
+
+- name: Check ipauser3 in grp-openstack
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t openstackclient -- bash -c "
+      source /home/cloud-admin/ipauser &&
+      export OS_IDENTITY_API_VERSION=3 &&
+      openstack group contains user --group-domain REDHAT --user-domain REDHAT grp-openstack ipauser3"
+  register: user3_group_result
+  failed_when: "'ipauser3 in group grp-openstack' not in user3_group_result.stdout"
