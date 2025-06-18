@@ -1,0 +1,45 @@
+spec:
+  manila:
+    enabled: true
+    apiOverride:
+      route: {}
+    template:
+      databaseInstance: openstack
+      databaseAccount: manila
+      manilaAPI:
+        customServiceConfig: |
+          [DEFAULT]
+          debug = true
+          enabled_share_protocols=nfs
+        replicas: 3
+        networkAttachments:
+          - internalapi
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.80
+              spec:
+                type: LoadBalancer
+      manilaScheduler:
+        replicas: 1
+      manilaShares:
+        share1:
+          customServiceConfig: |
+            [DEFAULT]
+            debug = true
+            enabled_share_backends=netapp
+            [netapp]
+            driver_handles_share_servers=False
+            share_backend_name=netapp
+            share_driver=manila.share.drivers.netapp.common.NetAppDriver
+            netapp_storage_family=ontap_cluster
+            netapp_transport_type=http
+          customServiceConfigSecrets:
+            - osp-secret-manila-netapp
+          replicas: 1
+          networkAttachments:
+            - storage

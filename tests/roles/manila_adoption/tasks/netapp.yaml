@@ -1,0 +1,48 @@
+- name: Deploy Podified Manila - Netapp
+  block:
+    - name: Slurp manila.conf from controller
+      become: true
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ controller_ssh }}
+        CONTROLLER1_SCP="{{ controller1_ssh  | regex_replace('^ssh', 'scp')}}"
+        ${CONTROLLER1_SCP}:{{ manila_tripleo_path }} {{ manila_conf_path }}
+
+    - name: Extract Netapp data from manila.conf
+      ansible.builtin.set_fact:
+        manila_netapp_config: "{{ manila_netapp_config | default({}) | combine({item: lookup('ansible.builtin.ini', item, file=manila_conf_path, section=manila_netapp_backend, allow_no_value=True)}) }}"
+      loop: "{{ manila_netapp_vars }}"
+
+    - name: Fail if manila_netapp_config params are not defined
+      when: |
+        manila_netapp_config.netapp_login is not defined or
+        manila_netapp_config.netapp_password is not defined or
+        manila_netapp_config.netapp_vserver is not defined or
+        manila_netapp_config.netapp_server_hostname is not defined
+      ansible.builtin.fail:
+        msg:
+          - 'Missing required Netapp input'
+
+    - name: Render Netapp OpenShift Secret template
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/netapp_secret.yaml.j2"
+        dest: /tmp/netapp_secret.yaml
+        mode: "0600"
+
+    - name: Apply the rendered Netapp secret in the openstack namespace
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc apply -f /tmp/netapp_secret.yaml
+
+    - name: Generate Manila CR patch config based on the selected backend
+      ansible.builtin.template:
+        src: "{{ role_path}}/templates/manila_netapp.yaml.j2"
+        dest: /tmp/manila_netapp.yaml
+        mode: "0600"
+
+    - name: Deploy podified Manila with Netapp backend
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/manila_netapp.yaml
