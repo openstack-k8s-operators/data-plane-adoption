@@ -1,0 +1,24 @@
+---
+- name: internal_api_vip
+  network: internal_api
+  subnet: internal_api_subnet
+  dns_name: overcloud
+- name: storage_vip
+  network: storage
+  subnet: storage_subnet
+- name: storage_mgmt_vip
+  network: storagemgmt
+  dns_name: overcloud
+- name: ctlplane_vip
+  network: ctlplane
+  ip_address: 2620:cf:cf:aaaa::99
+  subnet: ctlplane-subnet
+  dns_name: overcloud
+- name: external_vip
+  network: external
+  subnet: external_subnet
+  dns_name: overcloud
+- name: ironic_vip
+  network: ironic
+  ip_address: 2620:cf:cf:ffff::99
+  subnet: ironic_subnet
