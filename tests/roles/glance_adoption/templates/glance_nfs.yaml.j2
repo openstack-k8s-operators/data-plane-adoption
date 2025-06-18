@@ -11,7 +11,7 @@ spec:
       databaseInstance: openstack
       glanceAPIs:
         default:
-          replicas: 1
+          replicas: 3
           type: single
       extraMounts:
       - extraVol:
@@ -22,7 +22,7 @@ spec:
           volumes:
           - name: nfs
             nfs:
-              path: "{{ nfs_server_path }}"
-              server: "{{ nfs_server_address }}"
+              path: "{{ glance_nfs_server_path }}"
+              server: "{{ glance_nfs_server_addr }}"
         name: r1
         region: r1
