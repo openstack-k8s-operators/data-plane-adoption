@@ -1,0 +1,22 @@
+spec:
+  cinder:
+    template:
+      cinderVolumes:
+        ontap-nfs:
+          networkAttachments:
+            - storage
+            - storageMgmt
+          customServiceConfig: |
+            [ontap-nfs]
+            volume_backend_name=ontap-nfs
+            volume_driver=cinder.volume.drivers.netapp.common.NetAppDriver
+            netapp_storage_protocol=nfs
+            netapp_storage_family=ontap_cluster
+            nfs_snapshot_support=true
+            nas_secure_file_operations=false
+            nas_secure_file_permissions=false
+            netapp_server_port=80
+            # we don't need nfs_shares_config as we use nas_host and nas_share_path
+            #nfs_shares_config= '/etc/cinder/nfs_shares'
+          customServiceConfigSecrets:
+            - cinder-volume-ontap-secrets
