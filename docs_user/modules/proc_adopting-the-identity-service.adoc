@@ -84,3 +84,108 @@ $ openstack endpoint list | grep keystone
 ----
 $ oc wait --for=condition=Ready --timeout=1m OpenStackControlPlane openstack
 ----
+
+
+=== Configuring LDAP with Domain-Specific Drivers
+
+If you need to integrate the {identity_service} with one or more LDAP servers using domain-specific configurations, you can enable domain-specific drivers and provide the necessary LDAP settings.
+
+This involves two main steps:
+1. Creating the Kubernetes secret that holds the domain-specific LDAP configuration files.
+2. Patching the `OpenStackControlPlane` Custom Resource (CR) to enable domain-specific drivers for Keystone and mount a secret containing the LDAP configurations.
+
+
+.Create the keystone-domains Secret
+
+This secret stores the actual LDAP configuration files that Keystone will use. Each file within the secret corresponds to an LDAP domain.
+
+The following example demonstrates creating a secret for a single LDAP domain. Replace `<namespace>` with the namespace where your {identity_service} is deployed.
+The filename `keystone.conf.ldap.DOMAIN_NAME` should be updated to reflect your actual domain name (e.g., `keystone.conf.ldap.myldapdomain`).
+
+First, create a local file named `keystone.DOMAIN_NAME.conf` (adjust filename as needed) with your LDAP configuration:
+[source,ini]
+----
+[ldap]
+url = ldap://<ldap_server_host>:<ldap_server_port>
+user = <bind_dn_user>
+password = <bind_dn_password>
+suffix = <user_tree_dn>
+query_scope = sub
+# User configuration
+user_tree_dn = <user_tree_dn>
+user_objectclass = <user_object_class>
+user_id_attribute = <user_id_attribute>
+user_name_attribute = <user_name_attribute>
+user_mail_attribute = <user_mail_attribute>
+user_enabled_attribute = <user_enabled_attribute>
+user_enabled_default = true
+# Group configuration
+group_tree_dn = <group_tree_dn>
+group_objectclass = <group_object_class>
+group_id_attribute = <group_id_attribute>
+group_name_attribute = <group_name_attribute>
+group_member_attribute = <group_member_attribute>
+group_members_are_ids = true
+----
+Replace the placeholder values (e.g., `<ldap_server_host>`, `<bind_dn_user>`, `<user_tree_dn>`) with your actual LDAP server details.
+
+Then, create the secret from this file:
+[source,bash]
+----
+oc create secret generic keystone-domains \
+  -n <namespace> \
+  --from-file=keystone.DOMAIN_NAME.conf
+----
+
+After creating the secret, you would typically remove the local configuration file if it's no longer needed or store it securely.
+
+IMPORTANT: The name of the file provided to `--from-file` (e.g., `keystone.DOMAIN_NAME.conf`) is critical. Keystone uses this filename to map incoming authentication requests for a domain to the correct LDAP configuration. Ensure `DOMAIN_NAME` matches the name of the domain you are configuring in Keystone.
+
+If you have multiple LDAP domains, create a configuration file for each (e.g., `keystone.DOMAIN_ONE.conf`, `keystone.DOMAIN_TWO.conf`). Then, create the secret with all files:
+[source,bash]
+----
+oc create secret generic keystone-domains \
+  -n <namespace> \
+  --from-file=keystone.conf.ldap.DOMAIN_ONE \
+  --from-file=keystone.conf.ldap.DOMAIN_TWO
+----
+
+
+.Patch the OpenStackControlPlane CR
+
+The following command patches your `OpenStackControlPlane` CR.
+Replace `<cr_name>` with the name of your `OpenStackControlPlane` CR (e.g., `openstack`) and `<namespace>` with the namespace where it is deployed (e.g., `openstack`).
+
+[source,bash]
+----
+oc patch openstackcontrolplane <cr_name> \
+  -n <namespace> \
+  --type=merge \
+  -p '
+spec:
+  keystone:
+    template:
+      customServiceConfig: |                                                                                                                                                      
+          [identity]
+          domain_specific_drivers_enabled = true
+      extraMounts:
+        - name: v1
+          region: r1
+          extraVol:
+            - propagation:
+              - Keystone
+              extraVolType: Conf
+              volumes:
+              - name: keystone-domains
+                secret:
+                  secretName: keystone-domains
+              mounts:
+              - name: keystone-domains
+                mountPath: "/etc/keystone/domains"
+                readOnly: true
+----
+This patch does the following:
+* Sets `spec.keystone.template.customServiceConfig` - please make sure you are not overwriting any previously defined value.
+* Defines `spec.keystone.template.extraMounts` to mount a secret named `keystone-domains` into the Keystone pods at `/etc/keystone/domains`. This secret will contain your LDAP configuration files.
+
+You may need to wait a few moments for the changes to propagate and for the Keystone pods to be updated.
