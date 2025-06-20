@@ -1,0 +1,13 @@
+spec:
+  cinder:
+    enabled: true
+    template:
+      cinderBackup:
+        networkAttachments:
+        - storage
+        replicas: 1
+        customServiceConfig: |
+          [DEFAULT]
+          backup_driver=cinder.backup.drivers.nfs.NFSBackupDriver
+          backup_share = {{ cinder_backup_nfs_backup_share }}
+          backup_mount_point_base = {{ cinder_backup_nfs_backup_mount_point_base }}
