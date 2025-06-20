@@ -14,6 +14,13 @@
   retries: 60
   delay: 2
 
+- name: Get cinder-api pod name
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get pods -l component=cinder-api -o custom-columns="NAME:.metadata.name" --no-headers | head -1
+  register: cinder_api_pod
+
 - name: check that Cinder is reachable and its endpoints are defined
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -37,7 +44,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc exec -t cinder-api-0 -c cinder-api -- cinder-manage service remove cinder-backup "{{ item }}"
+    oc exec -t "{{ cinder_api_pod.stdout }}" -c cinder-api -- cinder-manage service remove cinder-backup "{{ item }}"
   loop: "{{ backup_down_services.stdout_lines }}"
 
 - name: Get cinder-scheduler down services
@@ -51,7 +58,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc exec -t cinder-api-0 -c cinder-api -- cinder-manage service remove cinder-scheduler "{{ item }}"
+    oc exec -t "{{ cinder_api_pod.stdout }}" -c cinder-api -- cinder-manage service remove cinder-scheduler "{{ item }}"
   loop: "{{ scheduler_down_services.stdout_lines }}"
 
 - name: deploy podified Cinder scheduler
@@ -137,4 +144,4 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc exec -t cinder-api-0 -c cinder-api -- cinder-manage db online_data_migrations
+    oc exec -t "{{ cinder_api_pod.stdout }}" -c cinder-api -- cinder-manage db online_data_migrations
