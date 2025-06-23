@@ -4,6 +4,9 @@
     github-check:
       jobs:
         - noop
-        - adoption-standalone-to-crc-ceph
-        - adoption-standalone-to-crc-no-ceph
+        - adoption-standalone-to-crc-ceph: &required_projects
+            required-projects:
+              - name: openstack-k8s-operators/data-plane-adoption
+                override-checkout: 18.0-fr3
+        - adoption-standalone-to-crc-no-ceph: *required_projects
         - adoption-docs-preview
