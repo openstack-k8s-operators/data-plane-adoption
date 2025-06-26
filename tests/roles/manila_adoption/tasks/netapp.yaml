@@ -6,6 +6,7 @@
         {{ shell_header }}
         CONTROLLER1_SCP="{{ controller1_ssh  | regex_replace('^ssh', 'scp')}}"
         ${CONTROLLER1_SCP}:{{ manila_tripleo_path }} {{ manila_conf_path }}
+        chmod a+r {{ manila_conf_path }}
 
     - name: Extract Netapp data from manila.conf
       ansible.builtin.set_fact:
