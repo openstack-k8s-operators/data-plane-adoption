@@ -4,7 +4,6 @@
       become: true
       ansible.builtin.shell: |
         {{ shell_header }}
-        {{ controller_ssh }}
         CONTROLLER1_SCP="{{ controller1_ssh  | regex_replace('^ssh', 'scp')}}"
         ${CONTROLLER1_SCP}:{{ cinder_tripleo_path }} {{ cinder_conf_path }}
         ${CONTROLLER1_SCP}:{{ cinder_tripleo_nfs_shares_config_path }} {{ cinder_nfs_shares_conf_path }}
