@@ -5,7 +5,6 @@ spec:
         ontap-nfs:
           networkAttachments:
             - storage
-            - storageMgmt
           customServiceConfig: |
             [ontap-nfs]
             volume_backend_name=ontap-nfs
