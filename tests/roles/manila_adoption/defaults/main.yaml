@@ -1,5 +1,5 @@
 # manila_backend can be 'cephfs', 'cephnfs', 'netapp'
-manila_backend: cephfs
+manila_backend: ''
 os_net_conf_path: "/etc/os-net-config/config.yaml"
 manila_storagenfs_nic: "nic2"
 manila_storagenfs_vlan_id: "70"
@@ -20,3 +20,8 @@ manila_netapp_vars:
   - netapp_password
   - netapp_server_hostname
   - netapp_vserver
+# supported backends in the manila adoption test suite
+supported_backends:
+  - cephfs
+  - cephnfs
+  - netapp
