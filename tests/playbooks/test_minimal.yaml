@@ -48,6 +48,9 @@
     - role: glance_adoption
       tags:
         - glance_adoption
+    - role: manila_adoption
+      tags:
+        - manila_adoption
     - role: placement_adoption
       tags:
         - placement_adoption
