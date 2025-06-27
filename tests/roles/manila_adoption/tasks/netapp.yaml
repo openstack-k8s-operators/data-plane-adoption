@@ -1,4 +1,4 @@
-- name: Deploy Podified Manila - Netapp
+- name: Get manila.conf from controller nodes
   block:
     - name: Slurp manila.conf from controller
       become: true
@@ -8,11 +8,26 @@
         CONTROLLER1_SCP="{{ controller1_ssh  | regex_replace('^ssh', 'scp')}}"
         ${CONTROLLER1_SCP}:{{ manila_tripleo_path }} {{ manila_conf_path }}
 
-    - name: Extract Netapp data from manila.conf
-      ansible.builtin.set_fact:
-        manila_netapp_config: "{{ manila_netapp_config | default({}) | combine({item: lookup('ansible.builtin.ini', item, file=manila_conf_path, section=manila_netapp_backend, allow_no_value=True)}) }}"
-      loop: "{{ manila_netapp_vars }}"
+    - name: Stat the retrieved manila.conf file
+      ansible.builtin.stat:
+        path: "{{ manila_conf_path }}"
+      register: manila_conf
 
+    - name: Fail if manila.conf is not present
+      when: not manila_conf.stat.exists
+      ansible.builtin.fail:
+        msg: "manila.conf does not exist"
+
+- name: Deploy Podified Manila - Netapp
+  vars:
+    manila_netapp_config: |
+      {% set manila_netapp_conf = {} %}
+      {% for item in manila_netapp_vars %}
+      {% set value = lookup('ansible.builtin.ini', item, file=manila_conf_path, section=manila_netapp_backend, allow_no_value=True) %}
+      {% set _ = manila_netapp_conf.__setitem__(item, value) %}
+      {% endfor %}
+      {{ manila_netapp_conf }}
+  block:
     - name: Fail if manila_netapp_config params are not defined
       when: |
         manila_netapp_config.netapp_login is not defined or
