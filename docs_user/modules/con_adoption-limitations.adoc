@@ -20,9 +20,7 @@ The following {compute_service_first_ref} features are Technology Previews:
 * NUMA-aware vswitches
 * PCI passthrough by flavor
 * SR-IOV trusted virtual functions
-* RX and TX queue sizes
 * vGPU
-* Virtio multiqueue
 * Emulated virtual Trusted Platform Module (vTPM)
 * UEFI
 * AMD SEV
