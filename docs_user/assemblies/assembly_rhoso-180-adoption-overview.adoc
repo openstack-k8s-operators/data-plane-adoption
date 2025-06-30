@@ -6,14 +6,11 @@ ifdef::context[:parent-context: {context}]
 
 = {rhos_long_noacro} {rhos_curr_ver} adoption overview
 
-Adoption is the process of migrating a {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} overcloud to a {rhos_long_noacro} {rhos_curr_ver} data plane. To ensure that you understand the entire adoption process and how to sufficiently prepare your {OpenStackShort} environment, review the prerequisites, adoption process, and post-adoption tasks.
+Adoption is the process of migrating a {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} control plane to {rhos_long_noacro} {rhos_curr_ver}, and then completing an in-place upgrade of the data plane. Adoption enables you to retain existing infrastructure investments while modernizing your {OpenStackShort} deployment on a containerized {rhocp_long} foundation. To ensure that you understand the entire adoption process and how to sufficiently prepare your {OpenStackShort} environment, review the prerequisites, adoption process, and post-adoption tasks.
 
 [IMPORTANT]
 It is important to read the whole adoption guide before you start
-the adoption. You should form an understanding of the procedure,
-prepare the necessary configuration snippets for each service ahead of
-time, and test the procedure in a representative test environment
-before you adopt your main environment.
+the adoption to ensure that you understand the procedure. You also must prepare the necessary configuration snippets for each {OpenStackShort} service in advance, and test the migration in a representative test environment before you apply it to production.
 
 include::../modules/con_adoption-limitations.adoc[leveloffset=+1]
 
