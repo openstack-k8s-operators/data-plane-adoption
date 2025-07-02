@@ -10,7 +10,7 @@ Adoption is the process of migrating a {rhos_prev_long} ({OpenStackShort}) {rhos
 
 [IMPORTANT]
 Read the whole adoption guide before you start
-the adoption to ensure that you understand the procedure. You also must prepare the necessary configuration snippets for each {OpenStackShort} service in advance, and test the migration in a representative test environment before you apply it to production.
+the adoption to ensure that you understand the procedure. Prepare the necessary configuration snippets for each {OpenStackShort} service in advance, and test the migration in a representative test environment before you apply it to production.
 
 include::../modules/con_adoption-limitations.adoc[leveloffset=+1]
 
