@@ -1,11 +1,10 @@
 # pcp_cleanup role
 
-This role cleans up the podified control plane and podifed data
+This role cleans up the podified control plane and podified data
 plane from the target OpenShift environment, removing any artifacts
 of a previous test suite run (even a failed one).
 
-This role also include the option of reverting standalone VM to
-pre adoption state .
+This role also includes the option of reverting standalone VM to pre-adoption state.
 
 
 ## Variables
