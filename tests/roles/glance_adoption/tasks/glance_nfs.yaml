@@ -17,3 +17,16 @@
     {{ shell_header }}
     {{ oc_header }}
     oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/glance_nfs.yaml
+
+# NOTE (fpantano):
+# Glance provides by default a type: split API that we do not use for this scenario.
+# type: split applies to all the existing use cases except NFS where there's no
+# need to split the API between internal and external. Because it is not possible
+# to modify an existing Glance object with type:split (webhooks prevent this operation)
+# we delete this unused API.
+# https://github.com/openstack-k8s-operators/glance-operator/blob/main/docs/design-decisions.md#decommissioning-a-glanceapi
+- name: Decommission the default API
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=json -p="[{'op': 'remove', 'path': '/spec/glance/template/glanceAPIs/default'}]"
