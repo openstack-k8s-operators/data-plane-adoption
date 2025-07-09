@@ -88,4 +88,4 @@ $ sudo cephadm shell -- ceph orch ps | grep -i mon
 
 .Next steps
 
-Proceed to the next step xref:migrating-the-ceph-monitor-ip-address_{context}[Migrating the Ceph Monitor IP address].
+Proceed to the next step xref:proc_migrating-mon-from-controller-nodes-network.adoc#migrating-the-ceph-monitor-ip-address_{context}[Migrating the Ceph Monitor IP address].

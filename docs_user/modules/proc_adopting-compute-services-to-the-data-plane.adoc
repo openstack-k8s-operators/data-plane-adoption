@@ -8,7 +8,7 @@ Adopt your Compute (nova) services to the {rhos_long} data plane.
 
 .Prerequisites
 
-* You have stopped the remaining control plane nodes, repositories, and packages on the {compute_service_first_ref} hosts. For more information, see xref:stopping-infrastructure-management-and-compute-services_{context}[Stopping infrastructure management and Compute services].
+* You have stopped the remaining control plane nodes, repositories, and packages on the {compute_service_first_ref} hosts. For more information, see xref:proc_stopping-infrastructure-management-and-compute-services.adoc#stopping-infrastructure-management-and-compute-services_{context}[Stopping infrastructure management and Compute services].
 * You have configured the Ceph back end for the `NovaLibvirt` service. For more information, see xref:configuring-a-ceph-backend_migrating-databases[Configuring a Ceph back end].
 * You have configured IP Address Management (IPAM):
 +
@@ -306,7 +306,7 @@ EOF
 ----
 +
 <1> To enable a local metadata service for cell<X>, append a `spec.dataSources.secretRef` to reference an additional auto-generated `nova-cell<X>-metadata-neutron-config` secret. You should also set
-`spec.nova.template.cellTemplates.cell<X>.metadataServiceTemplate.enable` in the `OpenStackControlPlane/openstack` CR, as described in xref:adopting-the-compute-service_{context}[Adopting the Compute service]. You can configure a single top-level metadata, or define the metadata per cell.
+`spec.nova.template.cellTemplates.cell<X>.metadataServiceTemplate.enable` in the `OpenStackControlPlane/openstack` CR, as described in xref:proc_adopting-the-compute-service.adoc#adopting-the-compute-service_{context}[Adopting the Compute service]. You can configure a single top-level metadata, or define the metadata per cell.
 <2> The secret `nova-cell<X>-compute-config` auto-generates for each `cell<X>`.
 <3> You must append the `nova-cell<X>-compute-config` and `nova-migration-ssh-key` references for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
 +
@@ -843,4 +843,4 @@ To create new cell Compute nodes, you re-provision the decomissioned controllers
 
 .Next steps
 
-* You must perform a fast-forward upgrade on your Compute services. For more information, see xref:performing-a-fast-forward-upgrade-on-compute-services_{context}[Performing a fast-forward upgrade on Compute services].
+* You must perform a fast-forward upgrade on your Compute services. For more information, see xref:proc_performing-a-fast-forward-upgrade-on-compute-services.adoc#performing-a-fast-forward-upgrade-on-compute-services_{context}[Performing a fast-forward upgrade on Compute services].

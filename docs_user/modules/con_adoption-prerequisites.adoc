@@ -6,7 +6,7 @@ Before you begin the adoption procedure, complete the following prerequisites:
 
 Planning information::
 
-* Review the xref:adoption-limitations_{context}[Adoption limitations].
+* Review the xref:con_adoption-limitations.adoc#adoption-limitations_{context}[Adoption limitations].
 * Review the {rhocp_long} requirements, data plane node requirements, Compute node requirements, and so on. For more information, see link:{planning}/index[{planning-t}].
 * Review the adoption-specific networking requirements. For more information, see xref:configuring-network-for-RHOSO-deployment_planning[Configuring the network for the RHOSO deployment].
 * Review the adoption-specific storage requirements. For more information, see xref:storage-requirements_configuring-network[Storage requirements].
@@ -44,7 +44,7 @@ Compute::
 
 * Upgrade your Compute nodes to Red Hat Enterprise Linux {rhel_prev_ver}. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/framework_for_upgrades_16.2_to_17.1/index#upgrading-compute-nodes_upgrading-the-compute-node-operating-system[Upgrading all Compute nodes to RHEL 9.2] in _Framework for upgrades (16.2 to 17.1)_.
 * Perform a minor update to the latest {OpenStackShort} version. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/performing_a_minor_update_of_red_hat_openstack_platform/index[Performing a minor update of Red Hat OpenStack Platform].
-* Install the `systemd-container` package on your Compute hosts. For more information, see xref:installing-the-systemd-container-package-on-compute-hosts_{context}[Installing the `systemd-container` package on Compute hosts].
+* Install the `systemd-container` package on your Compute hosts. For more information, see xref:proc_installing-the-systemd-container-package-on-compute-hosts.adoc#installing-the-systemd-container-package-on-compute-hosts_{context}[Installing the `systemd-container` package on Compute hosts].
 
 ML2/OVS::
 

@@ -169,4 +169,4 @@ $ sudo cephadm shell -c $HOME/ceph_client_backup/ceph.conf -k $HOME/ceph_client_
 
 .Next steps
 
-Proceed to the next step xref:draining-the-source-node_{context}[Draining the source node].
+Proceed to the next step xref:proc_migrating-mon-from-controller-nodes-drain-host.adoc#draining-the-source-node_{context}[Draining the source node].

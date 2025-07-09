@@ -15,10 +15,10 @@ Before you migrate your {Ceph} cluster daemons from your Controller nodes, compl
 
 Complete the prerequisites for your specific {Ceph} environment:
 
-* xref:completing-prerequisites-for-migrating-ceph-monitoring-stack_{context}[{Ceph} with monitoring stack components]
-* xref:completing-prerequisites-for-migrating-ceph-rgw_{context}[{Ceph} RGW]
-* xref:completing-prerequisites-for-rbd-migration_{context}[{Ceph} RBD]
-* xref:creating-a-ceph-nfs-cluster_{context}[NFS Ganesha]
+* xref:proc_completing-prerequisites-for-migrating-ceph-monitoring-stack.adoc#completing-prerequisites-for-migrating-ceph-monitoring-stack_{context}[{Ceph} with monitoring stack components]
+* xref:proc_completing-prerequisites-for-migrating-ceph-rgw.adoc#completing-prerequisites-for-migrating-ceph-rgw_{context}[{Ceph} RGW]
+* xref:proc_completing-prerequisites-for-migrating-ceph-rbd.adoc#completing-prerequisites-for-rbd-migration_{context}[{Ceph} RBD]
+* xref:proc_creating-a-ceph-nfs-cluster.adoc#creating-a-ceph-nfs-cluster_{context}[NFS Ganesha]
 
 
 include::../modules/proc_completing-prerequisites-for-migrating-ceph-monitoring-stack.adoc[leveloffset=+1]

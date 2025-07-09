@@ -101,5 +101,5 @@ $ sudo cephadm shell -- ceph orch reconfig osd.default_drive_group
 
 .Next steps
 
-Repeat the procedure starting from step xref:draining-the-source-node_{context}[Draining the source node] for each node that you want to decommission.
-Proceed to the next step xref:verifying-the-cluster-after-ceph-mon-migration_{context}[Verifying the {CephCluster} cluster after Ceph Monitor migration].
+Repeat the procedure starting from step xref:proc_migrating-mon-from-controller-nodes-drain-host.adoc#draining-the-source-node_{context}[Draining the source node] for each node that you want to decommission.
+Proceed to the next step xref:proc_migrating-mon-from-controller-nodes-verification.adoc#verifying-the-cluster-after-ceph-mon-migration_{context}[Verifying the {CephCluster} cluster after Ceph Monitor migration].
