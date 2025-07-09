@@ -12,7 +12,7 @@ Migrate your databases from the original {rhos_prev_long} ({OpenStackShort}) dep
 
 * Ensure that the control plane MariaDB and RabbitMQ are running, and that no other control plane services are running.
 * Retrieve the topology-specific service configuration. For more information, see xref:proc_retrieving-topology-specific-service-configuration_migrating-databases[Retrieving topology-specific service configuration].
-* Stop the {OpenStackShort} services. For more information, see xref:stopping-openstack-services_{context}[Stopping {rhos_prev_long} services].
+* Stop the {OpenStackShort} services. For more information, see xref:proc_stopping-openstack-services.adoc#stopping-openstack-services_{context}[Stopping {rhos_prev_long} services].
 * Ensure that there is network routability between the original MariaDB and the MariaDB for the control plane.
 * Define the following shell variables. Replace the following example values with values that are correct for your environment:
 +
