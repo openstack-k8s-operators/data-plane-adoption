@@ -5,8 +5,6 @@
 
 Adopt your Compute (nova) services to the {rhos_long} data plane.
 
-//kgilliga: The following text belongs under the code block in step 6 but I'm unable to hide it there: "For multi-cell, config maps and {rhos_prev_long} data plane services should be named like `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`."
-
 .Prerequisites
 
 * You have stopped the remaining control plane nodes, repositories, and packages on the {compute_service_first_ref} hosts. For more information, see xref:stopping-infrastructure-management-and-compute-services_{context}[Stopping infrastructure management and Compute services].
@@ -85,7 +83,7 @@ EOF
 * You have defined the shell variables to run the script that runs the upgrade:
 +
 ----
-$ CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //'
+$ CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //')
 
 $ alias openstack="oc exec -t openstackclient -- openstack"
 
@@ -128,7 +126,7 @@ $ NODESETS="[${NODESETS%,*}]"
 +
 <1> The source cloud `default` cell acquires a new `DEFAULT_CELL_NAME` on the destination cloud after adoption.
 In a multi-cell adoption scenario, you can retain the original name, `default`, or create a new cell default name by providing the incremented index of the last cell in the source cloud. For example, if the incremented index of the last cell is `cell5`, the new cell default name is `cell6`.
-<2> For each cell, update the `<["standalone.localdomain"]="x.x.x.x">` value and the and `COMPUTES_CELL<X>` value with the names and IP addresses of the {compute_service} nodes that are connected to the `ctlplane` and `internalapi` networks. Do not specify a real FQDN defined for each network. Always use the same hostname for each connected network of a Compute node. Provide the IP addresses and the names of the hosts on the remaining networks of the source cloud as needed. Or you can manually adjust the files that you generate in step 9 of this procedure.
+<2> For each cell, update the `<["standalone.localdomain"]="x.x.x.x">` value and the `COMPUTES_CELL<X>` value with the names and IP addresses of the {compute_service} nodes that are connected to the `ctlplane` and `internalapi` networks. Do not specify a real FQDN defined for each network. Always use the same hostname for each connected network of a Compute node. Provide the IP addresses and the names of the hosts on the remaining networks of the source cloud as needed. Or you can manually adjust the files that you generate in step 9 of this procedure.
 <3> If your deployment has a custom DNS domain, specify it in the FQDN value of the nodes. This value is used in the data plane node set `spec.nodes.<NODE NAME>.hostName`.
 <4> Assign all {compute_service} nodes from the source cloud `cell1` cell into `COMPUTES_CELL1`, and so on. Replace `<compute1>`, `<compute2>`, and `<compute3>` with the names of your {compute_service} nodes.
 <5> Assign all {compute_service} nodes from the source cloud `default` cell into `COMPUTES_CELL<X>` and `COMPUTES_API_CELL<X>``, where `<X>` is the `DEFAULT_CELL_NAME` environment variable value. In this example, the `DEFAULT_CELL_NAME` environment variable value equals `cell3`.
@@ -262,6 +260,9 @@ data:
     rbd_secret_uuid=$CEPH_FSID
 EOF
 ----
++
+[NOTE]
+For {Ceph} environments with multi-cell configurations, you must name configuration maps and {rhos_prev_long} data plane services similar to the following examples: `nova-custom-ceph-cellX` and `nova-compute-extraconfig-cellX`.
 
 . Create the data plane services for {compute_service} cells to enable pre-upgrade workarounds, and to configure the Compute services for your chosen storage back end:
 +
@@ -422,7 +423,7 @@ endif::[]
     - name: ANSIBLE_FORCE_COLOR
       value: "True"
     - name: ANSIBLE_VERBOSITY
-      value: 3
+      value: '3'
   nodeTemplate:
     ansibleSSHPrivateKeySecret: dataplane-adoption-secret
     ansible:
