@@ -2,23 +2,21 @@
 
 = About the {block_storage} configuration generation helper tool
 
-Creating the right {block_storage_first_ref} configuration files to deploy using Operators may
-sometimes be a complicated experience, especially the first times, so you have a
-helper tool that can create a draft of the files from a `cinder.conf` file.
+Creating the right {block_storage_first_ref} configuration files to deploy by using Operators can
+sometimes be complex. There is a helper tool that can create a draft of the files from a `cinder.conf` file.
 
-This tool is not meant to be a automation tool. It is mostly to help you get the
-gist of it, maybe point out some potential pitfalls and reminders.
+This tool is not meant to be an automation tool. You can use the tool to get a general understanding of how to create the configuration files, or to point out some potential pitfalls and reminders.
 
 [IMPORTANT]
-The tools requires `PyYAML` Python package to be installed (`pip
+The tool requires the `PyYAML` Python package to be installed (`pip
 install PyYAML`).
 
 This link:helpers/cinder-cfg.py[cinder-cfg.py script] defaults to reading the
 `cinder.conf` file from the current directory (unless `--config` option is used)
 and outputs files to the current directory (unless `--out-dir` option is used).
 
-In the output directory you always get a `cinder.patch` file with the Cinder
-specific configuration patch to apply to the `OpenStackControlPlane` custom resource but you might also get an additional file called `cinder-prereq.yaml` file with some
+In the output directory, you always get a `cinder.patch` file with the Cinder-
+specific configuration patch to apply to the `OpenStackControlPlane` custom resource, but you might also get an additional file called `cinder-prereq.yaml` with some
 `Secrets` and `MachineConfigs`, and an `openstackversion.yaml` file with the
 `OpenStackVersion` sample.
 
@@ -29,7 +27,7 @@ a Ceph backend:
 $ python cinder-cfg.py --config cinder.conf --out-dir ./
 WARNING:root:The {block_storage} is configured to use ['/etc/cinder/policy.yaml'] as policy file, please ensure this file is available for the control plane {block_storage} services using "extraMounts" or remove the option.
 
-WARNING:root:Deployment uses Ceph, so make sure the Ceph credentials and configuration are present in OpenShift as a asecret and then use the extra volumes to make them available in all the services that would need them.
+WARNING:root:Deployment uses Ceph, so make sure the Ceph credentials and configuration are present in OpenShift as a secret and then use the extra volumes to make them available in all the services that would need them.
 
 WARNING:root:You were using user ['nova'] to talk to Nova, but in podified using the service keystone username is preferred in this case ['cinder']. Dropping that configuration.
 
@@ -38,9 +36,9 @@ WARNING:root:ALWAYS REVIEW RESULTS, OUTPUT IS JUST A ROUGH DRAFT!!
 Output written at ./: cinder.patch
 ----
 
-The script outputs some warnings to let you know things that you might need to do
-manually -adding the custom policy, provide the ceph configuration files- and
-also let you know a change in how the `service_user` has been removed.
+The script outputs some warnings to let you know that you might need to do some things
+manually, such as add the custom policy or provide the Ceph configuration files, and
+also let you know that the service_user was removed.
 
 A different example when using multiple backends, one of them being a 3PAR FC
 could be:
@@ -51,7 +49,7 @@ WARNING:root:The {block_storage} is configured to use ['/etc/cinder/policy.yaml'
 
 ERROR:root:Backend hpe_fc requires a vendor container image, but there is no certified image available yet. Patch will use the last known image for reference, but IT WILL NOT WORK
 
-WARNING:root:Deployment uses Ceph, so make sure the Ceph credentials and configuration are present in OpenShift as a asecret and then use the extra volumes to make them available in all the services that would need them.
+WARNING:root:Deployment uses Ceph, so make sure the Ceph credentials and configuration are present in OpenShift as a secret and then use the extra volumes to make them available in all the services that would need them.
 
 WARNING:root:You were using user ['nova'] to talk to Nova, but in podified using the service keystone username is preferred, in this case ['cinder']. Dropping that configuration.
 
