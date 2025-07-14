@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="completing-prerequisites-for-migrating-ceph-monitoring-stack_{context}"]
 
 = Completing prerequisites for a {Ceph} cluster with monitoring stack components

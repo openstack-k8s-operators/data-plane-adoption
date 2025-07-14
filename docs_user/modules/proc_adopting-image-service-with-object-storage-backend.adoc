@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-image-service-with-object-storage-backend_{context}"]
 
 = Adopting the {image_service} that is deployed with a {object_storage} back end

@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="relocating-one-instance-of-a-monitoring-stack-to-migrate-daemons-to-target-nodes_{context}"]
 
 = Scenario 2: Relocating one instance of a monitoring stack to migrate daemons to target nodes

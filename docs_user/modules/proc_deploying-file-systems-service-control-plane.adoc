@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="deploying-file-systems-service-control-plane_{context}"]
 
 = Deploying the {rhos_component_storage_file} on the control plane

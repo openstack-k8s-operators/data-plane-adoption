@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="changes-to-cephFS-through-NFS_{context}"]
 
 = Changes to CephFS through NFS

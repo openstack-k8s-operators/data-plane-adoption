@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="rolling-back-control-plane-adoption_{context}"]
 
 = Rolling back the control plane adoption

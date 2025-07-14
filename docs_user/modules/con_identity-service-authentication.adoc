@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="identity-service-authentication_{context}"]
 
 = {identity_service} authentication

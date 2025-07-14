@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="about-node-roles_{context}"]
 
 = About node roles

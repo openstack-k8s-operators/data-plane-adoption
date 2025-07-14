@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="troubleshooting-object-storage-migration_{context}"]
 
 = Troubleshooting the {object_storage} migration

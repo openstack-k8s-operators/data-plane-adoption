@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-autoscaling_{context}"]
 
 = Adopting autoscaling services

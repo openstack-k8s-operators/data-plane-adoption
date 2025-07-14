@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="configuring-openshift-worker-nodes_{context}"]
 
 = Configuring isolated networks on {OpenShiftShort} worker nodes

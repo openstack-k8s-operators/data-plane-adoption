@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="ospdo-scale-down-pre-database-adoption_{context}"]
 
 = Scaling down director Operator resources

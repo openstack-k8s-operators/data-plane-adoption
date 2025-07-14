@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="block-storage-requirements_{context}"]
 
 = {block_storage} guidelines

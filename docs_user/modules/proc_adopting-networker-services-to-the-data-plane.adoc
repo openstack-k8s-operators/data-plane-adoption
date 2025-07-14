@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-networker-services-to-the-data-plane_{context}"]
 
 = Adopting Networker services to the {rhos_acro} data plane

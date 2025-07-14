@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-the-key-manager-service_{context}"]
 
 = Adopting the {key_manager}

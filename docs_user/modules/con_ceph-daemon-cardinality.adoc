@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="ceph-daemon-cardinality_{context}"]
 
 = {Ceph} daemon cardinality

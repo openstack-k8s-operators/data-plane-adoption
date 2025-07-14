@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="adoption-prerequisites_{context}"]
 
 = Adoption prerequisites

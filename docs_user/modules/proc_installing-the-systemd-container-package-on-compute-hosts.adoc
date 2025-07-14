@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="installing-the-systemd-container-package-on-compute-hosts_{context}"]
 
 = Installing the `systemd-container` package on Compute hosts

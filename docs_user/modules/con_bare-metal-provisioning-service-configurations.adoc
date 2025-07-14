@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="con_bare-metal-provisioning-service-configurations_{context}"]
 
 = {bare_metal} configurations

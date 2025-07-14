@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-image-service-with-nfs-backend_{context}"]
 
 = Adopting the {image_service} that is deployed with an NFS back end

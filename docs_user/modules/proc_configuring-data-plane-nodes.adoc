@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="configuring-data-plane-nodes_{context}"]
 
 = Configuring isolated networks on data plane nodes

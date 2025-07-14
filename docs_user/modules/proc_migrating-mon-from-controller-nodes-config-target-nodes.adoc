@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="configuring-target-nodes-for-ceph-monitor-migration_{context}"]
 
 = Configuring target nodes for Ceph Monitor migration
