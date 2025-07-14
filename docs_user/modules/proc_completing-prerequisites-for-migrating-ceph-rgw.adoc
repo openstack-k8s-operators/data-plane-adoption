@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="completing-prerequisites-for-migrating-ceph-rgw_{context}"]
 
 = Completing prerequisites for {Ceph} RGW migration

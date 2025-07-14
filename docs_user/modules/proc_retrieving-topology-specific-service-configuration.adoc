@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="proc_retrieving-topology-specific-service-configuration_{context}"]
 
 = Retrieving topology-specific service configuration

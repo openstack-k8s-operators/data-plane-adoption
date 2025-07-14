@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="migrating-object-storage-data-to-rhoso-nodes_{context}"]
 
 = Migrating the {object_storage} data from {OpenStackShort} to {rhos_acro} nodes

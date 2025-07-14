@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="stopping-infrastructure-management-and-compute-services_{context}"]
 
 = Stopping infrastructure management and Compute services

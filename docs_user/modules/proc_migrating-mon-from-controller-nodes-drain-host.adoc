@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="draining-the-source-node_{context}"]
 
 = Draining the source node

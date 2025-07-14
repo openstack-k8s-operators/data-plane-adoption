@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="preparing-the-shared-file-systems-service-configuration_{context}"]
 
 = Guidelines for preparing the {rhos_component_storage_file} configuration

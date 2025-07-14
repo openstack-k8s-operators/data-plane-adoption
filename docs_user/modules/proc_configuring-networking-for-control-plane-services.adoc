@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="configuring-networking-for-control-plane-services_{context}"]
 
 = Configuring isolated networks on control plane services

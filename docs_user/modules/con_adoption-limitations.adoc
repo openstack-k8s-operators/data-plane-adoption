@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="adoption-limitations_{context}"]
 
 = Adoption limitations

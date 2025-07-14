@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="verifying-the-image-service-adoption_{context}"]
 
 = Verifying the {image_service} adoption

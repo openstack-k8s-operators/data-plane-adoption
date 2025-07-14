@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="adoption-process-overview_{context}"]
 
 = Adoption process overview

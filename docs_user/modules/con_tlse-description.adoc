@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="con_tlse-description_{context}"]
 
 = TLS Everywhere

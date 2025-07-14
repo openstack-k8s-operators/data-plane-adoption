@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="key-manager-service-support-for-crypto-plug-ins_{context}"]
 
 = Key Manager service support for crypto plug-ins

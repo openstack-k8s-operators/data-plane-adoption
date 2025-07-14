@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="block-storage-limitations_{context}"]
 
 = Limitations for adopting the {block_storage}
