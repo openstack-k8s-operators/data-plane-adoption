@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="preparing-block-storage-by-using-agnostic-configuration-file_{context}"]
 
 = Preparing the {block_storage} by using an agnostic configuration file

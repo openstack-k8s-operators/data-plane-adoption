@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="adoption-guidelines_{context}"]
 
 = Guidelines for planning the adoption

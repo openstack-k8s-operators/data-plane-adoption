@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="migrating-the-rgw-backends_{context}"]
 
 = Migrating the {Ceph} RGW back ends

@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-the-compute-service_{context}"]
 
 = Adopting the {compute_service}

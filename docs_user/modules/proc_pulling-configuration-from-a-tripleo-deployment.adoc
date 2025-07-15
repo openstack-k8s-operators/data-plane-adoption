@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="pulling-configuration-from-tripleo-deployment_{context}"]
 
 = Pulling the configuration from a {OpenStackPreviousInstaller} deployment

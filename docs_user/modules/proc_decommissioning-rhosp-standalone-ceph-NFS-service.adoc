@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="decommissioning-RHOSP-standalone-Ceph-NFS-service_{context}"]
 
 = Decommissioning the {rhos_prev_long} standalone Ceph NFS service

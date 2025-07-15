@@ -1,3 +1,4 @@
+:_mod-docs-content-type: ASSEMBLY
 ifdef::context[:parent-context: {context}]
 
 [id="configuring-network-for-RHOSO-deployment_{context}"]

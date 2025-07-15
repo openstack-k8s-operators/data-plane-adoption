@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-the-openstack-dashboard_{context}"]
 
 = Adopting the {dashboard_service}

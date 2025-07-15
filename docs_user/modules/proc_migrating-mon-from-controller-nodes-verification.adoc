@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="verifying-the-cluster-after-ceph-mon-migration_{context}"]
 
 = Verifying the {CephCluster} cluster after Ceph Monitor migration
