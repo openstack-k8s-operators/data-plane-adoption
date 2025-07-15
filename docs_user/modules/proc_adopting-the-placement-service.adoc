@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-the-placement-service_{context}"]
 
 = Adopting the Placement service

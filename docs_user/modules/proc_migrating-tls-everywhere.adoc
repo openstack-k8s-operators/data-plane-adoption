@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="migrating-tls-everywhere_{context}"]
 
 = Migrating TLS-e to the {rhos_acro} deployment

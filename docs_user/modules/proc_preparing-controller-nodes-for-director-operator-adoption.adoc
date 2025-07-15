@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="preparing-controller-nodes-for-director-operator-adoption_{context}"]
 
 = Preparing Controller nodes for director Operator adoption

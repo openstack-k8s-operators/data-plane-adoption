@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-compute-services-to-the-data-plane_{context}"]
 
 = Adopting Compute services to the {rhos_acro} data plane

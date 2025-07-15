@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="preparing-RHOSO-for-director-operator-adoption_{context}"]
 
 = Preparing RHOSO for director Operator adoption

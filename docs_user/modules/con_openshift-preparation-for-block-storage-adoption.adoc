@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="openshift-preparation-for-block-storage-adoption_{context}"]
 
 = {OpenShiftShort} preparation for {block_storage} adoption

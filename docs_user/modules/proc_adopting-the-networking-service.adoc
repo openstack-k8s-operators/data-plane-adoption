@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-the-networking-service_{context}"]
 
 = Adopting the {networking_service}

@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="completing-prerequisites-for-rbd-migration_{context}"]
 
 = Completing prerequisites for a {Ceph} RBD migration

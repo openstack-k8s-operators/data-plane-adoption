@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="known-issues-adoption_{context}"]
 
 = Known issues

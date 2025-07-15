@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="migrating-ceph-mgr-daemons-to-ceph-nodes_{context}"]
 
 = Migrating Ceph Manager daemons to {Ceph} nodes

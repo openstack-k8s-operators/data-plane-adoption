@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="block-storage-configuration-generation-helper-tool_{context}"]
 
 = About the {block_storage} configuration generation helper tool

@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="migrating-ceph-mds_{context}"]
 
 = Migrating {Ceph} MDS to new nodes within the existing cluster

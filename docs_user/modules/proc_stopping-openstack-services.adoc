@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="stopping-openstack-services_{context}"]
 
 = Stopping {rhos_prev_long} services

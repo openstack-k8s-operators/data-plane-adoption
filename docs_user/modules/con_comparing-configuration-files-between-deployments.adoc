@@ -1,3 +1,4 @@
+:_mod-docs-content-type: CONCEPT
 [id="comparing-configuration-files-between-deployments_{context}"]
 
 = Comparing configuration files between deployments

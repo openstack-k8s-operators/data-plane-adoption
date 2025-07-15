@@ -1,3 +1,4 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-telemetry-services_{context}"]
 
 = Adopting Telemetry services
