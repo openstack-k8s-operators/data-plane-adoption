@@ -7,7 +7,7 @@ The quick and dirty process is more straightforward:
 
 .Procedure
 . Create an agnostic configuration file removing any specifics from the old
-deployment's `cinder.conf` file, like the `connection` in the `[dabase]`
+deployment's `cinder.conf` file, like the `connection` in the `[database]`
 section, the `transport_url` and `log_dir` in `[DEFAULT]`, the whole
 `[coordination]` and `[barbican]` sections, etc..
 . Assuming the configuration has sensitive information, drop the modified
