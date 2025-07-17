@@ -3,13 +3,13 @@
 
 = Preparing the {block_storage} by using an agnostic configuration file
 
-The quick and dirty process is more straightforward:
+The following process is a more straightforward approach:
 
 .Procedure
 . Create an agnostic configuration file removing any specifics from the old
-deployment's `cinder.conf` file, like the `connection` in the `[dabase]`
+deployment's `cinder.conf` file, such as the `connection` in the `[database]`
 section, the `transport_url` and `log_dir` in `[DEFAULT]`, the whole
-`[coordination]` and `[barbican]` sections, etc..
+`[coordination]` and `[barbican]` sections, and so on.
 . Assuming the configuration has sensitive information, drop the modified
 contents of the whole file into a `Secret`.
 . Reference this secret in all the services, creating a {block_storage_first_ref} volumes section
