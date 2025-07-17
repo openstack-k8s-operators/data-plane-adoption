@@ -1,7 +1,7 @@
 - name: Common pre-adoption tasks
   import_playbook: _before_adoption.yaml
 
-- name: Parallel Adoption with Ceph - True Async Execution
+- name: Optimized Parallel Adoption with Ceph - Native Async
   hosts: local
   gather_facts: false
   vars:
@@ -65,10 +65,10 @@
     # Wave 1: Services that only depend on Keystone (run in parallel)
     - name: Start Barbican Adoption (Wave 1)
       ansible.builtin.shell: |
-        cd {{ playbook_dir }}/..
-        timeout 1200 ansible-playbook -i inventory.yaml \
-          -e @vars.yaml -e @secrets.yaml --limit local \
-          -c local /dev/stdin <<'EOF'
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
         ---
         - hosts: local
           gather_facts: false
@@ -82,10 +82,10 @@
 
     - name: Start Swift Adoption (Wave 1)
       ansible.builtin.shell: |
-        cd {{ playbook_dir }}/..
-        timeout 1200 ansible-playbook -i inventory.yaml \
-          -e @vars.yaml -e @secrets.yaml --limit local \
-          -c local /dev/stdin <<'EOF'
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
         ---
         - hosts: local
           gather_facts: false
@@ -99,10 +99,10 @@
 
     - name: Start Horizon Adoption (Wave 1)
       ansible.builtin.shell: |
-        cd {{ playbook_dir }}/..
-        timeout 1200 ansible-playbook -i inventory.yaml \
-          -e @vars.yaml -e @secrets.yaml --limit local \
-          -c local /dev/stdin <<'EOF'
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
         ---
         - hosts: local
           gather_facts: false
@@ -116,10 +116,10 @@
 
     - name: Start Heat Adoption (Wave 1)
       ansible.builtin.shell: |
-        cd {{ playbook_dir }}/..
-        timeout 1200 ansible-playbook -i inventory.yaml \
-          -e @vars.yaml -e @secrets.yaml --limit local \
-          -c local /dev/stdin <<'EOF'
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
         ---
         - hosts: local
           gather_facts: false
@@ -133,10 +133,10 @@
 
     - name: Start Telemetry Adoption (Wave 1)
       ansible.builtin.shell: |
-        cd {{ playbook_dir }}/..
-        timeout 1200 ansible-playbook -i inventory.yaml \
-          -e @vars.yaml -e @secrets.yaml --limit local \
-          -c local /dev/stdin <<'EOF'
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
         ---
         - hosts: local
           gather_facts: false
@@ -150,23 +150,51 @@
       when: telemetry_adoption|default(true)
 
     # Wait for Wave 1 completion
-    - name: Wait for Wave 1 Services to complete
+    - name: Wait for Barbican adoption to complete
       ansible.builtin.async_status:
-        jid: "{{ item.ansible_job_id }}"
-      register: wave1_result
-      until: wave1_result.finished
+        jid: "{{ barbican_job.ansible_job_id }}"
+      register: barbican_result
+      until: barbican_result.finished
       retries: 120
       delay: 10
-      loop:
-        - "{{ barbican_job }}"
-        - "{{ swift_job }}"
-        - "{{ horizon_job }}"
-        - "{{ heat_job }}"
-        - "{{ telemetry_job }}"
-      loop_control:
-        label: "{{ item.cmd | default('N/A') }}"
-      when: item.ansible_job_id is defined
-      tags: [wave1]
+      tags: [barbican_adoption, wave1]
+
+    - name: Wait for Swift adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ swift_job.ansible_job_id }}"
+      register: swift_result
+      until: swift_result.finished
+      retries: 120
+      delay: 10
+      tags: [swift_adoption, wave1]
+
+    - name: Wait for Horizon adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ horizon_job.ansible_job_id }}"
+      register: horizon_result
+      until: horizon_result.finished
+      retries: 120
+      delay: 10
+      tags: [horizon_adoption, wave1]
+
+    - name: Wait for Heat adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ heat_job.ansible_job_id }}"
+      register: heat_result
+      until: heat_result.finished
+      retries: 120
+      delay: 10
+      tags: [heat_adoption, wave1]
+
+    - name: Wait for Telemetry adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ telemetry_job.ansible_job_id }}"
+      register: telemetry_result
+      until: telemetry_result.finished
+      retries: 120
+      delay: 10
+      when: telemetry_adoption|default(true) and telemetry_job.ansible_job_id is defined
+      tags: [telemetry_adoption, wave1]
 
     # Sequential: Neutron (required for networking services)
     - name: Neutron Adoption
@@ -177,15 +205,14 @@
     # Wave 2: Services that depend on Neutron (run in parallel)
     - name: Start Glance Adoption (Wave 2)
       ansible.builtin.shell: |
-        cd {{ playbook_dir }}/..
-        timeout 1200 ansible-playbook -i inventory.yaml \
-          -e @vars.yaml -e @secrets.yaml --limit local \
-          -c local /dev/stdin <<'EOF'
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          -e "glance_backend=ceph" \
+          /dev/stdin <<EOF
         ---
         - hosts: local
           gather_facts: false
-          vars:
-            glance_backend: ceph
           roles:
             - glance_adoption
         EOF
@@ -196,10 +223,10 @@
 
     - name: Start Placement Adoption (Wave 2)
       ansible.builtin.shell: |
-        cd {{ playbook_dir }}/..
-        timeout 1200 ansible-playbook -i inventory.yaml \
-          -e @vars.yaml -e @secrets.yaml --limit local \
-          -c local /dev/stdin <<'EOF'
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
         ---
         - hosts: local
           gather_facts: false
@@ -212,33 +239,35 @@
       tags: [placement_adoption, wave2]
 
     # Wait for Wave 2 completion
-    - name: Wait for Wave 2 Services to complete
+    - name: Wait for Glance adoption to complete
       ansible.builtin.async_status:
-        jid: "{{ item.ansible_job_id }}"
-      register: wave2_result
-      until: wave2_result.finished
+        jid: "{{ glance_job.ansible_job_id }}"
+      register: glance_result
+      until: glance_result.finished
       retries: 120
       delay: 10
-      loop:
-        - "{{ glance_job }}"
-        - "{{ placement_job }}"
-      loop_control:
-        label: "{{ item.cmd | default('N/A') }}"
-      when: item.ansible_job_id is defined
-      tags: [wave2]
+      tags: [glance_adoption, wave2]
+
+    - name: Wait for Placement adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ placement_job.ansible_job_id }}"
+      register: placement_result
+      until: placement_result.finished
+      retries: 120
+      delay: 10
+      tags: [placement_adoption, wave2]
 
     # Wave 3: Services that depend on Placement/Glance (run in parallel)
     - name: Start Nova Adoption (Wave 3)
       ansible.builtin.shell: |
-        cd {{ playbook_dir }}/..
-        timeout 1800 ansible-playbook -i inventory.yaml \
-          -e @vars.yaml -e @secrets.yaml --limit local \
-          -c local /dev/stdin <<'EOF'
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          -e "nova_libvirt_backend=ceph" \
+          /dev/stdin <<EOF
         ---
         - hosts: local
           gather_facts: false
-          vars:
-            nova_libvirt_backend: ceph
           roles:
             - nova_adoption
         EOF
@@ -249,16 +278,15 @@
 
     - name: Start Cinder Adoption (Wave 3)
       ansible.builtin.shell: |
-        cd {{ playbook_dir }}/..
-        timeout 1800 ansible-playbook -i inventory.yaml \
-          -e @vars.yaml -e @secrets.yaml --limit local \
-          -c local /dev/stdin <<'EOF'
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          -e "cinder_volume_backend=ceph" \
+          -e "cinder_backup_backend=ceph" \
+          /dev/stdin <<EOF
         ---
         - hosts: local
           gather_facts: false
-          vars:
-            cinder_volume_backend: ceph
-            cinder_backup_backend: ceph
           roles:
             - cinder_adoption
         EOF
@@ -269,10 +297,10 @@
 
     - name: Start Octavia Adoption (Wave 3)
       ansible.builtin.shell: |
-        cd {{ playbook_dir }}/..
-        timeout 1800 ansible-playbook -i inventory.yaml \
-          -e @vars.yaml -e @secrets.yaml --limit local \
-          -c local /dev/stdin <<'EOF'
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
         ---
         - hosts: local
           gather_facts: false
@@ -286,15 +314,14 @@
 
     - name: Start Manila Adoption (Wave 3)
       ansible.builtin.shell: |
-        cd {{ playbook_dir }}/..
-        timeout 1800 ansible-playbook -i inventory.yaml \
-          -e @vars.yaml -e @secrets.yaml --limit local \
-          -c local /dev/stdin <<'EOF'
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          -e "manila_backend=cephfs" \
+          /dev/stdin <<EOF
         ---
         - hosts: local
           gather_facts: false
-          vars:
-            manila_backend: cephfs
           roles:
             - manila_adoption
         EOF
@@ -304,22 +331,41 @@
       tags: [manila_adoption, wave3]
 
     # Wait for Wave 3 completion
-    - name: Wait for Wave 3 Services to complete
+    - name: Wait for Nova adoption to complete
       ansible.builtin.async_status:
-        jid: "{{ item.ansible_job_id }}"
-      register: wave3_result
-      until: wave3_result.finished
+        jid: "{{ nova_job.ansible_job_id }}"
+      register: nova_result
+      until: nova_result.finished
       retries: 180
       delay: 10
-      loop:
-        - "{{ nova_job }}"
-        - "{{ cinder_job }}"
-        - "{{ octavia_job }}"
-        - "{{ manila_job }}"
-      loop_control:
-        label: "{{ item.cmd | default('N/A') }}"
-      when: item.ansible_job_id is defined
-      tags: [wave3]
+      tags: [nova_adoption, wave3]
+
+    - name: Wait for Cinder adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ cinder_job.ansible_job_id }}"
+      register: cinder_result
+      until: cinder_result.finished
+      retries: 180
+      delay: 10
+      tags: [cinder_adoption, wave3]
+
+    - name: Wait for Octavia adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ octavia_job.ansible_job_id }}"
+      register: octavia_result
+      until: octavia_result.finished
+      retries: 180
+      delay: 10
+      tags: [octavia_adoption, wave3]
+
+    - name: Wait for Manila adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ manila_job.ansible_job_id }}"
+      register: manila_result
+      until: manila_result.finished
+      retries: 180
+      delay: 10
+      tags: [manila_adoption, wave3]
 
     # Sequential: Autoscaling (depends on Telemetry)
     - name: Autoscaling Adoption
