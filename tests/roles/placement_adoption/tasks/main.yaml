@@ -8,7 +8,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait pod --for condition=Ready --selector=service=placement
+    oc wait pod --for condition=Ready --selector=service=plament
   register: placement_running_result
   until: placement_running_result is success
   retries: 60
