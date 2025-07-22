@@ -102,26 +102,28 @@
   when: tobiko_qe_test | default('false') | bool
   environment:
     OS_CLOUD_IP: "{{ standalone_ip | default(edpm_node_ip) }}"
+    EDPM_PRIVATEKEY_PATH: "{{ edpm_privatekey_path }}"
   block:
     # Temporal - tobiko installation task
     - name: tobiko installation
       ansible.builtin.shell: >
-          ssh ${OS_CLOUD_IP} "set -o pipefail && mkdir -p ~/src/x && cd ~/src/x &&
+          ssh -i ${EDPM_PRIVATEKEY_PATH} -o StrictHostKeyChecking=no ${OS_CLOUD_IP} "set -o pipefail && mkdir -p ~/src/x && cd ~/src/x &&
           git clone https://github.com/redhat-openstack/tobiko.git &&
           cd tobiko && git checkout {{ tobiko_version }}"
 
     - name: oc undercloud installation
       ansible.builtin.shell: >
-          ssh ${OS_CLOUD_IP} "curl -s -L https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/openshift-client-linux.tar.gz
+          ssh -i ${EDPM_PRIVATEKEY_PATH} -o StrictHostKeyChecking=no ${OS_CLOUD_IP} "curl -s -L https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/openshift-client-linux.tar.gz
           | sudo tar -zxvf - -C /usr/local/bin/"
 
     - name: copy kube conf to undercloud
       ansible.builtin.shell: |
-        scp -r ~/.kube/ ${OS_CLOUD_IP}:~
+        scp -i ${EDPM_PRIVATEKEY_PATH} -o StrictHostKeyChecking=no -r ~/.kube/ ${OS_CLOUD_IP}:~
 
     - name: upload tobiko-playbook.yaml to the undercloud
       delegate_to: "{{ standalone_ip | default(edpm_node_ip) }}"
       vars:
+        ansible_ssh_private_key_file: "{{ edpm_privatekey_path }}"
         tobiko_playbook: |
           - name: Playbook to run tobiko from the undercloud pre-adoption
             hosts: localhost
@@ -135,6 +137,8 @@
         dest: ~/src/x/tobiko/tobiko-playbook.yaml
 
     - name: Add tobiko.conf to the undercloud
+      vars:
+        ansible_ssh_private_key_file: "{{ edpm_privatekey_path }}"
       delegate_to: "{{ standalone_ip | default(edpm_node_ip) }}"
       ansible.builtin.copy:
         mode: a+r
@@ -142,6 +146,8 @@
         dest: ~/src/x/tobiko/tobiko.conf
 
     - name: Run Tobiko from the undercloud
+      vars:
+        ansible_ssh_private_key_file: "{{ edpm_privatekey_path }}"
       delegate_to: "{{ standalone_ip | default(edpm_node_ip) }}"
       ansible.builtin.shell:
         chdir: ~/src/x/tobiko/
@@ -154,4 +160,4 @@
 
     - name: copy keys from undercloud for tobiko
       ansible.builtin.shell: |
-        mkdir -p ~/ci-framework-data/tests/test_operator; scp -r ${OS_CLOUD_IP}:~/.ssh/id_ecdsa* ~/ci-framework-data/tests/test_operator/
+        mkdir -p ~/ci-framework-data/tests/test_operator; scp -i ${EDPM_PRIVATEKEY_PATH} -o StrictHostKeyChecking=no -r ${OS_CLOUD_IP}:~/.ssh/id_ecdsa* ~/ci-framework-data/tests/test_operator/
