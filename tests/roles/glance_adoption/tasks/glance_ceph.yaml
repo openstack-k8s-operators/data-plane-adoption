@@ -1,0 +1,11 @@
+- name: template out the glance backend
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/glance_ceph.yaml.j2"
+    dest: "/tmp/glance_ceph.yaml"
+    mode: '644'
+
+- name: deploy podified Glance with Ceph backend
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+     oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/glance_ceph.yaml

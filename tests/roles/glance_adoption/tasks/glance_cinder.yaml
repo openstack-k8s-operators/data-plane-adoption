@@ -1,0 +1,11 @@
+- name: template out the cinder backend
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/glance_cinder.yaml.j2"
+    dest: "/tmp/glance_cinder.yaml"
+    mode: '644'
+
+- name: deploy podified Glance with Cinder backend
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/glance_cinder.yaml
