@@ -1,0 +1,134 @@
+:_mod-docs-content-type: PROCEDURE
+[id='configuring-ldap-with-domain-specific-drivers_{context}']
+
+= Configuring LDAP with domain-specific drivers
+
+If you need to integrate the {identity_service_first_ref} with one or more LDAP servers using domain-specific configurations, you can enable domain-specific drivers and provide the necessary LDAP settings.
+
+This involves two main steps:
+
+. Create the secret that holds the domain-specific LDAP configuration files that the {identity_service} uses. Each file within the secret corresponds to an LDAP domain.
+. Patch the `OpenStackControlPlane` custom resource (CR) to enable domain-specific drivers for the {identity_service} and mount a secret that contains the LDAP configurations.
+
+
+.Procedure
+
+. To create the `keystone-domains` secret that stores the actual LDAP configuration files that {identity_service} uses, create a local file that includes your LDAP configuration, for example, `keystone.myldapdomain.conf`:
++
+The following example file includes the configuration for a single LDAP domain. If you have multiple LDAP domains, create a configuration file for each, for example, `keystone.DOMAIN_ONE.conf`, `keystone.DOMAIN_TWO.conf`.
++
+[source,ini]
+----
+[identity]
+driver = ldap
+[ldap]
+url = ldap://<ldap_server_host>:<ldap_server_port>
+user = <bind_dn_user>
+password = <bind_dn_password>
+suffix = <user_tree_dn>
+query_scope = sub
+# User configuration
+user_tree_dn = <user_tree_dn>
+user_objectclass = <user_object_class>
+user_id_attribute = <user_id_attribute>
+user_name_attribute = <user_name_attribute>
+user_mail_attribute = <user_mail_attribute>
+user_enabled_attribute = <user_enabled_attribute>
+user_enabled_default = true
+# Group configuration
+group_tree_dn = <group_tree_dn>
+group_objectclass = <group_object_class>
+group_id_attribute = <group_id_attribute>
+group_name_attribute = <group_name_attribute>
+group_member_attribute = <group_member_attribute>
+group_members_are_ids = true
+----
++
+* Replace the values, such as `<ldap_server_host>`, `<bind_dn_user>`, `<user_tree_dn>`, and so on, with your LDAP server details.
+
+. Create the secret from this file:
++
+----
+$ oc create secret generic keystone-domains --from-file=<keystone.DOMAIN_NAME.conf>
+----
++
+* Replace `<keystone.DOMAIN_NAME.conf>` with the name of your local configuration file. If applicable, include additional configuration files by using the `--from-file` option. After creating the secret, you can remove the local configuration file if it is no longer needed, or store it securely.
++
+[IMPORTANT]
+The name of the file that you provide to `--from-file`, for example `keystone.DOMAIN_NAME.conf`, is critical. The {identity_service} uses this filename to map incoming authentication requests for a domain to the correct LDAP configuration. Ensure that `DOMAIN_NAME` matches the name of the domain you are configuring in the {identity_service}.
+
+. Patch the `OpenStackControlPlane` CR:
++
+----
+$ oc patch openstackcontrolplane <cr_name> --type=merge -p '
+spec:
+  keystone:
+    template:
+      customServiceConfig: |
+          [identity]
+          domain_specific_drivers_enabled = true
+      extraMounts:
+        - name: v1
+          region: r1
+          extraVol:
+            - propagation:
+              - Keystone
+              extraVolType: Conf
+              volumes:
+              - name: keystone-domains
+                secret:
+                  secretName: keystone-domains
+              mounts:
+              - name: keystone-domains
+                mountPath: "/etc/keystone/domains"
+                readOnly: true
+----
++
+* Replace `<cr_name>` with the name of your `OpenStackControlPlane` CR (for example, `openstack`).
+* This patch does the following:
+** Sets `spec.keystone.template.customServiceConfig`. Ensure that you do not overwrite any previously defined value.
+** Defines `spec.keystone.template.extraMounts` to mount a secret named `keystone-domains` into the {identity_service} pods at `/etc/keystone/domains`. This secret contains your LDAP configuration files.
++
+[NOTE]
+You might need to wait a few minutes for the changes to propagate and for the {identity_service} pods to be updated.
+
+.Verification
+
+. Verify that users from the LDAP domain are accessible:
++
+----
+$ oc exec -t openstackclient -- openstack user list --domain <domain_name>
+----
++
+* Replace `<domain_name>` with your LDAP domain name.
++
+This command returns a list of users from your LDAP server.
+
+. Verify that groups from the LDAP domain are accessible:
++
+----
+$ oc exec -t openstackclient -- openstack group list --domain <domain_name>
+----
++
+This command returns a list of groups from your LDAP server.
+
+. Test authentication with an LDAP user:
++
+----
+$ oc exec -t openstackclient -- openstack --os-auth-url <keystone_auth_url> --os-identity-api-version 3 --os-user-domain-name <domain_name> --os-username <ldap_username> --os-password <ldap_password> token issue
+----
++
+* Replace `<keystone_auth_url>` with the {identity_service} authentication URL.
+* Replace `<ldap_username>` and `<ldap_password>` with valid LDAP user credentials.
++
+If successful, this command returns a token, confirming that LDAP authentication is working correctly.
+
+. Verify group membership for an LDAP user:
++
+----
+$ oc exec -t openstackclient -- openstack group contains user --group-domain <domain_name> --user-domain <domain_name> <group_name> <username>
+----
++
+* Replace `<domain_name>`, `<group_name>`, and `<username>` with the appropriate values from your LDAP server.
++
+This command verifies that the user is properly associated with the group through LDAP.
