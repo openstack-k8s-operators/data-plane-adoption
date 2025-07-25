@@ -1,4 +1,7 @@
-ovn_image: quay.io/podified-antelope-centos9/openstack-ovn-base:current-podified
+container_registry: "quay.io"
+container_namespace: "podified-antelope-centos9"
+container_tag: "current-podified"
+ovn_image: "{{ container_registry }}/{{ container_namespace }}/openstack-ovn-base:{{ container_tag }}"
 storage_class_name: local-storage
 storage_reclaim_policy: delete
 ironic_adoption: false
