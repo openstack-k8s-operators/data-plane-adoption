@@ -53,6 +53,10 @@
       ontap-nfs: 'cinder_volume_netapp_nfs.yaml.j2'
       ontap-iscsi: 'cinder_volume_netapp_iscsi.yaml.j2'
   block:
+    - name: debug cinder_netapp_config
+      ansible.builtin.debug:
+        msg: "{{ cinder_netapp_config }} - {{ cinder_netapp_share_config|default('') }} - {{ cinder_configuration_template }}"
+
     - name: Fail if cinder_netapp_config params are not defined
       when: |
         cinder_netapp_config.netapp_login is not defined or
