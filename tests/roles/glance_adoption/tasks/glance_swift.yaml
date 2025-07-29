@@ -1,0 +1,11 @@
+- name: template out the swift backend
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/glance_swift.yaml.j2"
+    dest: "/tmp/glance_swift.yaml"
+    mode: '644'
+
+- name: deploy podified Glance with Swift backend
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/glance_swift.yaml
