@@ -33,6 +33,12 @@
 
     - name: Render Netapp OpenShift Secret template
       ansible.builtin.template:
+        src: "{{ role_path }}/templates/cinder_volume_netapp_nfs.yaml.j2"
+        dest: /tmp/cinder_volume_netapp_nfs.yaml
+        mode: "0600"
+
+    - name: Render cinder netapp NFS OpenShift patch file template
+      ansible.builtin.template:
         src: "{{ role_path }}/templates/cinder-volume-ontap-secrets.yaml.j2"
         dest: /tmp/cinder-volume-ontap-secrets.yaml
         mode: "0600"
@@ -47,4 +53,4 @@
       ansible.builtin.shell: |
         {{ shell_header }}
         {{ oc_header }}
-        oc patch openstackcontrolplane openstack --type=merge --patch-file={{ role_path }}/files/cinder_volume_netapp_nfs.yaml
+        oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/cinder_volume_netapp_nfs.yaml
