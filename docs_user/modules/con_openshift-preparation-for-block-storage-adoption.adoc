@@ -45,7 +45,7 @@ Some changes to the storage transport protocols might be required for {OpenShift
 * If you use a `MachineConfig` to make changes to {OpenShiftShort} nodes, the nodes reboot.
 * Check the back-end sections that are listed in the `enabled_backends` configuration option in your `cinder.conf` file to determine the enabled storage back-end sections.
 * Depending on the back end, you can find the transport protocol by viewing the `volume_driver` or `target_protocol` configuration options.
-* The `icssid` service, `multipathd` service, and `NVMe-TCP` kernel modules start automatically on data plane nodes.
+* The `iscsid` service, `multipathd` service, and `NVMe-TCP` kernel modules start automatically on data plane nodes.
 
 NFS:::
 ** {OpenShiftShort} connects to NFS back ends without additional changes.
