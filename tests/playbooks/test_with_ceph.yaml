@@ -1,7 +1,7 @@
 - name: Common pre-adoption tasks
   import_playbook: _before_adoption.yaml
 
-- name: Adoption
+- name: Optimized Parallel Adoption with Ceph - Native Async
   hosts: local
   gather_facts: false
   vars:
@@ -13,82 +13,382 @@
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash
-  roles:
-    - role: development_environment
-      tags:
-        - development_environment
-    - role: tls_adoption
-      tags:
-        - tls_adoption
+
+  tasks:
+    # Sequential foundation roles (cannot be parallelized)
+    - name: Development Environment
+      ansible.builtin.import_role:
+        name: development_environment
+      tags: [development_environment]
+
+    - name: TLS Adoption
+      ansible.builtin.import_role:
+        name: tls_adoption
+      tags: [tls_adoption]
       when: enable_tlse|default(false)
-    - role: backend_services
-      tags:
-        - backend_services
-    - role: ceph_backend_configuration
-      tags:
-        - ceph_backend_configuration
-    - role: get_services_configuration
-      tags:
-        - get_services_configuration
-    - role: stop_openstack_services
-      tags:
-        - stop_openstack_services
-    - role: mariadb_copy
-      tags:
-        - mariadb_copy
-    - role: ovn_adoption
-      tags:
-        - ovn_adoption
-    - role: keystone_adoption
-      tags:
-        - keystone_adoption
-    - role: barbican_adoption
-      tags:
-        - barbican_adoption
-    - role: neutron_adoption
-      tags:
-        - neutron_adoption
-    - role: glance_adoption
-      tags:
-        - glance_adoption
-    - role: placement_adoption
-      tags:
-        - placement_adoption
-    - role: nova_adoption
-      tags:
-        - nova_adoption
-    - role: cinder_adoption
-      tags:
-        - cinder_adoption
-    - role: octavia_adoption
-      tags:
-        - octavia_adoption
-    - role: horizon_adoption
-      tags:
-        - horizon_adoption
-    - role: heat_adoption
-      tags:
-        - heat_adoption
-    - role: telemetry_adoption
-      tags:
-        - telemetry_adoption
+
+    - name: Backend Services
+      ansible.builtin.import_role:
+        name: backend_services
+      tags: [backend_services]
+
+    - name: Ceph Backend Configuration
+      ansible.builtin.import_role:
+        name: ceph_backend_configuration
+      tags: [ceph_backend_configuration]
+
+    - name: Get Services Configuration
+      ansible.builtin.import_role:
+        name: get_services_configuration
+      tags: [get_services_configuration]
+
+    - name: Stop OpenStack Services
+      ansible.builtin.import_role:
+        name: stop_openstack_services
+      tags: [stop_openstack_services]
+
+    - name: MariaDB Copy
+      ansible.builtin.import_role:
+        name: mariadb_copy
+      tags: [mariadb_copy]
+
+    - name: OVN Adoption
+      ansible.builtin.import_role:
+        name: ovn_adoption
+      tags: [ovn_adoption]
+
+    - name: Keystone Adoption
+      ansible.builtin.import_role:
+        name: keystone_adoption
+      tags: [keystone_adoption]
+
+    # Wave 1: Services that only depend on Keystone (run in parallel)
+    - name: Start Barbican Adoption (Wave 1)
+      ansible.builtin.shell: |
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
+        ---
+        - hosts: local
+          gather_facts: false
+          roles:
+            - barbican_adoption
+        EOF
+      async: 1200
+      poll: 0
+      register: barbican_job
+      tags: [barbican_adoption, wave1]
+
+    - name: Start Swift Adoption (Wave 1)
+      ansible.builtin.shell: |
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
+        ---
+        - hosts: local
+          gather_facts: false
+          roles:
+            - swift_adoption
+        EOF
+      async: 1200
+      poll: 0
+      register: swift_job
+      tags: [swift_adoption, wave1]
+
+    - name: Start Horizon Adoption (Wave 1)
+      ansible.builtin.shell: |
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
+        ---
+        - hosts: local
+          gather_facts: false
+          roles:
+            - horizon_adoption
+        EOF
+      async: 1200
+      poll: 0
+      register: horizon_job
+      tags: [horizon_adoption, wave1]
+
+    - name: Start Heat Adoption (Wave 1)
+      ansible.builtin.shell: |
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
+        ---
+        - hosts: local
+          gather_facts: false
+          roles:
+            - heat_adoption
+        EOF
+      async: 1200
+      poll: 0
+      register: heat_job
+      tags: [heat_adoption, wave1]
+
+    - name: Start Telemetry Adoption (Wave 1)
+      ansible.builtin.shell: |
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
+        ---
+        - hosts: local
+          gather_facts: false
+          roles:
+            - telemetry_adoption
+        EOF
+      async: 1200
+      poll: 0
+      register: telemetry_job
+      tags: [telemetry_adoption, wave1]
       when: telemetry_adoption|default(true)
-    - role: autoscaling_adoption
-      tags:
-        - autoscaling_adoption
+
+    # Wait for Wave 1 completion
+    - name: Wait for Barbican adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ barbican_job.ansible_job_id }}"
+      register: barbican_result
+      until: barbican_result.finished
+      retries: 120
+      delay: 10
+      tags: [barbican_adoption, wave1]
+
+    - name: Wait for Swift adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ swift_job.ansible_job_id }}"
+      register: swift_result
+      until: swift_result.finished
+      retries: 120
+      delay: 10
+      tags: [swift_adoption, wave1]
+
+    - name: Wait for Horizon adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ horizon_job.ansible_job_id }}"
+      register: horizon_result
+      until: horizon_result.finished
+      retries: 120
+      delay: 10
+      tags: [horizon_adoption, wave1]
+
+    - name: Wait for Heat adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ heat_job.ansible_job_id }}"
+      register: heat_result
+      until: heat_result.finished
+      retries: 120
+      delay: 10
+      tags: [heat_adoption, wave1]
+
+    - name: Wait for Telemetry adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ telemetry_job.ansible_job_id }}"
+      register: telemetry_result
+      until: telemetry_result.finished
+      retries: 120
+      delay: 10
+      when: telemetry_adoption|default(true) and telemetry_job.ansible_job_id is defined
+      tags: [telemetry_adoption, wave1]
+
+    # Sequential: Neutron (required for networking services)
+    - name: Neutron Adoption
+      ansible.builtin.import_role:
+        name: neutron_adoption
+      tags: [neutron_adoption]
+
+    # Wave 2: Services that depend on Neutron (run in parallel)
+    - name: Start Glance Adoption (Wave 2)
+      ansible.builtin.shell: |
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          -e "glance_backend=ceph" \
+          /dev/stdin <<EOF
+        ---
+        - hosts: local
+          gather_facts: false
+          roles:
+            - glance_adoption
+        EOF
+      async: 1200
+      poll: 0
+      register: glance_job
+      tags: [glance_adoption, wave2]
+
+    - name: Start Placement Adoption (Wave 2)
+      ansible.builtin.shell: |
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
+        ---
+        - hosts: local
+          gather_facts: false
+          roles:
+            - placement_adoption
+        EOF
+      async: 1200
+      poll: 0
+      register: placement_job
+      tags: [placement_adoption, wave2]
+
+    # Wait for Wave 2 completion
+    - name: Wait for Glance adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ glance_job.ansible_job_id }}"
+      register: glance_result
+      until: glance_result.finished
+      retries: 120
+      delay: 10
+      tags: [glance_adoption, wave2]
+
+    - name: Wait for Placement adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ placement_job.ansible_job_id }}"
+      register: placement_result
+      until: placement_result.finished
+      retries: 120
+      delay: 10
+      tags: [placement_adoption, wave2]
+
+    # Wave 3: Services that depend on Placement/Glance (run in parallel)
+    - name: Start Nova Adoption (Wave 3)
+      ansible.builtin.shell: |
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          -e "nova_libvirt_backend=ceph" \
+          /dev/stdin <<EOF
+        ---
+        - hosts: local
+          gather_facts: false
+          roles:
+            - nova_adoption
+        EOF
+      async: 1800
+      poll: 0
+      register: nova_job
+      tags: [nova_adoption, wave3]
+
+    - name: Start Cinder Adoption (Wave 3)
+      ansible.builtin.shell: |
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          -e "cinder_volume_backend=ceph" \
+          -e "cinder_backup_backend=ceph" \
+          /dev/stdin <<EOF
+        ---
+        - hosts: local
+          gather_facts: false
+          roles:
+            - cinder_adoption
+        EOF
+      async: 1800
+      poll: 0
+      register: cinder_job
+      tags: [cinder_adoption, wave3]
+
+    - name: Start Octavia Adoption (Wave 3)
+      ansible.builtin.shell: |
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          /dev/stdin <<EOF
+        ---
+        - hosts: local
+          gather_facts: false
+          roles:
+            - octavia_adoption
+        EOF
+      async: 1800
+      poll: 0
+      register: octavia_job
+      tags: [octavia_adoption, wave3]
+
+    - name: Start Manila Adoption (Wave 3)
+      ansible.builtin.shell: |
+        ansible-playbook -i "{{ inventory_file }}" \
+          -e "ansible_host={{ ansible_host | default('localhost') }}" \
+          -e "ansible_connection={{ ansible_connection | default('local') }}" \
+          -e "manila_backend=cephfs" \
+          /dev/stdin <<EOF
+        ---
+        - hosts: local
+          gather_facts: false
+          roles:
+            - manila_adoption
+        EOF
+      async: 1800
+      poll: 0
+      register: manila_job
+      tags: [manila_adoption, wave3]
+
+    # Wait for Wave 3 completion
+    - name: Wait for Nova adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ nova_job.ansible_job_id }}"
+      register: nova_result
+      until: nova_result.finished
+      retries: 180
+      delay: 10
+      tags: [nova_adoption, wave3]
+
+    - name: Wait for Cinder adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ cinder_job.ansible_job_id }}"
+      register: cinder_result
+      until: cinder_result.finished
+      retries: 180
+      delay: 10
+      tags: [cinder_adoption, wave3]
+
+    - name: Wait for Octavia adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ octavia_job.ansible_job_id }}"
+      register: octavia_result
+      until: octavia_result.finished
+      retries: 180
+      delay: 10
+      tags: [octavia_adoption, wave3]
+
+    - name: Wait for Manila adoption to complete
+      ansible.builtin.async_status:
+        jid: "{{ manila_job.ansible_job_id }}"
+      register: manila_result
+      until: manila_result.finished
+      retries: 180
+      delay: 10
+      tags: [manila_adoption, wave3]
+
+    # Sequential: Autoscaling (depends on Telemetry)
+    - name: Autoscaling Adoption
+      ansible.builtin.import_role:
+        name: autoscaling_adoption
+      tags: [autoscaling_adoption]
       when: telemetry_adoption|default(true)
-    - role: manila_adoption
-      tags:
-        - manila_adoption
-    - role: stop_remaining_services
-      tags:
-        - stop_remaining_services
-    - role: pull_openstack_configuration
-      tags:
-        - pull_openstack_configuration
-    - role: dataplane_adoption
-      tags:
-        - dataplane_adoption
+
+    # Sequential cleanup roles (cannot be parallelized)
+    - name: Stop Remaining Services
+      ansible.builtin.import_role:
+        name: stop_remaining_services
+      tags: [stop_remaining_services]
+
+    - name: Pull OpenStack Configuration
+      ansible.builtin.import_role:
+        name: pull_openstack_configuration
+      tags: [pull_openstack_configuration]
+
+    - name: Dataplane Adoption
+      ansible.builtin.import_role:
+        name: dataplane_adoption
+      tags: [dataplane_adoption]
 
 - name: Stop the ping test
   import_playbook: _stop_ping_test.yaml
