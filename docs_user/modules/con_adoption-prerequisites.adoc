@@ -32,6 +32,7 @@ ifeval::["{build_variant}" != "ospdo"]
 $ oc project openstack
 endif::[]
 ----
+* Familiarize yourself with mapping RHOSO versions to OpenStack Operators and OpenStackVersion custom resources (CRs). For more information, see the Red Hat Knowledgebase article link:https://access.redhat.com/articles/7125383[How RHOSO versions map to OpenStack Operators and OpenStackVersion CRs].
 
 Back-up information::
 
