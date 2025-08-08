@@ -1,0 +1,16 @@
+spec:
+  cinder:
+    template:
+      cinderVolumes:
+        ontap-iscsi:
+          networkAttachments:
+            - storage
+          customServiceConfig: |
+            [{{ cinder_netapp_backend }}]
+            volume_backend_name=ontap-iscsi
+            volume_driver=cinder.volume.drivers.netapp.common.NetAppDriver
+            netapp_storage_protocol=iscsi
+            netapp_storage_family=ontap_cluster
+            consistencygroup_support=True
+          customServiceConfigSecrets:
+            - cinder-volume-ontap-secrets
