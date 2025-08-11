@@ -34,7 +34,7 @@ spec:
                     metallb.universe.tf/allow-shared-ip: internalapi
 {% endraw %}
                     metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.80
-              spec:
-                type: LoadBalancer
+                spec:
+                  type: LoadBalancer
           networkAttachments:
             - storage
