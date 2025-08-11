@@ -6,7 +6,7 @@ spec:
           networkAttachments:
             - storage
           customServiceConfig: |
-            [ontap-nfs]
+            [{{ cinder_netapp_backend }}]
             volume_backend_name=ontap-nfs
             volume_driver=cinder.volume.drivers.netapp.common.NetAppDriver
             netapp_storage_protocol=nfs
