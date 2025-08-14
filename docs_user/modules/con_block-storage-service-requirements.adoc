@@ -3,6 +3,7 @@
 
 = {block_storage} guidelines
 
+[role="_abstract"]
 Prepare to adopt your {block_storage_first_ref}:
 
 * Take note of the {block_storage} back ends that you use.

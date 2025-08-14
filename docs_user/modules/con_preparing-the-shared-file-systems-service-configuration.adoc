@@ -3,6 +3,7 @@
 
 = Guidelines for preparing the {rhos_component_storage_file} configuration
 
+[role="_abstract"]
 To deploy {rhos_component_storage_file_first_ref} on the control plane, you must copy the original configuration file from the {rhos_prev_long} {rhos_prev_ver} deployment. You must review the content in the file to make sure you are adopting the correct configuration for {rhos_long} {rhos_curr_ver}. Not all of the content needs to be brought into the new cloud environment.
 
 Review the following guidelines for preparing your {rhos_component_storage_file} configuration file for adoption:

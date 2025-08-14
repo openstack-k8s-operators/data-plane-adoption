@@ -7,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 = Migrating the monitoring stack component to new nodes within an existing {Ceph} cluster
 
+[role="_abstract"]
 The {Ceph} Dashboard module adds web-based monitoring and administration to the
 Ceph Manager. With {OpenStackPreviousInstaller}-deployed {Ceph}, the {Ceph} Dashboard is enabled as part of the overcloud deploy and is composed of the following components:
 

@@ -7,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 :context: migrating-ceph
 
+[role="_abstract"]
 In the context of data plane adoption, where the {rhos_prev_long}
 ({OpenStackShort}) services are redeployed in {rhocp_long}, you migrate a
 {OpenStackPreviousInstaller}-deployed {CephCluster} cluster by using a process

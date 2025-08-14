@@ -7,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 = Migrating databases to the control plane
 
+[role="_abstract"]
 To begin creating the control plane, enable back-end services and import the databases from your original {rhos_prev_long} {rhos_prev_ver} deployment.
 
 include::../modules/proc_retrieving-topology-specific-service-configuration.adoc[leveloffset=+1]

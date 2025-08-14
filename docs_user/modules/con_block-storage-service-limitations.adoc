@@ -3,6 +3,7 @@
 
 = Limitations for adopting the {block_storage}
 
+[role="_abstract"]
 Before you begin the {block_storage_first_ref} adoption, review the following limitations:
 
 * There is no global `nodeSelector` option for all {block_storage} volumes. You must specify the `nodeSelector` for each back end.

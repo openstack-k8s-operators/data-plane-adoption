@@ -3,6 +3,7 @@
 
 = Adoption process overview
 
+[role="_abstract"]
 Familiarize yourself with the steps of the adoption process and the optional post-adoption tasks.
 
 .Main adoption process

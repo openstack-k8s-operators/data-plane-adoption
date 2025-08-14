@@ -3,6 +3,7 @@
 
 = Guidelines for planning the adoption
 
+[role="_abstract"]
 When planning to adopt a {rhos_long} {rhos_curr_ver} environment, consider the scope of the change. An adoption is similar in scope to a data center upgrade. Different firmware levels, hardware vendors, hardware profiles, networking interfaces, storage interfaces, and so on affect the adoption process and can cause changes in behavior during the adoption.
 
 Review the following guidelines to adequately plan for the adoption and increase the chance that you complete the adoption successfully:

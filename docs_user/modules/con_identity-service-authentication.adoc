@@ -3,6 +3,7 @@
 
 = {identity_service} authentication
 
+[role="_abstract"]
 If you have custom policies enabled, contact Red Hat Support before adopting a {OpenStackPreviousInstaller} OpenStack deployment. You must complete the following steps for adoption:
 
 . Remove custom policies.

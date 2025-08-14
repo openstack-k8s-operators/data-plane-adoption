@@ -7,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 :context: migrating-ceph-mon
 
+[role="_abstract"]
 You must move Ceph Monitor daemons from the {rhos_prev_long} ({OpenStackShort}) Controller nodes to a set of target nodes. Target nodes are either existing {Ceph} nodes, or {OpenStackShort} Compute nodes if {Ceph} is
 deployed by {OpenStackPreviousInstaller} with a Hyperconverged Infrastructure (HCI) topology. Additional Ceph Monitors are deployed to the target nodes, and they are promoted as `_admin` nodes that you can use to manage the {CephCluster} cluster and perform day 2 operations.
 

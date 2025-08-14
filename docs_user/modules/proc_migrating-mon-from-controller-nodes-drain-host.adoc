@@ -3,6 +3,7 @@
 
 = Draining the source node
 
+[role="_abstract"]
 Drain the source node and remove the source node host from the {CephCluster} cluster.
 
 .Procedure

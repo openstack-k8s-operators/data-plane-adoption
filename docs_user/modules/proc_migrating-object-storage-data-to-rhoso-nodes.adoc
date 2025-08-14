@@ -3,6 +3,7 @@
 
 = Migrating the {object_storage} data from {OpenStackShort} to {rhos_acro} nodes
 
+[role="_abstract"]
 The {object_storage_first_ref} migration involves the following steps:
 
 . Add new nodes to the {object_storage} rings.

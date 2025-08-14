@@ -3,6 +3,7 @@
 
 = Deploying a {Ceph} ingress daemon
 
+[role="_abstract"]
 To deploy the Ceph ingress daemon, you perform the following actions:
 
 . Remove the existing `ceph_rgw` configuration.
