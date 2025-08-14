@@ -3,6 +3,7 @@
 
 = Pulling the configuration from a {OpenStackPreviousInstaller} deployment
 
+[role="_abstract"]
 Before you start the data plane adoption workflow, back up the configuration from the {rhos_prev_long} ({OpenStackShort}) services and {OpenStackPreviousInstaller}. You can then use the files during the configuration of the adopted services to ensure that nothing is missed or misconfigured.
 
 .Prerequisites

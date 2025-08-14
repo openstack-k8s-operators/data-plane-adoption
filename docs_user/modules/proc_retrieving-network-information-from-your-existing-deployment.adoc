@@ -3,6 +3,7 @@
 
 = Retrieving the network configuration from your existing deployment
 
+[role="_abstract"]
 You must determine which isolated networks are defined in your existing
 deployment. After you retrieve your network configuration, you have the following information:
 

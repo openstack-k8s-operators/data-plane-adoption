@@ -3,6 +3,7 @@
 
 = Migrating TLS-e to the {rhos_acro} deployment
 
+[role="_abstract"]
 If you enabled TLS everywhere (TLS-e) in your {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} deployment, you must migrate TLS-e to the {rhos_long} deployment.
 
 The {rhos_acro} deployment uses the cert-manager operator to issue, track, and renew the certificates. In the following procedure, you extract the CA signing certificate from the FreeIPA instance that you use to provide the certificates in the {OpenStackShort} environment, and then import them into cert-manager in the {rhos_acro} environment. As a result, you minimize the disruption on the Compute nodes because you do not need to install a new chain of trust.

@@ -3,6 +3,7 @@
 
 = Create or update the {object_storage} endpoints
 
+[role="_abstract"]
 You must create or update the {object_storage_first_ref} endpoints to configure the new virtual IP address (VIP) that you reserved on the same network that you used to deploy RGW ingress.
 
 .Procedure

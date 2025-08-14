@@ -3,6 +3,7 @@
 
 = Scenario 2: Relocating one instance of a monitoring stack to migrate daemons to target nodes
 
+[role="_abstract"]
 Instead of adding a single `monitoring` label to all the target nodes, it is
 possible to relocate one instance of each monitoring stack daemon on a
 particular node.
