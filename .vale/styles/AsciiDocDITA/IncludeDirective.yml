@@ -1,9 +1,0 @@
-# Report include directives.
----
-extends: existence
-message: "%s"
-level: suggestion
-scope: raw
-nonword: true
-tokens:
-  - '^include::(?:[^\s\[]|[^[]*[^\s\[])\[.*\][ \t]*$'
