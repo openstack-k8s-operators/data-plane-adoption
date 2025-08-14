@@ -3,6 +3,7 @@
 
 = Retrieving topology-specific service configuration
 
+[role="_abstract"]
 Before you migrate your databases to the {rhos_long} control plane, retrieve the topology-specific service configuration from your {rhos_prev_long} ({OpenStackShort}) environment. You need this configuration for the following reasons:
 
 * To check your current database for inaccuracies

@@ -3,6 +3,7 @@
 
 = Completing prerequisites for {Ceph} RGW migration
 
+[role="_abstract"]
 Complete the following prerequisites before you begin the Ceph Object Gateway (RGW) migration.
 
 .Procedure

@@ -3,6 +3,7 @@
 
 = Redeploying a Ceph Monitor on the target node
 
+[role="_abstract"]
 You use the IP address that you migrated to the target node to redeploy the
 Ceph Monitor on the target node.
 

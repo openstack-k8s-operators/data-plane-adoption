@@ -7,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 = Planning your IPAM configuration
 
+[role="_abstract"]
 In a {rhos_long} deployment, each service that is deployed on the {rhocp_long}
 worker nodes requires an IP address from the IP Address Management (IPAM) pool.
 In a {rhos_prev_long} ({OpenStackShort}) deployment, all services that are

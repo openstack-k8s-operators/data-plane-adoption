@@ -3,6 +3,7 @@
 
 = Configuring new subnet ranges
 
+[role="_abstract"]
 [NOTE]
 If you are using IPv6, you can reuse existing subnet ranges in most cases. For more information about existing subnet ranges, see xref:reusing-existing-subnet-ranges_{context}[Reusing existing subnet ranges].
 

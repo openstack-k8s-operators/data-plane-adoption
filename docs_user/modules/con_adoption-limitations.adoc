@@ -3,6 +3,7 @@
 
 = Adoption limitations
 
+[role="_abstract"]
 Before you proceed with the adoption, check which features are Technology Previews or unsupported.
 
 .Technology Preview

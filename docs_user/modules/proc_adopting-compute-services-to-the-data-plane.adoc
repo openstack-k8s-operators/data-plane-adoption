@@ -3,6 +3,7 @@
 
 = Adopting Compute services to the {rhos_acro} data plane
 
+[role="_abstract"]
 Adopt your Compute (nova) services to the {rhos_long} data plane.
 
 .Prerequisites

@@ -3,6 +3,7 @@
 
 = Migrating the Ceph Monitor IP address
 
+[role="_abstract"]
 You must migrate your Ceph Monitor IP addresses to the target {Ceph} nodes. The
 IP address migration assumes that the target nodes are originally deployed by
 {OpenStackPreviousInstaller} and that the network configuration is managed by

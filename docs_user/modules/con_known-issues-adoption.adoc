@@ -3,4 +3,5 @@
 
 = Known issues
 
+[role="_abstract"]
 Review the following known issues that might affect a successful adoption:

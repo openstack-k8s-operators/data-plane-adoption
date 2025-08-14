@@ -3,6 +3,7 @@
 
 = Adopting the {object_storage}
 
+[role="_abstract"]
 If you are using Object Storage as a service, adopt the {object_storage_first_ref} to the {rhos_long} environment. If you are using the Object Storage API of the Ceph Object Gateway (RGW), skip the following procedure.
 
 .Prerequisites

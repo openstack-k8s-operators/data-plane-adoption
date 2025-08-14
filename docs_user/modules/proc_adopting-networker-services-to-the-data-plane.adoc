@@ -3,6 +3,7 @@
 
 = Adopting Networker services to the {rhos_acro} data plane
 
+[role="_abstract"]
 Adopt the Networker services in your existing {rhos_prev_long} deployment to the {rhos_long} data plane. The `Networker` services could be running on `Conroller` nodes or dedicated `Networker` nodes. You decide which services you want to run on the Networker nodes, and create a separate `OpenStackDataPlaneNodeSet` custom resource (CR) for the Networker nodes. You might also decide to implement the following options if they apply to your environment:
 
 * Depending on your topology, you might need to run the `neutron-metadata` service on the nodes, specifically when you want to serve metadata to SR-IOV ports that are hosted on Compute nodes.

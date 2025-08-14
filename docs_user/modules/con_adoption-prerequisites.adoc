@@ -3,6 +3,7 @@
 
 = Adoption prerequisites
 
+[role="_abstract"]
 Before you begin the adoption procedure, complete the following prerequisites:
 
 Planning information::

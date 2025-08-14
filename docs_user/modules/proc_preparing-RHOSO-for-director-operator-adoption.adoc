@@ -3,6 +3,7 @@
 
 = Preparing RHOSO for director Operator adoption
 
+[role="_abstract"]
 When you deploy a {rhos_long} environment by using two {rhocp_long} master nodes, you must perform the following actions:
 
 * Create a new namespace for {rhos_acro} installation.
