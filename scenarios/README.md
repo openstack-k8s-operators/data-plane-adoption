@@ -63,7 +63,7 @@ applicable, optional.
 - `deploy_command`: string with the stack deploy command to run verbatim,
 if defined, it ignores the `vars` and `args` fields, optional.
 - `stack_nodes`: list of groups for the inventory that contains the nodes that
-will be part of the stack, required. This groups must be a subset of the groups
+will be part of the stack, required. These groups must be a subset of the groups
 used as keys in `hostname_groups_map` and `roles_groups_map`.
 - `routes`: list of routes to define in the nodes' os_net_config template.
 List of dictionaries with the fields `ip_netmask`, `next_hop` and `default`.
@@ -99,7 +99,7 @@ for example, to deploy Ceph. Continuing from the example mentioned in the
 previous section, a possible value for this map would be:
 
 ```
-hostname_groups_map:
+roles_groups_map:
   osp-computes: "Compute"
   osp-controllers: "Controller"
 ```
@@ -134,5 +134,5 @@ pre_oc_run:
 
 Since the `source` attribute is not an absolute path, this example assumes that
 the `adoption_deploy_ceph.yml` playbook exists in the ci-framework (it
-introduced alongside the role to consume the scenarios defined here by
+is introduced alongside the role to consume the scenarios defined here by
 [this PR](https://github.com/openstack-k8s-operators/ci-framework/pull/2297)).

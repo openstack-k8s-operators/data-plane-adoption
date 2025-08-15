@@ -9,12 +9,12 @@ regarding the configuration of the services.
 In {OpenStackPreviousInstaller} deployments many of the service configurations are abstracted by
 {OpenStackPreviousInstaller}-specific configuration options. A single {OpenStackPreviousInstaller} option may trigger
 changes for multiple services and support for drivers, for example, the Block Storage service (cinder), that
-require patches to the {OpenStackPreviousInstaller} code base.
+require patches to the {OpenStackPreviousInstaller} codebase.
 
-In operator deployments this approach has changed: reduce the installer specific knowledge and leverage {OpenShift} ({OpenShiftShort}) and
+In operator deployments, this approach has changed: reduce the installer-specific knowledge and leverage {OpenShift} ({OpenShiftShort}) and
 {rhos_prev_long} ({OpenStackShort}) service specific knowledge whenever possible.
 
-To this effect {OpenStackShort} services will have sensible defaults for {OpenShiftShort} deployments and human operators will provide configuration snippets to provide
+To this effect, {OpenStackShort} services will have sensible defaults for {OpenShiftShort} deployments and human operators will provide configuration snippets to provide
 necessary configuration, such as the Block Storage service backend configuration, or to override
 the defaults.
 
@@ -76,8 +76,8 @@ a snippet with the section/s and configuration options.
 When there are sensitive information in the service configuration then it
 becomes a matter of personal preference whether to store all the configuration
 in the `Secret` or only the sensitive parts. However, if you split the
-configuration between `Secret` and `customServiceConfig` you still need the
+configuration between `Secret` and `customServiceConfig`, you still need the
 section header (eg: `[DEFAULT]`) to be present in both places.
 
 Attention should be paid to each service's adoption process as they may have
-some particularities regarding their configuration.
+some particularities regarding their configurations.
