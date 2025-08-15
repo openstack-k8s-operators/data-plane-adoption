@@ -120,6 +120,7 @@ cinder_volume_netapp_vars:
   - netapp_password
   - netapp_server_hostname
   - netapp_vserver
+  - netapp_pool_name_search_pattern
 
 # Vars for cinder-backup
 cinder_backup_nfs_backup_mount_point_base: "/var/lib/cinder/backup"
