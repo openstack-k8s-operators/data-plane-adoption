@@ -3,6 +3,7 @@
 
 = FIPS support
 
+[role="_abstract"]
 If you are adopting a {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} FIPS environment to {rhos_long} {rhos_curr_ver}, your adopted cluster remains a FIPS cluster. There is no option to change FIPS status during adoption.
 
 There is a major difference with how FIPS was configured in {OpenStackPreviousInstaller} and how it is enabled and enforced in operator deployments. In {OpenStackPreviousInstaller}, FIPS is enabled as part of its configuration, whereas in operator deployments, there is no specific FIPS configuration.

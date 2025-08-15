@@ -3,6 +3,7 @@
 
 = Adopting the {block_storage}
 
+[role="_abstract"]
 To adopt a {OpenStackPreviousInstaller}-deployed {block_storage_first_ref}, create the manifest based on the existing `cinder.conf` file, deploy the {block_storage}, and validate the new deployment.
 
 .Prerequisites

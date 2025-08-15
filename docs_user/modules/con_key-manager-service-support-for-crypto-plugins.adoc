@@ -3,6 +3,7 @@
 
 = Key Manager service support for crypto plug-ins
 
+[role="_abstract"]
 The Key Manager service (barbican) does not yet support all of the crypto plug-ins available in {OpenStackPreviousInstaller}.
 
 //**TODO: Right now Barbican only supports the simple crypto plugin.

@@ -3,6 +3,7 @@
 
 = Adopting the Placement service
 
+[role="_abstract"]
 To adopt the Placement service, you patch an existing `OpenStackControlPlane` custom resource (CR) that has the Placement service disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
 
 .Prerequisites

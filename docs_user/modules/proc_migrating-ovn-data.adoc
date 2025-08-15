@@ -3,6 +3,7 @@
 
 = Migrating OVN data
 
+[role="_abstract"]
 Migrate the data in the OVN databases from the original {rhos_prev_long} deployment to `ovsdb-server` instances that are running in the {rhocp_long} cluster.
 
 .Prerequisites

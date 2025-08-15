@@ -7,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 = Preparing director Operator for adoption
 
+[role="_abstract"]
 You must prepare your existing director Operator environment and the {rhos_long} environment for adoption.
 
 include::../modules/proc_preparing-controller-nodes-for-director-operator-adoption.adoc[leveloffset=+1]

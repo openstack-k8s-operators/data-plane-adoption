@@ -3,6 +3,7 @@
 
 = Completing prerequisites for a {Ceph} cluster with monitoring stack components
 
+[role="_abstract"]
 Complete the following prerequisites before you migrate a {Ceph} cluster with monitoring stack components.
 
 [NOTE]

@@ -3,6 +3,7 @@
 
 = Preparing the {block_storage} by using an agnostic configuration file
 
+[role="_abstract"]
 The following process is a more straightforward approach:
 
 .Procedure

@@ -3,6 +3,7 @@
 
 = Performing a fast-forward upgrade on Compute services
 
+[role="_abstract"]
 You must upgrade the Compute services from {rhos_prev_long} {rhos_prev_ver} to {rhos_long} {rhos_curr_ver} on the control plane and data plane by completing the following tasks:
 
 * Update the cell1 Compute data plane services version.

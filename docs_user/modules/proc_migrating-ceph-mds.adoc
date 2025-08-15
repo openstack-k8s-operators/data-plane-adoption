@@ -3,6 +3,7 @@
 
 = Migrating {Ceph} MDS to new nodes within the existing cluster
 
+[role="_abstract"]
 You can migrate the MDS daemon when {rhos_component_storage_file_first_ref}, deployed with either a cephfs-native or ceph-nfs back end, is part of the overcloud deployment. The MDS migration is performed by `cephadm`, and you move the daemons placement from a hosts-based approach to a label-based approach.
 ifeval::["{build}" != "upstream"]
 This ensures that you can visualize the status of the cluster and where daemons are placed by using the `ceph orch host` command. You can also have a general view of how the daemons are co-located within a given host, as described in the Red Hat Knowledgebase article https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations].
