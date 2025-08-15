@@ -11,6 +11,8 @@ Adopt your {rhos_prev_long} {rhos_prev_ver} control plane services to deploy the
 
 include::../modules/proc_adopting-the-identity-service.adoc[leveloffset=+1]
 
+include::../modules/proc_configuring-ldap-with-domain-specific-drivers.adoc[leveloffset=+1]
+
 include::../modules/proc_adopting-key-manager-service.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-the-networking-service.adoc[leveloffset=+1]
