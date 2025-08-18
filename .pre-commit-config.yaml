@@ -16,7 +16,7 @@ repos:
         files: .*\.(yaml|yml)$
         args: [--allow-multiple-documents]
   - repo: https://github.com/ansible/ansible-lint
-    rev: v6.22.1
+    rev: v25.8.1
     hooks:
       - id: ansible-lint
         entry: env ANSIBLE_ROLES_PATH=./tests/roles:$ANSIBLE_ROLES_PATH ANSIBLE_LIBRARY=./tests/plugins/modules:$ANSIBLE_LIBRARY ansible-lint
