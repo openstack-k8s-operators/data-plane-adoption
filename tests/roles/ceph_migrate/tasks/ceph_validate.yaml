@@ -39,7 +39,10 @@
   vars:
     num_up_osds: "{{ ceph | community.general.json_query('osdmap.num_up_osds') | default(0) }}"
     num_osds: "{{ ceph | community.general.json_query('osdmap.num_osds') | default(1) }}"
-    pct: "{{ (num_up_osds | float | default(0.0) / num_osds | float | default(1.0)) * 100 }}"
+    pct: >-
+      {%- set up_osds = (num_up_osds | float | default(0.0)) -%}
+      {%- set total_osds = (num_osds | float | default(1.0)) -%}
+      {{ (up_osds / total_osds * 100) if total_osds > 0 else 0 }}
   block:
     - name: OSDMap
       ansible.builtin.debug:
