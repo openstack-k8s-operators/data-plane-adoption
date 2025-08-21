@@ -22,6 +22,8 @@
         src: manila_cephfs.yaml.j2
         dest: /tmp/manila_cephfs.yaml
         mode: "0600"
+      vars:
+        tripleo_ganesha_vip: "{{ cephnfs_vip.stdout }}"
 
     - name: Deploy podified Manila with cephfs backend
       ansible.builtin.shell: |
