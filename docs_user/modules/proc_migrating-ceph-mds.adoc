@@ -250,9 +250,8 @@ mds.mds.cephstorage-2.gnfhfe  cephstorage-2.redhat.local                     run
 ----
 
 ifeval::["{build}" != "downstream"]
-.Useful resources
-
+[role="_additional-resources"]
+.Additional resources
 * https://docs.ceph.com/en/reef/cephfs/eviction[cephfs - eviction]
-
 * https://docs.ceph.com/en/reef/cephfs/standby/#configuring-mds-file-system-affinity[ceph mds - affinity]
 endif::[]

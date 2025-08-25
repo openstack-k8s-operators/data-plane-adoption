@@ -15,6 +15,10 @@ deployment. After you retrieve your network configuration, you have the followin
   services, these addresses are excluded from the corresponding allocation
   pools.
 
+ifeval::["{build_variant}" == "ospdo"]
+For more information about director Operator network configurations, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#assembly_creating-networks-with-director-operator[Creating networks with director Operator] in _Deploying an overcloud in a Red Hat OpenShift Container Platform cluster with director Operator_.
+endif::[]
+
 .Procedure
 
 . Find the network configuration in the `network_data.yaml` file. For example:
@@ -64,7 +68,3 @@ consumed and are not available for the new control plane services until the adop
 
 . Repeat this procedure for each isolated network and each host in the
 configuration.
-
-ifeval::["{build_variant}" == "ospdo"]
-For more information about director Operator network configurations, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#assembly_creating-networks-with-director-operator[Creating networks with director Operator] in _Deploying an overcloud in a Red Hat OpenShift Container Platform cluster with director Operator_.
-endif::[]

@@ -144,7 +144,7 @@ swift-ring-tool remove 172.20.0.100
 swift-ring-tool rebalance
 swift-ring-tool push'
 ----
-
++
 [NOTE]
 Even if all replicas are on the new nodes and the `swift-dispersion-report` command reports 100% of the copies found, there might still be data on the old nodes. The replicators remove this data, but it might take more time.
 

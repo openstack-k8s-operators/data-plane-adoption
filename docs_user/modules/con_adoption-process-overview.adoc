@@ -6,8 +6,8 @@
 [role="_abstract"]
 Familiarize yourself with the steps of the adoption process and the optional post-adoption tasks.
 
-.Main adoption process
-
+Main adoption process::
++
 . xref:migrating-tls-everywhere_configuring-network[Migrate TLS everywhere (TLS-e) to the Red Hat OpenStack Services on OpenShift (RHOSO) deployment].
 . xref:migrating-databases-to-the-control-plane_configuring-network[Migrate your existing databases to the new control plane].
 . xref:adopting-openstack-control-plane-services_configuring-network[Adopt your Red Hat OpenStack Platform 17.1 control plane services to the new RHOSO 18.0 deployment].
@@ -22,8 +22,8 @@ endif::[]
 .. xref:migrating-ceph-rgw_migrating-ceph-monitoring[Migrate {Ceph} RGW to external RHEL nodes].
 .. xref:migrating-ceph-rbd_migrating-ceph-monitoring[Migrate {Ceph} RBD to external RHEL nodes].
 
-.Post-adoption tasks
-
+Post-adoption tasks::
++
 * Optional: Run tempest to verify that the entire adoption process is working properly. For more information, see link:{defaultURL}/validating_and_troubleshooting_the_deployed_cloud/index[Validating and troubleshooting the deployed cloud].
 * Optional: Perform a minor update from RHEL 9.2 to 9.4. You can perform a minor update any time after you complete the adoption procedure. For more information, see link:{defaultURL}/updating_your_environment_to_the_latest_maintenance_release/index[Updating your environment to the latest maintenance release].
 * Optional: Verify that you migrated all services from the Controller nodes, and then power off the nodes. If any services are still running in the Controller nodes, such as Open Virtual Networking (ML2/OVN), {object_storage_first_ref}, or {Ceph}, do not power off the nodes.

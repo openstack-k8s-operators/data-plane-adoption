@@ -12,6 +12,10 @@ The {networking_service} adoption is complete if you see the following results:
 * The `NeutronAPI` service is running.
 * The {identity_service_first_ref} endpoints are updated, and the same back end of the source cloud is available.
 
+ifeval::["{build}" != "downstream"]
+The {networking_service} adoption follows a similar pattern to https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone].
+endif::[]
+
 .Prerequisites
 
 * Ensure that Single Node OpenShift or OpenShift Local is running in the {rhocp_long} cluster.
@@ -20,9 +24,6 @@ The {networking_service} adoption is complete if you see the following results:
 
 
 .Procedure
-ifeval::["{build}" != "downstream"]
-The {networking_service} adoption follows a similar pattern to https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone].
-endif::[]
 
 * Patch the `OpenStackControlPlane` CR to deploy the {networking_service}:
 +

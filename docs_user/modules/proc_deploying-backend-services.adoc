@@ -351,7 +351,7 @@ spec:
         customIssuer: rootca-internal
       enabled: true
 ----
-
++
 [NOTE]
 ====
 If you use IPv6, change the load balancer IPs to the IPs in your environment, for example:

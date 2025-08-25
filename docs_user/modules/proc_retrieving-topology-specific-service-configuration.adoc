@@ -238,5 +238,6 @@ $ chmod 0600 ~/.source_cloud_exported_variables*
 +
 <1> If `neutron-sriov-nic-agent` agents are running in your {OpenStackShort} deployment, get the configuration to use for the data plane adoption.
 
-[NOTE]
+.Next steps
+
 This configuration and the exported values are required later, during the data plane adoption post-checks. After the {OpenStackShort} control plane services are shut down, if any of the exported values are lost, re-running the `export` command fails because the control plane services are no longer running on the source cloud, and the data cannot be retrieved. To avoid data loss, preserve the exported values in an environment file before shutting down the control plane services.
