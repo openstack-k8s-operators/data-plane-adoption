@@ -17,9 +17,9 @@ contents of the whole file into a `Secret`.
 for each backend and just adding the respective `enabled_backends` option.
 . Add external files as mentioned in the last bullet of the tailor-made
 configuration explanation.
-
++
 Example of what the quick and dirty configuration patch would look like:
-
++
 [source,yaml]
 ----
    spec:

@@ -8,6 +8,21 @@ To connect service pods to isolated networks on {rhocp_long} worker nodes that r
 
 This configuration is managed by the NMState operator, which uses `NodeNetworkConfigurationPolicy` custom resources (CRs) to define the desired network configuration for the nodes.
 
+// TODO: Move this to the IPv6 section once it is fully documented, both upstream and downstream.
+ifeval::["{build}" != "downstream"]
+[WARNING]
+In IPv6, {rhocp_long} worker nodes need a `/64` prefix allocation due to OVN
+limitations (RFC 4291). For dynamic IPv6 configuration, you need to change the
+prefix allocation on the Router Advertisement settings. If you want to use
+manual configuration for IPv6, define a similar CR to the
+`NodeNetworkConfigurationPolicy` CR example in this procedure, and define an
+IPv6 address and disable IPv4. Because the constraint for the `/64` prefix did
+not exist in {OpenstackPreviousInstaller}, your {OpenStackShort}
+control plane network might not have enough capacity to allocate these
+networks. If that is the case, allocate a prefix that fits a large enough number
+of addresses, for example, `/60`. The prefix depends on the number of worker nodes you have.
+endif::[]
+
 .Procedure
 
 * For each {OpenShiftShort} worker node, define a `NodeNetworkConfigurationPolicy` CR that describes the desired network configuration. For example:
@@ -72,18 +87,3 @@ items:
       kubernetes.io/hostname: ocp-worker-0
       node-role.kubernetes.io/worker: ""
 ----
-
-// TODO: Move this to the IPv6 section once it is fully documented, both upstream and downstream.
-ifeval::["{build}" != "downstream"]
-[WARNING]
-In IPv6, {rhocp_long} worker nodes need a `/64` prefix allocation due to OVN
-limitations (RFC 4291). For dynamic IPv6 configuration, you need to change the
-prefix allocation on the Router Advertisement settings. If you want to use
-manual configuration for IPv6, define a similar CR to the
-`NodeNetworkConfigurationPolicy` CR example in this procedure, and define an
-IPv6 address and disable IPv4. Because the constraint for the `/64` prefix did
-not exist in {OpenstackPreviousInstaller}, your {OpenStackShort}
-control plane network might not have enough capacity to allocate these
-networks. If that is the case, allocate a prefix that fits a large enough number
-of addresses, for example, `/60`. The prefix depends on the number of worker nodes you have.
-endif::[]

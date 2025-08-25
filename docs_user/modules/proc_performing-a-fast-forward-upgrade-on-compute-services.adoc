@@ -184,5 +184,5 @@ ${BASH_ALIASES[openstack]} server list -c Name -c Status -f value | grep -qF "te
   ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test --fit-width -f json | jq -r '.state' | grep running || echo FAIL
 ----
 
-[NOTE]
+.Next steps
 After the data plane adoption, the Compute hosts continue to run Red Hat Enterprise Linux (RHEL) {rhel_prev_ver}. To take advantage of RHEL {rhel_curr_ver}, perform a minor update procedure after finishing the adoption procedure.
