@@ -3,6 +3,7 @@
 
 = Adopting the {loadbalancer_service}
 
+[role="_abstract"]
 To adopt the {loadbalancer_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {loadbalancer_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment. Existing load balancers fail over after the adoption process to upgrade their image, and set up a network connection with the new control plane.
 
 .Procedure

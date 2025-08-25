@@ -7,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 = Adopting the {image_service}
 
+[role="_abstract"]
 To adopt the {image_service_first_ref} you patch an existing `OpenStackControlPlane` custom resource (CR) that has the {image_service} disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
 
 The {image_service} adoption is complete if you see the following results:

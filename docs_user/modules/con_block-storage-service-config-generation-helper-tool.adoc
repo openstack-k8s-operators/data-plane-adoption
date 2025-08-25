@@ -3,6 +3,7 @@
 
 = About the {block_storage} configuration generation helper tool
 
+[role="_abstract"]
 Creating the right {block_storage_first_ref} configuration files to deploy by using Operators can
 sometimes be complex. There is a helper tool that can create a draft of the files from a `cinder.conf` file.
 

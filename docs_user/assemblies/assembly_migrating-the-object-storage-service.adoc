@@ -6,6 +6,8 @@ ifdef::context[:parent-context: {context}]
 :context: migrate-object-storage-service
 
 = Migrating the {object_storage} to {rhos_long_noacro} nodes
+
+[role="_abstract"]
 If you are using the {rhos_prev_long} {object_storage_first_ref} as an Object Storage service, you must migrate your Object Storage service to {rhos_long_noacro} nodes.
 
 If you are using the Object Storage API of the Ceph Object Gateway (RGW), you can skip this chapter and migrate your Red Hat Ceph Storage cluster. For more information, see xref:ceph-migration_adopt-control-plane[Migrate the {Ceph} cluster]. If you are not planning to migrate Ceph daemons from Controller nodes, you must perform the steps that are described in xref:deploying-a-ceph-ingress-daemon_migrating-ceph-rgw[Deploying a Ceph ingress daemon] and xref:updating-the-object-storage-endpoints_migrating-ceph-rgw[Create or update the Object Storage service endpoints].

@@ -3,6 +3,7 @@
 
 = Updating the {CephCluster} cluster Ceph Dashboard configuration
 
+[role="_abstract"]
 If the Ceph Dashboard is part of the enabled Ceph Manager modules, you need to
 reconfigure the failover settings.
 
