@@ -16,11 +16,52 @@
     type: Opaque
     EOF
 
+
+- name: Set IPA BaseDN var
+  ansible.builtin.set_fact:
+    ipa_basedn: "dc={{ edpm_node_hostname.split('.')[1:] | join(',dc=') }}"
+  when: enable_tlse is defined and enable_tlse
+
+- name: Create Keystone domain config secret for LDAP
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    cat <<EOF | oc apply -n openstack -f -
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: keystone-domains
+    type: Opaque
+    stringData:
+      keystone.{{ ipa_domain | default('REDHAT') }}.conf: |
+        [identity]
+        driver = ldap
+        [ldap]
+        url = ldap://{{ standalone_ip | default(edpm_node_ip) }}
+        user = uid=admin,cn=users,cn=accounts,{{ ipa_basedn }}
+        password = {{ ipa_admin_password | default('nomoresecrets') }}
+        suffix = {{ ipa_basedn }}
+        user_tree_dn = cn=users,cn=accounts,{{ ipa_basedn }}
+        user_objectclass = person
+        user_id_attribute = uid
+        user_name_attribute = uid
+        user_mail_attribute = mail
+        group_tree_dn = cn=groups,cn=accounts,{{ ipa_basedn }}
+        group_objectclass = groupOfNames
+        group_id_attribute = cn
+        group_name_attribute = cn
+        group_member_attribute = member
+        group_desc_attribute = description
+    EOF
+  when: enable_tlse is defined and enable_tlse
+
 - name: deploy podified Keystone
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '{{ keystone_patch }}'
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ keystone_patch_to_use }}'
+  vars:
+    keystone_patch_to_use: "{{ keystone_patch_ldap if (enable_tlse is defined and enable_tlse) else keystone_patch }}"
 
 - name: wait for Keystone to start up
   ansible.builtin.shell: |
@@ -106,3 +147,7 @@
     ${BASH_ALIASES[openstack]} credential show {{ before_adoption_credential.stdout }} -f value -c blob
   register: after_adoption_credential
   failed_when: after_adoption_credential.stdout != 'test'
+
+- name: Run IPA tests if enable_tlse is true
+  ansible.builtin.include_tasks: run_ipa_test.yml
+  when: enable_tlse is defined and enable_tlse
