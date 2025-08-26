@@ -5,6 +5,7 @@
 :compat-mode:
 :doctype: book
 :context: adoption-rhoso
+:sectnums:
 
 include::adoption-attributes.adoc[]
 
