@@ -8,7 +8,7 @@ ifdef::context[:parent-context: {context}]
 = {rhos_long_noacro} {rhos_curr_ver} adoption overview
 
 [role="_abstract"]
-Adoption is the process of migrating a {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} control plane to {rhos_long_noacro} {rhos_curr_ver}, and then completing an in-place upgrade of the data plane. Adoption enables you to retain existing infrastructure investments while modernizing your {OpenStackShort} deployment on a containerized {rhocp_long} foundation. To ensure that you understand the entire adoption process and how to sufficiently prepare your {OpenStackShort} environment, review the prerequisites, adoption process, and post-adoption tasks.
+Adoption is the process of migrating a {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} control plane to {rhos_long_noacro} {rhos_curr_ver}, and then completing an in-place upgrade of the data plane. You can retain existing infrastructure investments and modernize your {OpenStackShort} deployment on a containerized {rhocp_long} foundation. To ensure that you understand the entire adoption process and how to sufficiently prepare your {OpenStackShort} environment, review the prerequisites, adoption process, and post-adoption tasks.
 
 [IMPORTANT]
 Read the whole adoption guide before you start

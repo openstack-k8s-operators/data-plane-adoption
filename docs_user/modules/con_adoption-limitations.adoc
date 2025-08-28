@@ -32,12 +32,12 @@ Unsupported features::
 +
 The adoption process does not support the following features:
 +
-* instanceHA
-* DCN
-* Designate
+* Instance high availability (instanceHA)
+* Distributed Compute node architecture (DCN)
+* DNS-as-a-service (designate)
 * {loadbalancer_first_ref}
-* BGP
-* Adopting a FIPS environment
+* Border Gateway Protocol (BGP)
+* Adopting a Federal Information Processing Standards (FIPS) environment
 * The {key_manager} only supports the simple crypto plug-in
 
 
