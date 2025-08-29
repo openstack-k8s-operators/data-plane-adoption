@@ -5,7 +5,8 @@
       become: true
       ansible.builtin.shell: |
         {{ shell_header }}
-        ${CONTROLLER1_SSH} awk -F '[=;]' '/Bind_Addr/ {gsub(/ /, "", $2); print $2}' {{ ganesha_default_path }}
+        CONTROLLER1_SSH="{{ controller1_ssh }}"
+        ${CONTROLLER1_SSH} "awk -F '[=;]' '/Bind_Addr/ {gsub(/ /, \"\", \$2); print \$2}' {{ ganesha_default_path }}"
       register: cephnfs_vip
 
     - name: Fail if the OLD Ganesha VIP is not a good input value
