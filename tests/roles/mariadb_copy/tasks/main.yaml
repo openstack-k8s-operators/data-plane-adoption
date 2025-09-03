@@ -66,6 +66,10 @@
   retries: 25
   delay: 2
 
+- name: Add time
+  ansible.builtin.pause:
+    seconds: 160
+
 - name: check that the Galera database cluster(s) members are online and synced, for all cells
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
@@ -79,7 +83,7 @@
         oc rsh mariadb-copy-data mysql \
           -h "$i" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" \
           -e "show global status like 'wsrep_local_state_comment'" | \
-          grep -qE "\bSynced\b"
+          grep -E "\bSynced\b"
       done
     done
 

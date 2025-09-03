@@ -6,9 +6,9 @@ set +u
 . ~/.source_cloud_exported_variables_default
 set -u
 dbs=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD['super']}" -e 'SHOW databases;')
-echo $dbs | grep -Eq '\bkeystone\b' && echo "OK" || echo "CHECK FAILED"
-echo $dbs | grep -Eq '\bneutron\b' && echo "OK" || echo "CHECK FAILED"
-echo "${PULL_OPENSTACK_CONFIGURATION_DATABASES[@]}" | grep -Eq '\bovs_neutron\b' && echo "OK" || echo "CHECK FAILED" # <1>
+echo $dbs | grep -E '\bkeystone\b' && echo "OK" || echo "CHECK FAILED"
+echo $dbs | grep -E '\bneutron\b' && echo "OK" || echo "CHECK FAILED"
+echo "${PULL_OPENSTACK_CONFIGURATION_DATABASES[@]}" | grep -E '\bovs_neutron\b' && echo "OK" || echo "CHECK FAILED" # <1>
 novadb_mapped_cells=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD['super']}" \
   nova_api -e 'select uuid,name,transport_url,database_connection,disabled from cell_mappings;') # <2>
 uuidf='\S{8,}-\S{4,}-\S{4,}-\S{4,}-\S{12,}'
@@ -17,8 +17,8 @@ difference=$(diff -ZNua \
   <(printf "%s\n" "$PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS") \
   <(printf "%s\n" "$novadb_mapped_cells")) || true
 if [ "$DEFAULT_CELL_NAME" != "default" ]; then
-  printf "%s\n" "$difference" | grep -qE "^\-$default\s+default\b" && echo "OK" || echo "CHECK FAILED"
-  printf "%s\n" "$difference" | grep -qE "^\+$default\s+$DEFAULT_CELL_NAME\b" && echo "OK" || echo "CHECK FAILED"
+  printf "%s\n" "$difference" | grep -E "^\-$default\s+default\b" && echo "OK" || echo "CHECK FAILED"
+  printf "%s\n" "$difference" | grep -E "^\+$default\s+$DEFAULT_CELL_NAME\b" && echo "OK" || echo "CHECK FAILED"
   [ $(grep -E "^[-\+]$uuidf" <<<"$difference" | wc -l) -eq 2 ] && echo "OK" || echo "CHECK FAILED"
 else
   [ "x$difference" = "x" ] && echo "OK" || echo "CHECK FAILED"
@@ -30,7 +30,7 @@ for CELL in $(echo $RENAMED_CELLS); do # <3>
   . ~/.source_cloud_exported_variables_$RCELL
   set -u
   c1dbs=$(oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p${PODIFIED_DB_ROOT_PASSWORD[$CELL]} -e 'SHOW databases;') # <4>
-  echo $c1dbs | grep -Eq "\bnova_${CELL}\b" && echo "OK" || echo "CHECK FAILED"
+  echo $c1dbs | grep -E "\bnova_${CELL}\b" && echo "OK" || echo "CHECK FAILED"
   novadb_svc_records=$(oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p${PODIFIED_DB_ROOT_PASSWORD[$CELL]} \
     nova_$CELL -e "select host from services where services.binary='nova-compute' and deleted=0 order by host asc;")
   diff -Z <(echo "x$novadb_svc_records") <(echo "x${PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[@]}") && echo "OK" || echo "CHECK FAILED" # <5>
