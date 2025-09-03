@@ -1,0 +1,51 @@
+- name: deploy podified Designate
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ designate_patch }}'
+
+- name: wait for Designate to start up
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait pod --for condition=Ready --selector=service=designate
+  register: designate_running_result
+  until: designate_running_result is success
+  retries: 180
+  delay: 2
+
+- name: check that Designate is reachable and its endpoints are defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    ${BASH_ALIASES[openstack]} endpoint list | grep dns
+    ${BASH_ALIASES[openstack]} zone list
+  register: designate_responding_result
+  until: designate_responding_result is success
+  retries: 60
+  delay: 2
+
+- name: verify Designate functionality with test zone creation
+  when: test_designate_functionality|default(false)
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    # Create a test zone
+    zone_name="test-adoption-{{ ansible_date_time.epoch }}.example.com."
+    ${BASH_ALIASES[openstack]} zone create --email test@example.com $zone_name
+
+    # Verify zone was created
+    zone_status=$(${BASH_ALIASES[openstack]} zone show $zone_name -f value -c status)
+    if [ "$zone_status" != "ACTIVE" ] && [ "$zone_status" != "PENDING" ]
+    then
+      echo "Zone creation failed. Status: $zone_status"
+      exit 1
+    fi
+
+    # Clean up test zone
+    ${BASH_ALIASES[openstack]} zone delete $zone_name
