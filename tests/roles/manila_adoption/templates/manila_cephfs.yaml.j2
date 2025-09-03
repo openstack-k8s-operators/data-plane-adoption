@@ -48,7 +48,7 @@ spec:
             cephfs_protocol_helper_type= {{ (manila_backend == "cephfs") | ternary('CEPHFS', 'NFS') }}
             {% if manila_backend == "cephnfs" -%}
             cephfs_nfs_cluster_id=cephfs
-            cephfs_ganesha_server_ip= {{ cephnfs_vip | default("") }}
+            cephfs_ganesha_server_ip= {{ tripleo_ganesha_vip | default("") }}
             {%- endif %}
 
           replicas: 1
