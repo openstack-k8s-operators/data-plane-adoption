@@ -61,6 +61,18 @@
         - {os_command: 'role', os_command_object: 'swiftoperator'}
         - {os_command: 'project', os_command_object: 'service'}
 
+    # Validate that ceph_rgw_virtual_ips_list is not empty
+    - name: Validate Ceph RGW IP list is not empty
+      ansible.builtin.fail:
+        msg: "ceph_rgw_virtual_ips_list is empty or undefined. Please ensure Ceph RGW virtual IPs are configured."
+      when:
+        - ceph_rgw_virtual_ips_list is not defined or ceph_rgw_virtual_ips_list | length == 0
+
+    # This task will wrap the ip with [] in case of ipv6, for ipv4 ip is used as it is.
+    - name: Extract IP and wrap it in case of IPV6 url
+      ansible.builtin.set_fact:
+        ceph_rgw_url: "{{ (ceph_rgw_virtual_ips_list[0] | ansible.utils.ipaddr('address')) | ansible.utils.ipwrap }}"
+
     - name: Configure swift endpoints to use rgw
       ansible.builtin.shell: |
         {{ shell_header }}
@@ -68,6 +80,6 @@
 
         ${BASH_ALIASES[openstack]} role add --user {{ all_uuids.results.0.stdout }} --project {{ all_uuids.results.7.stdout }} {{ all_uuids.results.2.stdout }}
         ${BASH_ALIASES[openstack]} role add --user {{ all_uuids.results.0.stdout }} --project {{ all_uuids.results.7.stdout }} {{ all_uuids.results.3.stdout }}
-        ${BASH_ALIASES[openstack]} endpoint create --region regionOne {{ all_uuids.results.1.stdout }} public http://{{ ceph_rgw_virtual_ips_list[0] | ansible.utils.ipaddr('address') }}:8080/swift/v1/AUTH_%\(tenant_id\)s
-        ${BASH_ALIASES[openstack]} endpoint create --region regionOne {{ all_uuids.results.1.stdout }} internal http://{{ ceph_rgw_virtual_ips_list[0] | ansible.utils.ipaddr('address') }}:8080/swift/v1/AUTH_%\(tenant_id\)s
+        ${BASH_ALIASES[openstack]} endpoint create --region regionOne {{ all_uuids.results.1.stdout }} public http://{{ ceph_rgw_url }}:8080/swift/v1/AUTH_%\(tenant_id\)s
+        ${BASH_ALIASES[openstack]} endpoint create --region regionOne {{ all_uuids.results.1.stdout }} internal http://{{ ceph_rgw_url }}:8080/swift/v1/AUTH_%\(tenant_id\)s
         ${BASH_ALIASES[openstack]} role add --project {{ all_uuids.results.4.stdout }} --user {{ all_uuids.results.5.stdout }} {{ all_uuids.results.6.stdout }}
