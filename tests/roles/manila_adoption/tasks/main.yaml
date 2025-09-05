@@ -44,3 +44,4 @@
       vars:
         share_type_name: default
         driver_handles_share_servers: false
+      when: manila_create_share_type | default(true)
