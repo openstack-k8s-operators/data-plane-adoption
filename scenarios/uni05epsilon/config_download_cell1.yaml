@@ -1,0 +1,121 @@
+---
+resource_registry:
+  # yamllint disable rule:line-length
+  OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+  OS::TripleO::OVNMacAddressNetwork: OS::Heat::None
+  OS::TripleO::OVNMacAddressPort: OS::Heat::None
+  OS::TripleO::Compute::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
+  OS::TripleO::Compute::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
+  OS::TripleO::Compute::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
+  OS::TripleO::Compute::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  OS::TripleO::CellController::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
+  OS::TripleO::CellController::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
+  OS::TripleO::CellController::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
+  OS::TripleO::CellController::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  OS::TripleO::Compute::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+  OS::TripleO::CellController::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+
+  OS::TripleO::Services::CeilometerAgentCentral: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-central-container-puppet.yaml
+  OS::TripleO::Services::CeilometerAgentNotification: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-notification-container-puppet.yaml
+  OS::TripleO::Services::CeilometerAgentIpmi: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-ipmi-container-puppet.yaml
+  OS::TripleO::Services::ComputeCeilometerAgent: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-compute-container-puppet.yaml
+  OS::TripleO::Services::Collectd: /usr/share/openstack-tripleo-heat-templates/deployment/metrics/collectd-container-puppet.yaml
+  OS::TripleO::Services::MetricsQdr: /usr/share/openstack-tripleo-heat-templates/deployment/metrics/qdr-container-puppet.yaml
+  OS::TripleO::Services::OsloMessagingRpc: /usr/share/openstack-tripleo-heat-templates/deployment/rabbitmq/rabbitmq-messaging-rpc-pacemaker-puppet.yaml
+  OS::TripleO::Services::OsloMessagingNotify: /usr/share/openstack-tripleo-heat-templates/deployment/rabbitmq/rabbitmq-messaging-notify-shared-puppet.yaml
+  OS::TripleO::Services::HAproxy: /usr/share/openstack-tripleo-heat-templates/deployment/haproxy/haproxy-pacemaker-puppet.yaml
+  OS::TripleO::Services::Pacemaker: /usr/share/openstack-tripleo-heat-templates/deployment/pacemaker/pacemaker-baremetal-puppet.yaml
+  OS::TripleO::Services::PacemakerRemote: /usr/share/openstack-tripleo-heat-templates/deployment/pacemaker/pacemaker-remote-baremetal-puppet.yaml
+  OS::TripleO::Services::Clustercheck: /usr/share/openstack-tripleo-heat-templates/deployment/pacemaker/clustercheck-container-puppet.yaml
+  OS::TripleO::Services::Redis: /usr/share/openstack-tripleo-heat-templates/deployment/database/redis-pacemaker-puppet.yaml
+  OS::TripleO::Services::Rsyslog: /usr/share/openstack-tripleo-heat-templates/deployment/logging/rsyslog-container-puppet.yaml
+  OS::TripleO::Services::MySQL: /usr/share/openstack-tripleo-heat-templates/deployment/database/mysql-pacemaker-puppet.yaml
+  OS::TripleO::Services::CinderBackup: /usr/share/openstack-tripleo-heat-templates/deployment/cinder/cinder-backup-pacemaker-puppet.yaml
+  OS::TripleO::Services::CinderVolume: /usr/share/openstack-tripleo-heat-templates/deployment/cinder/cinder-volume-pacemaker-puppet.yaml
+
+  # Complements the 'ManageNetworks: false', not needed otherwise
+  OS::TripleO::Network::External: OS::Heat::None
+  OS::TripleO::Network::InternalApi: OS::Heat::None
+  OS::TripleO::Network::Storage: OS::Heat::None
+  OS::TripleO::Network::StorageMgmt: OS::Heat::None
+  OS::TripleO::Network::Tenant: OS::Heat::None
+  OS::TripleO::Network::Management: OS::Heat::None
+
+parameter_defaults:
+  SshFirewallAllowAll: true
+
+  # Specify that this is an additional cell
+  NovaAdditionalCell: True
+  # Disable network creation in order to use the `network_data.yaml` file from the overcloud stack,
+  # and create ports for the nodes in the separate stacks on the existing networks.
+  # NOTE(bogdando): might need to enable it, to deploy cells-specific subdomains from different network_data_cellX.yaml files.
+  # Also, test RHOSO adoption for a metadata agent deployed per each cell, to see if it handles each one properly,
+  # when transitioning all to a superconductor layoyt from a flat OSP17.1 layout
+  ManageNetworks: false
+  NovaLocalMetadataPerCell: True
+
+  RedisVirtualFixedIPs:
+    - ip_address: 192.168.122.111
+      use_neutron: false
+  OVNDBsVirtualFixedIPs:
+    - ip_address: 192.168.122.121
+      use_neutron: false
+  ComputeExtraConfig:
+    nova::compute::libvirt::services::libvirt_virt_type: qemu
+    nova::compute::libvirt::virt_type: qemu
+  Debug: true
+  DockerPuppetDebug: true
+  ContainerCli: podman
+
+  CellControllerCount: 1
+  ControllerCount: 0
+  ComputeCount: 1
+  NeutronGlobalPhysnetMtu: 1350
+  CinderLVMLoopDeviceSize: 20480
+
+  CloudName: overcloud.example.com
+  CloudNameInternal: overcloud.internalapi.example.com
+  CloudNameStorage: overcloud.storage.example.com
+  CloudNameStorageManagement: overcloud.storagemgmt.example.com
+  CloudNameExternal: overcloud.external.example.com
+  CloudNameCtlplane: overcloud.ctlplane.example.com
+  CloudDomain: example.com
+
+  OVNCMSOptions: enable-chassis-as-gw
+  NeutronPhysicalBridge: br-ex
+  NeutronNetworkType: geneve
+  NeutronTunnelTypes: geneve
+  NeutronBridgeMappings: datacentre:br-ex
+
+  CellControllerHostnameFormat: '%stackname%-controller-%index%'
+  ComputeHostnameFormat: '%stackname%-novacompute-%index%'
+
+  # If tripleo_networking, update the existing os-net-config on deployed servers for tripleo isolnet
+  # This should also work for CI, where we initially configure zuul subnodes with os-net-config,
+  # but is mostly targeting local libvirt or cloud deployments (without zuul and ci-framework)
+  NetworkConfigWithAnsible: false
+  ComputeNetworkConfigUpdate: false
+  BlockStorageNetworkConfigUpdate: false
+  ObjectStorageNetworkConfigUpdate: false
+  CellControllerNetworkConfigUpdate: false
+
+  ComputeNetworkConfigTemplate: templates/single_nic_vlans/single_nic_vlans.j2
+  BlockStorageNetworkConfigTemplate: templates/single_nic_vlans/single_nic_vlans.j2
+  ObjectStorageNetworkConfigTemplate: templates/single_nic_vlans/single_nic_vlans.j2
+  CellControllerNetworkConfigTemplate: templates/single_nic_vlans/single_nic_vlans.j2
+
+  CtlplaneNetworkAttributes:
+    network:
+      dns_domain: localdomain
+      mtu: 1500
+      name: ctlplane
+      tags:
+        - 192.168.122.0/24
+    subnets:
+      ctlplane-subnet:
+        cidr: 192.168.122.0/24
+        dns_nameservers: 192.168.122.1
+        gateway_ip: 192.168.122.1
+        host_routes: []
+        name: ctlplane-subnet
+        ip_version: 4
