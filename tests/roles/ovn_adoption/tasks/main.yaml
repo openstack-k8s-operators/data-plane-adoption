@@ -243,6 +243,13 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ ovn_nic_mapping_ironic_patch }}'
+
+- name: Add OVN nicMappings for gateway
+  when: not ironic_adoption|bool
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
     oc patch openstackcontrolplane openstack --type=merge --patch '{{ ovn_nic_mapping_patch }}'
 
 - name: Enable ovn controller
