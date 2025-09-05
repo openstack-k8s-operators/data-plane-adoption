@@ -27,10 +27,10 @@ endif::[]
 $ declare -A TRIPLEO_PASSWORDS
 ifeval::["{build_variant}" != "ospdo"]
 $ CELLS="default cell1 cell2"
+endif::[]
 $ for CELL in $(echo $CELLS); do
 >    TRIPLEO_PASSWORDS[$CELL]="$PASSWORD_FILE"
 > done
-endif::[]
 ifeval::["{build_variant}" == "ospdo"]
 $ CELLS="default"
 $ for CELL in $(echo $CELLS); do
