@@ -34,6 +34,16 @@ ovn_northd_patch: |
 ovn_nic_mapping_patch: |
   spec:
     ovn:
+      enabled: true
+      template:
+        ovnController:
+          nicMappings:
+            datacentre: ocpbr
+
+ovn_nic_mapping_ironic_patch: |
+  spec:
+    ovn:
+      enabled: true
       template:
         ovnController:
           nicMappings:
