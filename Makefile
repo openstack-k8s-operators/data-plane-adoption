@@ -59,6 +59,11 @@ test-swift-migration:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_swift_migration.yaml 2>&1 | tee $(TEST_OUTFILE)
 
+test-ocp-as-gw: TEST_OUTFILE ?= tests/logs/test_ocp_as_gw_out_$(shell date +%FT%T%Z).log
+test-ocp-as-gw:  ## Launch test suite related to the ocp gateways
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_ocp_as_gw.yaml 2>&1 | tee $(TEST_OUTFILE)
+
 test-rollback-minimal: TEST_OUTFILE ?= tests/logs/test_rollback_minimal_out_$(shell date +%FT%T%Z).log
 test-rollback-minimal:
 	mkdir -p tests/logs
