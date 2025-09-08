@@ -7,7 +7,7 @@
       CONTROLLER3_SSH="{{ controller3_ssh }}"
 
 - name: Remove colocation constraints between manila-share and ceph-nfs
-  when: manila_backend == "cephnfs"
+  when: manila_backend | default("")  == "cephnfs"
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
