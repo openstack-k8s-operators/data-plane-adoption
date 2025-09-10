@@ -27,14 +27,16 @@ endif::[]
 $ declare -A TRIPLEO_PASSWORDS
 ifeval::["{build_variant}" != "ospdo"]
 $ CELLS="default cell1 cell2"
-$ for CELL in $(echo $CELLS); do
->    TRIPLEO_PASSWORDS[$CELL]="$PASSWORD_FILE"
-> done
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
 $ CELLS="default"
+endif::[]
 $ for CELL in $(echo $CELLS); do
->     oc get secret tripleo-passwords -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' | base64 -d >"$TRIPLEO_PASSWORDS[$CELL]"
+>    TRIPLEO_PASSWORDS[$CELL]="$PASSWORD_FILE"
+> done
+ifeval::["{build_variant}" == "ospdo"]
+$ for CELL in $(echo $CELLS); do
+>     oc get secret tripleo-passwords -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' | base64 -d >"${TRIPLEO_PASSWORDS[$CELL]}"
 > done
 endif::[]
 $ declare -A SOURCE_DB_ROOT_PASSWORD
@@ -181,7 +183,7 @@ $ if [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" != "" ]; then
 +
 ----
 export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client-1 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-    mysql -rsh "${SOURCE_MARIADB_IP['default]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD['default']}" nova_api -e \
+    mysql -rsh "${SOURCE_MARIADB_IP['default']}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD['default']}" nova_api -e \
     'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')
 ----
 
