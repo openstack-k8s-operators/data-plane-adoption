@@ -21,7 +21,12 @@ cinder_api_patch: |
                   annotations:
                     metallb.universe.tf/address-pool: internalapi
                     metallb.universe.tf/allow-shared-ip: internalapi
+                    {% if ipv6_enabled | default(false) -%}
+                    metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix_ipv6 | default('2620:cf:cf:bbbb') }}::50
+                    {%- else -%}
                     metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.80
+                    {%- endif %}
+
                 spec:
                   type: LoadBalancer
         cinderScheduler:
