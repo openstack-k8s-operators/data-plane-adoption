@@ -24,6 +24,7 @@ endif::[]
 
 Post-adoption tasks::
 +
+* In your network configuration, you must reset the `edpm_network_config_update` variable to `false`. Otherwise, the nodes could lose network access. Whenever `edpm_network_config_update` is `true`, the updated network configuration is reapplied every time an `OpenStackDataPlaneDeployment` CR is created that includes the `configure-network` service that is a member of the `servicesOverride` list. For more information about setting this variable, see xref:using-new-subnet-ranges_ipam-configuration[Configuring new subnet ranges].
 * Optional: Run tempest to verify that the entire adoption process is working properly. For more information, see link:{defaultURL}/validating_and_troubleshooting_the_deployed_cloud/index[Validating and troubleshooting the deployed cloud].
 * Optional: Perform a minor update from RHEL 9.2 to 9.4. You can perform a minor update any time after you complete the adoption procedure. For more information, see link:{defaultURL}/updating_your_environment_to_the_latest_maintenance_release/index[Updating your environment to the latest maintenance release].
 * Optional: Verify that you migrated all services from the Controller nodes, and then power off the nodes. If any services are still running in the Controller nodes, such as Open Virtual Networking (ML2/OVN), {object_storage_first_ref}, or {Ceph}, do not power off the nodes.
