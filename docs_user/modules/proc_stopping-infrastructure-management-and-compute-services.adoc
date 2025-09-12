@@ -4,9 +4,14 @@
 = Stopping infrastructure management and Compute services
 
 [role="_abstract"]
-You must stop cloud database nodes, and messaging nodes on the {rhos_prev_long} {rhos_prev_ver} control plane. Do not stop nodes that are running the Compute, Storage, Networker or Controller(if running `OVN Controller Gateway agent` network agent) roles on the control plane.
+You must stop cloud database nodes and messaging nodes on the {rhos_prev_long} {rhos_prev_ver} control plane. Do not stop nodes that are running the following roles:
 
-The following procedure applies to a single node standalone {OpenStackPreviousInstaller} deployment. You must remove conflicting repositories and packages from your Compute hosts, so that you can install libvirt packages when these hosts are adopted as data plane nodes, where modular libvirt daemons are no longer running in podman containers.
+* Compute
+* Storage
+* Networker
+* Controller if running `OVN Controller Gateway agent` network agent
+
+The following procedure applies to a standalone {OpenStackPreviousInstaller} deployment. You must stop the Pacemaker services on your host so that you can install libvirt packages when the Compute roles are adopted as data plane nodes. Modular libvirt daemons no longer run in podman containers on data plane nodes.
 
 .Prerequisites
 
@@ -38,7 +43,7 @@ endif::[]
 
 .Procedure
 
-* Remove the conflicting repositories and packages from all Compute hosts:
+* Stop the Pacemaker services:
 +
 ----
 PacemakerResourcesToStop=(
