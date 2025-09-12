@@ -8,9 +8,9 @@ It **does not** migrate OSDs, hence no data movement is involved.
 It assumes that both `source` and `target` nodes are part of the Ceph cluster,
 and the high level procedure does the following:
 
-1. It Loads the information from the existing Ceph cluster (deployed daemons,
+1. It loads the information from the existing Ceph cluster (deployed daemons,
    status of the cluster, hostmap, services, monmap, osdmap)
-2. It Validates the retrieved information (the cluster is healthy and it's in a
+2. It validates the retrieved information (the cluster is healthy and it's in a
    valid state), and fail if one of the defined conditions is not met
 3. It starts performing the migration with the following order:
    - Ceph Monitoring Stack
@@ -108,7 +108,7 @@ An important override that should be provided is the list of `decomm_nodes` and
 `target_nodes`: the first list maps to the second list (via `zip` function) to
 make sure that each source node has a corresponding target node where the daemons
 can be redeployed.
-In the examle above:
+In the example above:
 
 ```
 controller-0  maps to cephstorage-0
@@ -122,7 +122,7 @@ Dependencies
 Great part of the commands executed against an existing Ceph cluster return a
 `json` formatted output.
 To easily process this output, and minimize the amount of tasks required to
-analize the `stdout` of a registered variable, the `community.general.json_query`
+analyze the `stdout` of a registered variable, the `community.general.json_query`
 module has been extensively used, and it has been added in the `requirements.yaml`
 of the project.
 
