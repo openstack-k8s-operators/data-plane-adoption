@@ -1,0 +1,6 @@
+- name: Add OVN nicMappings for OpenShift as gateway
+  when: not ironic_adoption|bool
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ ovn_nic_mapping_patch }}'
