@@ -106,12 +106,16 @@ As a result, the following route is added to your {OpenShiftShort} nodes:
         additional_ctlplane_host_routes:
         - ip_netmask: 172.31.0.0/24
           next_hop: '{{ ctlplane_ip }}'
+        edpm_network_config_update: true
         edpm_network_config_template: |
           network_config:
           - type: ovs_bridge
             routes: {{ ctlplane_host_routes + additional_ctlplane_host_routes }}
             ...
 ----
++
+[IMPORTANT]
+After the adoption is complete, you must reset `edpm_network_config_update` to `false`. Otherwise, the nodes could lose network access. Whenever `edpm_network_config_update` is `true`, the updated network configuration is reapplied every time an `OpenStackDataPlaneDeployment` CR is created that includes the `configure-network` service that is a member of the `servicesOverride` list.
 
 . List the IP addresses that are used for the data plane nodes in the existing deployment as `ansibleHost` and `fixedIP`. For example:
 +
@@ -141,5 +145,3 @@ Do not change {OpenStackShort} node IP addresses during the adoption process. Li
 ----
 +
 This provides SSH access from the new subnet to the {OpenStackShort} nodes as well as the {OpenStackShort} subnets.
-
-. Set `edpm_network_config_update: true` to enforce the changes that you are applying to the nodes.
