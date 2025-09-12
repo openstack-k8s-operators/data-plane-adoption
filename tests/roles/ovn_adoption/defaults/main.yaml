@@ -6,6 +6,13 @@ storage_class_name: local-storage
 storage_reclaim_policy: delete
 ironic_adoption: false
 
+# Network configuration for IPv4/IPv6 support
+ipv6_enabled: false
+internalapi_src: "172.17.1.0/24"
+internalapi_src_ipv6: "2620:cf:cf:bbbb::/64"
+ctlplane_prefix: "192.168.122"
+ctlplane_prefix_ipv6: "2620:cf:cf:aaaa"
+
 ovs_db_patch: |
   spec:
     ovn:

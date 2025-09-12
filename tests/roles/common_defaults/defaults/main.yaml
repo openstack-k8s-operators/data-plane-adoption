@@ -2,6 +2,11 @@
 # sensitive data.
 use_no_log: false
 
+# Network configuration for IPv4/IPv6 support
+ipv6_enabled: false
+internalapi_prefix: "172.17.0"
+internalapi_prefix_ipv6: "2620:cf:cf:bbbb"
+
 # Whether the adopted node will host compute services
 compute_adoption: true
 
@@ -133,7 +138,7 @@ mariadb_copy_shell_vars_src: |-
   MARIADB_CLIENT_ANNOTATIONS={{ deploy_ctlplane_ospdo | default(false) | bool | ternary("-n $NAMESPACE", "--annotations=k8s.v1.cni.cncf.io/networks=internalapi") }}
   MARIADB_RUN_OVERRIDES={{ deploy_ctlplane_ospdo | default(false) | bool | ternary("--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS {{ mysql_client_override }}", "$MARIADB_CLIENT_ANNOTATIONS") }}
 
-  OSPDO_MARIADB_CLIENT_ANNOTATIONS='[{"name": "internalapi-static","ips": ["172.17.0.99/24"]}]'
+  OSPDO_MARIADB_CLIENT_ANNOTATIONS='[{"name": "internalapi-static","ips": ["{% if ipv6_enabled | default(false) %}{{ internalapi_prefix_ipv6 | default('2620:cf:cf:bbbb') }}::99/64{% else %}{{ internalapi_prefix | default('172.17.0') }}.99/24{% endif %}"]}]'
 
   {{ pull_openstack_configuration_ssh_shell_vars }}
 

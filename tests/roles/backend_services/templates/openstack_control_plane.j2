@@ -138,10 +138,15 @@ spec:
             metadata:
               annotations:
                 metallb.universe.tf/address-pool: internalapi
+                {% if ipv6_enabled | default(false) -%}
+                metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix_ipv6 | default('2620:cf:cf:bbbb') }}::55
+                {%- else -%}
                 metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.85
+                {%- endif %}
+
             spec:
               type: LoadBalancer
-{% set ind = {'val': 86} %}
+{% set ind = {'val': 56 if ipv6_enabled | default(false) else 86} %}
 {% for cell in renamed_cells %}
       rabbitmq-{{ cell }}:
         persistence:
@@ -151,7 +156,12 @@ spec:
             metadata:
               annotations:
                 metallb.universe.tf/address-pool: internalapi
+                {% if ipv6_enabled | default(false) -%}
+                metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix_ipv6 | default('2620:cf:cf:bbbb') }}::{{ ind.val }}
+                {%- else -%}
                 metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.{{ ind.val }}
+                {%- endif %}
+
             spec:
               type: LoadBalancer
 {% set _ = ind.update({'val': ind.val + 1}) %}
