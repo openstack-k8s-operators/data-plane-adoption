@@ -38,7 +38,7 @@ endif::[]
 
 .Procedure
 
-* Remove the conflicting repositories and packages from all Compute hosts:
+* Stop the Pacemaker services:
 +
 ----
 PacemakerResourcesToStop=(
