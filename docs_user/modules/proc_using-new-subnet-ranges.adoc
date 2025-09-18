@@ -141,5 +141,3 @@ Do not change {OpenStackShort} node IP addresses during the adoption process. Li
 ----
 +
 This provides SSH access from the new subnet to the {OpenStackShort} nodes as well as the {OpenStackShort} subnets.
-
-. Set `edpm_network_config_update: true` to enforce the changes that you are applying to the nodes.
