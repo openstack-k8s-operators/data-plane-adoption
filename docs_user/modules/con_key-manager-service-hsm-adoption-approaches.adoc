@@ -1,0 +1,70 @@
+:_mod-docs-content-type: CONCEPT
+[id="key-manager-service-hsm-adoption-approaches_{context}"]
+
+= Key Manager service HSM adoption approaches
+
+[role="_abstract"]
+The {key_manager_first_ref} adoption approach depends on your source {OpenStackPreviousInstaller} environment configuration. Use the standard adoption approach for environments with only simple crypto backends, or the HSM-enabled approach for environments with Hardware Security Module integration.
+
+== Standard adoption approach
+
+Use the standard adoption approach when your source environment uses only the `simple_crypto` plugin for secret storage and has no Hardware Security Module (HSM) integration.
+
+The standard approach:
+
+* Uses the existing Barbican adoption procedure
+* Migrates simple crypto backend configuration
+* Provides a single-step adoption process
+* Is suitable for development, testing, and standard production environments
+
+== HSM-enabled adoption approach
+
+Use the HSM-enabled adoption approach when your source environment has Hardware Security Module integration using PKCS#11, KMIP, or other HSM backends alongside `simple_crypto`.
+
+The HSM-enabled approach:
+
+* Uses enhanced Barbican adoption procedures with HSM awareness
+* Automatically detects HSM configuration in the source environment
+* Preserves HSM metadata during database migration
+* Supports both simple crypto and HSM backends in the target environment
+* Requires HSM-specific configuration and custom container images
+
+== Decision matrix
+
+[options="header"]
+|===
+| Source Environment Characteristic | Recommended Approach | Rationale
+
+| Only `simple_crypto` backend configured
+| Standard adoption
+| No HSM complexity needed
+
+| HSM integration present (PKCS#11, KMIP, etc.)
+| HSM-enabled adoption
+| Preserves HSM functionality and secrets
+
+| Development or testing environment
+| Standard adoption
+| Simpler setup and maintenance
+
+| Production with compliance requirements
+| HSM-enabled adoption
+| Maintains security compliance
+
+| Unknown backend configuration
+| Check source environment first
+| Determine appropriate approach
+|===
+
+== Supported HSM vendors
+
+The HSM-enabled adoption approach supports multiple HSM vendors:
+
+* **Proteccio (Eviden Trustway)**: Fully supported with PKCS#11 integration
+* **Luna (SafeNet)**: PKCS#11 support available
+* **nCipher (Entrust)**: PKCS#11 support available
+
+[IMPORTANT]
+====
+HSM adoption requires additional configuration steps including custom container images with HSM client libraries and proper certificate management. These approaches are mutually exclusive - choose based on your source environment configuration.
+====
