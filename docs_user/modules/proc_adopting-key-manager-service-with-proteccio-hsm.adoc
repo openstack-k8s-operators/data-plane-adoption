@@ -1,0 +1,151 @@
+:_mod-docs-content-type: PROCEDURE
+[id="adopting-the-key-manager-service-with-proteccio-hsm_{context}"]
+
+= Adopting the {key_manager} with Proteccio HSM integration
+
+[role="_abstract"]
+To adopt the {key_manager_first_ref} with Proteccio Hardware Security Module (HSM) integration, you use a custom Ansible role that performs database adoption and deploys Proteccio-enabled container images. This approach is required when your source {rhos_prev_long} ({OpenStackShort}) environment uses Proteccio HSM instead of the standard `simple_crypto` backend.
+
+The {key_manager} Proteccio HSM adoption is complete if you see the following results:
+
+* The `BarbicanAPI` and `BarbicanWorker` services are up and running with Proteccio custom images.
+* The `BarbicanKeystoneListener` service is not affected since it does not directly interact with Proteccio.
+* All secrets from the source {OpenStackShort} {rhos_prev_ver} environment are available in {rhos_long} {rhos_curr_ver}.
+* Proteccio HSM client certificates are properly mounted and configured.
+* The PKCS11 crypto plugin is available alongside `simple_crypto` for new secret storage.
+
+[NOTE]
+====
+This procedure is specifically for environments that use Proteccio HSM. For standard {key_manager} adoption using `simple_crypto`, see xref:adopting-the-key-manager-service_{context}[Adopting the {key_manager}].
+
+This adoption process bypasses the standard data-plane-adoption framework's `barbican_adoption` role because it only supports `simple_crypto` backend. Instead, it uses a custom approach that preserves HSM integration while adopting all existing secrets.
+
+The automation handles RabbitMQ user configuration automatically, but manual intervention may be required if the HSM role dependencies are not available.
+====
+
+.Prerequisites
+
+* You have a running {OpenStackPreviousInstaller} environment with Proteccio HSM integration (the source cloud).
+* You have a Single Node OpenShift or OpenShift Local running in the {rhocp_long} cluster.
+* You have SSH access to the source {OpenStackPreviousInstaller} undercloud and controller nodes.
+* The following files are available in your Proteccio files directory (example: `/path/to/your/proteccio_files/`):
+** Your Proteccio client certificate file (filename varies by environment)
+** Your Proteccio client private key file (filename varies by environment)
+** Your HSM certificate file (filename varies by environment)
+** Your Proteccio environment configuration file (filename varies by environment)
+* The `ansible-role-rhoso-proteccio-hsm` role is installed and available in your roles directory (example: `/path/to/your/roles/`).
+
+[IMPORTANT]
+====
+The `ansible-role-rhoso-proteccio-hsm` role is **mandatory** for Proteccio HSM adoption. This role creates essential OpenShift secrets and configures HSM integration. The adoption process will fail if this role is not available or cannot execute successfully.
+
+You must either:
+* Allow the adoption framework to execute this role automatically, OR
+* Execute this role manually before starting the adoption process
+
+Without this role, your HSM-protected secrets will become inaccessible after adoption.
+====
+
+.Procedure
+
+. Navigate to the adoption framework tests directory:
++
+----
+$ cd /path/to/your/dp-adopt/tests
+----
+
+. Verify that all prerequisites are met by running the adoption script in dry-run mode:
++
+----
+$ ./run_proteccio_adoption.sh
+----
++
+Select option `3` for dry run to validate the environment without making changes.
+
+. Execute the Proteccio HSM adoption:
++
+----
+$ ./run_proteccio_adoption.sh
+----
++
+Select option `1` for full adoption, which performs the following phases:
++
+--
+* *Phase 1 (Environment Preparation)*: Extracts source environment configuration and Keystone keys
+* *Phase 2 (Base RHOSO Deployment)*: Deploys base {rhos_long} control plane with standard images
+* *Phase 3 (Database Adoption)*: Adopts Barbican database from source to target environment and configures HSM secrets
+* *Phase 4 (Proteccio Deployment)*: Deploys Proteccio custom images and HSM configuration
+* *Phase 5 (Verification)*: Validates adoption success and functionality
+--
+
+[NOTE]
+====
+**Execution Options Summary:**
+
+*Primary approach (recommended):* Use `./run_proteccio_adoption.sh` for user-friendly execution with prerequisite validation and interactive options.
+
+*Alternative approach (advanced users):* Use direct `ansible-playbook` commands for granular control or troubleshooting specific phases:
+
+----
+# Run only database adoption phase
+$ ansible-playbook -i inventory.proteccio.yaml playbooks/barbican_proteccio_adoption.yml --tags phase3
+
+# Run only verification phase
+$ ansible-playbook -i inventory.proteccio.yaml playbooks/barbican_proteccio_adoption.yml --tags phase5
+----
+====
+
+.Verification
+
+. Ensure that the {identity_service_first_ref} endpoints are defined and are pointing to the control plane FQDNs:
++
+----
+$ openstack endpoint list | grep key-manager
+----
+
+. Ensure that Barbican API service is registered in the {identity_service}:
++
+----
+$ openstack service list | grep key-manager
+----
+
+. Verify that all secrets from the source environment are available:
++
+----
+$ openstack secret list
+----
+
+. Confirm that Proteccio custom images are deployed:
++
+----
+$ oc get pods -n openstack -l service=barbican -o wide
+----
+
+. Verify that Proteccio client certificates are mounted in the Barbican pods:
++
+----
+$ oc exec -n openstack $(oc get pods -n openstack -l component=barbican-api -o jsonpath='{.items[0].metadata.name}') -c barbican-api -- ls -la /etc/proteccio/
+----
++
+This command should show the presence of your configured Proteccio certificate files, private key, HSM certificate, and configuration files.
+
+. Test secret creation to verify functionality:
++
+----
+$ openstack secret store --name adoption-verification --payload 'Proteccio HSM adoption successful'
+----
+
+. Review the generated adoption summary report:
++
+----
+$ ls -la /path/to/your/dp-adopt/adoption_summary_*.md
+----
+
+.Additional resources
+
+* For troubleshooting adoption issues, check the generated log files in your configured backup directory.
+* To switch the default secret store from `simple_crypto` to `pkcs11` after verifying HSM connectivity:
++
+----
+$ oc patch openstackcontrolplane openstack -n openstack --type='json' -p='[{"op": "replace", "path": "/spec/barbican/template/globalDefaultSecretStore", "value": "pkcs11"}]'
+----

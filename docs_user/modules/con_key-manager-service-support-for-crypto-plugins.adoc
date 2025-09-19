@@ -4,9 +4,16 @@
 = Key Manager service support for crypto plug-ins
 
 [role="_abstract"]
-The Key Manager service (barbican) does not yet support all of the crypto plug-ins available in {OpenStackPreviousInstaller}.
+The Key Manager service (barbican) supports multiple crypto plug-ins for different security requirements and deployment scenarios.
 
-//**TODO: Right now Barbican only supports the simple crypto plugin.
+== Supported crypto plug-ins
+
+The following crypto plug-ins are supported in {rhos_acro}:
+
+* **Simple Crypto Plugin**: Software-based cryptographic backend suitable for development and testing environments
+* **PKCS#11 Plugin**: Hardware Security Module (HSM) integration for production environments requiring enhanced security
+
+For environments that require HSM integration during adoption, see xref:adopting-key-manager-service-with-hsm[].
 
 //*TODO: Talk about Ceph Storage and Swift Storage nodes, HCI deployments,
 //etc.*

@@ -12,7 +12,7 @@ The {key_manager} adoption is complete if you see the following results:
 * Keystone endpoints are updated, and the same crypto plugin of the source cloud is available.
 
 [NOTE]
-This procedure configures the {key_manager} to use the `simple_crypto` back end. Additional back ends, such as PKCS11 and DogTag, are currently not supported in {rhos_long}.
+This procedure configures the {key_manager} to use the `simple_crypto` back end. For environments that require Hardware Security Module (HSM) integration using PKCS#11, see xref:adopting-key-manager-service-with-hsm[].
 
 .Procedure
 

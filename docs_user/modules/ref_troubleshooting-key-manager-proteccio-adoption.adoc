@@ -1,0 +1,265 @@
+:_mod-docs-content-type: REFERENCE
+[id="troubleshooting-key-manager-proteccio-adoption_{context}"]
+
+= Troubleshooting {key_manager} Proteccio HSM adoption
+
+[role="_abstract"]
+Use this reference to troubleshoot common issues that might occur during {key_manager_first_ref} adoption with Proteccio HSM integration.
+
+== Prerequisites validation failures
+
+*Problem*: The adoption script fails during prerequisites check.
+
+*Symptoms*:
+----
+ERROR: Required file proteccio_files/YOUR_CERT_FILE not found
+ERROR: Cannot connect to OpenShift cluster
+ERROR: Proteccio HSM Ansible role not found
+----
+
+*Solution*:
+
+. Verify that all required Proteccio files are present:
++
+----
+$ ls -la /path/to/your/proteccio_files/
+----
++
+Ensure that your configured certificate files, private key, HSM certificate file, and configuration file exist as specified in your `proteccio_required_files` configuration.
+
+. Test OpenShift cluster connectivity:
++
+----
+$ oc cluster-info
+$ oc get pods -n openstack
+----
+
+. Verify that the HSM Ansible role is available:
++
+----
+$ ls -la /path/to/your/roles/ansible-role-rhoso-proteccio-hsm/
+----
+
+== SSH connection failures to source environment
+
+*Problem*: Cannot connect to source {OpenStackPreviousInstaller} environment.
+
+*Symptoms*:
+----
+Warning: Permanently added 'YOUR_UNDERCLOUD_HOST' (ED25519) to the list of known hosts.
+Permission denied (publickey).
+----
+
+*Solution*:
+
+. Verify SSH key access to the undercloud:
++
+----
+$ ssh YOUR_UNDERCLOUD_HOST echo "Connection test"
+----
+
+. Test the specific SSH commands used by the adoption:
++
+----
+$ sudo ssh -t YOUR_UNDERCLOUD_HOST 'sudo -u stack bash -lc "echo test"'
+$ sudo ssh -t YOUR_UNDERCLOUD_HOST 'sudo -u stack ssh -t tripleo-admin@YOUR_CONTROLLER_HOST.ctlplane "echo test"'
+----
+
+. If connection fails, verify the SSH configuration and ensure that the undercloud hostname resolves correctly.
+
+== Database import failures
+
+*Problem*: Source database export or import fails.
+
+*Symptoms*:
+----
+Error: no container with name or ID "galera-bundle-podman-0" found
+mysqldump: Got error: 1045: "Access denied for user 'barbican'@'localhost'"
+----
+
+*Solution*:
+
+. Verify that the source Galera container is running:
++
+----
+$ sudo ssh -t YOUR_UNDERCLOUD_HOST 'sudo -u stack ssh -t tripleo-admin@YOUR_CONTROLLER_HOST.ctlplane "sudo podman ps | grep galera"'
+----
+
+. Test database connectivity with the extracted credentials:
++
+----
+$ sudo ssh -t YOUR_UNDERCLOUD_HOST 'sudo -u stack ssh -t tripleo-admin@YOUR_CONTROLLER_HOST.ctlplane "sudo podman exec galera-bundle-podman-0 mysql -u barbican -p<password> -e \"SELECT 1;\""'
+----
+
+. Check the source Barbican configuration for the correct database password:
++
+----
+$ sudo ssh -t YOUR_UNDERCLOUD_HOST 'sudo -u stack ssh -t tripleo-admin@YOUR_CONTROLLER_HOST.ctlplane "sudo grep connection /var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf"'
+----
+
+== Custom image pull failures
+
+*Problem*: Proteccio custom images fail to pull or start.
+
+*Symptoms*:
+----
+Failed to pull image "<Your Custom Pod Image and Tag>": rpc error
+Pod has unbound immediate PersistentVolumeClaims
+----
+
+*Solution*:
+
+. Verify image registry access:
++
+----
+$ podman pull <Your Custom Pod Image and Tag>
+----
+
+. Check image pull secrets and registry authentication:
++
+----
+$ oc get secrets -n openstack | grep pull
+$ oc describe pod <barbican-pod-name> -n openstack
+----
+
+. Verify that the OpenStackVersion resource was applied correctly:
++
+----
+$ oc get openstackversion openstack -n openstack -o yaml
+----
+
+== HSM certificate mounting issues
+
+*Problem*: Proteccio client certificates are not properly mounted in pods.
+
+*Symptoms*:
+----
+$ oc exec <barbican-pod> -c barbican-api -- ls -la /etc/proteccio/
+ls: cannot access '/etc/proteccio/': No such file or directory
+----
+
+*Solution*:
+
+. Verify that the `proteccio-data` secret was created correctly:
++
+----
+$ oc describe secret proteccio-data -n openstack
+----
+
+. Check that the secret contains the expected files:
++
+----
+$ oc get secret proteccio-data -n openstack -o yaml
+----
+
+. Verify the Barbican configuration includes the correct volume mounts:
++
+----
+$ oc get barbican barbican -n openstack -o yaml | grep -A10 pkcs11
+----
+
+== Service startup failures
+
+*Problem*: Barbican services fail to start after configuration.
+
+*Symptoms*:
+----
+CrashLoopBackOff
+Init:Error
+amqp.exceptions.AccessRefused: Login was refused using authentication mechanism AMQPLAIN
+----
+
+*Solution*:
+
+. Check pod logs for specific error messages:
++
+----
+$ oc logs <barbican-pod-name> -c barbican-api -n openstack
+$ oc logs <barbican-pod-name> -c barbican-api-log -n openstack
+----
+
+. Verify that the Barbican configuration is valid:
++
+----
+$ oc get barbican barbican -n openstack -o yaml
+----
+
+. Check RabbitMQ user configuration if seeing authentication errors:
++
+----
+# Get the transport URL to find expected username
+$ oc get secret rabbitmq-transport-url-barbican-barbican-transport -n openstack -o jsonpath='{.data.transport_url}' | base64 -d
+
+# Create the missing RabbitMQ user (extract username and password from URL above)
+$ oc exec rabbitmq-server-0 -n openstack -- rabbitmqctl add_user <username> <password>
+$ oc exec rabbitmq-server-0 -n openstack -- rabbitmqctl set_permissions <username> ".*" ".*" ".*"
+
+# Restart failing pods
+$ oc delete pods -l service=barbican -n openstack
+----
+
+. Check for resource constraints or scheduling issues:
++
+----
+$ oc describe pod <barbican-pod-name> -n openstack
+----
+
+== Adoption verification failures
+
+*Problem*: Secrets from source environment are not accessible after adoption.
+
+*Symptoms*:
+----
+$ openstack secret list
+# Returns empty list or HTTP 500 errors
+----
+
+*Solution*:
+
+. Verify that the database import completed successfully:
++
+----
+$ oc exec openstack-galera-0 -n openstack -- mysql -u root -p<password> barbican -e "SELECT COUNT(*) FROM secrets;"
+----
+
+. Check for schema adoption issues:
++
+----
+$ oc logs job.batch/barbican-db-sync -n openstack
+----
+
+. Test API connectivity directly:
++
+----
+$ oc exec openstackclient -n openstack -- curl -s -k -H "X-Auth-Token: $(openstack token issue -f value -c id)" https://barbican-internal.openstack.svc:9311/v1/secrets
+----
+
+. Verify that projects and users were adopted correctly, as secrets are project-scoped.
+
+== Rollback procedures
+
+If the adoption fails and you need to restore the original state:
+
+. Restore the RHOSO 18 database backup:
++
+----
+$ oc exec -i openstack-galera-0 -n openstack -- mysql -u root -p<password> barbican < /path/to/your/backups/rhoso18_barbican_backup.sql
+----
+
+. Reset to standard images:
++
+----
+$ oc delete openstackversion openstack -n openstack
+----
+
+. Restore the base control plane configuration:
++
+----
+$ oc apply -f /path/to/your/base_controlplane.yaml
+----
+
+== Additional resources
+
+* Adoption logs are stored in your configured working directory with timestamped summary reports.
+* For HSM-specific issues, consult the Proteccio documentation and verify HSM connectivity from the target environment.
+* Run the adoption in dry-run mode (`./run_proteccio_adoption.sh` option 3) to validate the environment before making changes.
