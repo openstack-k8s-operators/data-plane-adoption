@@ -1,0 +1,60 @@
+# Sample environment-specific variables for barbican_proteccio_adoption role
+# Copy this file and customize it for your environment
+
+# REQUIRED: Source environment connection details
+source_undercloud_host: "your-undercloud-hostname"
+source_controller_host: "your-controller-hostname.ctlplane"
+
+# REQUIRED: Generate your own 32-byte base64 KEK
+# Run: openssl rand -base64 32
+barbican_simple_crypto_kek: "YOUR_GENERATED_32_BYTE_BASE64_KEY_HERE"
+
+# REQUIRED: HSM configuration specific to your Proteccio setup
+hsm_login_password: "YOUR_HSM_LOGIN_PASSWORD"
+hsm_token_labels: "YOUR_HSM_TOKEN_LABEL"
+hsm_mkek_label: "your_mkek_label"
+hsm_hmac_label: "your_hmac_label"
+
+# REQUIRED: List your actual Proteccio certificate files
+# Replace these with your actual filenames
+proteccio_required_files:
+  - "your_client_certificate.crt"    # Your actual client certificate filename
+  - "your_client_private_key.key"    # Your actual client private key filename
+  - "your_proteccio_config.rc"       # Your actual Proteccio configuration filename
+  - "your_hsm_certificate.crt"       # Your actual HSM certificate filename
+
+# OPTIONAL: Customize paths if different from defaults
+work_dir: "/your/custom/working/directory"
+proteccio_base_dir: "/your/custom/proteccio/base/directory"
+proteccio_files_dir: "/your/custom/proteccio/files/directory"
+# MANDATORY: Path to the ansible-role-rhoso-proteccio-hsm role (REQUIRED for HSM adoption)
+hsm_role_path: "/your/custom/path/to/ansible-role-rhoso-proteccio-hsm"
+tripleo_passwords_file: "/your/custom/path/to/overcloud-passwords.yaml"
+backup_dir: "/your/custom/backup/directory"
+
+# OPTIONAL: HSM role execution control (default: true - HSM role is required)
+# Set to false only if you have manually executed the HSM role beforehand
+require_hsm_role: true
+
+# OPTIONAL: Customize target environment settings
+target_namespace: "openstack"  # or your custom namespace
+target_storage_class: "your-storage-class"
+
+# REQUIRED: Proteccio-enabled container images
+# These must be Proteccio-enabled images with HSM client libraries
+proteccio_custom_images:
+  barbican_api: "your-registry.com/barbican-api:proteccio-enabled-tag"
+  barbican_worker: "your-registry.com/barbican-worker:proteccio-enabled-tag"
+
+# OPTIONAL: Adjust replica counts for your environment
+barbican_api_replicas: 1
+barbican_worker_replicas: 1
+barbican_keystone_listener_replicas: 1
+
+# OPTIONAL: Configure verification settings
+# List specific secret names you want to verify were adopted
+expected_secrets_to_verify:
+  - "your-important-secret-name"
+  - "another-secret-name"
+# Set to false if you don't want to test access to any secrets
+verify_any_secrets: true

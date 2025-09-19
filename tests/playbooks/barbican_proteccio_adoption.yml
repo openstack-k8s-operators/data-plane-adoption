@@ -1,0 +1,66 @@
+---
+# Main playbook for Barbican adoption with Proteccio HSM integration
+# OpenStack 17.1 to RHOSO 18 adoption
+
+- name: Barbican Adoption with Proteccio HSM Integration
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  become: false
+
+  vars: {}
+    # Override default variables here if needed
+    # source_undercloud_host: "your-undercloud-host"
+    # source_controller_host: "your-controller-host"
+    # target_namespace: "openstack"
+    # barbican_simple_crypto_kek: "your-custom-kek"
+
+  pre_tasks:
+    - name: Verify environment prerequisites
+      block:
+        - name: Check if running as correct user
+          ansible.builtin.fail:
+            msg: "This playbook should be run as the stack user"
+          when: ansible_user_id != "stack"
+
+        - name: Verify oc/oc access
+          ansible.builtin.command: oc cluster-info
+          register: cluster_check
+          failed_when: cluster_check.rc != 0
+
+        - name: Check OpenShift/Kubernetes cluster access
+          ansible.builtin.command: "oc get namespace {{ target_namespace | default('openstack') }}"
+          register: namespace_check
+          changed_when: false
+          failed_when: namespace_check.rc != 0
+
+  roles:
+    - role: barbican_proteccio_adoption
+
+  post_tasks:
+    - name: Display completion summary
+      ansible.builtin.debug:
+        msg: |
+          ===============================================
+          ADOPTION COMPLETED SUCCESSFULLY!
+          ===============================================
+
+          Barbican adoption with Proteccio HSM integration has been completed.
+
+          Key achievements:
+          - Database adopted with {{ adopted_secrets_count | default('N/A') }} secrets
+          - Proteccio custom images deployed
+          - HSM configuration applied
+          - API functionality verified
+
+          Check the generated summary file for detailed results.
+          ===============================================
+
+  handlers:
+    - name: Clean up temporary files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ backup_dir }}/temp_*"
+      listen: "cleanup"

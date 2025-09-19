@@ -1,0 +1,10 @@
+---
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackVersion
+metadata:
+  name: openstack
+  namespace: {{ target_namespace }}
+spec:
+  customContainerImages:
+    barbicanAPIImage: {{ proteccio_custom_images.barbican_api }}
+    barbicanWorkerImage: {{ proteccio_custom_images.barbican_worker }}
