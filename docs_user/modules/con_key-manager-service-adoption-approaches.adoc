@@ -1,0 +1,101 @@
+:_mod-docs-content-type: CONCEPT
+[id="key-manager-service-adoption-approaches_{context}"]
+
+= {key_manager} adoption approaches
+
+[role="_abstract"]
+The {key_manager_first_ref} adoption process varies depending on the cryptographic backend used in your source {rhos_prev_long} ({OpenStackShort}) environment. You can choose between two adoption approaches based on your current configuration.
+
+== Standard adoption approach
+
+The standard {key_manager} adoption approach is suitable for environments that use the `simple_crypto` cryptographic backend. This approach:
+
+* Uses the data-plane-adoption framework's built-in `barbican_adoption` role
+* Supports adoption of secrets stored with the `simple_crypto` plugin
+* Follows the standard adoption workflow for most {rhos_prev_long} deployments
+* Is suitable for testing and development environments
+
+For more information about standard adoption, see xref:adopting-the-key-manager-service_{context}[Adopting the {key_manager}].
+
+== Proteccio HSM adoption approach
+
+The Proteccio HSM adoption approach is required for production environments that use Proteccio Hardware Security Modules (HSM) for cryptographic operations. This approach:
+
+* Uses a specialized Ansible role (`barbican_proteccio_adoption`) that extends beyond the standard framework
+* Supports adoption of secrets stored with PKCS11 and other HSM-backed plugins
+* Deploys Proteccio-enabled container images with HSM client libraries
+* Preserves HSM integration and security compliance requirements
+* Handles complex HSM certificate and configuration management
+
+[NOTE]
+====
+The `barbican_proteccio_adoption` role is completely separate from the standard `barbican_adoption` role. Both roles are included in the data-plane-adoption framework but serve different use cases:
+
+* `barbican_adoption`: For standard environments without HSM
+* `barbican_proteccio_adoption`: For HSM-enabled environments only
+
+These roles are mutually exclusive and should not be used together.
+====
+
+[IMPORTANT]
+====
+The standard data-plane-adoption framework does not support HSM backends such as Proteccio PKCS11. Attempting to use standard adoption with HSM-backed environments results in loss of access to existing secrets and degradation of security posture.
+
+Always use the Proteccio HSM adoption approach if your source environment uses any HSM backend for the {key_manager}.
+====
+
+== Determining your adoption approach
+
+To determine which adoption approach to use, check the cryptographic backend configuration in your source {OpenStackShort} environment:
+
+. Connect to your source controller node:
++
+----
+$ sudo ssh -t undercloud-0 'sudo -u stack ssh -t tripleo-admin@controller-0.ctlplane bash -lc'
+----
+
+. Check the Barbican configuration:
++
+----
+$ sudo cat /var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf | grep -A5 "\[.*plugin\]"
+----
+
+. Review the output:
++
+--
+* If you see only `[simple_crypto_plugin]` configuration, use the standard adoption approach.
+* If you see `[p11_crypto_plugin]`, or references to Proteccio, HSM, or PKCS11, use the Proteccio HSM adoption approach.
+--
+
+== Adoption approach comparison
+
+[cols="1,2,2",options="header"]
+|===
+|Aspect |Standard adoption |Proteccio HSM adoption
+
+|Supported backends
+|`simple_crypto` only
+|`simple_crypto`, `pkcs11`, and other HSM backends
+
+|Framework used
+|Built-in `barbican_adoption` role
+|Specialized `barbican_proteccio_adoption` role
+
+|Container images
+|Standard {rhos_long} images
+|Proteccio-enabled custom images
+
+|Adoption complexity
+|Low - automated workflow
+|Medium - requires HSM certificates and configuration
+
+|Security level
+|Standard encryption
+|Hardware-backed encryption with compliance features
+
+|Production readiness
+|Development and testing
+|Production and compliance-regulated environments
+|===
+
+For most production deployments with security requirements, the Proteccio HSM adoption approach is recommended to maintain cryptographic security and compliance standards.
