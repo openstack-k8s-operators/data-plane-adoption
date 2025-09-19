@@ -68,3 +68,16 @@ stacks:
     stack_nodes:
       - osp-computes
       - osp-controllers
+    pre_oc_run:
+      - name: Prepare Ceph nodes
+        type: playbook
+        source: "setup_cephnodes_ipv6.yaml"
+        inventory: "uni04delta-ipv6/ceph_inventory.yaml"
+        extra_vars:
+          file: "uni04delta-ipv6/repo_setup_and_CA_vars.yaml"
+      - name: Deploy external ceph
+        type: playbook
+        source: "ceph.yml"
+        inventory: "uni04delta-ipv6/ceph_inventory.yaml"
+        extra_vars:
+          file: "uni04delta-ipv6/ceph_overrides.yaml"
