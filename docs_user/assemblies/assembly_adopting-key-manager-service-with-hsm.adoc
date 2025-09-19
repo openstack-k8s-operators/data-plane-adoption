@@ -1,0 +1,17 @@
+:_mod-docs-content-type: ASSEMBLY
+[id="adopting-key-manager-service-with-hsm"]
+= Adopting the {key_manager} with Hardware Security Module integration
+
+This assembly describes how to adopt the {key_manager_first_ref} from {OpenStackPreviousInstaller} to {rhos_long} when your source environment includes Hardware Security Module (HSM) integration.
+
+Hardware Security Modules provide enhanced security for cryptographic operations by storing encryption keys in dedicated hardware devices. When migrating from {OpenStackPreviousInstaller} to {rhos_acro}, it is essential to preserve HSM functionality and maintain access to HSM-backed secrets.
+
+include::../modules/con_key-manager-service-hsm-adoption-approaches.adoc[leveloffset=+1]
+
+include::../modules/proc_adopting-key-manager-service-with-hsm-integration.adoc[leveloffset=+1]
+
+.Additional resources
+
+* {key_manager} service configuration documentation
+* Hardware Security Module vendor-specific documentation
+* OpenStack Barbican PKCS#11 plugin documentation
