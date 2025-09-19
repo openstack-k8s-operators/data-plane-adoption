@@ -1,0 +1,79 @@
+= Key Manager service adoption approaches
+
+[id="key-manager-service-adoption-approaches_{context}"]
+
+The Key Manager service (Barbican) adoption approach depends on your source OpenStack 17.1 deployment configuration. There are two distinct approaches available:
+
+== Standard adoption approach
+
+Use the standard adoption approach when your source environment:
+
+* Uses only the `simple_crypto` plugin for secret storage
+* Has no Hardware Security Module (HSM) integration
+* Is suitable for development, testing, or standard production environments
+
+The standard approach:
+
+* Leverages the existing `barbican_adoption` role
+* Migrates simple crypto backend configuration
+* Provides a single-phase adoption process
+* Requires minimal configuration
+
+== HSM-enabled adoption approach
+
+Use the HSM-enabled adoption approach when your source environment:
+
+* Has Hardware Security Module integration (Proteccio, Luna, nCipher, etc.)
+* Uses PKCS#11, KMIP, or other HSM backends alongside `simple_crypto`
+* Requires preservation of HSM-backed secrets during adoption
+* Is a production environment with compliance requirements
+
+The HSM-enabled approach:
+
+* Uses the enhanced `barbican_adoption` role with HSM awareness
+* Automatically detects HSM configuration in the source environment
+* Preserves HSM metadata during database migration
+* Supports both simple crypto and HSM backends in the target environment
+* Requires HSM-specific configuration and custom container images
+
+== Decision matrix
+
+[options="header"]
+|===
+| Source Environment Characteristic | Recommended Approach | Rationale
+
+| Only `simple_crypto` backend
+| Standard adoption
+| No HSM complexity needed
+
+| HSM integration present
+| HSM-enabled adoption
+| Preserves HSM functionality and secrets
+
+| Development/testing environment
+| Standard adoption
+| Simpler setup and maintenance
+
+| Production with compliance requirements
+| HSM-enabled adoption
+| Maintains security compliance
+
+| Unknown backend configuration
+| Automatic detection
+| Role detects and guides to appropriate approach
+|===
+
+[IMPORTANT]
+====
+These approaches are **mutually exclusive**. The adoption role automatically detects your source environment configuration and guides you to the appropriate approach.
+====
+
+== HSM vendor support
+
+The HSM-enabled adoption approach supports multiple HSM vendors through a vendor-agnostic architecture:
+
+* **Proteccio (Eviden Trustway)**: Fully supported
+* **Luna (SafeNet)**: Planned support
+* **nCipher (Entrust)**: Planned support
+
+The adoption role automatically detects the HSM vendor and applies vendor-specific configuration while maintaining common adoption logic.
