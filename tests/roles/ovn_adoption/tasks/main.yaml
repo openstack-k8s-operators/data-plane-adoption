@@ -45,11 +45,16 @@
   ansible.builtin.set_fact:
     ovn_copy_shell_vars: |
       STORAGE_CLASS={{ storage_class_name }}
+      {% if ipv6_enabled | bool %}
+      PODIFIED_OVSDB_NB_IP=[{{ podified_ovn_nb_ip_result.stdout }}]
+      PODIFIED_OVSDB_SB_IP=[{{ podified_ovn_sb_ip_result.stdout }}]
+      SOURCE_OVSDB_IP=[{{ source_ovndb_ip }}]
+      {% else %}
       PODIFIED_OVSDB_NB_IP={{ podified_ovn_nb_ip_result.stdout }}
       PODIFIED_OVSDB_SB_IP={{ podified_ovn_sb_ip_result.stdout }}
-      OVSDB_IMAGE={{ ovn_image }}
-
       SOURCE_OVSDB_IP={{ source_ovndb_ip }}
+      {% endif %}
+      OVSDB_IMAGE={{ ovn_image }}
 
       CONTROLLER1_SSH="{{ controller1_ssh }}"
       CONTROLLER2_SSH="{{ controller2_ssh }}"
@@ -153,18 +158,33 @@
 # filter allowing traffic from podified network is needed. Adding the rules
 # no matter the scenario to simplify logic and on a non-scenario-A environment
 # this rule shouldn't harm.
-- name: Add nftables rule to allow podified internalapi trafic to controllers
+- name: Add nftables rule to allow podified internalapi traffic to controllers (IPv4)
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     {{ ovn_copy_shell_vars }}
 
-    $CONTROLLER1_SSH sudo nft add rule inet filter INPUT ip saddr 172.17.1.0/24 tcp dport 6641 ct state new counter accept
-    $CONTROLLER1_SSH sudo nft add rule inet filter INPUT ip saddr 172.17.1.0/24 tcp dport 6642 ct state new counter accept
-    $CONTROLLER2_SSH sudo nft add rule inet filter INPUT ip saddr 172.17.1.0/24 tcp dport 6641 ct state new counter accept
-    $CONTROLLER2_SSH sudo nft add rule inet filter INPUT ip saddr 172.17.1.0/24 tcp dport 6642 ct state new counter accept
-    $CONTROLLER3_SSH sudo nft add rule inet filter INPUT ip saddr 172.17.1.0/24 tcp dport 6641 ct state new counter accept
-    $CONTROLLER3_SSH sudo nft add rule inet filter INPUT ip saddr 172.17.1.0/24 tcp dport 6642 ct state new counter accept
+    $CONTROLLER1_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6641 ct state new counter accept
+    $CONTROLLER1_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6642 ct state new counter accept
+    $CONTROLLER2_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6641 ct state new counter accept
+    $CONTROLLER2_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6642 ct state new counter accept
+    $CONTROLLER3_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6641 ct state new counter accept
+    $CONTROLLER3_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6642 ct state new counter accept
+  when: not ipv6_enabled | bool
+
+- name: Add nftables rule to allow podified internalapi traffic to controllers (IPv6)
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    $CONTROLLER1_SSH sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6641 ct state new counter accept
+    $CONTROLLER1_SSH sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6642 ct state new counter accept
+    $CONTROLLER2_SSH sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6641 ct state new counter accept
+    $CONTROLLER2_SSH sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6642 ct state new counter accept
+    $CONTROLLER3_SSH sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6641 ct state new counter accept
+    $CONTROLLER3_SSH sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6642 ct state new counter accept
+  when: ipv6_enabled | bool
 
 - name: dump OVN databases using tcp connection
   no_log: "{{ use_no_log }}"

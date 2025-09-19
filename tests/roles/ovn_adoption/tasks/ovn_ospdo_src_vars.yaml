@@ -19,11 +19,16 @@
   ansible.builtin.set_fact:
     ovn_copy_shell_vars: |
       STORAGE_CLASS={{ ospdo_storage_class.stdout }}
+      {% if ipv6_enabled | bool %}
+      PODIFIED_OVSDB_NB_IP=[{{ podified_ovn_nb_ip_result.stdout }}]
+      PODIFIED_OVSDB_SB_IP=[{{ podified_ovn_sb_ip_result.stdout }}]
+      SOURCE_OVSDB_IP=[{{ source_ovndb_ip_str.stdout }}]
+      {% else %}
       PODIFIED_OVSDB_NB_IP={{ podified_ovn_nb_ip_result.stdout }}
       PODIFIED_OVSDB_SB_IP={{ podified_ovn_sb_ip_result.stdout }}
-      OVSDB_IMAGE={{ ovn_image }}
-
       SOURCE_OVSDB_IP={{ source_ovndb_ip_str.stdout }}
+      {% endif %}
+      OVSDB_IMAGE={{ ovn_image }}
 
       CONTROLLER1_SSH="{{ controller1_ssh }}"
       CONTROLLER2_SSH="echo ospdo src env, skipping on controller-1 "
