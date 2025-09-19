@@ -1,0 +1,24 @@
+[id="adopting-barbican-with-hsm"]
+= Adopting the Key Manager service with HSM integration
+
+This assembly describes how to adopt the Key Manager service (Barbican) from OpenStack 17.1 to {rhos_long} {rhos_acro} when your source environment includes Hardware Security Module (HSM) integration.
+
+Hardware Security Modules provide enhanced security for cryptographic operations by storing encryption keys in dedicated hardware devices. When migrating from TripleO-based OpenStack 17.1 to {rhos_acro}, it is critical to preserve HSM functionality and maintain access to HSM-backed secrets.
+
+include::../modules/con_key-manager-service-adoption-approaches.adoc[leveloffset=+1]
+
+include::../modules/proc_adopting-key-manager-service-with-hsm-integration.adoc[leveloffset=+1]
+
+include::../modules/ref_troubleshooting-key-manager-hsm-adoption.adoc[leveloffset=+1]
+
+.Additional resources
+
+* link:https://github.com/openstack-k8s-operators/ansible-role-rhoso-proteccio-hsm[ansible-role-rhoso-proteccio-hsm repository]
+* {rhos_acro} Key Manager service documentation
+* Vendor-specific HSM documentation (Proteccio, Luna, nCipher)
+* OpenStack Barbican PKCS#11 plugin documentation
+
+[NOTE]
+====
+This documentation addresses the requirements and feedback from the data-plane-adoption community to provide HSM adoption procedures that integrate with the standard adoption workflow and avoid test-specific dependencies.
+====

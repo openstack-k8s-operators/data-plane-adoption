@@ -1,0 +1,284 @@
+= Troubleshooting Key Manager HSM adoption
+
+[id="troubleshooting-key-manager-hsm-adoption_{context}"]
+
+This section provides troubleshooting guidance for common issues encountered during HSM-enabled Key Manager (Barbican) service adoption.
+
+== Configuration validation failures
+
+.Problem
+The adoption fails with validation errors about placeholder values.
+
+.Symptoms
+----
+TASK [Validate all required variables are set] ****
+fatal: [localhost]: FAILED! => {
+    "msg": "Required variable proteccio_certs_path contains placeholder value."
+}
+----
+
+.Solution
+. Edit the HSM configuration file:
++
+[source,bash]
+----
+$ vi tests/hsm_vars/user_config.yml
+----
+
+. Replace all `CHANGE_ME_*` values with actual configuration values for your environment
+. Verify no placeholder values remain:
++
+[source,bash]
+----
+$ grep -i "CHANGE_ME" tests/hsm_vars/user_config.yml
+----
+
+== HSM file prerequisites missing
+
+.Problem
+The adoption fails because HSM certificates or client software cannot be found.
+
+.Symptoms
+----
+TASK [Validate Proteccio prerequisites exist] ****
+fatal: [localhost]: FAILED! => {
+    "msg": "Proteccio client ISO not found: /opt/proteccio/Proteccio3.06.05.iso"
+}
+----
+
+.Solution
+. Verify all required HSM files exist at the configured paths:
++
+[source,bash]
+----
+$ ls -la /path/to/proteccio/certs/
+$ ls -la /path/to/proteccio/Proteccio3.06.05.iso
+$ ls -la /path/to/proteccio/proteccio.rc
+----
+
+. If files are in different locations, update the paths in `user_config.yml`
+. Ensure file permissions allow read access by the ansible user
+
+== Source environment connectivity issues
+
+.Problem
+The adoption cannot connect to the source OpenStack environment to extract configuration.
+
+.Symptoms
+----
+TASK [detect source environment HSM configuration] ****
+fatal: [localhost]: FAILED! => {
+    "msg": "SSH connection to source environment failed"
+}
+----
+
+.Solution
+. Verify SSH connectivity to the source controller:
++
+[source,bash]
+----
+$ ssh -o StrictHostKeyChecking=no tripleo-admin@controller-0.ctlplane
+----
+
+. Update the `controller1_ssh` variable if needed:
++
+[source,yaml]
+----
+controller1_ssh: "ssh -o StrictHostKeyChecking=no tripleo-admin@<controller_ip>"
+----
+
+. Ensure SSH keys are properly configured for passwordless access
+
+== HSM secret creation failures
+
+.Problem
+HSM secrets cannot be created in the target environment.
+
+.Symptoms
+----
+TASK [Create HSM secrets in target environment] ****
+fatal: [localhost]: FAILED! => {
+    "msg": "Failed to create secret proteccio-data"
+}
+----
+
+.Solution
+. Verify target environment access:
++
+[source,bash]
+----
+$ export KUBECONFIG=/path/to/.kube/config
+$ oc get secrets -n openstack
+----
+
+. Check if secrets already exist:
++
+[source,bash]
+----
+$ oc get secret proteccio-data hsm-login -n openstack
+----
+
+. If secrets exist with different names, update the configuration in `user_config.yml`
+
+== Custom image registry issues
+
+.Problem
+Custom Barbican images cannot be pushed to or pulled from the configured registry.
+
+.Symptoms
+----
+TASK [Create Proteccio-enabled Barbican images] ****
+fatal: [localhost]: FAILED! => {
+    "msg": "Failed to push image to registry"
+}
+----
+
+.Solution
+. Verify registry authentication:
++
+[source,bash]
+----
+$ podman login <registry_url>
+----
+
+. Test image push permissions:
++
+[source,bash]
+----
+$ podman tag hello-world <registry>/<namespace>/test:latest
+$ podman push <registry>/<namespace>/test:latest
+----
+
+. Update registry configuration in `user_config.yml` if needed
+
+== HSM backend detection failures
+
+.Problem
+The adoption role cannot detect HSM configuration in the source environment.
+
+.Symptoms
+----
+TASK [detect source environment HSM configuration] ****
+ok: [localhost] => {
+    "msg": "No HSM configuration found - using standard adoption"
+}
+----
+
+.Solution
+. Manually verify HSM configuration exists in the source:
++
+[source,bash]
+----
+$ ssh tripleo-admin@controller-0.ctlplane \
+  "sudo grep -A 10 '\[p11_crypto_plugin\]' \
+  /var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf"
+----
+
+. If HSM is configured but not detected, force HSM adoption:
++
+[source,bash]
+----
+$ ansible-playbook -i inventory.yaml \
+  -e @tests/hsm_vars/user_config.yml \
+  -e enable_hsm_integration=true \
+  -e hsm_vendor=proteccio \
+  tests/playbooks/hsm/hsm_adoption.yml
+----
+
+== Database migration issues
+
+.Problem
+HSM metadata is not preserved during database migration.
+
+.Symptoms
+----
+TASK [Verify database migration preserves HSM references] ****
+ok: [localhost] => {
+    "msg": "HSM secrets found in migrated database: 0"
+}
+----
+
+.Solution
+. Verify source database contains HSM secrets:
++
+[source,bash]
+----
+$ ssh tripleo-admin@controller-0.ctlplane \
+  "sudo mysql barbican -e 'SELECT COUNT(*) FROM secret_store_metadata WHERE key=\"plugin_name\" AND value=\"PKCS11\";'"
+----
+
+. Check database migration logs for errors:
++
+[source,bash]
+----
+$ oc logs deployment/barbican-api | grep -i migration
+----
+
+. If migration failed, restore from backup and retry
+
+== Service startup failures
+
+.Problem
+Barbican services fail to start after HSM configuration is applied.
+
+.Symptoms
+----
+$ oc get pods -l service=barbican
+NAME                           READY   STATUS    RESTARTS   AGE
+barbican-api-xyz               0/1     Error     0          2m
+----
+
+.Solution
+. Check pod logs for HSM connectivity issues:
++
+[source,bash]
+----
+$ oc logs barbican-api-xyz
+----
+
+. Verify HSM library is accessible:
++
+[source,bash]
+----
+$ oc exec barbican-api-xyz -- ls -la /opt/tw_proteccio/lib/libnethsm.so
+----
+
+. Check HSM configuration in the pod:
++
+[source,bash]
+----
+$ oc exec barbican-api-xyz -- cat /etc/proteccio/proteccio.rc
+----
+
+== Performance and connectivity issues
+
+.Problem
+HSM operations are slow or fail intermittently.
+
+.Solution
+. Test HSM connectivity from Barbican pods:
++
+[source,bash]
+----
+$ oc exec barbican-api-xyz -- pkcs11-tool --module /opt/tw_proteccio/lib/libnethsm.so --list-slots
+----
+
+. Check HSM server connectivity:
++
+[source,bash]
+----
+$ oc exec barbican-api-xyz -- nc -zv <hsm_server_ip> <hsm_port>
+----
+
+. Monitor HSM server logs for authentication or capacity issues
+
+== Getting additional help
+
+If issues persist after following this troubleshooting guide:
+
+. Collect adoption logs and configuration for analysis
+. Check the HSM vendor documentation for vendor-specific troubleshooting
+. Verify HSM server status and connectivity independently
+. Review the adoption summary report for additional diagnostic information
+
+For Proteccio-specific issues, consult the Eviden Trustway documentation and ensure HSM server configuration matches the client settings.
