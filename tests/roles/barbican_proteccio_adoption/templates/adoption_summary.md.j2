@@ -1,0 +1,122 @@
+# OpenStack 17.1 to RHOSO 18 Adoption Summary
+
+**Adoption Date**: {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+**Executed by**: {{ ansible_user_id }}@{{ ansible_hostname }}
+**Adoption Type**: Option 2 Custom Adoption with Proteccio HSM Integration
+
+---
+
+## Adoption Results
+
+### **Overall Status: COMPLETED SUCCESSFULLY**
+
+### **Phase Completion:**
+- **Phase 1 (Environment Preparation)**: COMPLETED
+- **Phase 2 (Base RHOSO 18 Deployment)**: COMPLETED
+- **Phase 3 (Database Adoption)**: COMPLETED
+- **Phase 4 (Proteccio Deployment)**: COMPLETED
+- **Phase 5 (Verification)**: COMPLETED
+
+---
+
+## Technical Details
+
+### **Source Environment:**
+- **Undercloud Host**: {{ source_undercloud_host }}
+- **Controller Host**: {{ source_controller_host }}
+- **Database Password**: {{ source_db_password }}
+
+### **Target Environment:**
+- **Namespace**: {{ target_namespace }}
+- **Storage Class**: {{ target_storage_class }}
+
+### **Proteccio Configuration:**
+- **Custom Images Deployed**:
+  - API: {{ proteccio_custom_images.barbican_api }}
+  - Worker: {{ proteccio_custom_images.barbican_worker }}
+- **HSM Configuration**:
+  - Token Labels: {{ hsm_token_labels }}
+  - MKEK Label: {{ hsm_mkek_label }}
+  - HMAC Label: {{ hsm_hmac_label }}
+
+### **Database Adoption:**
+- **Total Secrets Adopted**: {{ verification_results.total_secrets_adopted }}
+- **Source Database Dump**: {{ source_dump_file }}
+- **Backup Created**: {{ rhoso18_backup_file if backup_database else 'Skipped' }}
+
+### **Service Configuration:**
+- **Barbican API Replicas**: {{ barbican_api_replicas }}
+- **Barbican Worker Replicas**: {{ barbican_worker_replicas }}
+- **Barbican Keystone Listener Replicas**: {{ barbican_keystone_listener_replicas }}
+
+---
+
+## Verification Results
+
+### **Proteccio Integration:**
+- **Client Files Mounted**: {{ verification_results.proteccio_files_mounted }}
+- **HSM Secrets Created**: hsm-login, proteccio-data
+- **PKCS11 Plugin**: CONFIGURED
+
+### **Database Adoption:**
+- **Adoption Status**: SUCCESSFUL
+- **Specific Test Secrets Found**: {{ verification_results.specific_secrets_found }}
+
+### **API Functionality:**
+- **New Secret Creation**: {{ verification_results.new_secret_creation }}
+- **Adopted Secret Access**: {{ verification_results.adopted_secret_access }}
+- **Barbican Service**: OPERATIONAL
+
+---
+
+## Files Generated
+
+{% set generated_files = [
+    my_vars_file,
+    base_controlplane_file,
+    proteccio_openstackversion_file,
+    barbican_proteccio_patch_file
+] %}
+
+{% if backup_database %}
+{% set generated_files = generated_files + [rhoso18_backup_file] %}
+{% endif %}
+
+{% set generated_files = generated_files + [source_dump_file] %}
+
+### **Configuration Files:**
+{% for file in generated_files %}
+- `{{ file }}`
+{% endfor %}
+
+### **Pre-existing Required Files:**
+{% for file in proteccio_required_files %}
+- `{{ proteccio_files_dir }}/{{ file }}`
+{% endfor %}
+- `{{ hsm_role_path }}/`
+
+---
+
+## Next Steps
+
+1. **HSM Connectivity Verification**: Test actual HSM connectivity and switch default secret store to `pkcs11` when ready
+2. **Additional Services**: Continue adoption of other OpenStack services (Nova, Neutron, Cinder, etc.)
+3. **Data Plane Adoption**: Implement EDPM adoption for compute and storage nodes
+4. **Production Validation**: Perform comprehensive testing with production workloads
+
+---
+
+## Ansible Role Usage
+
+This adoption was performed using the `barbican_proteccio_adoption` Ansible role:
+
+```bash
+cd {{ work_dir }}/tests
+ansible-playbook -i inventory.proteccio.yaml playbooks/barbican_proteccio_adoption.yml
+```
+
+**Role Location**: `{{ work_dir }}/tests/roles/barbican_proteccio_adoption/`
+
+---
+
+*Adoption completed successfully with Proteccio HSM integration maintained.*

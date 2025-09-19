@@ -1,0 +1,95 @@
+---
+# Phase 2: Base RHOSO 18 Deployment
+
+- name: "Phase 2: Base RHOSO 18 Deployment"
+  ansible.builtin.debug:
+    msg: "Starting Phase 2 - Base RHOSO 18 Deployment with Standard Images"
+
+- name: Create base OpenStackControlPlane configuration
+  ansible.builtin.template:
+    src: base_controlplane.yaml.j2
+    dest: "{{ base_controlplane_file }}"
+    mode: '0644'
+
+- name: Deploy base OpenStackControlPlane
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', base_controlplane_file) | from_yaml }}"
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: "{{ service_ready_timeout }}"
+
+- name: Wait for base services to be ready
+  kubernetes.core.k8s_info:
+    api_version: core.openstack.org/v1beta1
+    kind: OpenStackControlPlane
+    name: openstack
+    namespace: "{{ target_namespace }}"
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: "{{ service_ready_timeout }}"
+
+- name: Create Keystone secret with extracted keys
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: keystone
+        namespace: "{{ target_namespace }}"
+      type: Opaque
+      data:
+        CredentialKeys0: "{{ keystone_credential_keys[0] }}"
+        CredentialKeys1: "{{ keystone_credential_keys[1] }}"
+        FernetKeys0: "{{ keystone_fernet_keys[0] }}"
+        FernetKeys1: "{{ keystone_fernet_keys[1] }}"
+
+- name: Verify base deployment
+  kubernetes.core.k8s_info:
+    api_version: barbican.openstack.org/v1beta1
+    kind: Barbican
+    name: barbican
+    namespace: "{{ target_namespace }}"
+  register: barbican_status
+
+- name: Get Barbican transport URL to extract RabbitMQ user
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Secret
+    name: rabbitmq-transport-url-barbican-barbican-transport
+    namespace: "{{ target_namespace }}"
+  register: barbican_transport_secret
+
+- name: Extract RabbitMQ credentials from transport URL
+  ansible.builtin.set_fact:
+    rabbitmq_user: "{{ (barbican_transport_secret.resources[0].data.transport_url | b64decode | regex_search('rabbit://([^:]+):', '\\1'))[0] }}"
+    rabbitmq_password: "{{ (barbican_transport_secret.resources[0].data.transport_url | b64decode | regex_search('rabbit://[^:]+:([^@]+)@', '\\1'))[0] }}"
+  when: barbican_transport_secret.resources | length > 0
+
+- name: Create RabbitMQ user for Barbican services
+  ansible.builtin.shell: |
+    oc exec rabbitmq-server-0 -n {{ target_namespace }} -- rabbitmqctl add_user {{ rabbitmq_user }} {{ rabbitmq_password }}
+  register: rabbitmq_user_result
+  failed_when:
+    - rabbitmq_user_result.rc != 0
+    - "'already exists' not in rabbitmq_user_result.stderr"
+  when: rabbitmq_user is defined
+
+- name: Set RabbitMQ permissions for Barbican user
+  ansible.builtin.shell: |
+    oc exec rabbitmq-server-0 -n {{ target_namespace }} -- rabbitmqctl set_permissions {{ rabbitmq_user }} ".*" ".*" ".*"
+  when: rabbitmq_user is defined
+
+- name: Display base deployment status
+  ansible.builtin.debug:
+    msg: |
+      Base deployment status:
+      - OpenStackControlPlane: Ready
+      - Barbican Status: {{ barbican_status.resources[0].status.conditions | selectattr('type', 'equalto', 'Ready') | map(attribute='status') | first | default('Unknown') }}
+      - Using standard images
+      - RabbitMQ user configured: {{ rabbitmq_user | default('N/A') }}

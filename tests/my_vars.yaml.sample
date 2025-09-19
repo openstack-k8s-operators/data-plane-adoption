@@ -1,0 +1,10 @@
+# Sample source environment connection variables
+# This file is generated automatically by the barbican_proteccio_adoption role
+# Copy this file to my_vars.yaml and customize for your environment
+
+UC_HOST: "YOUR_UNDERCLOUD_HOSTNAME"
+CTRL_HOST: "YOUR_CONTROLLER_HOSTNAME.ctlplane"
+controller1_ssh: "sudo ssh -t YOUR_UNDERCLOUD_HOSTNAME 'sudo -u stack ssh -t tripleo-admin@YOUR_CONTROLLER_HOSTNAME.ctlplane bash -lc'"
+undercloud_ssh: "sudo ssh -t YOUR_UNDERCLOUD_HOSTNAME 'sudo -u stack bash -lc'"
+tripleo_passwords:
+  default: "/path/to/your/overcloud-passwords.yaml"

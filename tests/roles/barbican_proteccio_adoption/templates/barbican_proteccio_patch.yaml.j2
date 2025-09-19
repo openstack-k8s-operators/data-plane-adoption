@@ -1,0 +1,41 @@
+---
+spec:
+  barbican:
+    enabled: true
+    template:
+      customServiceConfig: |
+        [DEFAULT]
+        debug = False
+
+        [simple_crypto_plugin]
+        kek = {{ barbican_simple_crypto_kek }}
+
+        [p11_crypto_plugin]
+        plugin_name = PKCS11
+        library_path = /opt/tw_proteccio/lib/libnethsm.so
+        token_labels = {{ hsm_token_labels }}
+        mkek_label = {{ hsm_mkek_label }}
+        hmac_label = {{ hsm_hmac_label }}
+        encryption_mechanism = CKM_AES_CBC
+        hmac_key_type = CKK_GENERIC_SECRET
+        hmac_keygen_mechanism = CKM_GENERIC_SECRET_KEY_GEN
+        hmac_mechanism = CKM_SHA256_HMAC
+        key_wrap_mechanism = CKM_AES_CBC_PAD
+        key_wrap_generate_iv = true
+        always_set_cka_sensitive = true
+        os_locking_ok = false
+        login = {{ hsm_login_password }}
+      globalDefaultSecretStore: {{ 'simple_crypto' if start_with_simple_crypto else 'pkcs11' }}
+      enabledSecretStores:
+        - simple_crypto
+        - pkcs11
+      pkcs11:
+        loginSecret: hsm-login
+        clientDataSecret: proteccio-data
+        clientDataPath: /etc/proteccio
+      barbicanAPI:
+        replicas: {{ barbican_api_replicas }}
+      barbicanWorker:
+        replicas: {{ barbican_worker_replicas }}
+      barbicanKeystoneListener:
+        replicas: {{ barbican_keystone_listener_replicas }}

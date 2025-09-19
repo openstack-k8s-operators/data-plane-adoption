@@ -1,0 +1,93 @@
+---
+# Phase 1: Environment Preparation
+
+- name: "Phase 1: Environment Preparation"
+  ansible.builtin.debug:
+    msg: "Starting Phase 1 - Environment Preparation"
+
+- name: Create working directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ work_dir }}"
+    - "{{ backup_dir }}"
+
+- name: Verify prerequisites
+  block:
+    - name: Check if Proteccio HSM Ansible role exists
+      ansible.builtin.stat:
+        path: "{{ hsm_role_path }}"
+      register: proteccio_role_check
+      failed_when: not proteccio_role_check.stat.exists
+
+    - name: Check if proteccio files directory exists
+      ansible.builtin.stat:
+        path: "{{ proteccio_files_dir }}"
+      register: proteccio_files_check
+      failed_when: not proteccio_files_check.stat.exists
+
+    - name: Verify required proteccio files exist
+      ansible.builtin.stat:
+        path: "{{ proteccio_files_dir }}/{{ item }}"
+      register: proteccio_file_check
+      failed_when: not proteccio_file_check.stat.exists
+      loop: "{{ proteccio_required_files }}"
+
+    - name: Check oc availability
+      ansible.builtin.command: which oc
+      register: oc_check
+      failed_when: oc_check.rc != 0
+
+    - name: Check ansible-playbook availability
+      ansible.builtin.command: which ansible-playbook
+      register: ansible_check
+      failed_when: ansible_check.rc != 0
+
+- name: Create connection variables file
+  ansible.builtin.template:
+    src: my_vars.yaml.j2
+    dest: "{{ my_vars_file }}"
+    mode: '0644'
+
+- name: Extract source database credentials
+  ansible.builtin.shell: |
+    sudo ssh -t {{ source_undercloud_host }} 'sudo -u stack ssh -t tripleo-admin@{{ source_controller_host }} "sudo grep connection /var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf"'
+  register: source_db_connection
+  changed_when: false
+
+- name: Parse database password from connection string
+  ansible.builtin.set_fact:
+    source_db_password: "{{ source_db_connection.stdout | regex_search('barbican:([^@]+)@', '\\1') | first }}"
+
+- name: Extract Keystone Fernet keys
+  ansible.builtin.shell: |
+    sudo ssh -t {{ source_undercloud_host }} 'sudo -u stack ssh -t tripleo-admin@{{ source_controller_host }} "sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/fernet-keys/{{ item }}"'
+  register: fernet_keys
+  loop: [0, 1]
+  changed_when: false
+
+- name: Extract Keystone Credential keys
+  ansible.builtin.shell: |
+    sudo ssh -t {{ source_undercloud_host }} 'sudo -u stack ssh -t tripleo-admin@{{ source_controller_host }} "sudo cat /var/lib/config-data/puppet-generated/keystone/etc/keystone/credential-keys/{{ item }}"'
+  register: credential_keys
+  loop: [0, 1]
+  changed_when: false
+
+- name: Store extracted keys as facts
+  ansible.builtin.set_fact:
+    keystone_fernet_keys:
+      - "{{ fernet_keys.results[0].stdout | b64encode }}"
+      - "{{ fernet_keys.results[1].stdout | b64encode }}"
+    keystone_credential_keys:
+      - "{{ credential_keys.results[0].stdout | b64encode }}"
+      - "{{ credential_keys.results[1].stdout | b64encode }}"
+
+- name: Display extracted configuration
+  ansible.builtin.debug:
+    msg: |
+      Extracted configuration:
+      - Source DB Password: {{ source_db_password }}
+      - Fernet Keys: {{ keystone_fernet_keys | length }} keys extracted
+      - Credential Keys: {{ keystone_credential_keys | length }} keys extracted

@@ -1,0 +1,121 @@
+---
+# Phase 4: Proteccio Custom Images and HSM Configuration
+
+- name: "Phase 4: Proteccio Deployment"
+  ansible.builtin.debug:
+    msg: "Starting Phase 4 - Proteccio Custom Images and HSM Configuration"
+
+- name: Create Proteccio OpenStackVersion configuration
+  ansible.builtin.template:
+    src: proteccio_openstackversion.yaml.j2
+    dest: "{{ proteccio_openstackversion_file }}"
+    mode: '0644'
+
+- name: Apply Proteccio custom images
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', proteccio_openstackversion_file) | from_yaml }}"
+
+- name: Create Barbican Proteccio configuration patch
+  ansible.builtin.template:
+    src: barbican_proteccio_patch.yaml.j2
+    dest: "{{ barbican_proteccio_patch_file }}"
+    mode: '0644'
+
+- name: Apply Barbican Proteccio configuration
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: core.openstack.org/v1beta1
+      kind: OpenStackControlPlane
+      metadata:
+        name: openstack
+        namespace: "{{ target_namespace }}"
+      spec:
+        barbican:
+          enabled: true
+          template:
+            customServiceConfig: |
+              [DEFAULT]
+              debug = False
+
+              [simple_crypto_plugin]
+              kek = {{ barbican_simple_crypto_kek }}
+
+              [p11_crypto_plugin]
+              plugin_name = PKCS11
+              library_path = /opt/tw_proteccio/lib/libnethsm.so
+              token_labels = {{ hsm_token_labels }}
+              mkek_label = {{ hsm_mkek_label }}
+              hmac_label = {{ hsm_hmac_label }}
+              encryption_mechanism = CKM_AES_CBC
+              hmac_key_type = CKK_GENERIC_SECRET
+              hmac_keygen_mechanism = CKM_GENERIC_SECRET_KEY_GEN
+              hmac_mechanism = CKM_SHA256_HMAC
+              key_wrap_mechanism = CKM_AES_CBC_PAD
+              key_wrap_generate_iv = true
+              always_set_cka_sensitive = true
+              os_locking_ok = false
+              login = {{ hsm_login_password }}
+            globalDefaultSecretStore: "{{ 'simple_crypto' if start_with_simple_crypto else 'pkcs11' }}"
+            enabledSecretStores:
+              - simple_crypto
+              - pkcs11
+            pkcs11:
+              loginSecret: hsm-login
+              clientDataSecret: proteccio-data
+              clientDataPath: /etc/proteccio
+            barbicanAPI:
+              replicas: "{{ barbican_api_replicas }}"
+            barbicanWorker:
+              replicas: "{{ barbican_worker_replicas }}"
+            barbicanKeystoneListener:
+              replicas: "{{ barbican_keystone_listener_replicas }}"
+    merge_type: merge
+
+- name: Wait for Barbican services to be ready
+  kubernetes.core.k8s_info:
+    api_version: barbican.openstack.org/v1beta1
+    kind: Barbican
+    name: barbican
+    namespace: "{{ target_namespace }}"
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: "{{ service_ready_timeout }}"
+
+- name: Get Barbican API pod for verification
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: "{{ target_namespace }}"
+    label_selectors:
+      - component=barbican-api
+  register: barbican_api_pods
+
+- name: Get Barbican Worker pod for verification
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: "{{ target_namespace }}"
+    label_selectors:
+      - service=barbican
+      - component=barbican-worker
+  register: barbican_worker_pods
+
+- name: Verify Proteccio custom images are deployed
+  ansible.builtin.shell: |
+    oc describe pod {{ item.metadata.name }} -n {{ target_namespace }} | grep 'Image:' | head -1
+  register: image_verification
+  loop: "{{ barbican_api_pods.resources + barbican_worker_pods.resources }}"
+  changed_when: false
+
+- name: Display Proteccio deployment status
+  ansible.builtin.debug:
+    msg: |
+      Proteccio deployment completed:
+      - Custom images applied: {{ proteccio_openstackversion_file }}
+      - HSM configuration applied: {{ barbican_proteccio_patch_file }}
+      - Barbican services ready: {{ barbican_api_replicas + barbican_worker_replicas + barbican_keystone_listener_replicas }} replicas
+      - Images in use: {{ image_verification.results | map(attribute='stdout') | list }}

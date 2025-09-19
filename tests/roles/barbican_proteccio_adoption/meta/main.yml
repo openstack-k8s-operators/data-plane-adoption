@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: Red Hat
+  description: Automated Barbican adoption from OpenStack 17.1 to RHOSO 18 with Proteccio HSM
+  company: Red Hat
+  license: Apache-2.0
+  min_ansible_version: "2.9"
+  platforms:
+    - name: EL
+      versions:
+        - all
+  galaxy_tags:
+    - openstack
+    - adoption
+    - barbican
+    - hsm
+    - proteccio
+
+dependencies: []

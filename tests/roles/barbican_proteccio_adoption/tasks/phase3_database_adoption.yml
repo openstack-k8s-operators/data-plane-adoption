@@ -1,0 +1,169 @@
+---
+# Phase 3: Database Adoption (THE ACTUAL ADOPTION)
+
+- name: "Phase 3: Database Adoption"
+  ansible.builtin.debug:
+    msg: "Starting Phase 3 - Database Adoption (THE ACTUAL ADOPTION)"
+
+- name: Check if HSM secrets already exist
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Secret
+    name: "{{ item }}"
+    namespace: "{{ target_namespace }}"
+  register: existing_hsm_secrets
+  loop:
+    - hsm-login
+    - proteccio-data
+
+- name: Check if HSM role path exists
+  ansible.builtin.stat:
+    path: "{{ hsm_role_path }}"
+  register: hsm_role_check
+  when: existing_hsm_secrets.results | selectattr('resources', 'equalto', []) | list | length > 0
+
+- name: Fail if HSM role is required but not available
+  ansible.builtin.fail:
+    msg: |
+      CRITICAL ERROR: The ansible-role-rhoso-proteccio-hsm role is MANDATORY for Proteccio HSM adoption.
+
+      The role was not found at: {{ hsm_role_path }}
+
+      RESOLUTION OPTIONS:
+      1. Install the ansible-role-rhoso-proteccio-hsm role at the specified path
+      2. Update 'hsm_role_path' variable to point to the correct location
+      3. Execute the HSM role manually before running this adoption:
+         ansible-playbook -i your_inventory your_hsm_playbook.yml
+
+      This role is REQUIRED to create HSM secrets (hsm-login, proteccio-data) that are
+      essential for Proteccio HSM integration. Without it, the adoption will fail.
+  when:
+    - existing_hsm_secrets.results | selectattr('resources', 'equalto', []) | list | length > 0
+    - require_hsm_role | bool
+    - not hsm_role_check.stat.exists
+
+- name: Execute MANDATORY Proteccio HSM Ansible role
+  ansible.builtin.include_role:
+    name: "{{ hsm_role_path }}"
+  vars:
+    ansible_connection: local
+    proteccio_files_path: "{{ proteccio_files_dir }}"
+  when: existing_hsm_secrets.results | selectattr('resources', 'equalto', []) | list | length > 0
+
+- name: Verify MANDATORY HSM secrets are available
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Secret
+    name: "{{ item }}"
+    namespace: "{{ target_namespace }}"
+  register: hsm_secrets_check
+  loop:
+    - hsm-login
+    - proteccio-data
+
+- name: Fail if required HSM secrets are missing
+  ansible.builtin.fail:
+    msg: |
+      CRITICAL ERROR: Required HSM secret '{{ item.item }}' not found.
+
+      For Proteccio HSM adoption, the following Kubernetes secrets are MANDATORY:
+      - hsm-login: Contains HSM authentication credentials
+      - proteccio-data: Contains Proteccio certificate data
+
+      These secrets must be created by the ansible-role-rhoso-proteccio-hsm role.
+
+      RESOLUTION:
+      1. Ensure the ansible-role-rhoso-proteccio-hsm role executed successfully
+      2. Check that your Proteccio certificate files are properly configured
+      3. Verify your HSM authentication credentials are correct
+
+      Cannot proceed with Proteccio HSM adoption without these secrets.
+  when:
+    - require_hsm_role | bool
+    - item.resources | length == 0
+  loop: "{{ hsm_secrets_check.results }}"
+
+- name: Get MariaDB root password
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Secret
+    name: osp-secret
+    namespace: "{{ target_namespace }}"
+  register: osp_secret
+
+- name: Set MariaDB root password fact
+  ansible.builtin.set_fact:
+    mariadb_root_password: "{{ osp_secret.resources[0].data.DbRootPassword | b64decode }}"
+
+- name: Backup current RHOSO 18 Barbican database
+  ansible.builtin.shell: |
+    oc exec openstack-galera-0 -n {{ target_namespace }} -- mysqldump -u root -p{{ mariadb_root_password }} barbican > {{ rhoso18_backup_file }}
+  when: backup_database | bool
+
+- name: Export source Barbican database
+  ansible.builtin.shell: |
+    sudo ssh -t {{ source_undercloud_host }} 'sudo -u stack ssh -t tripleo-admin@{{ source_controller_host }} "sudo podman exec galera-bundle-podman-0 mysqldump -u barbican -p{{ source_db_password }} barbican"' > {{ source_dump_file }}
+
+- name: Clean SSH warnings from database dump
+  ansible.builtin.replace:
+    path: "{{ source_dump_file }}"
+    regexp: "{{ item }}"
+    replace: ""
+  loop:
+    - "Warning: Permanently added.*\n"
+    - "Connection to {{ source_controller_host }} closed.\n"
+    - "Connection to {{ source_undercloud_host }} closed.\n"
+
+- name: Disable Barbican services for adoption
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: core.openstack.org/v1beta1
+      kind: OpenStackControlPlane
+      metadata:
+        name: openstack
+        namespace: "{{ target_namespace }}"
+      spec:
+        barbican:
+          enabled: false
+    merge_type: merge
+
+- name: Wait for Barbican pods to terminate
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: "{{ target_namespace }}"
+    label_selectors:
+      - service=barbican
+  register: barbican_pods
+  until: barbican_pods.resources | length == 0
+  retries: 12
+  delay: 5
+
+- name: Drop and recreate Barbican database
+  ansible.builtin.shell: |
+    oc exec openstack-galera-0 -n {{ target_namespace }} -- mysql -u root -p{{ mariadb_root_password }} -e "DROP DATABASE IF EXISTS barbican; CREATE DATABASE barbican CHARACTER SET utf8 COLLATE utf8_general_ci;"
+
+- name: Import source database
+  ansible.builtin.shell: |
+    oc exec -i openstack-galera-0 -n {{ target_namespace }} -- mysql -u root -p{{ mariadb_root_password }} barbican < {{ source_dump_file }}
+  async: "{{ database_import_timeout }}"
+  poll: 10
+
+- name: Verify database import
+  ansible.builtin.shell: |
+    oc exec openstack-galera-0 -n {{ target_namespace }} -- mysql -u root -p{{ mariadb_root_password }} barbican -e "SELECT COUNT(*) as secret_count FROM secrets;"
+  register: imported_secrets_count
+  changed_when: false
+
+- name: Store adopted secrets count
+  ansible.builtin.set_fact:
+    adopted_secrets_count: "{{ imported_secrets_count.stdout_lines[-1] }}"
+
+- name: Display database adoption results
+  ansible.builtin.debug:
+    msg: |
+      Database adoption completed:
+      - Secrets adopted: {{ adopted_secrets_count }}
+      - Source database: {{ source_dump_file }}
+      - Backup created: {{ rhoso18_backup_file if backup_database else 'Skipped' }}
