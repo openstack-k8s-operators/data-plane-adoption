@@ -1,0 +1,11 @@
+- name: Configuring nicMappings for OCP gateways
+  hosts: local
+  gather_facts: false
+  force_handlers: true
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  roles:
+    - role: ocp_as_gw
+      tags:
+        - ocp_as_gw
