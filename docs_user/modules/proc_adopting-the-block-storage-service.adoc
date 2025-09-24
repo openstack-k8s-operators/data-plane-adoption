@@ -168,9 +168,8 @@ Ensure that you use the same configuration group name for the driver that you us
 ====
 +
 . Configure the NetApp NFS Block Storage volume service:
-.. Create secrets that include sensitive information such as hostnames, passwords, and usernames to access the third-party NetApp NFS storage. You can find the credentials in the `cinder.conf` file that was generated from the {OpenStackPreviousInstaller} deployment.
+.. Create a secret that includes sensitive information such as hostnames, passwords, and usernames to access the third-party NetApp NFS storage. You can find the credentials in the `cinder.conf` file that was generated from the {OpenStackPreviousInstaller} deployment:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: v1
@@ -198,7 +197,9 @@ EOF
 $ oc patch openstackcontrolplane openstack --type=merge --patch-file=<cinder_netappNFS.patch>
 ----
 +
-* The following example shows a `cinder_netappNFS.patch` file that configures a NetApp NFS Block Storage volume service:
+* Replace `<cinder_netappNFS.patch>` with the name of the patch file for your NetApp NFS Block Storage volume back end.
++
+The following example shows a `cinder_netappNFS.patch` file that configures a NetApp NFS Block Storage volume service:
 +
 [source,yaml]
 ----
@@ -223,6 +224,59 @@ spec:
             netapp_storage_family=ontap_cluster
           customServiceConfigSecrets:
           - cinder-volume-ontap-secrets
+----
++
+. Configure the NetApp iSCSI Block Storage volume service:
+.. Create a secret that includes sensitive information such as hostnames, passwords, and usernames to access the third-party NetApp iSCSI storage. You can find the credentials in the `cinder.conf` file that was generated from the {OpenStackPreviousInstaller} deployment:
++
+----
+$ oc apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    service: cinder
+    component: cinder-volume
+  name: cinder-volume-ontap-secrets
+type: Opaque
+stringData:
+  ontap-cinder-secrets: |
+    [tripleo_netapp]
+    netapp_server_hostname = netapp_host
+    netapp_login = netapp_username
+    netapp_password = netapp_password
+    netapp_vserver = netapp_vserver
+    netapp_pool_name_search_pattern=(netapp_poolpattern)
+EOF
+----
+. Patch the `OpenStackControlPlane` custom resource (CR) to deploy the NetApp iSCSI Block Storage volume back end:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file=<cinder_netappISCSI.patch>
+----
++
+* Replace `<cinder_netappISCSI.patch>` with the name of the patch file for your NetApp iSCSI Block Storage volume back end.
++
+The following example shows a `cinder_netappISCSI.patch` file that configures a NetApp iSCSI Block Storage volume service:
++
+----
+spec:
+  cinder:
+    enabled: true
+    template:
+      cinderVolumes:
+        ontap-iscsi:
+          networkAttachments:
+            - storage
+          customServiceConfig: |
+            [tripleo_netapp]
+            volume_backend_name=ontap-iscsi
+            volume_driver=cinder.volume.drivers.netapp.common.NetAppDriver
+            netapp_storage_protocol=iscsi
+            netapp_storage_family=ontap_cluster
+            consistencygroup_support=True
+          customServiceConfigSecrets:
+            - cinder-volume-ontap-secrets
 ----
 . Check if all the services are up and running:
 +
