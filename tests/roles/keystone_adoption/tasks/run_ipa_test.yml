@@ -67,6 +67,8 @@
       echo 'IPA user authentication failed'"
   register: ipa_auth_test
   failed_when: "'IPA user authentication failed' in ipa_auth_test.stdout"
+  retries: 60
+  delay: 2
 
 - name: List IPA users via Keystone
   ansible.builtin.shell: |
