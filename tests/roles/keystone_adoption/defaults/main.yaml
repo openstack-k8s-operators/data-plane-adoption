@@ -27,4 +27,46 @@ keystone_patch: |
                 type: LoadBalancer
         databaseInstance: openstack
         secret: osp-secret
+
+keystone_patch_federation: |
+  spec:
+    tls:
+      caBundleSecretName: keycloakca
+    keystone:
+      enabled: true
+      apiOverride:
+        route: {}
+      template:
+        customServiceConfig: |
+          [token]
+          expiration = 360000
+          [federation]
+          trusted_dashboard={{ cifmw_federation_horizon_url }}/dashboard/auth/websso/
+          sso_callback_template=/etc/keystone/sso_callback_template.html
+          [openid]
+          remote_id_attribute=HTTP_OIDC_ISS
+          [auth]
+          methods = password,token,oauth1,mapped,application_credential,openid
+          [trusted_ip]
+          trusted_forwarded_for_header=True
+        httpdCustomization:
+          customConfigSecret: keystone-httpd-override
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  {% if ipv6_enabled | default(false) -%}
+                  metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix_ipv6 | default('2620:cf:cf:bbbb') }}::50
+                  {%- else -%}
+                  metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.80
+                  {%- endif %}
+
+              spec:
+                type: LoadBalancer
+        databaseInstance: openstack
+        secret: osp-secret
+
 keystone_retry_delay: 30

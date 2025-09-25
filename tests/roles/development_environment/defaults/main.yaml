@@ -19,6 +19,47 @@ run_pre_adoption_validation: true
 os_cloud_name: standalone
 source_osp_ssh_user: root
 use_hugepages: false
+# Enable federation tests that exercise OIDC authentication
+enable_federation: false
+# Command used to retrieve an OIDC-issued Keystone token from the source cloud.
+get_oidc_token_command: >-
+  ssh -i {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }} "source {{ federation_oidc_cloudrc_remote_path }} && openstack token issue -f value -c id"
+# Path on the source node where the rendered cloudrc file should be stored.
+federation_oidc_cloudrc_remote_path: /home/{{ source_osp_ssh_user }}/ci-framework-data/tmp/{{ federation_oidc_cloudrc_filename }}
+# Name of the cloudrc file rendered for OIDC authentication.
+federation_oidc_cloudrc_filename: kctestuser1
+federation_oidc_cloudrc_template: kctestuser1.j2
+# Location of the ingress operator CA used to seed the Keycloak trust bundle.
+federation_ingress_ca_path: ~/ci-framework-data/tmp/ingress-operator-ca.crt
+
+# Federation defaults aligned with ci-framework
+cifmw_federation_keycloak_url: https://keycloak-openstack.apps-crc.testing
+cifmw_federation_keystone_url: https://keystone-public-openstack.apps-crc.testing
+cifmw_federation_horizon_url: https://horizon-openstack.apps-crc.testing
+cifmw_federation_keycloak_realm: openstack
+cifmw_federation_project_name: SSOproject
+cifmw_federation_domain: SSO
+cifmw_federation_idp_name: kcIDP
+cifmw_federation_keycloak_client_id: rhoso
+cifmw_federation_keycloak_client_secret: COX8bmlKAWn56XCGMrKQJj7dgHNAOl6f
+cifmw_federation_keycloak_testuser1_username: kctestuser1
+cifmw_federation_keycloak_testuser1_password: nomoresecrets1
+
+cifmw_keystone_oidc_claim_prefix: "OIDC-"
+cifmw_keystone_oidc_response_type: "code"
+cifmw_keystone_oidc_scope: "openid profile email"
+cifmw_keystone_oidc_claim_delimiter: ","
+cifmw_keystone_oidc_pass_user_info_as: "payload"
+cifmw_keystone_oidc_pass_claims_as: "both"
+cifmw_keystone_oidc_provider_metadata_url: "{{ cifmw_federation_keycloak_url }}/auth/realms/{{ cifmw_federation_keycloak_realm }}/.well-known/openid-configuration"
+cifmw_keystone_oidc_client_id: "{{ cifmw_federation_keycloak_client_id }}"
+cifmw_keystone_oidc_client_secret: "{{ cifmw_federation_keycloak_client_secret }}"
+cifmw_keystone_oidc_crypto_passphrase: supersecret
+cifmw_keystone_oidc_oauth_client_id: "{{ cifmw_federation_keycloak_client_id }}"
+cifmw_keystone_oidc_oauth_client_secret: "{{ cifmw_federation_keycloak_client_secret }}"
+cifmw_keystone_oidc_oauth_introspection_endpoint: "{{ cifmw_federation_keycloak_url }}/auth/realms/{{ cifmw_federation_keycloak_realm }}/protocol/openid-connect/token/introspect"
+cifmw_keystone_oidc_provider_name: "{{ cifmw_federation_idp_name }}"
+
 # Supported storage backends for Cinder of the source cloud
 # must match those configured for the target cloud
 supported_volume_backends: []
