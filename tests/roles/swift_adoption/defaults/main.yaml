@@ -12,6 +12,7 @@ swift_patch: |
           replicas: 0
           networkAttachments:
           - storage
+          - storagemgmt
           storageClass: {{ storage_class_name }}
           storageRequest: 10Gi
         swiftProxy:
@@ -37,3 +38,4 @@ swift_patch: |
                   type: LoadBalancer
           networkAttachments:
           - storage
+          - storagemgmt
