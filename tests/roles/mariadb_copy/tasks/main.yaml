@@ -66,6 +66,10 @@
   retries: 25
   delay: 2
 
+- name: Add sleep time
+  ansible.builtin.pause:
+    seconds: "{{ mariadb_client_timeout }}"
+
 - name: check that the Galera database cluster(s) members are online and synced, for all cells
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
