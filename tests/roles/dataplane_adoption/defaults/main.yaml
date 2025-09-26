@@ -283,7 +283,7 @@ dataplane_cr: |
           edpm_ovs_packages:
           - openvswitch3.3
 
-          {% if use_hugepages|bool +%}
+          {% if use_hugepages|default(false)|bool +%}
           edpm_default_mounts:
             - path: /dev/hugepages2M
               opts: pagesize=2M
