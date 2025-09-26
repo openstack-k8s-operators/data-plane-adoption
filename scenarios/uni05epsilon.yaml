@@ -1,0 +1,157 @@
+---
+undercloud:
+  config:
+    - section: DEFAULT
+      option: undercloud_hostname
+      value: undercloud.localdomain
+    - section: DEFAULT
+      option: undercloud_timezone
+      value: UTC
+    - section: DEFAULT
+      option: undercloud_debug
+      value: true
+    - section: DEFAULT
+      option: container_cli
+      value: podman
+    - section: DEFAULT
+      option: undercloud_enable_selinux
+      value: false
+    - section: DEFAULT
+      option: generate_service_certificate
+      value: false
+  undercloud_parameters_override: "uni05epsilon/hieradata_overrides_undercloud.yaml"
+  undercloud_parameters_defaults: "uni05epsilon/undercloud_parameter_defaults.yaml"
+  ctlplane_vip: 192.168.122.101
+  routes: &sroutes
+    - ip_netmask: 0.0.0.0/0
+      next_hop: 192.168.122.1
+      default: true
+cloud_domain: localdomain
+hostname_groups_map:
+  # map ansible groups in the inventory to role hostname format for
+  # 17.1 deployment
+  osp-controllers: overcloud-controller
+  cell1-osp-computes: cell1-novacompute
+  cell1-osp-controllers: cell1-controller
+  cell2-osp-computes: cell2-novacompute
+  cell2-osp-controllers: cell2-controller
+roles_groups_map:
+  # map ansible groups to tripleo Role names
+  osp-controllers: Controller
+  cell1-osp-controllers: CellController
+  cell2-osp-controllers: CellController
+# A new name for 'default' cell of OSP after adopting it into RHOSO
+default_cell_name: cell1
+stacks:
+  - stackname: overcloud
+    args:
+      - "--override-ansible-cfg /home/zuul/ansible_config.cfg"
+      - "--templates /usr/share/openstack-tripleo-heat-templates"
+      - "--libvirt-type qemu"
+      - "--timeout 90"
+      - "--overcloud-ssh-user zuul"
+      - "--deployed-server"
+      - "--validation-warnings-fatal"
+      - "--disable-validations"
+      - "--heat-type pod"
+      - "--disable-protected-resource-types"
+    vars:
+      - "/usr/share/openstack-tripleo-heat-templates/environments/docker-ha.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/podman.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
+    network_data_file: "uni05epsilon/network_data.yaml.j2"
+    routes: *sroutes
+    vips_data_file: "uni05epsilon/vips_data_overcloud.yaml"
+    roles_file: "uni05epsilon/roles.yaml"
+    config_download_file: "uni05epsilon/config_download_overcloud.yaml"
+    stack_nodes:
+      - osp-controllers
+    post_oc_run:
+      - name: Multi-cell post overcloud deploy
+        type: playbook
+        source: adoption_multicell_post_stack.yml
+        extra_vars:
+          stack: overcloud
+
+  - stackname: cell1
+    args:
+      - "--override-ansible-cfg /home/zuul/ansible_config.cfg"
+      - "--templates /usr/share/openstack-tripleo-heat-templates"
+      - "--libvirt-type qemu"
+      - "--timeout 90"
+      - "--overcloud-ssh-user zuul"
+      - "--deployed-server"
+      - "--validation-warnings-fatal"
+      - "--disable-validations"
+      - "--heat-type pod"
+      - "--disable-protected-resource-types"
+    vars:
+      - "/usr/share/openstack-tripleo-heat-templates/environments/docker-ha.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/podman.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/enable-legacy-telemetry.yaml"
+      - "/home/zuul/cell1-input.yaml"
+    network_data_file: "uni05epsilon/network_data.yaml.j2"
+    routes: *sroutes
+    vips_data_file: "uni05epsilon/vips_data_cell1.yaml"
+    roles_file: "uni05epsilon/roles.yaml"
+    config_download_file: "uni05epsilon/config_download_cell1.yaml"
+    stack_nodes:
+      - cell1-osp-computes
+      - cell1-osp-controllers
+    pre_oc_run:
+      - name: Multi-cell pre overcloud deploy
+        type: playbook
+        source: adoption_multicell_pre_stack.yml
+        extra_vars:
+          stack: cell1
+    post_oc_run:
+      - name: Multi-cell post overcloud deploy
+        type: playbook
+        source: adoption_multicell_post_stack.yml
+        extra_vars:
+          stack: cell1
+
+  - stackname: cell2
+    args:
+      - "--override-ansible-cfg /home/zuul/ansible_config.cfg"
+      - "--templates /usr/share/openstack-tripleo-heat-templates"
+      - "--libvirt-type qemu"
+      - "--timeout 90"
+      - "--overcloud-ssh-user zuul"
+      - "--deployed-server"
+      - "--validation-warnings-fatal"
+      - "--disable-validations"
+      - "--heat-type pod"
+      - "--disable-protected-resource-types"
+    vars:
+      - "/usr/share/openstack-tripleo-heat-templates/environments/docker-ha.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/podman.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
+      - "/home/zuul/cell2-input.yaml"
+    network_data_file: "uni05epsilon/network_data.yaml.j2"
+    routes: *sroutes
+    vips_data_file: "uni05epsilon/vips_data_cell2.yaml"
+    roles_file: "uni05epsilon/roles.yaml"
+    config_download_file: "uni05epsilon/config_download_cell2.yaml"
+    stack_nodes:
+      - cell2-osp-computes
+      - cell2-osp-controllers
+    pre_oc_run:
+      - name: Multi-stack pre stack deploy
+        type: playbook
+        source: adoption_multicell_pre_stack.yml
+        extra_vars:
+          stack: cell2
+    post_oc_run:
+      - name: Multi-cell post stack deploy manage cells
+        type: playbook
+        source: adoption_multicell_post_stack.yml
+        extra_vars:
+          stack: cell2
+      - name: Multi-stack post all stacks deploy manage /etc/hosts
+        type: playbook
+        source: adoption_multicell_post_stack_all.yml
