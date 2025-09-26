@@ -1,0 +1,15 @@
+---
+# Inventory for OpenStack Proteccio Adoption Role
+# Use this inventory specifically for the barbican_proteccio_adoption role
+# For standard dp-adopt framework, use inventory.yaml instead
+
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_python_interpreter: "{{ ansible_playbook_python }}"
+
+  children:
+    adoption:
+      hosts:
+        localhost:

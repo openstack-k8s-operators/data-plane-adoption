@@ -1,0 +1,52 @@
+---
+# Main tasks for OpenStack 17.1 to RHOSO 18 adoption
+
+- name: Display adoption banner
+  ansible.builtin.debug:
+    msg: |
+      =============================================
+      OpenStack 17.1 to RHOSO 18 Adoption
+      with Proteccio HSM Integration
+      =============================================
+
+- name: Phase 1 - Environment Preparation
+  ansible.builtin.include_tasks: phase1_preparation.yml
+  tags:
+    - phase1
+    - preparation
+
+- name: Phase 2 - Base RHOSO 18 Deployment
+  ansible.builtin.include_tasks: phase2_base_deployment.yml
+  tags:
+    - phase2
+    - base_deployment
+
+- name: Phase 3 - Database Adoption
+  ansible.builtin.include_tasks: phase3_database_adoption.yml
+  tags:
+    - phase3
+    - database_adoption
+
+- name: Phase 4 - Proteccio Deployment
+  ansible.builtin.include_tasks: phase4_proteccio_deployment.yml
+  tags:
+    - phase4
+    - proteccio_deployment
+
+- name: Phase 5 - Verification
+  ansible.builtin.include_tasks: phase5_verification.yml
+  tags:
+    - phase5
+    - verification
+
+- name: Display adoption completion banner
+  ansible.builtin.debug:
+    msg: |
+      =============================================
+      Adoption Completed Successfully!
+      =============================================
+      - Barbican secrets adopted: {{ adopted_secrets_count | default('N/A') }}
+      - Proteccio custom images: Deployed
+      - HSM configuration: Applied
+      - API functionality: Verified
+      =============================================

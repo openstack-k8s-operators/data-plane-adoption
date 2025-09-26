@@ -1,0 +1,66 @@
+---
+# Default variables for OpenStack adoption
+
+# Source environment connection details (CUSTOMIZE THESE)
+source_undercloud_host: "CHANGE_ME_UNDERCLOUD_HOSTNAME"  # Change to your undercloud hostname
+source_controller_host: "CHANGE_ME_CONTROLLER_HOSTNAME.ctlplane"  # Change to your controller hostname
+
+# Target RHOSO environment
+target_namespace: "openstack"
+target_storage_class: "local-storage"
+
+# Database configuration (GENERATE YOUR OWN KEK)
+barbican_simple_crypto_kek: "CHANGE_ME_GENERATE_32_BYTE_BASE64_KEY"  # openssl rand -base64 32
+
+# Proteccio HSM configuration (CUSTOMIZE THESE IMAGE URLS)
+proteccio_custom_images:
+  barbican_api: "CHANGE_ME_YOUR_REGISTRY/barbican-api:CHANGE_ME_YOUR_TAG"  # Replace with your Proteccio-enabled Barbican API image
+  barbican_worker: "CHANGE_ME_YOUR_REGISTRY/barbican-worker:CHANGE_ME_YOUR_TAG"  # Replace with your Proteccio-enabled Barbican Worker image
+
+# HSM configuration (CUSTOMIZE THESE)
+hsm_login_password: "CHANGE_ME_YOUR_HSM_PASSWORD"  # Replace with your HSM password
+hsm_token_labels: "CHANGE_ME_YOUR_HSM_TOKEN_LABEL"  # Replace with your HSM token label
+hsm_mkek_label: "CHANGE_ME_YOUR_MKEK_LABEL"  # Replace with your MKEK label
+hsm_hmac_label: "CHANGE_ME_YOUR_HMAC_LABEL"  # Replace with your HMAC label
+
+# Required Proteccio client files (list of filenames expected in proteccio_files_dir)
+# CUSTOMIZE THIS LIST with your actual certificate and key filenames
+proteccio_required_files:
+  - "CHANGE_ME_YOUR_CLIENT_CERT_FILENAME.crt"  # Your Proteccio client certificate
+  - "CHANGE_ME_YOUR_CLIENT_KEY_FILENAME.key"   # Your Proteccio client private key
+  - "CHANGE_ME_YOUR_CONFIG_FILENAME.rc"        # Your Proteccio configuration file
+  - "CHANGE_ME_YOUR_HSM_CERT_FILENAME.crt"     # Your HSM certificate
+
+# Service replica counts
+barbican_api_replicas: 1
+barbican_worker_replicas: 1
+barbican_keystone_listener_replicas: 1
+
+# Adoption settings
+backup_database: true
+verify_adoption: true
+start_with_simple_crypto: true
+handle_rabbitmq_users: true
+# NOTE: The ansible-role-rhoso-proteccio-hsm role is MANDATORY for Proteccio environments
+# It must be available and executable, either as part of this process or run beforehand
+require_hsm_role: true
+
+# Verification settings (CUSTOMIZE THESE)
+# List of secret names to specifically verify during adoption
+# Leave empty to skip specific secret verification
+expected_secrets_to_verify: []  # Example: ["hsm-secret", "my-important-secret"]
+verify_any_secrets: true  # If true, verify that ANY secrets were adopted (recommended)
+
+# Timeouts (seconds)
+service_ready_timeout: 600
+database_import_timeout: 300
+
+# Working directories (CUSTOMIZE THESE PATHS)
+work_dir: "{{ ansible_env.PWD | default('/tmp/adopt_proteccio') }}"  # Current working directory or change as needed
+proteccio_base_dir: "{{ proteccio_base_dir | default('/home/' + ansible_user + '/adopt_proteccio') }}"  # Base directory for all Proteccio files
+proteccio_files_dir: "{{ proteccio_files_dir | default(proteccio_base_dir + '/proteccio_files') }}"  # Proteccio certificate files directory
+hsm_role_path: "{{ hsm_role_path | default(proteccio_base_dir + '/roles/ansible-role-rhoso-proteccio-hsm') }}"  # HSM role path
+backup_dir: "{{ backup_dir | default(work_dir + '/backups') }}"
+
+# TripleO configuration files (CUSTOMIZE THESE PATHS)
+tripleo_passwords_file: "CHANGE_ME_PATH_TO_OVERCLOUD_PASSWORDS_YAML"  # Path to overcloud passwords file (usually /home/USER/overcloud-passwords.yaml)

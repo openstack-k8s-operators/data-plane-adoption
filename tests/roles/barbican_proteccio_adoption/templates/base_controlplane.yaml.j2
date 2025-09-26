@@ -1,0 +1,60 @@
+---
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+  namespace: {{ target_namespace }}
+spec:
+  secret: osp-secret
+  storageClass: {{ target_storage_class }}
+  barbican:
+    enabled: true
+    template:
+      databaseInstance: openstack
+      databaseAccount: barbican
+      rabbitMqClusterName: rabbitmq
+      serviceUser: barbican
+      passwordSelectors:
+        service: BarbicanPassword
+        simplecryptokek: BarbicanSimpleCryptoKEK
+      preserveJobs: true
+      customServiceConfig: |
+        [DEFAULT]
+        debug = False
+        [simple_crypto_plugin]
+        kek = {{ barbican_simple_crypto_kek }}
+      globalDefaultSecretStore: simple_crypto
+      enabledSecretStores:
+        - simple_crypto
+      barbicanAPI:
+        replicas: 1
+      barbicanWorker:
+        replicas: 1
+      barbicanKeystoneListener:
+        replicas: 1
+  galera:
+    enabled: true
+    templates:
+      openstack:
+        replicas: 1
+        secret: osp-secret
+        storageRequest: 1Gi
+        storageClass: {{ target_storage_class }}
+  rabbitmq:
+    enabled: true
+    templates:
+      rabbitmq:
+        replicas: 1
+        persistence:
+          storage: 3Gi
+  keystone:
+    enabled: true
+    template:
+      databaseInstance: openstack
+      secret: osp-secret
+      replicas: 1
+  memcached:
+    enabled: true
+    templates:
+      memcached:
+        replicas: 1

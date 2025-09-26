@@ -1,0 +1,31 @@
+---
+# Internal variables for the adoption role
+
+# Kubernetes/OpenShift commands
+kybectl_cmd: "kubectl"
+oc_cmd: "oc"
+
+# SSH command templates
+undercloud_ssh_cmd: "sudo ssh -t {{ source_undercloud_host }} 'sudo -u stack bash -lc"
+controller_ssh_cmd: "sudo ssh -t {{ source_undercloud_host }} 'sudo -u stack ssh -t tripleo-admin@{{ source_controller_host }} bash -lc"
+
+# Generated file paths (in tests directory to avoid repository root)
+my_vars_file: "{{ work_dir }}/tests/my_vars.yaml"
+base_controlplane_file: "{{ work_dir }}/tests/base_controlplane.yaml"
+proteccio_openstackversion_file: "{{ work_dir }}/tests/proteccio_openstackversion.yaml"
+barbican_proteccio_patch_file: "{{ work_dir }}/tests/barbican_proteccio_patch.yaml"
+rhoso18_backup_file: "{{ backup_dir }}/rhoso18_barbican_backup.sql"
+source_dump_file: "{{ backup_dir }}/source_barbican_dump.sql"
+
+# Adoption phases
+adoption_phases:
+  - name: "environment_preparation"
+    description: "Prepare environment and extract source configuration"
+  - name: "base_deployment"
+    description: "Deploy base RHOSO 18 with standard images"
+  - name: "database_adoption"
+    description: "Adopt Barbican database from source to target"
+  - name: "proteccio_deployment"
+    description: "Deploy Proteccio custom images and HSM configuration"
+  - name: "verification"
+    description: "Verify adoption success and functionality"
