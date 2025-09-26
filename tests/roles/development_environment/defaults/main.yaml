@@ -1,3 +1,7 @@
+---
+# IPA-related variables
+ipa_admin_password: "fce95318204114530f31f885c9df588f"
+ipa_user_password: "nomoresecrets"
 prelaunch_test_instance: true
 prelaunch_test_instance_scripts:
   - pre_launch.bash
