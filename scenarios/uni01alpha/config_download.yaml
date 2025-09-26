@@ -34,6 +34,11 @@ resource_registry:
   OS::TripleO::Services::HeatApiCfn: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-cfn-container-puppet.yaml
   OS::TripleO::Services::HeatApiCloudwatch: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-cloudwatch-disabled-puppet.yaml
   OS::TripleO::Services::HeatEngine: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-engine-container-puppet.yaml
+  OS::TripleO::Services::OctaviaApi: /usr/share/openstack-tripleo-heat-templates//deployment/octavia/octavia-api-container-puppet.yaml
+  OS::TripleO::Services::OctaviaHousekeeping: /usr/share/openstack-tripleo-heat-templates/deployment/octavia/octavia-housekeeping-container-puppet.yaml
+  OS::TripleO::Services::OctaviaHealthManager: /usr/share/openstack-tripleo-heat-templates/deployment/octavia/octavia-health-manager-container-puppet.yaml
+  OS::TripleO::Services::OctaviaWorker: /usr/share/openstack-tripleo-heat-templates/deployment/octavia/octavia-worker-container-puppet.yaml
+  OS::TripleO::Services::OctaviaDeploymentConfig: /usr/share/openstack-tripleo-heat-templates/deployment/octavia/octavia-deployment-config.yaml
 parameter_defaults:
   RedisVirtualFixedIPs:
     - ip_address: 192.168.122.130
@@ -110,3 +115,9 @@ parameter_defaults:
     IronicNetwork: ironic
     IronicInspectorNetwork: ironic
   IronicCleaningDiskErase: metadata
+  NeutronEnableForceMetadata: true
+    # This flag enables internal generation of certificates for communication
+    # with amphorae. Use OctaviaCaCert, OctaviaCaKey, OctaviaCaKeyPassphrase,
+    # OctaviaClient and OctaviaServerCertsKeyPassphrase cert to configure
+    # secure production environments.
+  OctaviaGenerateCerts: true
