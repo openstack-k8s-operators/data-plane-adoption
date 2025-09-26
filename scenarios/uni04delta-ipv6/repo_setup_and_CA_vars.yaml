@@ -1,0 +1,14 @@
+# repo setup vars
+_oso_release: "{{ cifmw_oso_release | default('osp18') }}"
+_ceph_version: "{{ cifmw_ceph_release | default('ceph-7.1-rhel-9') }}"
+_rhel_version: "{{ cifmw_rhel_version | default('9.4') }}"
+_rhoso_version: "{{ cifmw_rhoso_release | default('') }}"
+_default_rhos_release_args: "{{ _ceph_version }} {{ _rhoso_version }} -r {{ _rhel_version }}"
+
+cifmw_repo_setup_rhos_release_path: "/home/zuul/rhos-release"
+cifmw_repo_setup_rhos_release_rpm: "http://download.devel.redhat.com/rcm-guest/puddles/OpenStack/rhos-release/rhos-release-latest.noarch.rpm"
+cifmw_repo_setup_rhos_release_args: "{{ _default_rhos_release_args }}"
+cifmw_repo_setup_output: "/etc/yum.repos.d"
+
+# install_ca vars   
+cifmw_install_ca_url: "https://certs.corp.redhat.com/certs/Current-IT-Root-CAs.pem"
