@@ -20,7 +20,11 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '{{ keystone_patch }}'
+    if {{ enable_federation | default(false) | lower }} == true; then
+      oc patch openstackcontrolplane openstack --type=merge --patch '{{ keystone_patch_federation }}'
+    else
+      oc patch openstackcontrolplane openstack --type=merge --patch '{{ keystone_patch }}'
+    fi
 
 - name: wait for Keystone to start up
   ansible.builtin.shell: |
@@ -74,6 +78,64 @@
       ${BASH_ALIASES[openstack]} service list | awk "/ $service /{ print \$2; }" | xargs -r ${BASH_ALIASES[openstack]} service delete || true
     done
 
+- name: Ensure Keycloak CA secret exists when federation enabled
+  when: enable_federation | default(false) | bool
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    if ! oc get secret keycloakca >/dev/null 2>&1; then
+      oc create secret generic keycloakca --from-file=KeyCloakCA={{ federation_ingress_ca_path }}
+    fi
+
+- name: Ensure Keystone httpd override secret exists when federation enabled
+  when:
+    - enable_federation | default(false) | bool
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    cat <<EOF | oc apply -f -
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: keystone-httpd-override
+      namespace: openstack
+    type: Opaque
+    stringData:
+      federation.conf: |
+        OIDCClaimPrefix "{{ cifmw_keystone_oidc_claim_prefix }}"
+        OIDCResponseType "{{ cifmw_keystone_oidc_response_type }}"
+        OIDCScope "{{ cifmw_keystone_oidc_scope }}"
+        OIDCClaimDelimiter "{{ cifmw_keystone_oidc_claim_delimiter }}"
+        OIDCPassUserInfoAs "{{ cifmw_keystone_oidc_pass_user_info_as }}"
+        OIDCPassClaimsAs "{{ cifmw_keystone_oidc_pass_claims_as }}"
+        OIDCProviderMetadataURL "{{ cifmw_keystone_oidc_provider_metadata_url }}"
+        OIDCClientID "{{ cifmw_keystone_oidc_client_id }}"
+        OIDCClientSecret "{{ cifmw_keystone_oidc_client_secret }}"
+        OIDCCryptoPassphrase "{{ cifmw_keystone_oidc_crypto_passphrase }}"
+        OIDCOAuthClientID "{{ cifmw_keystone_oidc_oauth_client_id }}"
+        OIDCOAuthClientSecret "{{ cifmw_keystone_oidc_oauth_client_secret }}"
+        OIDCOAuthIntrospectionEndpoint "{{ cifmw_keystone_oidc_oauth_introspection_endpoint }}"
+        OIDCRedirectURI "{{ cifmw_federation_keystone_url }}/v3/auth/OS-FEDERATION/identity_providers/{{ cifmw_keystone_oidc_provider_name }}/protocols/openid/websso/"
+        LogLevel debug
+
+        <LocationMatch "/v3/auth/OS-FEDERATION/identity_providers/{{ cifmw_keystone_oidc_provider_name }}/protocols/openid/websso">
+          AuthType "openid-connect"
+          Require valid-user
+        </LocationMatch>
+
+        <Location "/v3/OS-FEDERATION/identity_providers/{{ cifmw_keystone_oidc_provider_name }}/protocols/openid/auth">
+          AuthType oauth20
+          Require valid-user
+        </Location>
+
+        <LocationMatch "/v3/auth/OS-FEDERATION/websso/openid">
+          AuthType "openid-connect"
+          Require valid-user
+        </LocationMatch>
+    EOF
+
 - name: Print session test token
   ansible.builtin.debug:
     var: before_adoption_token
@@ -91,6 +153,21 @@
       exit 0
     fi
   register: adoption_token_result
+
+- name: Verify that pre-adoption OIDC token still works
+  when:
+    - enable_federation | default(false) | bool
+    - before_adoption_oidc_token is defined
+    - before_adoption_oidc_token.stdout is defined
+  ansible.builtin.shell:
+    cmd: |
+      {{ shell_header }}
+      {{ oc_header }}
+
+      alias openstack="oc exec -t openstackclient -- env -u OS_CLOUD - OS_AUTH_URL={{ auth_url }} OS_AUTH_TYPE=v3oidcaccesstoken OS_ACCESS_TOKEN={{ before_adoption_oidc_token.stdout }} openstack"
+
+      ${BASH_ALIASES[openstack]} token issue -f json
+  register: adoption_oidc_token_result
 
 - name: Print credentials test token
   ansible.builtin.debug:
