@@ -38,7 +38,7 @@
         driver = ldap
         [ldap]
         url = ldap://{{ standalone_ip | default(edpm_node_ip) }}
-        user = uid=admin,cn=users,cn=accounts,{{ ipa_basedn }}
+        user = uid=svc-ldap,cn=users,cn=accounts,{{ ipa_basedn }}
         password = {{ ipa_admin_password | default('nomoresecrets') }}
         suffix = {{ ipa_basedn }}
         user_tree_dn = cn=users,cn=accounts,{{ ipa_basedn }}
