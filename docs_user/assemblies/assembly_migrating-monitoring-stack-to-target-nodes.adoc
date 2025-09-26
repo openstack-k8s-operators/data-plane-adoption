@@ -1,3 +1,4 @@
+:_mod-docs-content-type: ASSEMBLY
 ifdef::context[:parent-context: {context}]
 
 [id="migrating-monitoring-stack-to-target-nodes_{context}"]
@@ -6,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 = Migrating the monitoring stack to the target nodes
 
+[role="_abstract"]
 To migrate the monitoring stack to the target nodes, you add the monitoring label to your existing nodes and update the configuration of each daemon. You do not need to migrate node exporters. These daemons are deployed across
 the nodes that are part of the {Ceph} cluster (the placement is ‘*’).
 

@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="deploying-backend-services_{context}"]
 
 = Deploying back-end services
 
+[role="_abstract"]
 Create the `OpenStackControlPlane` custom resource (CR) with the basic back-end services deployed, and disable all the {rhos_prev_long} ({OpenStackShort}) services. This CR is the foundation of the control plane.
 
 .Prerequisites
@@ -349,7 +351,7 @@ spec:
         customIssuer: rootca-internal
       enabled: true
 ----
-
++
 [NOTE]
 ====
 If you use IPv6, change the load balancer IPs to the IPs in your environment, for example:

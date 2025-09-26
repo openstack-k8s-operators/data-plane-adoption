@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="configuring-target-nodes-for-ceph-monitor-migration_{context}"]
 
 = Configuring target nodes for Ceph Monitor migration
 
+[role="_abstract"]
 Prepare the target {Ceph} nodes for the Ceph Monitor migration by performing the following actions:
 
 . Enable firewall rules in a target node and persist them.

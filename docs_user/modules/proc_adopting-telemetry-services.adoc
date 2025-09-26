@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-telemetry-services_{context}"]
 
 = Adopting Telemetry services
 
+[role="_abstract"]
 To adopt Telemetry services, you patch an existing `OpenStackControlPlane` custom resource (CR) that has Telemetry services disabled to start the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} environment.
 
 If you adopt Telemetry services, the observability solution that is used in the {OpenStackShort} {rhos_prev_ver} environment, Service Telemetry Framework, is removed from the cluster. The new solution is deployed in the {rhos_long} environment, allowing for metrics, and optionally logs, to be retrieved and stored in the new back ends.

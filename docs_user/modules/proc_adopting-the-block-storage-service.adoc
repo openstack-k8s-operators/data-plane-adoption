@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-the-block-storage-service_{context}"]
 
 = Adopting the {block_storage}
 
+[role="_abstract"]
 To adopt a {OpenStackPreviousInstaller}-deployed {block_storage_first_ref}, create the manifest based on the existing `cinder.conf` file, deploy the {block_storage}, and validate the new deployment.
 
 .Prerequisites
@@ -160,6 +162,11 @@ spec:
             report_discard_supported=True
 ----
 +
+[NOTE]
+====
+Ensure that you use the same configuration group name for the driver that you used in the source cluster. In this example, the driver configuration group in `customServiceConfig` is called `tripleo_ceph` because it reflects the value of the configuration group name in the `cinder.conf` file of the source OpenStack cluster.
+====
++
 . Configure the NetApp NFS Block Storage volume service:
 .. Create secrets that include sensitive information such as hostnames, passwords, and usernames to access the third-party NetApp NFS storage. You can find the credentials in the `cinder.conf` file that was generated from the {OpenStackPreviousInstaller} deployment.
 +
@@ -176,7 +183,7 @@ metadata:
 type: Opaque
 stringData:
   ontap-cinder-secrets: |
-    [ontap-nfs]
+    [tripleo_netapp]
     netapp_login= netapp_username
     netapp_password= netapp_password
     netapp_vserver= netapp_vserver
@@ -204,7 +211,7 @@ spec:
           networkAttachments:
             - storage
           customServiceConfig: |
-            [ontap-nfs]
+            [tripleo_netapp]
             volume_backend_name=ontap-nfs
             volume_driver=cinder.volume.drivers.netapp.common.NetAppDriver
             nfs_snapshot_support=true
@@ -222,13 +229,13 @@ spec:
 ----
 $ openstack volume service list
 
-+------------------+------------------------+------+---------+-------+----------------------------+
-| Binary           | Host                   | Zone | Status  | State | Updated At                 |
-+------------------+------------------------+------+---------+-------+----------------------------+
-| cinder-volume    | hostgroup@tripleo_ceph | nova | enabled | up    | 2023-06-28T17:00:03.000000 |
-| cinder-scheduler | cinder-scheduler-0     | nova | enabled | up    | 2023-06-28T17:00:02.000000 |
-| cinder-backup    | cinder-backup-0        | nova | enabled | up    | 2023-06-28T17:00:01.000000 |
-+------------------+------------------------+------+---------+-------+----------------------------+
++------------------+--------------------------+------+---------+-------+----------------------------+
+| Binary           | Host                     | Zone | Status  | State | Updated At                 |
++------------------+--------------------------+------+---------+-------+----------------------------+
+| cinder-volume    | hostgroup@tripleo_netapp | nova | enabled | up    | 2023-06-28T17:00:03.000000 |
+| cinder-scheduler | cinder-scheduler-0       | nova | enabled | up    | 2023-06-28T17:00:02.000000 |
+| cinder-backup    | cinder-backup-0          | nova | enabled | up    | 2023-06-28T17:00:01.000000 |
++------------------+--------------------------+------+---------+-------+----------------------------+
 ----
 
 . Apply the DB data migrations:

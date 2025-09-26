@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="preparing-controller-nodes-for-director-operator-adoption_{context}"]
 
 = Preparing Controller nodes for director Operator adoption
 
+[role="_abstract"]
 Prepare the Controller nodes in your director Operator (OSPdO) environment for adoption to the {rhos_long} environment.
 
 [NOTE]

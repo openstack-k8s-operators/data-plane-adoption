@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-the-compute-service_{context}"]
 
 = Adopting the {compute_service}
 
+[role="_abstract"]
 To adopt the {compute_service_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {compute_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment. The following procedure describes a single-cell setup.
 
 //[NOTE]

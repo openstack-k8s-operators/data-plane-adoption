@@ -1,71 +1,47 @@
-- name: Check the required input when manila_backend is NFS
-  when: manila_backend == "cephnfs"
-  block:
-    - name: Set shell vars to connect to controller1
-      no_log: "{{ use_no_log }}"
-      ansible.builtin.set_fact:
-        controller_ssh: |
-          CONTROLLER1_SSH="{{ controller1_ssh }}"
-
-    - name: Get ceph-nfs IP Address
-      become: true
-      ansible.builtin.shell: |
-        {{ shell_header }}
-        {{ controller_ssh }}
-        ${CONTROLLER1_SSH} awk -F '[=;]' '/Bind_Addr/ {gsub(/ /, "", $2); print $2}' {{ ganesha_default_path }}
-      register: cephnfs_vip
-
-    - name: Fail if the OLD Ganesha VIP is not a good input value
-      when:
-        - not (cephnfs_vip.stdout | ansible.builtin.ipaddr)
-      ansible.builtin.fail:
-        msg: "The (TRIPLEO) gathered Ganesha server IP is malformed"
-
-- name: Deploy Podified Manila
+- name: Deploy Podified Manila - Ceph
   when: manila_backend == "cephfs" or manila_backend == "cephnfs"
-  block:
-    - name: Generate CR config based on the selected backend
-      ansible.builtin.template:
-        src: manila_cephfs.yaml.j2
-        dest: /tmp/manila_cephfs.yaml
-        mode: "0600"
+  ansible.builtin.include_tasks: ceph.yaml
 
-    - name: Deploy podified Manila with cephfs backend
+- name: Deploy Podified Manila - Netapp
+  when: manila_backend == "netapp"
+  ansible.builtin.include_tasks: netapp.yaml
+
+- name: Check Manila deployment
+  when:
+    - manila_backend is defined
+    - manila_backend | length > 0
+  block:
+    - name: Wait for Manila to start up
       ansible.builtin.shell: |
         {{ shell_header }}
         {{ oc_header }}
-        oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/manila_cephfs.yaml
+        oc wait pod --for condition=Ready --selector=component=manila-api
+        oc wait pod --for condition=Ready --selector=component=manila-scheduler
+        oc wait pod --for condition=Ready --selector=component=manila-share
+      register: manila_running_result
+      until: manila_running_result is success
+      retries: 60
+      delay: 2
 
-- name: Wait for Manila to start up
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    oc wait pod --for condition=Ready --selector=component=manila-api
-    oc wait pod --for condition=Ready --selector=component=manila-scheduler
-    oc wait pod --for condition=Ready --selector=component=manila-share
-  register: manila_running_result
-  until: manila_running_result is success
-  retries: 60
-  delay: 2
+    - name: Check that Manila is reachable and its endpoints are defined
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        alias openstack="oc exec -t openstackclient -- openstack"
 
-- name: Check that Manila is reachable and its endpoints are defined
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    alias openstack="oc exec -t openstackclient -- openstack"
+        ${BASH_ALIASES[openstack]} endpoint list | grep -i share
+        ${BASH_ALIASES[openstack]} share pool list
+      register: manila_responding_result
+      until: manila_responding_result is success
+      retries: 15
 
-    ${BASH_ALIASES[openstack]} endpoint list | grep -i share
-    ${BASH_ALIASES[openstack]} share pool list
-  register: manila_responding_result
-  until: manila_responding_result is success
-  retries: 15
-
-- name: Create default share type
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    alias openstack="oc exec -t openstackclient -- openstack"
-    ${BASH_ALIASES[openstack]} share type create {{ share_type_name }} {{ driver_handles_share_servers }}
-  vars:
-    share_type_name: default
-    driver_handles_share_servers: false
+    - name: Create default share type
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        alias openstack="oc exec -t openstackclient -- openstack"
+        ${BASH_ALIASES[openstack]} share type create {{ share_type_name }} {{ driver_handles_share_servers }}
+      vars:
+        share_type_name: default
+        driver_handles_share_servers: false
+      when: manila_create_share_type | default(true)

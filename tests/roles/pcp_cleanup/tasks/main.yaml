@@ -21,9 +21,11 @@
     oc delete --ignore-not-found=true --wait=false pod ovn-copy-data
 
     # Delete secrets
-    for secret in $(oc -o name get secrets ); do
+    for secret in $(oc get secrets -o name); do
       echo "Deleting secret ${secret}";
-      #(TODO: holser) oc patch can be removed when OSPRH-10262 is merged
+      # (TODO: holser) The following 'oc patch' command removes finalizers from secrets to allow deletion.
+      # This is a workaround for an issue where secrets may be stuck in a terminating state due to finalizers.
+      # Once OSPRH-10262 is merged and the issue is resolved, this patch can be removed.
       oc patch ${secret} -p '{"metadata":{"finalizers":[]}}' --type=merge
       oc delete ${secret} ;
     done
@@ -52,7 +54,10 @@
     {{ shell_header }}
     {{ oc_header }}
     cd {{ install_yamls_path }}
-    for i in {1..3}; do make crc_storage_cleanup crc_storage && break || sleep 5; done
+    # Try up to 3 times to clean up and recreate CRC storage, with a 5-second delay between attempts
+    for i in {1..3}; do
+      make crc_storage_cleanup crc_storage && break || sleep 5
+    done
     {{ cells_env }}
     NAMESPACE={{ rhoso_namespace }} make namespace
     for CELL in $(echo $RENAMED_CELLS); do

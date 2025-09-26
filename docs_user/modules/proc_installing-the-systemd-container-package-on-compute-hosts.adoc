@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="installing-the-systemd-container-package-on-compute-hosts_{context}"]
 
 = Installing the `systemd-container` package on Compute hosts
 
+[role="_abstract"]
 Before you adopt the {rhos_long} data plane, you must install the `systemd-container` package on all the hypervisors on your Compute hosts. This procedure must be performed on one Compute host at a time.
 
 .Procedure

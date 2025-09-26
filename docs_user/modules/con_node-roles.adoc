@@ -1,7 +1,9 @@
+:_mod-docs-content-type: CONCEPT
 [id="about-node-roles_{context}"]
 
 = About node roles
 
+[role="_abstract"]
 In {OpenStackPreviousInstaller} deployments you had 5 different standard roles
 for the nodes: `Controller`, `Compute`, `Networker`, `Ceph Storage`, `Swift
 Storage`, but in the control plane you make a distinction based on where things

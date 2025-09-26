@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-the-openstack-dashboard_{context}"]
 
 = Adopting the {dashboard_service}
 
+[role="_abstract"]
 To adopt the {dashboard_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) that has the {dashboard_service} disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} environment.
 
 .Prerequisites

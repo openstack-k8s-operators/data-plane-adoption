@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-image-service-with-ceph-backend_{context}"]
 
 = Adopting the {image_service} that is deployed with a {Ceph} back end
 
+[role="_abstract"]
 Adopt the {image_service_first_ref} that you deployed with a {Ceph} back end. Use the `customServiceConfig` parameter to inject the right configuration to the `GlanceAPI` instance.
 
 .Prerequisites

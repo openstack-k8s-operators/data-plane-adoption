@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="verifying-the-cluster-after-ceph-mon-migration_{context}"]
 
 = Verifying the {CephCluster} cluster after Ceph Monitor migration
 
+[role="_abstract"]
 After you finish migrating your Ceph Monitor daemons to the target nodes, verify that the the {CephCluster} cluster is healthy.
 
 .Procedure

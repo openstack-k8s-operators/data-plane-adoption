@@ -1,3 +1,4 @@
+:_mod-docs-content-type: ASSEMBLY
 ifdef::context[:parent-context: {context}]
 
 [id="preparing-the-block-storage-service_{context}"]
@@ -6,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 = Preparing the {block_storage} configurations for adoption
 
+[role="_abstract"]
 The recommended way to deploy {block_storage} volume back ends is to use a {block_storage} volume service for each back end.
 
 For example, you have an LVM and a Ceph back end and two entries in `cinderVolume`, and you cannot set global defaults for all volume services. You must define a service for each of them:

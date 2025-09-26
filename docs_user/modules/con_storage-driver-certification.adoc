@@ -1,7 +1,9 @@
+:_mod-docs-content-type: CONCEPT
 [id="storage-driver-certification_{context}"]
 
 = Storage driver certification
 
+[role="_abstract"]
 Before you adopt your {rhos_prev_long} {rhos_prev_ver} deployment to a {rhos_long} {rhos_curr_ver} deployment, confirm that your deployed storage drivers are certified for use with {rhos_acro} {rhos_curr_ver}.
 
 For information on software certified for use with {rhos_acro} {rhos_curr_ver}, see the link:https://catalog.redhat.com/search?searchType=software&certified_versions=Red%20Hat%20OpenStack%20Services%20on%20OpenShift%2018&p=1[Red Hat Ecosystem Catalog].

@@ -1,18 +1,37 @@
 spec:
   glance:
+    enabled: true
     template:
-      customServiceConfig: |
-        [DEFAULT]
-        enabled_backends = default_backend:file
-        [glance_store]
-        default_backend = default_backend
-        [default_backend]
-        filesystem_store_datadir = /var/lib/glance/images/
       databaseInstance: openstack
+      keystoneEndpoint: nfs
       glanceAPIs:
-        default:
-          replicas: 1
+        nfs:
+          replicas: 3
           type: single
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_backends = default_backend:file
+            [glance_store]
+            default_backend = default_backend
+            [default_backend]
+            filesystem_store_datadir = /var/lib/glance/images/
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    {% if ipv6_enabled | default(false) -%}
+                    metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix_ipv6 | default('2620:cf:cf:bbbb') }}::50
+                    {%- else -%}
+                    metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.80
+                    {%- endif %}
+
+                spec:
+                  type: LoadBalancer
+          networkAttachments:
+            - storage
       extraMounts:
       - extraVol:
         - extraVolType: NFS
@@ -22,7 +41,7 @@ spec:
           volumes:
           - name: nfs
             nfs:
-              path: "{{ nfs_server_path }}"
-              server: "{{ nfs_server_address }}"
+              path: "{{ glance_nfs_server_path }}"
+              server: "{{ glance_nfs_server_addr }}"
         name: r1
         region: r1

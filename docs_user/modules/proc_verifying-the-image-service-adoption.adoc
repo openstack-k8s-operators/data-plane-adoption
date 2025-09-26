@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="verifying-the-image-service-adoption_{context}"]
 
 = Verifying the {image_service} adoption
 
+[role="_abstract"]
 Verify that you adopted the {image_service_first_ref} to the {rhos_long} {rhos_curr_ver} deployment.
 
 .Procedure

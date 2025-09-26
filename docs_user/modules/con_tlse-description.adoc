@@ -1,7 +1,9 @@
+:_mod-docs-content-type: CONCEPT
 [id="con_tlse-description_{context}"]
 
 = TLS Everywhere
 
+[role="_abstract"]
 Note: The assumption is, that the new deployment will adopt the settings from the
 old deployment, so in case TLS Everywhere is disabled, it won't be enabled on
 the new deployment.

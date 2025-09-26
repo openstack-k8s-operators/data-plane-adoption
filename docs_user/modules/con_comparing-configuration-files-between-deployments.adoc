@@ -1,7 +1,9 @@
+:_mod-docs-content-type: CONCEPT
 [id="comparing-configuration-files-between-deployments_{context}"]
 
 = Comparing configuration files between deployments
 
+[role="_abstract"]
 To help you manage the configuration for your {OpenStackPreviousInstaller} and {rhos_prev_long} ({OpenStackShort}) services, you can compare the configuration files between your {OpenStackPreviousInstaller} deployment and the {rhos_long} cloud by using the os-diff tool.
 ifeval::["{build_variant}" == "ospdo"]
 [NOTE]

@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="migrating-databases-to-mariadb-instances_{context}"]
 
 = Migrating databases to MariaDB instances
 
+[role="_abstract"]
 Migrate your databases from the original {rhos_prev_long} ({OpenStackShort}) deployment to the MariaDB instances in the {rhocp_long} cluster.
 
 //[NOTE]

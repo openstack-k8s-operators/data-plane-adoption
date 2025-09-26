@@ -1,7 +1,9 @@
+:_mod-docs-content-type: CONCEPT
 [id="troubleshooting-object-storage-migration_{context}"]
 
 = Troubleshooting the {object_storage} migration
 
+[role="_abstract"]
 You can troubleshoot issues with the {object_storage_first_ref} migration.
 
 * If the replication is not working and the `swift-dispersion-report` is not back to 100% availability, check the replicator progress to help you debug:

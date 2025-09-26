@@ -1,3 +1,4 @@
+:_mod-docs-content-type: ASSEMBLY
 ifdef::context[:parent-context: {context}]
 
 [id="adopting-data-plane_{context}"]
@@ -6,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 = Adopting the data plane
 
+[role="_abstract"]
 Adopting the {rhos_long} data plane involves the following steps:
 
 ifeval::["{build_variant}" != "ospdo"]

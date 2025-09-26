@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="reusing-existing-subnet-ranges_{context}"]
 
 = Reusing existing subnet ranges
 
+[role="_abstract"]
 You can reuse existing subnet ranges if they have enough IP addresses to allocate to the new control plane services. You configure the new control plane services to use the same subnet as you used in the {rhos_prev_long} ({OpenStackShort}) environment, and configure the allocation pools that are used by the new services to exclude IP addresses that are already allocated to existing cluster nodes. By reusing existing subnets, you avoid additional link local route configuration between the existing and new subnets.
 
 If your existing subnets do not have enough IP addresses in the existing subnet ranges for the new control plane services, you must create new subnet ranges. For more information, see xref:using-new-subnet-ranges_{context}[Using new subnet ranges].

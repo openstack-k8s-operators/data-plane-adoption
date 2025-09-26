@@ -2,6 +2,11 @@
 # must match those configured for the source cloud
 supported_backup_backends: []
 supported_volume_backends: []
+
+# Network configuration for IPv4/IPv6 support
+ipv6_enabled: false
+ctlplane_prefix: "192.168.122"
+ctlplane_prefix_ipv6: "2620:cf:cf:aaaa"
 edpm_networker_deploy: false
 configure_ipam: true
 libvirt_password: ''
@@ -121,7 +126,7 @@ edpm_network_config_template: |
   ---
   {% set mtu_list = [ctlplane_mtu] %}
   {% for network in nodeset_networks %}
-  {{ mtu_list.append(lookup('vars', networks_lower[network] ~ '_mtu')) }}
+  {%set _ = mtu_list.append(lookup('vars', networks_lower[network] ~ '_mtu')) %}
   {%- endfor %}
   {% set min_viable_mtu = mtu_list | max %}
   network_config:
@@ -152,7 +157,7 @@ edpm_network_config_template: |
   {% endraw %}
 neutron_physical_bridge_name: br-ctlplane
 neutron_public_interface_name: "{{ dataplane_public_iface | default('eth0') }}"
-edpm_sshd_allowed_ranges: "{{ ['192.168.122.0/24'] if dataplane_os_net_config_set_route|default(true)|bool else ['0.0.0.0/0'] }}"
+edpm_sshd_allowed_ranges: "{% if ipv6_enabled | default(false) %}{{ [ctlplane_prefix_ipv6 | default('fd00:aaaa') + '::/64'] if dataplane_os_net_config_set_route|default(true)|bool else ['::/0'] }}{% else %}{{ [ctlplane_prefix | default('192.168.122') + '.0/24'] if dataplane_os_net_config_set_route|default(true)|bool else ['0.0.0.0/0'] }}{% endif %}"
 edpm_neutron_sriov_agent_enabled: true
 edpm_neutron_dhcp_agent_enabled: true
 nova_libvirt_backend: local
@@ -204,7 +209,7 @@ dataplane_cr: |
       - name: ANSIBLE_SSH_ARGS
         value: "-C -o ControlMaster=auto -o ControlPersist=80s"
       - name: ANSIBLE_VERBOSITY
-        value: "{{ dataplane_verbosity | default ('3') }}"
+        value: "{{ dataplane_verbosity | default ('1') }}"
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
       ansible:

@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-image-service-with-nfs-backend_{context}"]
 
 = Adopting the {image_service} that is deployed with an NFS back end
 
+[role="_abstract"]
 Adopt the {image_service_first_ref} that you deployed with an NFS back end. To complete the following procedure, ensure that your environment meets the following criteria:
 
 * The Storage network is propagated to the {rhos_prev_long} ({OpenStackShort}) control plane.
@@ -92,8 +94,9 @@ spec:
         filesystem_store_datadir = /var/lib/glance/images/
       storage:
         storageRequest: 10G
+      keystoneEndpoint: nfs
       glanceAPIs:
-        default:
+        nfs:
           replicas: 3
           type: single
           override:
@@ -121,6 +124,12 @@ EOF
 $ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_nfs_patch.yaml
 ----
 
+. Patch the `OpenStackControlPlane` CR to remove the default {image_service}:
++
+----
+$ oc patch openstackcontrolplane openstack --type=json -p="[{'op': 'remove', 'path': '/spec/glance/template/glanceAPIs/default'}]"
+----
+
 .Verification
 
 * When `GlanceAPI` is active, confirm that you can see a single API instance:
@@ -128,7 +137,9 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_nfs_
 ----
 $ oc get pods -l service=glance
 NAME                      READY   STATUS    RESTARTS
-glance-default-single-0   3/3     Running   0
+glance-nfs-single-0   2/2     Running   0
+glance-nfs-single-1   2/2     Running   0
+glance-nfs-single-2   2/2     Running   0
 ----
 
 * Ensure that the description of the pod reports the following output:

@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="ospdo-scale-down-pre-database-adoption_{context}"]
 
 = Scaling down director Operator resources
 
+[role="_abstract"]
 Before you migrate your databases to the control plane, you must scale down and remove OpenStack director Operator (OSPdO) resources in order to use the {rhos_long} resources.
 
 You must perform the following actions:

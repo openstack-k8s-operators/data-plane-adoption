@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-image-service-with-object-storage-backend_{context}"]
 
 = Adopting the {image_service} that is deployed with a {object_storage} back end
 
+[role="_abstract"]
 Adopt the {image_service_first_ref} that you deployed with an {object_storage_first_ref} back end in the {rhos_prev_long} ({OpenStackShort}) environment. The control plane `glanceAPI` instance is deployed with the following configuration. You use this configuration in the patch manifest that deploys the {image_service} with the object storage back end:
 
 ----

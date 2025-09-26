@@ -1,7 +1,9 @@
+:_mod-docs-content-type: CONCEPT
 [id="con_bare-metal-provisioning-service-configurations_{context}"]
 
 = {bare_metal} configurations
 
+[role="_abstract"]
 You configure the {bare_metal_first_ref} by using configuration snippets. For more information about configuring the control plane with the {bare_metal}, see link:{customizing-rhoso}/index[{customizing-rhoso-t}].
 
 Some {bare_metal} configuration is overridden in {OpenStackPreviousInstaller}, for example, PXE Loader file names are often overridden at intermediate layers. You must pay attention to the settings you apply in your {rhos_long} deployment. The `ironic-operator` applies a reasonable working default configuration, but if you override them with your prior configuration, your experience might not be ideal or your new {bare_metal} fails to operate. Similarly, additional configuration might be necessary, for example, if you enable and use additional hardware types in your `ironic.conf` file.

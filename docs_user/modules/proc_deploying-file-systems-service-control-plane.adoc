@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="deploying-file-systems-service-control-plane_{context}"]
 
 = Deploying the {rhos_component_storage_file} on the control plane
 
+[role="_abstract"]
 Copy the {rhos_component_storage_file_first_ref} configuration from the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} deployment, and then deploy the {rhos_component_storage_file} on the control plane.
 
 .Prerequisites

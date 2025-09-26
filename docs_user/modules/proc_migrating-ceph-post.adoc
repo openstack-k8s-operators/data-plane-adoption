@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="updating-the-cluster-dashboard-configuration_{context}"]
 
 = Updating the {CephCluster} cluster Ceph Dashboard configuration
 
+[role="_abstract"]
 If the Ceph Dashboard is part of the enabled Ceph Manager modules, you need to
 reconfigure the failover settings.
 

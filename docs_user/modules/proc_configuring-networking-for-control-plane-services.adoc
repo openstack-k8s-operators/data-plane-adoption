@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="configuring-networking-for-control-plane-services_{context}"]
 
 = Configuring isolated networks on control plane services
 
+[role="_abstract"]
 After the NMState operator creates the desired hypervisor network configuration for isolated networks, you must configure the {rhos_prev_long} ({OpenStackShort}) services to use the configured interfaces. You define a `NetworkAttachmentDefinition` custom resource (CR) for each isolated network. In some clusters, these CRs are managed by the Cluster Network Operator, in which case you use `Network` CRs instead. For more information, see
 link:{defaultOCPURL}/networking/cluster-network-operator#nw-cluster-network-operator_cluster-network-operator[Cluster Network Operator] in _Networking_.
 

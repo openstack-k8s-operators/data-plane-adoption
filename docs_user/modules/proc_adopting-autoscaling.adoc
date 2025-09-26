@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-autoscaling_{context}"]
 
 = Adopting autoscaling services
 
+[role="_abstract"]
 To adopt services that enable autoscaling, you patch an existing `OpenStackControlPlane` custom resource (CR) where the Alarming services (aodh) are disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} environment.
 
 .Prerequisites

@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="deploying-the-bare-metal-provisioning-service_{context}"]
 
 = Deploying the {bare_metal}
 
+[role="_abstract"]
 To deploy the {bare_metal_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) that has the {bare_metal} disabled. The `ironic-operator` applies the configuration and starts the Bare Metal Provisioning services. After the services are running, the {bare_metal} automatically begins polling the power state of the bare-metal nodes that it manages.
 
 [NOTE]

@@ -1,7 +1,9 @@
+:_mod-docs-content-type: CONCEPT
 [id="ceph-daemon-cardinality_{context}"]
 
 = {Ceph} daemon cardinality
 
+[role="_abstract"]
 {Ceph} {CephVernum} and later applies strict constraints in the way daemons can be colocated within the same node.
 ifeval::["{build}" != "upstream"]
 For more information, see the Red Hat Knowledgebase article link:https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations].

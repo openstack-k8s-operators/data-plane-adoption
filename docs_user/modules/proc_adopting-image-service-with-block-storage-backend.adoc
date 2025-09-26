@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-image-service-with-block-storage-backend_{context}"]
 
 = Adopting the {image_service} that is deployed with a {block_storage} back end
 
+[role="_abstract"]
 Adopt the {image_service_first_ref} that you deployed with a {block_storage_first_ref} back end in the {rhos_prev_long} ({OpenStackShort}) environment. The control plane `glanceAPI` instance is deployed with the following configuration. You use this configuration in the patch manifest that deploys the {image_service} with the block storage back end:
 
 ----
@@ -15,7 +17,6 @@ spec
           [glance_store]
           default_backend = default_backend
           [default_backend]
-          rootwrap_config = /etc/glance/rootwrap.conf
           description = Default cinder backend
           cinder_store_auth_address = {{ .KeystoneInternalURL }}
           cinder_store_user_name = {{ .ServiceUser }}
@@ -50,7 +51,6 @@ spec:
         [glance_store]
         default_backend = default_backend
         [default_backend]
-        rootwrap_config = /etc/glance/rootwrap.conf
         description = Default cinder backend
         cinder_store_auth_address = {{ .KeystoneInternalURL }}
         cinder_store_user_name = {{ .ServiceUser }}

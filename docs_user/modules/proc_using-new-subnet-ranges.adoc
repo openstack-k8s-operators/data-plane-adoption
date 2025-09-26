@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="using-new-subnet-ranges_{context}"]
 
 = Configuring new subnet ranges
 
+[role="_abstract"]
 [NOTE]
 If you are using IPv6, you can reuse existing subnet ranges in most cases. For more information about existing subnet ranges, see xref:reusing-existing-subnet-ranges_{context}[Reusing existing subnet ranges].
 
@@ -17,6 +19,10 @@ Defining a new subnet for Storage and Storage management is not supported becaus
 In the following procedure, you configure `NetworkAttachmentDefinition` custom resources (CRs) to use a different subnet from what is configured in the `network_config` section of the `OpenStackDataPlaneNodeSet` CR for the same networks. The new range in the `NetworkAttachmentDefinition` CR is used for control plane services, while the existing range in the `OpenStackDataPlaneNodeSet` CR is used to manage IP Address Management (IPAM) for data plane nodes.
 
 The values that are used in the following procedure are examples. Use values that are specific to your configuration.
+
+ifeval::["{build_variant}" == "ospdo"]
+For more information about director Operator network configurations, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#assembly_creating-networks-with-director-operator[Creating networks with director Operator] in _Deploying an overcloud in a Red Hat OpenShift Container Platform cluster with director Operator_.
+endif::[]
 
 .Procedure
 
@@ -37,10 +43,6 @@ network_config:
 <2> The control plane IP address of the existing data plane node.
 +
 Repeat this configuration for other networks that need to use different subnets for the new and existing parts of the deployment.
-
-ifeval::["{build_variant}" == "ospdo"]
-For more information about director Operator network configurations, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#assembly_creating-networks-with-director-operator[Creating networks with director Operator] in _Deploying an overcloud in a Red Hat OpenShift Container Platform cluster with director Operator_.
-endif::[]
 
 . Apply the new configuration to every {OpenStackShort} node:
 +
@@ -139,5 +141,3 @@ Do not change {OpenStackShort} node IP addresses during the adoption process. Li
 ----
 +
 This provides SSH access from the new subnet to the {OpenStackShort} nodes as well as the {OpenStackShort} subnets.
-
-. Set `edpm_network_config_update: true` to enforce the changes that you are applying to the nodes.

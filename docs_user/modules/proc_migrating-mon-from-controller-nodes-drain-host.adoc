@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="draining-the-source-node_{context}"]
 
 = Draining the source node
 
+[role="_abstract"]
 Drain the source node and remove the source node host from the {CephCluster} cluster.
 
 .Procedure

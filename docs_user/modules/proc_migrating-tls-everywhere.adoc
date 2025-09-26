@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="migrating-tls-everywhere_{context}"]
 
 = Migrating TLS-e to the {rhos_acro} deployment
 
+[role="_abstract"]
 If you enabled TLS everywhere (TLS-e) in your {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} deployment, you must migrate TLS-e to the {rhos_long} deployment.
 
 The {rhos_acro} deployment uses the cert-manager operator to issue, track, and renew the certificates. In the following procedure, you extract the CA signing certificate from the FreeIPA instance that you use to provide the certificates in the {OpenStackShort} environment, and then import them into cert-manager in the {rhos_acro} environment. As a result, you minimize the disruption on the Compute nodes because you do not need to install a new chain of trust.
@@ -23,14 +25,14 @@ You then decommission the previous FreeIPA node and no longer use it to issue ce
 +
 ifeval::["{build}" != "downstream"]
 ----
-IPA_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 podman exec -ti freeipa-server-container"
+IPA_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 podman exec -ti freeipa-server"
 ----
 +
 In this example the FreeIPA instance is running on a separate host, in a container.
 endif::[]
 ifeval::["{build}" == "downstream"]
 ----
-IPA_SSH="ssh -i <path_to_ssh_key> root@<freeipa-server-ip-address>"
+IPA_SSH="ssh -i <path_to_ssh_key> <admin user>@<freeipa-server-ip-address> sudo"
 ----
 endif::[]
 
@@ -41,7 +43,7 @@ ifeval::["{build_variant}" != "ospdo"]
 . To locate the CA certificate and key, list all the certificates inside your NSSDB:
 +
 ----
-$ IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
+$IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
 ----
 +
 * The `-L` option lists all certificates.
@@ -64,8 +66,7 @@ ifeval::["{build_variant}" == "ospdo"]
 . To locate the CA certificate and key, list all the certificates inside your NSSDB. If you installed OSPdO by using director-dev-tools, the server host runs the freeipa server as a container:
 +
 ----
-$ IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
-$ IPA_SSH="podman exec -ti freeipa-server"
+$IPA_SSH certutil -L -d /etc/pki/pki-tomcat/alias
 ----
 +
 * The `-L` option lists all certificates.

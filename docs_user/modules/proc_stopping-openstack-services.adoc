@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="stopping-openstack-services_{context}"]
 
 = Stopping {rhos_prev_long} services
 
+[role="_abstract"]
 Before you start the {rhos_long} adoption, you must stop the {rhos_prev_long} ({OpenStackShort}) services to avoid inconsistencies in the data that you migrate for the data plane adoption. Inconsistencies are caused by resource changes after the database is copied to the new deployment.
 
 You should not stop the infrastructure management services yet, such as:

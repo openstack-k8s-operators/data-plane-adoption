@@ -1,60 +1,84 @@
+:_mod-docs-content-type: PROCEDURE
 [id="updating-the-object-storage-endpoints_{context}"]
 
-= Updating the {object_storage} endpoints
+= Create or update the {object_storage} endpoints
 
-You must update the {object_storage_first_ref} endpoints to point to the new virtual IP address (VIP) that you reserved on the same network that you used to deploy RGW ingress.
+[role="_abstract"]
+You must create or update the {object_storage_first_ref} endpoints to configure the new virtual IP address (VIP) that you reserved on the same network that you used to deploy RGW ingress.
 
 .Procedure
 
-. List the current endpoints:
+. List the current swift endpoints and service:
 +
 ----
-(overcloud) [stack@undercloud-0 ~]$ openstack endpoint list | grep object
-
-| 1326241fb6b6494282a86768311f48d1 | regionOne | swift    	| object-store   | True	| internal  | http://172.17.3.68:8080/swift/v1/AUTH_%(project_id)s |
-| 8a34817a9d3443e2af55e108d63bb02b | regionOne | swift    	| object-store   | True	| public	| http://10.0.0.103:8080/swift/v1/AUTH_%(project_id)s  |
-| fa72f8b8b24e448a8d4d1caaeaa7ac58 | regionOne | swift    	| object-store   | True	| admin 	| http://172.17.3.68:8080/swift/v1/AUTH_%(project_id)s |
+ $ oc rsh openstackclient openstack endpoint list | grep 'swift.*object'
+ $ oc rsh openstackclient openstack service list | grep 'swift.*object'
 ----
 
-. Update the endpoints that are pointing to the Ingress VIP:
+. If the service and endpoints do not exist, create the missing swift resources:
 +
 ----
-(overcloud) [stack@undercloud-0 ~]$ openstack endpoint set --url "http://10.0.0.89:8080/swift/v1/AUTH_%(project_id)s" 95596a2d92c74c15b83325a11a4f07a3
-
-(overcloud) [stack@undercloud-0 ~]$ openstack endpoint list | grep object-store
-| 6c7244cc8928448d88ebfad864fdd5ca | regionOne | swift    	| object-store   | True	| internal  | http://172.17.3.79:8080/swift/v1/AUTH_%(project_id)s |
-| 95596a2d92c74c15b83325a11a4f07a3 | regionOne | swift    	| object-store   | True	| public	| http://10.0.0.89:8080/swift/v1/AUTH_%(project_id)s   |
-| e6d0599c5bf24a0fb1ddf6ecac00de2d | regionOne | swift    	| object-store   | True	| admin 	| http://172.17.3.79:8080/swift/v1/AUTH_%(project_id)s |
+$ oc rsh openstackclient openstack service create --name swift --description 'OpenStack Object Storage' object-store
+$ oc rsh openstackclient openstack role add --user swift --project service member
+$ oc rsh openstackclient openstack role add --user swift --project service admin
+$ for i in public internal; do
+      oc rsh openstackclient endpoint create --region regionOne object-store $i http://<RGW_VIP>:8080/swift/v1/AUTH_%\(tenant_id\)s
+  done
+$ oc rsh openstackclient openstack role add --project admin --user admin swiftoperator
 ----
 +
-Repeat this step for both internal and admin endpoints.
+* Replace `<RGW_VIP>` with the Ceph RGW ingress VIP.
+
+. If the endpoints exist, update the endpoints to point to the right RGW ingress VIP:
++
+----
+$ oc rsh openstackclient openstack endpoint set --url http://<RGW_VIP>:8080/swift/v1/AUTH_%\(tenant_id\)s <swift_public_endpoint_uuid>
+$ oc rsh openstackclient openstack endpoint set --url http://<RGW_VIP>:8080/swift/v1/AUTH_%\(tenant_id\)s <swift_internal_endpoint_uuid>
+$ oc rsh openstackclient openstack endpoint list | grep object
+| 0d682ad71b564cf386f974f90f80de0d | regionOne | swift        | object-store | True    | public    | http://172.18.0.100:8080/swift/v1/AUTH_%(tenant_id)s    |
+| b311349c305346f39d005feefe464fb1 | regionOne | swift        | object-store | True    | internal  | http://172.18.0.100:8080/swift/v1/AUTH_%(tenant_id)s    |
+
+----
++
+* Replace `<swift_public_endpoint_uuid>` with the UUID of the swift public endpoint.
+* Replace `<swift_internal_endpoint_uuid>` with the UUID of the swift internal endpoint.
 
 . Test the migrated service:
 +
 ----
-(overcloud) [stack@undercloud-0 ~]$ swift list --debug
 
-DEBUG:swiftclient:Versionless auth_url - using http://10.0.0.115:5000/v3 as endpoint
-DEBUG:keystoneclient.auth.identity.v3.base:Making authentication request to http://10.0.0.115:5000/v3/auth/tokens
-DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): 10.0.0.115:5000
-DEBUG:urllib3.connectionpool:http://10.0.0.115:5000 "POST /v3/auth/tokens HTTP/1.1" 201 7795
-DEBUG:keystoneclient.auth.identity.v3.base:{"token": {"methods": ["password"], "user": {"domain": {"id": "default", "name": "Default"}, "id": "6f87c7ffdddf463bbc633980cfd02bb3", "name": "admin", "password_expires_at": null},
-
+$ oc rsh openstackclient openstack container list --debug
 
 ...
 ...
 ...
+REQ: curl -g -i -X GET http://keystone-public-openstack.apps.ocp.openstack.lab -H "Accept: application/json" -H "User-Agent: openstacksdk/1.0.2 keystoneauth1/5.1.3 python-requests/2.25.1 CPython/3.9.23"
+Starting new HTTP connection (1): keystone-public-openstack.apps.ocp.openstack.lab:80
+http://keystone-public-openstack.apps.ocp.openstack.lab:80 "GET / HTTP/1.1" 300 298
+RESP: [300] content-length: 298 content-type: application/json date: Mon, 14 Jul 2025 17:41:29 GMT location: http://keystone-public-openstack.apps.ocp.openstack.lab/v3/ server: Apache set-cookie: b5697f82cf3c19ece8be533395142512=d5c6a9ee2
+267c4b63e9f656ad7565270; path=/; HttpOnly vary: X-Auth-Token x-openstack-request-id: req-452e42c5-e60f-440f-a6e8-fe1b9ea89055
+RESP BODY: {"versions": {"values": [{"id": "v3.14", "status": "stable", "updated": "2020-04-07T00:00:00Z", "links": [{"rel": "self", "href": "http://keystone-public-openstack.apps.ocp.openstack.lab/v3/"}], "media-types": [{"base": "applic
+ation/json", "type": "application/vnd.openstack.identity-v3+json"}]}]}}
+GET call to http://keystone-public-openstack.apps.ocp.openstack.lab/ used request id req-452e42c5-e60f-440f-a6e8-fe1b9ea89055
 
-DEBUG:swiftclient:REQ: curl -i http://10.0.0.89:8080/swift/v1/AUTH_852f24425bb54fa896476af48cbe35d3?format=json -X GET -H "X-Auth-Token: gAAAAABj7KHdjZ95syP4c8v5a2zfXckPwxFQZYg0pgWR42JnUs83CcKhYGY6PFNF5Cg5g2WuiYwMIXHm8xftyWf08zwTycJLLMeEwoxLkcByXPZr7kT92ApT-36wTfpi-zbYXd1tI5R00xtAzDjO3RH1kmeLXDgIQEVp0jMRAxoVH4zb-DVHUos" -H "Accept-Encoding: gzip"
-DEBUG:swiftclient:RESP STATUS: 200 OK
-DEBUG:swiftclient:RESP HEADERS: {'content-length': '2', 'x-timestamp': '1676452317.72866', 'x-account-container-count': '0', 'x-account-object-count': '0', 'x-account-bytes-used': '0', 'x-account-bytes-used-actual': '0', 'x-account-storage-policy-default-placement-container-count': '0', 'x-account-storage-policy-default-placement-object-count': '0', 'x-account-storage-policy-default-placement-bytes-used': '0', 'x-account-storage-policy-default-placement-bytes-used-actual': '0', 'x-trans-id': 'tx00000765c4b04f1130018-0063eca1dd-1dcba-default', 'x-openstack-request-id': 'tx00000765c4b04f1130018-0063eca1dd-1dcba-default', 'accept-ranges': 'bytes', 'content-type': 'application/json; charset=utf-8', 'date': 'Wed, 15 Feb 2023 09:11:57 GMT'}
-DEBUG:swiftclient:RESP BODY: b'[]'
+...
+
+REQ: curl -g -i -X GET "http://172.18.0.100:8080/swift/v1/AUTH_44477474b0dc4b5b8911ceec23a22246?format=json" -H "User-Agent: openstacksdk/1.0.2 keystoneauth1/5.1.3 python-requests/2.25.1 CPython/3.9.23" -H "X-Auth-Token: {SHA256}ec5deca0be37bd8bfe659f132b9cdf396b8f409db5dc16972d50cbf3f28474d4"
+Starting new HTTP connection (1): 172.18.0.100:8080
+http://172.18.0.100:8080 "GET /swift/v1/AUTH_44477474b0dc4b5b8911ceec23a22246?format=json HTTP/1.1" 200 2
+RESP: [200] accept-ranges: bytes content-length: 2 content-type: application/json; charset=utf-8 date: Mon, 14 Jul 2025 17:41:31 GMT x-account-bytes-used: 0 x-account-bytes-used-actual: 0 x-account-container-count: 0 x-account-object-count: 0 x-account-storage-policy-default-placement-bytes-used: 0 x-account-storage-policy-default-placement-bytes-used-actual: 0 x-account-storage-policy-default-placement-container-count: 0 x-account-storage-policy-default-placement-object-count: 0 x-openstack-request-id: tx000001e95361131ccf694-006875414a-7753-default x-timestamp: 1752514891.25991 x-trans-id: tx000001e95361131ccf694-006875414a-7753-default
+RESP BODY: []
+GET call to http://172.18.0.100:8080/swift/v1/AUTH_44477474b0dc4b5b8911ceec23a22246?format=json used request id tx000001e95361131ccf694-006875414a-7753-default
+
+clean_up ListContainer:
+END return value: 0
+
 ----
 ifeval::["{build}" != "downstream"]
 . Run tempest tests against {object_storage}:
 +
 ----
-(overcloud) [stack@undercloud-0 tempest-dir]$ tempest run --regex tempest.api.object_storage
+$ tempest run --regex tempest.api.object_storage
 ...
 ...
 ...

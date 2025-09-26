@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-the-identity-service_{context}"]
 
 = Adopting the {identity_service}
 
+[role="_abstract"]
 To adopt the {identity_service_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {identity_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
 
 .Prerequisites

@@ -1,7 +1,9 @@
+:_mod-docs-content-type: CONCEPT
 [id="changes-to-cephFS-through-NFS_{context}"]
 
 = Changes to CephFS through NFS
 
+[role="_abstract"]
 Before you begin the adoption, review the following information to understand the changes to CephFS through NFS between {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} and {rhos_long} {rhos_curr_ver}:
 
 * If the {OpenStackShort} {rhos_prev_ver} deployment uses CephFS through NFS as a back end for {rhos_component_storage_file_first_ref}, you cannot directly import the `ceph-nfs` service on the {OpenStackShort} Controller nodes into {rhos_acro} {rhos_curr_ver}. In {rhos_acro} {rhos_curr_ver}, the {rhos_component_storage_file} only supports using a clustered NFS service that is directly managed on the {Ceph} cluster. Adoption with the `ceph-nfs` service involves a data path disruption to existing NFS clients.

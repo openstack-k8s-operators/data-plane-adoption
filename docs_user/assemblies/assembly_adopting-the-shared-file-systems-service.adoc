@@ -1,3 +1,4 @@
+:_mod-docs-content-type: ASSEMBLY
 ifdef::context[:parent-context: {context}]
 
 [id="adopting-the-shared-file-systems-service_{context}"]
@@ -6,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 = Adopting the {rhos_component_storage_file}
 
+[role="_abstract"]
 The {rhos_component_storage_file_first_ref} in {rhos_long} provides a self-service API to create and manage file shares. File shares (or "shares"), are built for concurrent read/write access from multiple clients. This makes the {rhos_component_storage_file} essential in cloud environments that require a ReadWriteMany persistent storage.
 
 File shares in {rhos_acro} require network access. Ensure that the networking in the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} environment matches the network plans for your new cloud after adoption. This ensures that tenant workloads remain connected to storage during the adoption process. The {rhos_component_storage_file} control plane services are not in the data path. Shutting down the API, scheduler, and share manager services do not impact access to existing shared file systems.

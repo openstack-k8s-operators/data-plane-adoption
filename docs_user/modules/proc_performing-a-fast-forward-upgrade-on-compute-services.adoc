@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="performing-a-fast-forward-upgrade-on-compute-services_{context}"]
 
 = Performing a fast-forward upgrade on Compute services
 
+[role="_abstract"]
 You must upgrade the Compute services from {rhos_prev_long} {rhos_prev_ver} to {rhos_long} {rhos_curr_ver} on the control plane and data plane by completing the following tasks:
 
 * Update the cell1 Compute data plane services version.
@@ -22,6 +24,8 @@ for CELL in $(echo "super $RENAMED_CELLS"); do
   PODIFIED_DB_ROOT_PASSWORD[$CELL]=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
 done
 ----
+
+* Complete the steps in xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].
 
 .Procedure
 
@@ -115,8 +119,6 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file=oscp-patch.
 $ oc wait --for condition=Ready --timeout=300s Nova/nova
 ----
 
-. Complete the steps in xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the {rhos_acro} data plane].
-
 . Remove the pre-fast-forward upgrade workarounds from the Compute data plane services:
 +
 ----
@@ -182,5 +184,5 @@ ${BASH_ALIASES[openstack]} server list -c Name -c Status -f value | grep -qF "te
   ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test --fit-width -f json | jq -r '.state' | grep running || echo FAIL
 ----
 
-[NOTE]
+.Next steps
 After the data plane adoption, the Compute hosts continue to run Red Hat Enterprise Linux (RHEL) {rhel_prev_ver}. To take advantage of RHEL {rhel_curr_ver}, perform a minor update procedure after finishing the adoption procedure.

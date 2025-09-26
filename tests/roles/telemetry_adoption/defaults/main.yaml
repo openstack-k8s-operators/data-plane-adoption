@@ -33,6 +33,11 @@ telemetry_logging_patch: |
       template:
         logging:
           enabled: false
-          ipaddr: 172.17.0.80
+          {% if ipv6_enabled | default(false) -%}
+          ipaddr: {{ internalapi_prefix_ipv6 | default('2620:cf:cf:bbbb') }}::50
+          {%- else -%}
+          ipaddr: {{ internalapi_prefix | default('172.17.0') }}.80
+          {%- endif %}
+
           port: 10514
           cloNamespace: openshift-logging

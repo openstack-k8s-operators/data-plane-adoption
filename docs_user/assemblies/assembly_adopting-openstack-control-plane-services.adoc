@@ -1,3 +1,4 @@
+:_mod-docs-content-type: ASSEMBLY
 ifdef::context[:parent-context: {context}]
 
 [id="adopting-openstack-control-plane-services_{context}"]
@@ -6,9 +7,12 @@ ifdef::context[:parent-context: {context}]
 
 = Adopting {rhos_prev_long} control plane services
 
+[role="_abstract"]
 Adopt your {rhos_prev_long} {rhos_prev_ver} control plane services to deploy them in the {rhos_long} {rhos_curr_ver} control plane.
 
 include::../modules/proc_adopting-the-identity-service.adoc[leveloffset=+1]
+
+include::../modules/proc_configuring-ldap-with-domain-specific-drivers.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-key-manager-service.adoc[leveloffset=+1]
 

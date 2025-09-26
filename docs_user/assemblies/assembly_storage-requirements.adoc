@@ -1,3 +1,4 @@
+:_mod-docs-content-type: ASSEMBLY
 ifdef::context[:parent-context: {context}]
 
 [id="storage-requirements_{context}"]
@@ -6,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 = Storage requirements
 
+[role="_abstract"]
 Storage in a {rhos_prev_long} ({OpenStackShort}) deployment refers to the following types:
 
 * The storage that is needed for the service to run

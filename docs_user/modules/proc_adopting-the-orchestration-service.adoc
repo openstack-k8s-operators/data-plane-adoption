@@ -1,11 +1,17 @@
+:_mod-docs-content-type: PROCEDURE
 [id="adopting-the-orchestration-service_{context}"]
 
 = Adopting the {orchestration}
 
+[role="_abstract"]
 To adopt the {orchestration_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR), where the {orchestration}
 is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
 
 After you complete the adoption process, you have CRs for `Heat`, `HeatAPI`, `HeatEngine`, and `HeatCFNAPI`, and endpoints within the {identity_service_first_ref} to facilitate these services.
+
+ifeval::["{build}" != "downstream"]
+The Heat Adoption follows a similar workflow to https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone].
+endif::[]
 
 .Prerequisites
 
@@ -15,9 +21,6 @@ After you complete the adoption process, you have CRs for `Heat`, `HeatAPI`, `He
 * If your existing {orchestration} stacks contain resources from other services such as {networking_first_ref}, {compute_service_first_ref}, {object_storage_first_ref}, and so on, adopt those sevices before adopting the {orchestration}.
 
 .Procedure
-ifeval::["{build}" != "downstream"]
-The Heat Adoption follows a similar workflow to https://github.com/openstack-k8s-operators/data-plane-adoption/blob/main/keystone_adoption.md[Keystone].
-endif::[]
 
 . Retrieve the existing `auth_encryption_key` and `service` passwords. You use these passwords to patch the `osp-secret`. In the following example, the `auth_encryption_key` is used as `HeatAuthEncryptionKey` and the `service` password is used as `HeatPassword`:
 +

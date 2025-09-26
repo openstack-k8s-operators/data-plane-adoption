@@ -1,3 +1,4 @@
+:_mod-docs-content-type: ASSEMBLY
 ifdef::context[:parent-context: {context}]
 
 [id="configuring-network-for-RHOSO-deployment_{context}"]
@@ -6,6 +7,7 @@ ifdef::context[:parent-context: {context}]
 
 = Configuring the network for the {rhos_long_noacro} deployment
 
+[role="_abstract"]
 When you adopt a new {rhos_long} deployment, you must align the network
 configuration with the adopted cluster to maintain connectivity for existing
 workloads.

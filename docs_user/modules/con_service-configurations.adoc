@@ -1,7 +1,9 @@
+:_mod-docs-content-type: CONCEPT
 [id="service-configurations_{context}"]
 
 = Service configurations
 
+[role="_abstract"]
 There is a fundamental difference between the {OpenStackPreviousInstaller} and operator deployments
 regarding the configuration of the services.
 

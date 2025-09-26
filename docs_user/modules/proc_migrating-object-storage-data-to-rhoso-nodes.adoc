@@ -1,7 +1,9 @@
+:_mod-docs-content-type: PROCEDURE
 [id="migrating-object-storage-data-to-rhoso-nodes_{context}"]
 
 = Migrating the {object_storage} data from {OpenStackShort} to {rhos_acro} nodes
 
+[role="_abstract"]
 The {object_storage_first_ref} migration involves the following steps:
 
 . Add new nodes to the {object_storage} rings.
@@ -142,7 +144,7 @@ swift-ring-tool remove 172.20.0.100
 swift-ring-tool rebalance
 swift-ring-tool push'
 ----
-
++
 [NOTE]
 Even if all replicas are on the new nodes and the `swift-dispersion-report` command reports 100% of the copies found, there might still be data on the old nodes. The replicators remove this data, but it might take more time.
 
