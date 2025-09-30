@@ -18,20 +18,21 @@ fatal: [localhost]: FAILED! => {
 ----
 
 .Solution
-. Edit the HSM configuration file:
+. Edit your HSM configuration in the Zuul job vars or CI framework configuration file.
+
+. Replace all placeholder values with actual configuration values for your environment. Key variables to check:
 +
-[source,bash]
+[source,yaml]
 ----
-$ vi tests/hsm_vars/user_config.yml
+cifmw_hsm_password: "your_actual_hsm_password"
+cifmw_barbican_proteccio_partition: "VHSM1"
+cifmw_barbican_proteccio_mkek_label: "your_mkek_label"
+cifmw_barbican_proteccio_hmac_label: "your_hmac_label"
+cifmw_hsm_proteccio_client_src: "https://your-server/path/to/Proteccio.iso"
+cifmw_hsm_proteccio_conf_src: "https://your-server/path/to/proteccio.rc"
 ----
 
-. Replace all `CHANGE_ME_*` values with actual configuration values for your environment
-. Verify no placeholder values remain:
-+
-[source,bash]
-----
-$ grep -i "CHANGE_ME" tests/hsm_vars/user_config.yml
-----
+. Verify no placeholder values remain in your configuration.
 
 == HSM file prerequisites missing
 
@@ -47,17 +48,27 @@ fatal: [localhost]: FAILED! => {
 ----
 
 .Solution
-. Verify all required HSM files exist at the configured paths:
+. Verify all required HSM files are accessible from the configured URLs:
 +
 [source,bash]
 ----
-$ ls -la /path/to/proteccio/certs/
-$ ls -la /path/to/proteccio/Proteccio3.06.05.iso
-$ ls -la /path/to/proteccio/proteccio.rc
+$ curl -I https://your-server/path/to/Proteccio3.06.05.iso
+$ curl -I https://your-server/path/to/proteccio.rc
+$ curl -I https://your-server/path/to/client.crt
+$ curl -I https://your-server/path/to/client.key
 ----
 
-. If files are in different locations, update the paths in `user_config.yml`
-. Ensure file permissions allow read access by the ansible user
+. If files are in different locations, update the URL variables in your configuration:
++
+[source,yaml]
+----
+cifmw_hsm_proteccio_client_src: "https://correct-server/path/to/Proteccio3.06.05.iso"
+cifmw_hsm_proteccio_conf_src: "https://correct-server/path/to/proteccio.rc"
+cifmw_hsm_proteccio_client_crt_src: "https://correct-server/path/to/client.crt"
+cifmw_hsm_proteccio_client_key_src: "https://correct-server/path/to/client.key"
+----
+
+. Ensure the URLs are accessible from the CI environment (check network connectivity and authentication)
 
 == Source environment connectivity issues
 
@@ -118,7 +129,13 @@ $ oc get secrets -n openstack
 $ oc get secret proteccio-data hsm-login -n openstack
 ----
 
-. If secrets exist with different names, update the configuration in `user_config.yml`
+. If secrets exist with different names, update the configuration variables:
++
+[source,yaml]
+----
+proteccio_login_secret_name: "your-hsm-login-secret"
+proteccio_client_data_secret_name: "your-proteccio-data-secret"
+----
 
 == Custom image registry issues
 
@@ -149,7 +166,14 @@ $ podman tag hello-world <registry>/<namespace>/test:latest
 $ podman push <registry>/<namespace>/test:latest
 ----
 
-. Update registry configuration in `user_config.yml` if needed
+. Update registry configuration variables if needed:
++
+[source,yaml]
+----
+cifmw_update_containers_registry: "your-registry:5001"
+cifmw_update_containers_org: "your-namespace"
+cifmw_image_registry_verify_tls: false
+----
 
 == HSM backend detection failures
 
@@ -174,16 +198,15 @@ $ ssh tripleo-admin@controller-0.ctlplane \
   /var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf"
 ----
 
-. If HSM is configured but not detected, force HSM adoption:
+. If HSM is configured but not detected, force HSM adoption by setting the `barbican_hsm_enabled` variable:
 +
-[source,bash]
+[source,yaml]
 ----
-$ ansible-playbook -i inventory.yaml \
-  -e @tests/hsm_vars/user_config.yml \
-  -e enable_hsm_integration=true \
-  -e hsm_vendor=proteccio \
-  tests/playbooks/hsm/hsm_adoption.yml
+# In your Zuul job vars or CI framework configuration
+barbican_hsm_enabled: true
 ----
++
+This will ensure the `barbican_adoption` role uses the HSM-enabled patch for Barbican deployment.
 
 == Database migration issues
 
@@ -240,7 +263,7 @@ $ oc logs barbican-api-xyz
 +
 [source,bash]
 ----
-$ oc exec barbican-api-xyz -- ls -la /opt/tw_proteccio/lib/libnethsm.so
+$ oc exec barbican-api-xyz -- ls -la /usr/lib64/libnethsm.so
 ----
 
 . Check HSM configuration in the pod:
@@ -260,7 +283,7 @@ HSM operations are slow or fail intermittently.
 +
 [source,bash]
 ----
-$ oc exec barbican-api-xyz -- pkcs11-tool --module /opt/tw_proteccio/lib/libnethsm.so --list-slots
+$ oc exec barbican-api-xyz -- pkcs11-tool --module /usr/lib64/libnethsm.so --list-slots
 ----
 
 . Check HSM server connectivity:

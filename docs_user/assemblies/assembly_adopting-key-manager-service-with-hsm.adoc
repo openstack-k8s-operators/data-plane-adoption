@@ -8,6 +8,8 @@ Hardware Security Modules provide enhanced security for cryptographic operations
 
 include::../modules/con_key-manager-service-hsm-adoption-approaches.adoc[leveloffset=+1]
 
+include::../modules/proc_adopting-key-manager-service-with-proteccio-hsm.adoc[leveloffset=+1]
+
 include::../modules/proc_adopting-key-manager-service-with-hsm-integration.adoc[leveloffset=+1]
 
 .Additional resources

@@ -23,11 +23,13 @@ Use the HSM-enabled adoption approach when your source environment has Hardware 
 
 The HSM-enabled approach:
 
-* Uses enhanced Barbican adoption procedures with HSM awareness
-* Automatically detects HSM configuration in the source environment
+* Uses the enhanced `barbican_adoption` role with HSM awareness
+* Configures HSM integration through a simple boolean flag (`barbican_hsm_enabled: true`)
+* Automatically creates required Kubernetes secrets (`hsm-login` and `proteccio-data`)
 * Preserves HSM metadata during database migration
 * Supports both simple crypto and HSM backends in the target environment
-* Requires HSM-specific configuration and custom container images
+* Requires HSM-specific configuration variables and custom container images with HSM client libraries
+* Uses ci-framework hooks (`barbican-enable-proteccio.yml`) to build custom images and prepare HSM configuration
 
 == Decision matrix
 
@@ -58,13 +60,19 @@ The HSM-enabled approach:
 
 == Supported HSM vendors
 
-The HSM-enabled adoption approach supports multiple HSM vendors:
+The HSM-enabled adoption approach currently supports:
 
 * **Proteccio (Eviden Trustway)**: Fully supported with PKCS#11 integration
-* **Luna (SafeNet)**: PKCS#11 support available
+* **Luna (Thales)**: PKCS#11 support available
 * **nCipher (Entrust)**: PKCS#11 support available
 
 [IMPORTANT]
 ====
-HSM adoption requires additional configuration steps including custom container images with HSM client libraries and proper certificate management. These approaches are mutually exclusive - choose based on your source environment configuration.
+HSM adoption requires additional configuration steps including:
+
+* Custom Barbican container images with HSM client libraries (built using the `rhoso_proteccio_hsm` Ansible role)
+* HSM client certificates and configuration files accessible via URLs
+* Proper HSM partition and key configuration matching your source environment
+
+These approaches are mutually exclusive - choose based on your source environment configuration.
 ====
