@@ -13,7 +13,7 @@
   register: ovn_ovsdb_servers_running_result
   until: ovn_ovsdb_servers_running_result is success
   retries: 60
-  delay: 2
+  delay: "{{ ovn_retry_delay }}"
 
 # NOTE: w/o pods readiness gates, a service IP is not immediately comes in, so we wait
 - name: get podified OVN NB ovsdb-server service cluster IP
@@ -24,7 +24,7 @@
   register: podified_ovn_nb_ip_result
   until: podified_ovn_nb_ip_result is success
   retries: 10
-  delay: 2
+  delay: "{{ ovn_retry_delay }}"
 
 - name: get podified OVN SB ovsdb-server IP
   ansible.builtin.shell: |
@@ -34,7 +34,7 @@
   register: podified_ovn_sb_ip_result
   until: podified_ovn_sb_ip_result is success
   retries: 10
-  delay: 2
+  delay: "{{ ovn_retry_delay }}"
 
 - name: execute alternative tasks when source env is ODPdO
   ansible.builtin.include_tasks: ovn_ospdo_src_vars.yaml
@@ -140,7 +140,7 @@
   register: ovn_data_pod_result
   until: ovn_data_pod_result is success
   retries: 2
-  delay: 6
+  delay: "{{ ovn_retry_delay }}"
 
 - name: stop northd service
   no_log: "{{ use_no_log }}"
