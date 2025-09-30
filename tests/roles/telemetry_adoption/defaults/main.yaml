@@ -41,3 +41,4 @@ telemetry_logging_patch: |
 
           port: 10514
           cloNamespace: openshift-logging
+telemetry_retry_delay: 5

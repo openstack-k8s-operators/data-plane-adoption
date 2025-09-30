@@ -19,7 +19,7 @@
   register: ironic_running_result
   until: ironic_running_result is success
   retries: 60
-  delay: 2
+  delay: "{{ ironic_retry_delay }}"
 
 - name: check that ironic-inspector is reachable and its endpoints are defined
   ansible.builtin.shell: |
@@ -35,7 +35,7 @@
   register: ironic_inspector_running_result
   until: ironic_inspector_running_result is success
   retries: 60
-  delay: 2
+  delay: "{{ ironic_retry_delay }}"
 
 - name: Disable Role Based Access Control
   ansible.builtin.shell: |
@@ -57,7 +57,7 @@
   register: ironic_node_list_result
   until: ironic_node_list_result is success
   retries: 60
-  delay: 2
+  delay: "{{ ironic_retry_delay }}"
 
 - name: Set owner field on baremeteal nodes
   ansible.builtin.shell: |
@@ -92,7 +92,7 @@
   register: ironic_node_list_result
   until: ironic_node_list_result is success
   retries: 60
-  delay: 2
+  delay: "{{ ironic_retry_delay }}"
 
 - name: Change the DNS server in the provisioning subnet
   ansible.builtin.shell: |

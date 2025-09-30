@@ -76,3 +76,4 @@ ironic_enable_rbac_patch: |
             [oslo_policy]
             enforce_scope=true
             enforce_new_defaults=true
+ironic_retry_delay: 5

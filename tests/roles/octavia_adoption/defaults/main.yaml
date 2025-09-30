@@ -1,3 +1,4 @@
 octavia_ssh_pubkey_path: /root/.ssh/id_ecdsa.pub
 octavia_ssh_path: /tmp/octavia-ssl
 run_octavia_ssh_adoption: true
+octavia_retry_delay: 5

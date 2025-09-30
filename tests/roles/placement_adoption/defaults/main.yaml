@@ -24,3 +24,4 @@ placement_patch: |
 
               spec:
                 type: LoadBalancer
+placement_retry_delay: 5

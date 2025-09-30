@@ -30,7 +30,7 @@
   register: keystone_running_result
   until: keystone_running_result is success
   retries: 10
-  delay: 30
+  delay: "{{ keystone_retry_delay }}"
 
 - name: wait for openstackclient pod to start up
   ansible.builtin.shell: |
@@ -40,7 +40,7 @@
   register: osc_running_result
   until: osc_running_result is success
   retries: 10
-  delay: 30
+  delay: "{{ keystone_retry_delay }}"
 
 - name: check that Keystone is reachable and its endpoints are defined
   ansible.builtin.shell: |
@@ -53,7 +53,7 @@
   register: keystone_responding_result
   until: keystone_responding_result is success
   retries: 10
-  delay: 30
+  delay: "{{ keystone_retry_delay }}"
 
 - name: verify that OpenStackControlPlane setup is complete
   ansible.builtin.shell: |

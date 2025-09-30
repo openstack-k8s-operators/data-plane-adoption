@@ -37,3 +37,4 @@ swift_patch: |
                   type: LoadBalancer
           networkAttachments:
           - storage
+swift_retry_delay: 5

@@ -29,7 +29,7 @@
   register: monmap
   until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
   retries: 100
-  delay: 5
+  delay: "{{ ceph_retry_delay }}"
   tags:
     - ceph_mon_quorum
 
@@ -140,7 +140,7 @@
       until: '"Removed" in rmmon.stdout'
       register: rmmon
       retries: 30
-      delay: 4
+      delay: "{{ ceph_retry_delay }}"
       loop_control:
         label: "MON - Get tmp mon"
       notify: restart mgr
@@ -169,7 +169,7 @@
   register: monmap
   until: (monmap.stdout | from_json | community.general.json_query('monmap.num_mons') | int) >= ((decomm_nodes |default([]) | length | int) | default(3))
   retries: 100
-  delay: 5
+  delay: "{{ ceph_retry_delay }}"
   tags:
     - ceph_mon_quorum
 

@@ -120,7 +120,7 @@
   register: mariadb_running_result
   until: mariadb_running_result is success
   retries: 60
-  delay: 5
+  delay: "{{ backend_retry_delay }}"
 # TODO- debug value (was 2)
 
 - name: verify that MariaDB and RabbitMQ CR's deployed, for all defined cells
@@ -131,7 +131,7 @@
   register: service_cr_result
   until: service_cr_result.stdout == "true"
   retries: 60
-  delay: 5
+  delay: "{{ backend_retry_delay }}"
   failed_when: service_cr_result.rc != 0 and service_cr_result.stdout != "true"
   loop:
     - "Galera"
@@ -170,4 +170,4 @@
   register: openstack_control_plane_cr_result
   until: openstack_control_plane_cr_result is success
   retries: 60
-  delay: 2
+  delay: "{{ backend_retry_delay }}"

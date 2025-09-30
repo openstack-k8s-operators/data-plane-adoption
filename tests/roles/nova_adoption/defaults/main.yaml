@@ -243,3 +243,4 @@ remove_ffu_workaround_patch: |
               {%+ endfor +%}
             {%+ endif +%}
           {%+ endfor +%}
+nova_retry_delay: 5

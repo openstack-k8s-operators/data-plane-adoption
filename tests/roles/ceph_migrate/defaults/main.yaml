@@ -49,3 +49,4 @@ ceph_prometheus_container_image: "quay.io/prometheus/prometheus:v2.43.0"
 ceph_storagenfs_nic: "nic2"
 ceph_storagenfs_vlan_id: "70"
 rhoso_namespace: "openstack"
+ceph_retry_delay: 5
