@@ -14,8 +14,6 @@ include::../modules/proc_adopting-the-identity-service.adoc[leveloffset=+1]
 
 include::../modules/proc_configuring-ldap-with-domain-specific-drivers.adoc[leveloffset=+1]
 
-include::../modules/con_key-manager-service-adoption-approaches.adoc[leveloffset=+1]
-
 include::../modules/proc_adopting-key-manager-service.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-key-manager-service-with-proteccio-hsm.adoc[leveloffset=+1]

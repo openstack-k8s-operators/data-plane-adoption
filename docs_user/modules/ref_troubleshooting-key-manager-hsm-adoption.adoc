@@ -240,7 +240,7 @@ $ oc logs barbican-api-xyz
 +
 [source,bash]
 ----
-$ oc exec barbican-api-xyz -- ls -la /opt/tw_proteccio/lib/libnethsm.so
+$ oc exec barbican-api-xyz -- ls -la /usr/lib64/libnethsm.so
 ----
 
 . Check HSM configuration in the pod:
@@ -260,7 +260,7 @@ HSM operations are slow or fail intermittently.
 +
 [source,bash]
 ----
-$ oc exec barbican-api-xyz -- pkcs11-tool --module /opt/tw_proteccio/lib/libnethsm.so --list-slots
+$ oc exec barbican-api-xyz -- pkcs11-tool --module /usr/lib64/libnethsm.so --list-slots
 ----
 
 . Check HSM server connectivity:
