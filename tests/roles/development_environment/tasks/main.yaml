@@ -202,4 +202,3 @@
       ansible.builtin.shell: |
         {{ shell_header }}
         {{ openstack_command }} domain create --description \"Test LDAP Domain\" REDHAT
-
