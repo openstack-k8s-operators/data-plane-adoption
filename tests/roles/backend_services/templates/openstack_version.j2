@@ -64,7 +64,7 @@ spec:
     ovnNorthdImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-northd:{{ container_tag }}
     ovnSbDbclusterImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-sb-db-server:{{ container_tag }}
     placementAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-placement-api:{{ container_tag }}
-    rabbitmqImage: {{ container_registry }}/{{ container_namespace }}/openstack-rabbitmq:{{ container_tag }}
+    rabbitmqImage: images.paas.redhat.com/podified-rhos18-rhel9/openstack-rabbitmq@sha256:236fd5996af2f077238c56ac588874458da46f9e8bcf6433625676e32ed322f4
     swiftAccountImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-account:{{ container_tag }}
     swiftContainerImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-container:{{ container_tag }}
     swiftObjectImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-object:{{ container_tag }}
