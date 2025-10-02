@@ -3,7 +3,7 @@ undercloud:
   config:
     - section: DEFAULT
       option: undercloud_hostname
-      value: undercloud.localdomain
+      value: undercloud.example.com
     - section: DEFAULT
       option: undercloud_timezone
       value: UTC
@@ -26,7 +26,7 @@ undercloud:
     - ip_netmask: 0.0.0.0/0
       next_hop: 192.168.122.1
       default: true
-cloud_domain: localdomain
+cloud_domain: example.com
 hostname_groups_map:
   # map ansible groups in the inventory to role hostname format for
   # 17.1 deployment
