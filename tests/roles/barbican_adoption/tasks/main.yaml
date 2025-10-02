@@ -5,11 +5,19 @@
     CONTROLLER1_SSH="{{ controller1_ssh }}"
     oc set data secret/osp-secret "BarbicanSimpleCryptoKEK=$($CONTROLLER1_SSH "sudo python3 -c \"import configparser; c = configparser.ConfigParser(); c.read('/var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf'); print(c['simple_crypto_plugin']['kek'])\"")"
 
-- name: deploy podified Barbican
+- name: deploy podified Barbican (standard)
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     oc patch openstackcontrolplane openstack --type=merge --patch '{{ barbican_patch }}'
+  when: not barbican_hsm_enabled|default(false)
+
+- name: deploy podified Barbican (HSM)
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ barbican_hsm_patch }}'
+  when: barbican_hsm_enabled|default(false)
 
 - name: wait for Barbican to start up
   ansible.builtin.shell: |
