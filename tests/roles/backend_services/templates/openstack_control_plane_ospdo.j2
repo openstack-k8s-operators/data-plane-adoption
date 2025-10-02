@@ -123,6 +123,7 @@ spec:
   rabbitmq:
     templates:
       rabbitmq:
+        queueType: Mirrored
         replicas: 1
         override:
           service:
@@ -133,6 +134,7 @@ spec:
             spec:
               type: LoadBalancer
       rabbitmq-cell1:
+        queueType: Mirrored
         persistence:
           storageClassName: {{ ospdo_storage_class.stdout }}
         replicas: 1

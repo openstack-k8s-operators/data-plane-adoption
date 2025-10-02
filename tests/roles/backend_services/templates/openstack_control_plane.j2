@@ -131,6 +131,7 @@ spec:
   rabbitmq:
     templates:
       rabbitmq:
+        queueType: Mirrored
         persistence:
           storage: 3Gi
         override:
@@ -144,6 +145,7 @@ spec:
 {% set ind = {'val': 86} %}
 {% for cell in renamed_cells %}
       rabbitmq-{{ cell }}:
+        queueType: Mirrored
         persistence:
           storage: 3Gi
         override:
