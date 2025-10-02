@@ -88,7 +88,7 @@ parameter_defaults:
 
   CtlplaneNetworkAttributes:
     network:
-      dns_domain: localdomain
+      dns_domain: example.com
       mtu: 1500
       name: ctlplane
       tags:
