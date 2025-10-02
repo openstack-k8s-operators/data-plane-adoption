@@ -4,5 +4,5 @@
 # Test the connection to the control plane "upcall" and cells' databases
 for CELL in $(echo "super $RENAMED_CELLS"); do
   oc run mariadb-client --image $MARIADB_IMAGE -i --rm --restart=Never -- \
-    mysql -rsh "${PODIFIED_MARIADB_IP[$CELL]}" -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" -e 'SHOW databases;'
+    bash -c "sleep {{ mariadb_client_timeout }} && mysql -rsh \"${PODIFIED_MARIADB_IP[$CELL]}\" -uroot -p\"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}\" -e 'SHOW databases;'"
 done

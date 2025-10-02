@@ -9,3 +9,8 @@ mysql_client_override: ""
 
 # director operator namespace
 director_namespace: "ospdo_openstack"
+
+# MariaDB client connection timeout in seconds
+# Related to OSPRH-18618
+mariadb_client_timeout: 0
+mariadbcheck: true
