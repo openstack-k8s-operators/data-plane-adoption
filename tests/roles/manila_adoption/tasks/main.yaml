@@ -21,7 +21,7 @@
       register: manila_running_result
       until: manila_running_result is success
       retries: 60
-      delay: 2
+      delay: "{{ manila_retry_delay }}"
 
     - name: Check that Manila is reachable and its endpoints are defined
       ansible.builtin.shell: |

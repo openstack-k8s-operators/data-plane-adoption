@@ -8,3 +8,5 @@ horizon_patch: |
       template:
         memcachedInstance: memcached
         secret: osp-secret
+
+horizon_retry_delay: 5

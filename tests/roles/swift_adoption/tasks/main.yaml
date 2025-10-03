@@ -44,7 +44,7 @@
   register: swift_running_result
   until: swift_running_result is success
   retries: 60
-  delay: 2
+  delay: "{{ swift_retry_delay }}"
 
 - name: check that Swift is reachable and its endpoints are defined
   ansible.builtin.shell: |

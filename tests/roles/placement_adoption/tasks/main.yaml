@@ -12,7 +12,7 @@
   register: placement_running_result
   until: placement_running_result is success
   retries: 60
-  delay: 2
+  delay: "{{ placement_retry_delay }}"
 
 - name: check that Placement is reachable and its endpoints are defined
   # There is no placement CLI packaged in Fedora, we could do a CLI
@@ -31,4 +31,4 @@
   register: placement_responding_result
   until: placement_responding_result is success
   retries: 15
-  delay: 2
+  delay: "{{ placement_retry_delay }}"

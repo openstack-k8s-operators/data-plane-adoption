@@ -26,3 +26,4 @@ dpa_tests_dir: "{{ dpa_dir }}/tests"
 # director operator namespace
 director_namespace: "ospdo_openstack"
 # adoption repo default location
+backend_retry_delay: 5

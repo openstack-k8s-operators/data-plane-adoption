@@ -129,3 +129,4 @@ cinder_volume_netapp_vars:
 
 # Vars for cinder-backup
 cinder_backup_nfs_backup_mount_point_base: "/var/lib/cinder/backup"
+cinder_retry_delay: 5

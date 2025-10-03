@@ -27,7 +27,7 @@
   register: aodh_running_result
   until: aodh_running_result is success
   retries: 60
-  delay: 2
+  delay: "{{ autoscaling_retry_delay }}"
 
 - name: check that Aodh is reachable and its endpoints are defined
   ansible.builtin.shell: |
@@ -39,4 +39,4 @@
   register: aodh_responding_result
   until: aodh_responding_result is success
   retries: 60
-  delay: 2
+  delay: "{{ autoscaling_retry_delay }}"
