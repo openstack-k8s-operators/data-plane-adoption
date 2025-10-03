@@ -89,6 +89,47 @@ like:
 hostname_groups_map:
   osp-computes: "overcloud-novacompute"
   osp-controllers: "overcloud-controller"
+stacks:
+  - stackname: "overcloud"
+    stack_nodes:
+      - osp-computes
+      - osp-controllers
+```
+
+An example additional stack containing special mappings for cell controllers roles and HCI compute roles as cell computes hosts may look like:
+```
+roles_groups_map:
+  osp-computes: Compute
+  osp-controllers: Controller
+  cell1-osp-computes: ComputeHCI
+  cell1-osp-controllers: CellController
+hostname_groups_map:
+  osp-computes: overcloud-novacompute
+  osp-controllers: overcloud-controller
+  cell1-osp-computes: cell1-novacompute
+  cell1-osp-controllers: cell1-controller
+stacks:
+  - stackname: overcloud
+    stack_nodes:
+      - osp-computes
+      - osp-controllers
+  - stackname: cell1
+    stack_nodes:
+      - cell1-osp-computes
+      - cell1-osp-controllers
+```
+Additionally, the names of nodes defined in the `cifmw_networking_definition.instances`
+must be prefixed with the stack names (omitting it for the 'overcloud' stack name), and
+consequtively numbered end-to-end, for example:
+```
+cifmw_networking_definition:
+  instances:
+    controller-0:
+    cell1-controller-1:
+    cell2-controller-2:
+    cell1-compute-0:
+    cell2-compute-1:
+    cell1-compute-2:
 ```
 
 ### Roles groups map
