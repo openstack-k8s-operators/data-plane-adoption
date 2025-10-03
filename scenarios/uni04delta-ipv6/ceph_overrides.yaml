@@ -1,0 +1,19 @@
+---
+storage_network_range: "2620:cf:cf:cccc::/64"
+storage_mgmt_network_range: "2620:cf:cf:dddd::/64"
+cifmw_cephadm_default_container: false
+cifmw_cephadm_container_ns: registry-proxy.engineering.redhat.com/rh-osbs
+cifmw_cephadm_container_image: rhceph
+cifmw_cephadm_container_tag: 7
+cifmw_cephadm_ceph_spec_fqdn: false
+cifmw_cephadm_haproxy_container_image: "{{ cifmw_cephadm_container_ns }}/haproxy:latest"
+cifmw_cephadm_keepalived_container_image: "{{ cifmw_cephadm_container_ns }}/keepalived:latest"
+cifmw_cephadm_prometheus_container_ns: registry-proxy.engineering.redhat.com/prometheus
+cifmw_cephadm_alertmanager_container_image: "{{ cifmw_cephadm_prometheus_container_ns }}/alertmanager:latest"
+cifmw_cephadm_grafana_container_image: "{{ cifmw_cephadm_container_ns }}/grafana:latest"
+cifmw_cephadm_node_exporter_container_image: "{{ cifmw_cephadm_prometheus_container_ns }}/node-exporter:latest"
+cifmw_cephadm_prometheus_container_image: "{{ cifmw_cephadm_prometheus_container_ns }}/prometheus:latest"
+cifmw_ceph_target: "ceph"
+ansible_user_dir: "/home/zuul"
+cifmw_ceph_ipv6: true
+adoption_deploy_ceph_for_tripleo: true
