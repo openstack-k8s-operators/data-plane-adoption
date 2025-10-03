@@ -40,6 +40,7 @@ netconfig_networks:
             start: 10.0.0.100
         cidr: 10.0.0.0/24
         gateway: 10.0.0.1
+        vlan: 44
   - name: storage
     dnsDomain: storage.example.com
     subnets:
