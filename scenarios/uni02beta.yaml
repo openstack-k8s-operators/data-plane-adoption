@@ -38,7 +38,7 @@ stacks:
       - "--override-ansible-cfg /home/zuul/ansible_config.cfg"
       - "--templates /usr/share/openstack-tripleo-heat-templates"
       - "--libvirt-type qemu"
-      - "--timeout 90"
+      - "--timeout 120"
       - "--overcloud-ssh-user zuul"
       - "--deployed-server"
       - "--validation-warnings-fatal"
