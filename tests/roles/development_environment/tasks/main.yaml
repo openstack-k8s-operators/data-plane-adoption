@@ -118,7 +118,11 @@
 
     - name: copy kube conf to undercloud
       ansible.builtin.shell: |
+        {% if ipv6_enabled %}
+        scp -i ${EDPM_PRIVATEKEY_PATH} -o StrictHostKeyChecking=no -r ~/.kube/ [${OS_CLOUD_IP}]:~
+        {% else %}
         scp -i ${EDPM_PRIVATEKEY_PATH} -o StrictHostKeyChecking=no -r ~/.kube/ ${OS_CLOUD_IP}:~
+        {% endif %}
 
     - name: upload tobiko-playbook.yaml to the undercloud
       delegate_to: "{{ standalone_ip | default(edpm_node_ip) }}"
@@ -160,4 +164,8 @@
 
     - name: copy keys from undercloud for tobiko
       ansible.builtin.shell: |
+        {% if ipv6_enabled %}
+        mkdir -p ~/ci-framework-data/tests/test_operator; scp -i ${EDPM_PRIVATEKEY_PATH} -o StrictHostKeyChecking=no -r [${OS_CLOUD_IP}]:~/.ssh/id_ecdsa* ~/ci-framework-data/tests/test_operator/
+        {% else %}
         mkdir -p ~/ci-framework-data/tests/test_operator; scp -i ${EDPM_PRIVATEKEY_PATH} -o StrictHostKeyChecking=no -r ${OS_CLOUD_IP}:~/.ssh/id_ecdsa* ~/ci-framework-data/tests/test_operator/
+        {% endif %}
