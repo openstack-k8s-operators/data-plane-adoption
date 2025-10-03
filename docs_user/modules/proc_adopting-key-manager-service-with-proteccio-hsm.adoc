@@ -1,0 +1,119 @@
+:_mod-docs-content-type: PROCEDURE
+[id="adopting-the-key-manager-service-with-proteccio-hsm_{context}"]
+
+= Adopting the {key_manager} with Proteccio HSM integration
+
+[role="_abstract"]
+To adopt the {key_manager_first_ref} with Proteccio Hardware Security Module (HSM) integration, you use the enhanced Barbican adoption role that automatically detects HSM configuration and deploys appropriate container images. This approach preserves HSM integration while adopting all existing secrets from your source {rhos_prev_long} ({OpenStackShort}) environment.
+
+The {key_manager} Proteccio HSM adoption is complete if you see the following results:
+
+* The `BarbicanAPI` and `BarbicanWorker` services are up and running with HSM-enabled configuration.
+* All secrets from the source {OpenStackShort} {rhos_prev_ver} environment are available in {rhos_long} {rhos_curr_ver}.
+* The PKCS11 crypto plugin is available alongside `simple_crypto` for new secret storage.
+* HSM functionality is verified and operational.
+
+[NOTE]
+====
+This procedure is specifically for environments that use Proteccio HSM. For standard {key_manager} adoption using `simple_crypto`, see xref:adopting-the-key-manager-service_{context}[Adopting the {key_manager}].
+
+The enhanced Barbican adoption role automatically detects HSM configuration in your source environment and applies the appropriate configuration. This approach integrates seamlessly with the standard data-plane-adoption framework while providing HSM support.
+====
+
+.Prerequisites
+
+* You have a running {OpenStackPreviousInstaller} environment with Proteccio HSM integration (the source cloud).
+* You have a Single Node OpenShift or OpenShift Local running in the {rhocp_long} cluster.
+* You have SSH access to the source {OpenStackPreviousInstaller} undercloud and controller nodes.
+* You have configured HSM variables in your adoption configuration files.
+* The required HSM secrets are created in your target namespace.
+
+[IMPORTANT]
+====
+The HSM adoption process requires proper configuration of HSM-related variables and secrets. Ensure that:
+
+* HSM login secrets are configured in your target namespace
+* HSM client data secrets contain the necessary certificate and configuration files
+* All HSM-related variables are properly set in your configuration files
+
+Without proper HSM configuration, your HSM-protected secrets will become inaccessible after adoption.
+====
+
+.Procedure
+
+. Configure HSM integration variables in your adoption configuration:
++
+----
+# Enable HSM integration
+barbican_hsm_enabled: true
+
+# Configure HSM-specific variables
+proteccio_login_secret: "hsm-login"
+proteccio_client_data_secret: "proteccio-data"
+proteccio_library_path: "/opt/tw_proteccio/lib/libnethsm.so"
+proteccio_hsm_tokens: ["VHSM1"]
+proteccio_mkek_name: "adoption_mkek_1"
+proteccio_hmac_name: "adoption_hmac_1"
+----
+
+. Run the Barbican HSM adoption playbook:
++
+----
+$ ansible-playbook -i inventory.yaml playbooks/barbican_hsm_adoption.yml
+----
++
+The playbook will automatically:
++
+--
+* Detect HSM configuration in your source environment
+* Extract the simple crypto KEK from the source configuration
+* Deploy Barbican with HSM-enabled configuration
+* Verify HSM functionality
+--
+
+.Verification
+
+. Ensure that the {identity_service_first_ref} endpoints are defined and are pointing to the control plane FQDNs:
++
+----
+$ openstack endpoint list | grep key-manager
+----
+
+. Ensure that Barbican API service is registered in the {identity_service}:
++
+----
+$ openstack service list | grep key-manager
+----
+
+. Verify that all secrets from the source environment are available:
++
+----
+$ openstack secret list
+----
+
+. Confirm that Barbican services are running:
++
+----
+$ oc get pods -n openstack -l service=barbican -o wide
+----
+
+. Test secret creation to verify HSM functionality:
++
+----
+$ openstack secret store --name adoption-verification --payload 'HSM adoption successful'
+----
+
+. Verify HSM backend is operational:
++
+----
+$ openstack secret get <secret-id> --payload
+----
+
+.Additional resources
+
+* For troubleshooting adoption issues, check the Ansible playbook logs and OpenShift events.
+* To switch the default secret store from `simple_crypto` to `pkcs11` after verifying HSM connectivity:
++
+----
+$ oc patch openstackcontrolplane openstack -n openstack --type='json' -p='[{"op": "replace", "path": "/spec/barbican/template/globalDefaultSecretStore", "value": "pkcs11"}]'
+----
