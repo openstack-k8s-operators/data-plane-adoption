@@ -10,6 +10,7 @@ resource_registry:
   OS::TripleO::Controller::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
   OS::TripleO::Controller::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
   OS::TripleO::Controller::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  OS::TripleO::Controller::Ports::IronicPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_ironic.yaml
   OS::TripleO::Services::CeilometerAgentCentral: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-central-container-puppet.yaml
   OS::TripleO::Services::CeilometerAgentNotification: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-notification-container-puppet.yaml
   OS::TripleO::Services::CeilometerAgentIpmi: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-ipmi-container-puppet.yaml
@@ -88,5 +89,25 @@ parameter_defaults:
         host_routes: []
         name: ctlplane-subnet
         ip_version: 6
+  NeutronFlatNetworks:
+    - datacentre
+    - ironic
+  ControllerParameters:
+    NeutronBridgeMappings:
+      - datacentre:br-ex
+      - ironic:br-baremetal
   NeutronBridgeMappings:
     - datacentre:br-ex
+  IronicInspectorInterface: br-baremetal
+  IronicInspectorSubnets:
+    osp-controller-uni04delta-ipv6-0:
+      - ip_range: 2620:cf:cf:ffff::210,2620:cf:cf:ffff::219
+    osp-controller-uni04delta-ipv6-1:
+      - ip_range: 2620:cf:cf:ffff::220,2620:cf:cf:ffff::229
+    osp-controller-uni04delta-ipv6-2:
+      - ip_range: 2620:cf:cf:ffff::230,2620:cf:cf:ffff::239
+  ServiceNetMap:
+    IronicApiNetwork: ironic
+    IronicNetwork: ironic
+    IronicInspectorNetwork: ironic
+  IronicCleaningDiskErase: metadata
