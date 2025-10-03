@@ -1,4 +1,4 @@
-# Volume backends: ceph, ontap-nfs, ontap-iscsi
+# Volume backends: ceph, ontap-nfs, ontap-iscsi, pure-fc
 # Backup backends: ceph, swift, ontap-nfs
 cinder_volume_backend: ""
 cinder_backup_backend: ""

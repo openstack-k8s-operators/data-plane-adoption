@@ -1,0 +1,14 @@
+spec:
+  cinder:
+    template:
+      cinderVolumes:
+        pure-fc:
+          networkAttachments:
+            - storage
+          customServiceConfig: |
+            [{{ cinder_pure_backend }}]
+            volume_backend_name=pure-fc
+            volume_driver=cinder.volume.drivers.pure.PureFCDriver
+            consistencygroup_support=True
+          customServiceConfigSecrets:
+            - cinder-volume-pure-secrets
