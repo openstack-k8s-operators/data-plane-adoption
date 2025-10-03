@@ -5,6 +5,8 @@ heat_patch: |
       enabled: true
       apiOverride:
         route: {}
+      cnfAPIOverride:
+        route: {}
       template:
         databaseInstance: openstack
         databaseAccount: heat
