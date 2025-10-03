@@ -1,0 +1,29 @@
+ceph:
+  hosts:
+    osp-ext-ceph-uni04delta-ipv6-0:
+      ansible_user: zuul
+      ansible_ssh_private_key_file: /home/zuul/.ssh/cifmw_reproducer_key
+      bridge_ip: 2620:cf:cf:aaaa::6a/64
+      external_ip: 2620:cf:cf:cf02::6a/64
+      internalapi_ip: 2620:cf:cf:bbbb::6a/64
+      storage_ip: 2620:cf:cf:cccc::6a/64
+      storagemgmt_ip: 2620:cf:cf:dddd::6a/64
+      tenant_ip: 2620:cf:cf:eeee::6a/64
+    osp-ext-ceph-uni04delta-ipv6-1:
+      ansible_user: zuul
+      ansible_ssh_private_key_file: /home/zuul/.ssh/cifmw_reproducer_key
+      bridge_ip: 2620:cf:cf:aaaa::6b/64
+      external_ip: 2620:cf:cf:cf02::6b/64
+      internalapi_ip: 2620:cf:cf:bbbb::6b/64
+      storage_ip: 2620:cf:cf:cccc::6b/64
+      storagemgmt_ip: 2620:cf:cf:dddd::6b/64
+      tenant_ip: 2620:cf:cf:eeee::6b/64
+    osp-ext-ceph-uni04delta-ipv6-2:
+      ansible_user: zuul
+      ansible_ssh_private_key_file: /home/zuul/.ssh/cifmw_reproducer_key
+      bridge_ip: 2620:cf:cf:aaaa::6c/64
+      external_ip: 2620:cf:cf:cf02::6c/64
+      internalapi_ip: 2620:cf:cf:bbbb::6c/64
+      storage_ip: 2620:cf:cf:cccc::6c/64
+      storagemgmt_ip: 2620:cf:cf:dddd::6c/64
+      tenant_ip: 2620:cf:cf:eeee::6c/64
