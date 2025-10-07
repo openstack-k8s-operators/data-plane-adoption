@@ -45,14 +45,14 @@ parameter_defaults:
   SshFirewallAllowAll: true
 
   # Specify that this is an additional cell
-  NovaAdditionalCell: True
+  NovaAdditionalCell: true
   # Disable network creation in order to use the `network_data.yaml` file from the overcloud stack,
   # and create ports for the nodes in the separate stacks on the existing networks.
   # NOTE(bogdando): might need to enable it, to deploy cells-specific subdomains from different network_data_cellX.yaml files.
   # Also, test RHOSO adoption for a metadata agent deployed per each cell, to see if it handles each one properly,
   # when transitioning all to a superconductor layoyt from a flat OSP17.1 layout
   ManageNetworks: false
-  NovaLocalMetadataPerCell: True
+  NovaLocalMetadataPerCell: true
 
   RedisVirtualFixedIPs:
     - ip_address: 192.168.122.111
