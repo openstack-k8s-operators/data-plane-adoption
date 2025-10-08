@@ -15,7 +15,7 @@
   ansible.builtin.command: "{{ ceph_cli }} orch ps --daemon_type {{ daemon }} {{ d_id }} -f json"
   register: daemonstat
   retries: 200
-  delay: 5
+  delay: "{{ ceph_retry_delay }}"
   until: "'running' in daemonstat.stdout | from_json | community.general.json_query('[*].status_desc') | default([]) | list"
   loop_control:
     label: "wait for {{ daemon }}"

@@ -8,4 +8,4 @@
   register: nova_crs_ready_result
   until: nova_crs_ready_result is success
   retries: 60
-  delay: 2
+  delay: "{{ nova_retry_delay }}"

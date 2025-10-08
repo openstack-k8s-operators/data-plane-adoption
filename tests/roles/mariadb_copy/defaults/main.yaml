@@ -9,3 +9,4 @@ mysql_client_override: ""
 
 # director operator namespace
 director_namespace: "ospdo_openstack"
+mariadb_retry_delay: 5

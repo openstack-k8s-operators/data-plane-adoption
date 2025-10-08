@@ -16,3 +16,5 @@ heat_patch: |
           stackDomainAdminPassword: HeatStackDomainAdminPassword
         rabbitMqClusterName: rabbitmq
         serviceUser: heat
+
+heat_retry_delay: 5

@@ -27,3 +27,4 @@ keystone_patch: |
                 type: LoadBalancer
         databaseInstance: openstack
         secret: osp-secret
+keystone_retry_delay: 30

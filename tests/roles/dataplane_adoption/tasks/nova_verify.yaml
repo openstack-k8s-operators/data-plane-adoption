@@ -26,7 +26,7 @@
     - ("FAIL" not in nova_verify_stop_result.stdout_lines)
     - ("it is in power state shutdown" in nova_verify_stop_result.stdout)
   retries: 10
-  delay: 6
+  delay: "{{ dataplane_retry_delay }}"
 
 - name: verify if the Compute services can start the existing test VM instance
   when: prelaunch_test_instance|bool
@@ -38,4 +38,4 @@
   register: nova_verify_start_result
   until: ("FAIL" not in nova_verify_start_result.stdout_lines)
   retries: 60
-  delay: 6
+  delay: "{{ dataplane_retry_delay }}"

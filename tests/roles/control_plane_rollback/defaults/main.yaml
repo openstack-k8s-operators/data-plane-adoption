@@ -3,3 +3,4 @@ source_osp_ssh_user: root
 # override var for openstack verify command to use on the source cloud. For multi-node source cloud standalone_ip is the ip address of the undercloud.
 control_plane_rollback_verify_command: |
   ssh -i {{ edpm_privatekey_path }} -o StrictHostKeyChecking=no {{ source_osp_ssh_user }}@{{ standalone_ip }} OS_CLOUD={{ os_cloud_name }} openstack user list
+control_plane_retry_delay: 5

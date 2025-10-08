@@ -28,7 +28,7 @@
   register: swift_storage_ready_result
   until: swift_storage_ready_result is success
   retries: 60
-  delay: 2
+  delay: "{{ swift_migration_delay }}"
 
 - name: wait until ring configmap includes new pv devices
   ansible.builtin.shell: |
