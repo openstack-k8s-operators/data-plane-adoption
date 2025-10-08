@@ -66,6 +66,10 @@ ceph_prometheus_container_image: "quay.io/prometheus/prometheus:v2.43.0"
 ceph_spec_render_dir: "/home/tripleo-admin"
 endif::[]
 
+# Prometheus module configuration
+ceph_prometheus_server_port: 9283
+ceph_prometheus_server_addr: "0.0.0.0"
+
 ceph_rgw_virtual_ips_list:
   - 172.17.3.99/24
 #  - 10.0.0.99/24 # this requires the external network on the cephstorage node
