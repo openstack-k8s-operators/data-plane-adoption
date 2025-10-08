@@ -29,6 +29,7 @@
           -A INPUT -p tcp -m tcp --dport 2049 -m conntrack --ctstate NEW -m comment --comment "111 ceph_nfs ipv4" -j ACCEPT
           -A INPUT -p tcp -m tcp --dport 12049 -m conntrack --ctstate NEW -m comment --comment "111 ceph_nfs_backend ipv4" -j ACCEPT
           -A INPUT -p tcp -m tcp --dport 6800:7300 -m conntrack --ctstate NEW -m comment --comment "112 ceph_mds_mgr ipv4" -j ACCEPT
+          -A INPUT -p tcp -m tcp --dport 9283 -m conntrack --ctstate NEW -m comment --comment "113 ceph_prometheus ipv4" -j ACCEPT
       loop: "{{ ceph_iptables_path }}"
 
     - name: Ensure firewall is enabled/started - iptables

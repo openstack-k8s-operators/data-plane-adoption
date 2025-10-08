@@ -24,6 +24,23 @@
       ansible.builtin.command: |
         {{ ceph_cli }} mgr module enable dashboard
 
+- name: Set ceph-mgr prometheus port configuration
+  # cephadm runs w/ root privileges
+  become: true
+  block:
+    - name: Set the prometheus server port
+      ansible.builtin.command: |
+        {{ ceph_cli }} config set mgr mgr/prometheus/server_port {{ ceph_prometheus_server_port }}
+      changed_when: false
+    - name: Set the prometheus server address
+      ansible.builtin.command: |
+        {{ ceph_cli }} config set mgr mgr/prometheus/server_addr {{ ceph_prometheus_server_addr }}
+      changed_when: false
+    - name: Enable prometheus module
+      ansible.builtin.command: |
+        {{ ceph_cli }} mgr module enable prometheus
+      changed_when: false
+
 # - Expand labels to the whole hostmap
 - name: Apply Monitoring label to the overcloud nodes
   ansible.builtin.import_tasks: labels.yaml
