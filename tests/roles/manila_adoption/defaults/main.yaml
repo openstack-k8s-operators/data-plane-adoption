@@ -25,3 +25,4 @@ supported_backends:
   - cephfs
   - cephnfs
   - netapp
+manila_retry_delay: 5

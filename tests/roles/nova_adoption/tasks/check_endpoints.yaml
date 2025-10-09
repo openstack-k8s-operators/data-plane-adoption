@@ -10,4 +10,4 @@
   register: nova_responding_result
   until: nova_responding_result is success
   retries: 60
-  delay: 2
+  delay: "{{ nova_retry_delay }}"

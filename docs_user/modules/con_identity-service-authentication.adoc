@@ -4,11 +4,14 @@
 = {identity_service} authentication
 
 [role="_abstract"]
-If you have custom policies enabled, contact Red Hat Support before adopting a {OpenStackPreviousInstaller} OpenStack deployment. You must complete the following steps for adoption:
+If you have custom policies enabled, complete the following steps for adoption:
 
 . Remove custom policies.
 . Run the adoption.
 . Re-add custom policies by using the new SRBAC syntax.
+
+[IMPORTANT]
+Red Hat does not support customized roles or policies. Syntax errors or misapplied authorization can negatively impact security or usability. If you need customized roles or policies in your production environment, contact Red Hat support for a support exception before you begin the adoption.
 
 After you adopt a {OpenStackPreviousInstaller}-based OpenStack deployment to a {rhos_long_noacro} deployment, the {identity_service} performs user authentication and authorization by using Secure RBAC (SRBAC). If SRBAC is already enabled, then there is no change to how you perform operations. If SRBAC is disabled, then adopting a {OpenStackPreviousInstaller}-based OpenStack deployment might change how you perform operations due to changes in API access policies.
 

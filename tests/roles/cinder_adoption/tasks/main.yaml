@@ -12,7 +12,7 @@
   register: cinder_api_running
   until: cinder_api_running is success
   retries: 60
-  delay: 2
+  delay: "{{ cinder_retry_delay }}"
 
 - name: Get cinder-api pod name
   ansible.builtin.shell: |
@@ -31,7 +31,7 @@
   register: cinder_responding_result
   until: cinder_responding_result is success
   retries: 60
-  delay: 2
+  delay: "{{ cinder_retry_delay }}"
 
 - name: Get cinder-backup down services
   ansible.builtin.shell: |
@@ -99,7 +99,7 @@
   register: cinder_running_result
   until: cinder_running_result is success
   retries: 60
-  delay: 2
+  delay: "{{ cinder_retry_delay }}"
 
 # Give time for volume and backup services to initialize drivers, otherwise they
 # always looks ok (up) because that's the default at the start.
@@ -116,7 +116,7 @@
   register: cinder_scheduler_running_result
   until: cinder_scheduler_running_result is success
   retries: 5
-  delay: 2
+  delay: "{{ cinder_retry_delay }}"
 
 - name: wait for Cinder volume to be up and ready
   when: cinder_volume_backend != ''
@@ -127,7 +127,7 @@
   register: cinder_running_result
   until: cinder_running_result is success
   retries: 5
-  delay: 2
+  delay: "{{ cinder_retry_delay }}"
 
 - name: wait for Cinder backup to be up and ready
   when: cinder_backup_backend != ''
@@ -138,7 +138,7 @@
   register: cinder_running_result
   until: cinder_running_result is success
   retries: 5
-  delay: 2
+  delay: "{{ cinder_retry_delay }}"
 
 - name: Cinder online data migrations
   ansible.builtin.shell: |

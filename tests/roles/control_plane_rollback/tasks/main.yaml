@@ -155,4 +155,4 @@
   register: source_control_plane_responding_result
   until: source_control_plane_responding_result is success
   retries: 60
-  delay: 2
+  delay: "{{ control_plane_retry_delay }}"

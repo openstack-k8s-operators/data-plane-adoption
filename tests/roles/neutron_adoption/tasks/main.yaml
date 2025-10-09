@@ -12,7 +12,7 @@
   register: neutron_running_result
   until: neutron_running_result is success
   retries: 60
-  delay: 2
+  delay: "{{ neutron_retry_delay }}"
 
 - name: check that Neutron is reachable and its endpoints are defined
   ansible.builtin.shell: |
@@ -25,4 +25,4 @@
   register: neutron_responding_result
   until: neutron_responding_result is success
   retries: 15
-  delay: 2
+  delay: "{{ neutron_retry_delay }}"

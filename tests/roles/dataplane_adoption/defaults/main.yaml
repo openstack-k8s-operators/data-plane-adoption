@@ -40,6 +40,7 @@ netconfig_networks:
             start: 10.0.0.100
         cidr: 10.0.0.0/24
         gateway: 10.0.0.1
+        vlan: 44
   - name: storage
     dnsDomain: storage.example.com
     subnets:
@@ -283,7 +284,7 @@ dataplane_cr: |
           edpm_ovs_packages:
           - openvswitch3.3
 
-          {% if use_hugepages|bool +%}
+          {% if use_hugepages|default(false)|bool +%}
           edpm_default_mounts:
             - path: /dev/hugepages2M
               opts: pagesize=2M
@@ -395,3 +396,4 @@ networker_cr: |
           {% if edpm_container_registry_insecure_registries is defined -%}
           edpm_container_registry_insecure_registries: {{ edpm_container_registry_insecure_registries }}
           {% endif -%}
+dataplane_retry_delay: 10

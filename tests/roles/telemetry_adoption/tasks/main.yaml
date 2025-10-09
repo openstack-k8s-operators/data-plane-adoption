@@ -24,7 +24,7 @@
   register: coo_install_result
   until: coo_install_result is success
   retries: 60
-  delay: 2
+  delay: "{{ telemetry_retry_delay }}"
 
 - name: deploy metric storage
   ansible.builtin.shell: |
@@ -40,7 +40,7 @@
   register: alertmanager_running_result
   until: alertmanager_running_result is success
   retries: 60
-  delay: 2
+  delay: "{{ telemetry_retry_delay }}"
 
 - name: wait for prometheus metric storage to start up
   ansible.builtin.shell: |
@@ -50,7 +50,7 @@
   register: prometheus_running_result
   until: prometheus_running_result is success
   retries: 60
-  delay: 2
+  delay: "{{ telemetry_retry_delay }}"
 
 - name: deploy podified Ceilometer
   ansible.builtin.shell: |
@@ -66,7 +66,7 @@
   register: ceilometer_running_result
   until: ceilometer_running_result is success
   retries: 60
-  delay: 2
+  delay: "{{ telemetry_retry_delay }}"
 
 - name: include logging
   ansible.builtin.shell: |

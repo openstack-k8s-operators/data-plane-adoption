@@ -4,11 +4,60 @@
 = Installing the `systemd-container` package on Compute hosts
 
 [role="_abstract"]
-Before you adopt the {rhos_long} data plane, you must install the `systemd-container` package on all the hypervisors on your Compute hosts. This procedure must be performed on one Compute host at a time.
+Before you adopt the {rhos_long} data plane, you must verify that the `systemd-container` package is installed and that `systemd-machined` is running on all the Compute hosts. You must install the `systemd-container` package on each Compute host that does not have this package.
 
 .Procedure
 
-. If your Compute host is running a virtual machine, live migrate the virtual machine from the host. For more information about live migration, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/performing_a_minor_update_of_red_hat_openstack_platform/assembly_rebooting-the-overcloud_keeping-updated#proc_rebooting-compute-nodes_rebooting-the-overcloud[Rebooting Compute nodes] in _Performing a minor update of Red Hat OpenStack Platform_.
+. Log in to the Compute node host as a user with the appropriate permissions.
+
+. List the instances that are running on the host:
++
+----
+$ sudo machinectl list
+----
++
+Sample output::
++
+----
+MACHINE                  CLASS SERVICE      OS VERSION ADDRESSES
+qemu-1-instance-000000b9 vm    libvirt-qemu -  -       -
+qemu-2-instance-000000c2 vm    libvirt-qemu -  -       -
+
+2 machines listed.
+----
+
+. Verify that the `systemd-machined` service is running:
++
+----
+$ sudo systemctl status systemd-machined.service
+----
++
+Sample output::
++
+----
+systemd-machined.service - Virtual Machine and Container Registration Service
+     Loaded: loaded (/usr/lib/systemd/system/systemd-machined.service; static)
+     Active: active (running) since Mon 2025-06-16 11:42:07 EDT; 2min 48s ago
+       Docs: man:systemd-machined.service(8)
+             man:org.freedesktop.machine1(5)
+   Main PID: 136614 (systemd-machine)
+     Status: "Processing requests..."
+      Tasks: 1 (limit: 838860)
+     Memory: 1.4M
+        CPU: 33ms
+     CGroup: /system.slice/systemd-machined.service
+             └─136614 /usr/lib/systemd/systemd-machined
+
+Jun 16 11:42:07 computehost001 systemd[1]: Starting Virtual Machine and Container Registration Service...
+Jun 16 11:42:07 computehost001 systemd[1]: Started Virtual Machine and Container Registration Service.
+Jun 16 11:43:44 computehost001 systemd-machined[136614]: New machine qemu-1-instance-000000b9.
+Jun 16 11:43:51 computehost001 systemd-machined[136614]: New machine qemu-2-instance-000000c2.
+----
++
+[IMPORTANT]
+If the `systemd-machined` service is running, skip the rest of this procedure. Ensure that you verify that the `systemd-machined` service is running each Compute node host in the cluster.
+
+. If the `systemd-machined` service is not running, before you can install the `systemd-container` package, live migrate all virtual machines from the host. For more information about live migration, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/performing_a_minor_update_of_red_hat_openstack_platform/assembly_rebooting-the-overcloud_keeping-updated#proc_rebooting-compute-nodes_rebooting-the-overcloud[Rebooting Compute nodes] in _Performing a minor update of Red Hat OpenStack Platform_.
 
 . Install the `systemd-container` on the host:
 ** If you upgraded your environment from an earlier version of {rhos_prev_long}, reboot the Compute host to automatically install the `systemd-container`.
@@ -20,4 +69,4 @@ $ sudo dnf -y install systemd-container
 [NOTE]
 If your Compute host is not running a virtual machine, you can install the `systemd-container` automatically or manually.
 
-. Repeat this procedure on each hypervisor one by one.
+. Repeat this procedure on each Compute host in the cluster where the `systemd-machined` service is not running.

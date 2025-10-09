@@ -64,7 +64,7 @@
   register: mariadb_data_pod_result
   until: mariadb_data_pod_result is success
   retries: 25
-  delay: 2
+  delay: "{{ mariadb_retry_delay }}"
 
 - name: check that the Galera database cluster(s) members are online and synced, for all cells
   no_log: "{{ use_no_log }}"

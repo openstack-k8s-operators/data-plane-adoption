@@ -1,5 +1,5 @@
-# Volume backends: ceph or ontap_nfs
-# Backup backends: ceph or swift or ontap_nfs
+# Volume backends: ceph, ontap-nfs, ontap-iscsi
+# Backup backends: ceph, swift, ontap-nfs
 cinder_volume_backend: ""
 cinder_backup_backend: ""
 
@@ -129,3 +129,4 @@ cinder_volume_netapp_vars:
 
 # Vars for cinder-backup
 cinder_backup_nfs_backup_mount_point_base: "/var/lib/cinder/backup"
+cinder_retry_delay: 5

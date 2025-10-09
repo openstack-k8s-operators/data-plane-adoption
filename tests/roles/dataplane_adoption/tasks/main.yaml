@@ -558,7 +558,7 @@
     {{ oc_header }}
 
     DEPLOYMENT_NAME=openstack
-    TRIES=360
+    TRIES=720
     DELAY=30
     ALLOWED_JOB_RETRIES=3
 

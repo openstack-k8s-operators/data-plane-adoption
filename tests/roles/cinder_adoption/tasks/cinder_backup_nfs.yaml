@@ -1,6 +1,6 @@
-- name: Deploy Podified Cinder backup - Netapp
+- name: Deploy Podified Cinder backup - NFS
   block:
-    - name: Extract Netapp c-bak data from cinder.conf
+    - name: Extract NFS c-bak data from cinder.conf
       ansible.builtin.set_fact:
         cinder_backup_nfs_backup_share: "{{ lookup('ansible.builtin.ini', 'backup_share' , file=cinder_conf_path, section='DEFAULT', allow_no_value=True) }}"
 
@@ -8,16 +8,16 @@
       when: cinder_backup_nfs_backup_share is not defined
       ansible.builtin.fail:
         msg:
-          - 'Missing required Netapp input'
+          - 'Missing required NFS data for cinder-backup'
 
     - name: Generate cinder backup CR patch config based on the selected backend
       ansible.builtin.template:
-        src: "{{ role_path }}/templates/cinder-backup-netapp.yaml.j2"
-        dest: /tmp/cinder-backup-netapp.yaml
+        src: "{{ role_path }}/templates/cinder-backup-nfs.yaml.j2"
+        dest: /tmp/cinder-backup-nfs.yaml
         mode: "0600"
 
-    - name: Configure cinder backup netapp NFS backend
+    - name: Configure cinder backup NFS backend
       ansible.builtin.shell: |
         {{ shell_header }}
         {{ oc_header }}
-        oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/cinder-backup-netapp.yaml
+        oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/cinder-backup-nfs.yaml

@@ -35,9 +35,7 @@ $ for CELL in $(echo $CELLS); do
 >    TRIPLEO_PASSWORDS[$CELL]="$PASSWORD_FILE"
 > done
 ifeval::["{build_variant}" == "ospdo"]
-$ for CELL in $(echo $CELLS); do
->     oc get secret tripleo-passwords -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' | base64 -d >"${TRIPLEO_PASSWORDS[$CELL]}"
-> done
+$ oc get secret tripleo-passwords -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' | base64 -d >"${TRIPLEO_PASSWORDS[$CELLS]}"
 endif::[]
 $ declare -A SOURCE_DB_ROOT_PASSWORD
 $ for CELL in $(echo $CELLS); do

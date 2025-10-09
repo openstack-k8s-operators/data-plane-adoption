@@ -16,7 +16,7 @@
   # NOTE(slaweq): retries should not be needed but it seems there is some minor
   # bug in Neutron which causes reporting ovn-metadata-agent as DOWN in every first API request after deploying it on host.
   retries: 2
-  delay: 1
+  delay: "{{ dataplane_retry_delay }}"
 
 - name: get neutron-sriov-nic-agent alive state
   when: compute_adoption|bool

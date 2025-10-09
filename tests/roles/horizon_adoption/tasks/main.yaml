@@ -11,7 +11,7 @@
   register: horizon_running_result
   until: horizon_running_result is success
   retries: 60
-  delay: 2
+  delay: "{{ horizon_retry_delay }}"
 
 - name: check that horizon instance is deployed successfully
   ansible.builtin.shell: |
@@ -22,7 +22,7 @@
   register: horizon_setup_result
   until: horizon_setup_result is success
   retries: 60
-  delay: 3
+  delay: "{{ horizon_retry_delay }}"
 
 - name: check horizon dashboard is reachable
   ansible.builtin.shell: |
@@ -34,4 +34,4 @@
   register: horizon_http_status_code
   until: horizon_http_status_code is success
   retries: 15
-  delay: 2
+  delay: "{{ horizon_retry_delay }}"

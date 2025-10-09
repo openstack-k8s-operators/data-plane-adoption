@@ -38,3 +38,4 @@ barbican_patch: |
           replicas: 1
         barbicanKeystoneListener:
           replicas: 1
+barbican_retry_delay: 5
