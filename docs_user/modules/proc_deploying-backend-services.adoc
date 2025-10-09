@@ -629,6 +629,7 @@ $ for CELL in $(echo $RENAMED_CELLS); do
 ----
 +
 The given cells names are later referred to by using the environment variable `RENAMED_CELLS`.
+`RENAMED_CELLS` represent changes that are going to be made after you import the databases.
 
 * Ensure that the statuses of all the Rabbitmq and Galera CRs are `Setup complete`:
 +
