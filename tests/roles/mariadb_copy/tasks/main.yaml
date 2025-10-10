@@ -66,6 +66,12 @@
   retries: 25
   delay: "{{ mariadb_retry_delay }}"
 
+# MariaDB client connection timeout in seconds
+# Related to OSPRH-18618
+- name: Add sleep time
+  ansible.builtin.pause:
+    seconds: "{{ mariadb_client_timeout }}"
+
 - name: check that the Galera database cluster(s) members are online and synced, for all cells
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
