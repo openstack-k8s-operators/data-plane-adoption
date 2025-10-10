@@ -30,6 +30,22 @@
       object.ring.gz: $($CONTROLLER1_SSH "base64 -w0 /var/lib/config-data/puppet-generated/swift/etc/swift/object.ring.gz")
     EOF
 
+- name: Check if storagemgmt NetworkAttachmentDefinition exists
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get network-attachment-definitions storagemgmt
+  register: storagemgmt_nad_check
+  failed_when: false
+
+- name: Set storagemgmt_available variable
+  ansible.builtin.set_fact:
+    storagemgmt_available: "{{ storagemgmt_nad_check.rc == 0 }}"
+
+- name: Debug storagemgmt availability
+  ansible.builtin.debug:
+    msg: "storagemgmt NetworkAttachmentDefinition available: {{ storagemgmt_available }}"
+
 - name: Deploy podified Swift
   ansible.builtin.shell: |
     {{ shell_header }}
