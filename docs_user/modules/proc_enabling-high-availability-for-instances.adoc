@@ -1,0 +1,80 @@
+:_mod-docs-content-type: PROCEDURE
+[id="enabling-high-availability-for-instances_{context}"]
+
+= Enabling the high availability for Compute instances service
+
+[role="_abstract"]
+After the {rhos_long_noacro} data plane adoption is complete, you can enable the high availability for Compute instances (Instance HA) service.
+
+.Prerequisites
+
+* You have created the `fencing-secret.yaml` configuration file. For more information, see <Link TBD>.
+
+.Procedure
+
+. Create the secret:
++
+----
+$ oc apply -f fencing-secret.yaml -n openstack
+----
+
+. Create the Instance HA configuration map and set the `DISABLED` parameter to `false`. For example:
++
+----
+$ cat << EOF > iha-cm.yaml
+kind: ConfigMap
+metadata:
+  name: instanceha-0-config
+  namespace: openstack
+apiVersion: v1
+data:
+  config.yaml: |
+    config:
+      EVACUABLE_TAG: "evacuable"
+      TAGGED_IMAGES: "true"
+      TAGGED_FLAVORS: "true"
+      TAGGED_AGGREGATES: "true" 
+      SMART_EVACUATION: "false" 
+      DELTA: "30"
+      DELAY: "0"
+      POLL: "45"
+      THRESHOLD: "50"
+      WORKERS: "4"
+      RESERVED_HOSTS: "false" 
+      LEAVE_DISABLED: "false" 
+      CHECK_KDUMP: "false" 
+      LOGLEVEL: "info"
+      DISABLED: "true" 
+EOF
+----
+
+. Apply the configuration:
++
+----
+$ oc apply -f iha-cm.yaml -n openstack
+----
++
+[NOTE]
+If you want to restrict which Compute nodes are evacuated, create host aggregates and set them by using the `EVACUABLE_TAG` parameter. Alternatively, you can set the `TAGGED_AGGREGATES` parameter to `false` to enable monitoring and evacuation of all your Compute nodes. For more information about Instance HA service parameters, see link:{ha-for-instances}/assembly_deploying-and-configuring-the-high-availability-for-compute-instances-service_instance-ha#proc_editing-the-instance-ha-service-parameters_instance-ha[Editing the Instance HA service parameters] in _Configuring high availability for instances_.
+
+. Create an Instance HA resource and reference the fencing secret and configuration map. For example:
++
+----
+$ cat << EOF > iha.yaml
+apiVersion: instanceha.openstack.org/v1beta1
+kind: InstanceHa
+metadata:
+  name: instanceha-0
+  namespace: openstack
+spec:
+  caBundleSecretName: combined-ca-bundle
+  instanceHaConfigMap: instanceha-0-config
+  fencingSecret: fencing-secret
+EOF
+----
+
+. Deploy the Instance HA resource:
++
+----
+$ oc apply -f iha.yaml -n openstack
+----
