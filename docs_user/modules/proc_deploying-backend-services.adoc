@@ -629,6 +629,7 @@ $ for CELL in $(echo $RENAMED_CELLS); do
 ----
 +
 The given cells names are later referred to by using the environment variable `RENAMED_CELLS`.
+During the database migration procedure, the Nova cells are renamed. `RENAMED_CELLS` variable represents the new cell names used in the RHOSO deployment.
 
 * Ensure that the statuses of all the Rabbitmq and Galera CRs are `Setup complete`:
 +
