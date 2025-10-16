@@ -1,17 +1,9 @@
 # Add firewall rules for all the Ceph Services
 
-- name: Ensure firewall is temporarily stopped
-  delegate_to: "{{ node }}"
-  become: true
-  ansible.builtin.systemd:
-    name: "{{ item }}"
-    state: stopped
-  loop:
-    - iptables
-    - nftables
-
 - name: Manage Ceph iptables rules
-  when: ceph_firewall_type == "iptables"
+  when:
+    - ceph_firewall_enabled | bool | default(true)
+    - ceph_firewall_type == "iptables"
   block:
     - name: Ceph Migration - Apply the Ceph cluster rules (iptables)
       delegate_to: "{{ node }}"
@@ -29,10 +21,13 @@
           -A INPUT -p tcp -m tcp --dport 2049 -m conntrack --ctstate NEW -m comment --comment "111 ceph_nfs ipv4" -j ACCEPT
           -A INPUT -p tcp -m tcp --dport 12049 -m conntrack --ctstate NEW -m comment --comment "111 ceph_nfs_backend ipv4" -j ACCEPT
           -A INPUT -p tcp -m tcp --dport 6800:7300 -m conntrack --ctstate NEW -m comment --comment "112 ceph_mds_mgr ipv4" -j ACCEPT
+          -A INPUT -p tcp -m tcp --dport 9283 -m conntrack --ctstate NEW -m comment --comment "113 ceph_prometheus ipv4" -j ACCEPT
       loop: "{{ ceph_iptables_path }}"
 
     - name: Ensure firewall is enabled/started - iptables
-      when: ceph_firewall_enabled | bool | default(false)
+      when:
+        - ceph_firewall_enabled | bool | default(true)
+        - ceph_firewall_type == "iptables"
       delegate_to: "{{ node }}"
       become: true
       ansible.builtin.systemd:
@@ -41,7 +36,9 @@
         enabled: true
 
 - name: Manage Ceph nftables rules
-  when: ceph_firewall_type == "nftables"
+  when:
+    - ceph_firewall_enabled | bool | default(true)
+    - ceph_firewall_type == "nftables"
   block:
     - name: Ceph Migration - Apply the Ceph cluster rules (nftables)
       delegate_to: "{{ node }}"
@@ -50,32 +47,34 @@
         marker_begin: "BEGIN ceph firewall rules"
         marker_end: "END ceph firewall rules"
         path: "{{ ceph_nftables_path }}"
+        mode: "0644"
         block: |
-           # 100 ceph_alertmanager {'dport': [9093]}
-           add rule inet filter TRIPLEO_INPUT tcp dport { 9093 } ct state new counter accept comment "100 ceph_alertmanager"
-           # 100 ceph_dashboard {'dport': [8443]}
-           add rule inet filter TRIPLEO_INPUT tcp dport { 8443 } ct state new counter accept comment "100 ceph_dashboard"
-           # 100 ceph_grafana {'dport': [3100]}
-           add rule inet filter TRIPLEO_INPUT tcp dport { 3100 } ct state new counter accept comment "100 ceph_grafana"
-           # 100 ceph_prometheus {'dport': [9092]}
-           add rule inet filter TRIPLEO_INPUT tcp dport { 9092 } ct state new counter accept comment "100 ceph_prometheus"
-           # 100 ceph_rgw {'dport': ['8080']}
-           add rule inet filter TRIPLEO_INPUT tcp dport { 8080 } ct state new counter accept comment "100 ceph_rgw"
-           # 110 ceph_mon {'dport': [6789, 3300, '9100']}
-           add rule inet filter TRIPLEO_INPUT tcp dport { 6789,3300,9100 } ct state new counter accept comment "110 ceph_mon"
-           # 112 ceph_mds {'dport': ['6800-7300', '9100']}
-           add rule inet filter TRIPLEO_INPUT tcp dport { 6800-7300,9100 } ct state new counter accept comment "112 ceph_mds"
-           # 113 ceph_mgr {'dport': ['6800-7300', 8444]}
-           add rule inet filter TRIPLEO_INPUT tcp dport { 6800-7300,8444 } ct state new counter accept comment "113 ceph_mgr"
-           # 120 ceph_nfs {'dport': ['12049', '2049']}
-           add rule inet filter TRIPLEO_INPUT tcp dport { 2049 } ct state new counter accept comment "120 ceph_nfs"
-           # 122 ceph rgw {'dport': ['8080', '8080', '9100']}
-           add rule inet filter TRIPLEO_INPUT tcp dport { 8080,8080,9100 } ct state new counter accept comment "122 ceph rgw"
-           # 123 ceph_dashboard {'dport': [3100, 9090, 9092, 9093, 9094, 9100, 9283]}
-           add rule inet filter TRIPLEO_INPUT tcp dport { 3100,9090,9092,9093,9094,9100,9283 } ct state new counter accept comment "123 ceph_dashboard"
+           # 100 ceph_alertmanager (9093)
+           add rule inet filter EDPM_INPUT tcp dport { 9093 } ct state new counter accept comment "100 ceph_alertmanager"
+           # 100 ceph_dashboard (8443)
+           add rule inet filter EDPM_INPUT tcp dport { 8443 } ct state new counter accept comment "100 ceph_dashboard"
+           # 100 ceph_grafana (3100)
+           add rule inet filter EDPM_INPUT tcp dport { 3100 } ct state new counter accept comment "100 ceph_grafana"
+           # 100 ceph_prometheus (9092)
+           add rule inet filter EDPM_INPUT tcp dport { 9092 } ct state new counter accept comment "100 ceph_prometheus"
+           # 100 ceph_rgw (8080)
+           add rule inet filter EDPM_INPUT tcp dport { 8080 } ct state new counter accept comment "100 ceph_rgw"
+           # 110 ceph_mon (6789, 3300, 9100)
+           add rule inet filter EDPM_INPUT tcp dport { 6789,3300,9100 } ct state new counter accept comment "110 ceph_mon"
+           # 112 ceph_mds (6800-7300, 9100)
+           add rule inet filter EDPM_INPUT tcp dport { 6800-7300,9100 } ct state new counter accept comment "112 ceph_mds"
+           # 113 ceph_mgr (6800-7300, 8444)
+           add rule inet filter EDPM_INPUT tcp dport { 6800-7300,8444 } ct state new counter accept comment "113 ceph_mgr"
+           # 120 ceph_nfs (2049, 12049)
+           add rule inet filter EDPM_INPUT tcp dport { 2049,12049 } ct state new counter accept comment "120 ceph_nfs"
+           # 123 ceph_dashboard (9090, 9094, 9283)
+           add rule inet filter EDPM_INPUT tcp dport { 9090,9094,9283 } ct state new counter accept comment "123 ceph_dashboard"
+        insertbefore: '^# Lock down INPUT chains'
 
     - name: Ensure firewall is enabled/started - nftables
-      when: ceph_firewall_enabled | bool | default(false)
+      when:
+        - ceph_firewall_enabled | bool | default(true)
+        - ceph_firewall_type == "nftables"
       delegate_to: "{{ node }}"
       become: true
       ansible.builtin.systemd:
