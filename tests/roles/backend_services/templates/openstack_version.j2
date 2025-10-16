@@ -29,7 +29,7 @@ spec:
     edpmNeutronSriovAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-neutron-sriov-agent:{{ container_tag }}
     edpmOvnBgpAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-bgp-agent:{{ container_tag }}
     glanceAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-glance-api:{{ container_tag }}
-    heatAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-heat-api:{{ container_tag }}
+    heatAPIImage: quay.io/lmiccini/openstack-heat-api@sha256:d73ed9f60099986c45c8622557469715e06bdc3d64d6f12f774ce10cf1dbb3c2
     heatCfnapiImage: {{ container_registry }}/{{ container_namespace }}/openstack-heat-api-cfn:{{ container_tag }}
     heatEngineImage: {{ container_registry }}/{{ container_namespace }}/openstack-heat-engine:{{ container_tag }}
     horizonImage: {{ container_registry }}/{{ container_namespace }}/openstack-horizon:{{ container_tag }}
