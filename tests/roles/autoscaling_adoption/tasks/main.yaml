@@ -2,22 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      telemetry:
-        enabled: true
-        template:
-          autoscaling:
-            enabled: true
-            aodh:
-              passwordSelector:
-                aodhService: AodhPassword
-              databaseAccount: aodh
-              databaseInstance: openstack
-              secret: osp-secret
-              serviceUser: aodh
-            heatInstance: heat
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch-file={{ role_path }}/files/aodh_patch.yaml
 
 - name: wait for Aodh to start up
   ansible.builtin.shell: |

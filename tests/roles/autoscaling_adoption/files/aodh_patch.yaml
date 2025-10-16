@@ -1,0 +1,14 @@
+spec:
+  telemetry:
+    enabled: true
+    template:
+      autoscaling:
+        enabled: true
+        aodh:
+          passwordSelector:
+            aodhService: AodhPassword
+          databaseAccount: aodh
+          databaseInstance: openstack
+          secret: osp-secret
+          serviceUser: aodh
+        heatInstance: heat
