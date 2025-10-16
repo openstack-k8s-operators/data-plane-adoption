@@ -1,0 +1,40 @@
+:_mod-docs-content-type: PROCEDURE
+[id="preventing-pacemaker-from-monitoring-compute-nodes_{context}"]
+
+= Preventing Pacemaker from monitoring Compute nodes
+
+[role="_abstract"]
+You must disable Pacemaker so that it does not monitor your Compute nodes during the adoption. For example, if a network issue occurs during the adoption, Pacemaker attempts to reboot the Compute nodes to recover them, which breaks the adoption.
+
+.Procedure
+
+. Retrieve the names of the Compute remote resources:
++
+----
+$ sudo pcs stonith |grep -B1 stonith-fence_compute-fence-nova |grep Target |awk -F ': ' '{print $2}'
+----
+
+. Disable the stonith and `pacemaker_remote` resources on each Compute remote resource:
++
+----
+$ sudo pcs property set stonith-enabled=false
+$ sudo pcs resource disable <compute_remote_resource>
+----
++
+* Replace `<compute_remote_resource>` with the name of the Compute remote resource in your environment.
+
+. Retrieve the name of the Compute stonith resources:
++
+----
+$ sudo pcs stonith |grep Level |grep fence_compute |awk '{print $4}' |awk -F ',' '{print $1}' |sort |uniq
+----
+
+. Remove the Compute node `pacemaker_remote` and fencing resources:
++
+----
+$ sudo pcs stonith disable <compute_stonith_resource>
+$ sudo pcs stonith delete <compute_stonith_resource>
+$ sudo pcs resource delete <compute_remote_resource>
+----
++
+* Replace `<compute_stonith_resource>` with the name of the Compute stonith resource in your environment.
