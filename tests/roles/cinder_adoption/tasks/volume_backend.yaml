@@ -10,3 +10,8 @@
     cinder_volume_backend == 'ontap-nfs' or
     cinder_volume_backend == 'ontap-iscsi'
   ansible.builtin.include_tasks: cinder_volume_netapp.yaml
+
+- name: deploy podified Cinder volume with pure FC
+  when: >
+    cinder_volume_backend == 'pure-fc'
+  ansible.builtin.include_tasks: cinder_volume_pure.yaml

@@ -1,0 +1,61 @@
+- name: Slurp cinder.conf from controller
+  become: true
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    CONTROLLER1_SCP="{{ controller1_ssh  | regex_replace('^ssh', 'scp')}}"
+    ${CONTROLLER1_SCP}:{{ cinder_tripleo_path }} {{ cinder_conf_path }}
+    chmod a+r {{ cinder_conf_path }}
+
+- name: Stat the retrieved cinder.conf file
+  ansible.builtin.stat:
+    path: "{{ cinder_conf_path }}"
+  register: cinder_conf
+
+- name: Fail if cinder.conf is not present
+  when: not cinder_conf.stat.exists
+  ansible.builtin.fail:
+    msg: "cinder.conf does not exist"
+
+- name: Deploy Podified Cinder-Volume - Pure
+  vars:
+    cinder_pure_config: |
+      {% set cinder_pure_conf = {} %}
+      {% for item in cinder_volume_pure_vars %}
+      {% set value = lookup('ansible.builtin.ini', item, file=cinder_conf_path, section=cinder_pure_backend, allow_no_value=True) %}
+      {% set _ = cinder_pure_conf.__setitem__(item, value) %}
+      {% endfor %}
+      {{ cinder_pure_conf }}
+    cinder_configuration_template:
+      pure-fc: 'cinder_volume_pure_fc.yaml.j2'
+  block:
+    - name: Fail if cinder_pure_config params are not defined
+      when: |
+        cinder_pure_config.san_ip is not defined or
+        cinder_pure_config.pure_api_token is not defined
+      ansible.builtin.fail:
+        msg:
+          - 'Missing required pure-related parameters in the configuration of the cluster being adopted'
+
+    - name: Render Pure OpenShift Secret template
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/cinder-volume-pure-secrets.yaml.j2"
+        dest: /tmp/cinder-volume-pure-secrets.yaml
+        mode: "0600"
+
+    - name: Render cinder pure OpenShift patch file template
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/{{ cinder_configuration_template[cinder_volume_backend] }}"
+        dest: /tmp/cinder_volume_pure_config.yaml
+        mode: "0600"
+
+    - name: Apply the rendered Pure secret in the openstack namespace
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc apply -f /tmp/cinder-volume-pure-secrets.yaml
+
+    - name: Configure the appropriate pure backend
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/cinder_volume_pure_config.yaml
