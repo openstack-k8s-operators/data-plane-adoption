@@ -153,6 +153,19 @@ EDPM_CONFIGURE_HUGEPAGES=false make standalone <1>
 ----
 <1> To configure the host for a simplistic hugepages setup, set `EDPM_CONFIGURE_HUGEPAGES=true`.
 
+=== Enabling TLS everywhere (TLS-e) on Standalone
+
+To deploy the Standalone environment with TLS everywhere enabled, set `TLS_ENABLED=true` and provide a DNS domain to be used for certificates. Optionally disable the Ceph backend for a faster setup.
+
+[,bash]
+----
+cd ~/install_yamls/devsetup
+TLS_ENABLED=true DNS_DOMAIN=ooo.test EDPM_COMPUTE_CEPH_ENABLED=false make standalone
+----
+
+[NOTE]
+Disabling Ceph here mirrors the CI setup and speeds up the deployment.
+
 === Snapshot/revert
 
 When the deployment of the Standalone OpenStack is finished, it's a
