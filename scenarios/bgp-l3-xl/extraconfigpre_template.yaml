@@ -1,0 +1,41 @@
+heat_template_version: newton
+
+description: >
+  Inject stuff before puppet kicks in
+
+parameters:
+  server:
+    type: string
+
+resources:
+
+  CustomExtraConfigPre:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config: |
+        #!/bin/sh
+        # Disable stupid journald ratelimiting
+        if ! grep -e '^RateLimit' /etc/systemd/journald.conf; then echo -e "RateLimitIntervalSec=0s\nRateLimitBurst=0" >> /etc/systemd/journald.conf ; systemctl restart systemd-journald; fi
+        # Let's make sure we can always log into the nodes for debugging
+        setenforce 0
+        echo -n 'redhat' | passwd --stdin root
+        # Remove setroubleshoot for now
+        dnf remove -y setroubleshoot-server setroubleshoot-plugins
+        # Make sure pmlogger runs as root in order to collect per-slab stats
+        sed -i -e 's/^LOCALHOSTNAME.*/LOCALHOSTNAME   y   n   PCP_ARCHIVE_DIR\/LOCALHOSTNAME   -r -T24h10m -c config.default -v 100Mb -U root/' /etc/pcp/pmlogger/control.d/local
+        systemctl restart pmlogger
+        # workaround ntp
+        ip route add 10.0.0.0/8 via 172.20.$(hostname |cut -d. -f1 |cut -d- -f2).1
+
+  CustomExtraDeploymentPre:
+    type: OS::Heat::SoftwareDeployment
+    properties:
+      server: {get_param: server}
+      config: {get_resource: CustomExtraConfigPre}
+      actions: ['CREATE','UPDATE']
+
+outputs:
+  deploy_stdout:
+    description: Deployment reference, used to trigger pre-deploy on changes
+    value: {get_attr: [CustomExtraDeploymentPre, deploy_stdout]}

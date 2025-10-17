@@ -29,7 +29,7 @@
       name: mariadb-copy-data
       annotations:
         openshift.io/scc: anyuid
-        k8s.v1.cni.cncf.io/networks: {{ copy_pods_custom_networks | default('internalapi') }}
+        k8s.v1.cni.cncf.io/networks: {{ copy_pods_custom_networks | default('\'[{"name":"internalapi","namespace":"openstack"}]\'') }}
       labels:
         app: adoption
     spec:
@@ -65,6 +65,11 @@
   until: mariadb_data_pod_result is success
   retries: 25
   delay: "{{ mariadb_retry_delay }}"
+
+- name: wait bgp
+  when: bgp
+  ansible.builtin.pause:
+    seconds: 60
 
 - name: check that the Galera database cluster(s) members are online and synced, for all cells
   no_log: "{{ use_no_log }}"
