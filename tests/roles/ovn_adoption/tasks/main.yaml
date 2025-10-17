@@ -62,6 +62,9 @@
   when: not ospdo_src| bool
 
 - name: start an adoption helper pod
+  vars:
+    internalapi_default_nad: >-
+      '[{"name":"internalapi","namespace":"openstack"}]'
   ansible.builtin.shell: |-
     {{ shell_header }}
     {{ oc_header }}
@@ -99,7 +102,7 @@
       name: ovn-copy-data
       annotations:
         openshift.io/scc: anyuid
-        k8s.v1.cni.cncf.io/networks: {{ copy_pods_custom_networks | default('internalapi') }}
+        k8s.v1.cni.cncf.io/networks: {{ copy_pods_custom_networks | default(internalapi_default_nad) }}
       labels:
         app: adoption
     spec:
@@ -174,7 +177,9 @@
             ${!SSH_CMD} sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6642 ct state new counter accept
         fi
     done
-  when: not ipv6_enabled | bool
+  when:
+    - not ipv6_enabled | bool
+    - not bgp
 
 - name: Add nftables rule to allow podified internalapi traffic to controllers (IPv6)
   ansible.builtin.shell: |
@@ -189,7 +194,28 @@
             ${!SSH_CMD} sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6642 ct state new counter accept
         fi
     done
-  when: ipv6_enabled | bool
+  when:
+    - not ipv6_enabled | bool
+    - not bgp
+
+- name: Add nftables rule to allow podified internalapi trafic to controllers BGP
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    $CONTROLLER1_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6641 ct state new counter accept
+    $CONTROLLER1_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6642 ct state new counter accept
+    $CONTROLLER2_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6641 ct state new counter accept
+    $CONTROLLER2_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6642 ct state new counter accept
+    $CONTROLLER3_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6641 ct state new counter accept
+    $CONTROLLER3_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6642 ct state new counter accept
+  when: bgp
+
+- name: wait bgp
+  when: bgp
+  ansible.builtin.pause:
+    seconds: 60
 
 - name: dump OVN databases using tcp connection
   no_log: "{{ use_no_log }}"
