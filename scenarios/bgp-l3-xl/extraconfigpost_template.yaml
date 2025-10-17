@@ -1,0 +1,45 @@
+heat_template_version: newton
+
+description: >
+  Inject stuff at the end of the deployment
+
+parameters:
+  servers:
+    type: json
+  DeployIdentifier:
+    type: string
+  EndpointMap:
+    default: {}
+    description: Mapping of service endpoint -> protocol. Typically set
+                 via parameter_defaults in the resource registry.
+    type: json
+
+resources:
+  CustomExtraConfig:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config: |
+        #!/bin/sh
+        source /etc/os-release
+        if [[ $VERSION_ID =~ "^8.*" ]]; then
+            PKG_MANAGER="dnf"
+        elif [[ $VERSION_ID =~ "^7.*" ]]; then
+            PKG_MANAGER="yum"
+        else
+            PKG_MANAGER="yum"
+        fi
+        if systemctl is-active pmcd; then systemctl restart pmcd; fi
+        if systemctl is-active pmlogger; then systemctl restart pmlogger; fi
+        touch /root/ran-post-woohoo
+        # remove route
+        ip r del 10.0.0.0/8
+
+  CustomExtraDeployments:
+    type: OS::Heat::SoftwareDeploymentGroup
+    properties:
+      config: {get_resource: CustomExtraConfig}
+      servers:  {get_param: servers}
+      actions: ['CREATE','UPDATE']
+      input_values:
+        deploy_identifier: {get_param: DeployIdentifier}

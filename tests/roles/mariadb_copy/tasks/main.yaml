@@ -5,6 +5,9 @@
   when: ospdo_src| bool
 
 - name: start an adoption mariadb helper pod
+  vars:
+    internalapi_default_nad: >-
+      '[{"name":"internalapi","namespace":"openstack"}]'
   ansible.builtin.shell: |-
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
@@ -29,7 +32,7 @@
       name: mariadb-copy-data
       annotations:
         openshift.io/scc: anyuid
-        k8s.v1.cni.cncf.io/networks: {{ copy_pods_custom_networks | default('internalapi') }}
+        k8s.v1.cni.cncf.io/networks: {{ copy_pods_custom_networks | default(internalapi_default_nad) }}
       labels:
         app: adoption
     spec:
@@ -71,6 +74,11 @@
 - name: Add sleep time
   ansible.builtin.pause:
     seconds: "{{ mariadb_client_timeout }}"
+
+- name: wait bgp
+  when: bgp
+  ansible.builtin.pause:
+    seconds: 60
 
 - name: check that the Galera database cluster(s) members are online and synced, for all cells
   no_log: "{{ use_no_log }}"

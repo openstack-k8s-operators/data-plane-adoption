@@ -1,0 +1,43 @@
+- name: LeftNetwork
+  name_lower: left_network
+  vip: false
+  subnets:
+    left_network_r0:
+      ip_subnet: '100.64.0.0/24'
+    left_network_r1:
+      ip_subnet: '100.64.1.0/24'
+    left_network_r2:
+      ip_subnet: '100.64.2.0/24'
+- name: RightNetwork
+  name_lower: right_network
+  vip: false
+  subnets:
+    right_network_r0:
+      ip_subnet: '100.65.0.0/24'
+    right_network_r1:
+      ip_subnet: '100.65.1.0/24'
+    right_network_r2:
+      ip_subnet: '100.65.2.0/24'
+- name: MainNetwork
+  name_lower: main_network
+  vip: true
+  subnets:
+    main_network_r0:
+      ip_subnet: '99.99.0.0/24'
+    main_network_r1:
+      ip_subnet: '99.99.1.0/24'
+    main_network_r2:
+      ip_subnet: '99.99.2.0/24'
+- name: External
+  name_lower: external
+  vip: true
+  subnets:
+    external_subnet:
+      ip_subnet: '172.31.0.0/30'
+- name: MainNetworkIPv6
+  name_lower: main_network_ipv6
+  vip: true
+  ipv6: true
+  subnets:
+    main_network_ipv6_r0:
+      ipv6_subnet: 'f00d:f00d:f00d:f00d:f00d:f00d:f00d:0/124'
