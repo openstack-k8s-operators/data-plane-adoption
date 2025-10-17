@@ -411,6 +411,8 @@
           playbook: osp.edpm.pre_adoption_validation
         EOF
 
+    # TODO(eolivare): inject bgp netconfig and osdpns
+
     - name: create a OpenStackDataPlaneDeployment CR that runs only the validation
       no_log: "{{ use_no_log }}"
       ansible.builtin.shell: |
