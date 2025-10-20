@@ -1,0 +1,102 @@
+:_mod-docs-content-type: PROCEDURE
+[id="enabling-high-availability-for-instances_{context}"]
+
+= Enabling the high availability for Compute instances service
+
+[role="_abstract"]
+To enable the high availability for Compute instances (Instance HA) service, you create the following resources:
+
+* Fencing secret.
+* Configuration map. You can create the configuration map manually, or the configuration map is created automatically when you deploy the Instance HA resource. However, you must create the configuration map manually if you want to disable the Instance HA service.
+* Instance HA resource.
+
+
+.Prerequisites
+
+* You have created the `fencing-secret.yaml` configuration file. For more information, see xref:maintaining-instance-ha-functionality-after-adoption_preparing-instance-HA[Maintaining the Instance HA functionality after adoption].
+* You have disabled Pacemaker on your Compute nodes. For more information, see xref:preventing-pacemaker-from-monitoring-compute-nodes_preparing-instance-HA[Preventing Pacemaker from monitoring Compute nodes].
+
+.Procedure
+
+. Create the secret:
++
+----
+$ oc apply -f fencing-secret.yaml -n openstack
+----
+
+. Optional: Create the Instance HA configuration map and set the `DISABLED` parameter to `false`. For example:
++
+----
+$ cat << EOF > iha-cm.yaml
+kind: ConfigMap
+metadata:
+  name: instanceha-0-config
+  namespace: openstack
+apiVersion: v1
+data:
+  config.yaml: |
+    config:
+      EVACUABLE_TAG: "evacuable"
+      TAGGED_IMAGES: "true"
+      TAGGED_FLAVORS: "true"
+      TAGGED_AGGREGATES: "true"
+      SMART_EVACUATION: "false"
+      DELTA: "30"
+      DELAY: "0"
+      POLL: "45"
+      THRESHOLD: "50"
+      WORKERS: "4"
+      RESERVED_HOSTS: "false"
+      LEAVE_DISABLED: "false"
+      CHECK_KDUMP: "false"
+      LOGLEVEL: "info"
+      DISABLED: "false"
+EOF
+----
+
+.. Apply the configuration:
++
+----
+$ oc apply -f iha-cm.yaml -n openstack
+----
++
+[NOTE]
+If you want to restrict which Compute nodes are evacuated, create host aggregates and set them by using the `EVACUABLE_TAG` parameter. Alternatively, you can set the `TAGGED_AGGREGATES` parameter to `false` to enable monitoring and evacuation of all your Compute nodes. For more information about Instance HA service parameters, see link:{ha-for-instances}/assembly_deploying-and-configuring-the-high-availability-for-compute-instances-service_instance-ha#proc_editing-the-instance-ha-service-parameters_instance-ha[Editing the Instance HA service parameters] in _Configuring high availability for instances_.
+
+. Create an Instance HA resource and reference the fencing secret and configuration map. For example:
++
+----
+$ cat << EOF > iha.yaml
+apiVersion: instanceha.openstack.org/v1beta1
+kind: InstanceHa
+metadata:
+  name: instanceha-0
+  namespace: openstack
+spec:
+  caBundleSecretName: combined-ca-bundle
+  instanceHaConfigMap: <instanceha-0-config>
+  fencingSecret: fencing-secret
+EOF
+----
++
+* `instanceha-0-config`: Specifies the name of the Instance HA configuration map that you created. Leave blank to have the `infra-operator` automatically create a configuration map. You can then edit the values as needed.
+
+. Deploy the Instance HA resource:
++
+----
+$ oc apply -f iha.yaml -n openstack
+----
+
+.Next steps
+
+* After you complete the {rhos_long_noacro} adoption, remove the Pacemaker components from the Compute nodes. You must run the following commands on each Compute node:
++
+----
+$ sudo systemctl stop pacemaker_remote
+$ sudo systemctl stop pcsd
+$ sudo systemctl stop pcsd-ruby.service
+$ sudo systemctl disable pacemaker_remote
+$ sudo systemctl disable pcsd
+$ sudo systemctl disable pcsd-ruby.service
+$ sudo dnf remove pacemaker pacemaker-remote pcs pcsd -y
+----
