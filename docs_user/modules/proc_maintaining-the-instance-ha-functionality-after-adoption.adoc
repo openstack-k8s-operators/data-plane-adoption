@@ -1,0 +1,56 @@
+:_mod-docs-content-type: PROCEDURE
+[id="maintaining-instance-ha-functionality-after-adoption_{context}"]
+
+= Maintaining the Instance HA functionality after adoption
+
+[role="_abstract"]
+To maintain the high availability for Compute instances (Instance HA) functionality after you adopt {rhos_long_noacro} {rhos_curr_ver}, create a fencing configuration file to use in your adopted environment.
+
+.Procedure
+
+. Gather the fencing information from the `fencing.yaml` file in your {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} cluster.
+
+. Retrieve the {OpenStackShort} {rhos_prev_ver} stonith configuration from any of your overcloud Controller nodes:
++
+----
+$ sudo pcs config
+----
++
+.Sample output
++
+----
+Stonith Devices:
+...
+  Resource: stonith-fence_ipmilan-525400dde4f7 (class=stonith
+      type=fence_ipmilan)
+    Attributes: stonith-fence_ipmilan-525400dde4f7-instance_attributes
+      delay=20
+      ipaddr=172.16.0.1
+      ipport=6231
+      lanplus=true
+      login=admin
+      passwd=password
+      pcmk_host_list=compute-1
+    Operations:
+      monitor: stonith-fence_ipmilan-525400dde4f7-monitor-interval-60s
+        interval=60s
+  Resource: stonith-fence_ipmilan-525400819ad3 (class=stonith
+      type=fence_ipmilan)
+    Attributes: stonith-fence_ipmilan-525400819ad3-instance_attributes
+      delay=20
+      ipaddr=172.16.0.1
+      ipport=6230
+      lanplus=true
+      login=admin
+      passwd=password
+      pcmk_host_list=compute-0
+    Operations:
+      monitor: stonith-fence_ipmilan-525400819ad3-monitor-interval-60s
+        interval=60s
+...
+----
+
+. Generate the fencing configuration file:
++
+* To install the script that automatically generates this file, see link:https://access.redhat.com/solutions/7123932[How do I automatically generate fencing secret for RHOSO18 instanceha from a osp17.1 cluster that I want to adopt?].
+* To create the fencing configuration file manually, see link:{ha-for-instances}/assembly_deploying-and-configuring-the-high-availability-for-compute-instances-service_instance-ha#proc_configuring-the-fencing-of-compute-nodes_instance-ha[Configuring the fencing of Compute nodes] in _Configuring high availability for instances_.

@@ -1,0 +1,21 @@
+:_mod-docs-content-type: ASSEMBLY
+ifdef::context[:parent-context: {context}]
+
+[id="preparing-an-instance-HA-deployment-for-adoption_{context}"]
+
+:context: preparing-instance-HA
+
+= Preparing an Instance HA deployment for adoption
+
+[role="_abstract"]
+To enable the high availability for Compute instances (Instance HA) service after you adopt the {rhos_long_noacro} ({rhos_acro}) {rhos_curr_ver} data plane, perform the following preparation tasks:
+
+* Create a fencing configuration file to use after you adopt the {rhos_acro} data plane.
+* Prevent Pacemaker from monitoring or recovering the Compute nodes.
+
+include::../modules/proc_maintaining-the-instance-ha-functionality-after-adoption.adoc[leveloffset=+1]
+
+include::../modules/proc_preventing-pacemaker-from-monitoring-compute-nodes.adoc[leveloffset=+1]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]
