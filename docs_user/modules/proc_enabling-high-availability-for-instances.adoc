@@ -14,7 +14,7 @@ To enable the high availability for Compute instances (Instance HA) service, you
 .Prerequisites
 
 * You have created the `fencing-secret.yaml` configuration file. For more information, see xref:maintaining-instance-ha-functionality-after-adoption_preparing-instance-HA[Maintaining the Instance HA functionality after adoption].
-* You have disbaled Pacemaker on your Compute nodes. For more information, see xref:preventing-pacemaker-from-monitoring-compute-nodes_preparing-instance-HA[Preventing Pacemaker from monitoring Compute nodes].
+* You have disabled Pacemaker on your Compute nodes. For more information, see xref:preventing-pacemaker-from-monitoring-compute-nodes_preparing-instance-HA[Preventing Pacemaker from monitoring Compute nodes].
 
 .Procedure
 
