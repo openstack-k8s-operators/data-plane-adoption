@@ -149,9 +149,12 @@
     {{ oc_header }}
     {{ ovn_copy_shell_vars }}
 
-    $CONTROLLER1_SSH if sudo systemctl is-active tripleo_ovn_cluster_northd.service ';' then sudo systemctl stop tripleo_ovn_cluster_northd.service ';' fi
-    $CONTROLLER2_SSH if sudo systemctl is-active tripleo_ovn_cluster_northd.service ';' then sudo systemctl stop tripleo_ovn_cluster_northd.service ';' fi
-    $CONTROLLER3_SSH if sudo systemctl is-active tripleo_ovn_cluster_northd.service ';' then sudo systemctl stop tripleo_ovn_cluster_northd.service ';' fi
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+        if [ ! -z "${!SSH_CMD}" ]; then
+            ${!SSH_CMD} if sudo systemctl is-active tripleo_ovn_cluster_northd.service ';' then sudo systemctl stop tripleo_ovn_cluster_northd.service ';' fi
+        fi
+    done
 
 # If ovn_adoption is done using scenario A (different networks between podified
 # and tripleo deployments) in order to be able to dump OVN database a nftable
@@ -164,12 +167,13 @@
     {{ oc_header }}
     {{ ovn_copy_shell_vars }}
 
-    $CONTROLLER1_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6641 ct state new counter accept
-    $CONTROLLER1_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6642 ct state new counter accept
-    $CONTROLLER2_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6641 ct state new counter accept
-    $CONTROLLER2_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6642 ct state new counter accept
-    $CONTROLLER3_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6641 ct state new counter accept
-    $CONTROLLER3_SSH sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6642 ct state new counter accept
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+        if [ ! -z "${!SSH_CMD}" ]; then
+            ${!SSH_CMD} sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6641 ct state new counter accept
+            ${!SSH_CMD} sudo nft add rule inet filter INPUT ip saddr {{ internalapi_src }} tcp dport 6642 ct state new counter accept
+        fi
+    done
   when: not ipv6_enabled | bool
 
 - name: Add nftables rule to allow podified internalapi traffic to controllers (IPv6)
@@ -178,12 +182,13 @@
     {{ oc_header }}
     {{ ovn_copy_shell_vars }}
 
-    $CONTROLLER1_SSH sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6641 ct state new counter accept
-    $CONTROLLER1_SSH sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6642 ct state new counter accept
-    $CONTROLLER2_SSH sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6641 ct state new counter accept
-    $CONTROLLER2_SSH sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6642 ct state new counter accept
-    $CONTROLLER3_SSH sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6641 ct state new counter accept
-    $CONTROLLER3_SSH sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6642 ct state new counter accept
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+        if [ ! -z "${!SSH_CMD}" ]; then
+            ${!SSH_CMD} sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6641 ct state new counter accept
+            ${!SSH_CMD} sudo nft add rule inet filter INPUT ip6 saddr {{ internalapi_src_ipv6 }} tcp dport 6642 ct state new counter accept
+        fi
+    done
   when: ipv6_enabled | bool
 
 - name: dump OVN databases using tcp connection
@@ -307,11 +312,16 @@
     {{ shell_header }}
     {{ oc_header }}
     {{ ovn_copy_shell_vars }}
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+        if [ ! -z "${!SSH_CMD}" ]; then
+            ${!SSH_CMD} if sudo systemctl is-active tripleo_ovn_cluster_north_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_north_db_server.service ';' fi
+        fi
+    done
 
-    $CONTROLLER1_SSH if sudo systemctl is-active tripleo_ovn_cluster_north_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_north_db_server.service ';' fi
-    $CONTROLLER2_SSH if sudo systemctl is-active tripleo_ovn_cluster_north_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_north_db_server.service ';' fi
-    $CONTROLLER3_SSH if sudo systemctl is-active tripleo_ovn_cluster_north_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_north_db_server.service ';' fi
-
-    $CONTROLLER1_SSH if sudo systemctl is-active tripleo_ovn_cluster_south_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_south_db_server.service ';' fi
-    $CONTROLLER2_SSH if sudo systemctl is-active tripleo_ovn_cluster_south_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_south_db_server.service ';' fi
-    $CONTROLLER3_SSH if sudo systemctl is-active tripleo_ovn_cluster_south_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_south_db_server.service ';' fi
+    for i in {1..3}; do
+        SSH_CMD=CONTROLLER${i}_SSH
+        if [ ! -z "${!SSH_CMD}" ]; then
+            ${!SSH_CMD} if sudo systemctl is-active tripleo_ovn_cluster_south_db_server.service ';' then sudo systemctl stop tripleo_ovn_cluster_south_db_server.service ';' fi
+        fi
+    done
