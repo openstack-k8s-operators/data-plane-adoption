@@ -38,10 +38,9 @@ RENAMED_CELLS="cell1"
 This procedure assumes that {compute_service} metadata is deployed on the top level and not on each cell level. If the {OpenStackShort} deployment has a per-cell metadata deployment, adjust the following patch as needed. You cannot run the metadata service in `cell0`.
 To enable the metadata services of a local cell, set the `enabled` property in the `metadataServiceTemplate` field of the local cell to `true` in the `OpenStackControlPlane` CR.
 +
-[source, shell]
 ----
 $ rm -f celltemplates
-for CELL in $(echo $RENAMED_CELLS); do
+$ for CELL in $(echo $RENAMED_CELLS); do
  $ cat >> celltemplates << EOF
         ${CELL}:
           hasAPIAccess: true <1>
@@ -182,6 +181,7 @@ $ for CELL in $(echo $CELLS); do
 
   echo "comparing $CELL to $RCELL"
   echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS | grep -F "| $CELL |"
+  
 $ oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F "| $RCELL |"
 done
 ----
