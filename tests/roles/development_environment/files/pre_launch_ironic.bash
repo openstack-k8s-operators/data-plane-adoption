@@ -65,6 +65,7 @@ for node in $(${BASH_ALIASES[openstack]} baremetal node list -c UUID -f value); 
 done
 
 # Create a baremetal flavor
+${BASH_ALIASES[openstack]} flavor delete baremetal || true
 ${BASH_ALIASES[openstack]} flavor create baremetal --ram 1024 --vcpus 1 --disk 15 \
   --property resources:VCPU=0 \
   --property resources:MEMORY_MB=0 \
@@ -77,6 +78,7 @@ IMG=CentOS-Stream-GenericCloud-x86_64-9-latest.x86_64.qcow2
 URL=https://cloud.centos.org/centos/9-stream/x86_64/images/$IMG
 curl --silent --show-error -o /tmp/${IMG} -L $URL
 DISK_FORMAT=$(qemu-img info /tmp/${IMG} | grep "file format:" | awk '{print $NF}')
+${BASH_ALIASES[openstack]} image delete CentOS-Stream-GenericCloud-x86_64-9 || true
 ${BASH_ALIASES[openstack]} image create \
   --container-format bare \
   --disk-format ${DISK_FORMAT} \
@@ -87,25 +89,35 @@ wait_image_active CentOS-Stream-GenericCloud-x86_64-9
 
 
 export BAREMETAL_NODES=$(${BASH_ALIASES[openstack]} baremetal node list -c UUID -f value)
-# Manage nodes
-for node in $BAREMETAL_NODES; do
-  ${BASH_ALIASES[openstack]} baremetal node manage $node
-done
-wait_node_state "manageable"
 
-# Inspect baremetal nodes
-for node in $BAREMETAL_NODES; do
-  ${BASH_ALIASES[openstack]} baremetal node inspect $node
-  sleep 10
-done
-wait_node_state "manageable"
+# Check if any nodes are active (in use by instances)
+ACTIVE_NODES=$(${BASH_ALIASES[openstack]} baremetal node list -c "Provisioning State" -f value | grep -c "active" || true)
 
-# Provide nodes
-for node in $BAREMETAL_NODES; do
-  ${BASH_ALIASES[openstack]} baremetal node provide $node
-  sleep 10
-done
-wait_node_state "available"
+if [ "$ACTIVE_NODES" -eq 0 ]; then
+  echo "No active nodes found, proceeding with node management operations"
+
+  # Manage nodes
+  for node in $BAREMETAL_NODES; do
+    ${BASH_ALIASES[openstack]} baremetal node manage $node
+  done
+  wait_node_state "manageable"
+
+  # Inspect baremetal nodes
+  for node in $BAREMETAL_NODES; do
+    ${BASH_ALIASES[openstack]} baremetal node inspect $node
+    sleep 10
+  done
+  wait_node_state "manageable"
+
+  # Provide nodes
+  for node in $BAREMETAL_NODES; do
+    ${BASH_ALIASES[openstack]} baremetal node provide $node
+    sleep 10
+  done
+  wait_node_state "available"
+else
+  echo "Found $ACTIVE_NODES active node(s), skipping node management operations to preserve deployed instances"
+fi
 
 # Wait for nova to be aware of the node
 sleep 60
