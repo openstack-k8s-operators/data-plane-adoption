@@ -50,7 +50,14 @@
                      "tripleo_octavia_rsyslog.service"
                      "tripleo_octavia_driver_agent.service"
                      "tripleo_octavia_housekeeping.service"
-                     "tripleo_octavia_worker.service")
+                     "tripleo_octavia_worker.service"
+                     "tripleo_ironic_neutron_agent.service"
+                     "tripleo_ironic_api.service"
+                     "tripleo_ironic_inspector.service"
+                     "tripleo_ironic_conductor.service"
+                     "tripleo_ironic_inspector_dnsmasq.service"
+                     "tripleo_ironic_pxe_http.service"
+                     "tripleo_ironic_pxe_tftp.service")
 
     PacemakerResourcesToStart=("galera-bundle"
                                "haproxy-bundle"
