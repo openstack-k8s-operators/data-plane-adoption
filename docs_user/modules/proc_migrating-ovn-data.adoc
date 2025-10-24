@@ -59,7 +59,6 @@ $ oc get vmi -n $<ospdo_namespace> -o jsonpath='{.items[0].metadata.labels.kubev
 endif::[]
 . Prepare a temporary `PersistentVolume` claim and the helper pod for the OVN backup. Adjust the storage requests for a large database, if needed:
 +
-[source,yaml]
 ----
 $ oc apply -f - <<EOF
 ---
@@ -181,7 +180,6 @@ $ oc exec ovn-copy-data -- bash -c "ovsdb-client backup --ca-cert=/etc/pki/tls/m
 
 . Start the control plane OVN database services prior to import, with `northd` disabled:
 +
-[source,yaml]
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
@@ -266,7 +264,6 @@ $ oc exec -it ovsdbserver-sb-0 -- ovn-sbctl list Chassis
 
 . Start the control plane `ovn-northd` service to keep both OVN databases in sync:
 +
-[source,yaml]
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
@@ -280,7 +277,6 @@ spec:
 
 . If you are running OVN gateway services on {OpenShiftShort} nodes, enable the control plane `ovn-controller` service:
 +
-[source,yaml]
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:

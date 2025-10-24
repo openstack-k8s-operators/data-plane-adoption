@@ -75,7 +75,6 @@ $ sudo cephadm shell -- ceph orch host label add <target_node> mgr
 
 . Get the Ceph Manager spec:
 +
-[source,yaml]
 ----
 
 $ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}

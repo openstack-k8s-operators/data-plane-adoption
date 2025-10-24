@@ -158,6 +158,7 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch '
 metadata:
   finalizers: []
 ' || true
+//kgilliga: Should the metadata lines be copied?
 
 while oc get pod | grep rabbitmq-server-0; do
     sleep 2
