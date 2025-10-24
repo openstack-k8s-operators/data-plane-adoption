@@ -79,7 +79,6 @@ stringData:
 
 . In your `OpenStackControlPlane` CR, inject `ceph.conf` and `ceph.client.openstack.keyring` to the {OpenStackShort} services that are defined in the propagation list. For example:
 +
-[source,yaml]
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:

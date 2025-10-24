@@ -116,7 +116,6 @@ $ oc patch secret rootca-internal -p="{\"data\":{\"tls.key\": \"`$IPA_SSH openss
 
 . Create the cert-manager issuer and reference the secret:
 +
-[source, yaml]
 ----
 $ oc apply -f - <<EOF
 apiVersion: cert-manager.io/v1

@@ -155,9 +155,9 @@ can run `openstack` CLI commands such as `openstack server list`, or check that 
 ----
 $ oc delete --ignore-not-found=true --wait=false openstackcontrolplane/openstack
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
-metadata:
-  finalizers: []
-' || true
+> metadata:
+>   finalizers: []
+> ' || true
 
 while oc get pod | grep rabbitmq-server-0; do
     sleep 2
