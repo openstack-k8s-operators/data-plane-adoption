@@ -47,7 +47,9 @@ $ SPEC_DIR=${SPEC_DIR:-"$PWD/ceph_specs"}
 $ mkdir -p ${SPEC_DIR}
 $ sudo cephadm shell -- ceph orch ls --export rgw > ${SPEC_DIR}/rgw
 $ cat ${SPEC_DIR}/rgw
-
+----
++
+----
 networks:
 - 172.17.3.0/24
 placement:
