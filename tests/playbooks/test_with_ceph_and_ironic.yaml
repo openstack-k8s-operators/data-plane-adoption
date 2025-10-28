@@ -1,0 +1,126 @@
+- name: Prelude
+  hosts: local
+  gather_facts: false
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  roles:
+    - prelude_local
+
+- name: Cleanup
+  hosts: local
+  gather_facts: false
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  roles:
+    - pcp_cleanup
+
+- name: Common pre-adoption tasks
+  import_playbook: _before_adoption.yaml
+
+- name: Adoption
+  hosts: local
+  gather_facts: false
+  force_handlers: true
+  vars:
+    # Ceph backend configuration
+    glance_backend: ceph
+    manila_backend: cephfs
+    cinder_volume_backend: ceph
+    cinder_backup_backend: ceph
+    nova_libvirt_backend: ceph
+    # Ironic adoption configuration
+    ironic_adoption: true
+    prelaunch_test_instance_scripts:
+      - pre_launch_ironic.bash
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  roles:
+    - role: development_environment
+      tags:
+        - development_environment
+    - role: tls_adoption
+      tags:
+        - tls_adoption
+      when: enable_tlse|default(false)
+    - role: backend_services
+      tags:
+        - backend_services
+    - role: ceph_backend_configuration
+      tags:
+        - ceph_backend_configuration
+    - role: get_services_configuration
+      tags:
+        - get_services_configuration
+    - role: stop_openstack_services
+      tags:
+        - stop_openstack_services
+    - role: mariadb_copy
+      tags:
+        - mariadb_copy
+    - role: ovn_adoption
+      tags:
+        - ovn_adoption
+    - role: keystone_adoption
+      tags:
+        - keystone_adoption
+    - role: barbican_adoption
+      tags:
+        - barbican_adoption
+    - role: neutron_adoption
+      tags:
+        - neutron_adoption
+    - role: swift_adoption
+      tags:
+        - swift_adoption
+    - role: glance_adoption
+      tags:
+        - glance_adoption
+    - role: placement_adoption
+      tags:
+        - placement_adoption
+    - role: nova_adoption
+      tags:
+        - nova_adoption
+    - role: cinder_adoption
+      tags:
+        - cinder_adoption
+    - role: octavia_adoption
+      tags:
+        - octavia_adoption
+    - role: horizon_adoption
+      tags:
+        - horizon_adoption
+    - role: heat_adoption
+      tags:
+        - heat_adoption
+    - role: telemetry_adoption
+      tags:
+        - telemetry_adoption
+      when: telemetry_adoption|default(true)
+    - role: autoscaling_adoption
+      tags:
+        - autoscaling_adoption
+      when: telemetry_adoption|default(true)
+    - role: manila_adoption
+      tags:
+        - manila_adoption
+    - role: ironic_adoption
+      tags:
+        - ironic_adoption
+    - role: stop_remaining_services
+      tags:
+        - stop_remaining_services
+    - role: pull_openstack_configuration
+      tags:
+        - pull_openstack_configuration
+      when: dataplane_adoption|default(true)
+    - role: dataplane_adoption
+      tags:
+        - dataplane_adoption
+      when: dataplane_adoption|default(true)
+
+- name: Stop the ping test
+  import_playbook: _stop_ping_test.yaml
