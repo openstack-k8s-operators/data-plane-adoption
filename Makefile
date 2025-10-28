@@ -44,6 +44,11 @@ test-with-ceph:  ## Launch test suite with ceph
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
 
+test-with-ceph-and-ironic: TEST_OUTFILE ?= tests/logs/test_with_ceph_and_ironic_out_$(shell date +%FT%T%Z).log
+test-with-ceph-and-ironic:  ## Launch test suite with ceph and ironic
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_with_ceph_and_ironic.yaml 2>&1 | tee $(TEST_OUTFILE)
+
 test-tripleo-requirements: TEST_OUTFILE ?= tests/logs/test_tripleo_requirements_out_$(shell date +%FT%T%Z).log
 test-tripleo-requirements:  ## Launch test suite related to the ceph migration
 	mkdir -p tests/logs
@@ -88,7 +93,7 @@ test-rollback-only-with-ceph:
 test-with-ironic: TEST_OUTFILE ?= tests/logs/test_with_ironic_out_$(shell date +%FT%T%Z).log
 test-with-ironic: ## Launch test suite with Ironic
 	mkdir -p tests/logs
-	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  tests/playbooks/test_with_ironic.yaml 2>&1 | tee $(TEST_OUTFILE)
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS) $(TEST_ARGS) tests/playbooks/test_with_ironic.yaml 2>&1 | tee $(TEST_OUTFILE)
 
 ##@ DOCS
 
