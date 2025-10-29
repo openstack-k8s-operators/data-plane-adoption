@@ -163,6 +163,10 @@ telemetry_adoption: true
 octavia_adoption: true
 enable_octavia: true
 
+# Whether to adopt Designate
+designate_adoption: false
+enable_designate: false
+
 # Whether source env is OSPD Director Operator
 # i.e. https://github.com/openstack-k8s-operators/osp-director-operator
 ospdo_src: false
