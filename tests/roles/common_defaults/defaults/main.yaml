@@ -211,3 +211,8 @@ pull_openstack_configuration_ssh_shell_vars: |
 # Whether to adopt Octavia
 enable_octavia: true
 octavia_adoption: true
+
+# MariaDB client connection timeout in seconds
+# Related to OSPRH-18618
+mariadb_client_timeout: 0
+mariadbcheck: true
