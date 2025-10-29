@@ -12,7 +12,6 @@ The following features are Technology Previews and have not been tested within t
 +
 * NFS Ganesha back end for {rhos_component_storage_file_first_ref}
 * FC-based drivers for {block_storage_first_ref}
-* {block_storage} back end for the {image_service_first_ref}
 +
 The following {compute_service_first_ref} features are Technology Previews:
 +
