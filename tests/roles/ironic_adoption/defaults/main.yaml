@@ -18,7 +18,12 @@ ironic_patch: |
                   annotations:
                     metallb.universe.tf/address-pool: ctlplane
                     metallb.universe.tf/allow-shared-ip: ctlplane
+                    {% if ipv6_enabled | default(false) -%}
+                    metallb.universe.tf/loadBalancerIPs: {{ ctlplane_prefix_ipv6 | default('2620:cf:cf:aaaa') }}::50
+                    {%- else -%}
                     metallb.universe.tf/loadBalancerIPs: {{ ctlplane_prefix | default('192.168.122') }}.80
+                    {%- endif %}
+
                 spec:
                   type: LoadBalancer
         ironicConductors:
@@ -43,10 +48,17 @@ ironic_patch: |
           - {{ ironic_network }}
           dhcpRanges:
           - name: inspector-0
+            {% if ipv6_enabled | default(false) -%}
+            cidr: 2620:cf:cf:ffff::/64
+            start: 2620:cf:cf:ffff::190
+            end: 2620:cf:cf:ffff::199
+            {%- else -%}
             cidr: 172.20.1.0/24
             start: 172.20.1.190
             end: 172.20.1.199
             gateway: 172.20.1.1
+            {%- endif %}
+
           serviceUser: ironic-inspector
           databaseAccount: ironic-inspector
           passwordSelectors:
