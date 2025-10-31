@@ -27,3 +27,14 @@ dpa_tests_dir: "{{ dpa_dir }}/tests"
 director_namespace: "ospdo_openstack"
 # adoption repo default location
 backend_retry_delay: 5
+
+# list of names of cinder-volume containers as defined in the CRs
+backend_services_cindervolumes:
+  - volume1
+# dictionary of name/full URI of cinder-volume container images (3rd-party)
+backend_services_cindervolumes_extraimages: {}
+# list of names of manila-share containers as defined in the CRs
+backend_services_manilashares:
+  - share1
+# dictionary of name/full URI of manila-share container images (3rd-party)
+backend_services_manilashares_extraimages: {}
