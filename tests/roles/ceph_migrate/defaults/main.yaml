@@ -32,11 +32,11 @@ ceph_wait_mon_timeout: 10
 ceph_keep_mon_ipaddr: true
 
 # firewall section
-ceph_firewall_enabled: false
+ceph_firewall_enabled: true
 ceph_iptables_path:
   - "/etc/sysconfig/iptables"
   - "/etc/sysconfig/ip6tables"
-ceph_nftables_path: "/etc/nftables/tripleo-rules.nft"
+ceph_nftables_path: "/etc/nftables/edpm-rules.nft"
 ceph_firewall_type: nftables
 
 # DEFAULT Ceph Reef container images
@@ -46,6 +46,10 @@ ceph_alertmanager_container_image: "quay.io/prometheus/alertmanager:v0.25.0"
 ceph_grafana_container_image: "quay.io/ceph/ceph-grafana:9.4.7"
 ceph_node_exporter_container_image: "quay.io/prometheus/node-exporter:v1.5.0"
 ceph_prometheus_container_image: "quay.io/prometheus/prometheus:v2.43.0"
+
+# Prometheus module configuration
+ceph_prometheus_server_port: 9283
+ceph_prometheus_server_addr: "0.0.0.0"
 ceph_storagenfs_nic: "nic2"
 ceph_storagenfs_vlan_id: "70"
 rhoso_namespace: "openstack"
