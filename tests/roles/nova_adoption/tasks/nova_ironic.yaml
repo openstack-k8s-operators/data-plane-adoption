@@ -24,6 +24,9 @@
     file: check_endpoints.yaml
 
 - name: Provision new instance on ironic
+  when:
+    - prelaunch_test_instance|bool
+    - "'pre_launch_ironic.bash' in prelaunch_test_instance_scripts"
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
