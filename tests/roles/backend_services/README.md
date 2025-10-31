@@ -1,7 +1,7 @@
 # backend_services role
 
 This role aims to automate
-[backend services deployment doc](https://openstack-k8s-operators.github.io/data-plane-adoption/backend_services_deployment/)
+[backend services deployment doc](https://openstack-k8s-operators.github.io/data-plane-adoption/user/#deploying-backend-services_migrating-databases)
 for testing purposes.
 
 ## Variables
