@@ -1,0 +1,11 @@
+spec:
+  cinder:
+    template:
+      cinderVolumes:
+{% for cv_name, cv_nodeselector in cinder_volumes_nodeselector.items() %}
+        {{ cv_name }}:
+          nodeSelector:
+{% for ns_key, ns_value in cv_nodeselector.items() %}
+            {{ ns_key }}: {{ ns_value }}
+{% endfor %}
+{% endfor %}

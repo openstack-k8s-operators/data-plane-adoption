@@ -1,0 +1,8 @@
+spec:
+  cinder:
+    template:
+      cinderBackup:
+        nodeSelector:
+{% for ns_key, ns_value in cinder_backup_nodeselector.items() %}
+          {{ ns_key }}: {{ ns_value }}
+{% endfor %}

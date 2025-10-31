@@ -18,3 +18,7 @@
     cinder_backup_backend == 'nfs' or
     cinder_backup_backend == 'ontap-nfs'
   ansible.builtin.include_tasks: cinder_backup_nfs.yaml
+
+- name: Apply additional cinder-backup settings
+  ansible.builtin.include_tasks: extra_cinder_backup_settings.yaml
+  when: cinder_backup_nodeselector | length > 0

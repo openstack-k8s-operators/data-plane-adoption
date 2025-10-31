@@ -15,3 +15,7 @@
   when: >
     cinder_volume_backend == 'pure-fc'
   ansible.builtin.include_tasks: cinder_volume_pure.yaml
+
+- name: Apply additional settings to Cinder volumes
+  ansible.builtin.include_tasks: extra_cinder_volumes_settings.yaml
+  when: cinder_volumes_nodeselector | length > 0

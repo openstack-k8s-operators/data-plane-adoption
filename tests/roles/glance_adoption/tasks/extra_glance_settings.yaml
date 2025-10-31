@@ -1,0 +1,12 @@
+---
+- name: Generate the nodeSelector patch for Glance
+  ansible.builtin.template:
+    src: glance_extra_nodeselector.yaml.j2
+    dest: /tmp/glance_extra_nodeselector.yaml
+    mode: "0600"
+
+- name: Apply the nodeSelector patch for Glance
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/glance_extra_nodeselector.yaml

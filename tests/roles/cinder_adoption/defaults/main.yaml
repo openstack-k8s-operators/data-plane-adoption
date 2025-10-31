@@ -136,3 +136,8 @@ cinder_volume_pure_vars:
 # Vars for cinder-backup
 cinder_backup_nfs_backup_mount_point_base: "/var/lib/cinder/backup"
 cinder_retry_delay: 5
+
+# Dictionary of nodeSelector key/values as keys of cinder-volume backend names
+cinder_volumes_nodeselector: {}
+# Dictionary of nodeSelector key/values
+cinder_backup_nodeselector: {}
