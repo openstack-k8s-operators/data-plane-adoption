@@ -14,5 +14,9 @@
   when: glance_backend == 'cinder'
   ansible.builtin.include_tasks: glance_cinder.yaml
 
+- name: Apply additional Glance settings
+  ansible.builtin.include_tasks: extra_glance_settings.yaml
+  when: glance_nodeselector | length > 0
+
 - name: Check the adopted GlanceAPI
   ansible.builtin.include_tasks: check_glance.yaml

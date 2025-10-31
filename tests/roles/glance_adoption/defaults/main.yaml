@@ -1,3 +1,6 @@
 # glance_backend can be 'nfs', 'ceph', 'swift', 'cinder'
 glance_backend: swift
 glance_retry_delay: 5
+
+# Dictionary of nodeSelector key/values
+glance_nodeselector: {}
