@@ -69,7 +69,31 @@ spec:
     swiftContainerImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-container:{{ container_tag }}
     swiftObjectImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-object:{{ container_tag }}
     swiftProxyImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-proxy-server:{{ container_tag }}
+{% if (backend_services_cindervolumes | length > 0  or
+       (backend_services_cindervolumes_extraimages is defined and backend_services_cindervolumes_extraimages is mapping)) %}
     cinderVolumeImages:
-      volume1: {{ container_registry }}/{{ container_namespace }}/openstack-cinder-volume:{{ container_tag }}
+{% endif %}
+{% if backend_services_cindervolumes | length > 0 %}
+{% for _vol in backend_services_cindervolumes %}
+      {{ _vol }}: {{ container_registry }}/{{ container_namespace }}/openstack-cinder-volume:{{ container_tag }}
+{% endfor %}
+{% endif %}
+{% if (backend_services_cindervolumes_extraimages is defined and backend_services_cindervolumes_extraimages is mapping) %}
+{% for _container_name, _container_uri in backend_services_cindervolumes_extraimages.items() %}
+      {{ _container_name }}: {{ _container_uri }}
+{% endfor %}
+{% endif %}
+{% if (backend_services_manilashares | length > 0  or
+       (backend_services_manilashares_extraimages is defined and backend_services_manilashares_extraimages is mapping)) %}
     manilaShareImages:
-      share1: {{ container_registry }}/{{ container_namespace }}/openstack-manila-share:{{ container_tag }}
+{% endif %}
+{% if backend_services_manilashares | length > 0 %}
+{% for _vol in backend_services_manilashares %}
+      {{ _vol }}: {{ container_registry }}/{{ container_namespace }}/openstack-manila-share:{{ container_tag }}
+{% endfor %}
+{% endif %}
+{% if (backend_services_manilashares_extraimages is defined and backend_services_manilashares_extraimages is mapping) %}
+{% for _container_name, _container_uri in backend_services_manilashares_extraimages.items() %}
+      {{ _container_name }}: {{ _container_uri }}
+{% endfor %}
+{% endif %}
