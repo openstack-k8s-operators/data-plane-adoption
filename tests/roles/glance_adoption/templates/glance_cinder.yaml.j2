@@ -22,6 +22,8 @@ spec:
           cinder_store_project_name = service
           cinder_catalog_info = volumev3::internalURL
           cinder_use_multipath = true
+          [oslo_concurrency]
+          lock_path = /var/lib/glance/tmp
       glanceAPIs:
         default:
           replicas: 1
