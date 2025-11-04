@@ -1,6 +1,11 @@
 ---
 storage_class_name: local-storage
-dns_server_provisioning_ip: 192.168.122.80
+dns_server_provisioning_ip: >-
+  {{
+    (ctlplane_prefix_ipv6 | default('2620:cf:cf:aaaa')) ~ '::50'
+      if ipv6_enabled | default(false)
+      else (ctlplane_prefix | default('192.168.122')) ~ '.80'
+  }}
 ironic_network: baremetal
 ironic_patch: |
   spec:
