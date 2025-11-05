@@ -34,3 +34,8 @@
     {{ shell_header }}
     {{ oc_header }}
     oc project {{ rhoso_namespace }}
+
+- name: Stop adoption before running tests
+  ansible.builtin.fail:
+    msg: "Adoption is failed on purpose for local hypervisor testing"
+  when: local_debug_fail | default(false) | bool
