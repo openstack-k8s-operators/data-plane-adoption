@@ -93,35 +93,35 @@ $ RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
 
 $ declare -A COMPUTES_CELL1
 $ export COMPUTES_CELL1=( <2>
-  ["standalone.localdomain"]="192.168.122.100" <3>
-  # <compute1> <4>
-  # <compute2>
-  # <compute3>
-)
+> ["standalone.localdomain"]="192.168.122.100" <3>
+> # <compute1> <4>
+> # <compute2>
+> # <compute3>
+>)
 $ declare -A COMPUTES_CELL2
 $ export COMPUTES_CELL2=(
-  # ...
-)
+> # ...
+>)
 $ declare -A COMPUTES_CELL3
 $ export COMPUTES_CELL3=(
-  # ... <5>
-)
-# ...
+> # ... <5>
+>)
+># ...
 
 $ declare -A COMPUTES_API_CELL1
 $ export COMPUTES_API_CELL1=( <6>
-  ["standalone.localdomain"]="172.17.0.100"
-  # ...
-)
-# ...
+> ["standalone.localdomain"]="172.17.0.100"
+> # ...
+>)
+># ...
 
 $ NODESETS=""
 $ for CELL in $(echo $RENAMED_CELLS); do
-  ref="COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
-  eval names=\${!${ref}[@]}
-  [ -z "$names" ] && continue
-  NODESETS="'openstack-${CELL}', $NODESETS" <7>
-done
+> ref="COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
+> eval names=\${!${ref}[@]}
+> [ -z "$names" ] && continue
+> NODESETS="'openstack-${CELL}', $NODESETS" <7>
+>done
 $ NODESETS="[${NODESETS%,*}]"
 ----
 +
