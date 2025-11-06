@@ -111,10 +111,19 @@ if [ "$PING_TEST_VM" = "true" ]; then
 fi
 
 # Create security groups
-${BASH_ALIASES[openstack]} security group rule list --protocol icmp --ingress -f json | grep -q '"IP Range": "0.0.0.0/0"' || \
-    ${BASH_ALIASES[openstack]} security group rule create --protocol icmp --ingress --icmp-type -1 $(${BASH_ALIASES[openstack]} security group list --project admin -f value -c ID)
-${BASH_ALIASES[openstack]} security group rule list --protocol tcp --ingress -f json | grep '"Port Range": "22:22"' || \
-    ${BASH_ALIASES[openstack]} security group rule create --protocol tcp --ingress --dst-port 22 $(${BASH_ALIASES[openstack]} security group list --project admin -f value -c ID)
+
+${BASH_ALIASES[openstack]} security group show adoption-test || {
+    ${BASH_ALIASES[openstack]} security group create adoption-test
+    ${BASH_ALIASES[openstack]} security group rule create --protocol icmp --ingress --icmp-type -1 adoption-test
+    ${BASH_ALIASES[openstack]} security group rule create --protocol tcp --ingress --dst-port 22 adoption-test
+}
+
+# Add security groups
+
+${BASH_ALIASES[openstack]} server add security group test adoption-test || true
+if [ "$PING_TEST_VM" = "true" ]; then
+    ${BASH_ALIASES[openstack]} server add security group test-ping adoption-test || true
+fi
 
 export FIP=192.168.122.20
 # check connectivity via FIP
