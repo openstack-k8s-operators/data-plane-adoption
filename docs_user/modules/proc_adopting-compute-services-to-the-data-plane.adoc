@@ -184,13 +184,13 @@ endif::[]
 +
 ----
 $ cd "$(mktemp -d)"
-ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
-oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
+$ ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
+$ oc get secret nova-migration-ssh-key || oc create secret generic nova-migration-ssh-key \
   --from-file=ssh-privatekey=id \
   --from-file=ssh-publickey=id.pub \
   --type kubernetes.io/ssh-auth
-rm -f id*
-cd -
+$ rm -f id*
+$ cd -
 ----
 
 . If TLS Everywhere is enabled, set `LIBVIRT_PASSWORD` to match the existing {OpenStackShort} deployment password:
@@ -268,29 +268,29 @@ For {Ceph} environments with multi-cell configurations, you must name configurat
 . Create the data plane services for {compute_service} cells to enable pre-upgrade workarounds, and to configure the Compute services for your chosen storage back end:
 +
 ----
-for CELL in $(echo $RENAMED_CELLS); do
- $ oc apply -f - <<EOF
----
-apiVersion: dataplane.openstack.org/v1beta1
-kind: OpenStackDataPlaneService
-metadata:
-  name: nova-$CELL
-spec:
-  dataSources: <1>
-    - secretRef:
-        name: nova-$CELL-compute-config <2>
-    - secretRef:
-        name: nova-migration-ssh-key <3>
-    - configMapRef:
-        name: nova-cells-global-config
-  playbook: osp.edpm.nova
-  caCerts: combined-ca-bundle
-  edpmServiceType: nova
-  containerImageFields:
-  - NovaComputeImage
-  - EdpmIscsidImage
-EOF
-  done
+$ for CELL in $(echo $RENAMED_CELLS); do
+> oc apply -f - <<EOF
+> ---
+> apiVersion: dataplane.openstack.org/v1beta1
+> kind: OpenStackDataPlaneService
+> metadata:
+>  name: nova-$CELL
+> spec:
+>  dataSources: <1>
+>    - secretRef:
+>        name: nova-$CELL-compute-config <2>
+>    - secretRef:
+>        name: nova-migration-ssh-key <3>
+>    - configMapRef:
+>        name: nova-cells-global-config
+>  playbook: osp.edpm.nova
+>  caCerts: combined-ca-bundle
+>  edpmServiceType: nova
+>  containerImageFields:
+>  - NovaComputeImage
+>  - EdpmIscsidImage
+>EOF
+>  done
 ----
 +
 * If TLS Everywhere is enabled, append the following content to the `OpenStackDataPlaneService` CR:
@@ -589,9 +589,9 @@ external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-b
 +
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
-  test -f nodeset-${CELL}.yaml || continue
-$ oc apply -f nodeset-${CELL}.yaml
-done
+> test -f nodeset-${CELL}.yaml || continue
+> oc apply -f nodeset-${CELL}.yaml
+> done
 ----
 
 . If you use a {Ceph} back end for {block_storage_first_ref}, prepare the adopted data plane workloads:
@@ -821,8 +821,8 @@ $ oc logs -l app=openstackansibleee -f --max-log-requests 20
 +
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
-$ oc wait --for condition=Ready osdpns/openstack-$CELL --timeout=30m
-done
+> oc wait --for condition=Ready osdpns/openstack-$CELL --timeout=30m
+> done
 ----
 
 . Verify that the {networking_first_ref} agents are running:

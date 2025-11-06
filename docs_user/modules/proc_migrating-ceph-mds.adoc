@@ -91,11 +91,9 @@ dumped fsmap epoch 8
 +
 ----
 $ sudo cephadm shell -- ceph osd blocklist ls
-..
-..
-for item in $(sudo cephadm shell -- ceph osd blocklist ls | awk '{print $1}'); do
-     sudo cephadm shell -- ceph osd blocklist rm $item;
-done
+$ for item in $(sudo cephadm shell -- ceph osd blocklist ls | awk '{print $1}'); do
+>     sudo cephadm shell -- ceph osd blocklist rm $item;
+> done
 ----
 +
 [NOTE]
