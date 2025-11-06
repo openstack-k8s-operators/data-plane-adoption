@@ -11,8 +11,8 @@ You must create or update the {object_storage_first_ref} endpoints to configure 
 . List the current swift endpoints and service:
 +
 ----
- $ oc rsh openstackclient openstack endpoint list | grep 'swift.*object'
- $ oc rsh openstackclient openstack service list | grep 'swift.*object'
+ $ oc rsh openstackclient openstack endpoint list | grep "swift.*object"
+ $ oc rsh openstackclient openstack service list | grep "swift.*object"
 ----
 
 . If the service and endpoints do not exist, create the missing swift resources:
@@ -21,9 +21,9 @@ You must create or update the {object_storage_first_ref} endpoints to configure 
 $ oc rsh openstackclient openstack service create --name swift --description 'OpenStack Object Storage' object-store
 $ oc rsh openstackclient openstack role add --user swift --project service member
 $ oc rsh openstackclient openstack role add --user swift --project service admin
-$ for i in public internal; do
-      oc rsh openstackclient endpoint create --region regionOne object-store $i http://<RGW_VIP>:8080/swift/v1/AUTH_%\(tenant_id\)s
-  done
+> for i in public internal; do
+>     oc rsh openstackclient endpoint create --region regionOne  object-store $i http://<RGW_VIP>:8080/swift/v1/AUTH_%\(tenant_id\)s
+> done
 $ oc rsh openstackclient openstack role add --project admin --user admin swiftoperator
 ----
 +
