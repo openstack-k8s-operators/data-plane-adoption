@@ -318,11 +318,11 @@ spec:
     enabled: false
     template:
       swiftRing:
-        ringReplicas: 1
+        ringReplicas: 3
       swiftStorage:
         replicas: 0
       swiftProxy:
-        replicas: 1
+        replicas: 2
 EOF
 ----
 +
@@ -559,11 +559,11 @@ spec:
     enabled: false
     template:
       swiftRing:
-        ringReplicas: 1
+        ringReplicas: 3
       swiftStorage:
         replicas: 0
       swiftProxy:
-        replicas: 1
+        replicas: 2
 EOF
 ----
 +

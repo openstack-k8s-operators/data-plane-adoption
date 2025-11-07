@@ -53,7 +53,7 @@ spec:
     template:
       memcachedInstance: memcached
       swiftRing:
-        ringReplicas: 1
+        ringReplicas: 3
       swiftStorage:
         replicas: 0
         networkAttachments:
@@ -62,7 +62,7 @@ spec:
         storageRequest: 10Gi
       swiftProxy:
         secret: osp-secret
-        replicas: 1
+        replicas: 2
         passwordSelectors:
           service: SwiftPassword
         serviceUser: swift
