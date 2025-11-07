@@ -11,8 +11,11 @@ You must create or update the {object_storage_first_ref} endpoints to configure 
 . List the current swift endpoints and service:
 +
 ----
- $ oc rsh openstackclient openstack endpoint list | grep "swift.*object"
- $ oc rsh openstackclient openstack service list | grep "swift.*object"
+$ oc rsh openstackclient openstack endpoint list | grep "swift.*object"
+----
++
+----
+$ oc rsh openstackclient openstack service list | grep "swift.*object"
 ----
 
 . If the service and endpoints do not exist, create the missing swift resources:
