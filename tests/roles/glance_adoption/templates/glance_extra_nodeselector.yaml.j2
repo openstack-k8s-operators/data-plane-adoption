@@ -1,0 +1,9 @@
+spec:
+  glance:
+    template:
+      glanceAPIs:
+        default:
+          nodeSelector:
+{% for ns_key, ns_value in glance_nodeselector.items() %}
+            {{ ns_key }}: {{ ns_value }}
+{% endfor %}
