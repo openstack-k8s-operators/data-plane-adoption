@@ -21,7 +21,9 @@ $ sudo pcs property set stonith-enabled=false
 $ sudo pcs resource disable <compute_remote_resource>
 ----
 +
-* Replace `<compute_remote_resource>` with the name of the Compute remote resource in your environment.
+where:
+
+`<compute_remote_resource>`:: Specifies the name of the Compute remote resource in your environment.
 
 . Retrieve the name of the Compute stonith resources:
 +
@@ -32,9 +34,16 @@ $ sudo pcs stonith |grep Level |grep fence_compute |awk '{print $4}' |awk -F ','
 . Remove the Compute node `pacemaker_remote` and fencing resources:
 +
 ----
+$ sudo pcs stonith disable stonith-fence_compute-fence-nova
 $ sudo pcs stonith disable <compute_stonith_resource>
 $ sudo pcs stonith delete <compute_stonith_resource>
 $ sudo pcs resource delete <compute_remote_resource>
+$ sudo pcs resource disable compute-unfence-trigger-clone
+$ sudo pcs resource delete compute-unfence-trigger-clone
+$ sudo pcs resource disable nova-evacuate
+$ sudo pcs resource delete nova-evacuate
 ----
 +
-* Replace `<compute_stonith_resource>` with the name of the Compute stonith resource in your environment.
+where:
+
+`<compute_stonith_resource>`:: Specifies the name of the Compute stonith resource in your environment.

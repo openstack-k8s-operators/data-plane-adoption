@@ -74,12 +74,12 @@ metadata:
   namespace: openstack
 spec:
   caBundleSecretName: combined-ca-bundle
-  instanceHaConfigMap: <instanceha-0-config>
+  instanceHaConfigMap:
   fencingSecret: fencing-secret
 EOF
 ----
 +
-* `instanceha-0-config`: Specifies the name of the Instance HA configuration map that you created. Leave blank to have the `infra-operator` automatically create a configuration map. You can then edit the values as needed.
+* `spec.instanceHaConfigMap` defines the name of the YAML file containing the Instance HA configuration map that you created. If you do not create this file, then a YAML file called `instanceha-config` is created automatically when the Instance HA service is installed, providing the default values of the Instance HA service parameters. You can then edit the values as needed.
 
 . Deploy the Instance HA resource:
 +
