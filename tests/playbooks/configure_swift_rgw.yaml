@@ -1,0 +1,39 @@
+---
+- name: Configure Swift to use Ceph RGW
+  hosts: localhost
+  gather_facts: true
+  vars:
+    shell_header: "set -euo pipefail"
+    rgw_service_name: "rgw.rgw"
+  tasks:
+    - name: Extract Swift password from OpenShift secret
+      ansible.builtin.shell: |
+        oc get secret osp-secret -o json | jq -r '.data.SwiftPassword' | base64 -d
+      register: swift_password_result
+      changed_when: false
+      failed_when: swift_password_result.stdout | length == 0
+
+    - name: Get keystone-internal service details
+      ansible.builtin.shell: "oc get svc keystone-internal -o json | jq -r '.status.loadBalancer.ingress[0].ip'"
+      register: keystone_svc_lb_ip
+      changed_when: false
+      failed_when: keystone_svc_lb_ip.stdout | length == 0
+
+    - name: Set variables for Ceph RGW configuration
+      ansible.builtin.set_fact:
+        ceph_keystone_ep: "{{ keystone_protocol | default('http') }}://{{ keystone_svc_lb_ip.stdout | ansible.utils.ipwrap }}:5000"
+        ceph_keystone_swift_pwd: "{{ swift_password_result.stdout }}"
+
+    - name: Configure Ceph RGW Keystone settings
+      ansible.builtin.shell: |
+        sudo cephadm shell -- ceph config set global rgw_keystone_url {{ ceph_keystone_ep }}
+        sudo cephadm shell -- ceph config set global rgw_keystone_admin_password {{ ceph_keystone_swift_pwd }}
+        # refresh rgw after updating keystone rgw config
+        sudo cephadm shell -- ceph orch redeploy {{ rgw_service_name }}
+      delegate_to: "{{ groups['ceph'][0] }}"
+      changed_when: true
+
+    - name: Configure swift endpoints to use rgw
+      ansible.builtin.import_role:
+        name: ceph_migrate
+        tasks_from: configure_object
