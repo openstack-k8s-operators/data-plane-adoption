@@ -86,9 +86,6 @@
     - role: pull_openstack_configuration
       tags:
         - pull_openstack_configuration
-    - role: dataplane_adoption
-      tags:
-        - dataplane_adoption
 
 - name: Stop the ping test
   import_playbook: _stop_ping_test.yaml
