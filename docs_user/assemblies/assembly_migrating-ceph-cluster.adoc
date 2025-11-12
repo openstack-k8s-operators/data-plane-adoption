@@ -27,7 +27,7 @@ In either scenario, there are some {Ceph} processes that are deployed on
 Rados Block Device (RBD), Ceph Metadata Server (MDS), Ceph Dashboard, and NFS
 Ganesha. To migrate your {CephCluster} cluster, you must decommission the
 Controller nodes and move the {Ceph} daemons to a set of target nodes that are
-already part of the {CephCluster} cluster. 
+already part of the {CephCluster} cluster.
 
 Before you begin the migration, complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_configuring-network[{Ceph} prerequisites].
 
