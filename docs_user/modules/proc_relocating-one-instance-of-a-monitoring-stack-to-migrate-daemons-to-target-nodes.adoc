@@ -8,6 +8,9 @@ Instead of adding a single `monitoring` label to all the target nodes, it is
 possible to relocate one instance of each monitoring stack daemon on a
 particular node.
 
+.Prerequisites
+* Confirm that the firewall rules are in place and the ports are open for a given monitoring stack service.
+
 .Procedure
 
 . Set each of your nodes to host a particular daemon instance, for example, if you have three target nodes:

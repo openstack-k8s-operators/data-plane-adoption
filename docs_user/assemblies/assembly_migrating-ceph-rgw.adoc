@@ -10,9 +10,7 @@ ifdef::context[:parent-context: {context}]
 [role="_abstract"]
 For Hyperconverged Infrastructure (HCI) or dedicated Storage nodes, you must migrate the Ceph Object Gateway (RGW) daemons that are included in the {rhos_prev_long} Controller nodes into the existing external Red Hat Enterprise Linux (RHEL) nodes. The external RHEL nodes typically include the Compute nodes for an HCI environment or {Ceph} nodes. Your environment must have {Ceph} {CephVernum} or later and be managed by `cephadm` or Ceph Orchestrator.
 
-.Prerequisites
-
-* Complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_configuring-network[{Ceph} prerequisites].
+Before you begin the migration, complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_configuring-network[{Ceph} prerequisites].
 
 include::../modules/proc_migrating-the-rgw-backends.adoc[leveloffset=+1]
 
