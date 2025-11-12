@@ -1,4 +1,4 @@
-:_mod-docs-content-type: CONCEPT
+:_mod-docs-content-type: PROCEDURE
 [id="comparing-configuration-files-between-deployments_{context}"]
 
 = Comparing configuration files between deployments

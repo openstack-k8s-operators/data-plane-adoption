@@ -16,8 +16,6 @@ To maintain the high availability for Compute instances (Instance HA) functional
 $ sudo pcs config
 ----
 +
-.Sample output
-+
 ----
 Stonith Devices:
 ...

@@ -20,11 +20,7 @@ Ceph Manager. With {OpenStackPreviousInstaller}-deployed {Ceph}, the {Ceph} Dash
 The {Ceph} Dashboard containers are included through `tripleo-container-image-prepare` parameters, and high availability (HA) relies
 on `HAProxy` and `Pacemaker` to be deployed on the {rhos_prev_long} ({OpenStackShort}) environment. For an external {CephCluster} cluster, HA is not supported.
 
-In this procedure, you migrate and relocate the Ceph Monitoring components to free Controller nodes.
-
-.Prerequisites
-
-* Complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_configuring-network[{Ceph} prerequisites].
+You migrate and relocate the Ceph Monitoring components to free Controller nodes. Before you begin the migration, complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_configuring-network[{Ceph} prerequisites].
 
 
 include::../assemblies/assembly_migrating-monitoring-stack-to-target-nodes.adoc[leveloffset=+1]

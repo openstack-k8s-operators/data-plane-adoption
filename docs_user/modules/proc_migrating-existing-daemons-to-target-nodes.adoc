@@ -6,6 +6,9 @@
 [role="_abstract"]
 The following procedure is an example of an environment with 3 {Ceph} nodes or ComputeHCI nodes. This scenario extends the monitoring labels to all the {Ceph} or ComputeHCI nodes that are part of the cluster. This means that you keep 3 placements for the target nodes.
 
+.Prerequisites
+* Confirm that the firewall rules are in place and the ports are open for a given monitoring stack service.
+
 .Procedure
 
 . Add the monitoring label to all the {CephCluster} or ComputeHCI nodes in the cluster:

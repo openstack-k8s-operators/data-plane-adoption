@@ -3,6 +3,7 @@
 
 = Configuring LDAP with domain-specific drivers
 
+[role="_abstract"]
 If you need to integrate the {identity_service_first_ref} with one or more LDAP servers using domain-specific configurations, you can enable domain-specific drivers and provide the necessary LDAP settings.
 
 This involves two main steps:
