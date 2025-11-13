@@ -33,6 +33,7 @@ spec
 
 . Create a new file, for example, `glance_swift.patch`, and include the following content:
 +
+[subs="+quotes"]
 ----
 spec:
   glance:
@@ -66,14 +67,17 @@ spec:
                   annotations:
                     metallb.universe.tf/address-pool: internalapi
                     metallb.universe.tf/allow-shared-ip: internalapi
-                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80 <1>
+                    metallb.universe.tf/loadBalancerIPs: *<172.17.0.80>*
                 spec:
                   type: LoadBalancer
           networkAttachments:
             - storage
 ----
 +
-<1> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
+where:
+
+<172.17.0.80>::
+Specifies the load balancer IP in your environment. If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
 +
 [NOTE]
 The {object_storage} as a back end establishes a dependency with the {image_service}. Any deployed `GlanceAPI` instances do not work if the {image_service} is configured with the {object_storage} that is not available in the `OpenStackControlPlane` custom resource.
