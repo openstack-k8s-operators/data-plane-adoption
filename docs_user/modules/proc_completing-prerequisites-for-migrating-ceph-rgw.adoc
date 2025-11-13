@@ -47,25 +47,25 @@ Full List of Resources:
 
 . Identify the ranges of the storage networks. The following is an example and the values might differ in your environment:
 +
+[subs="+quotes"]
 ----
 [heat-admin@controller-0 ~]$ ip -o -4 a
 
 1: lo	inet 127.0.0.1/8 scope host lo\   	valid_lft forever preferred_lft forever
 2: enp1s0	inet 192.168.24.45/24 brd 192.168.24.255 scope global enp1s0\   	valid_lft forever preferred_lft forever
 2: enp1s0	inet 192.168.24.46/32 brd 192.168.24.255 scope global enp1s0\   	valid_lft forever preferred_lft forever
-7: br-ex	inet 10.0.0.122/24 brd 10.0.0.255 scope global br-ex\   	valid_lft forever preferred_lft forever <1>
+7: *br-ex*	inet 10.0.0.122/24 brd 10.0.0.255 scope global br-ex\   	valid_lft forever preferred_lft forever
 8: vlan70	inet 172.17.5.22/24 brd 172.17.5.255 scope global vlan70\   	valid_lft forever preferred_lft forever
 8: vlan70	inet 172.17.5.94/32 brd 172.17.5.255 scope global vlan70\   	valid_lft forever preferred_lft forever
 9: vlan50	inet 172.17.2.140/24 brd 172.17.2.255 scope global vlan50\   	valid_lft forever preferred_lft forever
-10: vlan30	inet 172.17.3.73/24 brd 172.17.3.255 scope global vlan30\   	valid_lft forever preferred_lft forever <2>
+10: *vlan30*	inet 172.17.3.73/24 brd 172.17.3.255 scope global vlan30\   	valid_lft forever preferred_lft forever
 10: vlan30	inet 172.17.3.68/32 brd 172.17.3.255 scope global vlan30\   	valid_lft forever preferred_lft forever
 11: vlan20	inet 172.17.1.88/24 brd 172.17.1.255 scope global vlan20\   	valid_lft forever preferred_lft forever
 12: vlan40	inet 172.17.4.24/24 brd 172.17.4.255 scope global vlan40\   	valid_lft forever preferred_lft forever
 ----
 +
-<1> `br-ex` represents the External Network, where in the current
-environment, HAProxy has the front-end Virtual IP (VIP) assigned.
-<2> `vlan30` represents the Storage Network, where the new RGW instances should be started on the {CephCluster} nodes.
+* `br-ex` represents the External Network, where in the current environment, HAProxy has the front-end Virtual IP (VIP) assigned.
+* `vlan30` represents the Storage Network, where the new RGW instances should be started on the {CephCluster} nodes.
 
 . Identify the network that you previously had in HAProxy and propagate it through {OpenStackPreviousInstaller} to the {CephCluster} nodes. Use this network to reserve a new VIP that is owned by {Ceph} as the entry point for the RGW service.
 
