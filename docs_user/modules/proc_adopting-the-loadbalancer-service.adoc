@@ -53,6 +53,7 @@ parameter_defaults:
 
 . To isolate the management network, add the network interface for the VLAN base interface:
 +
+[subs="+quotes"]
 ----
 $ oc get --no-headers nncp | cut -f 1 -d ' ' | grep -v nncp-dns | while read; do
 
@@ -69,7 +70,7 @@ interfaces=$(oc get nncp $REPLY -o jsonpath="{.spec.desiredState.interfaces[*].n
       "state": "up",
       "type": "vlan",
       "vlan": {
-        "base-iface": "<enp6s0>", <1>
+        "base-iface": "<enp6s0>",
         "id": 24
         }
     }
@@ -79,7 +80,7 @@ interfaces=$(oc get nncp $REPLY -o jsonpath="{.spec.desiredState.interfaces[*].n
     "path": "/spec/desiredState/interfaces/-",
     "value": {
       "description": "Octavia Bridge",
-      "mtu": <mtu>, <2>
+      "mtu": <mtu>,
       "state": "up",
       "type": "linux-bridge",
       "name": "octbr",
@@ -93,8 +94,12 @@ interfaces=$(oc get nncp $REPLY -o jsonpath="{.spec.desiredState.interfaces[*].n
 done
 ----
 +
-<1> Replace `<enp6s0>` with the name of the network interface in your {OpenShiftShort} setup.
-<2> Replace `<mtu>` with the `mtu` value in your environment.
+where:
+
+<enp6s0>::
+Specifies the name of the network interface in your {OpenShiftShort} setup.
+<mtu>::
+Specifies the `mtu` value in your environment.
 
 . To connect pods that manage load balancer virtual machines (amphorae) and the OpenvSwitch pods that are managed by the OVN operator, configure the {loadbalancer_service} network attachment definition:
 +

@@ -57,6 +57,7 @@ networkers+=(
 [NOTE]
 You can reuse most of the `nodeTemplate` section from the `OpenStackDataPlaneNodeSet` CR that is designated for your Compute nodes. You can omit some of the variables because of the limited set of services that are running on the Networker nodes.
 +
+[subs="+quotes"]
 ----
 $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
@@ -64,7 +65,7 @@ kind: OpenStackDataPlaneNodeSet
 metadata:
   name: openstack-networker
 spec:
-  tlsEnabled: false <1>
+  tlsEnabled: false
   networkAttachments:
       - ctlplane
   preProvisioned: true
@@ -205,7 +206,7 @@ endif::[]
         edpm_nodes_validation_validate_gateway_icmp: false
 
         # edpm ovn-controller configuration
-        edpm_ovn_bridge_mappings: <bridge_mappings> <2>
+        edpm_ovn_bridge_mappings: <bridge_mappings>
         edpm_ovn_bridge: br-int
         edpm_ovn_encap_type: geneve
         ovn_monitor_all: true
@@ -213,7 +214,7 @@ endif::[]
         edpm_ovn_ofctrl_wait_before_clear: 8000
 
         # serve as a OVN gateway
-        edpm_enable_chassis_gw: true <3>
+        edpm_enable_chassis_gw: true
 
         timesync_ntp_servers:
 ifeval::["{build}" != "downstream"]
@@ -254,9 +255,9 @@ endif::[]
 EOF
 ----
 +
-<1> If TLS Everywhere is enabled, change `spec:tlsEnabled` to `true`.
-<2> Set to the same values that you used in your {rhos_prev_long} {rhos_prev_ver} deployment.
-<3> Set to `true` to run `ovn-controller` in gateway mode.
+* `spec.tlsEnabled` specifies whether TLS Everywhere is enabled. If TLS is enabled, change `spec:tlsEnabled` to `true`.
+* `edpm_ovn_bridge_mappings: <bridge_mappings>` specifies the bridge mapping values that you used in your {rhos_prev_long} {rhos_prev_ver} deployment.
+* `edpm_enable_chassis_gw` specifies whether to run `ovn-controller` in gateway mode.
 
 . Ensure that you use the same `ovn-controller` settings in the `OpenStackDataPlaneNodeSet` CR that you used in the Networker nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
 +

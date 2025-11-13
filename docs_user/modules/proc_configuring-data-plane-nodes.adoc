@@ -12,13 +12,14 @@ Your {rhos_long} network configuration should reflect the existing {rhos_prev_lo
 
 . Configure a `NetConfig` CR with your desired VLAN tags and IPAM configuration. For example:
 +
+[subs="+quotes"]
 ----
 apiVersion: network.openstack.org/v1beta1
 kind: NetConfig
 metadata:
   name: netconfig
 spec:
-  networks: <1>
+  networks:
   - name: internalapi
     dnsDomain: internalapi.example.com
     subnets:
@@ -47,7 +48,7 @@ spec:
       cidr: 172.19.0.0/24
       vlan: 22
 ----
-<1> The `networks` composition must match the source cloud configuration to avoid data plane connectivity downtime.
+* `spec.networks` specifies the `networks` composition. The `networks` composition must match the source cloud configuration to avoid data plane connectivity downtime.
 
 . Optional: In the `NetConfig` CR, list multiple ranges for the `allocationRanges` field to exclude some of the IP addresses, for example, to accommodate IP addresses that are already consumed by the adopted environment:
 +

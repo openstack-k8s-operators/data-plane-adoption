@@ -33,7 +33,7 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file=<patch_name
 +
 The following example shows a `cinder_api.patch` file:
 +
-[source,yaml]
+[subs="+quotes"]
 ----
 spec:
   extraMounts:
@@ -69,7 +69,7 @@ spec:
                 annotations:
                   metallb.universe.tf/address-pool: internalapi
                   metallb.universe.tf/allow-shared-ip: internalapi
-                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80 <1>
+                  metallb.universe.tf/loadBalancerIPs: *<172.17.0.80>*
               spec:
                 type: LoadBalancer
         replicas: 1
@@ -89,7 +89,10 @@ spec:
           replicas: 0
 ----
 +
-<1> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
+where:
+
+<172.17.0.80>::
+Specifies the load balancer IP in your environment. If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
 
 . Retrieve the list of the previous scheduler and backup services:
 +
