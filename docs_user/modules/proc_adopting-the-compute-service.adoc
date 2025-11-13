@@ -38,15 +38,16 @@ RENAMED_CELLS="cell1"
 This procedure assumes that {compute_service} metadata is deployed on the top level and not on each cell level. If the {OpenStackShort} deployment has a per-cell metadata deployment, adjust the following patch as needed. You cannot run the metadata service in `cell0`.
 To enable the metadata services of a local cell, set the `enabled` property in the `metadataServiceTemplate` field of the local cell to `true` in the `OpenStackControlPlane` CR.
 +
+[subs="+quotes"]
 ----
 $ rm -f celltemplates
 $ for CELL in $(echo $RENAMED_CELLS); do
  $ cat >> celltemplates << EOF
 >       ${CELL}:
->         hasAPIAccess: true <1>
+>         *hasAPIAccess: true*
 >         cellDatabaseAccount: nova-$CELL
->         cellDatabaseInstance: openstack-$CELL <2>
->         cellMessageBusInstance: rabbitmq-$CELL <3>
+>         *cellDatabaseInstance: openstack-$CELL*
+>         *cellMessageBusInstance: rabbitmq-$CELL*
 >         metadataServiceTemplate:
 >           enabled: false
 >           override:
@@ -85,7 +86,7 @@ $ cat > oscp-patch.yaml << EOF
 >               annotations:
 >                 metallb.universe.tf/address-pool: internalapi
 >                 metallb.universe.tf/allow-shared-ip: internalapi
->                 metallb.universe.tf/loadBalancerIPs: 172.17.0.80 <4>
+>                 metallb.universe.tf/loadBalancerIPs: <172.17.0.80>
 >             spec:
 >               type: LoadBalancer
 >       customServiceConfig: |
@@ -99,7 +100,7 @@ $ cat > oscp-patch.yaml << EOF
 >             annotations:
 >               metallb.universe.tf/address-pool: internalapi
 >               metallb.universe.tf/allow-shared-ip: internalapi
->               metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+>               metallb.universe.tf/loadBalancerIPs: <172.17.0.80>
 >           spec:
 >             type: LoadBalancer
 >       customServiceConfig: |
@@ -124,10 +125,10 @@ $ cat celltemplates >> oscp-patch.yaml
 $ oc patch openstackcontrolplane openstack  --type=merge --patch-file=oscp-patch.yaml
 ----
 +
-<1> In the source cloud, cells are always configured with the main Nova API database upcall access. You can disable upcall access to the API by setting `hasAPIAccess` to `false`. However, do not make changes to the API during adoption.
-<2> The database instance that is used by the cell. The database instance names must match the names that are defined in the `OpenStackControlPlane` CR that you created in when you deployed the back-end services as described in xref:deploying-backend-services__migrating-databases[Deploying back-end services].
-<3> The message bus instance that is used by the cell. The message bus instance names must match the names that are defined in the `OpenStackControlPlane` CR.
-<4> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
+* `${CELL}.hasAPIAccess` specifies upcall access to the API. In the source cloud, cells are always configured with the main Nova API database upcall access. You can disable upcall access to the API by setting `hasAPIAccess` to `false`. However, do not make changes to the API during adoption.
+* `${CELL}.cellDatabaseInstance` specifies the database instance that is used by the cell. The database instance names must match the names that are defined in the `OpenStackControlPlane` CR that you created in when you deployed the back-end services as described in xref:deploying-backend-services__migrating-databases[Deploying back-end services].
+* `${CELL}.cellMessageBusInstance` specifies the message bus instance that is used by the cell. The message bus instance names must match the names that are defined in the `OpenStackControlPlane` CR.
+* `metallb.universe.tf/loadBalancerIPs: <172.17.0.80>` specifies the load balancer IP in your environment. If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
 
 . If you are adopting the {compute_service} with the {bare_metal_first_ref}, append the `novaComputeTemplates` field with the following content in each cell in the {compute_service} CR patch. For example:
 +

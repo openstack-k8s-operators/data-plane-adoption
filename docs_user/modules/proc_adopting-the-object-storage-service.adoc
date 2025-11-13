@@ -45,6 +45,7 @@ EOF
 
 . Patch the `OpenStackControlPlane` custom resource to deploy the {object_storage}:
 +
+[subs="+quotes"]
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
 spec:
@@ -58,7 +59,7 @@ spec:
         replicas: 0
         networkAttachments:
         - storage
-        storageClass: local-storage <1>
+        *storageClass: local-storage*
         storageRequest: 10Gi
       swiftProxy:
         secret: osp-secret
@@ -73,17 +74,17 @@ spec:
                 annotations:
                   metallb.universe.tf/address-pool: internalapi
                   metallb.universe.tf/allow-shared-ip: internalapi
-                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80 <2>
+                  metallb.universe.tf/loadBalancerIPs: *<172.17.0.80>*
               spec:
                 type: LoadBalancer
-        networkAttachments: <3>
+        *networkAttachments:*
         - storage
 '
 ----
 +
-<1> Must match the {rhos_acro} deployment storage class.
-<2> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
-<3> Must match the network attachment for the previous {object_storage} configuration from the {OpenStackShort} deployment.
+* `spec.swift.swiftStorage.storageClass` must match the {rhos_acro} deployment storage class.
+* `metallb.universe.tf/loadBalancerIPs: <172.17.0.80>` specifies the load balancer IP in your environment. If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
+* `spec.swift.swiftProxy.networkAttachments` must match the network attachment for the previous {object_storage} configuration from the {OpenStackShort} deployment.
 
 .Verification
 
