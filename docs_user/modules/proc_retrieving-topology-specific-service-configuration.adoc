@@ -207,7 +207,7 @@ export PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS=$($CONTROLLER1_SSH 
 +
 ----
 $ unset SRIOV_AGENTS
-$ declare -xA SRIOV_AGENTS <1>
+$ declare -xA SRIOV_AGENTS
 $ for CELL in $(echo $CELLS); do
 >     RCELL=$CELL
 >     [ "$CELL" = "$DEFAULT_CELL_NAME" ] && RCELL=default
@@ -236,7 +236,7 @@ $ for CELL in $(echo $CELLS); do
 $ chmod 0600 ~/.source_cloud_exported_variables*
 ----
 +
-<1> If `neutron-sriov-nic-agent` agents are running in your {OpenStackShort} deployment, get the configuration to use for the data plane adoption.
+* `declare -xA SRIOV_AGENTS` gets the `neutron-sriov-nic-agent` configuration to use for the data plane adoption if `neutron-sriov-nic-agent` agents are running in your {OpenStackShort} deployment.
 
 .Next steps
 

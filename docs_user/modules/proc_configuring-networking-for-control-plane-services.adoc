@@ -53,9 +53,9 @@ spec:
       "ipam": {
         "type": "whereabouts",
         "range": "172.17.0.0/24",
-        "range_start": "172.17.0.20", <1>
-        "range_end": "172.17.0.50", <2>
-        "exclude": [ <3>
+        "range_start": "172.17.0.20",
+        "range_end": "172.17.0.50",
+        "exclude": [
           "172.17.0.24/32",
           "172.17.0.44/31"
         ]
@@ -63,9 +63,9 @@ spec:
     }
 ----
 +
-<1> Defines the start of the IP range.
-<2> Defines the end of the IP range.
-<3> Excludes part of the IP range. This example excludes IP addresses `172.17.0.24/32` and `172.17.0.44/31` from the allocation pool.
+* `spec.config.ipam.range_start` defines the start of the IP range.
+* `spec.config.ipam.range_end` defines the end of the IP range.
+* `spec.config.ipam.exclude` excludes part of the IP range. This example excludes IP addresses `172.17.0.24/32` and `172.17.0.44/31` from the allocation pool.
 
 . If your {OpenStackShort} services require load balancer IP addresses, define the pools for these services in an `IPAddressPool` CR. For example:
 +

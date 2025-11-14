@@ -24,7 +24,6 @@ defined] already. Replace the following example values with values that are corr
 ----
 $ CONTROLLER1_SSH="ssh -i <path to SSH key> root@<node IP>"
 ----
-+
 endif::[]
 ifeval::["{build}" != "upstream"]
 * The `CONTROLLER1_SSH` environment variable is defined and points to the {OpenStackShort} Controller node. Replace the following example values with values that are correct for your environment:
@@ -32,7 +31,6 @@ ifeval::["{build}" != "upstream"]
 ----
 $ CONTROLLER1_SSH="ssh -i <path to SSH key> root@<node IP>"
 ----
-+
 endif::[]
 
 .Procedure
@@ -71,7 +69,7 @@ spec:
                 annotations:
                   metallb.universe.tf/address-pool: internalapi
                   metallb.universe.tf/allow-shared-ip: internalapi
-                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80 <1>
+                  metallb.universe.tf/loadBalancerIPs: <172.17.0.80>
               spec:
                 type: LoadBalancer
       manilaScheduler:
@@ -85,16 +83,16 @@ spec:
             host = hostgroup
             [cephfs]
             driver_handles_share_servers=False
-            share_backend_name=cephfs <2>
+            share_backend_name=cephfs
             share_driver=manila.share.drivers.cephfs.driver.CephFSDriver
             cephfs_conf_path=/etc/ceph/ceph.conf
             cephfs_auth_id=openstack
             cephfs_cluster_name=ceph
             cephfs_volume_mode=0755
             cephfs_protocol_helper_type=CEPHFS
-          networkAttachments: <3>
+          networkAttachments:
               - storage
-      extraMounts: <4>
+      extraMounts:
       - name: v1
         region: r1
         extraVol:
@@ -112,10 +110,10 @@ spec:
 __EOF__
 ----
 +
-<1> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
-<2> Ensure that the names of the back ends (`share_backend_name`) are the same as they were in {OpenStackShort} {rhos_prev_ver}.
-<3> Ensure that you specify the appropriate storage management network in the `networkAttachments` section. For example, the `manilaShares` instance with the CephFS back-end driver is connected to the `storage` network.
-<4> If you need to add extra files to any of the services, you can use `extraMounts`. For example, when using {Ceph}, you can add the {rhos_component_storage_file} Ceph user's keyring file as well as the `ceph.conf` configuration file.
+* `metallb.universe.tf/loadBalancerIPs:<172.17.0.80>` specifies the load balancer IP in your environment. If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
+* `share_backend_name` specifies the names of the back ends to use in {rhos_long}. Ensure that the names of the back ends are the same as they were in {OpenStackShort} {rhos_prev_ver}.
+* `networkAttachments` specifies the appropriate storage management network. For example, the `manilaShares` instance with the CephFS back-end driver is connected to the `storage` network.
+* `extraMounts` specifies additional files to add to any of the services. For example, when using {Ceph}, you can add the {rhos_component_storage_file} Ceph user's keyring file as well as the `ceph.conf` configuration file.
 +
 The following example patch file uses CephFS through NFS:
 +
@@ -141,7 +139,7 @@ spec:
                 annotations:
                   metallb.universe.tf/address-pool: internalapi
                   metallb.universe.tf/allow-shared-ip: internalapi
-                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+                  metallb.universe.tf/loadBalancerIPs: <172.17.0.80>
               spec:
                 type: LoadBalancer
       manilaScheduler:
