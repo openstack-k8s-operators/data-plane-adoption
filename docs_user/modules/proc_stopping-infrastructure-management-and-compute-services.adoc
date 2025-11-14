@@ -27,18 +27,18 @@ ifeval::["{build}" == "downstream"]
 CONTROLLER1_SSH="ssh -i <path_to_SSH_key> root@<controller-1 IP>"
 # ...
 endif::[]
-# ... <1>
+# ...
 ifeval::["{build}" != "downstream"]
 EDPM_PRIVATEKEY_PATH="~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa"
 endif::[]
 ifeval::["{build}" == "downstream"]
-EDPM_PRIVATEKEY_PATH="<path_to_SSH_key>" <2>
+EDPM_PRIVATEKEY_PATH="<path_to_SSH_key>"
 endif::[]
 ----
 +
-<1> In the `CONTROLLER<X>_SSH` settings, provide SSH connection details for all Controller nodes, including cell Controller nodes, of the source {OpenStackPreviousInstaller} cloud.
+** `CONTROLLER<X>_SSH` defines the SSH connection details for all Controller nodes, including cell Controller nodes, of the source {OpenStackPreviousInstaller} cloud.
 ifeval::["{build}" == "downstream"]
-<2> Replace `<path_to_SSH_key>` with the path to your SSH key.
+** `<path_to_SSH_key>` defines the path to your SSH key.
 endif::[]
 
 .Procedure

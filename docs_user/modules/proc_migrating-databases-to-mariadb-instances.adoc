@@ -9,6 +9,9 @@ Migrate your databases from the original {rhos_prev_long} ({OpenStackShort}) dep
 //[NOTE]
 //TOD(bogdando): For OSPDo, this example scenario describes a simple single-cell setup.
 //TODO(kgilliga): I hid the same note in the Compute adoption procedure. Will likely reinstate this after multi-cell is released.
+//kgilliga: The following text was below step 5. I'm preserving it here: +
+//Note filtering the information and performance schema tables.
+//Gnocchi is no longer used as a metric store as well
 
 .Prerequisites
 
@@ -33,11 +36,11 @@ $ OSPDO_MARIADB_CLIENT_ANNOTATIONS='[{"name": "internalapi-static","ips": ["172.
 $ MARIADB_RUN_OVERRIDES="$OSPDO_MARIADB_CLIENT_ANNOTATIONS"
 endif::[]
 
-$ CELLS="default cell1 cell2" <1>
+$ CELLS="default cell1 cell2"
 $ DEFAULT_CELL_NAME="cell3"
 $ RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
 
-$ CHARACTER_SET=utf8 # <2>
+$ CHARACTER_SET=utf8 #
 $ COLLATION=utf8_general_ci
 
 $ declare -A PODIFIED_DB_ROOT_PASSWORD
@@ -70,14 +73,14 @@ $ for CELL in $(echo $CELLS); do
 > done
 
 $ declare -A SOURCE_MARIADB_IP
-$ SOURCE_MARIADB_IP[default]=*<galera cluster VIP>* <3>
-$ SOURCE_MARIADB_IP[cell1]=*<galera cell1 cluster VIP>* <4>
-$ SOURCE_MARIADB_IP[cell2]=*<galera cell2 cluster VIP>* <5>
+$ SOURCE_MARIADB_IP[default]=*<galera cluster VIP>*
+$ SOURCE_MARIADB_IP[cell1]=*<galera cell1 cluster VIP>*
+$ SOURCE_MARIADB_IP[cell2]=*<galera cell2 cluster VIP>*
 # ...
 
 $ declare -A SOURCE_GALERA_MEMBERS_DEFAULT
 $ SOURCE_GALERA_MEMBERS_DEFAULT=(
->   ["standalone.localdomain"]=172.17.0.100 <6>
+>   ["standalone.localdomain"]=172.17.0.100
 >   # [...]=...
 > )
 $ declare -A SOURCE_GALERA_MEMBERS_CELL1
@@ -90,13 +93,12 @@ $ SOURCE_GALERA_MEMBERS_CELL2=(
 > )
 ----
 +
-<1> `CELLS` and `RENAMED_CELLS` represent changes that are going to be made after you import the databases. The `default` cell takes a new name from `DEFAULT_CELL_NAME`.
-In a multi-cell adoption scenario, `default` cell might retain its original 'default' name as well.
-<2> The `CHARACTER_SET` variable and collation should match the source database. If they do not match, then foreign key relationships break for any tables that are created in the future as part of database sync.
-<3> Add data in  `SOURCE_MARIADB_IP[*]= ...` for each cell that is defined in `CELLS`. Provide records for the cell names and VIP addresses of MariaDB Galera clusters.
-<4> Replace `<galera_cell1_cluster_VIP>` with the VIP of your galera cell1 cluster.
-<5> Replace `<galera_cell2_cluster_VIP>` with the VIP of your galera cell2 cluster, and so on.
-<6> For each cell defined in `CELLS`, in `SOURCE_GALERA_MEMBERS_CELL<X>`, add the names of the MariaDB Galera cluster members and its IP address. Replace `["standalone.localdomain"]="172.17.0.100"` with the real hosts data.
+** `CELLS` and `RENAMED_CELLS` represent changes that are going to be made after you import the databases. The `default` cell takes a new name from `DEFAULT_CELL_NAME`. In a multi-cell adoption scenario, `default` cell might retain its original 'default' name as well.
+** `CHARACTER_SET` and `COLLATION` should match the source database. If they do not match, then foreign key relationships break for any tables that are created in the future as part of the database sync.
+** `SOURCE_MARIADB_IP[X]= ...` includes the data for each cell that is defined in `CELLS`. Provide records for the cell names and VIP addresses of MariaDB Galera clusters.
+** `<galera_cell1_cluster_VIP>` defines the VIP of your galera cell1 cluster.
+** `<galera_cell2_cluster_VIP>` defines the VIP of your galera cell2 cluster, and so on.
+** `SOURCE_GALERA_MEMBERS_CELL<X>`, defines the names of the MariaDB Galera cluster members and their IP address for each cell defined in `CELLS`. Replace `["standalone.localdomain"]="172.17.0.100"` with the real hosts data.
 
 [NOTE]
 A standalone {OpenStackPreviousInstaller} environment only creates a 'default' cell, which should be the only `CELLS` value in this case. The `DEFAULT_CELL_NAME` value should be `cell1`.
@@ -199,6 +201,7 @@ $ for CELL in $(echo $CELLS); do
 > done
 ----
 +
+[NOTE]
 Each additional {compute_service_first_ref} v2 cell runs a dedicated Galera database cluster, so the command checks each cell.
 
 . Get the count of source databases with the `NOK` (not-OK) status:
@@ -248,9 +251,6 @@ $ for CELL in $(echo $CELLS); do
 > EOF
 > done
 ----
-+
-Note filtering the information and performance schema tables.
-Gnocchi is no longer used as a metric store as well
 
 . Restore the databases from `.sql` files into the control plane MariaDB:
 +
@@ -259,18 +259,18 @@ $ for CELL in $(echo $CELLS); do
 >   RCELL=$CELL
 >   [ "$CELL" = "default" ] && RCELL=$DEFAULT_CELL_NAME
 >   oc rsh mariadb-copy-data << EOF
->     declare -A db_name_map  <1>
+>     declare -A db_name_map
 >     db_name_map['nova']="nova_$RCELL"
 >     db_name_map['ovs_neutron']='neutron'
 >     db_name_map['ironic-inspector']='ironic_inspector'
->     declare -A db_cell_map  <2>
+>     declare -A db_cell_map
 >     db_cell_map['nova']="nova_$DEFAULT_CELL_NAME"
->     db_cell_map["nova_$RCELL"]="nova_$RCELL"  <3>
->     declare -A db_server_map  <4>
+>     db_cell_map["nova_$RCELL"]="nova_$RCELL"
+>     declare -A db_server_map
 >     db_server_map['default']=${PODIFIED_MARIADB_IP['super']}
 >     db_server_map["nova"]=${PODIFIED_MARIADB_IP[$DEFAULT_CELL_NAME]}
 >     db_server_map["nova_$RCELL"]=${PODIFIED_MARIADB_IP[$RCELL]}
->     declare -A db_server_password_map  <5>
+>     declare -A db_server_password_map
 >     db_server_password_map['default']=${PODIFIED_DB_ROOT_PASSWORD['super']}
 >     db_server_password_map["nova"]=${PODIFIED_DB_ROOT_PASSWORD[$DEFAULT_CELL_NAME]}
 >     db_server_password_map["nova_$RCELL"]=${PODIFIED_DB_ROOT_PASSWORD[$RCELL]}
@@ -284,7 +284,7 @@ $ for CELL in $(echo $CELLS); do
 >         target=super
 >       else
 >         target=$RCELL
->       fi  <6>
+>       fi
 >       renamed_db_file="\${target}_new.\${db_name}.sql"
 >       mv -f \${db_file} \${renamed_db_file}
 >       if [[ -v "db_name_map[\${db_name}]" ]]; then
@@ -316,12 +316,12 @@ $ for CELL in $(echo $CELLS); do
 > done
 ----
 +
-<1> Defines which common databases to rename when importing them.
-<2> Defines which cells databases to import, and how to rename them, if needed.
-<3> Omits importing special `cell0` databases of the cells, as its contents cannot be consolidated during adoption.
-<4> Defines which databases to import into which servers, usually dedicated for cells.
-<5> Defines the root passwords map for database servers. You can only use the same password for now.
-<6> Assigns which databases to import into which hosts when extracting databases from the `default` cell.
+* `db_name_map` defines which common databases to rename when importing them.
+* `db_cell_map` defines which cells databases to import, and how to rename them, if needed.
+* `db_cell_map["nova_$RCELL"]="nova_$RCELL"` omits importing special `cell0` databases of the cells, as its contents cannot be consolidated during adoption.
+* `db_server_map` defines which databases to import into which servers, usually dedicated for cells.
+* `db_server_password_map` defines the root passwords map for database servers. You can only use the same password for now.
+* `renamed_db_file="\${target}_new.\${db_name}.sql"` assigns which databases to import into which hosts when extracting databases from the `default` cell.
 
 .Verification
 
@@ -337,9 +337,9 @@ $ set -u
 $ dbs=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD['super']}" -e 'SHOW databases;')
 $ echo $dbs | grep -Eq '\bkeystone\b' && echo "OK" || echo "CHECK FAILED"
 $ echo $dbs | grep -Eq '\bneutron\b' && echo "OK" || echo "CHECK FAILED"
-$ echo "${PULL_OPENSTACK_CONFIGURATION_DATABASES[@]}" | grep -Eq '\bovs_neutron\b' && echo "OK" || echo "CHECK FAILED" <1>
+$ echo "${PULL_OPENSTACK_CONFIGURATION_DATABASES[@]}" | grep -Eq '\bovs_neutron\b' && echo "OK" || echo "CHECK FAILED"
 $ novadb_mapped_cells=$(oc exec openstack-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD['super']}" \
->   nova_api -e 'select uuid,name,transport_url,database_connection,disabled from cell_mappings;') <2>
+>   nova_api -e 'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')
 $ uuidf='\S{8,}-\S{4,}-\S{4,}-\S{4,}-\S{12,}'
 $ default=$(printf "%s\n" "$PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS" | sed -rn "s/^($uuidf)\s+default\b.*$/\1/p")
 $ difference=$(diff -ZNua \
@@ -352,25 +352,25 @@ $ if [ "$DEFAULT_CELL_NAME" != "default" ]; then
 > else
 >   [ "x$difference" = "x" ] && echo "OK" || echo "CHECK FAILED"
 > fi
-$ for CELL in $(echo $RENAMED_CELLS); do <3>
+$ for CELL in $(echo $RENAMED_CELLS); do
 >   RCELL=$CELL
 >   [ "$CELL" = "$DEFAULT_CELL_NAME" ] && RCELL=default
 >   set +u
 >   . ~/.source_cloud_exported_variables_$RCELL
 >   set -u
->   c1dbs=$(oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p${PODIFIED_DB_ROOT_PASSWORD[$CELL]} -e 'SHOW databases;') <4>
+>   c1dbs=$(oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p${PODIFIED_DB_ROOT_PASSWORD[$CELL]} -e 'SHOW databases;')
 >   echo $c1dbs | grep -Eq "\bnova_${CELL}\b" && echo "OK" || echo "CHECK FAILED"
 >   novadb_svc_records=$(oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p${PODIFIED_DB_ROOT_PASSWORD[$CELL]} \
 >     nova_$CELL -e "select host from services where services.binary='nova-compute' and deleted=0 order by host asc;")
->   diff -Z <(echo "x$novadb_svc_records") <(echo "x${PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[@]}") && echo "OK" || echo "CHECK FAILED" <5>
+>   diff -Z <(echo "x$novadb_svc_records") <(echo "x${PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[@]}") && echo "OK" || echo "CHECK FAILED"
 > done
 ----
 +
-<1> Ensures that the {networking_first_ref} database is renamed from `ovs_neutron`.
-<2> Ensures that the `default` cell is renamed to `$DEFAULT_CELL_NAME`, and the cell UUIDs are retained.
-<3> Ensures that the registered Compute services names have not changed.
-<4> Ensures {compute_service} cells databases are extracted to separate database servers, and renamed from `nova` to `nova_cell<X>`.
-<5> Ensures that the registered {compute_service} name has not changed.
+* `echo "${PULL_OPENSTACK_CONFIGURATION_DATABASES[@]}" | grep -Eq '\bovs_neutron\b' && echo "OK" || echo "CHECK FAILED"` ensures that the {networking_first_ref} database is renamed from `ovs_neutron`.
+* `nova_api -e 'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')` ensures that the `default` cell is renamed to `$DEFAULT_CELL_NAME`, and the cell UUIDs are retained.
+*  `for CELL in $(echo $RENAMED_CELLS); do` ensures that the registered Compute services names have not changed.
+* `c1dbs=$(oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p${PODIFIED_DB_ROOT_PASSWORD[$CELL]} -e 'SHOW databases;')` ensures {compute_service} cells databases are extracted to separate database servers, and renamed from `nova` to `nova_cell<X>`.
+*  `diff -Z <(echo "x$novadb_svc_records") <(echo "x${PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[@]}") && echo "OK" || echo "CHECK FAILED"` ensures that the registered {compute_service} name has not changed.
 
 . Delete the `mariadb-data` pod and the `mariadb-copy-data` persistent volume claim that contains the database backup:
 +
