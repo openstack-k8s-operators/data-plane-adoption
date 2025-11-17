@@ -50,7 +50,7 @@ ifeval::["{build_variant}" == "ospdo"]
 +
 ----
 $ export CONTROLLER_NODE=$(oc get vmi -ojson | jq -r '.items[0].status.nodeName')
-$ export SOURCE_OVN_OVSDB_IP=172.17.0.160 # get this from the source OVN DB
+$ export SOURCE_OVN_OVSDB_IP=$(oc get cm tripleo-exports-default -o json | jq -r '.data["ctlplane-export.yaml"]' | awk '/ovn_controller_bootstrap_node_ip/ {print $2}')
 ----
 
 . Find the mysql service IP in the `ctlplane-export.yaml` section of the `tripleo-exports-default` ConfigMap:
