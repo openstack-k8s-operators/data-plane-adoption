@@ -106,7 +106,7 @@ ifeval::["{build_variant}" == "ospdo"]
 endif::[]
 spec:
 ifeval::["{build_variant}" == "ospdo"]
-  nodeName: '{{ <ocp_node_holding_controller> }}' <1>
+  nodeName: '{{ <ocp_node_holding_controller> }}'
 endif::[]
   containers:
   - image: $OVSDB_IMAGE
@@ -136,7 +136,10 @@ EOF
 ----
 +
 ifeval::["{build_variant}" == "ospdo"]
-<1> Replace `<ocp_node_holding_controller>` with the {OpenStackShort} node that contains the Controller node.
+where:
+
+<ocp_node_holding_controller>::
+Specifies the {OpenStackShort} node that contains the Controller node.
 endif::[]
 
 . Wait for the pod to be ready:
@@ -285,10 +288,10 @@ spec:
     template:
       ovnController:
         nicMappings:
-          physNet: NIC <1>
+          physNet: NIC
 ----
 +
-<1> `physNet` is the name of your physical network. `NIC` is the name of the physical interface that is connected to your physical network.
+* `physNet` defines the name of your physical network. `NIC` is the name of the physical interface that is connected to your physical network.
 +
 [NOTE]
 Running OVN gateways on {OpenShiftShort} nodes might be prone to data plane downtime during Open vSwitch upgrades. Consider running OVN gateways on dedicated `Networker` data plane nodes for production deployments instead.
