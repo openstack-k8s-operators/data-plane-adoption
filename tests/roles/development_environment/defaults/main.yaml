@@ -41,7 +41,7 @@ tobiko_conf_file: |
   test_runner_timeout = 14400.0
   timeout = 1800.0
   [advanced_vm]
-  image_url = "http://kaplonski.pl/files/Customized-Fedora-Cloud-Base-Generic-41-1.4.x86_64.qcow2"
+  image_url = "https://github.com/openstack-k8s-operators/openstack-k8s-operators-ci/releases/download/v1.0.0/tobiko-custom-v1.0.0.qcow2"
   username = fedora
   [tripleo]
   undercloud_ssh_hostname = undercloud
