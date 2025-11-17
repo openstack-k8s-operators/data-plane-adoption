@@ -36,7 +36,7 @@ ifeval::["{build}" != "downstream"]
 CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 endif::[]
 ifeval::["{build}" == "downstream"]
-CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<controller-1 IP>*" <1>
+CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<controller-1 IP>*"
 CONTROLLER2_SSH="ssh -i *<path to SSH key>* root@*<controller-2 IP>*"
 CONTROLLER3_SSH="ssh -i *<path to SSH key>* root@*<controller-3 IP>*"
 endif::[]
@@ -51,15 +51,16 @@ CONTROLLER2_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@1
 CONTROLLER3_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.109"
 endif::[]
 ifeval::["{build}" == "downstream"]
-CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<controller-1 IP>*" <2>
+CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<controller-1 IP>*"
 CONTROLLER2_SSH="ssh -i *<path to SSH key>* root@*<controller-2 IP>*"
 CONTROLLER3_SSH="ssh -i *<path to SSH key>* root@*<controller-3 IP>*"
 # ...
 endif::[]
 ----
 ifeval::["{build}" == "downstream"]
-<1> Replace `<path_to_SSH_key>` with the path to your SSH key.
-<2> Replace `<controller-<X> IP>` with IP addresses of all Controller nodes.
++
+** `<path_to_SSH_key>` defines the path to your SSH key.
+** `<controller-<X> IP>` defines the IP addresses of all Controller nodes.
 endif::[]
 
 .Procedure

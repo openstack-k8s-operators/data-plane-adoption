@@ -73,24 +73,24 @@ This example assumes that `172.17.3.0/24` is the `storage` network.
 ----
 ---
 networks:
-- 172.17.3.0/24<1>
+- 172.17.3.0/24
 placement:
-  label: rgw <2>
+  label: rgw
 service_id: rgw
 service_name: rgw.rgw
 service_type: rgw
 spec:
-  rgw_frontend_port: 8090 <3>
+  rgw_frontend_port: 8090
   rgw_realm: default
   rgw_zone: default
-  rgw_frontend_ssl_certificate: ... <4>
+  rgw_frontend_ssl_certificate: ...
   ssl: true
 ----
 +
-<1> Add the storage network where the RGW back ends are deployed.
-<2> Replace the Controller nodes with the `label: rgw` label.
-<3> Change the `rgw_frontend_port` value to `8090` to avoid conflicts with the Ceph ingress daemon.
-<4> Optional: if TLS is enabled, add the SSL certificate and key concatenation as described in link:{configuring-storage}/assembly_configuring-red-hat-ceph-storage-as-the-backend-for-rhosp-storage#proc_ceph-configure-rgw-with-tls_ceph-back-end[Configuring RGW with TLS for an external Red Hat Ceph Storage cluster] in _{configuring-storage-t}_.
+* `networks` defines the storage network where the RGW back ends are deployed.
+* `placement.label: rgw` replaces the Controller nodes with the `rgw` label.
+* `spec.rgw_frontend_port` specifies the value as `8090` to avoid conflicts with the Ceph ingress daemon.
+* `spec.rgw_frontend_ssl_certificate` defines the SSL certificate and key concatenation if TLS is enabled as described in link:{configuring-storage}/assembly_configuring-red-hat-ceph-storage-as-the-backend-for-rhosp-storage#proc_ceph-configure-rgw-with-tls_ceph-back-end[Configuring RGW with TLS for an external Red Hat Ceph Storage cluster] in _{configuring-storage-t}_.
 
 . Apply the new RGW spec by using the orchestrator CLI:
 +

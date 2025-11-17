@@ -29,6 +29,7 @@ endif::[]
 
 . Configure link local routes on the existing deployment nodes for the control plane subnets. This is done through {OpenStackPreviousInstaller} configuration:
 +
+[subs=+quotes]
 ----
 network_config:
   - type: ovs_bridge
@@ -36,11 +37,12 @@ network_config:
     routes:
     - ip_netmask: 0.0.0.0/0
       next_hop: 192.168.1.1
-    - ip_netmask: 172.31.0.0/24 <1>
-      next_hop: 192.168.1.100 <2>
+    - *ip_netmask: 172.31.0.0/24*
+      *next_hop: 192.168.1.100*
 ----
-<1> The new control plane subnet.
-<2> The control plane IP address of the existing data plane node.
++
+* `ip_netmask` defines the new control plane subnet.
+* `next_hop` defines the control plane IP address of the existing data plane node.
 +
 Repeat this configuration for other networks that need to use different subnets for the new and existing parts of the deployment.
 
@@ -82,11 +84,12 @@ the risk of network disruption. You must enforce the changes by setting the
 . You also must configure link local routes to existing deployment on {rhos_long} worker nodes. This is achieved by adding `routes` entries to the `NodeNetworkConfigurationPolicy` CRs for each network. For example:
 +
 ----
-  - destination: 192.168.122.0/24 <1>
-    next-hop-interface: ospbr <2>
+  - destination: 192.168.122.0/24
+    next-hop-interface: ospbr
 ----
-<1> The original subnet of the isolated network on the data plane.
-<2> The {rhocp_long} worker network interface that corresponds to the isolated network on the data plane.
++
+* `destination` defines the original subnet of the isolated network on the data plane.
+* `next-hop-interface` defines the {rhocp_long} worker network interface that corresponds to the isolated network on the data plane.
 +
 As a result, the following route is added to your {OpenShiftShort} nodes:
 +

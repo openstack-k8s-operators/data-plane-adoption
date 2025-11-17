@@ -95,7 +95,7 @@ $ cat celltemplates >> oscp-patch.yaml
 ----
         cell<X>:
           novaComputeTemplates:
-            <hostname>: <1>
+            <hostname>:
               customServiceConfig: |
                 [DEFAULT]
                 host = <hostname>
@@ -105,7 +105,10 @@ $ cat celltemplates >> oscp-patch.yaml
         ...
 ----
 +
-<1> Replace `<hostname>` with the hostname of the node that is running the `ironic` Compute driver in the source cloud of `cell<X>`.
+where:
+
+<hostname>::
+Specifies the hostname of the node that is running the `ironic` Compute driver in the source cloud of `cell<X>`.
 
 . Apply the patch file:
 +
