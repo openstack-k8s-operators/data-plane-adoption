@@ -3,8 +3,3 @@
   become: true
   ansible.builtin.command:
     "{{ ceph_cli }} mgr fail"
-  delegate_to: "{{ groups['ComputeHCI'][0] | default(inventory_hostname) }}"
-  when:
-    - groups['ComputeHCI'] is defined
-    - groups['ComputeHCI'] | length > 0
-    - ceph_cli is defined

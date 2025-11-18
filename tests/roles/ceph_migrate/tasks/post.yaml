@@ -11,3 +11,28 @@
   vars:
     shell_header: "set -euo pipefail"
   when: ceph_daemons_layout.rgw | default(true) | bool
+
+- name: Flush handlers to ensure mgr restart completes
+  ansible.builtin.meta: flush_handlers
+
+- name: Remove faulty mgr
+  when:
+    - groups['ComputeHCI'] is defined
+    - groups['ComputeHCI'] | length > 0
+    - ceph is defined
+    - ceph.health.status is defined
+    - ceph.health.status != 'HEALTH_OK'
+  block:
+    - name: Install cephadm on all compute nodes
+      become: true
+      ansible.builtin.package:
+        name: cephadm
+        state: present
+      loop: "{{ groups['ComputeHCI'] }}"
+      delegate_to: "{{ item }}"
+
+    - name: Force fail ceph mgr on first compute node
+      become: true
+      ansible.builtin.command: cephadm shell -- ceph mgr fail
+      changed_when: false
+      delegate_to: "{{ groups['ComputeHCI'][0] }}"
