@@ -294,7 +294,7 @@ $ for CELL in $(echo $RENAMED_CELLS); do
 ----
 +
 * `spec.dataSources.secretRef` specifies an additional auto-generated `nova-cell<X>-metadata-neutron-config` secret to enable a local metadata service for cell<X>. You should also set
-`spec.nova.template.cellTemplates.cell<X>.metadataServiceTemplate.enable` in the `OpenStackControlPlane/openstack` CR, as described in xref:adopting-the-compute-service_{context}[Adopting the Compute service]. You can configure a single top-level metadata, or define the metadata per cell.
+`spec.nova.template.cellTemplates.cell<X>.metadataServiceTemplate.enable` in the `OpenStackControlPlane/openstack` CR, as described in xref:adopting-the-compute-service_adopt-control-plane[Adopting the Compute service]. You can configure a single top-level metadata, or define the metadata per cell.
 * `nova-$CELL-compute-config` specifies the secret that auto-generates for each `cell<X>`. You must append the `nova-cell<X>-compute-config` for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
 * `nova-migration-ssh-key` specifies the secret that you must append for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
 +
