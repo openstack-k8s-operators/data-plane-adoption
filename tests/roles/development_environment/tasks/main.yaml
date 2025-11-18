@@ -169,3 +169,34 @@
         {% else %}
         mkdir -p ~/ci-framework-data/tests/test_operator; scp -i ${EDPM_PRIVATEKEY_PATH} -o StrictHostKeyChecking=no -r ${OS_CLOUD_IP}:~/.ssh/id_ecdsa* ~/ci-framework-data/tests/test_operator/
         {% endif %}
+
+- name: Add IPA domain to Keystone and create IPA users
+  when: enable_tlse is defined and enable_tlse
+  block:
+    - name: SSH into standalone VM and execute IPA commands
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        ssh {{ edpm_node_ip }} "sudo podman exec freeipa-server-container bash -c '\
+          echo {{ ipa_admin_password }} | kinit admin;\
+          ipa user-add svc-ldap --first=Openstack --last=LDAP;\
+          echo {{ ipa_admin_password }} | ipa passwd svc-ldap;\
+          ipa user-add ipauser1 --first=ipa1 --last=user1;\
+          echo {{ ipa_user_password }} | ipa passwd ipauser1;\
+          ipa user-add ipauser2 --first=ipa2 --last=user2;\
+          echo {{ ipa_user_password }} | ipa passwd ipauser2;\
+          ipa user-add ipauser3 --first=ipa3 --last=user3;\
+          echo {{ ipa_user_password }} | ipa passwd ipauser3;\
+          ipa group-add --desc=\"OpenStack Users\" grp-openstack;\
+          ipa group-add --desc=\"OpenStack Admin Users\" grp-openstack-admin;\
+          ipa group-add --desc=\"OpenStack Demo Users\" grp-openstack-demo;\
+          ipa group-add-member --users=svc-ldap grp-openstack;\
+          ipa group-add-member --users=ipauser1 grp-openstack;\
+          ipa group-add-member --users=ipauser1 grp-openstack-admin;\
+          ipa group-add-member --users=ipauser2 grp-openstack;\
+          ipa group-add-member --users=ipauser2 grp-openstack-demo;\
+          ipa group-add-member --users=ipauser3 grp-openstack;\
+          '"
+    - name: Add REDHAT domain to Keystone
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ openstack_command }} domain create --description \"Test LDAP Domain\" REDHAT
