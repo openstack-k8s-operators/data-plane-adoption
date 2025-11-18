@@ -95,6 +95,11 @@ test-with-ironic: ## Launch test suite with Ironic
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS) $(TEST_ARGS) tests/playbooks/test_with_ironic.yaml 2>&1 | tee $(TEST_OUTFILE)
 
+test-configure-object: TEST_OUTFILE ?= tests/logs/test_configure_object_out_$(shell date +%FT%T%Z).log
+test-configure-object: ## Configure Swift object store to use Ceph RGW
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS) $(TEST_ARGS) tests/playbooks/configure_swift_rgw.yaml 2>&1 | tee $(TEST_OUTFILE)
+
 ##@ DOCS
 
 docs-dependencies: .bundle
