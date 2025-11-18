@@ -102,7 +102,7 @@ $ CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
 endif::[]
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]
-$ MARIADB_RUN_OVERRIDES="--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS"
+$ MARIADB_RUN_OVERRIDES="--overrides='${RUN_OVERRIDES}' $MARIADB_CLIENT_ANNOTATIONS"
 
 $ CONTROLLER1_SSH="oc rsh -c openstackclient openstackclient ssh controller-0.ctlplane"
 $ oc get secret tripleo-passwords -o json | jq -r '.data["tripleo-overcloud-passwords.yaml"]' |
