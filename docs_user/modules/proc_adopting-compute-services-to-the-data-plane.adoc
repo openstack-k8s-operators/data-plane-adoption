@@ -83,56 +83,55 @@ EOF
 
 * You have defined the shell variables to run the script that runs the upgrade:
 +
+[subs="+quotes"]
 ----
 $ CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //')
 
 $ alias openstack="oc exec -t openstackclient -- openstack"
 
-$ DEFAULT_CELL_NAME="cell3" <1>
+$ *DEFAULT_CELL_NAME="cell3"*
 $ RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
 
 $ declare -A COMPUTES_CELL1
-$ export COMPUTES_CELL1=( <2>
-> ["standalone.localdomain"]="192.168.122.100" <3>
-> # <compute1> <4>
-> # <compute2>
-> # <compute3>
+$ *export COMPUTES_CELL1=(*
+> *["standalone.localdomain"]="192.168.122.100"*
+> # *<compute1>*
+> # *<compute2>*
+> # *<compute3>*
 >)
 $ declare -A COMPUTES_CELL2
 $ export COMPUTES_CELL2=(
-> # ...
+> # *<compute1>*
 >)
 $ declare -A COMPUTES_CELL3
-$ export COMPUTES_CELL3=(
-> # ... <5>
+$*export COMPUTES_CELL3=(*
+> # *<compute1>*
+> # *<compute2>*
 >)
-># ...
 
 $ declare -A COMPUTES_API_CELL1
-$ export COMPUTES_API_CELL1=( <6>
+$*export COMPUTES_API_CELL1=(*
 > ["standalone.localdomain"]="172.17.0.100"
-> # ...
+> ["standalone2.localdomain"]="172.17.0.101"
 >)
-># ...
 
 $ NODESETS=""
 $ for CELL in $(echo $RENAMED_CELLS); do
 > ref="COMPUTES_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')"
 > eval names=\${!${ref}[@]}
 > [ -z "$names" ] && continue
-> NODESETS="'openstack-${CELL}', $NODESETS" <7>
+> NODESETS="'openstack-${CELL}', $NODESETS"
 >done
 $ NODESETS="[${NODESETS%,*}]"
 ----
 +
-<1> The source cloud `default` cell acquires a new `DEFAULT_CELL_NAME` on the destination cloud after adoption.
+** `DEFAULT_CELL_NAME="cell3"` defines the source cloud `default` cell that acquires a new `DEFAULT_CELL_NAME` on the destination cloud after adoption.
 In a multi-cell adoption scenario, you can retain the original name, `default`, or create a new cell default name by providing the incremented index of the last cell in the source cloud. For example, if the incremented index of the last cell is `cell5`, the new cell default name is `cell6`.
-<2> For each cell, update the `<["standalone.localdomain"]="x.x.x.x">` value and the `COMPUTES_CELL<X>` value with the names and IP addresses of the {compute_service} nodes that are connected to the `ctlplane` and `internalapi` networks. Do not specify a real FQDN defined for each network. Always use the same hostname for each connected network of a Compute node. Provide the IP addresses and the names of the hosts on the remaining networks of the source cloud as needed. Or you can manually adjust the files that you generate in step 9 of this procedure.
-<3> If your deployment has a custom DNS domain, specify it in the FQDN value of the nodes. This value is used in the data plane node set `spec.nodes.<NODE NAME>.hostName`.
-<4> Assign all {compute_service} nodes from the source cloud `cell1` cell into `COMPUTES_CELL1`, and so on. Replace `<compute1>`, `<compute2>`, and `<compute3>` with the names of your {compute_service} nodes.
-<5> Assign all {compute_service} nodes from the source cloud `default` cell into `COMPUTES_CELL<X>` and `COMPUTES_API_CELL<X>``, where `<X>` is the `DEFAULT_CELL_NAME` environment variable value. In this example, the `DEFAULT_CELL_NAME` environment variable value equals `cell3`.
-<6> For each cell, update the `<["standalone.localdomain"]="192.168.122.100">` value and the `COMPUTES_API_CELL` value with the names and IP addresses of the {compute_service} nodes that are connected to the `ctlplane` and `internalapi` networks. Do not specify a real FQDN defined for each network. Use the same host name for each of its connected networks. Provide the IP addresses and the names of the hosts on the remaining networks of the source cloud as needed. Or you can manually adjust the files that you generate in step 9 of this procedure.
-<7> Cells that do not contain Compute nodes are omitted from this template because no node sets are created for the cells.
+** `export COMPUTES_CELL1=` For each cell, update the `<["standalone.localdomain"]="x.x.x.x">` value and the `COMPUTES_CELL<X>` value with the names and IP addresses of the {compute_service} nodes that are connected to the `ctlplane` and `internalapi` networks. Do not specify a real FQDN defined for each network. Always use the same hostname for each connected network of a Compute node. Provide the IP addresses and the names of the hosts on the remaining networks of the source cloud as needed, or you can manually adjust the files that you generate in step 9 of this procedure.
+** `<compute1>`, `<compute2>`, and `<compute3>` specifies the names of your {compute_service} nodes for each cell. Assign all {compute_service} nodes from the source cloud `cell1` cell into `COMPUTES_CELL1`, and so on.
+** `export COMPUTES_CELL<X>=(` specifies all {compute_service} nodes that you assign from the source cloud `default` cell into `COMPUTES_CELL<X>` and `COMPUTES_API_CELL<X>`, where `<X>` is the `DEFAULT_CELL_NAME` environment variable value. In this example, the `DEFAULT_CELL_NAME` environment variable value equals `cell3`.
+** `export COMPUTES_API_CELL1=(` For each cell, update the `<["standalone.localdomain"]="192.168.122.100">` value and the `COMPUTES_API_CELL<X>` value with the names and IP addresses of the {compute_service} nodes that are connected to the `ctlplane` and `internalapi` networks. `["standalone.localdomain"]="192.168.122.100"` defines the custom DNS domain in the FQDN value of the nodes. This value is used in the data plane node set `spec.nodes.<NODE NAME>.hostName`. Do not specify a real FQDN defined for each network. Use the same hostname for each of its connected networks. Provide the IP addresses and the names of the hosts on the remaining networks of the source cloud as needed, or you can manually adjust the files that you generate in step 9 of this procedure.
+** `NODESETS="'openstack-${CELL}', $NODESETS"` specifies the cells that contain Compute nodes. Cells that do not contain Compute nodes are omitted from this template because no node sets are created for the cells.
 +
 [NOTE]
 ====
@@ -224,15 +223,15 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nova-cells-global-config
-data: <1>
-  99-nova-compute-cells-workarounds.conf: | <2>
+data:
+  99-nova-compute-cells-workarounds.conf: |
     [workarounds]
     disable_compute_service_check_for_ffu=true
 EOF
 ----
 +
-<1> The `data` resources in the `ConfigMap` provide the configuration files for all the cells.
-<2> There is a requirement to index the `<*.conf>` files from '03' to '99', based on precedence. A `<99-*.conf>` file takes the highest precedence, while indexes below '03' are reserved for internal use.
+* `data` provides the configuration files for all the cells.
+* `99-nova-compute-cells-workarounds.conf: |` specifies the index of the `<*.conf>` files. There is a requirement to index the `<*.conf>` files from '03' to '99', based on precedence. A `<99-*.conf>` file takes the highest precedence, while indexes below '03' are reserved for internal use.
 +
 [NOTE]
 If you adopt a live cloud, you might be required to carry over additional configurations for the default `nova` data plane services that are stored in the cell1 default `nova-extra-config` configuration map. Do not delete or overwrite the existing configuration in the `cell1` default `nova-extra-config` configuration map that is assigned to `nova`. Overwriting the configuration can break the data place services that rely on specific contents of the `nova-extra-config` configuration map.
@@ -267,6 +266,7 @@ For {Ceph} environments with multi-cell configurations, you must name configurat
 
 . Create the data plane services for {compute_service} cells to enable pre-upgrade workarounds, and to configure the Compute services for your chosen storage back end:
 +
+[subs="+quotes"]
 ----
 $ for CELL in $(echo $RENAMED_CELLS); do
 > oc apply -f - <<EOF
@@ -276,11 +276,11 @@ $ for CELL in $(echo $RENAMED_CELLS); do
 > metadata:
 >  name: nova-$CELL
 > spec:
->  dataSources: <1>
+>  dataSources:
 >    - secretRef:
->        name: nova-$CELL-compute-config <2>
+>        name: nova-$CELL-compute-config
 >    - secretRef:
->        name: nova-migration-ssh-key <3>
+>        name: nova-migration-ssh-key
 >    - configMapRef:
 >        name: nova-cells-global-config
 >  playbook: osp.edpm.nova
@@ -293,7 +293,24 @@ $ for CELL in $(echo $RENAMED_CELLS); do
 >  done
 ----
 +
-* If TLS Everywhere is enabled, append the following content to the `OpenStackDataPlaneService` CR:
+* `spec.dataSources.secretRef` specifies an additional auto-generated `nova-cell<X>-metadata-neutron-config` secret to enable a local metadata service for cell<X>. You should also set
+`spec.nova.template.cellTemplates.cell<X>.metadataServiceTemplate.enable` in the `OpenStackControlPlane/openstack` CR, as described in xref:adopting-the-compute-service_{context}[Adopting the Compute service]. You can configure a single top-level metadata, or define the metadata per cell.
+* `nova-$CELL-compute-config` specifies the secret that auto-generates for each `cell<X>`. You must append the `nova-cell<X>-compute-config` for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
+* `nova-migration-ssh-key` specifies the secret that you must append for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
++
+[NOTE]
+====
+When creating your data plane services for {compute_service} cells, review the following considerations:
+
+* In this example, the same `nova-migration-ssh-key` key is shared across cells. However, you should use different keys for different cells.
+* For simple configuration overrides, you do not need a custom data plane service. However, to reconfigure the cell, `cell1`,
+the safest option is to create a custom service and a dedicated configuration map for it.
+* The cell, `cell1`, is already managed with the default `OpenStackDataPlaneService` CR called `nova` and its `nova-extra-config` configuration map. Do not change the default data plane service `nova` definition. The changes are lost when the {rhos_acro} operator is updated with OLM.
+* When a cell spans multiple node sets, give the custom `OpenStackDataPlaneService` resources a name that relates to the node set, for example, `nova-cell1-nfv` and `nova-cell1-enterprise`. The auto-generated configuration maps are then named `nova-cell1-nfv-extra-config` and `nova-cell1-enterprise-extra-config`.
+* Different configurations for nodes in multiple node sets of the same cell are also supported, but are not covered in this guide.
+====
+
+. If TLS Everywhere is enabled, append the following content to the `OpenStackDataPlaneService` CR:
 +
 ----
   tlsCerts:
@@ -307,23 +324,6 @@ $ for CELL in $(echo $RENAMED_CELLS); do
   caCerts: combined-ca-bundle
   edpmServiceType: nova
 ----
-+
-<1> To enable a local metadata service for cell<X>, append a `spec.dataSources.secretRef` to reference an additional auto-generated `nova-cell<X>-metadata-neutron-config` secret. You should also set
-`spec.nova.template.cellTemplates.cell<X>.metadataServiceTemplate.enable` in the `OpenStackControlPlane/openstack` CR, as described in xref:adopting-the-compute-service_{context}[Adopting the Compute service]. You can configure a single top-level metadata, or define the metadata per cell.
-<2> The secret `nova-cell<X>-compute-config` auto-generates for each `cell<X>`.
-<3> You must append the `nova-cell<X>-compute-config` and `nova-migration-ssh-key` references for each custom `OpenStackDataPlaneService` CR that is related to the {compute_service}.
-+
-[NOTE]
-====
-When creating your data plane services for {compute_service} cells, review the following considerations:
-
-* In this example, the same `nova-migration-ssh-key` key is shared across cells. However, you should use different keys for different cells.
-* For simple configuration overrides, you do not need a custom data plane service. However, to reconfigure the cell, `cell1`,
-the safest option is to create a custom service and a dedicated configuration map for it.
-* The cell, `cell1`, is already managed with the default `OpenStackDataPlaneService` CR called `nova` and its `nova-extra-config` configuration map. Do not change the default data plane service `nova` definition. The changes are lost when the {rhos_acro} operator is updated with OLM.
-* When a cell spans multiple node sets, give the custom `OpenStackDataPlaneService` resources a name that relates to the node set, for example, `nova-cell1-nfv` and `nova-cell1-enterprise`. The auto-generated configuration maps are then named `nova-cell1-nfv-extra-config` and `nova-cell1-enterprise-extra-config`.
-* Different configurations for nodes in multiple node sets of the same cell are also supported, but are not covered in this guide.
-====
 
 ifeval::["{build}" == "downstream"]
 . Create a secret for the subscription manager:
@@ -355,6 +355,7 @@ The secret is already passed in with a node-specific `OpenStackDataPlaneNodeSet`
 
 . Create the data plane node set definitions for each cell:
 +
+[subs="+quotes"]
 ----
 $ declare -A names
 $ for CELL in $(echo $RENAMED_CELLS); do
@@ -369,10 +370,10 @@ $ for CELL in $(echo $RENAMED_CELLS); do
     ip_api="${ref_api}['$compute']"
     cat >> computes-$CELL << EOF
     ${compute}:
-      hostName: $compute <1>
+     *hostName: $compute*
       ansible:
         ansibleHost: $compute
-      networks: <2>
+     *networks:*
       - defaultRoute: true
         fixedIP: ${!ip}
         name: ctlplane
@@ -393,13 +394,13 @@ EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneNodeSet
 metadata:
-  name: openstack-$CELL <3>
+ *name: openstack-$CELL*
 spec:
-  tlsEnabled: false <4>
+  *tlsEnabled: false*
   networkAttachments:
       - ctlplane
   preProvisioned: true
-  services:
+  *services*:
 ifeval::["{build}" == "downstream"]
     - redhat
 endif::[]
@@ -417,7 +418,7 @@ endif::[]
     - neutron-metadata
     - libvirt
     - nova-$CELL
-    - telemetry <5>
+    - telemetry
   env:
     - name: ANSIBLE_CALLBACKS_ENABLED
       value: "profile_tasks"
@@ -494,7 +495,7 @@ endif::[]
         #
         # These vars are for the network config templates themselves and are
         # considered EDPM network defaults.
-        neutron_physical_bridge_name: br-ctlplane <6>
+        *neutron_physical_bridge_name: br-ctlplane*
         neutron_public_interface_name: eth0
 
         # edpm_nodes_validation
@@ -502,7 +503,7 @@ endif::[]
         edpm_nodes_validation_validate_gateway_icmp: false
 
         # edpm ovn-controller configuration
-        edpm_ovn_bridge_mappings: <bridge_mappings> <7>
+        *edpm_ovn_bridge_mappings: <bridge_mappings>*
         edpm_ovn_bridge: br-int
         edpm_ovn_encap_type: geneve
         ovn_monitor_all: true
@@ -553,9 +554,9 @@ endif::[]
         # Do not attempt OVS major upgrades here
         edpm_ovs_packages:
         - openvswitch3.3
-        edpm_default_mounts: <8>
-          - path: /dev/hugepages<size>
-            opts: pagesize=<size>
+        edpm_default_mounts:
+          - *path: /dev/hugepages<size>*
+            *opts: pagesize=<size>*
             fstype: hugetlbfs
             group: hugetlbfs
   nodes:
@@ -564,14 +565,14 @@ EOF
 done
 ----
 +
-<1> If your deployment has a custom DNS Domain, specify the FQDN for the node.
-<2> The network composition must match the source cloud configuration to avoid data plane connectivity downtime. The `ctlplane` network must come first. The commands only retain IP addresses for the hosts on the `ctlplane` and `internalapi` networks. Repeat this step for other isolated networks, or update the resulting files manually.
-<3> Use node sets names, such as `openstack-cell1`, `openstack-cell2`. Only create node sets for cells that contain Compute nodes.
-<4> If TLS Everywhere is enabled, change `tlsEnabled` to `true`.
-<5> If you are not adopting telemetry services, omit it from the services list.
-<6> The bridge name and other OVN and {networking_service}-specific values must match the source cloud configuration to avoid data plane connectivity downtime.
-<7> Replace `<bridge_mappings>` with the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
-<8> To configure huge pages, replace `<size>` with the size of the page. To configure multi-sized huge pages, create more items in the list. Note that the mount points must match the source cloud configuration.
+* `${compute}.hostName` specifies the FQDN for the node if your deployment has a custom DNS Domain.
+* `${compute}.networks` specifies the network composition. The network composition must match the source cloud configuration to avoid data plane connectivity downtime. The `ctlplane` network must come first. The commands only retain IP addresses for the hosts on the `ctlplane` and `internalapi` networks. Repeat this step for other isolated networks, or update the resulting files manually.
+* `metadata.name:` specifies the node set names for each cell, for example, `openstack-cell1`, `openstack-cell2`. Only create node sets for cells that contain Compute nodes.
+* `spec.tlsEnabled` specifies whether TLS Everywhere is enabled. If it is enabled, change `tlsEnabled` to `true`.
+* `spec.services` specifies the services to be adopted. If you are not adopting telemetry services, omit it from the services list.
+* `neutron_physical_bridge_name: br-ctlplane` specifies the bridge name. The bridge name and other OVN and {networking_service}-specific values must match the source cloud configuration to avoid data plane connectivity downtime.
+*`edpm_ovn_bridge_mappings: <bridge_mappings>` specifies the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
+* `path: /dev/hugepages<size>` and `opts: pagesize=<size>` configures huge pages. Replace `<size>` with the size of the page. To configure multi-sized huge pages, create more items in the list. Note that the mount points must match the source cloud configuration.
 +
 [NOTE]
 ====

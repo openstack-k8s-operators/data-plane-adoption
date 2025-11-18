@@ -13,6 +13,7 @@ Adopt the {image_service_first_ref} that you deployed with a {Ceph} back end. Us
 the `openstack` namespace and that the `extraMounts` property of the
 `OpenStackControlPlane` custom resource (CR) is configured properly. For more information, see xref:configuring-a-ceph-backend_migrating-databases[Configuring a Ceph back end].
 +
+[subs="+quotes"]
 ----
 $ cat << EOF > glance_patch.yaml
 spec:
@@ -42,7 +43,7 @@ spec:
                   annotations:
                     metallb.universe.tf/address-pool: internalapi
                     metallb.universe.tf/allow-shared-ip: internalapi
-                    metallb.universe.tf/loadBalancerIPs: 172.17.0.80 <1>
+                    *metallb.universe.tf/loadBalancerIPs: <172.17.0.80>*
                 spec:
                   type: LoadBalancer
           networkAttachments:
@@ -50,7 +51,10 @@ spec:
 EOF
 ----
 +
-<1> If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
+where:
+
+<172.17.0.80>::
+Specifies the load balancer IP. If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
 
 [NOTE]
 ====
