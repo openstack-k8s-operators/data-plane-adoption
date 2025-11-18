@@ -235,6 +235,20 @@
     oc exec ovn-copy-data -- bash -c "ovsdb-client get-schema --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_SB_IP:6642 > /backup/ovs-sb.ovsschema && ovsdb-tool convert /backup/ovs-sb.db /backup/ovs-sb.ovsschema"
   when: enable_tlse|bool
 
+- name: verify OVSDB servers are accessible before restore
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    oc exec ovn-copy-data -- bash -c "ovsdb-client list-dbs tcp:$PODIFIED_OVSDB_NB_IP:6641"
+    oc exec ovn-copy-data -- bash -c "ovsdb-client list-dbs tcp:$PODIFIED_OVSDB_SB_IP:6642"
+  register: ovsdb_connectivity_check
+  until: ovsdb_connectivity_check is success
+  retries: 10
+  delay: 5
+  when: enable_tlse|bool is false
+
 - name: restore OVN database backups to podified ovsdb-servers
   when: enable_tlse|bool is false
   block:
@@ -247,6 +261,12 @@
 
         oc exec ovn-copy-data -- bash -c "ovsdb-client -v restore tcp:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
 
+      register: ovn_nb_restore_result
+      until: ovn_nb_restore_result is success
+      retries: 5
+      delay: 10
+
+
     - name: restore OVN SB database backup to podified ovsdb-servers
       no_log: "{{ use_no_log }}"
       ansible.builtin.shell: |
@@ -255,6 +275,25 @@
         {{ ovn_copy_shell_vars }}
 
         oc exec ovn-copy-data -- bash -c "ovsdb-client -v restore tcp:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
+
+      register: ovn_sb_restore_result
+      until: ovn_sb_restore_result is success
+      retries: 5
+      delay: 10
+
+- name: verify OVSDB servers are accessible before restore (tls)
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ ovn_copy_shell_vars }}
+
+    oc exec ovn-copy-data -- bash -c "ovsdb-client list-dbs --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_NB_IP:6641"
+    oc exec ovn-copy-data -- bash -c "ovsdb-client list-dbs --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_SB_IP:6642"
+  register: ovsdb_connectivity_check_tls
+  until: ovsdb_connectivity_check_tls is success
+  retries: 10
+  delay: 5
+  when: enable_tlse|bool
 
 - name: restore OVN database backups to podified ovsdb-servers (tls)
   when: enable_tlse|bool
@@ -268,6 +307,11 @@
 
         oc exec ovn-copy-data -- bash -c "ovsdb-client -v restore --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_NB_IP:6641 < /backup/ovs-nb.db"
 
+      register: ovn_nb_restore_tls_result
+      until: ovn_nb_restore_tls_result is success
+      retries: 5
+      delay: 10
+
     - name: restore OVN SB database backup to podified ovsdb-servers (tls)
       no_log: "{{ use_no_log }}"
       ansible.builtin.shell: |
@@ -276,6 +320,10 @@
         {{ ovn_copy_shell_vars }}
 
         oc exec ovn-copy-data -- bash -c "ovsdb-client -v restore --ca-cert=/etc/pki/tls/misc/ca.crt --private-key=/etc/pki/tls/misc/tls.key --certificate=/etc/pki/tls/misc/tls.crt ssl:$PODIFIED_OVSDB_SB_IP:6642 < /backup/ovs-sb.db"
+      register: ovn_sb_restore_tls_result
+      until: ovn_sb_restore_tls_result is success
+      retries: 5
+      delay: 10
 
 - name: deploy podified OVN northd service to keep databases in sync
   ansible.builtin.shell: |
