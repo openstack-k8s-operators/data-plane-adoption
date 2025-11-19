@@ -169,16 +169,16 @@ stacks:
       - osp-r0-controllers
       - osp-r1-controllers
       - osp-r2-controllers
-    pre_oc_run:
-      - name: "[BGP] Add default route to OC nodes before OC deploy"
-        type: playbook
-        source: "adoption_bgp_pre_overcloud.yaml"
-    post_oc_run:
-      - name: "[BGP] Remove default route from OC nodes after OC deploy"
-        type: playbook
-        source: "adoption_bgp_post_overcloud.yaml"
+    #pre_oc_run:
+    #  - name: "[BGP] Add default route to OC nodes before OC deploy"
+    #    type: playbook
+    #    source: "adoption_bgp_pre_overcloud.yaml"
+    #post_oc_run:
+    #  - name: "[BGP] Remove default route from OC nodes after OC deploy"
+    #    type: playbook
+    #    source: "adoption_bgp_post_overcloud.yaml"
 pre_uc_run:
-  - name: Deploy BGP fabric
+  - name: "01 Deploy BGP fabric"
     type: playbook
     source: "../../playbooks/bgp/prepare-bgp-spines-leaves.yaml"
     extra_vars:
@@ -188,3 +188,10 @@ pre_uc_run:
       router_bool: true
       router_uplink_ip: 100.64.10.1
       cifmw_repo_setup_rhos_release_rpm: "{{ cifmw_repo_setup_rhos_release_rpm }}"
+  - name: "02 Add default route to UC and OC nodes before UC deploy"
+    type: playbook
+    source: "adoption_bgp_pre_undercloud.yaml"
+post_uc_run:
+  - name: Remove default route from UC after UC deploy
+    type: playbook
+    source: "adoption_bgp_post_undercloud.yaml"
