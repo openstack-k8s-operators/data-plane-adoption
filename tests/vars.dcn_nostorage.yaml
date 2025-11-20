@@ -90,13 +90,13 @@ netconfig_networks:
         start: 172.17.10.100
       cidr: 172.17.10.0/24
       name: internalapidcn1
-      vlan: 20
+      vlan: 30
     - allocationRanges:
       - end: 172.17.20.250
         start: 172.17.20.100
       cidr: 172.17.20.0/24
       name: internalapidcn2
-      vlan: 20
+      vlan: 40
   - dnsDomain: external.example.com
     mtu: 1500
     name: External
@@ -125,13 +125,13 @@ netconfig_networks:
         start: 172.18.10.100
       cidr: 172.18.10.0/24
       name: storagedcn1
-      vlan: 21
+      vlan: 31
     - allocationRanges:
       - end: 172.18.20.250
         start: 172.18.20.100
       cidr: 172.18.20.0/24
       name: storagedcn2
-      vlan: 21
+      vlan: 41
   - dnsDomain: storagemgmt.example.com
     mtu: 1500
     name: storagemgmt
@@ -148,13 +148,13 @@ netconfig_networks:
         start: 172.20.10.100
       cidr: 172.20.10.0/24
       name: storagemgmtdcn1
-      vlan: 23
+      vlan: 33
     - allocationRanges:
       - end: 172.20.20.250
         start: 172.20.20.100
       cidr: 172.20.20.0/24
       name: storagemgmtdcn2
-      vlan: 23
+      vlan: 43
   - dnsDomain: tenant.example.com
     mtu: 1500
     name: tenant
@@ -171,11 +171,11 @@ netconfig_networks:
         start: 172.19.10.100
       cidr: 172.19.10.0/24
       name: tenantdcn1
-      vlan: 22
+      vlan: 32
     - allocationRanges:
       - end: 172.19.20.250
         start: 172.19.20.100
       cidr: 172.19.20.0/24
       name: tenantdcn2
-      vlan: 22
+      vlan: 42
 
