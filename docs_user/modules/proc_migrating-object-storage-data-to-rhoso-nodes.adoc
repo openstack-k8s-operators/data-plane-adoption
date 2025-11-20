@@ -120,6 +120,16 @@ There were 285 partitions missing 0 copies.
 Sample represents 100.00% of the object partition space
 ----
 
++
+[NOTE]
+The rebalance command moves only one replica at a time to ensure continuos data
+availability. This requires running the rebalance command multiple times to
+complete the full rebalance operation.
+Additionally, a one-hour minimum time between consecutive rebalance commands is
+enforced to prevent moving multiple replicas at the same time. Running the
+rebalance again before this period elapses will have no effect.
++
+
 . Move the next replica to the new nodes by rebalancing and distributing the rings:
 +
 ----
