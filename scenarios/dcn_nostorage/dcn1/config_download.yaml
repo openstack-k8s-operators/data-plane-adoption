@@ -86,7 +86,11 @@ parameter_defaults:
         cidr: 192.168.133.0/24
         dns_nameservers: 192.168.122.10
         gateway_ip: 192.168.133.1
-        host_routes: []
+        host_routes:
+          - destination: 192.168.122.0/24  # Route to central ctlplane for DNS
+            nexthop: 192.168.133.1
+          - destination: 192.168.144.0/24  # Route to DCN2
+            nexthop: 192.168.133.1
         name: leaf1
         ip_version: 4
       leaf2:

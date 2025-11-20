@@ -77,7 +77,11 @@ parameter_defaults:
         cidr: 192.168.122.0/24
         dns_nameservers: 192.168.122.10
         gateway_ip: 192.168.122.10
-        host_routes: []
+        host_routes:
+          - destination: 192.168.133.0/24  # Route to DCN1
+            nexthop: 192.168.122.10
+          - destination: 192.168.144.0/24  # Route to DCN2
+            nexthop: 192.168.122.10
         name: ctlplane-subnet
         ip_version: 4
 

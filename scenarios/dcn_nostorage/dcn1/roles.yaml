@@ -11,11 +11,11 @@
     - external_bridge
   networks:
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_leaf1
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_leaf_1
     Storage:
-      subnet: storage_subnet
+      subnet: storage_leaf1
   default_route_networks: ['ControlPlane']
   HostnameFormatDefault: '%stack%-compute-%index%'
   RoleParametersDefault:

@@ -14,6 +14,11 @@
       vlan: 31
       ip_subnet: '172.18.10.0/24'
       allocation_pools: [{'start': '172.18.10.120', 'end': '172.18.10.250'}]
+      routes:
+        - destination: 172.18.0.0/24
+          nexthop: 172.18.10.1
+        - destination: 172.18.20.0/24
+          nexthop: 172.18.10.1
     storage_leaf2:
       vlan: 41
       ip_subnet: '172.18.20.0/24'
@@ -54,6 +59,11 @@
       vlan: 30
       ip_subnet: '172.17.10.0/24'
       allocation_pools: [{'start': '172.17.10.120', 'end': '172.17.10.250'}]
+      routes:
+        - destination: 172.17.0.0/24
+          nexthop: 172.17.10.1
+        - destination: 172.17.20.0/24
+          nexthop: 172.17.10.1
     internal_api_leaf2:
       vlan: 40
       ip_subnet: '172.17.20.0/24'
@@ -74,6 +84,11 @@
       vlan: 32
       ip_subnet: '172.19.10.0/24'
       allocation_pools: [{'start': '172.19.10.120', 'end': '172.19.10.250'}]
+      routes:
+        - destination: 172.19.0.0/24
+          nexthop: 172.19.10.1
+        - destination: 172.19.20.0/24
+          nexthop: 172.19.10.1
     tenant_leaf_2:
       vlan: 42
       ip_subnet: '172.19.20.0/24'

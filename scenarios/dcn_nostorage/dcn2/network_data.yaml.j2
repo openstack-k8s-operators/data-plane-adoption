@@ -18,6 +18,11 @@
       vlan: 41
       ip_subnet: '172.18.20.0/24'
       allocation_pools: [{'start': '172.18.20.120', 'end': '172.18.20.250'}]
+      routes:
+        - destination: 172.18.0.0/24
+          nexthop: 172.18.20.1
+        - destination: 172.18.10.0/24
+          nexthop: 172.18.20.1
 
 - name: StorageMgmt
   mtu: 1496
@@ -58,6 +63,11 @@
       vlan: 40
       ip_subnet: '172.17.20.0/24'
       allocation_pools: [{'start': '172.17.20.120', 'end': '172.17.20.250'}]
+      routes:
+        - destination: 172.17.0.0/24
+          nexthop: 172.17.20.1
+        - destination: 172.17.10.0/24
+          nexthop: 172.17.20.1
 
 - name: Tenant
   mtu: 1496
@@ -78,6 +88,11 @@
       vlan: 42
       ip_subnet: '172.19.20.0/24'
       allocation_pools: [{'start': '172.19.20.120', 'end': '172.19.20.250'}]
+      routes:
+        - destination: 172.19.0.0/24
+          nexthop: 172.19.20.1
+        - destination: 172.19.10.0/24
+          nexthop: 172.19.20.1
 
 - name: External
   mtu: 1500
