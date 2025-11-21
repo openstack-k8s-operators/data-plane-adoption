@@ -142,7 +142,7 @@ The source cloud always uses the same password for cells databases. For that rea
 $ unset PULL_OPENSTACK_CONFIGURATION_DATABASES
 $ declare -xA PULL_OPENSTACK_CONFIGURATION_DATABASES
 $ for CELL in $(echo $CELLS); do
->     PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]=$(oc run mariadb-client-1-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>     PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]=$(oc run mariadb-client-1-$CELL --overrides="${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS" -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
 >         mysql -rsh "${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e 'SHOW databases;')
 > done
 ----
