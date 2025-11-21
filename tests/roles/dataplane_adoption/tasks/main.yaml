@@ -589,11 +589,6 @@
   ansible.builtin.include_tasks:
     file: nova_ffu.yaml
 
-- name: Adopted Nova FFU post-checks
-  when: compute_adoption|bool
-  ansible.builtin.include_tasks:
-    file: nova_verify.yaml
-
 - name: Cleanup non-adopted Neutron and OVN agents
   ansible.builtin.include_tasks:
     file: neutron_agents_cleanup.yaml
@@ -601,6 +596,11 @@
 - name: Adopted Neutron and OVN agents post-checks
   ansible.builtin.include_tasks:
     file: neutron_verify.yaml
+
+- name: Adopted Nova FFU post-checks
+  when: compute_adoption|bool
+  ansible.builtin.include_tasks:
+    file: nova_verify.yaml
 
 - name: Adopted Octavia post-checks
   when: octavia_adoption|bool
