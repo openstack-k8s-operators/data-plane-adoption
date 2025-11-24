@@ -36,6 +36,8 @@ resource_registry:
   OS::TripleO::Services::HeatEngine: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-engine-container-puppet.yaml
   OS::TripleO::Services::NovaAZConfig: /usr/share/openstack-tripleo-heat-templates/deployment/nova/nova-az-config.yaml
 parameter_defaults:
+  # DCN deployment requires loose rp_filter to allow asymmetric routing
+  KernelIpv4ConfAllRpFilter: 2
   RedisVirtualFixedIPs:
     - ip_address: 192.168.122.110
       use_neutron: false
@@ -43,6 +45,7 @@ parameter_defaults:
     - ip_address: 192.168.122.111
       use_neutron: false
   ControllerExtraConfig:
+    nova::availability_zone::default_schedule_zone: az-central
     nova::compute::libvirt::services::libvirt_virt_type: qemu
     nova::compute::libvirt::virt_type: qemu
   ComputeExtraConfig:
@@ -90,8 +93,6 @@ parameter_defaults:
   ComputeParameters:
     NeutronBridgeMappings:
     - leaf0:br-ex
-  ControllerExtraConfig:
-    nova::availability_zone::default_schedule_zone: az-central
   ControllerNetworkConfigTemplate: /home/stack/central/network/spine-leaf-nics/controller0.j2
   ControllerParameters:
     NeutronBridgeMappings:
