@@ -71,7 +71,8 @@ ${BASH_ALIASES[openstack]} flavor create baremetal --ram 1024 --vcpus 1 --disk 1
   --property resources:MEMORY_MB=0 \
   --property resources:DISK_GB=0 \
   --property resources:CUSTOM_BAREMETAL=1 \
-  --property capabilities:boot_mode="uefi"
+  --property capabilities:boot_mode="uefi" \
+  --id 123456789-1234-1234-1234-000000000001
 
 # Create image
 IMG=CentOS-Stream-GenericCloud-x86_64-9-latest.x86_64.qcow2
