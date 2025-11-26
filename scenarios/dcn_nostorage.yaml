@@ -161,6 +161,22 @@ stacks:
       - ip_netmask: 0.0.0.0/0
         next_hop: 192.168.133.1
         default: true
+    network_routes:
+      internalapidcn1:
+        - ip_netmask: 172.17.0.0/24
+          next_hop: 172.17.10.1
+        - ip_netmask: 172.17.20.0/24
+          next_hop: 172.17.10.1
+      storagedcn1:
+        - ip_netmask: 172.18.0.0/24
+          next_hop: 172.18.10.1
+        - ip_netmask: 172.18.20.0/24
+          next_hop: 172.18.10.1
+      tenantdcn1:
+        - ip_netmask: 172.19.0.0/24
+          next_hop: 172.19.10.1
+        - ip_netmask: 172.19.20.0/24
+          next_hop: 172.19.10.1
   - stackname: dcn2
     args:
       - "--override-ansible-cfg /home/zuul/ansible_config.cfg"
@@ -190,3 +206,19 @@ stacks:
       - ip_netmask: 0.0.0.0/0
         next_hop: 192.168.144.1
         default: true
+    network_routes:
+      internalapidcn2:
+        - ip_netmask: 172.17.0.0/24
+          next_hop: 172.17.20.1
+        - ip_netmask: 172.17.10.0/24
+          next_hop: 172.17.20.1
+      storagedcn2:
+        - ip_netmask: 172.18.0.0/24
+          next_hop: 172.18.20.1
+        - ip_netmask: 172.18.10.0/24
+          next_hop: 172.18.20.1
+      tenantdcn2:
+        - ip_netmask: 172.19.0.0/24
+          next_hop: 172.19.20.1
+        - ip_netmask: 172.19.10.0/24
+          next_hop: 172.19.20.1
