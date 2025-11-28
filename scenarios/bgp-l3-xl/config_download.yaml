@@ -454,11 +454,11 @@ parameter_defaults:
   ControlPlaneSubnet: main_network_r0
   VipSubnetMap:
     main_network: main_network_r0
-  # provider1 represents a flat network
+  # datacentre represents a flat network
   # provider2 represents a network with vlans
-  NeutronFlatNetworks: provider1
+  NeutronFlatNetworks: datacentre
   ControllerRack0Parameters:
-    NeutronBridgeMappings: ["provider1:br-ex", "provider2:br-vlan"]
+    NeutronBridgeMappings: ["datacentre:br-ex", "provider2:br-vlan"]
     ControlPlaneSubnet: main_network_r0
     MemcachedIpSubnet: main_network_r0
     OVNCMSOptions: "enable-chassis-as-gw"
@@ -473,7 +473,7 @@ parameter_defaults:
         value: 0
 
   ControllerRack1Parameters:
-    NeutronBridgeMappings: ["provider1:br-ex", "provider2:br-vlan"]
+    NeutronBridgeMappings: ["datacentre:br-ex", "provider2:br-vlan"]
     ControlPlaneSubnet: main_network_r1
     MemcachedIpSubnet: main_network_r1
     OVNCMSOptions: "enable-chassis-as-gw"
@@ -487,7 +487,7 @@ parameter_defaults:
       net.ipv6.conf.br-ex.router_solicitations:
         value: 0
   ControllerRack2Parameters:
-    NeutronBridgeMappings: ["provider1:br-ex", "provider2:br-vlan"]
+    NeutronBridgeMappings: ["datacentre:br-ex", "provider2:br-vlan"]
     ControlPlaneSubnet: main_network_r2
     MemcachedIpSubnet: main_network_r2
     OVNCMSOptions: "enable-chassis-as-gw"
@@ -501,7 +501,7 @@ parameter_defaults:
       net.ipv6.conf.br-ex.router_solicitations:
         value: 0
   ComputeRack0Parameters:
-    NeutronBridgeMappings: ["provider1:br-ex", "provider2:br-vlan"]
+    NeutronBridgeMappings: ["datacentre:br-ex", "provider2:br-vlan"]
     FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
     ExtraSysctlSettings:
       net.ipv6.conf.eth2.accept_ra_defrtr:
@@ -511,7 +511,7 @@ parameter_defaults:
       net.ipv6.conf.br-ex.router_solicitations:
         value: 0
   ComputeRack1Parameters:
-    NeutronBridgeMappings: ["provider1:br-ex", "provider2:br-vlan"]
+    NeutronBridgeMappings: ["datacentre:br-ex", "provider2:br-vlan"]
     FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
     ExtraSysctlSettings:
       net.ipv6.conf.eth2.accept_ra_defrtr:
@@ -521,7 +521,7 @@ parameter_defaults:
       net.ipv6.conf.br-ex.router_solicitations:
         value: 0
   ComputeRack2Parameters:
-    NeutronBridgeMappings: ["provider1:br-ex", "provider2:br-vlan"]
+    NeutronBridgeMappings: ["datacentre:br-ex", "provider2:br-vlan"]
     FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
     ExtraSysctlSettings:
       net.ipv6.conf.eth2.accept_ra_defrtr:
