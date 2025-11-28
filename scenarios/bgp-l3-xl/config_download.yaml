@@ -436,7 +436,6 @@ parameter_defaults:
 
   # Allow ssh access from all networks
   SshFirewallAllowAll: true
-  MemcachedIpSubnet: '172.16.0.0/12'
 
   BarbicanSimpleCryptoGlobalDefault: true
 
@@ -461,6 +460,7 @@ parameter_defaults:
   ControllerRack0Parameters:
     NeutronBridgeMappings: ["provider1:br-ex", "provider2:br-vlan"]
     ControlPlaneSubnet: main_network_r0
+    MemcachedIpSubnet: main_network_r0
     OVNCMSOptions: "enable-chassis-as-gw"
     FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
     FrrOvnBgpAgentExposeTenantNetworks: true
@@ -475,6 +475,7 @@ parameter_defaults:
   ControllerRack1Parameters:
     NeutronBridgeMappings: ["provider1:br-ex", "provider2:br-vlan"]
     ControlPlaneSubnet: main_network_r1
+    MemcachedIpSubnet: main_network_r1
     OVNCMSOptions: "enable-chassis-as-gw"
     FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
     FrrOvnBgpAgentExposeTenantNetworks: true
@@ -488,6 +489,7 @@ parameter_defaults:
   ControllerRack2Parameters:
     NeutronBridgeMappings: ["provider1:br-ex", "provider2:br-vlan"]
     ControlPlaneSubnet: main_network_r2
+    MemcachedIpSubnet: main_network_r2
     OVNCMSOptions: "enable-chassis-as-gw"
     FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
     FrrOvnBgpAgentExposeTenantNetworks: true
