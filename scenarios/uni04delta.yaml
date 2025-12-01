@@ -75,8 +75,6 @@ stacks:
         gathering: implicit
         inventory: "{{ ansible_user_dir }}/{{ zuul.projects['github.com/openstack-k8s-operators/data-plane-adoption'].
                     src_dir }}/scenarios/uni04delta/ceph_inventory.yaml"
-        extra_vars:
-          cifmw_ceph_ipv6: false
       - name: 03 Create external Ceph parameters file
         type: playbook
         source: "create_external_ceph_params.yml"
