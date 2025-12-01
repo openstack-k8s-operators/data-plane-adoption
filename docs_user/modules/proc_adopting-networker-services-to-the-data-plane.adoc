@@ -193,7 +193,7 @@ endif::[]
                    {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
                routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
            {% endfor %}
-
+        edpm_network_config_nmstate: false
         edpm_network_config_hide_sensitive_logs: false
         #
         # These vars are for the network config templates themselves and are
