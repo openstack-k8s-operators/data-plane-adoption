@@ -121,6 +121,14 @@ mariadb_passwords_env: |-
 # OSPDo RUN_OVERRIDES definition exists only in docs (missing in code?).
 # NOTE: in a split-stack source cloud, each stack passwords should come from a stack-specific passwords file,
 # but different passwords are not supported in a multi-cell deployment
+mariadb_client_network_annotation: >-
+  {{
+    '--annotations=k8s.v1.cni.cncf.io/networks=[{\"name\":\"internalapi\",\"namespace\":\"openstack\"}]'
+    if not (bgp | bool)
+    else
+    '--annotations=k8s.v1.cni.cncf.io/networks=[{\"name\":\"internalapi\",\"namespace\":\"openstack\",\"default-route\":[\"'
+    + internalapi_prefix | default('172.17.0') + '.1\"]}]'
+  }}
 mariadb_copy_shell_vars_src: |-
   {{ shell_header }}
 
@@ -135,7 +143,7 @@ mariadb_copy_shell_vars_src: |-
   done
 
   RUN_OVERRIDES=' '
-  MARIADB_CLIENT_ANNOTATIONS={{ deploy_ctlplane_ospdo | default(false) | bool | ternary('-n $NAMESPACE', '--annotations=k8s.v1.cni.cncf.io/networks=[{\"name\":\"internalapi\",\"namespace\":\"openstack\"}]') }}
+  MARIADB_CLIENT_ANNOTATIONS={{ deploy_ctlplane_ospdo | default(false) | bool | ternary('-n $NAMESPACE', mariadb_client_network_annotation) }}
   MARIADB_RUN_OVERRIDES={{ deploy_ctlplane_ospdo | default(false) | bool | ternary("--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS {{ mysql_client_override }}", "$MARIADB_CLIENT_ANNOTATIONS") }}
 
   OSPDO_MARIADB_CLIENT_ANNOTATIONS='[{"name": "internalapi-static","ips": ["{% if ipv6_enabled | default(false) %}{{ internalapi_prefix_ipv6 | default('2620:cf:cf:bbbb') }}::99/64{% else %}{{ internalapi_prefix | default('172.17.0') }}.99/24{% endif %}"]}]'
