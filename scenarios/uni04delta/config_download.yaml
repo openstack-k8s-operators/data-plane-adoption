@@ -12,8 +12,6 @@ resource_registry:
   OS::TripleO::Controller::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
   OS::TripleO::Controller::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
   OS::TripleO::Controller::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
-  OS::TripleO::Controller::Ports::DesignatePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_designate.yaml
-  OS::TripleO::Controller::Ports::DesignateExtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_designateext.yaml
   OS::TripleO::Services::CeilometerAgentCentral: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-central-container-puppet.yaml
   OS::TripleO::Services::CeilometerAgentNotification: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-notification-container-puppet.yaml
   OS::TripleO::Services::CeilometerAgentIpmi: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-ipmi-container-puppet.yaml

@@ -24,10 +24,6 @@
       subnet: tenant_subnet
     External:
       subnet: external_subnet
-    Designate:
-      subnet: designate_subnet
-    Designateext:
-      subnet: designateext_subnet
   # For systems with both IPv4 and IPv6, you may specify a gateway network for
   # each, such as ['ControlPlane', 'External']
   default_route_networks: ['ControlPlane']
@@ -89,13 +85,6 @@
     - OS::TripleO::Services::Clustercheck
     - OS::TripleO::Services::Collectd
     - OS::TripleO::Services::ContainerImagePrepare
-    - OS::TripleO::Services::DesignateApi
-    - OS::TripleO::Services::DesignateCentral
-    - OS::TripleO::Services::DesignateProducer
-    - OS::TripleO::Services::DesignateWorker
-    - OS::TripleO::Services::DesignateMDNS
-    - OS::TripleO::Services::DesignateSink
-    - OS::TripleO::Services::DesignateBind
     - OS::TripleO::Services::Etcd
     - OS::TripleO::Services::ExternalSwiftProxy
     - OS::TripleO::Services::Frr
