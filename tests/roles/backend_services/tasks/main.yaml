@@ -28,6 +28,9 @@
     {% if cinder_password %}
         oc set data secret/osp-secret "CinderPassword={{ cinder_password }}"
     {% endif %}
+    {% if designate_password %}
+        oc set data secret/osp-secret "DesignatePassword={{ designate_password }}"
+    {% endif %}
     {% if glance_password %}
         oc set data secret/osp-secret "GlancePassword={{ glance_password }}"
     {% endif %}
