@@ -91,12 +91,14 @@ netconfig_networks:
       cidr: 172.17.10.0/24
       name: internalapidcn1
       vlan: 30
+      routes: "{{ edpm_dcn1_routes.get('internalapidcn1', []) }}"
     - allocationRanges:
       - end: 172.17.20.250
         start: 172.17.20.100
       cidr: 172.17.20.0/24
       name: internalapidcn2
       vlan: 40
+      routes: "{{ edpm_dcn2_routes.get('internalapidcn2', []) }}"
   - dnsDomain: external.example.com
     mtu: 1500
     name: External
@@ -126,12 +128,14 @@ netconfig_networks:
       cidr: 172.18.10.0/24
       name: storagedcn1
       vlan: 31
+      routes: "{{ edpm_dcn1_routes.get('storagedcn1', []) }}"
     - allocationRanges:
       - end: 172.18.20.250
         start: 172.18.20.100
       cidr: 172.18.20.0/24
       name: storagedcn2
       vlan: 41
+      routes: "{{ edpm_dcn2_routes.get('storagedcn2', []) }}"
   - dnsDomain: storagemgmt.example.com
     mtu: 1500
     name: storagemgmt
@@ -172,10 +176,12 @@ netconfig_networks:
       cidr: 172.19.10.0/24
       name: tenantdcn1
       vlan: 32
+      routes: "{{ edpm_dcn1_routes.get('tenantdcn1', []) }}"
     - allocationRanges:
       - end: 172.19.20.250
         start: 172.19.20.100
       cidr: 172.19.20.0/24
       name: tenantdcn2
       vlan: 42
+      routes: "{{ edpm_dcn2_routes.get('tenantdcn2', []) }}"
 
