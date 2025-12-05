@@ -501,7 +501,9 @@
       subnet: main_network_ipv6_r0
   HostnameFormatDefault: 'osp-r0-compute-%index%'
   RoleParametersDefault:
-    TunedProfileName: "virtual-host"
+    FsAioMaxNumber: 1048576
+    TunedProfileName: "throughput-performance"
+    NovaComputeStartupDelay: 180
   disable_upgrade_deployment: true
   ServicesDefault:
     - OS::TripleO::Services::Aide
@@ -573,7 +575,9 @@
       subnet: main_network_ipv6_r0
   HostnameFormatDefault: 'osp-r1-compute-%index%'
   RoleParametersDefault:
-    TunedProfileName: "virtual-host"
+    FsAioMaxNumber: 1048576
+    TunedProfileName: "throughput-performance"
+    NovaComputeStartupDelay: 180
   disable_upgrade_deployment: true
   ServicesDefault:
     - OS::TripleO::Services::Aide
@@ -645,7 +649,9 @@
       subnet: main_network_ipv6_r0
   HostnameFormatDefault: 'osp-r2-compute-%index%'
   RoleParametersDefault:
-    TunedProfileName: "virtual-host"
+    FsAioMaxNumber: 1048576
+    TunedProfileName: "throughput-performance"
+    NovaComputeStartupDelay: 180
   disable_upgrade_deployment: true
   ServicesDefault:
     - OS::TripleO::Services::Aide
