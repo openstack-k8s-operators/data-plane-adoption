@@ -534,6 +534,14 @@
         echo "Run out of retries"
         exit 2
 
+- name: Add default route to EDPM nodes with os-net-config before deploying OpenStackDataPlaneDeployment (bgp)
+  when: bgp
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    ssh {{ item.key }} sudo "sed -i.bak '0,/defroute:/s/defroute:.*/defroute: true/' /etc/os-net-config/tripleo_config.yaml"
+    ssh {{ item.key }} sudo os-net-config -c /etc/os-net-config/tripleo_config.yaml --provider ifcfg --debug
+  loop: "{{ edpm_nodes | combine(edpm_nodes_networker | default({})) | dict2items }}"
+
 - name: When the clean-up is finished, deploy the OpenStackDataPlaneDeployment CR
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
