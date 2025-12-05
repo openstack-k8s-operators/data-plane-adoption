@@ -397,6 +397,9 @@ dataplane_cr: |
           ovn_monitor_all: true
           edpm_ovn_remote_probe_interval: 60000
           edpm_ovn_ofctrl_wait_before_clear: 8000
+          {% if edpm_ovn_dbs_nodeset is defined -%}
+          edpm_ovn_dbs: {{ edpm_ovn_dbs_nodeset }}
+          {%+ endif +%}
     nodes:
 
 dpa_dir: "../.."
