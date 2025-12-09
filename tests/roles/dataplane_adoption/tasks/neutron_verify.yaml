@@ -4,7 +4,7 @@
   ansible.builtin.set_fact:
     neutron_header: |
       alias openstack="oc exec -t openstackclient -- openstack"
-      FIP={{ lookup('env', 'FIP') | default('192.168.122.20', True) }}
+      FIP={{ lookup('env', 'FIP') | default(public_subnet_fip_1, True) }}
 
 - name: verify that neutron-ovn-metadata-agent is alive
   ansible.builtin.shell: |
@@ -51,7 +51,7 @@
 - name: verify connectivity to the existing test VM instance using Floating IP
   when: prelaunch_test_instance|bool
   ansible.builtin.shell: |
-      ping -c4 {{ lookup('env', 'FIP') | default('192.168.122.20', True) }}
+      ping -c4 {{ lookup('env', 'FIP') | default(public_subnet_fip_1, True) }}
 
 - name: validate pings, new workloads after adoption and cleanup
   when: neutron_qe_test | default('false') | bool
