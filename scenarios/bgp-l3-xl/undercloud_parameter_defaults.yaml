@@ -1,0 +1,39 @@
+---
+parameter_defaults:
+  FrrBfdEnabled: true
+  FrrBgpEnabled: true
+  FrrBgpIpv4AllowASIn: true
+  FrrBgpIpv6AllowASIn: true
+  FrrBgpUplinks: ['nic3', 'nic4']
+  FrrBgpUplinksScope: internal
+  FrrLogLevel: debugging
+  FrrBgpRouterID: 99.99.0.33
+  FrrBgpIpv4SrcIp: 99.99.0.33
+  FrrBgpIpv6SrcIp: f00d:f00d:f00d:f00d:f00d:f00d:f00d:25
+  ContainerFrrImage: 'registry.redhat.io/rhosp-rhel9/openstack-frr:17.1'
+  UndercloudExtraGroupVars:
+    tripleo_frr_bgp_neighbor_password: f00barZ
+    tripleo_frr_bfd_detect_multiplier: 10
+    tripleo_frr_bfd_transmit_interval: 500
+    tripleo_frr_bfd_receive_interval: 500
+    tripleo_frr_zebra_graceful_restart_time: 30
+    tripleo_frr_conf_custom_router_bgp: |
+     bgp graceful-restart
+    tripleo_frr_conf_custom_globals: |
+     debug bfd peer
+     debug bfd network
+     debug bfd zebra
+     debug bgp graceful-restart
+     debug bgp neighbor-events
+     debug bgp updates
+     debug bgp update-groups
+     # We do not want to advertise the undercloud VIPs for now
+     ip prefix-list only-default permit 0.0.0.0/0
+     ip prefix-list only-host-prefixes seq 1 deny 172.20.4.200/32
+     ip prefix-list only-host-prefixes seq 2 deny 172.20.4.201/32
+     ip prefix-list only-host-prefixes seq 3 permit 0.0.0.0/0 ge 32
+
+
+  MasqueradeNetworks:
+    10.0.0.1/24: ['10.0.0.1/24']
+    192.168.122.0/24: ['192.168.122.0/24']

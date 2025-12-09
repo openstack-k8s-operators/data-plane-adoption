@@ -1,0 +1,31 @@
+heat_template_version: newton
+
+description: >
+  Inject stuff before puppet kicks in
+
+parameters:
+  server:
+    type: string
+
+resources:
+
+  CustomExtraConfigPre:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config: |
+        #!/bin/sh
+        set -x
+        ip route add default via 192.168.111.1 || true
+
+  CustomExtraDeploymentPre:
+    type: OS::Heat::SoftwareDeployment
+    properties:
+      server: {get_param: server}
+      config: {get_resource: CustomExtraConfigPre}
+      actions: ['CREATE', 'UPDATE']
+
+outputs:
+  deploy_stdout:
+    description: Deployment reference, used to trigger pre-deploy on changes
+    value: {get_attr: [CustomExtraDeploymentPre, deploy_stdout]}
