@@ -24,7 +24,12 @@ endif::[]
 
 Post-adoption tasks::
 +
-* Optional: Run tempest to verify that the entire adoption process is working properly. For more information, see link:{defaultURL}/validating_and_troubleshooting_the_deployed_cloud/index[Validating and troubleshooting the deployed cloud].
-* Optional: Perform a minor update from RHEL 9.2 to 9.4. You can perform a minor update any time after you complete the adoption procedure. For more information, see link:{defaultURL}/updating_your_environment_to_the_latest_maintenance_release/index[Updating your environment to the latest maintenance release].
+* Optional: Run tempest to verify that the entire adoption process is working correctly. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/validating_and_troubleshooting_the_deployed_cloud/index[Validating and troubleshooting the deployed cloud].
+* After adoption, {rhos_long} data plane nodes run Red Hat Enterprise Linux (RHEL) 9.2. The data plane nodes can remain on RHEL 9.2; however, you must perform a system update to use the full feature set from the release, and to align your environment with the maximum support lifecycle of {rhos_acro}.
+** You can perform a system update any time after you complete the adoption procedure.
+** You can defer the system update to a separate maintenance window.
+** You can perform the system update on one nodeset at a time. For example, you can update one nodeset from RHEL 9.2 to RHEL 9.4 in one maintenance window, and then update a different nodeset in another maintenance window later.
++
+For more information about updating your environment, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/updating_your_environment_to_the_latest_maintenance_release/index[Updating your environment to the latest maintenance release].
 * Optional: Verify that you migrated all services from the Controller nodes, and then power off the nodes. If any services are still running in the Controller nodes, such as Open Virtual Networking (ML2/OVN), {object_storage_first_ref}, or {Ceph}, do not power off the nodes.
 * If you enabled the high availability for Compute instances (Instance HA) service, remove the Pacemaker components from your Compute nodes. For more information, see xref:enabling-high-availability-for-instances_data-plane[Enabling the high availability for Compute instances service].
