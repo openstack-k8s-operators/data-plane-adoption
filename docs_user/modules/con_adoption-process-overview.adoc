@@ -24,7 +24,7 @@ endif::[]
 
 Post-adoption tasks::
 +
-* Optional: Run tempest to verify that the entire adoption process is working properly. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/validating_and_troubleshooting_the_deployed_cloud/index[Validating and troubleshooting the deployed cloud].
+* Optional: Run tempest to verify that the entire adoption process is working correctly. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/validating_and_troubleshooting_the_deployed_cloud/index[Validating and troubleshooting the deployed cloud].
 * After adoption, {rhos_long} data plane nodes run Red Hat Enterprise Linux (RHEL) 9.2. The data plane nodes can remain on RHEL 9.2; however, you must perform a system update to use the full feature set from the release.
 ** You can perform a system update any time after you complete the adoption procedure.
 ** You can defer the system update to a separate maintenance window.
