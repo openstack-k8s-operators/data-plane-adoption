@@ -1,0 +1,189 @@
+---
+undercloud:
+  config:
+    - section: DEFAULT
+      option: undercloud_hostname
+      value: undercloud.example.com
+    - section: DEFAULT
+      option: undercloud_timezone
+      value: UTC
+    - section: DEFAULT
+      option: undercloud_debug
+      value: true
+    - section: DEFAULT
+      option: container_cli
+      value: podman
+    - section: DEFAULT
+      option: undercloud_enable_selinux
+      value: false
+    - section: DEFAULT
+      option: generate_service_certificate
+      value: false
+    - section: DEFAULT
+      option: enable_frr
+      value: true
+    - section: DEFAULT
+      option: enable_routed_networks
+      value: true
+    - section: DEFAULT
+      option: local_ip
+      value: 192.168.122.95/24
+    - section: DEFAULT
+      option: undercloud_public_host
+      value: "192.168.122.97"
+    - section: DEFAULT
+      option: undercloud_admin_host
+      value: "192.168.122.98"
+    - section: DEFAULT
+      option: subnets
+      value: r0,r1,r2,r3
+    - section: DEFAULT
+      option: local_subnet
+      value: r0
+    - section: r0
+      option: cidr
+      value: 192.168.122.0/24
+    - section: r0
+      option: dhcp_start
+      value: 192.168.122.150
+    - section: r0
+      option: dhcp_end
+      value: 192.168.122.170
+    - section: r0
+      option: inspection_iprange
+      value: 192.168.122.171,192.168.122.185
+    - section: r0
+      option: gateway
+      value: 192.168.122.1
+    - section: r0
+      option: masquerade
+      value: false
+    - section: r1
+      option: cidr
+      value: 192.168.123.0/24
+    - section: r1
+      option: dhcp_start
+      value: 192.168.123.150
+    - section: r1
+      option: dhcp_end
+      value: 192.168.123.170
+    - section: r1
+      option: inspection_iprange
+      value: 192.168.123.171,192.168.123.185
+    - section: r1
+      option: gateway
+      value: 192.168.123.1
+    - section: r1
+      option: masquerade
+      value: false
+    - section: r2
+      option: cidr
+      value: 192.168.124.0/24
+    - section: r2
+      option: dhcp_start
+      value: 192.168.124.150
+    - section: r2
+      option: dhcp_end
+      value: 192.168.124.170
+    - section: r2
+      option: inspection_iprange
+      value: 192.168.124.171,192.168.124.185
+    - section: r2
+      option: gateway
+      value: 192.168.124.1
+    - section: r2
+      option: masquerade
+      value: false
+    - section: r3
+      option: cidr
+      value: 192.168.188.0/24
+    - section: r3
+      option: dhcp_start
+      value: 192.168.188.150
+    - section: r3
+      option: dhcp_end
+      value: 192.168.188.170
+    - section: r3
+      option: inspection_iprange
+      value: 192.168.188.171,192.168.188.185
+    - section: r3
+      option: gateway
+      value: 192.168.188.1
+    - section: r3
+      option: masquerade
+      value: false
+  undercloud_parameters_override: "bgp-l3-xl/hieradata_overrides_undercloud.yaml"
+  undercloud_parameters_defaults: "bgp-l3-xl/undercloud_parameter_defaults.yaml"
+  ctlplane_vip: 192.168.122.98
+cloud_domain: "example.com"
+hostname_groups_map:
+  # map ansible groups in the inventory to role hostname format for
+  # 17.1 deployment
+  osp-r0-computes: "osp-r0-compute"
+  osp-r1-computes: "osp-r1-compute"
+  osp-r2-computes: "osp-r2-compute"
+  osp-r0-controllers: "osp-r0-controller-0"
+  osp-r1-controllers: "osp-r1-controller-0"
+  osp-r2-controllers: "osp-r2-controller-0"
+roles_groups_map:
+  # map ansible groups to tripleo Role names
+  osp-r0-computes: "ComputeRack0"
+  osp-r1-computes: "ComputeRack1"
+  osp-r2-computes: "ComputeRack2"
+  osp-r0-controllers: "ControllerRack0"
+  osp-r1-controllers: "ControllerRack1"
+  osp-r2-controllers: "ControllerRack2"
+stacks:
+  - stackname: "overcloud"
+    args:
+      - "--override-ansible-cfg /home/zuul/ansible_config.cfg"
+      - "--templates /usr/share/openstack-tripleo-heat-templates"
+      - "--libvirt-type qemu"
+      - "--timeout 90"
+      - "--overcloud-ssh-user zuul"
+      - "--deployed-server"
+      - "--validation-warnings-fatal"
+      - "--disable-validations"
+      - "--heat-type pod"
+      - "--disable-protected-resource-types"
+    vars:
+      - "/usr/share/openstack-tripleo-heat-templates/environments/docker-ha.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/podman.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/services/barbican.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/barbican-backend-simple-crypto.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/services/frr.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/services/ovn-bgp-agent.yaml"
+    additional_files:
+      - "bgp-l3-xl/extraconfigpre_template.yaml"
+      - "bgp-l3-xl/extraconfigpost_template.yaml"
+    network_data_file: "bgp-l3-xl/network_data.yaml.j2"
+    vips_data_file: "bgp-l3-xl/vips_data.yaml"
+    roles_file: "bgp-l3-xl/roles.yaml"
+    config_download_file: "bgp-l3-xl/config_download.yaml"
+    stack_nodes:
+      - osp-r0-computes
+      - osp-r1-computes
+      - osp-r2-computes
+      - osp-r0-controllers
+      - osp-r1-controllers
+      - osp-r2-controllers
+pre_uc_run:
+  - name: "01 Deploy BGP fabric"
+    type: playbook
+    source: "../../playbooks/bgp/prepare-bgp-spines-leaves.yaml"
+    extra_vars:
+      num_racks: 3
+      edpm_nodes_per_rack: 5
+      ocp_nodes_per_rack: 4
+      router_bool: true
+      router_uplink_ip: 100.64.10.1
+      cifmw_repo_setup_rhos_release_rpm: "{{ cifmw_repo_setup_rhos_release_rpm }}"
+  - name: "02 Add default route to UC and OC nodes before UC deploy"
+    type: playbook
+    source: "adoption_bgp_pre_undercloud.yaml"
+post_uc_run:
+  - name: Remove default route from UC after UC deploy
+    type: playbook
+    source: "adoption_bgp_post_undercloud.yaml"
