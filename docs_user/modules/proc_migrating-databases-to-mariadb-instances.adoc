@@ -209,7 +209,7 @@ Each additional {compute_service_first_ref} v2 cell runs a dedicated Galera data
 ----
 $ for CELL in $(echo $CELLS); do
 >   oc rsh mariadb-copy-data mysql -h "${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e "SHOW databases;"
-> end
+> done
 ----
 
 . Check that `mysqlcheck` had no errors:
