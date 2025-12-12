@@ -376,7 +376,7 @@
     - edpm_neutron_sriov_agent_enabled|bool
     - compute_adoption|bool
 
-- name: enable neutron-dhcp in the OpenStackDataPlaneNodeSet CR
+- name: enable neutron-dhcp in the OpenStackDataPlaneNodeSet CR - for standalone env
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -392,7 +392,26 @@
         "value": "neutron-dhcp"
       }]'
     done
-  when: edpm_neutron_dhcp_agent_enabled|bool
+  when:
+    - edpm_neutron_dhcp_agent_enabled|bool
+    - os_cloud_name == 'standalone'
+    - edpm_nodes_networker is not defined
+
+- name: enable neutron-dhcp in the OpenStackDataPlaneNodeSet CR
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc patch openstackdataplanenodeset openstack-networker --type='json' --patch='[
+    {
+       "op": "add",
+       "path": "/spec/services/-",
+       "value": "neutron-dhcp"
+    }]'
+  when:
+    - edpm_neutron_dhcp_agent_enabled|bool
+    - edpm_nodes_networker is defined
 
 - name: Run the pre-adoption validation
   when: run_pre_adoption_validation|bool
