@@ -45,6 +45,9 @@ parameter_defaults:
   ComputeExtraConfig:
     nova::compute::libvirt::services::libvirt_virt_type: qemu
     nova::compute::libvirt::virt_type: qemu
+  ExtraConfig:
+    neutron::notification_driver: 'noop'
+    neutron::plugins::ml2::path_mtu: 1400
   BarbicanSimpleCryptoGlobalDefault: true
   Debug: true
   DockerPuppetDebug: true
@@ -52,7 +55,7 @@ parameter_defaults:
   ControllerCount: 3
   ComputeCount: 2
   NetworkerCount: 3
-  NeutronGlobalPhysnetMtu: 1350
+  NeutronGlobalPhysnetMtu: 1400
   CinderLVMLoopDeviceSize: 20480
   CloudName: overcloud.example.com
   CloudNameInternal: overcloud.internalapi.example.com
@@ -61,6 +64,16 @@ parameter_defaults:
   CloudNameCtlplane: overcloud.ctlplane.example.com
   CloudDomain: example.com
   NetworkConfigWithAnsible: false
+  EnableVLANTransparency: true
+  NeutronEnableIgmpSnooping: true
+  OVNEmitNeedToFrag: true
+  NeutronEnableDVR: true
+  NeutronTypeDrivers: 'geneve,vxlan,vlan,flat,local'
+  NeutronNetworkType: 'geneve,flat,vlan'
+  NeutronDnsDomain: 'example.com'
+  NeutronRouterSchedulerDriver: 'neutron.scheduler.l3_agent_scheduler.ChanceScheduler'
+  NeutronCustomConfigParameters:
+    ovn.ovn_router_indirect_snat: true
   ControllerHostnameFormat: '%stackname%-controller-%index%'
   ComputeHostnameFormat: '%stackname%-compute-%index%'
   NetworkerHostnameFormat: '%stackname%-networker-%index%'
