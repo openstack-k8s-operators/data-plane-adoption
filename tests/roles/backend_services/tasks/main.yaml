@@ -93,6 +93,32 @@
       args:
         chdir: "{{ dpa_tests_dir }}/config"
 
+- name: Get OpenStackVersion resource name for custom Barbican images
+  when: >-
+    (barbican_custom_api_image is defined and barbican_custom_api_image) or
+    (barbican_custom_worker_image is defined and barbican_custom_worker_image)
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get openstackversions -o jsonpath='{.items[0].metadata.name}'
+  register: openstack_version_name
+  changed_when: false
+  failed_when: openstack_version_name.stdout == ""
+
+- name: Patch OpenStackVersion with custom Barbican images
+  when: >-
+    (barbican_custom_api_image is defined and barbican_custom_api_image) or
+    (barbican_custom_worker_image is defined and barbican_custom_worker_image)
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {% if barbican_custom_api_image is defined and barbican_custom_api_image %}
+    oc patch openstackversion {{ openstack_version_name.stdout }} --type=merge -p '{"spec":{"customContainerImages":{"barbicanAPIImage":"{{ barbican_custom_api_image }}"}}}'
+    {% endif %}
+    {% if barbican_custom_worker_image is defined and barbican_custom_worker_image %}
+    oc patch openstackversion {{ openstack_version_name.stdout }} --type=merge -p '{"spec":{"customContainerImages":{"barbicanWorkerImage":"{{ barbican_custom_worker_image }}"}}}'
+    {% endif %}
+
 - name: execute alternative tasks when source env is ODPdO
   ansible.builtin.include_tasks: ospdo_backend_services.yaml
   when: ospdo_src| bool

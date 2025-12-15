@@ -5,6 +5,50 @@
     CONTROLLER1_SSH="{{ controller1_ssh }}"
     oc set data secret/osp-secret "BarbicanSimpleCryptoKEK=$($CONTROLLER1_SSH "sudo python3 -c \"import configparser; c = configparser.ConfigParser(); c.read('/var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf'); print(c['simple_crypto_plugin']['kek'])\"")"
 
+- name: Create HSM login secret for Barbican
+  when: barbican_hsm_enabled|default(false)
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    cat <<EOF | oc apply -f -
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: {{ proteccio_login_secret_name | default('hsm-login') }}
+      namespace: openstack
+    type: Opaque
+    stringData:
+      PKCS11Pin: "{{ proteccio_login_password | default('') }}"
+    EOF
+
+- name: Check if HSM client data files exist
+  when: barbican_hsm_enabled|default(false)
+  ansible.builtin.stat:
+    path: /tmp/hsm-prep-working-dir/proteccio_data_secret.yml
+  register: hsm_data_secret_file
+
+- name: Create HSM client data secret from file
+  when:
+    - barbican_hsm_enabled|default(false)
+    - hsm_data_secret_file.stat.exists|default(false)
+  ansible.builtin.command: oc apply -f /tmp/hsm-prep-working-dir/proteccio_data_secret.yml
+
+- name: Create empty HSM client data secret if file not found
+  when:
+    - barbican_hsm_enabled|default(false)
+    - not hsm_data_secret_file.stat.exists|default(true)
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    cat <<EOF | oc apply -f -
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: {{ proteccio_client_data_secret_name | default('proteccio-data') }}
+      namespace: openstack
+    type: Opaque
+    EOF
+
 - name: deploy podified Barbican (standard)
   ansible.builtin.shell: |
     {{ shell_header }}
