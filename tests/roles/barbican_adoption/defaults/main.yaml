@@ -80,8 +80,8 @@ barbican_hsm_patch: |
         globalDefaultSecretStore: pkcs11
         enabledSecretStores: ["simple_crypto", "pkcs11"]
         pkcs11:
-          loginSecret: hsm-login
-          clientDataSecret: proteccio-data
+          loginSecret: {{ proteccio_login_secret_name | default('hsm-login') }}
+          clientDataSecret: {{ proteccio_client_data_secret_name | default('proteccio-data') }}
           clientDataPath: /etc/proteccio
         barbicanAPI:
           replicas: 1
@@ -89,3 +89,8 @@ barbican_hsm_patch: |
           replicas: 1
         barbicanKeystoneListener:
           replicas: 1
+
+# HSM secrets configuration
+proteccio_login_secret_name: hsm-login
+proteccio_client_data_secret_name: proteccio-data
+proteccio_login_password: ''
