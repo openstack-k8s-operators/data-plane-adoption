@@ -826,6 +826,40 @@ $ for CELL in $(echo $RENAMED_CELLS); do
 > done
 ----
 
+. Clean up any {networking_first_ref} agents that are no longer running:
++
+----
+$ oc exec openstackclient -- openstack network agent list
+----
+.. If any agent in the list shows `XXX` in the `Alive` field, verify the Host and Agent Type. If the function of this agent is no longer required and the agent has been permanently stopped on the {rhos_prev_long} host, delete the agent:
++
+----
+$ oc exec openstackclient -- openstack network agent delete <agent_id>
+----
++
+* Replace `<agent_id>` with the ID of the agent to delete.
++
+[IMPORTANT]
+====
+During {rhos_prev_long} to {rhos_acro} adoption, the `tripleo_cleanup` playbook stops {rhos_prev_long} services on Compute nodes, including `neutron-ovn-metadata-agent` and `ovn-controller`. However, these agents do not unregister themselves from the {networking_service}; they stop sending heartbeats. When the new {rhos_acro} deployment creates containerized agents, these agents might register as new agents with different chassis IDs or hostnames rather than updating the old {rhos_prev_long} agent records. This leaves orphaned "dead" agents in the {networking_service} database that show as "Alive: XXX".
+
+If you encounter OVN Metadata agents or OVN Controller agents in the "XXX" state after adoption, you must delete these stale agents:
+
+----
+$ for AGENT_ID in $(oc exec openstackclient -- openstack network agent list | grep 'neutron-ovn-metadata-agent' | grep 'XXX' | awk '{print $2}'); do
+  echo "Deleting stale metadata agent: ${AGENT_ID}"
+  oc exec openstackclient -- openstack network agent delete ${AGENT_ID}
+done
+
+$ for AGENT_ID in $(oc exec openstackclient -- openstack network agent list | grep 'OVN Controller agent' | grep -v 'Gateway' | grep 'XXX' | awk '{print $2}'); do
+  echo "Deleting stale OVN controller agent: ${AGENT_ID}"
+  oc exec openstackclient -- openstack network agent delete ${AGENT_ID}
+done
+----
+
+This issue is more common in deployments that use site-specific naming patterns and unique OVN chassis IDs that differ from other node sets. However, this issue can affect any {rhos_prev_long} to {rhos_acro} adoption where the new deployment does not match the old hostnames or chassis IDs.
+====
+
 . Verify that the {networking_first_ref} agents are running:
 +
 ----
