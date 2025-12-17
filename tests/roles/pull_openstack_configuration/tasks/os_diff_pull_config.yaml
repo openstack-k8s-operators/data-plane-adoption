@@ -35,7 +35,7 @@
   ansible.builtin.lineinfile:
     path: "{{ playbook_dir }}/{{ os_diff_dir }}/ssh.config"
     regex: "IdentityFile ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa"
-    value: "    IdentityFile {{ controller1_ssh.split(' ')[2] }}"
+    value: "    IdentityFile {{ edpm_privatekey_path|default(controller1_ssh.split(' ')[2]) }}"
 
 - name: Set standalone IP in ssh.config file
   ansible.builtin.lineinfile:
