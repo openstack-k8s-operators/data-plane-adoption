@@ -42,7 +42,7 @@ To enable the metadata services of a local cell, set the `enabled` property in t
 ----
 $ rm -f celltemplates
 $ for CELL in $(echo $RENAMED_CELLS); do
- $ cat >> celltemplates << EOF
+  cat >> celltemplates << EOF
 >       ${CELL}:
 >         *hasAPIAccess: true*
 >         cellDatabaseAccount: nova-$CELL
@@ -173,17 +173,17 @@ $ openstack server list
 * Query the superconductor to check that the expected cells exist, and compare it to its pre-adoption values:
 +
 ----
-$ for CELL in $(echo $CELLS); do
-> set +u
-> . ~/.source_cloud_exported_variables_$CELL
-> set -u
-> RCELL=$CELL
-> [ "$CELL" = "default" ] && RCELL=$DEFAULT_CELL_NAME
->
-> echo "comparing $CELL to $RCELL"
-> echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS | grep -F "| $CELL |"
-> oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F "| $RCELL |"
-> done
+for CELL in $(echo $CELLS); do
+set +u
+. ~/.source_cloud_exported_variables_$CELL
+set -u
+RCELL=$CELL
+[ "$CELL" = "default" ] && RCELL=$DEFAULT_CELL_NAME
+
+echo "comparing $CELL to $RCELL"
+echo $PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS | grep -F "| $CELL |"
+oc rsh nova-cell0-conductor-0 nova-manage cell_v2 list_cells | grep -F "| $RCELL |"
+done
 ----
 +
 The following changes are expected for each cell:
