@@ -42,7 +42,7 @@ To enable the metadata services of a local cell, set the `enabled` property in t
 ----
 $ rm -f celltemplates
 $ for CELL in $(echo $RENAMED_CELLS); do
-  cat >> celltemplates << EOF
+>  cat >> celltemplates << EOF
 >       ${CELL}:
 >         *hasAPIAccess: true*
 >         cellDatabaseAccount: nova-$CELL
