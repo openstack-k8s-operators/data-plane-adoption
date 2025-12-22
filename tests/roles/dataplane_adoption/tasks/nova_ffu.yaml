@@ -76,6 +76,11 @@
     oc patch cm nova-cells-global-config --type=json -p='[{"op": "replace", "path": "/data/99-nova-compute-cells-workarounds.conf", "value": "[workarounds]\n"}]'
     for CELL in $(echo $RENAMED_CELLS); do
       oc get Openstackdataplanenodeset openstack-${CELL} || continue
+      NODESETS="[openstack-${CELL}]"
+      if [ "$CELL" == "cell1" ]; then
+        oc get Openstackdataplanenodeset dcn1 && NODESETS="${NODESETS%]*},dcn1]"
+        oc get Openstackdataplanenodeset dcn2 && NODESETS="${NODESETS%]*},dcn2]"
+      fi
       oc apply -f - <<EOF
     ---
     apiVersion: dataplane.openstack.org/v1beta1
@@ -83,8 +88,7 @@
     metadata:
       name: openstack-nova-compute-ffu-$CELL
     spec:
-      nodeSets:
-        - openstack-${CELL}
+      nodeSets: ${NODESETS}
       servicesOverride:
         - nova-${CELL}
     backoffLimit: 3
