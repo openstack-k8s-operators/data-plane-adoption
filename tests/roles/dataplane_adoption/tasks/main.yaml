@@ -258,6 +258,38 @@
     {% endif %}
     {% endfor %}
 
+- name: Create OpenStackDataPlaneNodeSet_dcn1
+  when: edpm_nodes_dcn1 is defined
+  no_log: "{{ use_no_log }}"
+  vars:
+    edpm_ovn_bridge_mappings_nodeset: "{{ edpm_ovn_bridge_mappings_dcn1|default(omit) }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    CELL=cell1
+    NODESET=dcn1
+    cat > nodeset-cell1-${NODESET}.yaml <<EOF
+    {{ dataplane_cr}}
+    {% filter indent(width=4) %}
+        {{ edpm_nodes_dcn1 | default([]) | to_yaml(indent=2) }}
+    {% endfilter %}
+    EOF
+
+- name: Create OpenStackDataPlaneNodeSet_dcn2
+  when: edpm_nodes_dcn2 is defined
+  no_log: "{{ use_no_log }}"
+  vars:
+    edpm_ovn_bridge_mappings_nodeset: "{{ edpm_ovn_bridge_mappings_dcn2|default(omit) }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    CELL=cell1
+    NODESET=dcn2
+    cat > nodeset-cell1-${NODESET}.yaml <<EOF
+    {{ dataplane_cr}}
+    {% filter indent(width=4) %}
+        {{ edpm_nodes_dcn2 | default([]) | to_yaml(indent=2) }}
+    {% endfilter %}
+    EOF
+
 - name: Create OpenStackDataPlaneNodeSet_networker
   when: edpm_nodes_networker is defined or edpm_networker_deploy
   no_log: "{{ use_no_log }}"
@@ -296,12 +328,20 @@
     cat edpm-crd-networker.yaml | oc apply -f -
     {%+ endif +%}
 
+    {%+ if edpm_nodes_dcn1 is defined +%}
+    cat nodeset-cell1-dcn1.yaml | oc apply -f -
+    {%+ endif +%}
+
+    {%+ if edpm_nodes_dcn2 is defined +%}
+    cat nodeset-cell1-dcn2.yaml | oc apply -f -
+    {%+ endif +%}
+
 # TODO(bogdando): Apply the ceph backend config for Cinder in the original openstack CR, via kustomize perhaps?
 - name: prepare the adopted data plane workloads to use Ceph backend for Cinder, if configured so
   no_log: "{{ use_no_log }}"
   when:
     - compute_adoption|bool
-    - cinder_volume_backend == "ceph" or cinder_backup_backend == "ceph" or ('ceph' in [nova_libvirt_backend])
+    - cinder_volume_backend|default('') == "ceph" or cinder_backup_backend|default('') == "ceph" or ('ceph' in [nova_libvirt_backend])
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -385,12 +425,19 @@
 
     for CELL in $(echo $RENAMED_CELLS); do
       test -f nodeset-${CELL}.yaml || continue
-      oc patch openstackdataplanenodeset openstack-$CELL --type='json' --patch='[
-      {
-        "op": "add",
-        "path": "/spec/services/-",
-        "value": "neutron-dhcp"
-      }]'
+      NODESETS="openstack-${CELL}"
+      if [ "$CELL" == "cell1" ]; then
+          test -f nodeset-cell1-dcn1.yaml && NODESETS="${NODESETS} dcn1"
+          test -f nodeset-cell1-dcn2.yaml && NODESETS="${NODESETS} dcn2"
+      fi
+      for NODESET in $NODESETS; do
+        oc patch openstackdataplanenodeset $NODESET --type='json' --patch='[
+        {
+          "op": "add",
+          "path": "/spec/services/-",
+          "value": "neutron-dhcp"
+        }]'
+      done
     done
   when: edpm_neutron_dhcp_agent_enabled|bool
 
@@ -419,6 +466,12 @@
 
         {%+ if edpm_nodes_networker is defined or edpm_networker_deploy +%}
         NODESETS="${NODESETS%]*},openstack-networker]"
+        {%+ endif +%}
+        {%+ if edpm_nodes_dcn1 is defined +%}
+        NODESETS="${NODESETS%]*},dcn1]"
+        {%+ endif +%}
+        {%+ if edpm_nodes_dcn2 is defined +%}
+        NODESETS="${NODESETS%]*},dcn2]"
         {%+ endif +%}
 
         oc apply -f - <<EOF
@@ -489,6 +542,12 @@
         {%+ if edpm_nodes_networker is defined or edpm_networker_deploy +%}
         NODESETS="${NODESETS%]*},openstack-networker]"
         {%+ endif +%}
+        {%+ if edpm_nodes_dcn1 is defined +%}
+        NODESETS="${NODESETS%]*},dcn1]"
+        {%+ endif +%}
+        {%+ if edpm_nodes_dcn2 is defined +%}
+        NODESETS="${NODESETS%]*},dcn2]"
+        {%+ endif +%}
 
         oc apply -f - <<EOF
         apiVersion: dataplane.openstack.org/v1beta1
@@ -540,6 +599,12 @@
 
     {%+ if edpm_nodes_networker is defined or edpm_networker_deploy +%}
     NODESETS="${NODESETS%]*},openstack-networker]"
+    {%+ endif +%}
+    {%+ if edpm_nodes_dcn1 is defined +%}
+    NODESETS="${NODESETS%]*},dcn1]"
+    {%+ endif +%}
+    {%+ if edpm_nodes_dcn2 is defined +%}
+    NODESETS="${NODESETS%]*},dcn2]"
     {%+ endif +%}
 
     oc apply -f - <<EOF
