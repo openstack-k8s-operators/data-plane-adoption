@@ -32,10 +32,10 @@ done
 . Wait for the {compute_service} data plane services version to update for all the cells:
 +
 ----
-$ for CELL in $(echo $RENAMED_CELLS); do
-> oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p"{PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
->   -e "select a.version from nova_${CELL}.services a join nova_${CELL}.services b where a.version!=b.version and a.binary='nova-compute' and a.deleted=0;"
-> done
+for CELL in $(echo $RENAMED_CELLS); do
+oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p"{PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
+  -e "select a.version from nova_${CELL}.services a join nova_${CELL}.services b where a.version!=b.version and a.binary='nova-compute' and a.deleted=0;"
+done
 ----
 +
 [NOTE]

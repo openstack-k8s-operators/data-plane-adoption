@@ -268,29 +268,28 @@ For {Ceph} environments with multi-cell configurations, you must name configurat
 +
 [subs="+quotes"]
 ----
-$ for CELL in $(echo $RENAMED_CELLS); do
-> oc apply -f - <<EOF
-> ---
-> apiVersion: dataplane.openstack.org/v1beta1
-> kind: OpenStackDataPlaneService
-> metadata:
->  name: nova-$CELL
-> spec:
->  dataSources:
->    - secretRef:
->        name: nova-$CELL-compute-config
->    - secretRef:
->        name: nova-migration-ssh-key
->    - configMapRef:
->        name: nova-cells-global-config
->  playbook: osp.edpm.nova
->  caCerts: combined-ca-bundle
->  edpmServiceType: nova
->  containerImageFields:
->  - NovaComputeImage
->  - EdpmIscsidImage
->EOF
->  done
+for CELL in $(echo $RENAMED_CELLS); do
+oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+ name: nova-$CELL
+spec:
+ dataSources:
+   - secretRef:
+       name: nova-$CELL-compute-config
+   - secretRef:
+       name: nova-migration-ssh-key
+   - configMapRef:
+       name: nova-cells-global-config
+ playbook: osp.edpm.nova
+ caCerts: combined-ca-bundle
+ edpmServiceType: nova
+ containerImageFields:
+ - NovaComputeImage
+ - EdpmIscsidImage
+EOF
+ done
 ----
 +
 * `spec.dataSources.secretRef` specifies an additional auto-generated `nova-cell<X>-metadata-neutron-config` secret to enable a local metadata service for cell<X>. You should also set
@@ -589,50 +588,50 @@ external_ids        : {hostname=standalone.localdomain, ovn-bridge=br-int, ovn-b
 . Deploy the `OpenStackDataPlaneNodeSet` CRs for each Compute cell:
 +
 ----
-$ for CELL in $(echo $RENAMED_CELLS); do
-> test -f nodeset-${CELL}.yaml || continue
-> oc apply -f nodeset-${CELL}.yaml
-> done
+for CELL in $(echo $RENAMED_CELLS); do
+test -f nodeset-${CELL}.yaml || continue
+oc apply -f nodeset-${CELL}.yaml
+done
 ----
 
 . If you use a {Ceph} back end for {block_storage_first_ref}, prepare the adopted data plane workloads:
 +
 ----
-$ for CELL in $(echo $RENAMED_CELLS); do
-  test -f nodeset-${CELL}.yaml || continue
-$ oc patch osdpns/openstack-$CELL --type=merge --patch "
-  spec:
-    services:
+for CELL in $(echo $RENAMED_CELLS); do
+test -f nodeset-${CELL}.yaml || continue
+oc patch osdpns/openstack-$CELL --type=merge --patch "
+spec:
+  services:
 ifeval::["{build}" == "downstream"]
-      - redhat
+    - redhat
 endif::[]
-      - bootstrap
-      - download-cache
-      - configure-network
-      - validate-network
-      - install-os
-      - configure-os
-      - ssh-known-hosts
-      - run-os
-      - reboot-os
-      - ceph-client
-      - install-certs
-      - ovn
-      - neutron-metadata
-      - libvirt
-      - nova-$CELL
-      - telemetry
-    nodeTemplate:
-      extraMounts:
-      - extraVolType: Ceph
-        volumes:
-        - name: ceph
-          secret:
-            secretName: ceph-conf-files
-        mounts:
-        - name: ceph
-          mountPath: "/etc/ceph"
-          readOnly: true
+    - bootstrap
+    - download-cache
+    - configure-network
+    - validate-network
+    - install-os
+    - configure-os
+    - ssh-known-hosts
+    - run-os
+    - reboot-os
+    - ceph-client
+    - install-certs
+    - ovn
+    - neutron-metadata
+    - libvirt
+    - nova-$CELL
+    - telemetry
+  nodeTemplate:
+    extraMounts:
+    - extraVolType: Ceph
+      volumes:
+      - name: ceph
+        secret:
+          secretName: ceph-conf-files
+      mounts:
+      - name: ceph
+        mountPath: "/etc/ceph"
+        readOnly: true
   "
 done
 ----
@@ -643,40 +642,40 @@ Ensure that you use the same list of services from the original `OpenStackDataPl
 . Optional: Enable `neutron-sriov-nic-agent` in the `OpenStackDataPlaneNodeSet` CR:
 +
 ----
-$ for CELL in $(echo $RENAMED_CELLS); do
-  test -f nodeset-${CELL}.yaml || continue
-$ oc patch openstackdataplanenodeset openstack-$CELL --type='json' --patch='[
-  {
-    "op": "add",
-    "path": "/spec/services/-",
-    "value": "neutron-sriov"
-  }, {
-    "op": "add",
-    "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_physical_device_mappings",
-    "value": "dummy_sriov_net:dummy-dev"
-  }, {
-    "op": "add",
-    "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_bandwidths",
-    "value": "dummy-dev:40000000:40000000"
-  }, {
-    "op": "add",
-    "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_hypervisors",
-    "value": "dummy-dev:standalone.localdomain"
-  }]'
-  done
+for CELL in $(echo $RENAMED_CELLS); do
+test -f nodeset-${CELL}.yaml || continue
+oc patch openstackdataplanenodeset openstack-$CELL --type='json' --patch='[
+{
+  "op": "add",
+  "path": "/spec/services/-",
+  "value": "neutron-sriov"
+}, {
+  "op": "add",
+  "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_physical_device_mappings",
+  "value": "dummy_sriov_net:dummy-dev"
+}, {
+  "op": "add",
+  "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_bandwidths",
+  "value": "dummy-dev:40000000:40000000"
+}, {
+  "op": "add",
+  "path": "/spec/nodeTemplate/ansible/ansibleVars/edpm_neutron_sriov_agent_SRIOV_NIC_resource_provider_hypervisors",
+  "value": "dummy-dev:standalone.localdomain"
+}]'
+done
 ----
 
 . Optional: Enable `neutron-dhcp` in the `OpenStackDataPlaneNodeSet` CR:
 +
 ----
-$ for CELL in $(echo $RENAMED_CELLS); do
-  test -f nodeset-${CELL}.yaml || continue
-$ oc patch openstackdataplanenodeset openstack-$CELL --type='json' --patch='[
-  {
-    "op": "add",
-    "path": "/spec/services/-",
-    "value": "neutron-dhcp"
-  }]'
+for CELL in $(echo $RENAMED_CELLS); do
+test -f nodeset-${CELL}.yaml || continue
+oc patch openstackdataplanenodeset openstack-$CELL --type='json' --patch='[
+{
+  "op": "add",
+  "path": "/spec/services/-",
+  "value": "neutron-dhcp"
+}]'
 done
 ----
 +
@@ -821,9 +820,9 @@ $ oc logs -l app=openstackansibleee -f --max-log-requests 20
 . Wait for the data plane node sets to reach the `Ready` status:
 +
 ----
-$ for CELL in $(echo $RENAMED_CELLS); do
-> oc wait --for condition=Ready osdpns/openstack-$CELL --timeout=30m
-> done
+for CELL in $(echo $RENAMED_CELLS); do
+oc wait --for condition=Ready osdpns/openstack-$CELL --timeout=30m
+done
 ----
 
 . Verify that the {networking_first_ref} agents are running:
