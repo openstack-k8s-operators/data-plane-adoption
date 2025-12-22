@@ -121,6 +121,14 @@ mariadb_passwords_env: |-
 # OSPDo RUN_OVERRIDES definition exists only in docs (missing in code?).
 # NOTE: in a split-stack source cloud, each stack passwords should come from a stack-specific passwords file,
 # but different passwords are not supported in a multi-cell deployment
+mariadb_client_network_annotation: >-
+  {{
+    '--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
+    if not (bgp | bool)
+    else
+    '--annotations=k8s.v1.cni.cncf.io/networks=[{\"name\":\"internalapi\",\"namespace\":\"openstack\",\"default-route\":[\"'
+    + internalapi_prefix | default('172.17.0') + '.1\"]}]'
+  }}
 mariadb_copy_shell_vars_src: |-
   {{ shell_header }}
 
@@ -135,7 +143,7 @@ mariadb_copy_shell_vars_src: |-
   done
 
   RUN_OVERRIDES=' '
-  MARIADB_CLIENT_ANNOTATIONS={{ deploy_ctlplane_ospdo | default(false) | bool | ternary("-n $NAMESPACE", "--annotations=k8s.v1.cni.cncf.io/networks=internalapi") }}
+  MARIADB_CLIENT_ANNOTATIONS={{ deploy_ctlplane_ospdo | default(false) | bool | ternary('-n $NAMESPACE', mariadb_client_network_annotation) }}
   MARIADB_RUN_OVERRIDES={{ deploy_ctlplane_ospdo | default(false) | bool | ternary("--overrides=${RUN_OVERRIDES} $MARIADB_CLIENT_ANNOTATIONS {{ mysql_client_override }}", "$MARIADB_CLIENT_ANNOTATIONS") }}
 
   OSPDO_MARIADB_CLIENT_ANNOTATIONS='[{"name": "internalapi-static","ips": ["{% if ipv6_enabled | default(false) %}{{ internalapi_prefix_ipv6 | default('2620:cf:cf:bbbb') }}::99/64{% else %}{{ internalapi_prefix | default('172.17.0') }}.99/24{% endif %}"]}]'
@@ -216,3 +224,14 @@ octavia_adoption: true
 # Related to OSPRH-18618
 mariadb_client_timeout: 0
 mariadbcheck: true
+
+# Whether bgp is configured
+bgp: false
+
+# Public subnet configuration
+public_subnet_cidr: 192.168.122.0/24
+public_subnet_gateway: "{{ public_subnet_cidr | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') }}"
+public_subnet_fip_1: "{{ public_subnet_cidr | ansible.utils.ipaddr('20') | ansible.utils.ipaddr('address') }}"
+public_subnet_fip_2: "{{ public_subnet_cidr | ansible.utils.ipaddr('21') | ansible.utils.ipaddr('address') }}"
+public_subnet_pool_start: "{{ public_subnet_cidr | ansible.utils.ipaddr('171') | ansible.utils.ipaddr('address') }}"
+public_subnet_pool_end: "{{ public_subnet_cidr | ansible.utils.ipaddr('250') | ansible.utils.ipaddr('address') }}"
