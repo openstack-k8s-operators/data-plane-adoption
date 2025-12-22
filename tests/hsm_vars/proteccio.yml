@@ -1,0 +1,3 @@
+---
+# Minimal Proteccio HSM configuration
+barbican_hsm_enabled: true
