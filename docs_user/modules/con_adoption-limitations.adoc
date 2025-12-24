@@ -34,7 +34,5 @@ The adoption process does not support the following features:
 * {loadbalancer_first_ref}
 * Adopting Border Gateway Protocol (BGP) environments to the {rhos_acro} data plane
 * Adopting a Federal Information Processing Standards (FIPS) environment
-* The {key_manager} supports simple crypto and PKCS#11 (HSM) plug-ins
-
 
 //* When you adopt a {OpenStackShort} {rhos_prev_ver} FIPS environment to {rhos_acro} {rhos_curr_ver}, your adopted cluster remains a FIPS cluster. There is no option to change the FIPS status during adoption. If your cluster is FIPS-enabled, you must deploy a FIPS {rhocp_long} cluster to adopt your {OpenStackShort} {rhos_prev_ver} FIPS control plane. For more information about enabling FIPS in {OpenShiftShort}, see link:{defaultOCPURL}/installing/installation-overview#installing-fips[Support for FIPS cryptography] in the {OpenShiftShort} _Installing_ guide.

@@ -4,9 +4,7 @@
 = Key Manager service support for crypto plug-ins
 
 [role="_abstract"]
-The Key Manager service (barbican) supports multiple crypto plug-ins for different security requirements and deployment scenarios.
-
-== Supported crypto plug-ins
+The {key_manager_first_ref} supports multiple crypto plug-ins for different security requirements and deployment scenarios.
 
 The following crypto plug-ins are supported in {rhos_acro}:
 
@@ -16,15 +14,11 @@ The following crypto plug-ins are supported in {rhos_acro}:
 //*TODO: Talk about Ceph Storage and Swift Storage nodes, HCI deployments,
 //etc.*
 
-For environments that require HSM integration during adoption, see xref:adopting-key-manager-service-with-proteccio-hsm_{context}[Adopting the {key_manager} with Proteccio HSM integration].
-
-== HSM Integration
-
-The Key Manager service supports Hardware Security Module (HSM) integration through the PKCS#11 plugin. This enables:
+The {key_manager} supports HSM integration through the PKCS#11 plugin. This enables:
 
 * Enhanced security for secret storage and retrieval
 * Hardware-based key management
 * Compliance with security requirements for production environments
 * Preservation of existing HSM-protected secrets during adoption
 
-HSM integration is configured through a simple boolean flag (`barbican_hsm_enabled`) during the adoption process.
+HSM integration is configured through a simple boolean flag (`barbican_hsm_enabled`) during the adoption process. For environments that require HSM integration during adoption, see xref:adopting-key-manager-service-with-proteccio-hsm_{context}[Adopting the {key_manager} with Proteccio HSM integration].
