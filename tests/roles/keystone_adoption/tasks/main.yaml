@@ -37,7 +37,7 @@
         [identity]
         driver = ldap
         [ldap]
-        url = ldaps://{{ standalone_ip | default(edpm_node_ip) }}
+        url = ldaps://ipa.ooo.test
         user = uid=svc-ldap,cn=users,cn=accounts,{{ ipa_basedn }}
         password = {{ ipa_admin_password | default('nomoresecrets') }}
         suffix = {{ ipa_basedn }}
@@ -101,6 +101,28 @@
     {{ shell_header }}
     {{ oc_header }}
     oc wait --for=condition=Ready --timeout=3m OpenStackControlPlane openstack
+
+- name: Create LDAP domain in adopted Keystone
+  when: enable_tlse is defined and enable_tlse
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -n openstack -t openstackclient -- bash -c "
+      openstack domain create REDHAT --description 'LDAP domain for IPA integration' 2>/dev/null || 
+      openstack domain show REDHAT > /dev/null"
+  register: domain_creation_result
+  failed_when: false
+
+- name: Verify LDAP domain exists
+  when: enable_tlse is defined and enable_tlse
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -n openstack -t openstackclient -- openstack domain show REDHAT -f value -c id
+  register: domain_verify
+  failed_when: domain_verify.rc != 0
+  retries: 3
+  delay: 5
 
 - name: clean up services and endpoints
   ansible.builtin.shell: |
