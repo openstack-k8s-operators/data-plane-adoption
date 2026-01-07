@@ -18,4 +18,3 @@ skip_list:
 strict: false
 quiet: false
 verbosity: 2
-parseable: true
