@@ -136,13 +136,30 @@ The source cloud always uses the same password for cells databases. For that rea
 
 .Procedure
 
+. Create a persistent mariadb-client pod for database operations:
++
+----
+$ oc delete pod mariadb-client || true
+$ oc run mariadb-client ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} --restart=Never -- /usr/bin/sleep infinity
+----
++
+This creates a long-running pod that will be used for all subsequent database operations, avoiding the need to create temporary pods for each command.
+
+. Wait for the mariadb-client pod to be able to reach the source MariaDB:
++
+----
+$ oc rsh mariadb-client mysql -rsh "${SOURCE_MARIADB_IP[default]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[default]}" -e 'select 1;'
+----
++
+This command might take a few moments to succeed, especially if BGP routes need to propagate. You can retry if it fails initially.
+
 . Export the shell variables for the following outputs and test the connection to the {OpenStackShort} database:
 +
 ----
 $ unset PULL_OPENSTACK_CONFIGURATION_DATABASES
 $ declare -xA PULL_OPENSTACK_CONFIGURATION_DATABASES
 $ for CELL in $(echo $CELLS); do
->     PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]=$(oc run mariadb-client-1-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>     PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]=$(oc rsh mariadb-client \
 >         mysql -rsh "${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e 'SHOW databases;')
 > done
 ----
@@ -161,7 +178,7 @@ endif::[]
 $ unset PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK
 $ declare -xA PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK
 $ run_mysqlcheck() {
->     PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc run mariadb-client-2-$1 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>     PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc rsh mariadb-client \
 >         mysqlcheck --all-databases -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" | grep -v OK)
 > }
 $ for CELL in $(echo $CELLS); do
@@ -169,8 +186,8 @@ $ for CELL in $(echo $CELLS); do
 > done
 $ if [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" != "" ]; then
 >     for CELL in $(echo $CELLS); do
->         MYSQL_UPGRADE=$(oc run mariadb-client-3 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
->             mysql_upgrade -v -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}")
+>         MYSQL_UPGRADE=$(oc rsh mariadb-client \
+>             mysql_upgrade --skip-version-check -v -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}")
 >         # rerun mysqlcheck to check if problem is resolved
 >         run_mysqlcheck
 >     done
@@ -180,8 +197,8 @@ $ if [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" != "" ]; then
 . Get the {compute_service_first_ref} cell mappings:
 +
 ----
-export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client-1 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-    mysql -rsh "${SOURCE_MARIADB_IP['default']}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD['default']}" nova_api -e \
+export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc rsh mariadb-client \
+    mysql -rsh "${SOURCE_MARIADB_IP[default]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[default]}" nova_api -e \
     'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')
 ----
 
@@ -191,7 +208,7 @@ export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client-
 $ unset PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES
 $ declare -xA PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES
 $ for CELL in $(echo $CELLS); do
->     PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]=$(oc run mariadb-client-4-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>     PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]=$(oc rsh mariadb-client \
 >         mysql -rsh "${SOURCE_MARIADB_IP[$CELL]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e \
 >             "select host from nova.services where services.binary='nova-compute' and deleted=0;")
 > done
@@ -218,15 +235,15 @@ $ for CELL in $(echo $CELLS); do
 > declare -xA PULL_OPENSTACK_CONFIGURATION_DATABASES
 > declare -xA PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK
 > declare -xA PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES
-> PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]="$(oc run mariadb-client-5-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+> PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]="$(oc rsh mariadb-client \
 >     mysql -rsh ${SOURCE_MARIADB_IP[$RCELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$RCELL]} -e 'SHOW databases;')"
-> PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK[$CELL]="$(oc run mariadb-client-6-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+> PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK[$CELL]="$(oc rsh mariadb-client \
 >     mysqlcheck --all-databases -h ${SOURCE_MARIADB_IP[$RCELL]} -u root -p${SOURCE_DB_ROOT_PASSWORD[$RCELL]} | grep -v OK)"
-> PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]="$(oc run mariadb-client-7-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+> PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]="$(oc rsh mariadb-client \
 >     mysql -rsh ${SOURCE_MARIADB_IP[$RCELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$RCELL]} -e \
 >     "select host from nova.services where services.binary='nova-compute' and deleted=0;")"
 > if [ "$RCELL" = "default" ]; then
->     PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="$(oc run mariadb-client-2 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
+>     PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="$(oc rsh mariadb-client \
 >         mysql -rsh ${SOURCE_MARIADB_IP[$RCELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$RCELL]} nova_api -e \
 >             'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')"
 >     PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$($CONTROLLER1_SSH sudo podman exec -it nova_conductor nova-manage cell_v2 list_cells)"
@@ -237,6 +254,14 @@ $ chmod 0600 ~/.source_cloud_exported_variables*
 ----
 +
 * `declare -xA SRIOV_AGENTS` gets the `neutron-sriov-nic-agent` configuration to use for the data plane adoption if `neutron-sriov-nic-agent` agents are running in your {OpenStackShort} deployment.
+
+. Clean up the mariadb-client pod:
++
+----
+$ oc delete pod mariadb-client
+----
++
+The mariadb-client pod is no longer needed after all the data has been exported and stored.
 
 .Next steps
 
