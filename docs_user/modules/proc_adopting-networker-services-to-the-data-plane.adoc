@@ -258,6 +258,23 @@ EOF
 * `spec.tlsEnabled` specifies whether TLS Everywhere is enabled. If TLS is enabled, change `spec:tlsEnabled` to `true`.
 * `edpm_ovn_bridge_mappings: <bridge_mappings>` specifies the bridge mapping values that you used in your {rhos_prev_long} {rhos_prev_ver} deployment.
 * `edpm_enable_chassis_gw` specifies whether to run `ovn-controller` in gateway mode.
++
+[NOTE]
+====
+For environments that are enabled with border gateway protocol (BGP), you must add the following services to the `services` list in the order shown:
+
+* After `configure-network` and before `validate-network`: Add `frr` service for FRRouting BGP support
+* After `ovn` and `neutron-metadata` services: Add `ovn-bgp-agent` service
+
+You must also configure the following additional Ansible variables in the `nodeTemplate.ansible.ansibleVars` section:
+
+* `edpm_frr_image`: The FRRouting container image
+* `edpm_ovn_bgp_agent_image`: The OVN BGP agent container image
+* `edpm_frr_bgp_ipv4_src_network`: The network name for BGP IPv4 source (for example, `bgpmainnet`)
+* `edpm_frr_bgp_ipv6_src_network`: The network name for BGP IPv6 source (for example, `bgpmainnetv6`)
+* `edpm_frr_bgp_neighbor_password`: The BGP neighbor password
+* `edpm_ovn_encap_ip`: Set to the BGP main network IP (for example, `{{ lookup("vars", "bgpmainnet_ip") }}`)
+====
 
 . Ensure that you use the same `ovn-controller` settings in the `OpenStackDataPlaneNodeSet` CR that you used in the Networker nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
 +

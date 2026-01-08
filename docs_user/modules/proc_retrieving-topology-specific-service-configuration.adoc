@@ -93,6 +93,23 @@ endif::[]
 ifeval::["{build_variant}" != "ospdo"]
 $ MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=internalapi'
 $ MARIADB_RUN_OVERRIDES="$MARIADB_CLIENT_ANNOTATIONS"
+----
++
+[NOTE]
+====
+For environments that are enabled with border gateway protocol (BGP), the network annotation must include a default route to enable proper routing. Use the following instead:
+
+----
+$ MARIADB_CLIENT_ANNOTATIONS='--annotations=k8s.v1.cni.cncf.io/networks=[{"name":"internalapi","namespace":"openstack","default-route":["<172.17.0.1>"]}]'
+$ MARIADB_RUN_OVERRIDES="$MARIADB_CLIENT_ANNOTATIONS"
+----
+where:
+
+<172.17.0.1>::
+Replace with the gateway IP address of your `internalapi` network.
+====
++
+----
 
 ifeval::["{build}" != "downstream"]
 $ CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
@@ -136,22 +153,44 @@ The source cloud always uses the same password for cells databases. For that rea
 
 .Procedure
 
-. Create a persistent mariadb-client pod for database operations:
+. If your source {OpenStackShort} environment uses border gateway protocol (BGP) for Layer 3 networking, create a `BGPConfiguration` custom resource to enable BGP routing:
++
+----
+$ cat << EOF > bgp.yaml
+apiVersion: network.openstack.org/v1beta1
+kind: BGPConfiguration
+metadata:
+  name: bgpconfiguration
+  namespace: openstack
+spec: {}
+EOF
+
+$ oc apply -f bgp.yaml
+----
++
+The `BGPConfiguration` resource enables BGP route advertisement between the {rhocp_long} cluster and the source cloud, which is necessary for the `mariadb-client` pod to reach the source MariaDB cluster.
+
+. Create a persistent `mariadb-client` pod for database operations:
 +
 ----
 $ oc delete pod mariadb-client || true
 $ oc run mariadb-client ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} --restart=Never -- /usr/bin/sleep infinity
 ----
 +
-This creates a long-running pod that will be used for all subsequent database operations, avoiding the need to create temporary pods for each command.
+This creates a long-running pod that is used for all subsequent database operations, avoiding the need to create temporary pods for each command.
 
-. Wait for the mariadb-client pod to be able to reach the source MariaDB:
+. Wait for the `mariadb-client` pod to be able to reach the source MariaDB:
 +
 ----
 $ oc rsh mariadb-client mysql -rsh "${SOURCE_MARIADB_IP[default]}" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[default]}" -e 'select 1;'
 ----
 +
-This command might take a few moments to succeed, especially if BGP routes need to propagate. You can retry if it fails initially.
+[NOTE]
+====
+For BGP-enabled environments, this command might take a few moments to succeed while BGP routes are advertised and propagated through the network. The `mariadb-client` pod needs to receive the route to the source MariaDB IP address through BGP before it can establish a connection. If the command fails, wait a few seconds and retry. The connection should succeed once the BGP route advertisement is complete.
+
+For standard (non-BGP) deployments, this command should succeed immediately.
+====
 
 . Export the shell variables for the following outputs and test the connection to the {OpenStackShort} database:
 +
@@ -255,13 +294,13 @@ $ chmod 0600 ~/.source_cloud_exported_variables*
 +
 * `declare -xA SRIOV_AGENTS` gets the `neutron-sriov-nic-agent` configuration to use for the data plane adoption if `neutron-sriov-nic-agent` agents are running in your {OpenStackShort} deployment.
 
-. Clean up the mariadb-client pod:
+. Clean up the `mariadb-client` pod:
 +
 ----
 $ oc delete pod mariadb-client
 ----
 +
-The mariadb-client pod is no longer needed after all the data has been exported and stored.
+The `mariadb-client` pod is no longer needed after all the data is exported and stored.
 
 .Next steps
 
