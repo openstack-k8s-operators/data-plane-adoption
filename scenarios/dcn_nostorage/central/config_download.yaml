@@ -92,14 +92,14 @@ parameter_defaults:
   ComputeNetworkConfigTemplate: /home/stack/central/network/spine-leaf-nics/compute0.j2
   ComputeParameters:
     NeutronBridgeMappings:
-    - leaf0:br-ex
+      - leaf0:br-ex
   ControllerNetworkConfigTemplate: /home/stack/central/network/spine-leaf-nics/controller0.j2
   ControllerParameters:
     NeutronBridgeMappings:
-    - leaf0:br-ex
+      - leaf0:br-ex
   DnsServers:
-  - 10.11.5.19
-  - 10.5.30.160
+    - 10.11.5.19
+    - 10.5.30.160
   NeutronEnableDVR: 'false'
   NeutronFlatNetworks: leaf0,leaf1,leaf2
   NeutronNetworkType: geneve
@@ -108,8 +108,8 @@ parameter_defaults:
   NovaComputeAvailabilityZone: az-central
   NovaCrossAZAttach: false
   NtpServer:
-  - clock.redhat.com
-  - clock2.redhat.com
+    - clock.redhat.com
+    - clock2.redhat.com
   PythonInterpreter: /usr/bin/python3
   RootStackName: central
   VipSubnetMap:

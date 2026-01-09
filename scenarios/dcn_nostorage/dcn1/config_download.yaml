@@ -45,6 +45,7 @@ parameter_defaults:
   ControllerExtraConfig:
     nova::compute::libvirt::services::libvirt_virt_type: qemu
     nova::compute::libvirt::virt_type: qemu
+    nova::availability_zone::default_schedule_zone: az-central
   ComputeDcn1ExtraConfig:
     nova::compute::libvirt::services::libvirt_virt_type: qemu
     nova::compute::libvirt::virt_type: qemu
@@ -101,9 +102,6 @@ parameter_defaults:
         name: leaf2
         ip_version: 4
 
-  BondInterfaceOvsOptions: bond_mode=active-backup
-  ControllerExtraConfig:
-    nova::availability_zone::default_schedule_zone: az-central
   VipSubnetMap:
     ctlplane: leaf1
   NeutronFlatNetworks: leaf0,leaf1,leaf2
@@ -113,12 +111,12 @@ parameter_defaults:
     NeutronBridgeMappings: ["leaf1:br-ex"]
   PythonInterpreter: /usr/bin/python3
   DnsServers: ['10.11.5.19', '10.5.30.160']
-  NtpServer: ["clock.redhat.com","clock2.redhat.com"]
+  NtpServer: ["clock.redhat.com", "clock2.redhat.com"]
   NovaComputeAvailabilityZone: az-dcn1
-  NovaCrossAZAttach: False
+  NovaCrossAZAttach: false
   RootStackName: dcn1
   AuthCloudName: 'central'
-  ManageNetworks: False
+  ManageNetworks: false
 
   NeutronNetworkType: geneve
   NeutronTunnelTypes: geneve
