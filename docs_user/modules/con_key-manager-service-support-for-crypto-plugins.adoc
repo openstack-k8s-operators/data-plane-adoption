@@ -6,10 +6,10 @@
 [role="_abstract"]
 The {key_manager_first_ref} supports multiple crypto plug-ins for different security requirements and deployment scenarios.
 
-The following crypto plug-ins are supported in {rhos_acro}:
+The following crypto plug-ins are supported in {rhos_long}:
 
-* **Simple Crypto Plugin**: Software-based cryptographic backend suitable for development and testing environments
-* **PKCS#11 Plugin**: Hardware Security Module (HSM) integration for production environments requiring enhanced security
+* Simple Crypto Plug-in: Software-based cryptographic back end suitable for development and testing environments
+* Public Key Cryptography Standard  (PKCS) #11 Plug-in: Hardware security module (HSM) integration for production environments that requires enhanced security
 
 //*TODO: Talk about Ceph Storage and Swift Storage nodes, HCI deployments,
 //etc.*

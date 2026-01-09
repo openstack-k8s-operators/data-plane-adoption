@@ -16,11 +16,13 @@ include::../modules/proc_adopting-key-manager-service-with-proteccio-hsm.adoc[le
 
 include::../modules/proc_adopting-key-manager-service-with-hsm-integration.adoc[leveloffset=+1]
 
+include::../modules/ref_troubleshooting-key-manager-proteccio-adoption.adoc[leveloffset=+1]
+
 [role="_additional-resources"]
 == Additional resources
 
 * {key_manager} service configuration documentation
-* Hardware Security Module vendor-specific documentation
+* Hardware security module vendor-specific documentation
 * OpenStack Barbican PKCS#11 plugin documentation
 
 ifdef::parent-context[:context: {parent-context}]

@@ -25,9 +25,9 @@ fatal: [localhost]: FAILED! => {
 [source,yaml]
 ----
 cifmw_hsm_password: "your_actual_hsm_password"
-cifmw_barbican_proteccio_partition: "VHSM1"
-cifmw_barbican_proteccio_mkek_label: "your_mkek_label"
-cifmw_barbican_proteccio_hmac_label: "your_hmac_label"
+cifmw_hsm_proteccio_partition: "VHSM1"
+cifmw_hsm_mkek_label: "your_mkek_label"
+cifmw_hsm_hmac_label: "your_hmac_label"
 cifmw_hsm_proteccio_client_src: "https://your-server/path/to/Proteccio.iso"
 cifmw_hsm_proteccio_conf_src: "https://your-server/path/to/proteccio.rc"
 ----
