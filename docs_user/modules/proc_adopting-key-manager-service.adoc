@@ -4,7 +4,7 @@
 = Adopting the {key_manager}
 
 [role="_abstract"]
-To adopt the {key_manager_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where {key_manager} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
+To adopt the {key_manager_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where {key_manager} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment. You configure the {key_manager} to use the `simple_crypto` back end.
 
 The {key_manager} adoption is complete if you see the following results:
 
@@ -12,7 +12,7 @@ The {key_manager} adoption is complete if you see the following results:
 * Keystone endpoints are updated, and the same crypto plugin of the source cloud is available.
 
 [NOTE]
-This procedure configures the {key_manager} to use the `simple_crypto` back end. To configure hardware security module (HSM) integration with Proteccio HSM, see xref:adopting-key-manager-service-with-proteccio-hsm_{context}[Adopting the {key_manager} with Proteccio HSM integration].
+To configure hardware security module (HSM) integration with Proteccio HSM, see xref:adopting-the-key-manager-service-with-proteccio-hsm_adopt-control-plane[Adopting the {key_manager} with Proteccio HSM integration].
 
 .Procedure
 
