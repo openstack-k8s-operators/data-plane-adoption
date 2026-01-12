@@ -295,7 +295,9 @@ dataplane_cr: |
       ansible:
         ansibleUser: {{ edpm_user }}
         ansibleVars:
-          edpm_tuned_profile: {{ edpm_tuned_profile|default(omit) }}
+          {% if edpm_tuned_profile is defined -%}
+          edpm_tuned_profile: {{ edpm_tuned_profile }}
+          {% endif -%}
           edpm_bootstrap_release_version_package: []
           os_net_config_iface: {{ dataplane_os_net_config_iface | default ('nic1') }}
           os_net_config_set_route: {{ dataplane_os_net_config_set_route | default(true) | bool }}
