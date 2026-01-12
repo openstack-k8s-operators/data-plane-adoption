@@ -1,9 +1,0 @@
----
-- name: Barbican HSM Adoption
-  hosts: localhost
-  connection: local
-  gather_facts: false
-  vars_files:
-    - hsm_vars/proteccio.yml
-  roles:
-    - barbican_adoption

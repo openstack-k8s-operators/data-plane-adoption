@@ -55,30 +55,6 @@
         prelaunch_test_instance: "{{ prelaunch_test_instance }}"
         ping_test: "{{ ping_test }}"
 
-- name: Debug - Check if we're trying to create Barbican secret
-  ansible.builtin.debug:
-    msg:
-      - "prelaunch_test_instance: {{ prelaunch_test_instance|bool }}"
-      - "prelaunch_barbican_secret: {{ prelaunch_barbican_secret|default(false) }}"
-      - "Will attempt to create secret: {{ prelaunch_test_instance|bool and prelaunch_barbican_secret|default(false) }}"
-
-- name: Debug - Check Barbican endpoint on source cloud
-  no_log: "{{ use_no_log }}"
-  when: prelaunch_test_instance|bool and prelaunch_barbican_secret|default(false)
-  ansible.builtin.shell:
-    cmd: |
-      {{ shell_header }}
-      {{ openstack_command }} endpoint list --service key-manager -f json
-  register: barbican_endpoint_check
-  failed_when: false
-
-- name: Debug - Display Barbican endpoint status
-  when:
-    - prelaunch_test_instance|bool
-    - prelaunch_barbican_secret|default(false)
-  ansible.builtin.debug:
-    msg: "{{ 'Barbican endpoint found' if barbican_endpoint_check.rc == 0 else 'ERROR: No Barbican endpoint found on source cloud!' }}"
-
 - name: creates Barbican secret
   no_log: "{{ use_no_log }}"
   when: prelaunch_test_instance|bool and prelaunch_barbican_secret|default(false)
