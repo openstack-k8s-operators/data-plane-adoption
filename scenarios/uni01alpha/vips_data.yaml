@@ -9,7 +9,7 @@
   dns_name: overcloud
 - name: ctlplane_vip
   network: ctlplane
-  ip_address: 192.168.122.100
+  ip_address: 192.168.122.99
   subnet: ctlplane-subnet
   dns_name: overcloud
 - name: ironic_vip
