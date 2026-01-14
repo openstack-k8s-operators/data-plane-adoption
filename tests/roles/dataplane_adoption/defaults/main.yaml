@@ -156,6 +156,54 @@ edpm_network_config_template: |
       routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
   {% endfor %}
   {% endraw %}
+edpm_network_config_template_bgp: |
+  {%- raw %}
+  ---
+  {% set mtu_list = [ctlplane_mtu] %}
+  {% for network in nodeset_networks %}
+  {%set _ = mtu_list.append(lookup('vars', networks_lower[network] ~ '_mtu')) %}
+  {%- endfor %}
+  {% set min_viable_mtu = mtu_list | max %}
+  network_config:
+  - type: ovs_bridge
+    name: {{ neutron_physical_bridge_name }}
+    mtu: {{ min_viable_mtu }}
+    use_dhcp: false
+  - type: ovs_bridge
+    name: br-vlan
+    mtu: {{ min_viable_mtu }}
+    use_dhcp: false
+  - type: interface
+    name: nic1
+    use_dhcp: true
+    defroute: false
+  - type: interface
+    name: nic2
+    use_dhcp: false
+    defroute: false
+    dns_servers: {{ ctlplane_dns_nameservers }}
+    domain: {{ dns_search_domains }}
+    addresses:
+      - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
+  - type: interface
+    name: nic3
+    use_dhcp: false
+    addresses:
+    - ip_netmask: {{ lookup('vars', 'bgpnet0_ip') }}/30
+  - type: interface
+    name: nic4
+    use_dhcp: false
+    addresses:
+    - ip_netmask: {{ lookup('vars', 'bgpnet1_ip') }}/30
+  - type: interface
+    name: lo
+    addresses:
+    - ip_netmask: {{ lookup('vars', 'bgpmainnet_ip') }}/32
+    - ip_netmask: {{ lookup('vars', 'bgpmainnetv6_ip') }}/128
+    - ip_netmask: {{ lookup('vars', 'internalapi_ip') }}/32
+    - ip_netmask: {{ lookup('vars', 'storage_ip') }}/32
+    - ip_netmask: {{ lookup('vars', 'tenant_ip') }}/32
+  {% endraw %}
 neutron_physical_bridge_name: br-ctlplane
 neutron_public_interface_name: "{{ dataplane_public_iface | default('eth0') }}"
 edpm_sshd_allowed_ranges: "{% if ipv6_enabled | default(false) %}{{ [ctlplane_prefix_ipv6 | default('fd00:aaaa') + '::/64'] if dataplane_os_net_config_set_route|default(true)|bool else ['::/0'] }}{% else %}{{ [ctlplane_prefix | default('192.168.122') + '.0/24'] if dataplane_os_net_config_set_route|default(true)|bool else ['0.0.0.0/0'] }}{% endif %}"
@@ -181,6 +229,26 @@ dataplane_cr: |
       - ctlplane
     preProvisioned: true
     services:
+      {%+ if bgp | bool +%}
+      - bootstrap
+      - download-cache
+      - install-os
+      - configure-os
+      - configure-network
+      - frr
+      - validate-network
+      - ssh-known-hosts
+      - run-os
+      - reboot-os
+      - install-certs
+      - ovn
+      - neutron-metadata
+      - ovn-bgp-agent
+      {%+   if compute_adoption|bool +%}
+      - libvirt
+      - nova-$CELL
+      {%+   endif +%}
+      {%+ else +%}
       - bootstrap
       - download-cache
       - configure-network
@@ -193,12 +261,13 @@ dataplane_cr: |
       - install-certs
       - ovn
       - neutron-metadata
-      {%+ if compute_adoption|bool +%}
+      {%+   if compute_adoption|bool +%}
       - libvirt
       - nova-$CELL
-      {%+ endif +%}
-      {% if telemetry_adoption|bool +%}
+      {%+   endif +%}
+      {%    if telemetry_adoption|bool +%}
       - telemetry
+      {%+   endif +%}
       {%+ endif +%}
     env:
       - name: ANSIBLE_CALLBACKS_ENABLED
@@ -213,6 +282,14 @@ dataplane_cr: |
         value: "-C -o ControlMaster=auto -o ControlPersist=80s"
       - name: ANSIBLE_VERBOSITY
         value: "{{ dataplane_verbosity | default ('1') }}"
+      {%+ if bgp | bool +%}
+      - name: ANSIBLE_TIMEOUT
+        value: "60"
+      - name: ANSIBLE_SSH_TIMEOUT
+        value: "60"
+      - name: ANSIBLE_SSH_RETRIES
+        value: "60"
+      {%+ endif +%}
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
       ansible:
@@ -230,8 +307,7 @@ dataplane_cr: |
           # edpm_network_config
           # nic config template for a EDPM compute node
           edpm_network_config_template: |
-            {{ edpm_network_config_template| indent(10) }}
-
+            {{ (bgp | bool) | ternary(edpm_network_config_template_bgp, edpm_network_config_template) | indent(10) }}
           edpm_network_config_nmstate: false
           edpm_bootstrap_network_resolvconf_update: false
           edpm_network_config_hide_sensitive_logs: false
@@ -265,13 +341,20 @@ dataplane_cr: |
           {% if edpm_telemetry_node_exporter_image is defined -%}
           edpm_telemetry_node_exporter_image: "{{ edpm_telemetry_node_exporter_image }}"
           {% endif %}
+          {% if bgp | bool +%}
+          edpm_frr_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-frr:{{ image_tag }}"
+          edpm_ovn_bgp_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-bgp-agent:{{ image_tag }}"
+          edpm_frr_bgp_ipv4_src_network: bgpmainnet
+          edpm_frr_bgp_ipv6_src_network: bgpmainnetv6
+          edpm_frr_bgp_neighbor_password: f00barZ
+          {%+ endif +%}
           {%- if edpm_container_registry_logins is defined -%}
           edpm_container_registry_logins:
             {% for login, value in edpm_container_registry_logins.items() -%}
             {{ login | indent(10) }}:
               {{ value | to_nice_yaml | trim }}
             {% endfor -%}
-          {% endif %}
+          {%+ endif +%}
 
           gather_facts: false
           # edpm firewall, change the allowed CIDR if needed
@@ -295,7 +378,14 @@ dataplane_cr: |
           {%+ endif +%}
 
           # ovn-controller settings
-          edpm_ovn_bridge_mappings: ["datacentre:{{ neutron_physical_bridge_name }}"]
+          edpm_ovn_bridge_mappings:
+            - "datacentre:{{ neutron_physical_bridge_name }}"
+          {%+ if bgp | bool +%}
+            - "provider2:br-vlan"
+          {% raw %}
+          edpm_ovn_encap_ip: '{{ lookup("vars", "bgpmainnet_ip") }}'
+          {% endraw %}
+          {%+ endif +%}
           edpm_ovn_bridge: br-int
           edpm_ovn_encap_type: geneve
           ovn_monitor_all: true
@@ -319,6 +409,22 @@ networker_cr: |
       - ctlplane
     preProvisioned: true
     services:
+      {%+ if bgp | bool +%}
+      - bootstrap
+      - download-cache
+      - install-os
+      - configure-os
+      - configure-network
+      - frr
+      - validate-network
+      - ssh-known-hosts
+      - run-os
+      - reboot-os
+      - install-certs
+      - ovn
+      - neutron-metadata
+      - ovn-bgp-agent
+      {%+ else +%}
       - bootstrap
       - download-cache
       - configure-network
@@ -331,6 +437,7 @@ networker_cr: |
       - install-certs
       - ovn
       - neutron-metadata
+      {%+ endif +%}
     env:
       - name: ANSIBLE_CALLBACKS_ENABLED
         value: "ansible.posix.profile_tasks"
@@ -344,6 +451,14 @@ networker_cr: |
         value: "-C -o ControlMaster=auto -o ControlPersist=80s"
       - name: ANSIBLE_VERBOSITY
         value: "{{ dataplane_verbosity | default ('1') }}"
+      {%+ if bgp | bool +%}
+      - name: ANSIBLE_TIMEOUT
+        value: "60"
+      - name: ANSIBLE_SSH_TIMEOUT
+        value: "60"
+      - name: ANSIBLE_SSH_RETRIES
+        value: "60"
+      {%+ endif +%}
     nodes: {{ edpm_nodes_networker }}
     nodeTemplate:
       ansibleSSHPrivateKeySecret: {{ ansible_ssh_private_key_secret }}
@@ -361,7 +476,7 @@ networker_cr: |
           # edpm_network_config
           # nic config template for a EDPM compute node
           edpm_network_config_template: |
-            {{ edpm_network_config_template| indent(10) }}
+            {{ (bgp | bool) | ternary(edpm_network_config_template_bgp, edpm_network_config_template) | indent(10) }}
           edpm_network_config_nmstate: false
           edpm_network_config_hide_sensitive_logs: false
           #
@@ -381,6 +496,13 @@ networker_cr: |
           edpm_neutron_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
           edpm_neutron_dhcp_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-dhcp-agent:{{ image_tag }}"
           edpm_multipathd_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-multipathd:{{ image_tag }}"
+          {%+ if bgp | bool +%}
+          edpm_frr_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-frr:{{ image_tag }}"
+          edpm_ovn_bgp_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-bgp-agent:{{ image_tag }}"
+          edpm_frr_bgp_ipv4_src_network: bgpmainnet
+          edpm_frr_bgp_ipv6_src_network: bgpmainnetv6
+          edpm_frr_bgp_neighbor_password: f00barZ
+          {%+ endif +%}
           gather_facts: false
           # edpm firewall, change the allowed CIDR if needed
           edpm_sshd_configure_firewall: true
@@ -389,7 +511,14 @@ networker_cr: |
           edpm_ovs_packages:
           - openvswitch3.3
           # ovn-controller settings
-          edpm_ovn_bridge_mappings: ["datacentre:{{ neutron_physical_bridge_name }}"]
+          edpm_ovn_bridge_mappings:
+            - "datacentre:{{ neutron_physical_bridge_name }}"
+          {%+ if bgp | bool +%}
+            - "provider2:br-vlan"
+          {% raw %}
+          edpm_ovn_encap_ip: '{{ lookup("vars", "bgpmainnet_ip") }}'
+          {% endraw %}
+          {%+ endif +%}
           edpm_ovn_bridge: br-int
           edpm_ovn_encap_type: geneve
           ovn_monitor_all: true

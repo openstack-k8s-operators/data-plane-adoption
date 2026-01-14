@@ -1,0 +1,4 @@
+- network: external
+  ip_address: 172.31.0.1
+- network: ctlplane
+  ip_address: 192.168.188.253

@@ -62,6 +62,13 @@
   when: not ospdo_src| bool
 
 - name: start an adoption helper pod
+  vars:
+    internalapi_default_nad: >-
+      {% if not (bgp | bool) -%}
+      '[{"name":"internalapi","namespace":"openstack"}]'
+      {% else -%}
+      '[{"name":"internalapi","namespace":"openstack","default-route":["{{ internalapi_prefix | default('172.17.0') }}.1"]}]'
+      {% endif -%}
   ansible.builtin.shell: |-
     {{ shell_header }}
     {{ oc_header }}
@@ -99,7 +106,7 @@
       name: ovn-copy-data
       annotations:
         openshift.io/scc: anyuid
-        k8s.v1.cni.cncf.io/networks: {{ copy_pods_custom_networks | default('internalapi') }}
+        k8s.v1.cni.cncf.io/networks: {{ copy_pods_custom_networks | default(internalapi_default_nad) }}
       labels:
         app: adoption
     spec:
@@ -190,6 +197,11 @@
         fi
     done
   when: ipv6_enabled | bool
+
+- name: wait bgp
+  when: bgp
+  ansible.builtin.pause:
+    seconds: 60
 
 - name: dump OVN databases using tcp connection
   no_log: "{{ use_no_log }}"
@@ -301,8 +313,8 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    oc exec ovsdbserver-nb-0 -- ovn-nbctl show
-    oc exec ovsdbserver-sb-0 -- ovn-sbctl show
+    oc exec ovsdbserver-nb-0 -- ovn-nbctl --no-leader-only show
+    oc exec ovsdbserver-sb-0 -- ovn-sbctl --no-leader-only show
 
   register: ovn_show_responding_result
 

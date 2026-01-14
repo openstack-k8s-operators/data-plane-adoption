@@ -532,6 +532,35 @@
         echo "Run out of retries"
         exit 2
 
+- name: Add default route to EDPM nodes with os-net-config before deploying OpenStackDataPlaneDeployment (bgp)
+  when: bgp
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    ssh -o StrictHostKeyChecking=accept-new -i {{ edpm_privatekey_path }} root@{{ item.key }} 'bash -s' << 'EOF'
+    cp /etc/os-net-config/tripleo_config.yaml /etc/os-net-config/tripleo_config.yaml.bak
+    awk 'BEGIN { first_done=0; skip=0 }
+    /^network_config:/ { print; next }
+    !first_done && /^- type:/ {
+      print "- type: interface"
+      print "  name: nic1"
+      print "  mtu: 1500"
+      print "  use_dhcp: true"
+      print "  routes:"
+      print "  - ip_netmask: 0.0.0.0/0"
+      print "    next_hop: 192.168.111.1"
+      print "  defroute: true"
+      first_done=1
+      skip=1
+      next
+    }
+    skip && !/^- type:/ { next }
+    skip && /^- type:/ { skip=0 }
+    { print }' /etc/os-net-config/tripleo_config.yaml > /tmp/tripleo_config.yaml.tmp
+    mv /tmp/tripleo_config.yaml.tmp /etc/os-net-config/tripleo_config.yaml
+    os-net-config -c /etc/os-net-config/tripleo_config.yaml --provider ifcfg --debug
+    EOF
+  loop: "{{ edpm_nodes | combine(edpm_nodes_networker | default({})) | dict2items }}"
+
 - name: When the clean-up is finished, deploy the OpenStackDataPlaneDeployment CR
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |

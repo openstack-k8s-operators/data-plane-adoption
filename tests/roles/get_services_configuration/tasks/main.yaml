@@ -4,6 +4,42 @@
     tasks_from: env_vars_src_ospdo.yaml
   when: ospdo_src| bool
 
+- name: create bgpconfiguration
+  when: bgp
+  ansible.builtin.shell: |
+    cat << EOF > bgp.yaml
+    apiVersion: network.openstack.org/v1beta1
+    kind: BGPConfiguration
+    metadata:
+      name: bgpconfiguration
+      namespace: openstack
+    spec: {}
+    EOF
+
+    oc apply -f bgp.yaml
+
+- name: create mariadb-client container
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    {{ mariadb_copy_shell_vars_src }}
+    # delete existing mariadb-client pods
+    oc delete pod mariadb-client || true
+    oc run mariadb-client ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} --restart=Never -- /usr/bin/sleep infinity
+
+# wait until pod ip is advertised via bgp and can reach the galera vip
+- name: wait until SOURCE_MARIADB_IP is reachable
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    {{ mariadb_copy_shell_vars_src }}
+    oc rsh mariadb-client mysql -rsh ${SOURCE_MARIADB_IP[default]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[default]} -e 'select 1;'
+  register: _ping_check
+  retries: 60
+  delay: 3
+  until: _ping_check.rc == 0
+  changed_when: false
+
 # NOTE(bogdando): env variables must be used to keep this consistent with documentation,
 # where the stored values need to be compared with post-adoption ones w/o using ansible specifics
 - name: test connection to the original DB
@@ -14,8 +50,8 @@
     unset PULL_OPENSTACK_CONFIGURATION_DATABASES
     declare -xA PULL_OPENSTACK_CONFIGURATION_DATABASES
     for CELL in $(echo $CELLS); do
-        PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]=$(oc run mariadb-client-1-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-            bash -c "sleep {{ mariadb_client_timeout }} && mysql -rsh \"${SOURCE_MARIADB_IP[$CELL]}\" -uroot -p\"${SOURCE_DB_ROOT_PASSWORD[$CELL]}\" -e 'SHOW databases;' ")
+        PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]=$(oc rsh mariadb-client \
+            mysql -rsh ${SOURCE_MARIADB_IP[$CELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$CELL]} -e 'SHOW databases;')
     done
 
 - name: run mysqlcheck on the original DB to look for things that are not OK
@@ -26,8 +62,8 @@
     unset PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK
     declare -xA PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK
     run_mysqlcheck() {
-        PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc run mariadb-client-2-$1 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-            bash -c "sleep {{ mariadb_client_timeout }} && mysqlcheck --all-databases -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p\"${SOURCE_DB_ROOT_PASSWORD[$CELL]}\" | grep -v OK")
+        PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK=$(oc rsh mariadb-client \
+            mysqlcheck --all-databases -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p${SOURCE_DB_ROOT_PASSWORD[$CELL]} | grep -v OK)
     }
     for CELL in $(echo $CELLS); do
       run_mysqlcheck $CELL
@@ -35,8 +71,8 @@
     if [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" != "" ]; then
         # Try mysql_upgrade to fix mysqlcheck failure
         for CELL in $(echo $CELLS); do
-            MYSQL_UPGRADE=$(oc run mariadb-client-3-$CELL ${MARIADB_CLIENT_ANNOTATIONS} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-                bash -c "sleep {{ mariadb_client_timeout }} && mysql_upgrade --skip-version-check -v -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p\"${SOURCE_DB_ROOT_PASSWORD[$CELL]}\" ")
+            MYSQL_UPGRADE=$(oc rsh mariadb-client \
+                mysql_upgrade --skip-version-check -v -h ${SOURCE_MARIADB_IP[$CELL]} -u root -p${SOURCE_DB_ROOT_PASSWORD[$CELL]})
             # rerun mysqlcheck to check if problem is resolved
             run_mysqlcheck
         done
@@ -52,9 +88,9 @@
       ansible.builtin.shell: |
         {{ oc_header }}
         {{ mariadb_copy_shell_vars_src }}
-        export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc run mariadb-client-1 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-          bash -c "sleep {{ mariadb_client_timeout }} && mysql -rsh \"${SOURCE_MARIADB_IP[default]}\" -uroot -p\"${SOURCE_DB_ROOT_PASSWORD[default]}\" nova_api -e \
-              'select uuid,name,transport_url,database_connection,disabled from cell_mappings;' ")
+        export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc rsh mariadb-client \
+            mysql -rsh ${SOURCE_MARIADB_IP[default]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[default]} nova_api -e \
+               'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')
 
     - name: get the host names of the registered Nova compute services
       ansible.builtin.shell: |
@@ -63,9 +99,9 @@
         unset PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES
         declare -xA PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES
         for CELL in $(echo $CELLS); do
-            PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]=$(oc run mariadb-client-4-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-                bash -c "sleep {{ mariadb_client_timeout }} && mysql -rsh \"${SOURCE_MARIADB_IP[$CELL]}\" -uroot -p\"${SOURCE_DB_ROOT_PASSWORD[$CELL]}\" -e \
-                    \"select host from nova.services where services.binary='nova-compute' and deleted=0;\" ")
+            PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]=$(oc rsh mariadb-client \
+                mysql -rsh ${SOURCE_MARIADB_IP[$CELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$CELL]} -e \
+                    "select host from nova.services where services.binary='nova-compute' and deleted=0;" )
         done
 
     - name: get the list of mapped Nova cells
@@ -89,19 +125,27 @@
     declare -xA PULL_OPENSTACK_CONFIGURATION_DATABASES
     declare -xA PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK
     declare -xA PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES
-    PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]="$(oc run mariadb-client-5-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-        bash -c "sleep {{ mariadb_client_timeout }} && mysql -rsh ${SOURCE_MARIADB_IP[$RCELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$RCELL]} -e 'SHOW databases;'")"
-    PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK[$CELL]="$(oc run mariadb-client-6-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-        bash -c "sleep {{ mariadb_client_timeout }} && mysqlcheck --all-databases -h ${SOURCE_MARIADB_IP[$RCELL]} -u root -p${SOURCE_DB_ROOT_PASSWORD[$RCELL]} | grep -v OK")"
-    PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]="$(oc run mariadb-client-7-$CELL ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-        bash -c "sleep {{ mariadb_client_timeout }} && mysql -rsh ${SOURCE_MARIADB_IP[$RCELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$RCELL]} -e \
-            \"select host from nova.services where services.binary='nova-compute' and deleted=0;\" ")"
+    PULL_OPENSTACK_CONFIGURATION_DATABASES[$CELL]="$(oc rsh mariadb-client \
+        mysql -rsh ${SOURCE_MARIADB_IP[$RCELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$RCELL]} -e 'SHOW databases;')"
+
+    PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK[$CELL]="$(oc rsh mariadb-client \
+        mysqlcheck --all-databases -h ${SOURCE_MARIADB_IP[$RCELL]} -u root -p${SOURCE_DB_ROOT_PASSWORD[$RCELL]} | grep -v OK)"
+
+    PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES[$CELL]="$(oc rsh mariadb-client \
+        mysql -rsh ${SOURCE_MARIADB_IP[$RCELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$RCELL]} -e \
+            "select host from nova.services where services.binary='nova-compute' and deleted=0;" )"
+
     if [ "$RCELL" = "default" ]; then
-        PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="$(oc run mariadb-client-2 ${MARIADB_RUN_OVERRIDES} -q --image ${MARIADB_IMAGE} -i --rm --restart=Never -- \
-            bash -c "sleep {{ mariadb_client_timeout }} && mysql -rsh ${SOURCE_MARIADB_IP[$RCELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$RCELL]} nova_api -e \
-                'select uuid,name,transport_url,database_connection,disabled from cell_mappings;'")"
+        PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS="$(oc rsh mariadb-client \
+            mysql -rsh ${SOURCE_MARIADB_IP[$RCELL]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[$RCELL]} nova_api -e \
+                'select uuid,name,transport_url,database_connection,disabled from cell_mappings;')"
         PULL_OPENSTACK_CONFIGURATION_NOVAMANAGE_CELL_MAPPINGS="$($CONTROLLER1_SSH sudo podman exec -it nova_conductor nova-manage cell_v2 list_cells)"
     fi
     EOF
     done
     chmod 0600 ~/.source_cloud_exported_variables*
+
+- name: delete mariadb-client pod
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    oc delete pod mariadb-client

@@ -1,0 +1,611 @@
+resource_registry:
+  # yamllint disable rule:line-length
+  OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+
+  OS::TripleO::OVNMacAddressNetwork: OS::Heat::None
+  OS::TripleO::OVNMacAddressPort: OS::Heat::None
+
+  OS::TripleO::ComputeRack0::Ports::LeftNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_left_network.yaml
+  OS::TripleO::ComputeRack0::Ports::RightNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_right_network.yaml
+  OS::TripleO::ComputeRack0::Ports::MainNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_main_network.yaml
+  OS::TripleO::ComputeRack0::Ports::MainNetworkIpv6Port: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_main_network_ipv6.yaml
+
+  OS::TripleO::ComputeRack1::Ports::LeftNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_left_network.yaml
+  OS::TripleO::ComputeRack1::Ports::RightNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_right_network.yaml
+  OS::TripleO::ComputeRack1::Ports::MainNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_main_network.yaml
+  OS::TripleO::ComputeRack1::Ports::MainNetworkIpv6Port: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_main_network_ipv6.yaml
+
+  OS::TripleO::ComputeRack2::Ports::LeftNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_left_network.yaml
+  OS::TripleO::ComputeRack2::Ports::RightNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_right_network.yaml
+  OS::TripleO::ComputeRack2::Ports::MainNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_main_network.yaml
+  OS::TripleO::ComputeRack2::Ports::MainNetworkIpv6Port: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_main_network_ipv6.yaml
+
+  OS::TripleO::ControllerRack0::Ports::LeftNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_left_network.yaml
+  OS::TripleO::ControllerRack0::Ports::RightNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_right_network.yaml
+  OS::TripleO::ControllerRack0::Ports::MainNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_main_network.yaml
+  OS::TripleO::ControllerRack0::Ports::ExternalNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+  OS::TripleO::ControllerRack0::Ports::MainNetworkIpv6Port: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_main_network_ipv6.yaml
+
+  OS::TripleO::ControllerRack1::Ports::LeftNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_left_network.yaml
+  OS::TripleO::ControllerRack1::Ports::RightNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_right_network.yaml
+  OS::TripleO::ControllerRack1::Ports::MainNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_main_network.yaml
+  OS::TripleO::ControllerRack1::Ports::ExternalNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+  OS::TripleO::ControllerRack1::Ports::MainNetworkIpv6Port: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_main_network_ipv6.yaml
+
+  OS::TripleO::ControllerRack2::Ports::LeftNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_left_network.yaml
+  OS::TripleO::ControllerRack2::Ports::RightNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_right_network.yaml
+  OS::TripleO::ControllerRack2::Ports::MainNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_main_network.yaml
+  OS::TripleO::ControllerRack2::Ports::ExternalNetworkPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+  OS::TripleO::ControllerRack2::Ports::MainNetworkIpv6Port: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_main_network_ipv6.yaml
+
+  OS::TripleO::Services::OsloMessagingRpc: /usr/share/openstack-tripleo-heat-templates/deployment/rabbitmq/rabbitmq-messaging-rpc-pacemaker-puppet.yaml
+  OS::TripleO::Services::OsloMessagingNotify: /usr/share/openstack-tripleo-heat-templates/deployment/rabbitmq/rabbitmq-messaging-notify-shared-puppet.yaml
+  OS::TripleO::Services::HAproxy: /usr/share/openstack-tripleo-heat-templates/deployment/haproxy/haproxy-pacemaker-puppet.yaml
+  OS::TripleO::Services::Pacemaker: /usr/share/openstack-tripleo-heat-templates/deployment/pacemaker/pacemaker-baremetal-puppet.yaml
+  OS::TripleO::Services::PacemakerRemote: /usr/share/openstack-tripleo-heat-templates/deployment/pacemaker/pacemaker-remote-baremetal-puppet.yaml
+  OS::TripleO::Services::Clustercheck: /usr/share/openstack-tripleo-heat-templates/deployment/pacemaker/clustercheck-container-puppet.yaml
+  OS::TripleO::Services::Redis: /usr/share/openstack-tripleo-heat-templates/deployment/database/redis-pacemaker-puppet.yaml
+  OS::TripleO::Services::Rsyslog: /usr/share/openstack-tripleo-heat-templates/deployment/logging/rsyslog-container-puppet.yaml
+  OS::TripleO::Services::MySQL: /usr/share/openstack-tripleo-heat-templates/deployment/database/mysql-pacemaker-puppet.yaml
+  OS::TripleO::Services::CinderBackup: /usr/share/openstack-tripleo-heat-templates/deployment/cinder/cinder-backup-pacemaker-puppet.yaml
+  OS::TripleO::Services::CinderVolume: /usr/share/openstack-tripleo-heat-templates/deployment/cinder/cinder-volume-pacemaker-puppet.yaml
+  OS::TripleO::Services::HeatApi: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-container-puppet.yaml
+  OS::TripleO::Services::HeatApiCfn: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-cfn-container-puppet.yaml
+  OS::TripleO::Services::HeatApiCloudwatch: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-cloudwatch-disabled-puppet.yaml
+  OS::TripleO::Services::HeatEngine: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-engine-container-puppet.yaml
+
+  OS::TripleO::ControllerRack0ExtraConfigPre: /home/zuul/extraconfigpre_template.yaml
+  OS::TripleO::ControllerRack1ExtraConfigPre: /home/zuul/extraconfigpre_template.yaml
+  OS::TripleO::ControllerRack2ExtraConfigPre: /home/zuul/extraconfigpre_template.yaml
+  OS::TripleO::ComputeRack0ExtraConfigPre: /home/zuul/extraconfigpre_template.yaml
+  OS::TripleO::ComputeRack1ExtraConfigPre: /home/zuul/extraconfigpre_template.yaml
+  OS::TripleO::ComputeRack2ExtraConfigPre: /home/zuul/extraconfigpre_template.yaml
+
+  NodeExtraConfigPost: /home/zuul/extraconfigpost_template.yaml
+
+
+parameter_defaults:
+
+  NetworkConfigWithAnsible: false
+
+  ControllerRack0Count: 1
+  ControllerRack0HostnameFormat: controllerrack0-%index%
+  ControllerRack1Count: 1
+  ControllerRack1HostnameFormat: controllerrack1-%index%
+  ControllerRack2Count: 1
+  ControllerRack2HostnameFormat: controllerrack2-%index%
+  ComputeRack0Count: 2
+  ComputeRack0HostnameFormat: computerack0-%index%
+  ComputeRack1Count: 2
+  ComputeRack1HostnameFormat: computerack1-%index%
+  ComputeRack2Count: 2
+  ComputeRack2HostnameFormat: computerack2-%index%
+
+  HostnameMap:
+    computerack0-0: osp-r0-compute-0
+    computerack0-1: osp-r0-compute-1
+    computerack1-0: osp-r1-compute-0
+    computerack1-1: osp-r1-compute-1
+    computerack2-0: osp-r2-compute-0
+    computerack2-1: osp-r2-compute-1
+    controllerrack0-0: osp-r0-controller-0
+    controllerrack1-0: osp-r1-controller-0
+    controllerrack2-0: osp-r2-controller-0
+
+
+  DeployedServerPortMap:
+    osp-r0-compute-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.122.100
+    osp-r0-compute-1-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.122.101
+    osp-r1-compute-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.123.105
+    osp-r1-compute-1-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.123.106
+    osp-r2-compute-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.124.110
+    osp-r2-compute-1-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.124.111
+    osp-r0-controller-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.122.140
+    osp-r1-controller-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.123.142
+    osp-r2-controller-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.124.144
+
+  NodePortMap:
+    osp-r0-compute-0:
+      ctlplane:
+        ip_address: 192.168.122.100
+        ip_address_uri: 192.168.122.100
+        ip_subnet: 192.168.122.0/24
+      left_network:
+        ip_address: 100.64.0.2
+        ip_address_uri: 100.64.0.2
+        ip_subnet: 100.64.0.0/24
+      right_network:
+        ip_address: 100.65.0.2
+        ip_address_uri: 100.65.0.2
+        ip_subnet: 100.65.0.0/24
+      main_network:
+        ip_address: 99.99.0.7
+        ip_address_uri: 99.99.0.7
+        ip_subnet: 99.99.0.0/24
+      main_network_ipv6:
+        ip_address: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0004
+        ip_address_uri: "[f00d:f00d:f00d:f00d:f00d:f00d:f00d:0004]"
+        ip_subnet: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0/124
+    osp-r0-compute-1:
+      ctlplane:
+        ip_address: 192.168.122.101
+        ip_address_uri: 192.168.122.101
+        ip_subnet: 192.168.122.0/24
+      left_network:
+        ip_address: 100.64.0.6
+        ip_address_uri: 100.64.0.6
+        ip_subnet: 100.64.0.0/24
+      right_network:
+        ip_address: 100.65.0.6
+        ip_address_uri: 100.65.0.6
+        ip_subnet: 100.65.0.0/24
+      main_network:
+        ip_address: 99.99.0.8
+        ip_address_uri: 99.99.0.8
+        ip_subnet: 99.99.0.0/24
+      main_network_ipv6:
+        ip_address: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0005
+        ip_address_uri: "[f00d:f00d:f00d:f00d:f00d:f00d:f00d:0005]"
+        ip_subnet: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0/124
+    osp-r1-compute-0:
+      ctlplane:
+        ip_address: 192.168.123.105
+        ip_address_uri: 192.168.123.100
+        ip_subnet: 192.168.123.0/24
+      left_network:
+        ip_address: 100.64.1.2
+        ip_address_uri: 100.64.1.2
+        ip_subnet: 100.64.1.0/24
+      right_network:
+        ip_address: 100.65.1.2
+        ip_address_uri: 100.65.1.2
+        ip_subnet: 100.65.1.0/24
+      main_network:
+        ip_address: 99.99.1.7
+        ip_address_uri: 99.99.1.7
+        ip_subnet: 99.99.1.0/24
+      main_network_ipv6:
+        ip_address: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0006
+        ip_address_uri: "[f00d:f00d:f00d:f00d:f00d:f00d:f00d:0006]"
+        ip_subnet: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0/124
+    osp-r1-compute-1:
+      ctlplane:
+        ip_address: 192.168.123.106
+        ip_address_uri: 192.168.123.101
+        ip_subnet: 192.168.123.0/24
+      left_network:
+        ip_address: 100.64.1.6
+        ip_address_uri: 100.64.1.6
+        ip_subnet: 100.64.1.0/24
+      right_network:
+        ip_address: 100.65.1.6
+        ip_address_uri: 100.65.1.6
+        ip_subnet: 100.65.1.0/24
+      main_network:
+        ip_address: 99.99.1.8
+        ip_address_uri: 99.99.1.8
+        ip_subnet: 99.99.1.0/24
+      main_network_ipv6:
+        ip_address: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0007
+        ip_address_uri: "[f00d:f00d:f00d:f00d:f00d:f00d:f00d:0007]"
+        ip_subnet: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0/124
+    osp-r2-compute-0:
+      ctlplane:
+        ip_address: 192.168.124.110
+        ip_address_uri: 192.168.124.100
+        ip_subnet: 192.168.124.0/24
+      left_network:
+        ip_address: 100.64.2.2
+        ip_address_uri: 100.64.2.2
+        ip_subnet: 100.64.2.0/24
+      right_network:
+        ip_address: 100.65.2.2
+        ip_address_uri: 100.65.2.2
+        ip_subnet: 100.65.2.0/24
+      main_network:
+        ip_address: 99.99.2.7
+        ip_address_uri: 99.99.2.7
+        ip_subnet: 99.99.2.0/24
+      main_network_ipv6:
+        ip_address: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0008
+        ip_address_uri: "[f00d:f00d:f00d:f00d:f00d:f00d:f00d:0008]"
+        ip_subnet: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0/124
+    osp-r2-compute-1:
+      ctlplane:
+        ip_address: 192.168.124.111
+        ip_address_uri: 192.168.124.101
+        ip_subnet: 192.168.124.0/24
+      left_network:
+        ip_address: 100.64.2.6
+        ip_address_uri: 100.64.2.6
+        ip_subnet: 100.64.2.0/24
+      right_network:
+        ip_address: 100.65.2.6
+        ip_address_uri: 100.65.2.6
+        ip_subnet: 100.65.2.0/24
+      main_network:
+        ip_address: 99.99.2.8
+        ip_address_uri: 99.99.2.8
+        ip_subnet: 99.99.2.0/24
+      main_network_ipv6:
+        ip_address: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0009
+        ip_address_uri: "[f00d:f00d:f00d:f00d:f00d:f00d:f00d:0009]"
+        ip_subnet: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0/124
+    osp-r0-controller-0:
+      ctlplane:
+        ip_address: 192.168.122.140
+        ip_address_uri: 192.168.122.140
+        ip_subnet: 192.168.122.0/24
+      left_network:
+        ip_address: 100.64.0.30
+        ip_address_uri: 100.64.0.30
+        ip_subnet: 100.64.0.0/24
+      right_network:
+        ip_address: 100.65.0.30
+        ip_address_uri: 100.65.0.30
+        ip_subnet: 100.65.0.0/24
+      main_network:
+        ip_address: 99.99.0.9
+        ip_address_uri: 99.99.0.9
+        ip_subnet: 99.99.0.0/24
+      main_network_ipv6:
+        ip_address: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0001
+        ip_address_uri: "[f00d:f00d:f00d:f00d:f00d:f00d:f00d:0001]"
+        ip_subnet: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0/124
+    osp-r1-controller-0:
+      ctlplane:
+        ip_address: 192.168.123.142
+        ip_address_uri: 192.168.123.140
+        ip_subnet: 192.168.123.0/24
+      left_network:
+        ip_address: 100.64.1.30
+        ip_address_uri: 100.64.1.30
+        ip_subnet: 100.64.1.0/24
+      right_network:
+        ip_address: 100.65.1.30
+        ip_address_uri: 100.65.1.30
+        ip_subnet: 100.65.1.0/24
+      main_network:
+        ip_address: 99.99.1.9
+        ip_address_uri: 99.99.1.9
+        ip_subnet: 99.99.1.0/24
+      main_network_ipv6:
+        ip_address: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0002
+        ip_address_uri: "[f00d:f00d:f00d:f00d:f00d:f00d:f00d:0002]"
+        ip_subnet: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0/124
+    osp-r2-controller-0:
+      ctlplane:
+        ip_address: 192.168.124.144
+        ip_address_uri: 192.168.124.140
+        ip_subnet: 192.168.124.0/24
+      left_network:
+        ip_address: 100.64.2.30
+        ip_address_uri: 100.64.2.30
+        ip_subnet: 100.64.2.0/24
+      right_network:
+        ip_address: 100.65.2.30
+        ip_address_uri: 100.65.2.30
+        ip_subnet: 100.65.2.0/24
+      main_network:
+        ip_address: 99.99.2.9
+        ip_address_uri: 99.99.2.9
+        ip_subnet: 99.99.2.0/24
+      main_network_ipv6:
+        ip_address: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0003
+        ip_address_uri: "[f00d:f00d:f00d:f00d:f00d:f00d:f00d:0003]"
+        ip_subnet: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0/124
+
+  CloudDomain: "example.com"
+  CloudName: "overcloud.example.com"
+  CloudNameCtlplane: "overcloud.ctlplane.example.com"
+  CloudNameMainNetwork: "overcloud.main.example.com"
+  CloudNameLeftNetwork: "overcloud.left.example.com"
+  CloudNameRightNetwork: "overcloud.right.example.com"
+
+  CinderLVMLoopDeviceSize: 16384
+  FrrBfdEnabled: true
+  FrrBgpEnabled: true
+  FrrBgpIpv4AllowASIn: true
+  FrrBgpIpv6AllowASIn: true
+  FrrBgpUplinks: ['nic3', 'nic4']
+  FrrBgpUplinksScope: internal
+  FrrLogLevel: debugging
+  FrrBgpIpv4SrcNetwork: main_network
+  FrrBgpIpv6SrcNetwork: main_network_ipv6
+  FrrBgpL2VpnEnabled: true
+  FrrBgpL2VpnEbgpMultihop: 10
+  FrrBgpL2VpnPeers: ['5.1.1.1']
+
+  ControllerRack0ExtraGroupVars:
+    tripleo_frr_bgp_neighbor_password: f00barZ
+    tripleo_frr_bfd_detect_multiplier: 10
+    tripleo_frr_bfd_transmit_interval: 500
+    tripleo_frr_bfd_receive_interval: 500
+    tripleo_frr_zebra_graceful_restart_time: 30
+    tripleo_frr_conf_custom_router_bgp: |
+      bgp graceful-restart
+    tripleo_frr_conf_custom_globals: |
+      debug bfd peer
+      debug bfd network
+      debug bfd zebra
+      debug bgp graceful-restart
+      debug bgp neighbor-events
+      debug bgp updates
+      debug bgp update-groups
+  ControllerRack1ExtraGroupVars:
+    tripleo_frr_bgp_neighbor_password: f00barZ
+    tripleo_frr_bfd_detect_multiplier: 10
+    tripleo_frr_bfd_transmit_interval: 500
+    tripleo_frr_bfd_receive_interval: 500
+    tripleo_frr_zebra_graceful_restart_time: 30
+    tripleo_frr_conf_custom_router_bgp: |
+      bgp graceful-restart
+    tripleo_frr_conf_custom_globals: |
+      debug bfd peer
+      debug bfd network
+      debug bfd zebra
+      debug bgp graceful-restart
+      debug bgp neighbor-events
+      debug bgp updates
+      debug bgp update-groups
+  ControllerRack2ExtraGroupVars:
+    tripleo_frr_bgp_neighbor_password: f00barZ
+    tripleo_frr_bfd_detect_multiplier: 10
+    tripleo_frr_bfd_transmit_interval: 500
+    tripleo_frr_bfd_receive_interval: 500
+    tripleo_frr_zebra_graceful_restart_time: 30
+    tripleo_frr_conf_custom_router_bgp: |
+      bgp graceful-restart
+    tripleo_frr_conf_custom_globals: |
+      debug bfd peer
+      debug bfd network
+      debug bfd zebra
+      debug bgp graceful-restart
+      debug bgp neighbor-events
+      debug bgp updates
+      debug bgp update-groups
+
+  ComputeRack0ExtraGroupVars:
+    tripleo_frr_bgp_neighbor_password: f00barZ
+    tripleo_frr_bfd_detect_multiplier: 10
+    tripleo_frr_bfd_transmit_interval: 500
+    tripleo_frr_bfd_receive_interval: 500
+    tripleo_frr_zebra_graceful_restart_time: 30
+    tripleo_frr_conf_custom_router_bgp: |
+      bgp graceful-restart
+    tripleo_frr_conf_custom_globals: |
+      debug bfd peer
+      debug bfd network
+      debug bfd zebra
+      debug bgp graceful-restart
+      debug bgp neighbor-events
+      debug bgp updates
+      debug bgp update-groups
+  ComputeRack1ExtraGroupVars:
+    tripleo_frr_bgp_neighbor_password: f00barZ
+    tripleo_frr_bfd_detect_multiplier: 10
+    tripleo_frr_bfd_transmit_interval: 500
+    tripleo_frr_bfd_receive_interval: 500
+    tripleo_frr_zebra_graceful_restart_time: 30
+    tripleo_frr_conf_custom_router_bgp: |
+      bgp graceful-restart
+    tripleo_frr_conf_custom_globals: |
+      debug bfd peer
+      debug bfd network
+      debug bfd zebra
+      debug bgp graceful-restart
+      debug bgp neighbor-events
+      debug bgp updates
+      debug bgp update-groups
+  ComputeRack2ExtraGroupVars:
+    tripleo_frr_bgp_neighbor_password: f00barZ
+    tripleo_frr_bfd_detect_multiplier: 10
+    tripleo_frr_bfd_transmit_interval: 500
+    tripleo_frr_bfd_receive_interval: 500
+    tripleo_frr_zebra_graceful_restart_time: 30
+    tripleo_frr_conf_custom_router_bgp: |
+      bgp graceful-restart
+    tripleo_frr_conf_custom_globals: |
+      debug bfd peer
+      debug bfd network
+      debug bfd zebra
+      debug bgp graceful-restart
+      debug bgp neighbor-events
+      debug bgp updates
+      debug bgp update-groups
+
+  BgpvpnServiceProvider: 'BGPVPN:OVN:networking_bgpvpn.neutron.services.service_drivers.ovn.ovn.OvnBGPVPNDriver:default'
+
+  # Allow ssh access from all networks
+  SshFirewallAllowAll: true
+
+  BarbicanSimpleCryptoGlobalDefault: true
+
+
+  # this overrides the default value openstacklocal
+  NeutronDnsDomain: example.com
+
+  # overriding default values in order to not collide with provider subnet
+  OctaviaControlSubnetCidr: 172.25.0.0/16
+  OctaviaControlSubnetGateway: 172.25.0.1
+  OctaviaControlSubnetPoolStart: 172.25.0.2
+  OctaviaControlSubnetPoolEnd: 172.25.255.254
+
+  OctaviaLoadBalancerTopology: ACTIVE_STANDBY
+
+  ControlPlaneSubnet: main_network_r0
+  VipSubnetMap:
+    main_network: main_network_r0
+  # datacentre represents a flat network
+  # provider2 represents a network with vlans
+  NeutronFlatNetworks: datacentre
+  ControllerRack0Parameters:
+    NeutronBridgeMappings: ["datacentre:br-ex", "provider2:br-vlan"]
+    ControlPlaneSubnet: main_network_r0
+    MemcachedIpSubnet: main_network_r0
+    OVNCMSOptions: "enable-chassis-as-gw"
+    FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
+    FrrOvnBgpAgentExposeTenantNetworks: true
+    ExtraSysctlSettings:
+      net.ipv6.conf.eth2.accept_ra_defrtr:
+        value: 0
+      net.ipv6.conf.eth3.accept_ra_defrtr:
+        value: 0
+      net.ipv6.conf.br-ex.router_solicitations:
+        value: 0
+
+  ControllerRack1Parameters:
+    NeutronBridgeMappings: ["datacentre:br-ex", "provider2:br-vlan"]
+    ControlPlaneSubnet: main_network_r1
+    MemcachedIpSubnet: main_network_r1
+    OVNCMSOptions: "enable-chassis-as-gw"
+    FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
+    FrrOvnBgpAgentExposeTenantNetworks: true
+    ExtraSysctlSettings:
+      net.ipv6.conf.eth2.accept_ra_defrtr:
+        value: 0
+      net.ipv6.conf.eth3.accept_ra_defrtr:
+        value: 0
+      net.ipv6.conf.br-ex.router_solicitations:
+        value: 0
+  ControllerRack2Parameters:
+    NeutronBridgeMappings: ["datacentre:br-ex", "provider2:br-vlan"]
+    ControlPlaneSubnet: main_network_r2
+    MemcachedIpSubnet: main_network_r2
+    OVNCMSOptions: "enable-chassis-as-gw"
+    FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
+    FrrOvnBgpAgentExposeTenantNetworks: true
+    ExtraSysctlSettings:
+      net.ipv6.conf.eth2.accept_ra_defrtr:
+        value: 0
+      net.ipv6.conf.eth3.accept_ra_defrtr:
+        value: 0
+      net.ipv6.conf.br-ex.router_solicitations:
+        value: 0
+  ComputeRack0Parameters:
+    NeutronBridgeMappings: ["datacentre:br-ex", "provider2:br-vlan"]
+    FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
+    ExtraSysctlSettings:
+      net.ipv6.conf.eth2.accept_ra_defrtr:
+        value: 0
+      net.ipv6.conf.eth3.accept_ra_defrtr:
+        value: 0
+      net.ipv6.conf.br-ex.router_solicitations:
+        value: 0
+  ComputeRack1Parameters:
+    NeutronBridgeMappings: ["datacentre:br-ex", "provider2:br-vlan"]
+    FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
+    ExtraSysctlSettings:
+      net.ipv6.conf.eth2.accept_ra_defrtr:
+        value: 0
+      net.ipv6.conf.eth3.accept_ra_defrtr:
+        value: 0
+      net.ipv6.conf.br-ex.router_solicitations:
+        value: 0
+  ComputeRack2Parameters:
+    NeutronBridgeMappings: ["datacentre:br-ex", "provider2:br-vlan"]
+    FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
+    ExtraSysctlSettings:
+      net.ipv6.conf.eth2.accept_ra_defrtr:
+        value: 0
+      net.ipv6.conf.eth3.accept_ra_defrtr:
+        value: 0
+      net.ipv6.conf.br-ex.router_solicitations:
+        value: 0
+
+  NeutronExternalNetworkBridge: ''
+  NeutronNetworkVLANRanges: 'provider2:1:1000'
+  DnsServers: ['192.168.122.1', '192.168.125.1']
+  NtpPool: clock.corp.redhat.com
+  EnableVLANTransparency: true
+  NeutronEnableIgmpSnooping: true
+
+  RedisVirtualFixedIPs:
+    - ip_address: 172.31.0.3
+      use_neutron: false
+
+  ServiceNetMap:
+    ApacheNetwork: main_network
+    NeutronTenantNetwork: main_network
+    AodhApiNetwork: main_network
+    PankoApiNetwork: main_network
+    BarbicanApiNetwork: main_network
+    GnocchiApiNetwork: main_network
+    MongodbNetwork: main_network
+    CinderApiNetwork: main_network
+    CinderIscsiNetwork: main_network
+    GlanceApiNetwork: main_network
+    GlanceApiEdgeNetwork: main_network
+    GlanceApiInternalNetwork: main_network
+    IronicApiNetwork: main_network
+    IronicNetwork: main_network
+    IronicInspectorNetwork: main_network
+    KeystoneAdminApiNetwork: main_network
+    KeystonePublicApiNetwork: main_network
+    ManilaApiNetwork: main_network
+    NeutronApiNetwork: main_network
+    OctaviaApiNetwork: main_network
+    HeatApiNetwork: main_network
+    HeatApiCfnNetwork: main_network
+    HeatApiCloudwatchNetwork: main_network
+    NovaApiNetwork: main_network
+    PlacementNetwork: main_network
+    NovaMetadataNetwork: main_network
+    NovaVncProxyNetwork: main_network
+    NovaLibvirtNetwork: main_network
+    NovajoinNetwork: main_network
+    SwiftStorageNetwork: main_network
+    SwiftProxyNetwork: main_network
+    HorizonNetwork: main_network
+    MemcachedNetwork: main_network
+    OsloMessagingRpcNetwork: main_network
+    OsloMessagingNotifyNetwork: main_network
+    RabbitmqNetwork: main_network
+    QdrNetwork: main_network
+    RedisNetwork: main_network
+    GaneshaNetwork: main_network
+    MysqlNetwork: main_network
+    SnmpdNetwork: main_network
+    CephClusterNetwork: main_network
+    CephDashboardNetwork: main_network
+    CephGrafanaNetwork: main_network
+    CephMonNetwork: main_network
+    CephRgwNetwork: main_network
+    OpendaylightApiNetwork: main_network
+    OvnDbsNetwork: main_network
+    DockerRegistryNetwork: ctlplane
+    PacemakerNetwork: main_network
+    PacemakerRemoteNetwork: main_network
+    DesignateApiNetwork: main_network
+    BINDNetwork: main_network
+    EtcdNetwork: main_network
+    HaproxyNetwork: main_network
+
+    # Not sure as to why yet, but without these we fail rendering the hosts entries
+    ControllerRack0HostnameResolveNetwork: main_network
+    ControllerRack1HostnameResolveNetwork: main_network
+    ControllerRack2HostnameResolveNetwork: main_network
+    ComputeRack0HostnameResolveNetwork: main_network
+    ComputeRack1HostnameResolveNetwork: main_network
+    ComputeRack2HostnameResolveNetwork: main_network
+    InternalApiNetwork: main_network
+
+    PublicNetwork: external
