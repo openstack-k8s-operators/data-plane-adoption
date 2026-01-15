@@ -21,6 +21,9 @@ Perform the following tasks to incorporate the existing network configuration:
 When configuring nodes and services, the general approach is as follows:
 
 * For IPAM, you can either reuse subnet ranges from the existing deployment or, if there is a shortage of free IP addresses in existing subnets, define new ranges for the new control plane services. If you define new ranges, you configure IP routing between the old and new ranges. For more information, see xref:planning-your-ipam-configuration_configuring-network[Planning your IPAM configuration].
+ifeval::["{build_variant}" == "ospdo"]
+For more information about creating networks for a director Operator environment, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#proc_creating-an-overcloud-network-with-the-openstacknetconfig-CRD_OSPdO-networks[Creating networks with director Operator] in _Deploying an overcloud in a Red Hat OpenShift Container Platform cluster with director Operator_.
+endif::[]
 * For VLAN tags, always reuse the configuration from the existing deployment.
 
 [NOTE]

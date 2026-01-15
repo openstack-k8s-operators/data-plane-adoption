@@ -47,7 +47,9 @@ Additional IP addresses might be required in future {OpenStackShort} releases, s
 
 After you determine the required IP pool size for the new deployment, you can choose to define new IP address ranges or reuse your existing IP address ranges. Regardless of the scenario, the VLAN tags in the existing deployment are reused in the new deployment. Ensure that the VLAN tags are properly retained in the new configuration. For more information, see xref:configuring-isolated-networks_configuring-network[Configuring isolated networks].
 
+ifeval::["{build_variant}" != "ospdo"]
 include::../modules/proc_using-new-subnet-ranges.adoc[leveloffset=+1]
+endif::[]
 
 include::../modules/proc_reusing-existing-subnet-ranges.adoc[leveloffset=+1]
 
