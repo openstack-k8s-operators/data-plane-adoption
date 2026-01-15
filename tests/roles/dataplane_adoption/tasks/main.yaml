@@ -43,6 +43,69 @@
     EOF
   when: configure_ipam | bool
 
+# DCN requires routes in the internalapi NAD so OVN SB pods can reach DCN compute nodes.
+# Macvlan pods don't inherit routes from the node interface, so we add them to the NAD.
+- name: Patch internalapi NAD with routes to DCN subnets
+  when: edpm_nodes_dcn1 is defined or edpm_nodes_dcn2 is defined
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    # Get current NAD config
+    CURRENT_CONFIG=$(oc get net-attach-def internalapi -n openstack -o jsonpath='{.spec.config}')
+
+    # Check if routes already exist
+    if echo "$CURRENT_CONFIG" | grep -q '"routes"'; then
+      echo "Routes already exist in internalapi NAD, skipping"
+      exit 0
+    fi
+
+    # Build routes array for DCN subnets
+    # DCN1: 172.17.10.0/24, DCN2: 172.17.20.0/24, gateway: 172.17.0.1
+    ROUTES='[{"dst":"172.17.10.0/24","gw":"172.17.0.1"},{"dst":"172.17.20.0/24","gw":"172.17.0.1"}]'
+
+    # Add routes to IPAM config
+    NEW_CONFIG=$(echo "$CURRENT_CONFIG" | python3 -c "
+    import json, sys
+    config = json.load(sys.stdin)
+    config['ipam']['routes'] = json.loads('$ROUTES')
+    print(json.dumps(config))
+    ")
+
+    # Apply updated NAD
+    oc apply -f - <<EOF
+    apiVersion: k8s.cni.cncf.io/v1
+    kind: NetworkAttachmentDefinition
+    metadata:
+      name: internalapi
+      namespace: openstack
+      labels:
+        osp/net: internalapi
+        osp/net-attach-def-type: standard
+    spec:
+      config: |
+        $NEW_CONFIG
+    EOF
+  register: nad_patch_result
+
+- name: Restart OVN SB pods to pick up new NAD routes
+  when:
+    - edpm_nodes_dcn1 is defined or edpm_nodes_dcn2 is defined
+    - nad_patch_result.changed
+    - "'skipping' not in nad_patch_result.stdout"
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    # Delete OVN SB pods so they restart with new routes
+    oc delete pod -n openstack -l service=ovsdbserver-sb --wait=false
+
+    # Wait for pods to be ready again
+    sleep 10
+    oc wait --for=condition=Ready pod -n openstack -l service=ovsdbserver-sb --timeout=120s
+
 - name: Slurp the private key
   no_log: "{{ use_no_log }}"
   ansible.builtin.slurp:
@@ -258,11 +321,100 @@
     {% endif %}
     {% endfor %}
 
+- name: Get OVN SB internalapi IPs for DCN nodesets
+  when: edpm_nodes_dcn1 is defined or edpm_nodes_dcn2 is defined
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    # Get internalapi IPs from OVN SB pods
+    OVN_SB_IPS=""
+    for pod in ovsdbserver-sb-0 ovsdbserver-sb-1 ovsdbserver-sb-2; do
+      IP=$(oc get pod -n openstack $pod -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | \
+           python3 -c "import sys, json; data=json.load(sys.stdin); print([n for n in data if 'internalapi' in n.get('name','')][0]['ips'][0])")
+      if [ -z "$OVN_SB_IPS" ]; then
+        OVN_SB_IPS="\"$IP\""
+      else
+        OVN_SB_IPS="$OVN_SB_IPS, \"$IP\""
+      fi
+    done
+
+    echo "[$OVN_SB_IPS]"
+  register: ovn_sb_ips_result
+
+- name: Set OVN SB IPs fact for DCN nodesets
+  when: edpm_nodes_dcn1 is defined or edpm_nodes_dcn2 is defined
+  ansible.builtin.set_fact:
+    edpm_ovn_dbs_dcn: "{{ ovn_sb_ips_result.stdout | trim | from_json }}"
+
+- name: Create DCN OVN controller ConfigMap with direct IPs
+  when: edpm_nodes_dcn1 is defined or edpm_nodes_dcn2 is defined
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    # Build ovn-remote connection string from internalapi IPs
+    OVN_REMOTE="{% for ip in edpm_ovn_dbs_dcn %}tcp:{{ ip }}:6642{% if not loop.last %},{% endif %}{% endfor %}"
+
+    # Create ConfigMap for DCN nodes with direct IPs
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: ovncontroller-config-dcn
+      namespace: openstack
+    data:
+      ovsdb-config: |
+        ovn-remote: $OVN_REMOTE
+    EOF
+
+- name: Create DCN-specific OVN DataPlaneService
+  when: edpm_nodes_dcn1 is defined or edpm_nodes_dcn2 is defined
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    # Create OpenStackDataPlaneService for DCN that uses the DCN ConfigMap
+    oc apply -f - <<EOF
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: ovn-dcn
+      namespace: openstack
+    spec:
+      addCertMounts: false
+      caCerts: combined-ca-bundle
+      containerImageFields:
+      - OvnControllerImage
+      dataSources:
+      - configMapRef:
+          name: ovncontroller-config-dcn
+      edpmServiceType: ovn
+      playbook: osp.edpm.ovn
+      tlsCerts:
+        default:
+          contents:
+          - dnsnames
+          - ips
+          issuer: osp-rootca-issuer-ovn
+          keyUsages:
+          - digital signature
+          - key encipherment
+          - server auth
+          - client auth
+          networks:
+          - ctlplane
+    EOF
+
 - name: Create OpenStackDataPlaneNodeSet_dcn1
   when: edpm_nodes_dcn1 is defined
   no_log: "{{ use_no_log }}"
   vars:
     edpm_ovn_bridge_mappings_nodeset: "{{ edpm_ovn_bridge_mappings_dcn1|default(omit) }}"
+    edpm_ovn_dbs_nodeset: "{{ edpm_ovn_dbs_dcn }}"
   ansible.builtin.shell: |
     {{ shell_header }}
     CELL=cell1
@@ -279,6 +431,7 @@
   no_log: "{{ use_no_log }}"
   vars:
     edpm_ovn_bridge_mappings_nodeset: "{{ edpm_ovn_bridge_mappings_dcn2|default(omit) }}"
+    edpm_ovn_dbs_nodeset: "{{ edpm_ovn_dbs_dcn }}"
   ansible.builtin.shell: |
     {{ shell_header }}
     CELL=cell1
@@ -335,6 +488,45 @@
     {%+ if edpm_nodes_dcn2 is defined +%}
     cat nodeset-cell1-dcn2.yaml | oc apply -f -
     {%+ endif +%}
+
+- name: Patch DCN nodesets to use ovn-dcn service instead of ovn
+  when: edpm_nodes_dcn1 is defined or edpm_nodes_dcn2 is defined
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    # Patch dcn1 nodeset if it exists
+    {% if edpm_nodes_dcn1 is defined %}
+    if oc get openstackdataplanenodeset dcn1 -n openstack &>/dev/null; then
+      # Get current services list and replace 'ovn' with 'ovn-dcn'
+      SERVICES=$(oc get openstackdataplanenodeset dcn1 -n openstack -o jsonpath='{.spec.services}' | \
+        sed 's/"ovn"/"ovn-dcn"/g')
+
+      # Apply the patch
+      oc patch openstackdataplanenodeset dcn1 -n openstack --type=merge --patch "
+      spec:
+        services: $SERVICES
+      "
+      echo "Patched dcn1 nodeset to use ovn-dcn service"
+    fi
+    {% endif %}
+
+    # Patch dcn2 nodeset if it exists
+    {% if edpm_nodes_dcn2 is defined %}
+    if oc get openstackdataplanenodeset dcn2 -n openstack &>/dev/null; then
+      # Get current services list and replace 'ovn' with 'ovn-dcn'
+      SERVICES=$(oc get openstackdataplanenodeset dcn2 -n openstack -o jsonpath='{.spec.services}' | \
+        sed 's/"ovn"/"ovn-dcn"/g')
+
+      # Apply the patch
+      oc patch openstackdataplanenodeset dcn2 -n openstack --type=merge --patch "
+      spec:
+        services: $SERVICES
+      "
+      echo "Patched dcn2 nodeset to use ovn-dcn service"
+    fi
+    {% endif %}
 
 # TODO(bogdando): Apply the ceph backend config for Cinder in the original openstack CR, via kustomize perhaps?
 - name: prepare the adopted data plane workloads to use Ceph backend for Cinder, if configured so
