@@ -14,6 +14,13 @@ ironic_patch: |
       template:
         rpcTransport: oslo
         databaseInstance: openstack
+        customServiceConfig: |
+          [DEFAULT]
+          {% if ipv6_enabled | default(false) -%}
+          default_network_interface=neutron
+          {%- else -%}
+          default_network_interface=flat
+          {%- endif %}
         ironicAPI:
           replicas: 1
           override:
