@@ -1,4 +1,7 @@
 ---
+# HSM support flag
+barbican_hsm_enabled: false
+
 barbican_patch: |
   spec:
     barbican:
@@ -39,3 +42,55 @@ barbican_patch: |
         barbicanKeystoneListener:
           replicas: 1
 barbican_retry_delay: 5
+
+barbican_hsm_patch: |
+  spec:
+    barbican:
+      enabled: true
+      apiOverride:
+        route: {}
+      template:
+        databaseInstance: openstack
+        databaseAccount: barbican
+        rabbitMqClusterName: rabbitmq
+        secret: osp-secret
+        simpleCryptoBackendSecret: osp-secret
+        serviceAccount: barbican
+        serviceUser: barbican
+        passwordSelectors:
+          database: BarbicanDatabasePassword
+          service: BarbicanPassword
+          simplecryptokek: BarbicanSimpleCryptoKEK
+        customServiceConfig: |
+          [p11_crypto_plugin]
+          plugin_name = PKCS11
+          library_path = {{ proteccio_library_path | default('/opt/tw_proteccio/lib/libnethsm.so') }}
+          token_labels = {{ proteccio_hsm_tokens | default(['VHSM1']) | join(',') }}
+          mkek_label = {{ proteccio_mkek_name | default('adoption_mkek_1') }}
+          hmac_label = {{ proteccio_hmac_name | default('adoption_hmac_1') }}
+          encryption_mechanism = CKM_AES_CBC
+          hmac_key_type = CKK_GENERIC_SECRET
+          hmac_keygen_mechanism = CKM_GENERIC_SECRET_KEY_GEN
+          hmac_mechanism = CKM_SHA256_HMAC
+          key_wrap_mechanism = CKM_AES_CBC_PAD
+          key_wrap_generate_iv = true
+          always_set_cka_sensitive = true
+          os_locking_ok = false
+          login = {{ proteccio_login_password | default('') }}
+        globalDefaultSecretStore: pkcs11
+        enabledSecretStores: ["simple_crypto", "pkcs11"]
+        pkcs11:
+          loginSecret: {{ proteccio_login_secret_name | default('hsm-login') }}
+          clientDataSecret: {{ proteccio_client_data_secret_name | default('proteccio-data') }}
+          clientDataPath: /etc/proteccio
+        barbicanAPI:
+          replicas: 1
+        barbicanWorker:
+          replicas: 1
+        barbicanKeystoneListener:
+          replicas: 1
+
+# HSM secrets configuration
+proteccio_login_secret_name: hsm-login
+proteccio_client_data_secret_name: proteccio-data
+proteccio_login_password: ''
