@@ -1,0 +1,107 @@
+---
+- name: Storage
+  mtu: 1496
+  vip: true
+  name_lower: storage
+  dns_domain: storage.{{ cloud_domain }}.
+  service_net_map_replace: storage
+  subnets:
+    storage_subnet:
+      vlan: 21
+      ip_subnet: '172.18.0.0/24'
+      allocation_pools: [{'start': '172.18.0.120', 'end': '172.18.0.250'}]
+    storage_leaf1:
+      vlan: 31
+      ip_subnet: '172.18.10.0/24'
+      allocation_pools: [{'start': '172.18.10.120', 'end': '172.18.10.250'}]
+      routes:
+        - destination: 172.18.0.0/24
+          nexthop: 172.18.10.1
+        - destination: 172.18.20.0/24
+          nexthop: 172.18.10.1
+    storage_leaf2:
+      vlan: 41
+      ip_subnet: '172.18.20.0/24'
+      allocation_pools: [{'start': '172.18.20.120', 'end': '172.18.20.250'}]
+
+- name: StorageMgmt
+  mtu: 1496
+  vip: true
+  name_lower: storage_mgmt
+  dns_domain: storagemgmt.{{ cloud_domain }}.
+  service_net_map_replace: storage_mgmt
+  subnets:
+    storage_mgmt_subnet:
+      vlan: 23
+      ip_subnet: '172.20.0.0/24'
+      allocation_pools: [{'start': '172.20.0.120', 'end': '172.20.0.250'}]
+    storage_mgmt_leaf1:
+      vlan: 33
+      ip_subnet: '172.20.10.0/24'
+      allocation_pools: [{'start': '172.20.10.120', 'end': '172.20.10.250'}]
+    storage_mgmt_leaf2:
+      vlan: 43
+      ip_subnet: '172.20.20.0/24'
+      allocation_pools: [{'start': '172.20.20.120', 'end': '172.20.20.250'}]
+
+- name: InternalApi
+  mtu: 1496
+  vip: true
+  name_lower: internal_api
+  dns_domain: internal-api.{{ cloud_domain }}.
+  service_net_map_replace: internal_api
+  subnets:
+    internal_api_subnet:
+      vlan: 20
+      ip_subnet: '172.17.0.0/24'
+      allocation_pools: [{'start': '172.17.0.120', 'end': '172.17.0.250'}]
+    internal_api_leaf1:
+      vlan: 30
+      ip_subnet: '172.17.10.0/24'
+      allocation_pools: [{'start': '172.17.10.120', 'end': '172.17.10.250'}]
+      routes:
+        - destination: 172.17.0.0/24
+          nexthop: 172.17.10.1
+        - destination: 172.17.20.0/24
+          nexthop: 172.17.10.1
+    internal_api_leaf2:
+      vlan: 40
+      ip_subnet: '172.17.20.0/24'
+      allocation_pools: [{'start': '172.17.20.120', 'end': '172.17.20.250'}]
+
+- name: Tenant
+  mtu: 1496
+  vip: false  # Tenant network does not use VIPs
+  name_lower: tenant
+  dns_domain: tenant.{{ cloud_domain }}.
+  service_net_map_replace: tenant
+  subnets:
+    tenant_subnet:
+      vlan: 22
+      ip_subnet: '172.19.0.0/24'
+      allocation_pools: [{'start': '172.19.0.120', 'end': '172.19.0.250'}]
+    tenant_leaf_1:
+      vlan: 32
+      ip_subnet: '172.19.10.0/24'
+      allocation_pools: [{'start': '172.19.10.120', 'end': '172.19.10.250'}]
+      routes:
+        - destination: 172.19.0.0/24
+          nexthop: 172.19.10.1
+        - destination: 172.19.20.0/24
+          nexthop: 172.19.10.1
+    tenant_leaf_2:
+      vlan: 42
+      ip_subnet: '172.19.20.0/24'
+      allocation_pools: [{'start': '172.19.20.120', 'end': '172.19.20.250'}]
+
+- name: External
+  mtu: 1500
+  vip: true
+  name_lower: external
+  dns_domain: external.{{ cloud_domain }}.
+  service_net_map_replace: external
+  subnets:
+    external_subnet:
+      vlan: 44
+      ip_subnet: '10.0.0.0/24'
+      allocation_pools: [{'start': '10.0.0.150', 'end': '10.0.0.250'}]
