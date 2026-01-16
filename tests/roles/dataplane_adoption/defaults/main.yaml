@@ -332,10 +332,10 @@ dataplane_cr: |
           edpm_nova_compute_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-compute:{{ image_tag }}"
           edpm_nova_libvirt_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-libvirt:{{ image_tag }}"
           edpm_ovn_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
-          {% if telemetry_adoption|bool +%}
+          {% if telemetry_adoption|bool -%}
           edpm_telemetry_ceilometer_compute_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ceilometer-compute:{{ image_tag }}"
           edpm_telemetry_ceilometer_ipmi_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ceilometer-ipmi:{{ image_tag }}"
-          {%+ endif +%}
+          {% endif -%}
           edpm_neutron_sriov_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-sriov-agent:{{ image_tag }}"
           edpm_neutron_ovn_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-ovn-agent:{{ image_tag }}"
           edpm_neutron_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
@@ -343,21 +343,21 @@ dataplane_cr: |
           edpm_multipathd_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-multipathd:{{ image_tag }}"
           {% if edpm_telemetry_node_exporter_image is defined -%}
           edpm_telemetry_node_exporter_image: "{{ edpm_telemetry_node_exporter_image }}"
-          {% endif %}
-          {% if bgp | bool +%}
+          {% endif -%}
+          {% if bgp | bool -%}
           edpm_frr_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-frr:{{ image_tag }}"
           edpm_ovn_bgp_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-bgp-agent:{{ image_tag }}"
           edpm_frr_bgp_ipv4_src_network: bgpmainnet
           edpm_frr_bgp_ipv6_src_network: bgpmainnetv6
           edpm_frr_bgp_neighbor_password: f00barZ
-          {%+ endif +%}
+          {% endif -%}
           {% if edpm_container_registry_logins is defined -%}
           edpm_container_registry_logins:
             {% for login, value in edpm_container_registry_logins.items() -%}
-            {{ login | indent(10) }}:
+            {{ login }}:
               {{ value | to_nice_yaml | trim }}
             {% endfor -%}
-          {%+ endif +%}
+          {% endif -%}
 
           gather_facts: false
           # edpm firewall, change the allowed CIDR if needed
