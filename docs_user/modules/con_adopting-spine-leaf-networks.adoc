@@ -1,0 +1,135 @@
+:_mod-docs-content-type: CONCEPT
+[id="adopting-spine-leaf-networks_{context}"]
+
+= Configuring spine-leaf networks for the {rhos_long_noacro} deployment
+
+[role="_abstract"]
+When adopting a {rhos_prev_long} ({OpenStackShort}) deployment that uses spine-leaf or Distributed Compute Node (DCN) network topologies, you must understand the differences between standard flat L2 networks and routed L3 networks. Spine-leaf deployments use routed provider networks where each site has its own IP subnet that is routed, not bridged, to other sites.
+
+== Understanding routed provider networks
+
+In a standard single-site deployment, all compute nodes share a single flat L2 network for each service network (internalapi, storage, tenant). All nodes are in the same broadcast domain.
+
+In a spine-leaf or DCN deployment, each site has its own L2 network segment with a separate IP subnet. Traffic between sites is routed at L3 through spine routers or similar network infrastructure.
+
+.Example network topology for a three-site DCN deployment
+[options="header"]
+|===
+| Network | Central site | DCN1 site | DCN2 site
+| Control plane | 192.168.122.0/24 | 192.168.133.0/24 | 192.168.144.0/24
+| Internal API | 172.17.0.0/24 | 172.17.10.0/24 | 172.17.20.0/24
+| Storage | 172.18.0.0/24 | 172.18.10.0/24 | 172.18.20.0/24
+| Tenant | 172.19.0.0/24 | 172.19.10.0/24 | 172.19.20.0/24
+|===
+
+== Configuring multi-subnet NetConfig for spine-leaf
+
+When you adopt a spine-leaf deployment, you must configure the `NetConfig` custom resource (CR) with multiple subnets for each service network. Each subnet represents a different site.
+
+.Example NetConfig with multiple subnets per network
+[source,yaml]
+----
+apiVersion: network.openstack.org/v1beta1
+kind: NetConfig
+metadata:
+  name: netconfig
+spec:
+  networks:
+  - name: ctlplane
+    dnsDomain: ctlplane.example.com
+    subnets:
+    - name: subnet1              # Central site
+      allocationRanges:
+      - end: 192.168.122.120
+        start: 192.168.122.100
+      cidr: 192.168.122.0/24
+      gateway: 192.168.122.1
+    - name: ctlplanedcn1         # DCN1 site
+      allocationRanges:
+      - end: 192.168.133.120
+        start: 192.168.133.100
+      cidr: 192.168.133.0/24
+      gateway: 192.168.133.1
+    - name: ctlplanedcn2         # DCN2 site
+      allocationRanges:
+      - end: 192.168.144.120
+        start: 192.168.144.100
+      cidr: 192.168.144.0/24
+      gateway: 192.168.144.1
+  - name: internalapi
+    dnsDomain: internalapi.example.com
+    subnets:
+    - name: subnet1              # Central site
+      allocationRanges:
+      - end: 172.17.0.250
+        start: 172.17.0.100
+      cidr: 172.17.0.0/24
+      vlan: 20
+    - name: internalapidcn1      # DCN1 site
+      allocationRanges:
+      - end: 172.17.10.250
+        start: 172.17.10.100
+      cidr: 172.17.10.0/24
+      vlan: 30
+    - name: internalapidcn2      # DCN2 site
+      allocationRanges:
+      - end: 172.17.20.250
+        start: 172.17.20.100
+      cidr: 172.17.20.0/24
+      vlan: 40
+----
+
+* Each network defines multiple subnets, one for each site.
+* Each site uses unique VLAN IDs. In this example, central uses VLANs 20-23, DCN1 uses VLANs 30-33, and DCN2 uses VLANs 40-43.
+* The subnet naming convention typically uses `subnet1` for the central site and site-specific names like `internalapidcn1` for edge sites.
+
+== Configuring per-site physnets
+
+In spine-leaf deployments, each site requires its own provider network (physnet) because the sites are geographically distributed. The {networking_first_ref} must be configured to recognize all physnets.
+
+.Example Neutron ML2 configuration for multiple physnets
+[source,yaml]
+----
+[ml2_type_vlan]
+network_vlan_ranges = leaf0:1:1000,leaf1:1:1000,leaf2:1:1000
+
+[neutron]
+physnets = leaf0,leaf1,leaf2
+----
+
+* `leaf0` corresponds to the central site.
+* `leaf1` corresponds to the DCN1 site.
+* `leaf2` corresponds to the DCN2 site.
+
+When you create routed provider networks in {rhos_long}, you create network segments that map to these physnets:
+
+* Segment for central: `physnet=leaf0`, subnet=192.168.122.0/24
+* Segment for DCN1: `physnet=leaf1`, subnet=192.168.133.0/24
+* Segment for DCN2: `physnet=leaf2`, subnet=192.168.144.0/24
+
+== Configuring inter-site routes
+
+For compute nodes at edge sites to communicate with the control plane services in the central site, static routes must be configured. These routes enable traffic between different L3 network segments.
+
+.Example routes required on DCN1 compute nodes
+[options="header"]
+|===
+| Destination network | Next hop | Purpose
+| 172.17.0.0/24 | 172.17.10.1 | Route to central internalapi
+| 172.17.20.0/24 | 172.17.10.1 | Route to DCN2 internalapi
+| 172.18.0.0/24 | 172.18.10.1 | Route to central storage
+| 172.18.20.0/24 | 172.18.10.1 | Route to DCN2 storage
+|===
+
+You configure these routes in the `edpm_network_config_template` within the `OpenStackDataPlaneNodeSet` CR for each site.
+
+[IMPORTANT]
+====
+Without proper routes configured, compute nodes in edge sites cannot reach control plane services such as RabbitMQ or the database. The adoption might appear to succeed, but the cloud will not function correctly.
+====
+
+== DHCP relay limitations
+
+DHCP relay is not supported in adopted {rhos_long} environments with spine-leaf topologies. This affects bare metal provisioning scenarios that use PXE boot.
+
+If you need to provision bare metal nodes at edge sites, use Redfish virtual media or similar BMC virtual media features instead of PXE boot.
