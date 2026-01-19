@@ -1,0 +1,366 @@
+:_mod-docs-content-type: PROCEDURE
+[id="configuring-dcn-data-plane-nodesets_{context}"]
+
+= Configuring data plane nodesets for DCN sites
+
+[role="_abstract"]
+When adopting a Distributed Compute Node (DCN) deployment, you must create separate `OpenStackDataPlaneNodeSet` custom resources (CRs) for each site. Each nodeset requires site-specific configuration for network subnets, OVN bridge mappings, and inter-site routes.
+
+.Prerequisites
+
+* You have adopted the {rhos_prev_long} ({OpenStackShort}) control plane to {rhos_long}.
+* You have configured control plane networking for your spine-leaf topology, including multi-subnet `NetConfig` and `NetworkAttachmentDefinition` CRs with routes to remote sites. For more information, see xref:configuring-control-plane-networking-for-spine-leaf_{context}[Configuring control plane networking for spine-leaf topologies].
+* You have the network configuration information for each DCN site, including:
+** IP addresses and hostnames for all compute nodes
+** VLAN IDs for each service network
+** Gateway addresses for inter-site routing
+* You have identified the OVN bridge mappings (physnets) for each site.
+
+.Procedure
+
+. Define the OVN bridge mappings for each site. Each site requires a unique physnet that maps to the local provider network bridge:
++
+.Example OVN bridge mappings
+[options="header"]
+|===
+| Site | OVN bridge mapping
+| Central | `leaf0:br-ex`
+| DCN1 | `leaf1:br-ex`
+| DCN2 | `leaf2:br-ex`
+|===
+
+. Configure OVN for DCN sites. The default OVN controller configuration uses the Kubernetes ClusterIP (`ovsdbserver-sb.openstack.svc`) which is not routable from remote DCN sites. You must create a DCN-specific configuration that uses direct internalapi IP addresses.
+
+.. Get the OVN Southbound database internalapi IP addresses:
++
+----
+$ oc get pod -l service=ovsdbserver-sb -o jsonpath='{range .items[*]}{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}{"\n"}{end}' | jq -r '.[] | select(.name=="openstack/internalapi") | .ips[0]'
+----
++
+Example output:
++
+----
+172.17.0.34
+172.17.0.35
+172.17.0.36
+----
+
+.. Create a ConfigMap with the OVN SB direct IPs for DCN sites:
++
+[source,yaml,subs="+quotes"]
+----
+$ oc apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ovncontroller-config-dcn
+  namespace: openstack
+data:
+  ovsdb-config: |
+    *ovn-remote: tcp:172.17.0.34:6642,tcp:172.17.0.35:6642,tcp:172.17.0.36:6642*
+EOF
+----
++
+Replace the IP addresses with the actual internalapi IPs from the previous step.
+
+.. Create an `OpenStackDataPlaneService` CR for DCN OVN configuration:
++
+[source,yaml]
+----
+$ oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: ovn-dcn
+  namespace: openstack
+spec:
+  addCertMounts: false
+  caCerts: combined-ca-bundle
+  containerImageFields:
+  - OvnControllerImage
+  dataSources:
+  - configMapRef:
+      name: ovncontroller-config-dcn
+  edpmServiceType: ovn
+  playbook: osp.edpm.ovn
+  tlsCerts:
+    default:
+      contents:
+      - dnsnames
+      - ips
+      issuer: osp-rootca-issuer-ovn
+      keyUsages:
+      - digital signature
+      - key encipherment
+      - server auth
+      - client auth
+      networks:
+      - ctlplane
+EOF
+----
++
+[NOTE]
+====
+The `ovn-dcn` service uses the `ovncontroller-config-dcn` ConfigMap (via `dataSources`) which contains the direct internalapi IPs instead of the ClusterIP. DCN nodesets must use this service instead of the default `ovn` service.
+====
+
+. Create an `OpenStackDataPlaneNodeSet` CR for the central site compute nodes:
++
+[source,yaml,subs="+quotes"]
+----
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneNodeSet
+metadata:
+  name: openstack-edpm
+spec:
+  tlsEnabled: false
+  networkAttachments:
+    - ctlplane
+  preProvisioned: true
+  services:
+ifeval::["{build}" == "downstream"]
+    - redhat
+endif::[]
+    - bootstrap
+    - download-cache
+    - configure-network
+    - validate-network
+    - install-os
+    - configure-os
+    - ssh-known-hosts
+    - run-os
+    - reboot-os
+    - install-certs
+    - ovn
+    - neutron-metadata
+    - libvirt
+    - nova-cell1
+    - telemetry
+  nodeTemplate:
+    ansibleSSHPrivateKeySecret: dataplane-adoption-secret
+    ansible:
+      ansibleUser: root
+      ansibleVars:
+        *edpm_ovn_bridge_mappings: ["leaf0:br-ex"]*  <1>
+        edpm_ovn_bridge: br-int
+        edpm_ovn_encap_type: geneve
+        # Network configuration template for central site
+        edpm_network_config_template: |
+          ---
+          network_config:
+          - type: ovs_bridge
+            name: {{ neutron_physical_bridge_name }}
+            use_dhcp: false
+            dns_servers: {{ ctlplane_dns_nameservers }}
+            addresses:
+            - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
+            routes: {{ ctlplane_host_routes }}
+            members:
+            - type: interface
+              name: nic1
+              primary: true
+          {% for network in nodeset_networks %}
+            - type: vlan
+              vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
+              addresses:
+              - ip_netmask:
+                  {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
+              routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
+          {% endfor %}
+  nodes:
+    compute-0:
+      hostName: compute-0.example.com
+      ansible:
+        ansibleHost: compute-0.example.com
+      networks:
+      - defaultRoute: true
+        fixedIP: 192.168.122.100
+        name: ctlplane
+        *subnetName: subnet1*  <2>
+      - name: internalapi
+        *subnetName: subnet1*
+      - name: storage
+        subnetName: subnet1
+      - name: tenant
+        subnetName: subnet1
+----
+<1> The OVN bridge mapping uses the central site physnet `leaf0`.
+<2> Central site nodes reference `subnet1` for all networks.
+
+. Create an `OpenStackDataPlaneNodeSet` CR for DCN1 edge site compute nodes. You must add inter-site routes to the network configuration template and use the `ovn-dcn` service:
++
+[source,yaml,subs="+quotes"]
+----
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneNodeSet
+metadata:
+  name: openstack-edpm-dcn1
+spec:
+  tlsEnabled: false
+  networkAttachments:
+    - ctlplane
+  preProvisioned: true
+  services:
+ifeval::["{build}" == "downstream"]
+    - redhat
+endif::[]
+    - bootstrap
+    - download-cache
+    - configure-network
+    - validate-network
+    - install-os
+    - configure-os
+    - ssh-known-hosts
+    - run-os
+    - reboot-os
+    - install-certs
+    *- ovn-dcn*  # <1>
+    - neutron-metadata
+    - libvirt
+    - nova-cell1
+    - telemetry
+  nodeTemplate:
+    ansibleSSHPrivateKeySecret: dataplane-adoption-secret
+    ansible:
+      ansibleUser: root
+      ansibleVars:
+        *edpm_ovn_bridge_mappings: ["leaf1:br-ex"]*  <2>
+        edpm_ovn_bridge: br-int
+        edpm_ovn_encap_type: geneve
+        # Network configuration template for DCN1 site with inter-site routes
+        edpm_network_config_template: |
+          ---
+          network_config:
+          - type: ovs_bridge
+            name: {{ neutron_physical_bridge_name }}
+            use_dhcp: false
+            dns_servers: {{ ctlplane_dns_nameservers }}
+            addresses:
+            - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
+            routes:  # <3>
+              {{ ctlplane_host_routes }}
+              *- ip_netmask: 192.168.122.0/24*
+                *next_hop: 192.168.133.1*
+              - ip_netmask: 192.168.144.0/24
+                next_hop: 192.168.133.1
+            members:
+            - type: interface
+              name: nic1
+              primary: true
+          {% for network in nodeset_networks %}
+            - type: vlan
+              vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
+              addresses:
+              - ip_netmask:
+                  {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
+              routes:
+                {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
+                {% if network == 'internalapi' %}
+                *- ip_netmask: 172.17.0.0/24*
+                  *next_hop: 172.17.10.1*
+                - ip_netmask: 172.17.20.0/24
+                  next_hop: 172.17.10.1
+                {% endif %}
+                {% if network == 'storage' %}
+                - ip_netmask: 172.18.0.0/24
+                  next_hop: 172.18.10.1
+                - ip_netmask: 172.18.20.0/24
+                  next_hop: 172.18.10.1
+                {% endif %}
+                {% if network == 'tenant' %}
+                - ip_netmask: 172.19.0.0/24
+                  next_hop: 172.19.10.1
+                - ip_netmask: 172.19.20.0/24
+                  next_hop: 172.19.10.1
+                {% endif %}
+          {% endfor %}
+  nodes:
+    dcn1-compute-0:
+      hostName: dcn1-compute-0.example.com
+      ansible:
+        ansibleHost: dcn1-compute-0.example.com
+      networks:
+      - defaultRoute: true
+        fixedIP: 192.168.133.100
+        name: ctlplane
+        *subnetName: ctlplanedcn1*  <4>
+      - name: internalapi
+        *subnetName: internalapidcn1*
+      - name: storage
+        *subnetName: storagedcn1*
+      - name: tenant
+        *subnetName: tenantdcn1*
+----
+<1> DCN nodesets must use the `ovn-dcn` service instead of the default `ovn` service. This ensures OVN controller connects to the OVN Southbound database using direct internalapi IPs instead of the unreachable ClusterIP.
+<2> DCN1 uses the `leaf1` physnet for its OVN bridge mapping.
+<3> Inter-site routes must be added to the network configuration template. These routes enable DCN1 compute nodes to reach the central site (192.168.122.0/24) and other DCN sites (192.168.144.0/24 for DCN2). Similar routes are added for each service network (internalapi, storage, tenant).
+<4> DCN1 nodes reference site-specific subnet names like `ctlplanedcn1` and `internalapidcn1`. These subnet names must match those defined in the `NetConfig` CR.
+
+. Repeat step 3 for additional DCN sites (DCN2, DCN3, etc.), adjusting:
++
+* The nodeset name (e.g., `openstack-edpm-dcn2`)
+* The OVN bridge mapping (e.g., `leaf2:br-ex`)
+* The subnet names (e.g., `ctlplanedcn2`, `internalapidcn2`)
+* The inter-site routes (routes from DCN2 should point to central and DCN1 subnets)
+* The compute node definitions with site-appropriate IP addresses
+
+. Deploy all nodesets by creating an `OpenStackDataPlaneDeployment` CR:
++
+[source,yaml]
+----
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneDeployment
+metadata:
+  name: openstack-edpm-deployment
+spec:
+  nodeSets:
+    - openstack-edpm
+    - openstack-edpm-dcn1
+    - openstack-edpm-dcn2
+----
++
+[NOTE]
+====
+All nodesets can be deployed in parallel once the control plane adoption is complete.
+====
+
+. Wait for the deployment to complete:
++
+----
+$ oc wait --for condition=Ready openstackdataplanedeployment/openstack-edpm-deployment --timeout=40m
+----
+
+.Verification
+
+. Verify that all nodesets reach the `Ready` status:
++
+----
+$ oc get openstackdataplanenodeset
+NAME                  STATUS   MESSAGE
+openstack-edpm        True     Ready
+openstack-edpm-dcn1   True     Ready
+openstack-edpm-dcn2   True     Ready
+----
+
+. Verify that compute services are running across all sites:
++
+----
+$ oc exec openstackclient -- openstack compute service list
+----
++
+All `nova-compute` services should show `State=up` for nodes in all availability zones.
+
+. Verify inter-site connectivity by checking routes on a DCN compute node:
++
+----
+$ ssh dcn1-compute-0 ip route show | grep 172.17.0
+172.17.0.0/24 via 172.17.10.1 dev internalapi
+----
+
+. Test that DCN compute nodes can reach the control plane:
++
+----
+$ ssh dcn1-compute-0 ping -c 3 172.17.0.30
+----
++
+Replace `172.17.0.30` with an IP address of a control plane service on the internalapi network.
