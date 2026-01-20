@@ -23,7 +23,7 @@ For production environments, the deployment method will likely be
 different.
 endif::[]
 ifeval::["{build}" == "downstream"]
-* Install the OpenStack Operators. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/{rhos_curr_ver}/html-single/deploying_red_hat_openstack_services_on_openshift/index#assembly_installing-and-preparing-the-Operators[Installing and preparing the Operators] in _Deploying Red Hat OpenStack Services on OpenShift_.
+* Install the OpenStack Operators. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html-single/deploying_red_hat_openstack_services_on_openshift/index#assembly_installing-and-preparing-the-OpenStack-Operator[Installing and preparing the OpenStack Operator] in _{deploying-rhoso-t}_.
 endif::[]
 
 * If you enabled TLS everywhere (TLS-e) on the {OpenStackShort} environment, you must copy the `tls` root CA from the {OpenStackShort} environment to the `rootca-internal` issuer.
