@@ -170,3 +170,38 @@
         {% else %}
         mkdir -p ~/ci-framework-data/tests/test_operator; scp -i ${EDPM_PRIVATEKEY_PATH} -o StrictHostKeyChecking=no -r ${OS_CLOUD_IP}:~/.ssh/id_ecdsa* ~/ci-framework-data/tests/test_operator/
         {% endif %}
+
+- name: create Octavia load balancer
+  no_log: "{{ use_no_log }}"
+  when:
+    - prelaunch_octavia_workload|bool
+    - prelaunch_test_instance|bool
+    - "'pre_launch.bash' in prelaunch_test_instance_scripts"
+  ansible.builtin.shell:
+    cmd: |
+      {{ shell_header }}
+      {{ openstack_command }} loadbalancer create --vip-subnet-id public_subnet --name lb1 --wait
+      {{ openstack_command }} loadbalancer listener create --protocol http --protocol-port 80 --name listener1 lb1 --wait
+
+- name: get the load balancer VIP address
+  no_log: "{{ use_no_log }}"
+  when:
+    - prelaunch_octavia_workload|bool
+    - prelaunch_test_instance|bool
+    - "'pre_launch.bash' in prelaunch_test_instance_scripts"
+  ansible.builtin.shell:
+    cmd: |
+      {{ shell_header }}
+      {{ openstack_command }} loadbalancer show -f value -c vip_address lb1
+  register: octavia_vip_address
+
+- name: test the load balancer VIP address
+  no_log: "{{ use_no_log }}"
+  when:
+    - prelaunch_octavia_workload|bool
+    - prelaunch_test_instance|bool
+    - "'pre_launch.bash' in prelaunch_test_instance_scripts"
+  ansible.builtin.shell:
+    cmd: |
+      {{ shell_header }}
+      curl {{ octavia_vip_address.stdout }}
