@@ -902,7 +902,7 @@
 - name: Adopted Octavia post-checks
   when: octavia_adoption|bool
   ansible.builtin.include_tasks:
-    file: octavia_verify.yaml
+    file: octavia_post.yaml
 
 - name: Adopted Cinder post-checks
   ansible.builtin.include_tasks:

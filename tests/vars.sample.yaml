@@ -88,6 +88,9 @@ reset_crc_storage: true
 # Pre-launch test VM instance on the source cloud
 prelaunch_test_instance: false
 
+# Pre-launch an Octavia load balancer (requires prelaunch_test_instance)
+prelaunch_octavia_workload: false
+
 storage_class_name: local-storage #CUSTOMIZE_THIS
 storage_reclaim_policy: delete # or retain
 
