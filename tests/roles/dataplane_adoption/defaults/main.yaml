@@ -351,7 +351,7 @@ dataplane_cr: |
           edpm_frr_bgp_ipv6_src_network: bgpmainnetv6
           edpm_frr_bgp_neighbor_password: f00barZ
           {%+ endif +%}
-          {%- if edpm_container_registry_logins is defined -%}
+          {% if edpm_container_registry_logins is defined -%}
           edpm_container_registry_logins:
             {% for login, value in edpm_container_registry_logins.items() -%}
             {{ login | indent(10) }}:
