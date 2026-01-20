@@ -1,0 +1,166 @@
+---
+- name: set Octavia services shell vars
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.set_fact:
+    octavia_header: |
+      alias openstack="oc exec -t openstackclient -- openstack"
+
+# Creating a new LB requires resources setup by the prelaunch scripts
+- name: create a load balancer with the new control plane
+  when:
+    - prelaunch_octavia_workload|bool
+    - prelaunch_test_instance|bool
+    - "'pre_launch.bash' in prelaunch_test_instance_scripts"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ octavia_header }}
+    ${BASH_ALIASES[openstack]} loadbalancer create --vip-subnet-id public_subnet --name lb-post-adoption --tag new --wait
+    ${BASH_ALIASES[openstack]} loadbalancer listener create --protocol http --protocol-port 80 --name listener2 lb-post-adoption --wait
+
+- name: get new load balancer VIP address
+  when:
+    - prelaunch_octavia_workload|bool
+    - prelaunch_test_instance|bool
+    - "'pre_launch.bash' in prelaunch_test_instance_scripts"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ octavia_header }}
+    ${BASH_ALIASES[openstack]} loadbalancer show -f value -c vip_address lb-post-adoption
+  register: octavia_new_vip_address
+  ignore_errors: true
+
+- name: test the load balancer VIP address
+  when:
+    - prelaunch_octavia_workload|bool
+    - prelaunch_test_instance|bool
+    - "'pre_launch.bash' in prelaunch_test_instance_scripts"
+    - octavia_new_vip_address.rc == 0
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    curl {{ octavia_new_vip_address.stdout }}
+
+- name: perform failover of existing load balancers
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ octavia_header }}
+    ${BASH_ALIASES[openstack]} loadbalancer list -f value -c id --not-tag new | \
+      xargs -r -n1 -P4 ${BASH_ALIASES[openstack]} loadbalancer failover --wait
+
+- name: check for existing load balancer
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ octavia_header }}
+    ${BASH_ALIASES[openstack]} loadbalancer show -f value -c vip_address lb1
+  register: octavia_vip_address
+  ignore_errors: true
+
+- name: test the load balancer VIP address
+  when:
+    - octavia_vip_address.rc == 0
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    curl {{ octavia_vip_address.stdout }}
+
+- name: delete old flavors that have been migrated
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ octavia_header }}
+    ${BASH_ALIASES[openstack]} flavor delete octavia_65
+    # these might not be in OSP 17.1
+    ${BASH_ALIASES[openstack]} flavor show octavia_amphora-mvcpu-ha && \
+      ${BASH_ALIASES[openstack]} flavor delete octavia_amphora-mvcpu-ha
+    ${BASH_ALIASES[openstack]} loadbalancer flavor show octavia_amphora-mvcpu-ha && \
+      ${BASH_ALIASES[openstack]} loadbalancer flavor delete octavia_amphora-mvcpu-ha
+    ${BASH_ALIASES[openstack]} loadbalancer flavorprofile show octavia_amphora-mvcpu-ha_profile && \
+      ${BASH_ALIASES[openstack]} loadbalancer flavorprofile delete octavia_amphora-mvcpu-ha_profile
+
+- name: delete old mangement network ports and network
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ octavia_header }}
+    for net_id in $(${BASH_ALIASES[openstack]} network list -f value -c ID --name lb-mgmt-net); do desc=$(${BASH_ALIASES[openstack]} network show "$net_id" -f value -c description); [ -z "$desc" ] && WALLABY_LB_MGMT_NET_ID="$net_id" ; done
+    for id in $(${BASH_ALIASES[openstack]} port list --network "$WALLABY_LB_MGMT_NET_ID" -f value -c ID) ; do ${BASH_ALIASES[openstack]} port delete "$id" ; done
+
+    ${BASH_ALIASES[openstack]} network delete "$WALLABY_LB_MGMT_NET_ID"
+
+- name: get nova flavors for octavia
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ octavia_header }}
+    output=$(${BASH_ALIASES[openstack]} flavor list --all | grep octavia)
+    [ "$(echo "$output" | wc -l)" -eq 2 ] && echo PASS
+  register: octavia_novaflavor_result
+
+- name: verify nova flavors for octavia
+  when: octavia_adoption|bool
+  ansible.builtin.assert:
+    that:
+      - octavia_novaflavor_result.stdout == 'PASS'
+    fail_msg: "verification of nova flavors for octavia failed"
+    success_msg: "verification of nova flavors for octavia succeeded"
+
+# TODO(tweining): This fail upstream because the quay.io image contains only
+# one amp image
+# - name: get octavia flavors for octavia
+#   ansible.builtin.shell: |
+#     {{ shell_header }}
+#     {{ octavia_header }}
+#     output=$(${BASH_ALIASES[openstack]} loadbalancer flavor list -f value)
+#     [ "$(echo "$output" | wc -l)" -eq 2 ] && echo PASS
+#   register: octavia_octaviaflavor_result
+
+# - name: verify octavia flavors for octavia
+#   when: octavia_adoption|bool
+#   ansible.builtin.assert:
+#     that:
+#       - octavia_octaviaflavor_result.stdout == 'PASS'
+#     fail_msg: "verification of octavia flavors for octavia failed"
+#     success_msg: "verification of octavia flavors for octavia succeeded"
+
+# - name: get flavorprofiles for octavia
+#   ansible.builtin.shell: |
+#     {{ shell_header }}
+#     {{ octavia_header }}
+#     output=$(${BASH_ALIASES[openstack]} loadbalancer flavorprofile list -f value)
+#     [ "$(echo "$output" | wc -l)" -eq 2 ] && echo PASS
+#   register: octavia_flavorprofiles_result
+
+# - name: verify flavorprofiles for octavia
+#   when: octavia_adoption|bool
+#   ansible.builtin.assert:
+#     that:
+#       - octavia_flavorprofiles_result.stdout == 'PASS'
+#     fail_msg: "verification of flavorprofiles for octavia failed"
+#     success_msg: "verification of flavorprofiles for octavia succeeded"
+
+- name: get networks named lb-mgmt-net
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ octavia_header }}
+    output=$(${BASH_ALIASES[openstack]} network list | grep lb-mgmt-net)
+    [ "$(echo "$output" | wc -l)" -eq 1 ] && echo PASS
+  register: octavia_mgmt_network_result
+
+- name: verify that one network lb-mgmt-net exists
+  when: octavia_adoption|bool
+  ansible.builtin.assert:
+    that:
+      - octavia_mgmt_network_result.stdout == 'PASS'
+    fail_msg: "verification of lb-mgmt-net network failed"
+    success_msg: "verification of lb-mgmt-net network succeeded"
+
+- name: get subnets named lb-mgmt-subnet
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ octavia_header }}
+    output=$(${BASH_ALIASES[openstack]} subnet list | grep lb-mgmt-subnet)
+    [ "$(echo "$output" | wc -l)" -eq 1 ] && echo PASS
+  register: octavia_mgmt_subnet_result
+
+- name: verify that one subnet lb-mgmt-subnet exists
+  when: octavia_adoption|bool
+  ansible.builtin.assert:
+    that:
+      - octavia_mgmt_subnet_result.stdout == 'PASS'
+    fail_msg: "verification of subnet lb-mgmt-subnet failed"
+    success_msg: "verification of subnet lb-mgmt-subnet succeeded"

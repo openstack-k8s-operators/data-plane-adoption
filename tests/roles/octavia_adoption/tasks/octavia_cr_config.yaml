@@ -81,9 +81,6 @@
     {{ shell_header }}
     {{ oc_header }}
 
-    # FIXME: debug only. remove.
-    oc project
-
     oc patch openstackcontrolplane openstack --type=merge --patch '
     spec:
       ovn:
@@ -95,7 +92,6 @@
       octavia:
         enabled: true
         template:
-          apacheContainerImage: registry.redhat.io/rhel8/httpd-24:latest
           amphoraImageContainerImage: quay.io/gthiemonge/octavia-amphora-image
           octaviaHousekeeping:
             networkAttachments:

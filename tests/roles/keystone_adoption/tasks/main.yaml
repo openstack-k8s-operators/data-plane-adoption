@@ -70,7 +70,7 @@
 
     ${BASH_ALIASES[openstack]} endpoint list | grep keystone | awk '/admin/{ print $2; }' | xargs ${BASH_ALIASES[openstack]} endpoint delete || true
 
-    for service in aodh heat heat-cfn barbican cinderv3 designate glance gnocchi manila manilav2 neutron nova placement swift ironic-inspector ironic; do
+    for service in aodh heat heat-cfn barbican cinderv3 designate glance gnocchi manila manilav2 neutron nova octavia placement swift ironic-inspector ironic; do
       ${BASH_ALIASES[openstack]} service list | awk "/ $service /{ print \$2; }" | xargs -r ${BASH_ALIASES[openstack]} service delete || true
     done
 
