@@ -1,15 +1,28 @@
-= Troubleshooting Key Manager HSM adoption
-
+:_mod-docs-content-type: ASSEMBLY
 [id="troubleshooting-key-manager-hsm-adoption_{context}"]
 
-This section provides troubleshooting guidance for common issues encountered during HSM-enabled Key Manager (Barbican) service adoption.
+= Troubleshooting Key Manager HSM adoption
 
-== Configuration validation failures
+:context: troubleshooting-hsm
+
+
+[role="_abstract"]
+Review troubleshooting guidance for common issues that you might encounter while you perform the HSM-enabled Key Manager (Barbican) service adoption.
+
+== Next steps
+If issues persist after following the troubleshooting guide:
+
+* Collect adoption logs and configuration for analysis.
+* Check the HSM vendor documentation for vendor-specific troubleshooting.
+* Verify HSM server status and connectivity independently.
+* Review the adoption summary report for additional diagnostic information.
+
+== Resolving configuration validation failures
 
 .Problem
-The adoption fails with validation errors about placeholder values.
-
-.Symptoms
+[role="_abstract"]
+If the adoption fails with validation errors about placeholder values, replace the placeholder values with your environment's configuration values. Validation errors about placeholder values look similar to the following example:
++
 ----
 TASK [Validate all required variables are set] ****
 fatal: [localhost]: FAILED! => {
@@ -17,29 +30,28 @@ fatal: [localhost]: FAILED! => {
 }
 ----
 
-.Solution
-. Edit your HSM configuration in the Zuul job vars or CI framework configuration file.
 
-. Replace all placeholder values with actual configuration values for your environment. Key variables to check:
+.Procedure
+. Edit your hardware security module configuration in the Zuul job vars or CI framework configuration file.
+
+. Replace all placeholder values with actual configuration values for your environment. Check the following key variables:
 +
-[source,yaml]
 ----
-cifmw_hsm_password: "your_actual_hsm_password"
-cifmw_hsm_proteccio_partition: "VHSM1"
-cifmw_hsm_mkek_label: "your_mkek_label"
-cifmw_hsm_hmac_label: "your_hmac_label"
-cifmw_hsm_proteccio_client_src: "https://your-server/path/to/Proteccio.iso"
-cifmw_hsm_proteccio_conf_src: "https://your-server/path/to/proteccio.rc"
+cifmw_hsm_password: <your_actual_hsm_password>
+cifmw_barbican_proteccio_partition: <VHSM1>
+cifmw_barbican_proteccio_mkek_label: <your_mkek_label>
+cifmw_barbican_proteccio_hmac_label: <your_hmac_label>
+cifmw_hsm_proteccio_client_src: <https://your-server/path/to/Proteccio.iso>
+cifmw_hsm_proteccio_conf_src: <https://your-server/path/to/proteccio.rc>
 ----
 
-. Verify no placeholder values remain in your configuration.
+. Verify that no placeholder values remain in your configuration.
 
-== HSM file prerequisites missing
+== Resolving missing HSM file prerequisites
 
-.Problem
-The adoption fails because HSM certificates or client software cannot be found.
-
-.Symptoms
+[role="_abstract"]
+If the adoption fails because hardware security module (HSM) certificates or client software cannot be found, update your configuration to point to the files in their specific locations. The error looks similar to the following example:
++
 ----
 TASK [Validate Proteccio prerequisites exist] ****
 fatal: [localhost]: FAILED! => {
@@ -47,9 +59,11 @@ fatal: [localhost]: FAILED! => {
 }
 ----
 
-.Solution
-. Verify all required HSM files are accessible from the configured URLs:
+.Procedure
+. Verify that all required HSM files are accessible from the configured URLs:
 +
+.Example
+.Example
 [source,bash]
 ----
 $ curl -I https://your-server/path/to/Proteccio3.06.05.iso
@@ -58,9 +72,9 @@ $ curl -I https://your-server/path/to/client.crt
 $ curl -I https://your-server/path/to/client.key
 ----
 
-. If files are in different locations, update the URL variables in your configuration:
+. If the files are in different locations, update the URL variables in your configuration:
 +
-[source,yaml]
+.Example
 ----
 cifmw_hsm_proteccio_client_src: "https://correct-server/path/to/Proteccio3.06.05.iso"
 cifmw_hsm_proteccio_conf_src: "https://correct-server/path/to/proteccio.rc"
@@ -68,14 +82,13 @@ cifmw_hsm_proteccio_client_crt_src: "https://correct-server/path/to/client.crt"
 cifmw_hsm_proteccio_client_key_src: "https://correct-server/path/to/client.key"
 ----
 
-. Ensure the URLs are accessible from the CI environment (check network connectivity and authentication)
+. Check the network connectivity and authentication to ensure that the URLs are accessible from the CI environment.
 
-== Source environment connectivity issues
+== Resolving source environment connectivity issues
 
-.Problem
-The adoption cannot connect to the source OpenStack environment to extract configuration.
-
-.Symptoms
+[role="_abstract"]
+If the adoption cannot connect to the source {rhos_prev_long} environment to extract the configuration, check your SSH connectivity to the source Controller node and update the configuration if needed. The error for this issue looks similar to the following example:
++
 ----
 TASK [detect source environment HSM configuration] ****
 fatal: [localhost]: FAILED! => {
@@ -83,8 +96,8 @@ fatal: [localhost]: FAILED! => {
 }
 ----
 
-.Solution
-. Verify SSH connectivity to the source controller:
+.Procedure
+. Verify SSH connectivity to the source Controller node:
 +
 [source,bash]
 ----
@@ -93,14 +106,13 @@ $ ssh -o StrictHostKeyChecking=no tripleo-admin@controller-0.ctlplane
 
 . Update the `controller1_ssh` variable if needed:
 +
-[source,yaml]
 ----
 controller1_ssh: "ssh -o StrictHostKeyChecking=no tripleo-admin@<controller_ip>"
 ----
 
-. Ensure SSH keys are properly configured for passwordless access
+. Ensure that the SSH keys are properly configured for passwordless access.
 
-== HSM secret creation failures
+== Resolving HSM secret creation failures
 
 .Problem
 HSM secrets cannot be created in the target environment.
@@ -113,7 +125,17 @@ fatal: [localhost]: FAILED! => {
 }
 ----
 
-.Solution
+[role="_abstract"]
+If hardware security module (HSM) secrets cannot be created in the target environment, it might mean that you need to update the names of your secrets in your source configuration file.  The error looks similar to the following example:
++
+----
+TASK [Create HSM secrets in target environment] ****
+fatal: [localhost]: FAILED! => {
+    "msg": "Failed to create secret proteccio-data"
+}
+----
+
+.Procedure
 . Verify target environment access:
 +
 [source,bash]
@@ -137,12 +159,11 @@ proteccio_login_secret_name: "your-hsm-login-secret"
 proteccio_client_data_secret_name: "your-proteccio-data-secret"
 ----
 
-== Custom image registry issues
+== Resolving custom image registry issues
 
-.Problem
-Custom Barbican images cannot be pushed to or pulled from the configured registry.
-
-.Symptoms
+[role="_abstract"]
+If you see the following error indicating that custom Barbican images cannot be pushed to or pulled from the configured registry, you can verify the authentication, test image push permissions, and then update the configuration as needed.
++
 ----
 TASK [Create Proteccio-enabled Barbican images] ****
 fatal: [localhost]: FAILED! => {
@@ -150,7 +171,7 @@ fatal: [localhost]: FAILED! => {
 }
 ----
 
-.Solution
+.Procedure
 . Verify registry authentication:
 +
 [source,bash]
@@ -175,12 +196,11 @@ cifmw_update_containers_org: "your-namespace"
 cifmw_image_registry_verify_tls: false
 ----
 
-== HSM backend detection failures
+==  Resolving HSM back-end detection failures
 
-.Problem
-The adoption role cannot detect HSM configuration in the source environment.
-
-.Symptoms
+[role="_abstract"]
+If the adoption role cannot detect hardware security module (HSM) configuration in the source environment, you must force the HSM adoption. The error looks similar to the following example:
++
 ----
 TASK [detect source environment HSM configuration] ****
 ok: [localhost] => {
@@ -188,8 +208,8 @@ ok: [localhost] => {
 }
 ----
 
-.Solution
-. Manually verify HSM configuration exists in the source:
+.Procedure
+. Manually verify that the HSM configuration exists in the source environment:
 +
 [source,bash]
 ----
@@ -206,14 +226,13 @@ $ ssh tripleo-admin@controller-0.ctlplane \
 barbican_hsm_enabled: true
 ----
 +
-This will ensure the `barbican_adoption` role uses the HSM-enabled patch for Barbican deployment.
+This configuration ensures that the `barbican_adoption` role uses the HSM-enabled patch for {key_manager_first_ref} deployment.
 
-== Database migration issues
+== Resolving database migration issues
 
-.Problem
-HSM metadata is not preserved during database migration.
-
-.Symptoms
+[role="_abstract"]
+If hardware security module (HSM) metadata is not preserved during database migration, check the database logs for any errors and verify that the source database includes the HSM secrets. The error looks similar to the following example:
++
 ----
 TASK [Verify database migration preserves HSM references] ****
 ok: [localhost] => {
@@ -221,8 +240,8 @@ ok: [localhost] => {
 }
 ----
 
-.Solution
-. Verify source database contains HSM secrets:
+.Procedure
+. Verify that the source database contains the HSM secrets:
 +
 [source,bash]
 ----
@@ -230,28 +249,27 @@ $ ssh tripleo-admin@controller-0.ctlplane \
   "sudo mysql barbican -e 'SELECT COUNT(*) FROM secret_store_metadata WHERE key=\"plugin_name\" AND value=\"PKCS11\";'"
 ----
 
-. Check database migration logs for errors:
+. Check the database migration logs for errors:
 +
 [source,bash]
 ----
 $ oc logs deployment/barbican-api | grep -i migration
 ----
 
-. If migration failed, restore from backup and retry
+. If the migration failed, restore the database from backup and retry.
 
-== Service startup failures
+== Resolving service startup failures
 
-.Problem
-Barbican services fail to start after HSM configuration is applied.
-
-.Symptoms
+[role="_abstract"]
+If the {key_manager_first_ref} services fail to start after the hardware security module (HSM) configuration is applied, check the configuration in the pod. The error for the services failing to start looks similar to the following example:
++
 ----
 $ oc get pods -l service=barbican
 NAME                           READY   STATUS    RESTARTS   AGE
 barbican-api-xyz               0/1     Error     0          2m
 ----
 
-.Solution
+.Procedure
 . Check pod logs for HSM connectivity issues:
 +
 [source,bash]
@@ -273,13 +291,13 @@ $ oc exec barbican-api-xyz -- ls -la /usr/lib64/libnethsm.so
 $ oc exec barbican-api-xyz -- cat /etc/proteccio/proteccio.rc
 ----
 
-== Performance and connectivity issues
+== Resolving performance and connectivity issues
 
-.Problem
-HSM operations are slow or fail intermittently.
+[role="_abstract"]
+If the hardware security module (HSM) operations are slow or fail intermittently, check the HSM connectivity and monitor the HSM server logs.
 
-.Solution
-. Test HSM connectivity from Barbican pods:
+.Procedure
+. Test HSM connectivity from {key_manager_first_ref} pods:
 +
 [source,bash]
 ----
@@ -293,7 +311,7 @@ $ oc exec barbican-api-xyz -- pkcs11-tool --module /usr/lib64/libnethsm.so --lis
 $ oc exec barbican-api-xyz -- nc -zv <hsm_server_ip> <hsm_port>
 ----
 
-. Monitor HSM server logs for authentication or capacity issues
+. Monitor HSM server logs for authentication or capacity issues.
 
 == Getting additional help
 
@@ -303,5 +321,3 @@ If issues persist after following this troubleshooting guide:
 . Check the HSM vendor documentation for vendor-specific troubleshooting
 . Verify HSM server status and connectivity independently
 . Review the adoption summary report for additional diagnostic information
-
-For Proteccio-specific issues, consult the Eviden Trustway documentation and ensure HSM server configuration matches the client settings.

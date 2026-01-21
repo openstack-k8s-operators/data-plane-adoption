@@ -5,6 +5,18 @@
 
 [role="_abstract"]
 To adopt the {key_manager_first_ref} with Proteccio hardware security module (HSM) integration, you use the enhanced Barbican adoption role with HSM support enabled through a configuration flag. This approach preserves HSM integration while adopting all existing secrets from your source {rhos_prev_long} ({OpenStackShort}) environment.
+When you run the data plane adoption tests with HSM support enabled, the adoption process performs the following actions:
+
+* Extracts the simple crypto KEK from the source configuration.
+* Creates the required HSM secrets (hsm-login and proteccio-data) in the target namespace.
+* Deploys Barbican with HSM-enabled configuration by using the PKCS#11 plugin.
+* Verifies the HSM functionality and secret migration.
+When you run the data plane adoption tests with HSM support enabled, the adoption process performs the following actions:
+
+* Extracts the simple crypto KEK from the source configuration.
+* Creates the required HSM secrets (hsm-login and proteccio-data) in the target namespace.
+* Deploys Barbican with HSM-enabled configuration by using the PKCS#11 plugin.
+* Verifies the HSM functionality and secret migration.
 
 The {key_manager} Proteccio HSM adoption is complete if you see the following results:
 
@@ -30,7 +42,7 @@ The enhanced {key_manager} adoption role supports HSM configuration through a si
 
 [IMPORTANT]
 ====
-The HSM adoption process requires proper configuration of HSM-related variables. The adoption role automatically creates the required Kubernetes secrets (`hsm-login` and `proteccio-data`) when `barbican_hsm_enabled` is set to `true`. Ensure that the following items are true:
+The HSM adoption process requires proper configuration of HSM-related variables. The adoption role automatically creates the required Kubernetes secrets (`hsm-login` and `proteccio-data`) when `barbican_hsm_enabled` is set to `true`. Ensure that your environment includes the following:
 
 * All HSM-related variables are properly set in your configuration files
 * The Proteccio client ISO, certificates, and configuration files are accessible from the configured URLs
@@ -71,6 +83,7 @@ cifmw_hsm_proteccio_server_crt_src:
 ----
 +
 where:
+
 <URL_of_Proteccio_ISO_file>::
 Specifies the full URL (including "http://" or "https://") of the Proteccio client ISO image file.
 <URL_of_proteccio.rc_config_file>::
@@ -82,14 +95,7 @@ Specifies the full URL (including "http://" or "https://") of the client key fil
 <URL_of_HSM_certificate_file>::
 Specifies the full URL (including "http://" or "https://") of the HSM certificate file.
 
-. Run the data-plane-adoption tests with HSM support enabled. The adoption process will:
-+
---
-* Extract the simple crypto KEK from the source configuration
-* Create the required HSM secrets (`hsm-login` and `proteccio-data`) in the target namespace
-* Deploy Barbican with HSM-enabled configuration using the PKCS#11 plugin
-* Verify HSM functionality and secret migration
---
+. Run the data plane adoption tests with HSM support enabled:
 
 .Verification
 
@@ -130,5 +136,6 @@ $ openstack secret get <secret_id> --payload
 ----
 +
 where:
+
 <secret_id>::
 Specifies the ID of the HSM secret.
