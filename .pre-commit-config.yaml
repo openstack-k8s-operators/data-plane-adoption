@@ -36,3 +36,8 @@ repos:
         # E040: Syntax error determined using `bash -n` (as many scripts
         #       use jinja templating, this will often fail and the syntax
         #       error will be discovered in execution anyway)
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [-s]

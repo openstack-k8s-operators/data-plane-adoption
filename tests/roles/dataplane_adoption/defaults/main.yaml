@@ -206,7 +206,20 @@ edpm_network_config_template_bgp: |
   {% endraw %}
 neutron_physical_bridge_name: br-ctlplane
 neutron_public_interface_name: "{{ dataplane_public_iface | default('eth0') }}"
-edpm_sshd_allowed_ranges: "{% if ipv6_enabled | default(false) %}{{ [ctlplane_prefix_ipv6 | default('fd00:aaaa') + '::/64'] if dataplane_os_net_config_set_route|default(true)|bool else ['::/0'] }}{% else %}{{ [ctlplane_prefix | default('192.168.122') + '.0/24'] if dataplane_os_net_config_set_route|default(true)|bool else ['0.0.0.0/0'] }}{% endif %}"
+edpm_sshd_allowed_ranges: >
+  "{% if ipv6_enabled | default(false) %}
+     {{
+       [ctlplane_prefix_ipv6 | default('fd00:aaaa') + '::/64']
+       if dataplane_os_net_config_set_route|default(true)|bool
+       else ['::/0']
+     }}
+   {% else %}
+     {{
+       [ctlplane_prefix | default('192.168.122') + '.0/24']
+       if dataplane_os_net_config_set_route|default(true)|bool
+       else ['0.0.0.0/0']
+     }}
+   {% endif %}"
 edpm_neutron_sriov_agent_enabled: true
 edpm_neutron_dhcp_agent_enabled: true
 nova_libvirt_backend: local
