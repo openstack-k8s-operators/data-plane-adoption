@@ -47,6 +47,9 @@ parameter_defaults:
     nova::compute::libvirt::virt_type: qemu
   ExtraConfig:
     neutron::notification_driver: 'noop'
+    neutron::config::plugin_ml2_config:
+      ovn/disable_ovn_dhcp_for_baremetal_ports:
+        value: true
   BarbicanSimpleCryptoGlobalDefault: true
   Debug: true
   DockerPuppetDebug: true
