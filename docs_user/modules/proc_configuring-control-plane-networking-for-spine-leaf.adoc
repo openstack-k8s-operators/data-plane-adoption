@@ -4,7 +4,7 @@
 = Configuring control plane networking for spine-leaf topologies
 
 [role="_abstract"]
-If you are adopting a spine-leaf or Distributed Compute Node (DCN) deployment, you must update your control plane networking to support multiple sites. This includes adding subnets for remote sites to your existing `NetConfig` CR and updating `NetworkAttachmentDefinition` CRs with routes to enable connectivity between the central control plane and remote sites.
+If you are adopting a spine-leaf or Distributed Compute Node (DCN) deployment, update the control plane networking for communication across sites. Add subnets for remote sites to your existing `NetConfig` custom resource (CR) and update `NetworkAttachmentDefinition` CRs with routes to enable connectivity between the central control plane and remote sites.
 
 .Prerequisites
 
@@ -17,7 +17,11 @@ If you are adopting a spine-leaf or Distributed Compute Node (DCN) deployment, y
 
 .Procedure
 
-. Update your existing `NetConfig` CR to add subnets for each remote site. Each service network must include a subnet for the central site and each remote site:
+. Update your existing `NetConfig` CR to add subnets for each remote site. Each service network must include a subnet for the central site and each remote site. Use unique VLAN IDs for each site. For example:
++
+* Central site: VLANs 20-23
+* Edge site 1: VLANs 30-33
+* Edge site 2: VLANs 40-43
 +
 [source,yaml]
 ----
@@ -30,19 +34,19 @@ spec:
   - name: ctlplane
     dnsDomain: ctlplane.example.com
     subnets:
-    - name: subnet1                    # <1>
+    - name: <subnet1>
       allocationRanges:
       - end: 192.168.122.120
         start: 192.168.122.100
       cidr: 192.168.122.0/24
       gateway: 192.168.122.1
-    - name: ctlplanesite1              # <2>
+    - name: <ctlplanesite1>
       allocationRanges:
       - end: 192.168.133.120
         start: 192.168.133.100
       cidr: 192.168.133.0/24
       gateway: 192.168.133.1
-    - name: ctlplanesite2              # <3>
+    - name: <ctlplanesite2>
       allocationRanges:
       - end: 192.168.144.120
         start: 192.168.144.100
@@ -112,27 +116,19 @@ spec:
       cidr: 172.19.20.0/24
       vlan: 42
 ----
-<1> `subnet1` is the central site subnet.
-<2> `ctlplanesite1` is the first remote site subnet. For DCN deployments, you might name this `ctlplanedcn1`.
-<3> `ctlplanesite2` is the second remote site subnet. For DCN deployments, you might name this `ctlplanedcn2`.
++
+where:
+
+`<subnet1>`:: Specifies a user-defined subnet name for the central site subnet.
+`<ctlplanesite1>`:: Specifies a user-defined subnet for the first DCN edge site.
+`<ctlplanesite2>`:: Specifies a user-defined subnet for the second DCN edge site.
 +
 [NOTE]
 ====
-Use unique VLAN IDs for each site. In this example:
-
-* Central site: VLANs 20-23
-* Remote site 1: VLANs 30-33
-* Remote site 2: VLANs 40-43
-
-Adjust subnet names to match your deployment conventions. Common patterns include `<network>site1`, `<network>dcn1`, or `<network>leaf1`.
-====
-+
-[NOTE]
-====
-Having the `storagemgmt` network on OpenShift nodes is needed when using DCN with Swift but is not necessary when using Ceph.
+You must have the `storagemgmt` network on OpenShift nodes when using DCN with Swift storage. It is not necessary when using Red Hat Ceph Storage.
 ====
 
-. Update the `NetworkAttachmentDefinition` CR for the `internalapi` network to include routes to remote site subnets. This enables control plane pods such as OVN Southbound database to communicate with compute nodes at remote sites:
+. Update the `NetworkAttachmentDefinition` CR for the `internalapi` network to include routes to remote site subnets. These `routes` fields enable control plane pods attached to the `internalapi` network, such as OVN Southbound database, to communicate with Compute nodes at remote sites through the central site gateway, and are required for DCN:
 +
 [source,yaml]
 ----
@@ -159,13 +155,6 @@ spec:
       }
     }
 ----
-+
-* The `routes` field adds static routes so that pods attached to the `internalapi` network can reach remote site subnets through the central site gateway.
-+
-[IMPORTANT]
-====
-Without these routes, OVN Southbound database pods cannot respond to connections from compute nodes at remote sites, causing OVN controller to show "not connected" errors.
-====
 
 . Update the `NetworkAttachmentDefinition` CR for the `ctlplane` network to include routes to remote site subnets:
 +
@@ -262,9 +251,9 @@ Adjust the IP ranges, subnets, and gateway addresses in all NAD configurations t
 $ oc delete pod -l service=ovsdbserver-sb
 ----
 +
-The pods will be automatically recreated with the updated network configuration.
+The pods are automatically recreated with the updated network configuration.
 
-. Configure the {networking_first_ref} to recognize all site physnets. In the `OpenStackControlPlane` CR, ensure the Neutron configuration includes all physnets:
+. Configure the {networking_first_ref} to recognize all site physnets. In the `OpenStackControlPlane` CR, ensure the Networking service configuration includes all physnets:
 +
 [source,yaml]
 ----
@@ -282,9 +271,11 @@ spec:
         ovn_emit_need_to_frag = false
 ----
 +
-* `leaf0` is the physnet for the central site.
-* `leaf1` is the physnet for the first remote site.
-* `leaf2` is the physnet for the second remote site.
+where:
+
+leaf0:: Represents the physnet for the central site.
+leaf1:: Represents the physnet for the first remote site.
+leaf2:: Represents the physnet for the second remote site.
 +
 [NOTE]
 ====
@@ -302,13 +293,11 @@ $ oc get netconfig netconfig -o yaml | grep -A2 "name: subnet1\|name: .*site"
 . Verify that each `NetworkAttachmentDefinition` includes routes to remote site subnets:
 +
 ----
-$ for nad in ctlplane internalapi storage tenant; do
-    echo "=== $nad ==="
-    oc get net-attach-def $nad -o jsonpath='{.spec.config}' | jq '.ipam.routes'
-  done
+for nad in ctlplane internalapi storage tenant; do
+  echo "=== $nad ==="
+  oc get net-attach-def $nad -o jsonpath='{.spec.config}' | jq '.ipam.routes
+done
 ----
-+
-Each NAD should show routes to its corresponding remote site subnets.
 
 . After restarting OVN SB pods, verify they have routes to remote site subnets:
 +
@@ -316,7 +305,7 @@ Each NAD should show routes to its corresponding remote site subnets.
 $ oc exec $(oc get pod -l service=ovsdbserver-sb -o name | head -1) -- ip route show | grep 172.17
 ----
 +
-Expected output:
+Sample output:
 +
 ----
 172.17.10.0/24 via 172.17.0.1 dev internalapi
