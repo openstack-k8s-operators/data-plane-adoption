@@ -11,6 +11,9 @@ resource_registry:
   OS::TripleO::Controller::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
   OS::TripleO::Controller::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
   OS::TripleO::Controller::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  OS::TripleO::Networker::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
+  OS::TripleO::Networker::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
+  OS::TripleO::Networker::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
   OS::TripleO::Services::CeilometerAgentCentral: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-central-container-puppet.yaml
   OS::TripleO::Services::CeilometerAgentNotification: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-notification-container-puppet.yaml
   OS::TripleO::Services::CeilometerAgentIpmi: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-ipmi-container-puppet.yaml
@@ -45,6 +48,10 @@ parameter_defaults:
   ComputeExtraConfig:
     nova::compute::libvirt::services::libvirt_virt_type: qemu
     nova::compute::libvirt::virt_type: qemu
+  ExtraConfig:
+    neutron::notification_driver: 'noop'
+    neutron::plugins::ml2::path_mtu: 1500
+    neutron::plugins::ml2::ovn::ovn_router_indirect_snat: true
   BarbicanSimpleCryptoGlobalDefault: true
   Debug: true
   DockerPuppetDebug: true
@@ -52,7 +59,7 @@ parameter_defaults:
   ControllerCount: 3
   ComputeCount: 2
   NetworkerCount: 3
-  NeutronGlobalPhysnetMtu: 1350
+  NeutronGlobalPhysnetMtu: 1500
   CinderLVMLoopDeviceSize: 20480
   CloudName: overcloud.example.com
   CloudNameInternal: overcloud.internalapi.example.com
@@ -61,6 +68,14 @@ parameter_defaults:
   CloudNameCtlplane: overcloud.ctlplane.example.com
   CloudDomain: example.com
   NetworkConfigWithAnsible: false
+  EnableVLANTransparency: true
+  NeutronEnableIgmpSnooping: true
+  OVNEmitNeedToFrag: true
+  NeutronEnableDVR: true
+  NeutronTypeDrivers: 'geneve,vxlan,vlan,flat,local'
+  NeutronNetworkType: 'geneve,flat,vlan'
+  NeutronDnsDomain: 'example.com'
+  NeutronRouterSchedulerDriver: 'neutron.scheduler.l3_agent_scheduler.ChanceScheduler'
   ControllerHostnameFormat: '%stackname%-controller-%index%'
   ComputeHostnameFormat: '%stackname%-compute-%index%'
   NetworkerHostnameFormat: '%stackname%-networker-%index%'
