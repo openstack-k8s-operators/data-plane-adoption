@@ -774,6 +774,24 @@ node is correctly listed in the `OpenStackDataPlaneNodeSet` CR.
 to use the same profile as the one set on the {OpenStackShort} {rhos_prev_ver} node.
 ====
 
++
+[IMPORTANT]
+====
+For environments that are enabled with border gateway protocol (BGP), preserve the default routes on the data plane nodes.
+
+When adopting {rhos_prev_long} {rhos_prev_ver} environments with BGP, default routes can be lost when the data plane adoption procedure stops the {rhos_prev_long} services, specifically when FRRouting (FRR) is stopped. This causes connectivity issues during the {rhos_acro} data plane deployment.
+
+To prevent this, configure the required routes by using `os-net-config` on the data plane nodes (Compute nodes and Networker nodes) affected by this issue.
+
+Modify your `os-net-config` configuration file by adding the required routes, and then apply it:
+
+----
+$ sudo os-net-config -c /etc/os-net-config/modified_config_with_routes.yaml --provider ifcfg
+----
+
+This temporary default route is needed during the installation of the first services (such as `download-cache`) and is removed when the `configure-network` service applies the new network configuration.
+====
+
 . Remove the remaining {OpenStackPreviousInstaller} services:
 
 .. Create an `OpenStackDataPlaneService` CR to clean up the data plane services you are adopting:

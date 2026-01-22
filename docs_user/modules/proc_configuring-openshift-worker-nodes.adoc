@@ -87,3 +87,45 @@ items:
       kubernetes.io/hostname: ocp-worker-0
       node-role.kubernetes.io/worker: ""
 ----
++
+[NOTE]
+====
+For environments that are enabled with border gateway protocol (BGP), you might need to add additional routes in the `NodeNetworkConfigurationPolicy` CR so that {OpenShiftShort} worker nodes can reach the {rhos_prev_long} Controller nodes and Compute nodes over the control plane and internal API networks.
+
+When you configure the {OpenShiftShort} worker nodes network in the `NodeNetworkConfigurationPolicy` CR, add routes for each of the following networks:
+
+* External network (for example, `172.31.0.0/24`)
+* Control plane network (for example, `192.168.188.0/24`)
+* BGP main network (for example, `99.99.0.0/16`)
+
+The following example shows the `routes.config` section from a `NodeNetworkConfigurationPolicy` CR for a worker node with BGP configured. In this example, `100.64.0.17` and `100.65.0.17` are the IP addresses of the leaf switches that are connected to the specific {OpenShiftShort} node:
+
+----
+    routes:
+      config:
+      - destination: 99.99.0.0/16
+        next-hop-address: 100.64.0.17
+        next-hop-interface: enp7s0
+        weight: 200
+      - destination: 99.99.0.0/16
+        next-hop-address: 100.65.0.17
+        next-hop-interface: enp8s0
+        weight: 200
+      - destination: 172.31.0.0/24
+        next-hop-address: 100.64.0.17
+        next-hop-interface: enp7s0
+        weight: 200
+      - destination: 172.31.0.0/24
+        next-hop-address: 100.65.0.17
+        next-hop-interface: enp8s0
+        weight: 200
+      - destination: 192.168.188.0/24
+        next-hop-address: 100.64.0.17
+        next-hop-interface: enp7s0
+        weight: 200
+      - destination: 192.168.188.0/24
+        next-hop-address: 100.65.0.17
+        next-hop-interface: enp8s0
+        weight: 200
+----
+====
