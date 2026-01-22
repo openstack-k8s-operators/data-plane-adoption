@@ -14,6 +14,15 @@
       export CINDER_VOLUME_BACKEND_CONFIGURED={{ cinder_volume_backend_configured | string | lower }}
       export CINDER_BACKUP_BACKEND_CONFIGURED={{ cinder_backup_backend_configured | string | lower }}
       export PING_TEST_VM={{ ping_test | string | lower }}
+      export FLOATING_IP="{{ prelaunch_floating_ip }}"
+      export FLOATING_IP_PING="{{ prelaunch_floating_ip_ping }}"
+      export FLOATING_IP_NETWORK="{{ prelaunch_floating_ip_network }}"
+      export PUBLIC_NET_CIDR="{{ prelaunch_public_net_cidr }}"
+      export PUBLIC_NET_ALLOCATION_START="{{ prelaunch_public_net_allocation_start }}"
+      export PUBLIC_NET_ALLOCATION_END="{{ prelaunch_public_net_allocation_end }}"
+      export PUBLIC_NET_GATEWAY="{{ prelaunch_public_net_gateway }}"
+      export PUBLIC_NET_TYPE="{{ prelaunch_public_net_type }}"
+      export PUBLIC_NET_PHYSICAL="{{ prelaunch_public_net_physical }}"
       {{ lookup('ansible.builtin.file', 'pre_launch.bash') }}
 
 - name: pre-launch test Ironic instance
@@ -37,7 +46,7 @@
   block:
     - name: Start the ping test to the VM instance.
       vars:
-        fip: 192.168.122.21
+        fip: "{{ prelaunch_floating_ip_ping }}"
       ansible.builtin.shell:
         cmd: |
           ping -D {{ fip }} &> {{ ping_test_log_file }} &

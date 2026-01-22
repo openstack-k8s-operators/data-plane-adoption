@@ -3,6 +3,10 @@
 supported_backup_backends: []
 supported_volume_backends: []
 
+# Floating IP for prelaunch test instance verification
+# This should match the value used in development_environment role
+prelaunch_floating_ip: "192.168.122.20"
+
 # Network configuration for IPv4/IPv6 support
 ipv6_enabled: false
 ctlplane_prefix: "192.168.122"

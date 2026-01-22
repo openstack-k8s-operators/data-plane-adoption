@@ -4,6 +4,20 @@ prelaunch_test_instance_scripts:
 # Ping test activation flag, note that it needs
 # prelaunch_test_instance as well.
 ping_test: false
+
+# Floating IP configuration for prelaunch test instance
+# These can be overridden for scenarios with different public network configurations
+prelaunch_floating_ip: "192.168.122.20"
+prelaunch_floating_ip_ping: "192.168.122.21"
+prelaunch_floating_ip_network: "public"
+
+# Public network/subnet configuration (used only if network doesn't exist)
+prelaunch_public_net_cidr: "192.168.122.0/24"
+prelaunch_public_net_allocation_start: "192.168.122.171"
+prelaunch_public_net_allocation_end: "192.168.122.250"
+prelaunch_public_net_gateway: "192.168.122.1"
+prelaunch_public_net_type: "flat"
+prelaunch_public_net_physical: "datacentre"
 # Relative to
 # ~/src/github.com/openstack-k8s-operators/data-plane-adoption/tests/playbooks
 # Collected in

@@ -2,6 +2,19 @@ set -e
 
 alias openstack="$OPENSTACK_COMMAND"
 
+# Configurable floating IP settings with backward-compatible defaults
+FLOATING_IP="${FLOATING_IP:-192.168.122.20}"
+FLOATING_IP_NETWORK="${FLOATING_IP_NETWORK:-public}"
+FLOATING_IP_PING="${FLOATING_IP_PING:-192.168.122.21}"
+
+# Public network/subnet settings (used only if network doesn't exist)
+PUBLIC_NET_CIDR="${PUBLIC_NET_CIDR:-192.168.122.0/24}"
+PUBLIC_NET_ALLOCATION_START="${PUBLIC_NET_ALLOCATION_START:-192.168.122.171}"
+PUBLIC_NET_ALLOCATION_END="${PUBLIC_NET_ALLOCATION_END:-192.168.122.250}"
+PUBLIC_NET_GATEWAY="${PUBLIC_NET_GATEWAY:-192.168.122.1}"
+PUBLIC_NET_TYPE="${PUBLIC_NET_TYPE:-flat}"
+PUBLIC_NET_PHYSICAL="${PUBLIC_NET_PHYSICAL:-datacentre}"
+
 function wait_for_status() {
     local time=0
     local msg="Waiting for $2"
@@ -79,34 +92,34 @@ fi
 # Create networks
 ${BASH_ALIASES[openstack]} network show private || ${BASH_ALIASES[openstack]} network create private --share
 ${BASH_ALIASES[openstack]} subnet show priv_sub || ${BASH_ALIASES[openstack]} subnet create priv_sub --subnet-range 192.168.0.0/24 --network private
-${BASH_ALIASES[openstack]} network show public || ${BASH_ALIASES[openstack]} network create public --external --provider-network-type flat --provider-physical-network datacentre
+${BASH_ALIASES[openstack]} network show ${FLOATING_IP_NETWORK} || ${BASH_ALIASES[openstack]} network create ${FLOATING_IP_NETWORK} --external --provider-network-type ${PUBLIC_NET_TYPE} --provider-physical-network ${PUBLIC_NET_PHYSICAL}
 ${BASH_ALIASES[openstack]} subnet show public_subnet || \
-    ${BASH_ALIASES[openstack]} subnet create public_subnet --subnet-range 192.168.122.0/24 --allocation-pool start=192.168.122.171,end=192.168.122.250 --gateway 192.168.122.1 --dhcp --network public
+    ${BASH_ALIASES[openstack]} subnet create public_subnet --subnet-range ${PUBLIC_NET_CIDR} --allocation-pool start=${PUBLIC_NET_ALLOCATION_START},end=${PUBLIC_NET_ALLOCATION_END} --gateway ${PUBLIC_NET_GATEWAY} --dhcp --network ${FLOATING_IP_NETWORK}
 ${BASH_ALIASES[openstack]} router show priv_router || {
     ${BASH_ALIASES[openstack]} router create priv_router
     ${BASH_ALIASES[openstack]} router add subnet priv_router priv_sub
-    ${BASH_ALIASES[openstack]} router set priv_router --external-gateway public
+    ${BASH_ALIASES[openstack]} router set priv_router --external-gateway ${FLOATING_IP_NETWORK}
 }
 
 # Create a floating IP
-${BASH_ALIASES[openstack]} floating ip show 192.168.122.20 || \
-    ${BASH_ALIASES[openstack]} floating ip create public --floating-ip-address 192.168.122.20
+${BASH_ALIASES[openstack]} floating ip show ${FLOATING_IP} || \
+    ${BASH_ALIASES[openstack]} floating ip create ${FLOATING_IP_NETWORK} --floating-ip-address ${FLOATING_IP}
 
 # Create a test instance
 ${BASH_ALIASES[openstack]} server show test || {
     ${BASH_ALIASES[openstack]} server create --flavor m1.small --image cirros --nic net-id=private test --wait
-    ${BASH_ALIASES[openstack]} server add floating ip test 192.168.122.20
+    ${BASH_ALIASES[openstack]} server add floating ip test ${FLOATING_IP}
 }
 
 if [ "$PING_TEST_VM" = "true" ]; then
     # Create a floating IP
-    ${BASH_ALIASES[openstack]} floating ip show 192.168.122.21 || \
-        ${BASH_ALIASES[openstack]} floating ip create public --floating-ip-address 192.168.122.21
+    ${BASH_ALIASES[openstack]} floating ip show ${FLOATING_IP_PING} || \
+        ${BASH_ALIASES[openstack]} floating ip create ${FLOATING_IP_NETWORK} --floating-ip-address ${FLOATING_IP_PING}
 
     # Create a test-ping instance
     ${BASH_ALIASES[openstack]} server show test-ping || {
       ${BASH_ALIASES[openstack]} server create --flavor m1.small --image cirros --nic net-id=private test-ping --wait
-      ${BASH_ALIASES[openstack]} server add floating ip test-ping 192.168.122.21
+      ${BASH_ALIASES[openstack]} server add floating ip test-ping ${FLOATING_IP_PING}
     }
 fi
 
@@ -125,7 +138,7 @@ if [ "$PING_TEST_VM" = "true" ]; then
     ${BASH_ALIASES[openstack]} server add security group test-ping adoption-test || true
 fi
 
-export FIP=192.168.122.20
+export FIP=${FLOATING_IP}
 # check connectivity via FIP
 TRIES=0
 until ping -D -c1 -W2 "$FIP"; do
