@@ -125,7 +125,17 @@ fatal: [localhost]: FAILED! => {
 }
 ----
 
-.Solution
+[role="_abstract"]
+If hardware security module (HSM) secrets cannot be created in the target environment, it might mean that you need to update the names of your secrets in your source configuration file.  The error looks similar to the following example:
++
+----
+TASK [Create HSM secrets in target environment] ****
+fatal: [localhost]: FAILED! => {
+    "msg": "Failed to create secret proteccio-data"
+}
+----
+
+.Procedure
 . Verify target environment access:
 +
 [source,bash]
