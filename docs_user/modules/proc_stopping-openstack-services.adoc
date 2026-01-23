@@ -235,3 +235,154 @@ endif::[]
 ----
 +
 If the status of each service is `OK`, then the services stopped successfully.
+
+. For Distributed Compute Node (DCN) deployments where {image_service}, {block_storage}, and {Ceph} services run on edge Compute nodes, stop the {image_service}, {block_storage}, and etcd services on all edge Compute nodes with the `DistributedComputeHCI` role:
++
+[NOTE]
+====
+The `DistributedComputeHCI` role runs `GlanceApiEdge`, `CinderVolumeEdge`, and `Etcd` services. A minimum of three nodes per site use this role. Skip this step if your DCN deployment does not run these services on edge Compute nodes. The examples in this procedure use hyper-converged (HCI) roles. If your deployment does not use HCI, the same services apply to the `DistributedCompute` role, which runs the same `GlanceApiEdge`, `CinderVolumeEdge`, and `Etcd` services but without Ceph OSD, Ceph Monitor, or Ceph Manager.
+====
++
+.. Define shell variables for your `DistributedComputeHCI` edge Compute nodes:
++
+[subs=+quotes]
+----
+# DCN1 edge site DistributedComputeHCI nodes
+DCN1_HCI0_SSH="ssh -i *<path to SSH key>* root@*<dcn1-hci-0 IP>*"
+DCN1_HCI1_SSH="ssh -i *<path to SSH key>* root@*<dcn1-hci-1 IP>*"
+DCN1_HCI2_SSH="ssh -i *<path to SSH key>* root@*<dcn1-hci-2 IP>*"
+
+# DCN2 edge site DistributedComputeHCI nodes
+DCN2_HCI0_SSH="ssh -i *<path to SSH key>* root@*<dcn2-hci-0 IP>*"
+DCN2_HCI1_SSH="ssh -i *<path to SSH key>* root@*<dcn2-hci-1 IP>*"
+DCN2_HCI2_SSH="ssh -i *<path to SSH key>* root@*<dcn2-hci-2 IP>*"
+----
++
+where:
+
+`<path to SSH key>`::
+Specifies the path to your SSH key for each `DistributedComputeHCI` edge Compute node on each DCN edge site.
+
+`<dcn1-hci-0 IP>`, `<dcn1-hci-1 IP>`, `<dcn1-hci-2 IP>`::
+Specifies the IP address for each `DistributedComputeHCI` edge Compute node within the DCN1 edge site.
+
+`<dcn2-hci-0 IP>`, `<dcn2-hci-1 IP>`, `<dcn2-hci-2 IP>`::
+Specifies the IP address for each `DistributedComputeHCI` edge Compute node within the DCN2 edge site.
++
+.. Stop the storage services on all `DistributedComputeHCI` nodes:
++
+----
+# Services to stop on DistributedComputeHCI edge compute nodes
+DCN_HCI_SERVICES=("tripleo_glance_api_internal.service"
+                   "tripleo_cinder_volume.service"
+                   "tripleo_etcd.service")
+
+# List of all DistributedComputeHCI node SSH commands
+DCN_HCI_NODES=("$DCN1_HCI0_SSH"
+               "$DCN1_HCI1_SSH"
+               "$DCN1_HCI2_SSH"
+               "$DCN2_HCI0_SSH"
+               "$DCN2_HCI1_SSH"
+               "$DCN2_HCI2_SSH")
+
+echo "Stopping storage services on DistributedComputeHCI nodes"
+for node_ssh in "${DCN_HCI_NODES[@]}"; do
+    [ -z "$node_ssh" ] && continue
+    echo "Processing node: $node_ssh"
+    for service in "${DCN_HCI_SERVICES[@]}"; do
+        if $node_ssh sudo systemctl is-active $service 2>/dev/null; then
+            echo "Stopping $service"
+            $node_ssh sudo systemctl stop $service
+        fi
+    done
+done
+
+echo "Checking storage services on DistributedComputeHCI nodes"
+for node_ssh in "${DCN_HCI_NODES[@]}"; do
+    [ -z "$node_ssh" ] && continue
+    for service in "${DCN_HCI_SERVICES[@]}"; do
+        if ! $node_ssh systemctl show $service 2>/dev/null | grep ActiveState=inactive >/dev/null; then
+            echo "ERROR: Service $service still running on $node_ssh"
+        else
+            echo "OK: Service $service is not running on $node_ssh"
+        fi
+    done
+done
+----
++
+[NOTE]
+====
+* On edge sites, the {image_service} runs with the service name `tripleo_glance_api_internal.service`, which is different from the `tripleo_glance_api.service` on the central controller.
+* The {block_storage} volume service (`tripleo_cinder_volume.service`) uses the same service name on both edge sites and the central controller.
+* The etcd service (`tripleo_etcd.service`) is used as a distributed lock manager (DLM) for the {block_storage} volume service running in active/active mode on edge sites.
+====
+
+. If your DCN deployment includes `DistributedComputeHCIScaleOut` nodes, stop the HAProxy service on those nodes:
++
+[NOTE]
+====
+The `DistributedComputeHCIScaleOut` role is used to scale compute and storage capacity beyond the initial three `DistributedComputeHCI` nodes at each site. These nodes run `HAProxyEdge`, which proxies {image_service} requests to the `GlanceApiEdge` instances on `DistributedComputeHCI` nodes. Skip this step if your DCN deployment does not include `DistributedComputeHCIScaleOut` nodes. For non-HCI deployments, the equivalent role is `DistributedComputeScaleOut`, which runs the same `HAProxyEdge` service.
+====
++
+.. Define shell variables for your `DistributedComputeHCIScaleOut` edge Compute nodes:
++
+[subs=+quotes]
+----
+# DCN1 edge site DistributedComputeHCIScaleOut nodes
+DCN1_SCALEOUT0_SSH="ssh -i *<path to SSH key>* root@*<dcn1-scaleout-0 IP>*"
+DCN1_SCALEOUT1_SSH="ssh -i *<path to SSH key>* root@*<dcn1-scaleout-1 IP>*"
+
+# DCN2 edge site DistributedComputeHCIScaleOut nodes
+DCN2_SCALEOUT0_SSH="ssh -i *<path to SSH key>* root@*<dcn2-scaleout-0 IP>*"
+DCN2_SCALEOUT1_SSH="ssh -i *<path to SSH key>* root@*<dcn2-scaleout-1 IP>*"
+----
++
+where:
+
+`<dcn1-scaleout-0 IP>`, `<dcn1-scaleout-1 IP>`::
+Specifies the IP address for each `DistributedComputeHCIScaleOut` node within the DCN1 edge site.
+
+`<dcn2-scaleout-0 IP>`, `<dcn2-scaleout-1 IP>`::
+Specifies the IP address for each `DistributedComputeHCIScaleOut` node within the DCN2 edge site.
++
+.. Stop the services on all `DistributedComputeHCIScaleOut` nodes:
++
+----
+# Services to stop on DistributedComputeHCIScaleOut edge compute nodes
+DCN_SCALEOUT_SERVICES=("tripleo_haproxy_edge.service")
+
+# List of all DistributedComputeHCIScaleOut node SSH commands
+DCN_SCALEOUT_NODES=("$DCN1_SCALEOUT0_SSH"
+                     "$DCN1_SCALEOUT1_SSH"
+                     "$DCN2_SCALEOUT0_SSH"
+                     "$DCN2_SCALEOUT1_SSH")
+
+echo "Stopping services on DistributedComputeHCIScaleOut nodes"
+for node_ssh in "${DCN_SCALEOUT_NODES[@]}"; do
+    [ -z "$node_ssh" ] && continue
+    echo "Processing node: $node_ssh"
+    for service in "${DCN_SCALEOUT_SERVICES[@]}"; do
+        if $node_ssh sudo systemctl is-active $service 2>/dev/null; then
+            echo "Stopping $service"
+            $node_ssh sudo systemctl stop $service
+        fi
+    done
+done
+
+echo "Checking services on DistributedComputeHCIScaleOut nodes"
+for node_ssh in "${DCN_SCALEOUT_NODES[@]}"; do
+    [ -z "$node_ssh" ] && continue
+    for service in "${DCN_SCALEOUT_SERVICES[@]}"; do
+        if ! $node_ssh systemctl show $service 2>/dev/null | grep ActiveState=inactive >/dev/null; then
+            echo "ERROR: Service $service still running on $node_ssh"
+        else
+            echo "OK: Service $service is not running on $node_ssh"
+        fi
+    done
+done
+----
++
+[NOTE]
+====
+* The HAProxy edge service (`tripleo_haproxy_edge.service`) provided a local {image_service} endpoint on `DistributedComputeHCIScaleOut` nodes, proxying requests to the `GlanceApiEdge` instances on `DistributedComputeHCI` nodes. During adoption, {rhocp_long} Kubernetes service endpoints backed by MetalLB replace HAProxy.
+====

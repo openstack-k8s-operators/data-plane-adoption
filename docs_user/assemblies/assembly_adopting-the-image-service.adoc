@@ -31,6 +31,8 @@ include::../modules/proc_adopting-image-service-with-nfs-backend.adoc[leveloffse
 
 include::../modules/proc_adopting-image-service-with-ceph-backend.adoc[leveloffset=+1]
 
+include::../modules/proc_adopting-image-service-with-dcn-backend.adoc[leveloffset=+1]
+
 include::../modules/proc_verifying-the-image-service-adoption.adoc[leveloffset=+1]
 
 ifdef::parent-context[:context: {parent-context}]

@@ -1,0 +1,216 @@
+:_mod-docs-content-type: PROCEDURE
+[id="adopting-block-storage-service-with-dcn-backend_{context}"]
+
+= Adopt the {block_storage} with multiple {Ceph} back ends (DCN)
+
+[role="_abstract"]
+Adopt the {block_storage_first_ref} in a Distributed Compute Node (DCN) deployment where multiple {CephCluster} clusters provide storage at different sites. You can deploy multiple `CinderVolume` instances, one for each availability zone, with each volume service configured to use its local {Ceph} cluster.
+
+During adoption, the {block_storage} volume services that ran on edge site compute nodes are migrated to run on {rhocp_long} at the central site. Although the control path for API requests now traverses the WAN to reach the {block_storage} running on {rhocp_long}, the data path remains local. Volume data continues to be stored in the {Ceph} cluster at each edge site. When you create a volume or clone a volume from a snapshot, the operation occurs entirely within the local {Ceph} cluster. This preserves data locality.
+
+.Prerequisites
+
+* You have completed the previous adoption steps.
+* The per-site {Ceph} secrets (`ceph-conf-central`, `ceph-conf-dcn1`, `ceph-conf-dcn2`) exist and contain the configuration and keyrings for each site's {Ceph} cluster. For more information, see xref:configuring-a-ceph-backend_migrating-databases[Configuring a {Ceph} back end].
+* The `extraMounts` property of the `OpenStackControlPlane` CR is configured to mount the {Ceph} configuration to all {block_storage} instances.
+* You have stopped the {block_storage} on all DCN nodes. For more information, see xref:stopping-openstack-services_{context}[Stopping {rhos_prev_long} services]. On edge sites, the {block_storage} volume service runs on compute nodes with the service name `tripleo_cinder_volume.service`.
+
+.Procedure
+
+. Retrieve the `fsid` for each {Ceph} cluster in your DCN deployment. The `fsid` is used as the `rbd_secret_uuid` for libvirt integration:
++
+----
+$ oc get secret ceph-conf-central -o json | jq -r '.data | to_entries[] | select(.key | endswith(".conf")) | "\(.key): \(.value | @base64d)"' | grep fsid
+----
+
+. Create a patch file for the {block_storage} with multiple {Ceph} back ends. The following example shows a DCN deployment with a central site and two edge sites:
++
+[subs="+quotes"]
+----
+$ cat << EOF > cinder_dcn_patch.yaml
+spec:
+  cinder:
+    enabled: true
+    template:
+      cinderAPI:
+        customServiceConfig: |
+          [DEFAULT]
+          default_availability_zone = az-central
+      cinderScheduler:
+        replicas: 1
+      cinderVolumes:
+        central:
+          networkAttachments:
+          - storage
+          replicas: 1
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_backends = central
+            glance_api_servers = http://glance-central-internal.openstack.svc:9292
+            [central]
+            backend_host = hostgroup
+            volume_backend_name = central
+            volume_driver = cinder.volume.drivers.rbd.RBDDriver
+            rbd_ceph_conf = /etc/ceph/central.conf
+            rbd_user = openstack
+            rbd_pool = volumes
+            rbd_flatten_volume_from_snapshot = False
+            report_discard_supported = True
+            rbd_secret_uuid = *<central_fsid>*
+            rbd_cluster_name = central
+            backend_availability_zone = az-central
+        dcn1:
+          networkAttachments:
+          - storage
+          replicas: 1
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_backends = dcn1
+            glance_api_servers = http://glance-dcn1-internal.openstack.svc:9292
+            [dcn1]
+            backend_host = hostgroup
+            volume_backend_name = dcn1
+            volume_driver = cinder.volume.drivers.rbd.RBDDriver
+            rbd_ceph_conf = /etc/ceph/dcn1.conf
+            rbd_user = openstack
+            rbd_pool = volumes
+            rbd_flatten_volume_from_snapshot = False
+            report_discard_supported = True
+            rbd_secret_uuid = *<dcn1_fsid>*
+            rbd_cluster_name = dcn1
+            backend_availability_zone = az-dcn1
+        dcn2:
+          networkAttachments:
+          - storage
+          replicas: 1
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_backends = dcn2
+            glance_api_servers = http://glance-dcn2-internal.openstack.svc:9292
+            [dcn2]
+            backend_host = hostgroup
+            volume_backend_name = dcn2
+            volume_driver = cinder.volume.drivers.rbd.RBDDriver
+            rbd_ceph_conf = /etc/ceph/dcn2.conf
+            rbd_user = openstack
+            rbd_pool = volumes
+            rbd_flatten_volume_from_snapshot = False
+            report_discard_supported = True
+            rbd_secret_uuid = *<dcn2_fsid>*
+            rbd_cluster_name = dcn2
+            backend_availability_zone = az-dcn2
+EOF
+----
++
+where:
+
+<central_fsid>::
+Specifies the `fsid` of the central {Ceph} cluster, used as the libvirt secret UUID.
+
+<dcn1_fsid>::
+Specifies the `fsid` of the DCN1 edge {Ceph} cluster.
+
+<dcn2_fsid>::
+Specifies the `fsid` of the DCN2 edge {Ceph} cluster.
+
++
+[NOTE]
+====
+* You must configure each `CinderVolume` with the `backend_availability_zone` value that matches your {compute_service} availability zone for that site, because `cross_az_attach = False` is set in the {compute_service} configuration. If the names do not match, instances cannot attach volumes. Replace the examples (`az-central`, `az-dcn1`, `az-dcn2`) with the names used in your {rhos_prev_long} deployment.
+* Each `CinderVolume` points to its local {image_service} API endpoint through `glance_api_servers`. This ensures that volume creation from images uses the local {image_service} and {Ceph} cluster. The examples use `http://` for the {image_service} endpoints. If your {rhos_prev_long} deployment uses TLS for internal endpoints, use `https://` instead, and ensure that you have completed the TLS migration. For more information, see xref:migrating-tls-everywhere_{context}[Migrating TLS-e to the RHOSO deployment].
+* The `rbd_cluster_name` setting identifies which {Ceph} cluster configuration to use from the mounted secrets.
+* Adjust the number of edge sites and their names to match your DCN deployment.
+====
+
+. Patch the `OpenStackControlPlane` CR to deploy the {block_storage} with multiple {Ceph} back ends:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file cinder_dcn_patch.yaml
+----
+
+. Configure the {block_storage} backup service. In this example DCN deployment the backup service runs at the central site and uses the central {Ceph} cluster. Add the `cinderBackups` section to your patch file and re-apply it:
++
+[subs="+quotes"]
+----
+$ cat << EOF >> cinder_dcn_patch.yaml
+      cinderBackups:
+        central:
+          networkAttachments:
+          - storage
+          replicas: 1
+          customServiceConfig: |
+            [DEFAULT]
+            backup_driver=cinder.backup.drivers.ceph.CephBackupDriver
+            backup_ceph_conf=/etc/ceph/central.conf
+            backup_ceph_user=openstack
+            backup_ceph_pool=backups
+            storage_availability_zone=az-central
+EOF
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file cinder_dcn_patch.yaml
+----
++
+[NOTE]
+====
+Unlike a single-site {Ceph} deployment where the backup config references `/etc/ceph/ceph.conf`, in a DCN deployment the {Ceph} configuration files in the `ceph-conf-files` secret are named by cluster. Set `backup_ceph_conf` to the path of the {Ceph} configuration file for whichever cluster hosts your `backups` pool. In this example the file is named `central.conf`, so the path is `/etc/ceph/central.conf`. Using a path that does not match a file in the secret will cause the backup service to fail with a `conf_read_file` error.
+
+Set `storage_availability_zone` to match the availability zone of the volumes you want to back up. The backup scheduler uses this to route backup requests to a service in the correct zone. If the backup service zone does not match the volume zone, backup creation fails with `Service not found for creating backup`.
+====
+
+. Verify that the {block_storage} volume services are running for each availability zone:
++
+----
+$ openstack volume service list --service cinder-volume
+
++------------------+---------------------+------------+---------+-------+----------------------------+
+| Binary           | Host                | Zone       | Status  | State | Updated At                 |
++------------------+---------------------+------------+---------+-------+----------------------------+
+| cinder-volume    | hostgroup@central   | az-central | enabled | up    | 2024-01-01T00:00:00.000000 |
+| cinder-volume    | hostgroup@dcn1      | az-dcn1    | enabled | up    | 2024-01-01T00:00:00.000000 |
+| cinder-volume    | hostgroup@dcn2      | az-dcn2    | enabled | up    | 2024-01-01T00:00:00.000000 |
++------------------+---------------------+------------+---------+-------+----------------------------+
+----
+
+. Verify that the {block_storage} backup service is running and in the correct availability zone:
++
+----
+$ openstack volume service list --service cinder-backup
+
++---------------+-------------------------+------------+---------+-------+----------------------------+
+| Binary        | Host                    | Zone       | Status  | State | Updated At                 |
++---------------+-------------------------+------------+---------+-------+----------------------------+
+| cinder-backup | cinder-backup-central-0 | az-central | enabled | up    | 2024-01-01T00:00:00.000000 |
++---------------+-------------------------+------------+---------+-------+----------------------------+
+----
+
+. Test the backup service by creating a volume, backing it up, and restoring the backup:
++
+----
+$ openstack volume create --size 1 backup-test-vol
+
+$ openstack volume backup create --name backup-test-backup backup-test-vol
+
+$ openstack volume backup show backup-test-backup
++-----------------------+--------------------------------------+
+| Field                 | Value                                |
++-----------------------+--------------------------------------+
+| container             | backups                              |
+| fail_reason           | None                                 |
+| name                  | backup-test-backup                   |
+| size                  | 1                                    |
+| status                | available                            |
++-----------------------+--------------------------------------+
+
+$ openstack volume backup restore backup-test-backup backup-test-restore
+----
++
+[NOTE]
+====
+Some versions of the {rhocp_long} client display a `cannot unpack non-iterable VolumeBackupsRestore object` error after the restore command. This is a known issue in the client, the restore operation may not have failed. Verify by checking the restored volume status directly.
+====
++
+----
+$ openstack volume show backup-test-restore -c status -c availability_zone -c os-vol-host-attr:host -f value
+available
+az-central
+hostgroup@central#central
+----

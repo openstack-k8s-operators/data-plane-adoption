@@ -6,6 +6,11 @@
 [role="_abstract"]
 Copy the {rhos_component_storage_file_first_ref} configuration from the {rhos_prev_long} ({OpenStackShort}) {rhos_prev_ver} deployment, and then deploy the {rhos_component_storage_file} on the control plane.
 
+[NOTE]
+====
+In a {rhos_prev_long} DCN deployment, the {rhos_component_storage_file} runs only at the central site and is not deployed on edge site compute nodes. After adoption, {rhos_long} supports deploying the {rhos_component_storage_file} at edge sites if required.
+====
+
 .Prerequisites
 
 * The {rhos_component_storage_file} systemd services such as `api`, `cron`, and `scheduler` are stopped. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
@@ -114,6 +119,7 @@ __EOF__
 * `share_backend_name` specifies the names of the back ends to use in {rhos_long}. Ensure that the names of the back ends are the same as they were in {OpenStackShort} {rhos_prev_ver}.
 * `networkAttachments` specifies the appropriate storage management network. For example, the `manilaShares` instance with the CephFS back-end driver is connected to the `storage` network.
 * `extraMounts` specifies additional files to add to any of the services. For example, when using {Ceph}, you can add the {rhos_component_storage_file} Ceph user's keyring file as well as the `ceph.conf` configuration file.
+* In a DCN deployment where {Ceph} configuration files are named by cluster (for example, `central.conf` instead of `ceph.conf`), set `cephfs_conf_path` to the path of the configuration file for the cluster hosting the CephFS back end, and set `cephfs_cluster_name` to the corresponding cluster name. For example, `cephfs_conf_path=/etc/ceph/central.conf` and `cephfs_cluster_name=central`. Using `/etc/ceph/ceph.conf` when that file does not exist in the mounted secret will cause the `manila-share` service to fail with a `conf_read_file` error.
 +
 The following example patch file uses CephFS through NFS:
 +

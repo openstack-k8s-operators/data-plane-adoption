@@ -1,0 +1,126 @@
+---
+resource_registry:
+  # yamllint disable rule:line-length
+  OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+  OS::TripleO::OVNMacAddressNetwork: OS::Heat::None
+  OS::TripleO::OVNMacAddressPort: OS::Heat::None
+  OS::TripleO::DistributedComputeHCI::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
+  OS::TripleO::DistributedComputeHCI::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
+  OS::TripleO::DistributedComputeHCI::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
+  OS::TripleO::DistributedComputeHCI::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  OS::TripleO::Controller::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+  OS::TripleO::Controller::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
+  OS::TripleO::Controller::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
+  OS::TripleO::Controller::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
+  OS::TripleO::Controller::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  OS::TripleO::Services::CeilometerAgentCentral: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-central-container-puppet.yaml
+  OS::TripleO::Services::CeilometerAgentNotification: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-notification-container-puppet.yaml
+  OS::TripleO::Services::CeilometerAgentIpmi: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-ipmi-container-puppet.yaml
+  OS::TripleO::Services::ComputeCeilometerAgent: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-compute-container-puppet.yaml
+  OS::TripleO::Services::Collectd: /usr/share/openstack-tripleo-heat-templates/deployment/metrics/collectd-container-puppet.yaml
+  OS::TripleO::Services::MetricsQdr: /usr/share/openstack-tripleo-heat-templates/deployment/metrics/qdr-container-puppet.yaml
+  OS::TripleO::Services::OsloMessagingRpc: /usr/share/openstack-tripleo-heat-templates/deployment/rabbitmq/rabbitmq-messaging-rpc-pacemaker-puppet.yaml
+  OS::TripleO::Services::OsloMessagingNotify: /usr/share/openstack-tripleo-heat-templates/deployment/rabbitmq/rabbitmq-messaging-notify-shared-puppet.yaml
+  OS::TripleO::Services::HAproxy: /usr/share/openstack-tripleo-heat-templates/deployment/haproxy/haproxy-pacemaker-puppet.yaml
+  OS::TripleO::Services::Pacemaker: /usr/share/openstack-tripleo-heat-templates/deployment/pacemaker/pacemaker-baremetal-puppet.yaml
+  OS::TripleO::Services::PacemakerRemote: /usr/share/openstack-tripleo-heat-templates/deployment/pacemaker/pacemaker-remote-baremetal-puppet.yaml
+  OS::TripleO::Services::Clustercheck: /usr/share/openstack-tripleo-heat-templates/deployment/pacemaker/clustercheck-container-puppet.yaml
+  OS::TripleO::Services::Redis: /usr/share/openstack-tripleo-heat-templates/deployment/database/redis-pacemaker-puppet.yaml
+  OS::TripleO::Services::Rsyslog: /usr/share/openstack-tripleo-heat-templates/deployment/logging/rsyslog-container-puppet.yaml
+  OS::TripleO::Services::MySQL: /usr/share/openstack-tripleo-heat-templates/deployment/database/mysql-pacemaker-puppet.yaml
+  OS::TripleO::Services::CinderBackup: /usr/share/openstack-tripleo-heat-templates/deployment/cinder/cinder-backup-pacemaker-puppet.yaml
+  OS::TripleO::Services::CinderVolume: /usr/share/openstack-tripleo-heat-templates/deployment/cinder/cinder-volume-pacemaker-puppet.yaml
+  OS::TripleO::Services::HeatApi: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-container-puppet.yaml
+  OS::TripleO::Services::HeatApiCfn: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-cfn-container-puppet.yaml
+  OS::TripleO::Services::HeatApiCloudwatch: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-cloudwatch-disabled-puppet.yaml
+  OS::TripleO::Services::HeatEngine: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-engine-container-puppet.yaml
+  OS::TripleO::Services::NovaAZConfig: /usr/share/openstack-tripleo-heat-templates/deployment/nova/nova-az-config.yaml
+parameter_defaults:
+  RedisVirtualFixedIPs:
+    - ip_address: 192.168.122.110
+      use_neutron: false
+  OVNDBsVirtualFixedIPs:
+    - ip_address: 192.168.122.111
+      use_neutron: false
+  ControllerExtraConfig:
+    nova::compute::libvirt::services::libvirt_virt_type: qemu
+    nova::compute::libvirt::virt_type: qemu
+    nova::availability_zone::default_schedule_zone: az-central
+  DistributedComputeHCIExtraConfig:
+    nova::compute::libvirt::services::libvirt_virt_type: qemu
+    nova::compute::libvirt::virt_type: qemu
+  BarbicanSimpleCryptoGlobalDefault: true
+  Debug: true
+  DockerPuppetDebug: true
+  ContainerCli: podman
+  DistributedComputeHCICount: 3
+  NeutronGlobalPhysnetMtu: 1350
+  CinderLVMLoopDeviceSize: 20480
+  CloudName: overcloud.example.com
+  CloudNameInternal: overcloud.internalapi.example.com
+  CloudNameStorage: overcloud.storage.example.com
+  CloudNameStorageManagement: overcloud.storagemgmt.example.com
+  CloudNameCtlplane: overcloud.ctlplane.example.com
+  CloudDomain: example.com
+  NetworkConfigWithAnsible: false
+  ControllerHostnameFormat: '%stackname%-controller-%index%'
+  DistributedComputeHCIHostnameFormat: '%stackname%-distributedcomputehci-%index%'
+  DistributedComputeHCIControlPlaneSubnet: leaf2
+  CtlplaneNetworkAttributes:
+    network:
+      dns_domain: example.com
+      mtu: 1500
+      name: ctlplane
+      tags:
+        - 192.168.122.0/24
+        - 192.168.133.0/24
+        - 192.168.144.0/24
+    subnets:
+      ctlplane-subnet:
+        cidr: 192.168.122.0/24
+        dns_nameservers: 192.168.122.10
+        gateway_ip: 192.168.122.10
+        host_routes: []
+        name: ctlplane-subnet
+        ip_version: 4
+      leaf1:
+        cidr: 192.168.133.0/24
+        dns_nameservers: 192.168.122.10
+        gateway_ip: 192.168.133.1
+        host_routes: []
+        name: leaf1
+        ip_version: 4
+      leaf2:
+        cidr: 192.168.144.0/24
+        dns_nameservers: 192.168.122.10
+        gateway_ip: 192.168.144.1
+        host_routes:
+          - destination: 192.168.122.0/24  # Route to central ctlplane for DNS
+            nexthop: 192.168.144.1
+          - destination: 192.168.133.0/24  # Route to DCN1
+            nexthop: 192.168.144.1
+        name: leaf2
+        ip_version: 4
+
+  VipSubnetMap:
+    ctlplane: leaf2
+  NeutronFlatNetworks: leaf0,leaf1,leaf2
+  ControllerParameters:
+    NeutronBridgeMappings: ["leaf0:br-ex"]
+  DistributedComputeHCIParameters:
+    NeutronBridgeMappings: ["leaf2:br-ex"]
+  PythonInterpreter: /usr/bin/python3
+  DnsServers: ['10.11.5.19', '10.5.30.160']
+  NtpServer: ["clock.redhat.com", "clock2.redhat.com"]
+  NovaComputeAvailabilityZone: az-dcn2
+  CinderStorageAvailabilityZone: az-dcn2
+  CinderVolumeCluster: dcn2
+  NovaCrossAZAttach: false
+  RootStackName: dcn2
+  AuthCloudName: 'central'
+  ManageNetworks: false
+
+  NeutronNetworkType: geneve
+  NeutronTunnelTypes: geneve
+  NeutronNetworkVLANRanges: 'leaf0:1:1000,leaf1:1:1000,leaf2:1:1000'
+  BondInterfaceOvsOptions: "bond_mode=active-backup"

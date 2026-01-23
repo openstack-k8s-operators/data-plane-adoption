@@ -1,0 +1,11 @@
+parameter_defaults:
+  GlanceShowMultipleLocations: true
+  GlanceEnabledImportMethods: web-download,copy-image
+  GlanceBackend: rbd
+  GlanceBackendID: dcn2
+  GlanceStoreDescription: 'dcn2 rbd glance store'
+  GlanceMultistoreConfig:
+    central:
+      GlanceBackend: rbd
+      GlanceStoreDescription: 'central rbd glance store'
+      CephClusterName: central

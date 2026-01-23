@@ -224,6 +224,11 @@ edpm_sshd_allowed_ranges: >
 edpm_neutron_sriov_agent_enabled: true
 edpm_neutron_dhcp_agent_enabled: true
 nova_libvirt_backend: local
+# Key name in ceph-conf-files secret for extracting CEPH_FSID
+# Single cluster: "ceph.conf", DCN multi-cluster: "central.conf"
+ceph_conf_secret_key: "ceph.conf"
+# DCN per-site Nova Ceph configuration (empty = not DCN)
+nova_dcn_clusters: []
 skip_patching_ansibleee_csv: false
 # OS Diff automation steps
 os_diff_dir: tmp/os-diff

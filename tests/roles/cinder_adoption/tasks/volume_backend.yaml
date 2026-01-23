@@ -1,9 +1,17 @@
 - name: deploy podified Cinder volume
-  when: cinder_volume_backend == 'ceph'
+  when:
+    - cinder_volume_backend == 'ceph'
+    - cinder_dcn_clusters | length == 0
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_volume_backend_patch }}'
+
+- name: deploy podified Cinder volume with Ceph multi-backend configuration for DCN
+  when:
+    - cinder_volume_backend == 'ceph'
+    - cinder_dcn_clusters | length > 0
+  ansible.builtin.include_tasks: cinder_volume_dcn.yaml
 
 - name: deploy podified Cinder volume with netapp NFS or iSCSI
   when: >
