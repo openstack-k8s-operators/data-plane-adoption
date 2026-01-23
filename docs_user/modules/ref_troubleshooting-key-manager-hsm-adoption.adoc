@@ -299,4 +299,3 @@ If issues persist after following this troubleshooting guide:
 . Verify HSM server status and connectivity independently
 . Review the adoption summary report for additional diagnostic information
 
-For Proteccio-specific issues, consult the Eviden Trustway documentation and ensure HSM server configuration matches the client settings.
