@@ -3,7 +3,8 @@
 
 = Troubleshooting Key Manager HSM adoption
 
-[id="troubleshooting-key-manager-hsm-adoption_{context}"]
+:context: troubleshooting-hsm
+
 
 This section provides troubleshooting guidance for common issues encountered during HSM-enabled Key Manager (Barbican) service adoption.
 
