@@ -106,7 +106,6 @@ $ ssh -o StrictHostKeyChecking=no tripleo-admin@controller-0.ctlplane
 
 . Update the `controller1_ssh` variable if needed:
 +
-[source,yaml]
 ----
 controller1_ssh: "ssh -o StrictHostKeyChecking=no tripleo-admin@<controller_ip>"
 ----
