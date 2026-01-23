@@ -1,7 +1,7 @@
 :_mod-docs-content-type: ASSEMBLY
 ifdef::context[:parent-context: {context}]
 [id="troubleshooting-key-manager-proteccio-adoption_{context}"]
-
+:context: troubleshooting-proteccio
 = Troubleshooting {key_manager} Proteccio HSM adoption
 
 [role="_abstract"]
