@@ -17,7 +17,7 @@ If issues persist after following the troubleshooting guide:
 * Verify HSM server status and connectivity independently.
 * Review the adoption summary report for additional diagnostic information.
 
-== Configuration validation failures
+== Resolving configuration validation failures
 
 .Problem
 The adoption fails with validation errors about placeholder values.
