@@ -30,13 +30,6 @@ fatal: [localhost]: FAILED! => {
 }
 ----
 
-.Symptoms
-----
-TASK [Validate all required variables are set] ****
-fatal: [localhost]: FAILED! => {
-    "msg": "Required variable proteccio_certs_path contains placeholder value."
-}
-----
 
 .Procedure
 . Edit your hardware security module configuration in the Zuul job vars or CI framework configuration file.
