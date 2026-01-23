@@ -36,7 +36,6 @@ fatal: [localhost]: FAILED! => {
 
 . Replace all placeholder values with actual configuration values for your environment. Check the following key variables:
 +
-[source,yaml]
 ----
 cifmw_hsm_password: "your_actual_hsm_password"
 cifmw_hsm_proteccio_partition: "VHSM1"
