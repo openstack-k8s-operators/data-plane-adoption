@@ -5,7 +5,12 @@
 
 [role="_abstract"]
 To adopt the {key_manager_first_ref} with Proteccio hardware security module (HSM) integration, you use the enhanced Barbican adoption role with HSM support enabled through a configuration flag. This approach preserves HSM integration while adopting all existing secrets from your source {rhos_prev_long} ({OpenStackShort}) environment.
+When you run the data plane adoption tests with HSM support enabled, the adoption process performs the following actions:
 
+* Extracts the simple crypto KEK from the source configuration.
+* Creates the required HSM secrets (hsm-login and proteccio-data) in the target namespace.
+* Deploys Barbican with HSM-enabled configuration by using the PKCS#11 plugin.
+* Verifies the HSM functionality and secret migration.
 When you run the data plane adoption tests with HSM support enabled, the adoption process performs the following actions:
 
 * Extracts the simple crypto KEK from the source configuration.
