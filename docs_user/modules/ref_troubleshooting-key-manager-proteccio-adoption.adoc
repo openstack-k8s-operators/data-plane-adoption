@@ -266,7 +266,7 @@ $ oc delete openstackversion openstack -n openstack
 $ oc apply -f /path/to/your/base_controlplane.yaml
 ----
 
-== Additional resources
+.Next steps
 
 To avoid additional issues when attempting your adoption again, consider the following suggestions:
 
