@@ -1,4 +1,20 @@
-# rhoso namespace
+# Ceph backend configuration defaults
+
+# Single cluster (backwards compatible default)
+# For multi-cluster DCN, override with ceph_clusters list in vars file
+ceph_clusters: []
+
+# Path where ceph configs are stored on the controller.
+# Default is the TripleO path; override with /etc/ceph if CephConfigPath was customized.
+ceph_config_dir: /var/lib/tripleo-config/ceph
+
+# Example for DCN with multiple Ceph clusters:
+# ceph_clusters:
+#   - name: central        # central.conf, central.client.openstack.keyring
+#   - name: dcn1           # dcn1.conf, dcn1.client.openstack.keyring
+#   - name: dcn2           # dcn2.conf, dcn2.client.openstack.keyring
+
+# Control plane patch for extraMounts - mounts all ceph configs to /etc/ceph
 ceph_backend_configuration_patch: |
   spec:
     extraMounts:

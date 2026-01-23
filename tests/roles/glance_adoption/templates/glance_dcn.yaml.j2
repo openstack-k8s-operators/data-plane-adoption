@@ -1,0 +1,57 @@
+spec:
+  glance:
+    enabled: true
+    template:
+      databaseInstance: openstack
+      databaseAccount: glance
+      keystoneEndpoint: {{ glance_dcn_clusters | selectattr('default', 'defined') | selectattr('default') | map(attribute='name') | first }}
+      storage:
+        storageRequest: 10G
+      glanceAPIs:
+{% for cluster in glance_dcn_clusters %}
+        {{ cluster.name }}:
+          type: {{ cluster.type | default('split') }}
+          replicas: 1
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    metallb.universe.tf/loadBalancerIPs: {{ cluster.metallb_ip }}
+                spec:
+                  type: LoadBalancer
+          networkAttachments:
+            - storage
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_import_methods = [web-download,copy-image,glance-direct]
+{% if cluster.backends == 'all' %}
+            enabled_backends = {{ glance_dcn_clusters | map(attribute='name') | join(':rbd,') }}:rbd
+{% else %}
+            enabled_backends = {{ cluster.backends | join(':rbd,') }}:rbd
+{% endif %}
+            [glance_store]
+            default_backend = {{ cluster.name }}
+{% if cluster.backends == 'all' %}
+{% for backend in glance_dcn_clusters %}
+            [{{ backend.name }}]
+            rbd_store_ceph_conf = {{ backend.ceph_conf }}
+            store_description = "{{ backend.name }} RBD backend"
+            rbd_store_pool = {{ backend.pool | default('images') }}
+            rbd_store_user = openstack
+            rbd_thin_provisioning = True
+{% endfor %}
+{% else %}
+{% for backend_name in cluster.backends %}
+{% set backend = glance_dcn_clusters | selectattr('name', 'equalto', backend_name) | first %}
+            [{{ backend.name }}]
+            rbd_store_ceph_conf = {{ backend.ceph_conf }}
+            store_description = "{{ backend.name }} RBD backend"
+            rbd_store_pool = {{ backend.pool | default('images') }}
+            rbd_store_user = openstack
+            rbd_thin_provisioning = True
+{% endfor %}
+{% endif %}
+{% endfor %}

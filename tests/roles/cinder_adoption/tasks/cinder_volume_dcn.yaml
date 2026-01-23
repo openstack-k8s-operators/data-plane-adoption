@@ -1,0 +1,11 @@
+- name: Generate Cinder DCN patch file
+  ansible.builtin.template:
+    src: cinder_dcn_patch.yaml.j2
+    dest: /tmp/cinder_dcn_patch.yaml
+    mode: '0644'
+
+- name: Deploy podified Cinder volume with DCN multi-backend configuration
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch-file /tmp/cinder_dcn_patch.yaml

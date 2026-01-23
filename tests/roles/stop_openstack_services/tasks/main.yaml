@@ -160,3 +160,31 @@
             break
         fi
     done
+
+# DCN storage nodes: stop Glance, Cinder, and etcd services
+- name: stop services on DCN storage nodes
+  when: dcn_storage_nodes | length > 0
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    DCN_SSH="{{ item.ssh }}"
+    DCN_SERVICES=({% for svc in dcn_storage_services %}"{{ svc }}" {% endfor %})
+
+    echo "Stopping services on DCN node: {{ item.ssh }}"
+    for service in ${DCN_SERVICES[*]}; do
+        echo "Stopping $service"
+        if $DCN_SSH sudo systemctl is-active $service; then
+            $DCN_SSH sudo systemctl stop $service
+        fi
+    done
+
+    echo "Checking services on DCN node: {{ item.ssh }}"
+    for service in ${DCN_SERVICES[*]}; do
+        if ! $DCN_SSH systemctl show $service | grep ActiveState=inactive >/dev/null; then
+            echo "ERROR: Service $service still running"
+        else
+            echo "OK: Service $service is not running"
+        fi
+    done
+  loop: "{{ dcn_storage_nodes }}"
+  loop_control:
+    label: "{{ item.ssh }}"

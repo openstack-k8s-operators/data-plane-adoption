@@ -1,6 +1,26 @@
 # glance_backend can be 'nfs', 'ceph', 'swift', 'cinder'
+# For DCN multi-backend Ceph, set glance_backend: ceph and populate glance_dcn_clusters
 glance_backend: swift
 glance_retry_delay: 5
 
 # Dictionary of nodeSelector key/values
 glance_nodeselector: {}
+
+# DCN multi-backend configuration
+# Used when glance_backend: ceph and glance_dcn_clusters is non-empty
+# Each cluster defines a Ceph backend and a GlanceAPI
+glance_dcn_clusters: []
+# Example:
+#   - name: central
+#     ceph_conf: /etc/ceph/central.conf
+#     pool: images
+#     default: true
+#     type: split           # Central API type
+#     backends: all         # 'all' means include all cluster backends
+#     metallb_ip: "172.17.0.80"
+#   - name: dcn1
+#     ceph_conf: /etc/ceph/dcn1.conf
+#     pool: images
+#     type: edge            # Edge API type
+#     backends: [central, dcn1]  # Only central + local backends
+#     metallb_ip: "172.17.0.81"
