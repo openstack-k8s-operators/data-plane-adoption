@@ -1,3 +1,6 @@
+:_mod-docs-content-type: ASSEMBLY
+[id="troubleshooting-key-manager-hsm-adoption_{context}"]
+
 = Troubleshooting Key Manager HSM adoption
 
 [id="troubleshooting-key-manager-hsm-adoption_{context}"]
