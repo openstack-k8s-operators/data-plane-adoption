@@ -63,6 +63,7 @@ fatal: [localhost]: FAILED! => {
 . Verify that all required HSM files are accessible from the configured URLs:
 +
 .Example
+.Example
 [source,bash]
 ----
 $ curl -I https://your-server/path/to/Proteccio3.06.05.iso
