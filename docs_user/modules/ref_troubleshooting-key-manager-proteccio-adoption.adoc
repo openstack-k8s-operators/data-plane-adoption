@@ -5,7 +5,7 @@ ifdef::context[:parent-context: {context}]
 = Troubleshooting {key_manager} Proteccio HSM adoption
 
 [role="_abstract"]
-Use this reference to troubleshoot common issues that might occur during {key_manager_first_ref} adoption with Proteccio HSM integration.
+Use this reference to troubleshoot common issues that might occur during {key_manager_first_ref} adoption with Proteccio HSM integration. If Proteccio HSM issues persist, consult the Eviden Trustway documentation and ensure that HSM server configuration matches the client settings.
 
 == Resolving prerequisite validation failures
 
