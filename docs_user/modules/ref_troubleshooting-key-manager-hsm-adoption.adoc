@@ -20,7 +20,15 @@ If issues persist after following the troubleshooting guide:
 == Resolving configuration validation failures
 
 .Problem
-The adoption fails with validation errors about placeholder values.
+[role="_abstract"]
+If the adoption fails with validation errors about placeholder values, replace the placeholder values with your environment's configuration values. Validation errors about placeholder values look similar to the following example:
++
+----
+TASK [Validate all required variables are set] ****
+fatal: [localhost]: FAILED! => {
+    "msg": "Required variable proteccio_certs_path contains placeholder value."
+}
+----
 
 .Symptoms
 ----
