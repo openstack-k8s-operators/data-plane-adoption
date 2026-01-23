@@ -37,12 +37,12 @@ fatal: [localhost]: FAILED! => {
 . Replace all placeholder values with actual configuration values for your environment. Check the following key variables:
 +
 ----
-cifmw_hsm_password: "your_actual_hsm_password"
-cifmw_hsm_proteccio_partition: "VHSM1"
-cifmw_hsm_mkek_label: "your_mkek_label"
-cifmw_hsm_hmac_label: "your_hmac_label"
-cifmw_hsm_proteccio_client_src: "https://your-server/path/to/Proteccio.iso"
-cifmw_hsm_proteccio_conf_src: "https://your-server/path/to/proteccio.rc"
+cifmw_hsm_password: <your_actual_hsm_password>
+cifmw_barbican_proteccio_partition: <VHSM1>
+cifmw_barbican_proteccio_mkek_label: <your_mkek_label>
+cifmw_barbican_proteccio_hmac_label: <your_hmac_label>
+cifmw_hsm_proteccio_client_src: <https://your-server/path/to/Proteccio.iso>
+cifmw_hsm_proteccio_conf_src: <https://your-server/path/to/proteccio.rc>
 ----
 
 . Verify that no placeholder values remain in your configuration.
