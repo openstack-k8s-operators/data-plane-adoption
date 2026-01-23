@@ -6,7 +6,16 @@
 :context: troubleshooting-hsm
 
 
-This section provides troubleshooting guidance for common issues encountered during HSM-enabled Key Manager (Barbican) service adoption.
+[role="_abstract"]
+Review troubleshooting guidance for common issues that you might encounter while you perform the HSM-enabled Key Manager (Barbican) service adoption.
+
+== Next steps
+If issues persist after following the troubleshooting guide:
+
+* Collect adoption logs and configuration for analysis.
+* Check the HSM vendor documentation for vendor-specific troubleshooting.
+* Verify HSM server status and connectivity independently.
+* Review the adoption summary report for additional diagnostic information.
 
 == Configuration validation failures
 
