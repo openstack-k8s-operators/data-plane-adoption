@@ -261,6 +261,10 @@
     {{ ovn_copy_shell_vars }}
 
     oc exec ovn-copy-data -- bash -c "ovsdb-client -v restore {{ tls_opts }} {{ proto }}:${{ ovn_db_ip }}:{{ ovn_db_port }} < /backup/{{ ovn_db_file }}"
+  register: podified_ovn_db_restore
+  until: podified_ovn_db_restore is success
+  retries: 5
+  delay: "{{ ovn_retry_delay }}"
   loop:
     - nb
     - sb
