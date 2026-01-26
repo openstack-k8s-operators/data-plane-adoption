@@ -69,7 +69,6 @@ parameter_defaults:
   ComputeHostnameFormat: '%stackname%-compute-%index%'
   EnableVLANTransparency: true
   NeutronServicePlugins: 'qos,ovn-router,trunk,segments,log'
-  NeutronEnableIgmpSnooping: true
   OVNEmitNeedToFrag: false
   NeutronNetworkVLANRanges: 'datacentre:1000:2000'
   NeutronTypeDrivers: 'geneve,vlan,flat,local'
