@@ -47,6 +47,9 @@ parameter_defaults:
     nova::compute::libvirt::virt_type: qemu
   ExtraConfig:
     neutron::notification_driver: 'noop'
+    # Enable IGMP flood for OVN (mcast_flood) to ensure DHCPv6 multicast
+    # is forwarded to the qdhcp namespace.
+    neutron::server::igmp_flood: true
   BarbicanSimpleCryptoGlobalDefault: true
   Debug: true
   DockerPuppetDebug: true
