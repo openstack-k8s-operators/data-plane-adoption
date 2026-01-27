@@ -875,6 +875,10 @@
   ansible.builtin.include_tasks:
     file: nova_ffu.yaml
 
+- name: Cleanup non-adopted Nova compute services
+  ansible.builtin.include_tasks:
+    file: nova_compute_cleanup.yaml
+
 - name: Cleanup non-adopted Neutron and OVN agents
   ansible.builtin.include_tasks:
     file: neutron_agents_cleanup.yaml
