@@ -111,3 +111,4 @@ parameter_defaults:
     IronicNetwork: ironic
     IronicInspectorNetwork: ironic
   IronicCleaningDiskErase: metadata
+  IronicDefaultNetworkInterface: neutron
