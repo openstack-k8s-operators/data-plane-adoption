@@ -3,7 +3,7 @@ undercloud:
   config:
     - section: DEFAULT
       option: undercloud_hostname
-      value: undercloud.example.com
+      value: osp-undercloud-0.ooo.test
     - section: DEFAULT
       option: undercloud_timezone
       value: UTC
@@ -22,7 +22,8 @@ undercloud:
   undercloud_parameters_override: "hci/hieradata_overrides_undercloud.yaml"
   undercloud_parameters_defaults: "hci/undercloud_parameter_defaults.yaml"
   ctlplane_vip: 192.168.122.98
-cloud_domain: "example.com"
+cloud_domain: "ooo.test"
+tlse: true
 hostname_groups_map:
   # map ansible groups in the inventory to role hostname format for
   # 17.1 deployment
@@ -58,6 +59,9 @@ stacks:
       - "/usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-dashboard.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/services/barbican.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/barbican-backend-simple-crypto.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/ssl/tls-everywhere-endpoints-dns.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/services/haproxy-public-tls-certmonger.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/ssl/enable-internal-tls.yaml"
     network_data_file: "hci/network_data.yaml.j2"
     vips_data_file: "hci/vips_data.yaml"
     roles_file: "hci/roles.yaml"
