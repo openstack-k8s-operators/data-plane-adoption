@@ -346,7 +346,7 @@ openstack-edpm-dcn2   True     Ready
 $ oc exec openstackclient -- openstack compute service list
 ----
 
-. Verify inter-site connectivity by checking routes on a DCN compute node:
+. Verify inter-site connectivity by checking routes on a DCN Compute node:
 +
 ----
 $ ssh dcn1-compute-0 ip route show | grep 172.17.0
