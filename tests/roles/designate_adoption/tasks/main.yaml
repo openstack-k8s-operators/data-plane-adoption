@@ -1,0 +1,4 @@
+- name: Configure Designate network attachments and MetalLB
+  when: designate_adoption | bool
+  ansible.builtin.include_tasks:
+    file: designate_network_config.yaml
