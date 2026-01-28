@@ -1,0 +1,26 @@
+# These tasks will delete nova-compute services that were not adopted,
+# typically from controllers that were running compute in the source OSP
+# environment but are not adopted as compute nodes in the target RHOSO environment.
+
+- name: delete non-adopted nova-compute services
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    SERVICE_ID=$(${BASH_ALIASES[openstack]} compute service list --host {{ item }} --service nova-compute -f value -c ID)
+    if [ -n "${SERVICE_ID}" ]; then
+      ${BASH_ALIASES[openstack]} compute service delete ${SERVICE_ID}
+    fi
+  loop: "{{ nova_compute_cleanup_hosts | default([]) }}"
+
+- name: delete orphaned resource providers
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    ${BASH_ALIASES[openstack]} resource provider list -f value -c uuid -c name | awk '$1 == $2 {print $1}' | while read UUID; do
+      ${BASH_ALIASES[openstack]} resource provider delete $UUID || true
+    done
+  when: nova_compute_cleanup_hosts | default([]) | length > 0
