@@ -8,7 +8,7 @@ When you adopt a {rhos_prev_long} ({OpenStackShort}) deployment that has a Distr
 
 You must configure routing for Compute nodes at edge sites to connect with control plane services, such as RabbitMQ or the database at the central site. The cloud will not function correctly without routes configured.
 
-[Note]
+[NOTE]
 ====
 DHCP relay is not supported in adopted {rhos_long} environments with spine-leaf topologies. This affects bare metal provisioning scenarios that use PXE boot.
 
