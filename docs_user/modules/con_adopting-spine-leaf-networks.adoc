@@ -6,7 +6,7 @@
 [role="_abstract"]
 When you adopt a {rhos_prev_long} ({OpenStackShort}) deployment that has a Distributed Compute Node (DCN) architecture, you must adopt spine and leaf routed L3 networks. Each site has its own L2 network segment with a separate IP subnet. Traffic between sites is routed at L3 through spine routers or similar network infrastructure.
 
-You must configure routing for compute nodes at edge sites to connect with control plane services, such as RabbitMQ or the database at the central site. Without routes configured the cloud will not function correctly.
+You must configure routing for Compute nodes at edge sites to connect with control plane services, such as RabbitMQ or the database at the central site. The cloud will not function correctly without routes configured.
 
 [Note]
 ====
