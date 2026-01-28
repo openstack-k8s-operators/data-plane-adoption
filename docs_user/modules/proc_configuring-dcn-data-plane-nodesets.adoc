@@ -330,7 +330,7 @@ $ oc wait --for condition=Ready openstackdataplanedeployment/openstack-edpm-depl
 
 .Verification
 
-. Verify that all nodesets reach the `Ready` status:
+. Verify that all node sets reach the `Ready` status:
 +
 ----
 $ oc get openstackdataplanenodeset
