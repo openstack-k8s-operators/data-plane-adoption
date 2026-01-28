@@ -10,7 +10,7 @@ You must configure routing for Compute nodes at edge sites to connect with contr
 
 [NOTE]
 ====
-DHCP relay is not supported in adopted {rhos_long} environments with spine-leaf topologies. This affects bare metal provisioning scenarios that use PXE boot.
+DHCP relay is not supported in adopted {rhos_long} environments with spine-leaf topologies. This affects bare-metal provisioning scenarios that use PXE boot.
 
 If you need to provision bare metal nodes at edge sites, use Redfish virtual media or similar BMC virtual media features instead of PXE boot.
 ====
