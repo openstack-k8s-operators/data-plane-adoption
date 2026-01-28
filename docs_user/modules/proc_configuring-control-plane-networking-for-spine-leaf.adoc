@@ -122,7 +122,7 @@ spec:
 +
 [NOTE]
 ====
-You must have the `storagemgmt` network on OpenShift nodes when using DCN with Swift storage. It is not necessary when using Ceph.
+You must have the `storagemgmt` network on OpenShift nodes when using DCN with Swift storage. It is not necessary when using Red Hat Ceph Storage.
 ====
 
 . Update the `NetworkAttachmentDefinition` CR for the `internalapi` network to include routes to remote site subnets. These `routes` fields enable control plane pods attached to the `internalapi` network, such as OVN Southbound database, to communicate with compute nodes at remote sites through the central site gateway, and are required for DCN:
