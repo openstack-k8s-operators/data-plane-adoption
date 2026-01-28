@@ -340,7 +340,7 @@ openstack-edpm-dcn1   True     Ready
 openstack-edpm-dcn2   True     Ready
 ----
 
-. Verify that compute services are running across all sites. Ensure that all `nova-compute` services show `State=up` for nodes in all availability zones:
+. Verify that Compute services are running across all sites. Ensure that all `nova-compute` services show `State=up` for nodes in all availability zones:
 +
 ----
 $ oc exec openstackclient -- openstack compute service list
