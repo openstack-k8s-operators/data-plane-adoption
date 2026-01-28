@@ -15,7 +15,7 @@ DHCP relay is not supported in adopted {rhos_long} environments with spine-leaf 
 If you need to provision bare-metal nodes at edge sites, use Redfish virtual media or similar BMC virtual media features instead of PXE boot.
 ====
 
-.Example routes required on DCN1 compute nodes
+.Example routes required on DCN1 Compute nodes
 [options="header"]
 |===
 | Destination network | Next hop | Purpose
