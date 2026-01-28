@@ -62,7 +62,7 @@ DCN Adoption workflow overview:: The adoption of a Distributed Compute Node (DCN
 +
 . **Control plane adoption**: Adopt all control plane services from the central {OpenStackPreviousInstaller} stack to the {rhos_acro} control plane. This is identical to standard adoption.
 . **Network configuration**: Configure multi-subnet `NetConfig` and `NetworkAttachmentDefinition` CRs to support all site networks.
-. **Data plane nodeset creation**: Create separate `OpenStackDataPlaneNodeSet` CRs for each site, each with site-specific network configurations:
+. **Data plane node set creation**: Create separate `OpenStackDataPlaneNodeSet` CRs for each site, each with site-specific network configurations:
 +
 * Network subnet references
 * OVN bridge mappings (physnets)
