@@ -4,7 +4,7 @@
 = Configuring control plane networking for spine-leaf topologies
 
 [role="_abstract"]
-If you are adopting a spine-leaf or Distributed Compute Node (DCN) deployment, update the control plane networking for communication across sites. Add subnets for remote sites to your existing `NetConfig` CR and update `NetworkAttachmentDefinition` CRs with routes to enable connectivity between the central control plane and remote sites.
+If you are adopting a spine-leaf or Distributed Compute Node (DCN) deployment, update the control plane networking for communication across sites. Add subnets for remote sites to your existing `NetConfig` custom resource (CR) and update `NetworkAttachmentDefinition` CRs with routes to enable connectivity between the central control plane and remote sites.
 
 .Prerequisites
 
