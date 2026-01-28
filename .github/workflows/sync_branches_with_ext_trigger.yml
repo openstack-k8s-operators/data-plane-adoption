@@ -1,6 +1,6 @@
 ---
 name: Sync a target branch with source branch
-on:
+on: # yamllint disable-line rule:truthy
   repository_dispatch:
     types: [trigger-sync]
 
