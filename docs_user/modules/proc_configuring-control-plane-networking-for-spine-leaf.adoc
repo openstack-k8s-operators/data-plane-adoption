@@ -250,7 +250,7 @@ $ oc delete pod -l service=ovsdbserver-sb
 +
 The pods are automatically recreated with the updated network configuration.
 
-. Configure the {networking_first_ref} to recognize all site physnets. In the `OpenStackControlPlane` CR, ensure the Neutron configuration includes all physnets:
+. Configure the {networking_first_ref} to recognize all site physnets. In the `OpenStackControlPlane` CR, ensure the Networking service configuration includes all physnets:
 +
 [source,yaml]
 ----
