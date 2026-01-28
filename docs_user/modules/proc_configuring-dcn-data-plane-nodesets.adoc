@@ -353,7 +353,7 @@ $ ssh dcn1-compute-0 ip route show | grep 172.17.0
 172.17.0.0/24 via 172.17.10.1 dev internalapi
 ----
 
-. Test that DCN compute nodes can reach the control plane:
+. Test that DCN Compute nodes can reach the control plane:
 +
 ----
 $ ssh dcn1-compute-0 ping -c 3 172.17.0.30
