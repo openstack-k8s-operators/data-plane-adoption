@@ -68,7 +68,7 @@ DCN Adoption workflow overview:: The adoption of a Distributed Compute Node (DCN
 * OVN bridge mappings (physnets)
 * Inter-site routing configuration
 +
-. **Data plane deployment**: Deploy all nodesets. The edge site nodesets can be deployed in parallel after the central site control plane is adopted.
+. **Data plane deployment**: Deploy all node sets. The edge site node sets can be deployed in parallel after the central site control plane is adopted.
 
 
 [role="_additional-resources"]
