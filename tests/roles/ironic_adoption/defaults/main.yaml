@@ -16,11 +16,11 @@ ironic_patch: |
         databaseInstance: openstack
         customServiceConfig: |
           [DEFAULT]
-          {% if ipv6_enabled | default(false) -%}
+          {% if ipv6_enabled | default(false) %}
           default_network_interface=neutron
-          {%- else -%}
+          {% else %}
           default_network_interface=flat
-          {%- endif %}
+          {% endif %}
         ironicAPI:
           replicas: 1
           override:
