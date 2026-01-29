@@ -116,9 +116,12 @@ spec:
       cidr: 172.19.20.0/24
       vlan: 42
 ----
-* Replace `<subnet1>` with a user-defined subnet name for the central site subnet.
-* Replace `<ctlplanesite1>` with a user-defined subnet for the first DCN edge site.
-* Replace `<ctlplanesite2>` with a user-defined subnet for the second DCN edge site.
++
+where:
+
+<subnet1>:: Specifies a user-defined subnet name for the central site subnet.
+<ctlplanesite1>:: Specifies a user-defined subnet for the first DCN edge site.
+<ctlplanesite2>:: Specifies a user-defined subnet for the second DCN edge site.
 +
 [NOTE]
 ====
@@ -268,9 +271,11 @@ spec:
         ovn_emit_need_to_frag = false
 ----
 +
-* `leaf0` is the physnet for the central site.
-* `leaf1` is the physnet for the first remote site.
-* `leaf2` is the physnet for the second remote site.
+where:
+
+leaf0:: Represents the physnet for the central site.
+leaf1:: Represents the physnet for the first remote site.
+leaf2:: Represents the physnet for the second remote site.
 +
 [NOTE]
 ====

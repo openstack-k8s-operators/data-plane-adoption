@@ -48,11 +48,11 @@ Key differences from standard adoption:: The following table summarizes the diff
 
 Requirements for DCN adoption:: Before adopting a DCN deployment, ensure you have:
 +
-* Network topology information for all sites (IP ranges, VLANs, gateways)
-* Inter-site routing configuration (routes between site subnets)
-* Mapping of {OpenStackPreviousInstaller} roles to availability zones
-* OVN bridge mapping configuration for each site
-+
+** Network topology information for all sites (IP ranges, VLANs, gateways)
+** Inter-site routing configuration (routes between site subnets)
+** Mapping of {OpenStackPreviousInstaller} roles to availability zones
+** OVN bridge mapping configuration for each site
+
 [IMPORTANT]
 ====
 The adoption of the control plane must complete before adopting any data plane nodes. However, once the control plane is adopted, the edge site data plane adoptions can proceed in parallel with the central site data plane adoption.
@@ -64,10 +64,9 @@ DCN Adoption workflow overview:: The adoption of a Distributed Compute Node (DCN
 . **Network configuration**: Configure multi-subnet `NetConfig` and `NetworkAttachmentDefinition` CRs to support all site networks.
 . **Data plane node set creation**: Create separate `OpenStackDataPlaneNodeSet` CRs for each site, each with site-specific network configurations:
 +
-* Network subnet references
-* OVN bridge mappings (physnets)
-* Inter-site routing configuration
-+
+** Network subnet references
+** OVN bridge mappings (physnets)
+** Inter-site routing configuration
 . **Data plane deployment**: Deploy all node sets. The edge site node sets can be deployed in parallel after the central site control plane is adopted.
 
 
