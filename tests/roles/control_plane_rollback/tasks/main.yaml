@@ -21,6 +21,12 @@
                      "tripleo_cinder_scheduler.service"
                      "tripleo_cinder_volume.service"
                      "tripleo_cinder_backup.service"
+                     "tripleo_designate_api.service"
+                     "tripleo_designate_central.service"
+                     "tripleo_designate_backend_bind9.service"
+                     "tripleo_designate_worker.service"
+                     "tripleo_designate_producer.service"
+                     "tripleo_designate_mdns.service"
                      "tripleo_glance_api.service"
                      "tripleo_manila_api.service"
                      "tripleo_manila_api_cron.service"
@@ -57,7 +63,8 @@
                      "tripleo_ironic_conductor.service"
                      "tripleo_ironic_inspector_dnsmasq.service"
                      "tripleo_ironic_pxe_http.service"
-                     "tripleo_ironic_pxe_tftp.service")
+                     "tripleo_ironic_pxe_tftp.service"
+                     "tripleo_unbound.service")
 
     PacemakerResourcesToStart=("galera-bundle"
                                "haproxy-bundle"
