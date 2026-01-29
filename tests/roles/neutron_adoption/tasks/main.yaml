@@ -1,3 +1,21 @@
+- name: Fix neutron alembic expand version
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    DB_ROOT_PASSWORD=$(oc get secret osp-secret -n openstack -o jsonpath='{.data.DbRootPassword}' | base64 -d)
+    sleep 5
+    OLD_VERSION=$(oc exec openstack-galera-0 -n openstack -- \
+      mysql -u root -p"${DB_ROOT_PASSWORD}" neutron -N -s -e \
+      "SELECT version_num FROM alembic_version WHERE version_num='8df53b0d2c0e';" 2>/dev/null || true)
+    if [ -n "$OLD_VERSION" ]; then
+      echo "Updating alembic version: 8df53b0d2c0e -> fc153938cdc1"
+      oc exec openstack-galera-0 -n openstack -- \
+        mysql -u root -p"${DB_ROOT_PASSWORD}" neutron -e \
+        "UPDATE alembic_version SET version_num='fc153938cdc1' WHERE version_num='8df53b0d2c0e';"
+    fi
+  register: alembic_fix_result
+  changed_when: "'Updating alembic version' in alembic_fix_result.stdout"
+
 - name: deploy podified Neutron
   ansible.builtin.shell: |
     {{ shell_header }}
