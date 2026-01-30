@@ -57,25 +57,3 @@
       vlan: 23
       ip_subnet: '172.20.0.0/24'
       allocation_pools: [{'start': '172.20.0.120', 'end': '172.20.0.250'}]
-
-- name: Designate
-  mtu: 1500
-  vip: false
-  name_lower: designate
-  dns_domain: designate.{{ cloud_domain }}.
-  subnets:
-    designate_subnet:
-      vlan: 24
-      ip_subnet: '172.21.0.0/24'
-      allocation_pools: [{'start': '172.21.0.120', 'end': '172.21.0.250'}]
-
-- name: Designateext
-  mtu: 1500
-  vip: false
-  name_lower: designateext
-  dns_domain: designateext.{{ cloud_domain }}.
-  subnets:
-    designateext_subnet:
-      vlan: 25
-      ip_subnet: '172.23.0.0/24'
-      allocation_pools: [{'start': '172.23.0.120', 'end': '172.23.0.250'}]
