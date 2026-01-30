@@ -1,0 +1,29 @@
+ceph:
+  hosts:
+    osp-ext-ceph-uni04delta-0:
+      ansible_user: zuul
+      ansible_ssh_private_key_file: /home/zuul/.ssh/cifmw_reproducer_key
+      bridge_ip: 192.168.122.210/24
+      external_ip: 10.0.0.210/24
+      internalapi_ip: 172.17.0.210/24
+      storage_ip: 172.18.0.210/24
+      storagemgmt_ip: 172.20.0.210/24
+      tenant_ip: 172.19.0.210/24
+    osp-ext-ceph-uni04delta-1:
+      ansible_user: zuul
+      ansible_ssh_private_key_file: /home/zuul/.ssh/cifmw_reproducer_key
+      bridge_ip: 192.168.122.211/24
+      external_ip: 10.0.0.211/24
+      internalapi_ip: 172.17.0.211/24
+      storage_ip: 172.18.0.211/24
+      storagemgmt_ip: 172.20.0.211/24
+      tenant_ip: 172.19.0.211/24
+    osp-ext-ceph-uni04delta-2:
+      ansible_user: zuul
+      ansible_ssh_private_key_file: /home/zuul/.ssh/cifmw_reproducer_key
+      bridge_ip: 192.168.122.212/24
+      external_ip: 10.0.0.212/24
+      internalapi_ip: 172.17.0.212/24
+      storage_ip: 172.18.0.212/24
+      storagemgmt_ip: 172.20.0.212/24
+      tenant_ip: 172.19.0.212/24
