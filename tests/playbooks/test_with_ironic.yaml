@@ -27,7 +27,7 @@
     ironic_adoption: true
     nova_libvirt_backend: local
     prelaunch_test_instance_scripts:
-      - pre_launch_ironic.bash
+      - pre_launch.bash
   roles:
     - role: development_environment
       tags:
