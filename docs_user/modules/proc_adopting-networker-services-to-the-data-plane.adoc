@@ -258,6 +258,7 @@ EOF
 * `spec.tlsEnabled` specifies whether TLS Everywhere is enabled. If TLS is enabled, change `spec:tlsEnabled` to `true`.
 * `edpm_ovn_bridge_mappings: <bridge_mappings>` specifies the bridge mapping values that you used in your {rhos_prev_long} {rhos_prev_ver} deployment.
 * `edpm_enable_chassis_gw` specifies whether to run `ovn-controller` in gateway mode.
+ifeval::["{build}" != "downstream"]
 +
 [IMPORTANT]
 ====
@@ -292,6 +293,7 @@ You must also configure the following additional Ansible variables in the `nodeT
 * `edpm_frr_bgp_neighbor_password`: The BGP neighbor password
 * `edpm_ovn_encap_ip`: Set to the BGP main network IP (for example, `{{ lookup("vars", "bgpmainnet_ip") }}`)
 ====
+endif::[]
 
 . Ensure that you use the same `ovn-controller` settings in the `OpenStackDataPlaneNodeSet` CR that you used in the Networker nodes before adoption. This configuration is stored in the `external_ids` column in the `Open_vSwitch` table in the Open vSwitch database:
 +
