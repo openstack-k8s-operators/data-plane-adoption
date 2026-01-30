@@ -24,11 +24,15 @@ include::../modules/con_adoption-guidelines.adoc[leveloffset=+1]
 
 include::../modules/con_adoption-process-overview.adoc[leveloffset=+1]
 
+include::../modules/con_dcn-adoption-overview.adoc[leveloffset=+1]
+
 include::../modules/proc_installing-the-systemd-container-package-on-compute-hosts.adoc[leveloffset=+1]
 
 include::../modules/con_identity-service-authentication.adoc[leveloffset=+1]
 
 include::../assemblies/assembly_configuring-network-for-RHOSO-deployment.adoc[leveloffset=+1]
+
+include::../modules/con_adopting-spine-leaf-networks.adoc[leveloffset=+1]
 
 include::../assemblies/assembly_storage-requirements.adoc[leveloffset=+1]
 
