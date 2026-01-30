@@ -635,6 +635,7 @@ endif::[]
   "
 done
 ----
+ifeval::["{build}" != "downstream"]
 +
 [NOTE]
 ====
@@ -654,6 +655,7 @@ You must also configure the following additional Ansible variables in the `nodeT
 * `edpm_frr_bgp_neighbor_password`: The BGP neighbor password
 * `edpm_ovn_encap_ip`: Set to the BGP main network IP (for example, `{{ lookup("vars", "bgpmainnet_ip") }}`)
 ====
+endif::[]
 
 . Optional: Enable `neutron-sriov-nic-agent` in the `OpenStackDataPlaneNodeSet` CR:
 +
@@ -773,7 +775,7 @@ node is correctly listed in the `OpenStackDataPlaneNodeSet` CR.
 `edpm_tuned_profile` variable in the `OpenStackDataPlaneNodeSet` CR is configured
 to use the same profile as the one set on the {OpenStackShort} {rhos_prev_ver} node.
 ====
-
+ifeval::["{build}" != "downstream"]
 +
 [IMPORTANT]
 ====
@@ -791,6 +793,7 @@ $ sudo os-net-config -c /etc/os-net-config/modified_config_with_routes.yaml --pr
 
 This temporary default route is needed during the installation of the first services (such as `download-cache`) and is removed when the `configure-network` service applies the new network configuration.
 ====
+endif::[]
 
 . Remove the remaining {OpenStackPreviousInstaller} services:
 
