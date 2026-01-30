@@ -13,6 +13,7 @@ libvirt_password: ''
 netconfig_networks:
   - name: ctlplane
     dnsDomain: ctlplane.example.com
+    mtu: "{{ ctlplane_mtu | default(network_mtu) | default(1500) }}"
     subnets:
       - name: subnet1
         allocationRanges:
@@ -24,6 +25,7 @@ netconfig_networks:
         gateway: 192.168.122.1
   - name: internalapi
     dnsDomain: internalapi.example.com
+    mtu: "{{ internalapi_mtu | default(network_mtu) | default(1500) }}"
     subnets:
       - name: subnet1
         allocationRanges:
@@ -33,6 +35,7 @@ netconfig_networks:
         vlan: 20
   - name: External
     dnsDomain: external.example.com
+    mtu: "{{ external_mtu | default(network_mtu) | default(1500) }}"
     subnets:
       - name: subnet1
         allocationRanges:
@@ -43,6 +46,7 @@ netconfig_networks:
         vlan: 44
   - name: storage
     dnsDomain: storage.example.com
+    mtu: "{{ storage_mtu | default(network_mtu) | default(1500) }}"
     subnets:
       - name: subnet1
         allocationRanges:
@@ -52,6 +56,7 @@ netconfig_networks:
         vlan: 21
   - name: storagemgmt
     dnsDomain: storagemgmt.example.com
+    mtu: "{{ storagemgmt_mtu | default(network_mtu) | default(1500) }}"
     subnets:
       - name: subnet1
         allocationRanges:
@@ -61,6 +66,7 @@ netconfig_networks:
         vlan: 23
   - name: tenant
     dnsDomain: tenant.example.com
+    mtu: "{{ tenant_mtu | default(network_mtu) | default(1500) }}"
     subnets:
       - name: subnet1
         allocationRanges:
