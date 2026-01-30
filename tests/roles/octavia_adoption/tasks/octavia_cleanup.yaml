@@ -4,29 +4,3 @@
     {{ oc_header }}
     CONTROLLER1_SSH="{{ controller1_ssh }}"
     $CONTROLLER1_SSH "sudo sed -i '/^ONBOOT=/c\ONBOOT=no' /etc/sysconfig/network-scripts/ifcfg-o-hm0"
-
-- name: Delete old flavors that have been migrated
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    alias openstack="oc exec -t openstackclient -- openstack"
-
-    ${BASH_ALIASES[openstack]} flavor delete octavia_65
-    # these might not be in OSP 17.1
-    ${BASH_ALIASES[openstack]} flavor show octavia_amphora-mvcpu-ha && \
-      ${BASH_ALIASES[openstack]} flavor delete octavia_amphora-mvcpu-ha
-    ${BASH_ALIASES[openstack]} loadbalancer flavor show octavia_amphora-mvcpu-ha && \
-      ${BASH_ALIASES[openstack]} loadbalancer flavor delete octavia_amphora-mvcpu-ha
-    ${BASH_ALIASES[openstack]} loadbalancer flavorprofile show octavia_amphora-mvcpu-ha_profile && \
-      ${BASH_ALIASES[openstack]} loadbalancer flavorprofile delete octavia_amphora-mvcpu-ha_profile
-
-- name: Delete old mangement network ports and network
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    alias openstack="oc exec -t openstackclient -- openstack"
-
-    for net_id in $(${BASH_ALIASES[openstack]} network list -f value -c ID --name lb-mgmt-net); do desc=$(${BASH_ALIASES[openstack]} network show "$net_id" -f value -c description); [ -z "$desc" ] && WALLABY_LB_MGMT_NET_ID="$net_id" ; done
-    for id in $(${BASH_ALIASES[openstack]} port list --network "$WALLABY_LB_MGMT_NET_ID" -f value -c ID) ; do ${BASH_ALIASES[openstack]} port delete "$id" ; done
-
-    ${BASH_ALIASES[openstack]} network delete "$WALLABY_LB_MGMT_NET_ID"
