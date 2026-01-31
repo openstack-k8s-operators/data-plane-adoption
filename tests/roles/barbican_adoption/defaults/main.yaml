@@ -11,7 +11,8 @@ barbican_patch: |
       template:
         databaseInstance: openstack
         databaseAccount: barbican
-        rabbitMqClusterName: rabbitmq
+        messagingBus:
+          cluster: rabbitmq
         secret: osp-secret
         simpleCryptoBackendSecret: osp-secret
         serviceAccount: barbican
@@ -52,7 +53,8 @@ barbican_hsm_patch: |
       template:
         databaseInstance: openstack
         databaseAccount: barbican
-        rabbitMqClusterName: rabbitmq
+        messagingBus:
+          cluster: rabbitmq
         secret: osp-secret
         simpleCryptoBackendSecret: osp-secret
         serviceAccount: barbican

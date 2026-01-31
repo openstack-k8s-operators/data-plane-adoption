@@ -16,6 +16,8 @@
               databaseInstance: openstack
               secret: osp-secret
               serviceUser: aodh
+              notificationsBus:
+                cluster: rabbitmq
             heatInstance: heat
     '
 
