@@ -35,6 +35,15 @@ ping_command: >-
   {% endif -%}
 enroll_ironic_bmaas_nodes: true
 pre_launch_ironic_restart_chrony: true
+# Pre-launch Ironic node management configuration
+# Dependencies (enforced by bash script nesting):
+#   - pre_launch_ironic_inspect_nodes requires pre_launch_ironic_manage_nodes=true
+#   - pre_launch_ironic_provide_nodes requires pre_launch_ironic_manage_nodes=true
+#   - pre_launch_ironic_create_instance requires both manage_nodes and provide_nodes=true
+pre_launch_ironic_manage_nodes: true
+pre_launch_ironic_inspect_nodes: true
+pre_launch_ironic_provide_nodes: true
+pre_launch_ironic_create_instance: true
 # default tobiko parameter values
 tobiko_version: master
 tobiko_test_workflow: create-resources

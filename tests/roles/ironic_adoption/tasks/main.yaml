@@ -112,3 +112,18 @@
         --driver-info deploy_ramdisk= \
         --driver-info deploy_kernel=
     done
+
+- name: Post-adoption baremetal node management
+  when:
+    - ironic_post_adoption_manage_nodes | bool or
+      ironic_post_adoption_inspect_nodes | bool or
+      ironic_post_adoption_provide_nodes | bool
+  ansible.builtin.shell:
+    cmd: |
+      {{ shell_header }}
+      {{ oc_header }}
+      export OPENSTACK_COMMAND="oc exec -t openstackclient -- openstack"
+      export IRONIC_POST_ADOPTION_MANAGE_NODES={{ ironic_post_adoption_manage_nodes | string | lower }}
+      export IRONIC_POST_ADOPTION_INSPECT_NODES={{ ironic_post_adoption_inspect_nodes | string | lower }}
+      export IRONIC_POST_ADOPTION_PROVIDE_NODES={{ ironic_post_adoption_provide_nodes | string | lower }}
+      {{ lookup('ansible.builtin.file', 'post_adoption_manage_nodes.bash') }}

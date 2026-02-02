@@ -1,4 +1,4 @@
-set -e
+set -euxo pipefail
 
 alias openstack="$OPENSTACK_COMMAND"
 
@@ -16,7 +16,7 @@ function wait_node_state() {
     sleep 10
     ((counter++))
   done
-  set -e
+  set -euxo pipefail
 }
 
 function wait_image_active() {
@@ -33,7 +33,7 @@ function wait_image_active() {
     sleep 10
     ((counter++))
   done
-  set -e
+  set -euxo pipefail
 }
 
 
@@ -97,39 +97,57 @@ if [ "$ACTIVE_NODES" -eq 0 ]; then
   echo "No active nodes found, proceeding with node management operations"
 
   # Manage nodes
-  for node in $BAREMETAL_NODES; do
-    ${BASH_ALIASES[openstack]} baremetal node manage $node
-  done
-  wait_node_state "manageable"
+  if [[ "${PRE_LAUNCH_IRONIC_MANAGE_NODES,,}" != "false" ]]; then
+    for node in $BAREMETAL_NODES; do
+      ${BASH_ALIASES[openstack]} baremetal node manage $node
+    done
+    wait_node_state "manageable"
 
-  # Inspect baremetal nodes
-  for node in $BAREMETAL_NODES; do
-    ${BASH_ALIASES[openstack]} baremetal node inspect $node
-    sleep 10
-  done
-  wait_node_state "manageable"
+    # Inspect baremetal nodes
+    if [[ "${PRE_LAUNCH_IRONIC_INSPECT_NODES,,}" != "false" ]]; then
+      for node in $BAREMETAL_NODES; do
+        ${BASH_ALIASES[openstack]} baremetal node inspect $node
+        sleep 10
+      done
+      wait_node_state "manageable"
+    else
+      echo "Skipping inspect nodes (PRE_LAUNCH_IRONIC_INSPECT_NODES=false)"
+    fi
 
-  # Provide nodes
-  for node in $BAREMETAL_NODES; do
-    ${BASH_ALIASES[openstack]} baremetal node provide $node
-    sleep 10
-  done
-  wait_node_state "available"
+    # Provide nodes
+    if [[ "${PRE_LAUNCH_IRONIC_PROVIDE_NODES,,}" != "false" ]]; then
+      for node in $BAREMETAL_NODES; do
+        ${BASH_ALIASES[openstack]} baremetal node provide $node
+        sleep 10
+      done
+      wait_node_state "available"
+    else
+      echo "Skipping provide nodes (PRE_LAUNCH_IRONIC_PROVIDE_NODES=false)"
+    fi
+  else
+    echo "Skipping all node management operations (PRE_LAUNCH_IRONIC_MANAGE_NODES=false)"
+    echo "Note: Inspect and Provide steps require nodes to be in manageable state first"
+  fi
 else
-  echo "Found $ACTIVE_NODES active node(s), skipping node management operations to preserve deployed instances"
+  echo "Found $ACTIVE_NODES active node(s), skipping node management operations"
 fi
 
-# Wait for nova to be aware of the node
-sleep 60
+# Create test instance on baremetal
+if [[ "${PRE_LAUNCH_IRONIC_CREATE_INSTANCE,,}" != "false" ]]; then
+  # Wait for nova to be aware of the node
+  sleep 60
 
-# Create an instance on baremetal
-${BASH_ALIASES[openstack]} server show test-baremetal || {
-    ${BASH_ALIASES[openstack]} server create test-baremetal --flavor baremetal --image CentOS-Stream-GenericCloud-x86_64-9 --nic net-id=provisioning --wait
-}
+  # Create an instance on baremetal
+  ${BASH_ALIASES[openstack]} server show test-baremetal || {
+      ${BASH_ALIASES[openstack]} server create test-baremetal --flavor baremetal --image CentOS-Stream-GenericCloud-x86_64-9 --nic net-id=provisioning --wait
+  }
 
-# Wait for node to boot
-sleep 60
+  # Wait for node to boot
+  sleep 60
 
-# Check instance status and network connectivity
-${BASH_ALIASES[openstack]} server show test-baremetal
-ping -c 4 $(${BASH_ALIASES[openstack]} server show test-baremetal -f json -c addresses | jq -r .addresses.provisioning[0])
+  # Check instance status and network connectivity
+  ${BASH_ALIASES[openstack]} server show test-baremetal
+  ping -c 4 $(${BASH_ALIASES[openstack]} server show test-baremetal -f json -c addresses | jq -r .addresses.provisioning[0])
+else
+  echo "Skipping test instance creation (PRE_LAUNCH_IRONIC_CREATE_INSTANCE=false)"
+fi

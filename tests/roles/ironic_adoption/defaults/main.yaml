@@ -98,3 +98,14 @@ ironic_enable_rbac_patch: |
             enforce_scope=true
             enforce_new_defaults=true
 ironic_retry_delay: 5
+# Post-adoption node management steps
+# These steps complement the pre_launch_ironic_* variables in development_environment role.
+# Use these when node management was skipped pre-adoption but needed post-adoption.
+# Steps are independent and should match the actual state of nodes:
+#   - ironic_post_adoption_manage_nodes: move nodes to manageable state
+#   - ironic_post_adoption_inspect_nodes: inspect nodes (requires nodes in manageable state)
+#   - ironic_post_adoption_provide_nodes: move nodes to available state (requires nodes in manageable state)
+# Example: If pre_launch_ironic_manage_nodes=false was set pre-adoption, enable these post-adoption.
+ironic_post_adoption_manage_nodes: false
+ironic_post_adoption_inspect_nodes: false
+ironic_post_adoption_provide_nodes: false
