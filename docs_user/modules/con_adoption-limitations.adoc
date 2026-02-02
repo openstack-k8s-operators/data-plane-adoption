@@ -8,7 +8,7 @@ Before you proceed with the adoption, check which features are Technology Previe
 
 Technology Preview::
 +
-The following features are Technology Previews and have not been tested within the context of the {rhos_long_noacro} adoption:
+The following features are Technology Previews and have not been tested within the context of the {rhos_long} adoption:
 +
 * FC-based drivers for {block_storage_first_ref}
 +
@@ -32,7 +32,7 @@ The adoption process does not support the following features:
 * Distributed Compute node architecture (DCN)
 * DNS-as-a-service (designate)
 * {loadbalancer_first_ref}
-* Border Gateway Protocol (BGP)
+* Adopting Border Gateway Protocol (BGP) environments to the {rhos_acro} data plane
 * Adopting a Federal Information Processing Standards (FIPS) environment
 * The {key_manager} only supports the simple crypto plug-in
 
