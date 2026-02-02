@@ -219,8 +219,8 @@ for CELL in $(echo $CELLS); do
   set +u
   . ~/.source_cloud_exported_variables_$CELL
   set -u
+  test -z "${PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK[$CELL]}" || [ "${PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK[$CELL]}" = " " ] && echo "OK" || echo "CHECK FAILED"
 done
-test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "x$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = "x " ] && echo "OK" || echo "CHECK FAILED"
 ----
 
 . Test the connection to the control plane upcall and cells databases:
