@@ -4,7 +4,7 @@
 = Adopting the {loadbalancer_service}
 
 [role="_abstract"]
-To adopt the {loadbalancer_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {loadbalancer_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment. After completing the data plane adoption, you must trigger a failover of existing load balancers to upgrade their amphora VMs to use the new image and establish connectivity with the new control plane.
+To adopt the {loadbalancer_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {loadbalancer_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment. After completing the data plane adoption, you must trigger a failover of existing load balancers to upgrade their amphora virtual machines to use the new image and to establish connectivity with the new control plane.
 
 .Procedure
 
@@ -64,7 +64,7 @@ Specifies the name of the network interface in your {OpenShiftShort} setup.
 <mtu>::
 Specifies the `mtu` value in your environment.
 
-. To connect pods that manage load balancer virtual machines (amphorae) and the OpenvSwitch pods that are managed by the OVN operator, configure the {loadbalancer_service} network attachment definition:
+. To connect pods that manage load balancer virtual machines (amphorae) and the OpenvSwitch pods the OVN operator manages, configure the {loadbalancer_service} network attachment definition:
 +
 ----
 $ cat  octavia-nad.yaml << EOF_CAT
@@ -95,6 +95,11 @@ spec:
       }
     }
 EOF_CAT
+----
+
+. Create the `NetworkAttachmentDefinition` CR:
++
+----
 $ oc apply -f octavia-nad.yaml
 ----
 
@@ -148,7 +153,7 @@ $ openstack endpoint list --service load-balancer
 
 .Post-adoption cleanup
 
-Before running the post-adoption cleanup, you can ensure that the connectivty between the new control plane and the adopted compute nodes is functional by creating a new load balancer and checking that its `provisioning_status` becomes `ACTIVE`.
+Before running the post-adoption cleanup, you can ensure that the connectivty between the new control plane and the adopted Compute nodes is functional by creating a new load balancer and checking that its `provisioning_status` becomes `ACTIVE`.
 
 ----
 $ alias openstack="oc exec -t openstackclient -- openstack"
@@ -157,7 +162,7 @@ $ openstack loadbalancer create --vip-subnet-id public-subnet --name lb-post-ado
 
 After you complete the data plane adoption, perform the following cleanup steps to upgrade existing load balancers and remove old resources.
 
-. Trigger a failover for all existing load balancers to upgrade the amphorae virtual machines to use the new image and establish connectivity with the new control plane:
+. Trigger a failover for all existing load balancers to upgrade the amphorae virtual machines to use the new image and to establish connectivity with the new control plane:
 +
 ----
 $ openstack loadbalancer list -f value -c id | \
@@ -176,9 +181,9 @@ $ openstack loadbalancer flavor show octavia_amphora-mvcpu-ha && \
 $ openstack loadbalancer flavorprofile show octavia_amphora-mvcpu-ha_profile && \
   openstack loadbalancer flavorprofile delete octavia_amphora-mvcpu-ha_profile
 ----
-
++
 [NOTE]
-Some flavors may still be in-use by load balancers and cannot be deleted.
+Some flavors might still be used by load balancers and cannot be deleted.
 
 . Delete the old management network and its ports:
 +
