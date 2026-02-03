@@ -234,6 +234,7 @@ skip_patching_ansibleee_csv: false
 os_diff_dir: tmp/os-diff
 os_diff_data_dir: tmp/os-diff
 prelaunch_test_instance: true
+prelaunch_octavia_workload: false
 telemetry_adoption: true
 
 # nodes data will be templated in as a separate

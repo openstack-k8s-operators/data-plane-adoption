@@ -4,51 +4,14 @@
 = Adopting the {loadbalancer_service}
 
 [role="_abstract"]
-To adopt the {loadbalancer_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {loadbalancer_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment. Existing load balancers fail over after the adoption process to upgrade their image, and set up a network connection with the new control plane.
+To adopt the {loadbalancer_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {loadbalancer_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment. After completing the data plane adoption, you must trigger a failover of existing load balancers to upgrade their amphora virtual machines to use the new image and to establish connectivity with the new control plane.
 
 .Procedure
 
-. Create an alias for the `openstack` command:
+. Migrate the server certificate authority (CA) passphrase from the previous deployment:
 +
 ----
-$ alias openstack="oc exec -t openstackclient -- openstack"
-----
-. Use the `CONTROLLER1_SCP` shell variable to set the value of the existing
-`CONTROLLER1_SSH` variable:
-+
-----
-$ CONTROLLER1_SCP=$(echo "$CONTROLLER1_SSH" | sed 's/^ssh/scp/g')
-----
-
-. Run the following set of commands to regenerate the keys and certificates and install the data in {rhocp_long}. Convert the existing single certificate authority (CA) configuration into a dual CA configuration. You can use these commands to regenerate the keys and certificates and insert them into {OpenShiftShort}:
-+
-----
-include::../../tests/roles/octavia_adoption/tasks/octavia_certs.yaml[lines="7..83",indent=0]
-----
-
-. Optional: Copy the existing public SSH key that you can use for connecting to the amphorae and install it into {OpenShiftShort}:
-+
-----
-    ${CONTROLLER1_SCP}:<octavia_ssh_pubkey_path> $HOME/octavia_sshkey.pub
-
-    # Install new data in k8s
-    oc apply -f - <<EOF
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: octavia-ssh-pubkey
-    data:
-      key: $(cat $HOME/octavia_sshkey.pub)
-    EOF
-
-    rm -f $HOME/octavia_sshkey.pub
-----
-+
-* Replace `<octavia_ssh_pubkey_path>` with the path that you configured by using the `OctaviaAmphoraSshKeyFile` parameter in the previous deployment. The default path is `/etc/octavia/ssh/octavia_id_rsa`. For example:
-+
-----
-parameter_defaults:
-    OctaviaAmphoraSshKeyFile: /etc/octavia/ssh/octavia_id_rsa
+include::../../tests/roles/octavia_adoption/tasks/octavia_certs.yaml[lines="6..16",indent=0]
 ----
 
 . To isolate the management network, add the network interface for the VLAN base interface:
@@ -101,10 +64,10 @@ Specifies the name of the network interface in your {OpenShiftShort} setup.
 <mtu>::
 Specifies the `mtu` value in your environment.
 
-. To connect pods that manage load balancer virtual machines (amphorae) and the OpenvSwitch pods that are managed by the OVN operator, configure the {loadbalancer_service} network attachment definition:
+. To connect pods that manage load balancer virtual machines (amphorae) and the OpenvSwitch pods the OVN operator manages, configure the {loadbalancer_service} network attachment definition:
 +
 ----
-$ cat >> octavia-nad.yaml << EOF_CAT
+$ cat  octavia-nad.yaml << EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
@@ -132,6 +95,11 @@ spec:
       }
     }
 EOF_CAT
+----
+
+. Create the `NetworkAttachmentDefinition` CR:
++
+----
 $ oc apply -f octavia-nad.yaml
 ----
 
@@ -149,9 +117,7 @@ spec:
   octavia:
     enabled: true
     template:
-      apacheContainerImage: registry.redhat.io/rhel8/httpd-24:latest
       amphoraImageContainerImage: quay.io/gthiemonge/octavia-amphora-image
-      databaseInstance: openstack
       octaviaHousekeeping:
         networkAttachments:
           - octavia
@@ -173,99 +139,62 @@ $ oc wait --for condition=Ready --timeout=600s octavia.octavia.openstack.org/oct
 . Ensure that the {loadbalancer_service} is registered in the {identity_service}:
 +
 ----
+$ alias openstack="oc exec -t openstackclient -- openstack"
 $ openstack service list | grep load-balancer
 | bd078ca6f90c4b86a48801f45eb6f0d7 | octavia   | load-balancer |
-$ openstack endpoint list | grep load-balancer
-| f1ae7756b6164baf9cb82a1a670067a2 | regionOne | octavia      | load-balancer | True    | public    | https://octavia-public-openstack.apps-crc.testing                     |
-| ff3222b4621843669e89843395213049 | regionOne | octavia      | load-balancer | True    | internal  | http://octavia-internal.openstack.svc:9876                            |
+$ openstack endpoint list --service load-balancer
++----------------------------------+-----------+--------------+---------------+---------+-----------+---------------------------------------------------+
+| ID                               | Region    | Service Name | Service Type  | Enabled | Interface | URL                                               |
++----------------------------------+-----------+--------------+---------------+---------+-----------+---------------------------------------------------+
+| f1ae7756b6164baf9cb82a1a670067a2 | regionOne | octavia      | load-balancer | True    | public    | https://octavia-public-openstack.apps-crc.testing |
+| ff3222b4621843669e89843395213049 | regionOne | octavia      | load-balancer | True    | internal  | http://octavia-internal.openstack.svc:9876        |
++----------------------------------+-----------+--------------+---------------+---------+-----------+---------------------------------------------------+
 ----
 
-. Change the `ONBOOT` option in the network script for the management interface to `no` to ensure that the interface is disabled on reboot:
+.Post-adoption cleanup
 
-.. Connect to each of the Controller nodes on the old control plane, for example, `overcloud-controller-0`.
+Before running the post-adoption cleanup, you can ensure that the connectivty between the new control plane and the adopted Compute nodes is functional by creating a new load balancer and checking that its `provisioning_status` becomes `ACTIVE`.
 
-.. Open the management interface configuration file in a text editor such as `vi`:
+----
+$ alias openstack="oc exec -t openstackclient -- openstack"
+$ openstack loadbalancer create --vip-subnet-id public-subnet --name lb-post-adoption --wait
+----
+
+After you complete the data plane adoption, perform the following cleanup steps to upgrade existing load balancers and remove old resources.
+
+. Trigger a failover for all existing load balancers to upgrade the amphorae virtual machines to use the new image and to establish connectivity with the new control plane:
 +
 ----
-$ sudo vi /etc/sysconfig/network-scripts/ifcfg-o-hm0
+$ openstack loadbalancer list -f value -c id | \
+      xargs -r -n1 -P4 ${BASH_ALIASES[openstack]} loadbalancer failover --wait
 ----
-+
-The script name is based on the previous `OctaviaMgmtPortDevName` setting and might differ in your environment.
 
-. Delete old flavors that are migrated to the new control plane:
+. Delete old flavors that were migrated to the new control plane:
 +
 ----
-$ openstack flavor list --all | grep octavia
-| 484c351a-57ca-4a4b-8e6e-93d31596fec5 | octavia-amphora-4vcpus   | 4096 |    3 |         0 |     4 | False     |
-| 65                                   | octavia_65               | 1024 |    3 |         0 |     1 | False     |
-| amphora-mvcpu-ha                     | octavia_amphora-mvcpu-ha | 4096 |    3 |         0 |     4 | False     |
-| cf9d1d80-5680-4ed8-a051-e8ec4c5871e0 | octavia-amphora          | 1024 |    3 |         0 |     1 | False     |
 $ openstack flavor delete octavia_65
-$ openstack flavor delete octavia_amphora-mvcpu-ha
-$ openstack flavor list --all | grep octavia
-| 484c351a-57ca-4a4b-8e6e-93d31596fec5 | octavia-amphora-4vcpus | 4096 |    3 |         0 |     4 | False     |
-| cf9d1d80-5680-4ed8-a051-e8ec4c5871e0 | octavia-amphora        | 1024 |    3 |         0 |     1 | False     |
+# The following flavors might not exist in OSP 17.1 deployments
+$ openstack flavor show octavia_amphora-mvcpu-ha && \
+  openstack flavor delete octavia_amphora-mvcpu-ha
+$ openstack loadbalancer flavor show octavia_amphora-mvcpu-ha && \
+  openstack loadbalancer flavor delete octavia_amphora-mvcpu-ha
+$ openstack loadbalancer flavorprofile show octavia_amphora-mvcpu-ha_profile && \
+  openstack loadbalancer flavorprofile delete octavia_amphora-mvcpu-ha_profile
 ----
++
+[NOTE]
+Some flavors might still be used by load balancers and cannot be deleted.
 
-. Delete old {loadbalancer_service} flavors that are migrated to the new control plane:
+. Delete the old management network and its ports:
 +
 ----
-$ openstack loadbalancer flavor list
-+--------------------------------------+--------------------------+--------------------------------------+---------+
-| id                                   | name                     | flavor_profile_id                    | enabled |
-+--------------------------------------+--------------------------+--------------------------------------+---------+
-| 5db54d9b-ba08-4b51-a859-0a81533604aa | octavia_amphora-mvcpu-ha | 4fa6a793-4c20-4480-be4f-806912840511 | True    |
-| 6d649fd5-6322-4265-b5f3-c3277fc29ec8 | amphora-4vcpus           | d9764a80-99f5-4f22-bbe0-3ddbdc5c485c | True    |
-| 93f34308-24a7-42de-9065-959a3b36e7f6 | amphora                  | e75e50c8-7786-4623-abcf-bccbea59d213 | True    |
-+--------------------------------------+--------------------------+--------------------------------------+---------+
-$ openstack loadbalancer flavor delete octavia_amphora-mvcpu-ha
-$ openstack loadbalancer flavor list
-+--------------------------------------+----------------+--------------------------------------+---------+
-| id                                   | name           | flavor_profile_id                    | enabled |
-+--------------------------------------+----------------+--------------------------------------+---------+
-| 6d649fd5-6322-4265-b5f3-c3277fc29ec8 | amphora-4vcpus | d9764a80-99f5-4f22-bbe0-3ddbdc5c485c | True    |
-| 93f34308-24a7-42de-9065-959a3b36e7f6 | amphora        | e75e50c8-7786-4623-abcf-bccbea59d213 | True    |
-+--------------------------------------+----------------+--------------------------------------+---------+
-----
-
-. Delete old flavor profiles that are migrated to the new control plane:
-+
-----
-$ openstack loadbalancer flavorprofile list
-+--------------------------------------+----------------------------------+---------------+
-| id                                   | name                             | provider_name |
-+--------------------------------------+----------------------------------+---------------+
-| 4fa6a793-4c20-4480-be4f-806912840511 | octavia_amphora-mvcpu-ha_profile | amphora       |
-| d9764a80-99f5-4f22-bbe0-3ddbdc5c485c | amphora-4vcpus                   | amphora       |
-| e75e50c8-7786-4623-abcf-bccbea59d213 | amphora                          | amphora       |
-+--------------------------------------+----------------------------------+---------------+
-$ openstack loadbalancer flavorprofile delete octavia_amphora-mvcpu-ha_profile
-$ openstack loadbalancer flavorprofile list
-+--------------------------------------+----------------+---------------+
-| id                                   | name           | provider_name |
-+--------------------------------------+----------------+---------------+
-| d9764a80-99f5-4f22-bbe0-3ddbdc5c485c | amphora-4vcpus | amphora       |
-| e75e50c8-7786-4623-abcf-bccbea59d213 | amphora        | amphora       |
-+--------------------------------------+----------------+---------------+
-----
-
-. Delete the old management network ports. Store the network ID of the old management network in the variable `WALLABY_LB_MGMT_NET_ID` to use later:
-+
-----
-$ for net_id in $(openstack network list -f value -c ID --name lb-mgmt-net); do desc=$(openstack network show "$net_id" -f value -c description); [ -z "$desc" ] && WALLABY_LB_MGMT_NET_ID="$net_id" ; done
-$ echo $WALLABY_LB_MGMT_NET_ID
-1e21f9c1-7485-4104-a2f3-eed098ab9cad
-----
-
-. Delete all ports that are used in this network:
-+
-----
-$ for id in $(openstack port list --network "$WALLABY_LB_MGMT_NET_ID" -f value -c ID) ; do openstack port delete "$id" ; done
-----
-
-. Delete the old management network:
-+
-----
+$ for net_id in $(openstack network list -f value -c ID --name lb-mgmt-net); do \
+    desc=$(openstack network show "$net_id" -f value -c description); \
+    [ -z "$desc" ] && WALLABY_LB_MGMT_NET_ID="$net_id" ; \
+  done
+$ for id in $(openstack port list --network "$WALLABY_LB_MGMT_NET_ID" -f value -c ID); do \
+    openstack port delete "$id" ; \
+  done
 $ openstack network delete "$WALLABY_LB_MGMT_NET_ID"
 ----
 
