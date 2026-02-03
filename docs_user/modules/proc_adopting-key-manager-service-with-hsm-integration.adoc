@@ -64,6 +64,8 @@ $ oc create secret generic proteccio-data \
 ----
 +
 where:
+
+
 <your_hsm_password>::
 Specifies the HSM password for your {rhos_acro} environment.
 <path_to_client_cert>::
@@ -74,7 +76,7 @@ Specifies the path to the client key.
 Specifies the path to the server certificate.
 <path_to_hsm_config>::
 Specifies the path to your HSM configuration in your {rhos_acro} environment.
-
++
 [NOTE]
 ====
 When you use the automated adoption by setting `barbican_hsm_enabled: true`, the `barbican_adoption` role creates these secrets automatically. The secret names default to `hsm-login` and `proteccio-data`.
