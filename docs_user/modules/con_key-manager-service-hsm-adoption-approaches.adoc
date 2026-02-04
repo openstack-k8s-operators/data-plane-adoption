@@ -38,17 +38,6 @@ HSM adoption requires additional configuration steps, including:
 * Proper HSM partition and key configuration that matches your source environment
 
 These approaches are mutually exclusive. Choose an approach based on your source environment configuration.
-** nCipher (Entrust): PKCS#11 support available
-
-[IMPORTANT]
-====
-HSM adoption requires additional configuration steps, including:
-
-* Custom Barbican container images with HSM client libraries that are built using the `rhoso_proteccio_hsm` Ansible role
-* HSM client certificates and configuration files that are accessible by using URLs
-* Proper HSM partition and key configuration that matches your source environment
-
-These approaches are mutually exclusive. Choose an approach based on your source environment configuration.
 ====
 
 [options="header"]
