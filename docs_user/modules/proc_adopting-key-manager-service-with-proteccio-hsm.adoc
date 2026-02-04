@@ -1,0 +1,141 @@
+:_mod-docs-content-type: PROCEDURE
+[id="adopting-the-key-manager-service-with-proteccio-hsm_{context}"]
+
+= Adopting the {key_manager} with Proteccio HSM integration
+
+[role="_abstract"]
+To adopt the {key_manager_first_ref} with Proteccio hardware security module (HSM) integration, you use the enhanced Barbican adoption role with HSM support enabled through a configuration flag. This approach preserves HSM integration while adopting all existing secrets from your source {rhos_prev_long} ({OpenStackShort}) environment.
+When you run the data plane adoption tests with HSM support enabled, the adoption process performs the following actions:
+
+* Extracts the simple crypto KEK from the source configuration.
+* Creates the required HSM secrets (hsm-login and proteccio-data) in the target namespace.
+* Deploys Barbican with HSM-enabled configuration by using the PKCS#11 plugin.
+* Verifies the HSM functionality and secret migration.
+When you run the data plane adoption tests with HSM support enabled, the adoption process performs the following actions:
+
+* Extracts the simple crypto KEK from the source configuration.
+* Creates the required HSM secrets (hsm-login and proteccio-data) in the target namespace.
+* Deploys Barbican with HSM-enabled configuration by using the PKCS#11 plugin.
+* Verifies the HSM functionality and secret migration.
+
+The {key_manager} Proteccio HSM adoption is complete if you see the following results:
+
+* The `BarbicanAPI` and `BarbicanWorker` services are up and running with HSM-enabled configuration.
+* All secrets from the source {OpenStackShort} {rhos_prev_ver} environment are available in {rhos_long} {rhos_curr_ver}.
+* The PKCS11 crypto plugin is available alongside `simple_crypto` for new secret storage.
+* HSM functionality is verified and operational.
+
+[NOTE]
+====
+If your environment does not include Proteccio HSM, to adopt the {key_manager} by using `simple_crypto`, see xref:adopting-the-key-manager-service_{context}[Adopting the {key_manager}].
+
+The enhanced {key_manager} adoption role supports HSM configuration through a simple boolean flag. This approach integrates seamlessly with the standard data plane adoption framework while providing HSM support.
+====
+
+.Prerequisites
+
+* You have a running {OpenStackPreviousInstaller} environment with Proteccio HSM integration (the source cloud).
+* You have a Single Node OpenShift or OpenShift Local running in the {rhocp_long} cluster.
+* You have SSH access to the source {OpenStackPreviousInstaller} undercloud and Controller nodes.
+* You have configured HSM variables in your adoption configuration files.
+* Custom {key_manager} container images with the Proteccio client libraries are available in your registry.
+
+[IMPORTANT]
+====
+The HSM adoption process requires proper configuration of HSM-related variables. The adoption role automatically creates the required Kubernetes secrets (`hsm-login` and `proteccio-data`) when `barbican_hsm_enabled` is set to `true`. Ensure that your environment includes the following:
+
+* All HSM-related variables are properly set in your configuration files
+* The Proteccio client ISO, certificates, and configuration files are accessible from the configured URLs
+* Custom {key_manager} images with Proteccio client are built and available in your container registry
+
+Without proper HSM configuration, your HSM-protected secrets become inaccessible after adoption.
+====
+
+.Procedure
+
+. Configure HSM integration variables in your adoption configuration (Zuul job vars or CI framework configuration):
++
+----
+# Enable HSM integration for the Barbican adoption role
+barbican_hsm_enabled: true
+
+# HSM login credentials
+proteccio_login_password: "your_hsm_password"
+
+# Kubernetes secret names (defaults shown)
+proteccio_login_secret_name: "hsm-login"
+proteccio_client_data_secret_name: "proteccio-data"
+
+# HSM partition and key configuration
+cifmw_hsm_proteccio_partition: "VHSM1"
+cifmw_hsm_mkek_label: "adoption_mkek_1"
+cifmw_hsm_hmac_label: "adoption_hmac_1"
+cifmw_hsm_proteccio_library_path: "/usr/lib64/libnethsm.so"
+cifmw_hsm_key_wrap_mechanism: "CKM_AES_CBC_PAD"
+
+# HSM client sources (URLs to download Proteccio client files)
+cifmw_hsm_proteccio_client_src: "<URL_of_Proteccio_ISO_file>"
+cifmw_hsm_proteccio_conf_src: "<URL_of_proteccio.rc_config_file>"
+cifmw_hsm_proteccio_client_crt_src: "<URL_of_client_certificate_file>"
+cifmw_hsm_proteccio_client_key_src: "<URL_of_client_certificate_key>"
+cifmw_hsm_proteccio_server_crt_src:
+  - "<URL_of_HSM_certificate_file>"
+----
++
+where:
+
+<URL_of_Proteccio_ISO_file>::
+Specifies the full URL (including "http://" or "https://") of the Proteccio client ISO image file.
+<URL_of_proteccio.rc_config_file>::
+Specifies the full URL (including "http://" or "https://") of the `proteccio.rc` configuration in your {rhos_acro} environment.
+<URL_of_client_certificate_file>::
+Specifies the full URL (including "http://" or "https://") of the HSM client certificate file.
+<URL_of_client_certificate_key>::
+Specifies the full URL (including "http://" or "https://") of the client key file.
+<URL_of_HSM_certificate_file>::
+Specifies the full URL (including "http://" or "https://") of the HSM certificate file.
+
+. Run the data plane adoption tests with HSM support enabled:
+
+.Verification
+
+. Ensure that the {identity_service_first_ref} endpoints are defined and are pointing to the control plane FQDNs:
++
+----
+$ openstack endpoint list | grep key-manager
+----
+
+. Ensure that the Barbican API service is registered in the {identity_service}:
++
+----
+$ openstack service list | grep key-manager
+----
+
+. Verify that all secrets from the source environment are available:
++
+----
+$ openstack secret list
+----
+
+. Confirm that Barbican services are running:
++
+----
+$ oc get pods -n openstack -l service=barbican -o wide
+----
+
+. Test secret creation to verify HSM functionality:
++
+----
+$ openstack secret store --name adoption-verification --payload 'HSM adoption successful'
+----
+
+. Verify that the HSM back end is operational:
++
+----
+$ openstack secret get <secret_id> --payload
+----
++
+where:
+
+<secret_id>::
+Specifies the ID of the HSM secret.

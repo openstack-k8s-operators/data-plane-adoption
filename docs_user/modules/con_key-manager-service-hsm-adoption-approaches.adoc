@@ -1,0 +1,66 @@
+:_mod-docs-content-type: CONCEPT
+[id="key-manager-service-hsm-adoption-approaches_{context}"]
+
+= {key_manager} HSM adoption approaches
+
+[role="_abstract"]
+The {key_manager_first_ref} adoption approach depends on your source {OpenStackPreviousInstaller} environment configuration.
+
+* Use the standard adoption approach if your environment includes only the `simple_crypto` plugin for secret storage and has no HSM integration.
+* Use the HSM-enabled adoption approach if your source environment has HSM integration that uses Public Key Cryptography Standard (PKCS) #11, Key Management Interoperability Protocol (KMIP), or other HSM back ends alongside `simple_crypto`.
+
+Standard adoption approach::
+* Uses the existing {key_manager} adoption procedure
+* Migrates a simple crypto back-end configuration
+* Provides a single-step adoption process
+* Is suitable for development, testing, and standard production environments
+
+HSM-enabled adoption approach::
+* Uses the enhanced `barbican_adoption` role with HSM awareness
+* Configures HSM integration through a simple boolean flag (`barbican_hsm_enabled: true`)
+* Automatically creates required Kubernetes secrets (`hsm-login` and `proteccio-data`)
+* Preserves HSM metadata during database migration
+* Supports both simple crypto and HSM back ends in the target environment
+* Requires HSM-specific configuration variables and custom container images with HSM client libraries (built using the `rhoso_proteccio_hsm` Ansible role)
+* Uses HSM client certificates and configuration files accessible via URLs
+* Requires proper HSM partition and key configuration that matches your source environment
+* The HSM-enabled adoption approach currently supports:
+** Proteccio (Eviden Trustway): Fully supported with PKCS#11 integration
+** Luna (Thales): PKCS#11 support available
+** nCipher (Entrust): PKCS#11 support available
+
+[IMPORTANT]
+====
+HSM adoption requires additional configuration steps, including:
+
+* Custom Barbican container images with HSM client libraries that are built using the `rhoso_proteccio_hsm` Ansible role
+* HSM client certificates and configuration files that are accessible by using URLs
+* Proper HSM partition and key configuration that matches your source environment
+
+These approaches are mutually exclusive. Choose an approach based on your source environment configuration.
+====
+
+[options="header"]
+|===
+| Source environment characteristic | Approach | Rationale
+
+| Only `simple_crypto` back-end configured
+| Standard adoption
+| No HSM complexity needed
+
+| HSM integration present (PKCS#11, KMIP, and so on)
+| HSM-enabled adoption
+| Preserves HSM functionality and secrets
+
+| Development or testing environment
+| Standard adoption
+| Simpler setup and maintenance
+
+| Production with compliance requirements
+| HSM-enabled adoption
+| Maintains security compliance
+
+| Unknown back-end configuration
+| Check source environment first
+| Determine appropriate approach
+|===

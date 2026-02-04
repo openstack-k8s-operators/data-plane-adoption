@@ -1,0 +1,191 @@
+:_mod-docs-content-type: PROCEDURE
+[id="adopting-key-manager-service-with-hsm-integration_{context}"]
+
+= Adopting the {key_manager} with HSM integration
+
+[role="_abstract"]
+When your source {OpenStackPreviousInstaller} environment includes hardware security module (HSM) integration, you must use the HSM-enabled adoption approach to preserve HSM functionality and maintain access to HSM-backed secrets.
+
+.Prerequisites
+
+* The source {OpenStackPreviousInstaller} environment with HSM integration is configured.
+* HSM client software and certificates are available from accessible URLs.
+* The target {rhos_long} environment with HSM infrastructure is accessible.
+* HSM-enabled {key_manager_first_ref} container images are built and available in your registry.
+
+[NOTE]
+====
+If you use the automated adoption process by setting `barbican_hsm_enabled: true`, the required HSM secrets (`hsm-login` and `proteccio-data`) are created automatically. You only need to manually create the secret when you perform the manual adoption steps.
+====
+
+.Procedure
+
+. Confirm that your source environment configuration includes HSM integration:
++
+[source,bash]
+----
+$ ssh tripleo-admin@controller-0.ctlplane \
+  "sudo cat /var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf | grep -A5 '\[.*plugin\]'"
+----
++
+If you see `[p11_crypto_plugin]` or other HSM-specific sections, continue with the HSM adoption.
+
+. Extract the simple crypto key encryption keys (KEK) from your source environment:
++
+[source,bash]
+----
+$ SIMPLE_CRYPTO_KEK=$(ssh tripleo-admin@controller-0.ctlplane \
+  "sudo python3 -c \"import configparser; c = configparser.ConfigParser(); c.read('/var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf'); print(c['simple_crypto_plugin']['kek'])\"")
+----
+
+. Add the KEK to the target environment:
++
+[source,bash]
+----
+$ oc set data secret/osp-secret "BarbicanSimpleCryptoKEK=${SIMPLE_CRYPTO_KEK}"
+----
+
+. If you are not using the automated adoption, create HSM-specific secrets in the target environment:
++
+[source,bash]
+----
+# Create HSM login credentials secret
+$ oc create secret generic hsm-login \
+  --from-literal=PKCS11Pin=<your_hsm_password> \
+  -n openstack
+
+# Create HSM client configuration and certificates secret
+$ oc create secret generic proteccio-data \
+  --from-file=client.crt=<path_to_client_cert> \
+  --from-file=client.key=<path_to_client_key> \
+  --from-file=10_8_60_93.CRT=<path_to_server_cert> \
+  --from-file=proteccio.rc=<path_to_hsm_config> \
+  -n openstack
+----
++
+where:
+
+
+<your_hsm_password>::
+Specifies the HSM password for your {rhos_acro} environment.
+<path_to_client_cert>::
+Specifies the path to the HSM client certificate.
+<path_to_client_key>::
+Specifies the path to the client key.
+<path_to_server_cert>::
+Specifies the path to the server certificate.
+<path_to_hsm_config>::
+Specifies the path to your HSM configuration in your {rhos_acro} environment.
++
+[NOTE]
+====
+When you use the automated adoption by setting `barbican_hsm_enabled: true`, the `barbican_adoption` role creates these secrets automatically. The secret names default to `hsm-login` and `proteccio-data`.
+====
+
+. Patch the `OpenStackControlPlane` custom resource to deploy {key_manager} with HSM support:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  barbican:
+    enabled: true
+    apiOverride:
+      route: {}
+    template:
+      databaseInstance: openstack
+      databaseAccount: barbican
+      rabbitMqClusterName: rabbitmq
+      secret: osp-secret
+      simpleCryptoBackendSecret: osp-secret
+      serviceAccount: barbican
+      serviceUser: barbican
+      passwordSelectors:
+        database: BarbicanDatabasePassword
+        service: BarbicanPassword
+        simplecryptokek: BarbicanSimpleCryptoKEK
+      customServiceConfig: |
+        [p11_crypto_plugin]
+        plugin_name = PKCS11
+        library_path = /usr/lib64/libnethsm.so
+        token_labels = VHSM1
+        mkek_label = adoption_mkek_1
+        hmac_label = adoption_hmac_1
+        encryption_mechanism = CKM_AES_CBC
+        hmac_key_type = CKK_GENERIC_SECRET
+        hmac_keygen_mechanism = CKM_GENERIC_SECRET_KEY_GEN
+        hmac_mechanism = CKM_SHA256_HMAC
+        key_wrap_mechanism = CKM_AES_CBC_PAD
+        key_wrap_generate_iv = true
+        always_set_cka_sensitive = true
+        os_locking_ok = false
+      globalDefaultSecretStore: pkcs11
+      enabledSecretStores: ["simple_crypto", "pkcs11"]
+      pkcs11:
+        loginSecret: hsm-login
+        clientDataSecret: proteccio-data
+        clientDataPath: /etc/proteccio
+      barbicanAPI:
+        replicas: 1
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+              spec:
+                type: LoadBalancer
+      barbicanWorker:
+        replicas: 1
+      barbicanKeystoneListener:
+        replicas: 1
+'
+----
++
+* `library_path` specifies the path to the PKCS#11 library, for example, `/usr/lib64/libnethsm.so` for Proteccio).
+* `token_labels` specifies the HSM partition name, for example, `VHSM1`.
+* `mkek_label` and `hmac_label` specify key labels that are configured in the HSM.
+* `loginSecret` specifies the name of the Kubernetes secret that contains the HSM PIN.
+* `clientDataSecret` specifies the name of the Kubernetes secret that contains the HSM certificates and configuration.
+
+.Verification
+
+. Verify that both secret stores are available:
++
+[source,bash]
+----
+$ openstack secret store list
+----
+
+. Test the HSM back-end functionality:
++
+[source,bash]
+----
+$ openstack secret store --name "hsm-test-$(date +%s)" \
+  --payload "test-payload" \
+  --algorithm aes --mode cbc --bit-length 256
+----
+
+. Verify that the migrated secrets are accessible:
++
+[source,bash]
+----
+$ openstack secret list
+----
+
+. Check that the {key_manager} services are operational:
++
+[source,bash]
+----
+$ oc get pods -l service=barbican
+NAME                                          READY   STATUS    RESTARTS      AGE
+barbican-api-5d65949b4-xhkd7                  2/2     Running   7 (10m ago)   29d
+barbican-keystone-listener-687cbdc77d-4kjnk   2/2     Running   3 (11m ago)   29d
+barbican-worker-5c4b947d5c-l9jdh              2/2     Running   3 (11m ago)   29d
+----
+
+[NOTE]
+====
+HSM adoption preserves both simple crypto and HSM-backed secrets. The migration process maintains HSM metadata and secret references, ensuring continued access to existing secrets while enabling new secrets to use either back-end.
+====
