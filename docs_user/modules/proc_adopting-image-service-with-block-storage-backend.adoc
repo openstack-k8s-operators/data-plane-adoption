@@ -6,6 +6,8 @@
 [role="_abstract"]
 Adopt the {image_service_first_ref} that you deployed with a {block_storage_first_ref} back end in the {rhos_prev_long} ({OpenStackShort}) environment. The control plane `glanceAPI` instance is deployed with the following configuration. You use this configuration in the patch manifest that deploys the {image_service} with the block storage back end:
 
+Do not merge, just testing the adoption-docs-preview CI job.
+
 ----
 ..
 spec
