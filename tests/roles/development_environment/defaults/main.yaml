@@ -1,3 +1,7 @@
+# IPA-related variables
+ipa_hostname: "osp-free-ipa-0.ooo.test"
+ipa_admin_password: "nomoresecrets"
+ipa_user_password: "nomoresecrets"
 prelaunch_test_instance: true
 prelaunch_test_instance_scripts:
   - pre_launch.bash
