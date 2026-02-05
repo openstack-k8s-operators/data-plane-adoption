@@ -28,14 +28,17 @@
     file: ospdo.yaml
   when: ospdo_src| bool
 
-- name: pre process netconfig_networks for mtu to be an integer
+- name: Pre process netconfig_networks for mtu to be an integer
   ansible.builtin.set_fact:
     netconfig_networks_converted: >-
-      {% set new_list = [] %}
-      {% for net in netconfig_networks %}
-        {% set _ = net.update({'mtu': net.mtu | int}) %}
-        {% set _ = new_list.append(net) %}
-      {% endfor %}
+      {% set new_list = [] -%}
+      {% for net in netconfig_networks -%}
+        {% set mtu_value = net.mtu | default(None) -%}
+        {% if mtu_value is not none -%}
+          {% set _ = net.update({'mtu': mtu_value | int}) -%}
+        {% endif -%}
+        {% set _ = new_list.append(net) -%}
+      {% endfor -%}
       {{ new_list }}
   when: configure_ipam | bool
 
