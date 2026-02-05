@@ -121,8 +121,6 @@ edpm_bootstrap_command: |
   # Exclude ceph-common-18.2.7 as it's pulling newer openssl not compatible
   # with rhel 9.2 openssh
   dnf config-manager --setopt centos9-storage.exclude="ceph-common-18.2.7" --save
-  # FIXME: perform dnf upgrade for other packages in EDPM ansible
-  # here we only ensuring that decontainerized libvirt can start
   dnf -y upgrade openstack-selinux
   rm -f /run/virtlogd.pid
   {%+ endif +%}
