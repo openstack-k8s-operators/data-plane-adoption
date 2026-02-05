@@ -78,6 +78,9 @@
     - role: glance_adoption
       tags:
         - glance_adoption
+    - role: ironic_adoption
+      tags:
+        - ironic_adoption
     - role: placement_adoption
       tags:
         - placement_adoption
@@ -107,9 +110,6 @@
     - role: manila_adoption
       tags:
         - manila_adoption
-    - role: ironic_adoption
-      tags:
-        - ironic_adoption
     - role: stop_remaining_services
       tags:
         - stop_remaining_services
