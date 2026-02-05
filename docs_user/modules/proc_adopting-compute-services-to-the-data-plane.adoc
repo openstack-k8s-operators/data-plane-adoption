@@ -541,6 +541,7 @@ ifeval::["{build}" == "downstream"]
         edpm_bootstrap_command: |
           # FIXME: perform dnf upgrade for other packages in EDPM ansible
           # here we only ensuring that decontainerized libvirt can start
+          set -euxo pipefail
           dnf -y upgrade openstack-selinux
           rm -f /run/virtlogd.pid
 endif::[]
