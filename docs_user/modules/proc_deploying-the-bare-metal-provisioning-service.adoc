@@ -202,3 +202,18 @@ $ openstack endpoint list |grep ironic
 ----
 $ openstack baremetal node list
 ----
+
+. Reset the deploy images on all bare-metal nodes to use the new centrally configured images:
++
+[NOTE]
+After adoption, bare-metal nodes might still reference the old deployment's kernel and ramdisk
+images in their `driver_info` fields. Resetting these values causes the {bare_metal} to use the
+new centrally configured  `deploy_kernel` and `deploy_ramdisk` values from the `ironic.conf` file.
++
+----
+for node in $(openstack baremetal node list -c UUID -f value); do
+  openstack baremetal node set $node \
+    --driver-info deploy_ramdisk= \
+    --driver-info deploy_kernel=
+done
+----
