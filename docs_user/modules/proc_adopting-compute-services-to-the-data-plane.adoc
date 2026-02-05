@@ -530,8 +530,6 @@ ifeval::["{build}" != "downstream"]
           # https://issues.redhat.com/browse/RHOSZUUL-1517
           dnf -y install crypto-policies
           update-crypto-policies --set FIPS:NO-ENFORCE-EMS
-          # FIXME: perform dnf upgrade for other packages in EDPM ansible
-          # here we only ensuring that decontainerized libvirt can start
           ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
           dnf -y upgrade openstack-selinux
           rm -f /run/virtlogd.pid
@@ -539,8 +537,7 @@ ifeval::["{build}" != "downstream"]
 endif::[]
 ifeval::["{build}" == "downstream"]
         edpm_bootstrap_command: |
-          # FIXME: perform dnf upgrade for other packages in EDPM ansible
-          # here we only ensuring that decontainerized libvirt can start
+          set -euxo pipefail
           dnf -y upgrade openstack-selinux
           rm -f /run/virtlogd.pid
 endif::[]
