@@ -1,0 +1,67 @@
+:_mod-docs-content-type: PROCEDURE
+[id="performing-post-adoption-cleanup-of-load-balancers_{context}"]
+
+= Post-adoption tasks for the {loadbalancer_service}
+
+[role="_abstract"]
+If you adopted the {loadbalancer_first_ref}, after you complete the data plane adoption, you must perform the following tasks:
+
+* Upgrade the amphorae virtual machines to the new images.
+* Remove obsolete resources from your existing load balancers.
+
+.Prerequisites
+* You have adopted the {loadbalancer_service}. For more information, see xref:adopting-the-loadbalancer-service_troubleshooting-hsm[Adopting the {loadbalancer_service}].
+
+.Procedure
+
+. Ensure that the connectivity between the new control plane and the adopted Compute nodes is functional by creating a new load balancer and checking that its `provisioning_status` becomes `ACTIVE`:
++
+----
+$ alias openstack="oc exec -t openstackclient -- openstack"
+$ openstack loadbalancer create --vip-subnet-id public-subnet --name lb-post-adoption --wait
+----
+
+. Trigger a failover for all existing load balancers to upgrade the amphorae virtual machines to use the new image and to establish connectivity with the new control plane:
++
+----
+$ openstack loadbalancer list -f value -c id | \
+      xargs -r -n1 -P4 ${BASH_ALIASES[openstack]} loadbalancer failover --wait
+----
+
+. Delete old flavors that were migrated to the new control plane:
++
+----
+$ openstack flavor delete octavia_65
+# The following flavors might not exist in OSP 17.1 deployments
+$ openstack flavor show octavia_amphora-mvcpu-ha && \
+  openstack flavor delete octavia_amphora-mvcpu-ha
+$ openstack loadbalancer flavor show octavia_amphora-mvcpu-ha && \
+  openstack loadbalancer flavor delete octavia_amphora-mvcpu-ha
+$ openstack loadbalancer flavorprofile show octavia_amphora-mvcpu-ha_profile && \
+  openstack loadbalancer flavorprofile delete octavia_amphora-mvcpu-ha_profile
+----
++
+[NOTE]
+Some flavors might still be used by load balancers and cannot be deleted.
+
+. Delete the old management network and its ports:
++
+----
+$ for net_id in $(openstack network list -f value -c ID --name lb-mgmt-net); do \
+    desc=$(openstack network show "$net_id" -f value -c description); \
+    [ -z "$desc" ] && WALLABY_LB_MGMT_NET_ID="$net_id" ; \
+  done
+$ for id in $(openstack port list --network "$WALLABY_LB_MGMT_NET_ID" -f value -c ID); do \
+    openstack port delete "$id" ; \
+  done
+$ openstack network delete "$WALLABY_LB_MGMT_NET_ID"
+----
+
+. Verify that only one `lb-mgmt-net` and one `lb-mgmt-subnet` exists:
++
+----
+$ openstack network list | grep lb-mgmt-net
+| fe470c29-0482-4809-9996-6d636e3feea3 | lb-mgmt-net          | 6a881091-097d-441c-937b-5a23f4f243b7 |
+$ openstack subnet list | grep lb-mgmt-subnet
+| 6a881091-097d-441c-937b-5a23f4f243b7 | lb-mgmt-subnet          | fe470c29-0482-4809-9996-6d636e3feea3 | 172.24.0.0/16   |
+----
