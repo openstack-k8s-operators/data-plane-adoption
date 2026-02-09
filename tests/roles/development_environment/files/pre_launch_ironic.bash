@@ -91,7 +91,7 @@ wait_image_active CentOS-Stream-GenericCloud-x86_64-9
 export BAREMETAL_NODES=$(${BASH_ALIASES[openstack]} baremetal node list -c UUID -f value)
 
 # Check if any nodes are active (in use by instances)
-ACTIVE_NODES=$(${BASH_ALIASES[openstack]} baremetal node list -c "Provisioning State" -f value | grep -c "active" || true)
+ACTIVE_NODES=$(${BASH_ALIASES[openstack]} baremetal node list -c "Provisioning\ State" -f value | grep -c "active" || true)
 
 if [ "$ACTIVE_NODES" -eq 0 ]; then
   echo "No active nodes found, proceeding with node management operations"

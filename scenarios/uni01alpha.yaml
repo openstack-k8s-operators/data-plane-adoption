@@ -3,7 +3,7 @@ undercloud:
   config:
     - section: DEFAULT
       option: undercloud_hostname
-      value: undercloud.localdomain
+      value: osp-undercloud-0.ooo.test
     - section: DEFAULT
       option: undercloud_timezone
       value: UTC
@@ -22,7 +22,8 @@ undercloud:
   undercloud_parameters_override: "uni01alpha/hieradata_overrides_undercloud.yaml"
   undercloud_parameters_defaults: "uni01alpha/undercloud_parameter_defaults.yaml"
   ctlplane_vip: 192.168.122.101
-cloud_domain: "localdomain"
+cloud_domain: "ooo.test"
+tlse: true
 hostname_groups_map:
   # map ansible groups in the inventory to role hostname format for
   # 17.1 deployment
@@ -57,6 +58,9 @@ stacks:
       - "/usr/share/openstack-tripleo-heat-templates/environments/services/ironic-inspector.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/services/barbican.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/barbican-backend-simple-crypto.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/ssl/tls-everywhere-endpoints-dns.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/services/haproxy-public-tls-certmonger.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/ssl/enable-internal-tls.yaml"
     network_data_file: "uni01alpha/network_data.yaml.j2"
     vips_data_file: "uni01alpha/vips_data.yaml"
     roles_file: "uni01alpha/roles.yaml"
