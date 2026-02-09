@@ -26,6 +26,8 @@ telemetry_ceilometer_patch: |
           enabled: true
           secret: osp-secret
           serviceUser: ceilometer
+          notificationsBus:
+            cluster: rabbitmq
 
 telemetry_logging_patch: |
   spec:

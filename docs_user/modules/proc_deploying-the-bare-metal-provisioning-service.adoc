@@ -95,7 +95,8 @@ spec:
           service: IronicInspectorPassword
       ironicNeutronAgent:
         replicas: 1
-        rabbitMqClusterName: rabbitmq
+        messagingBus:
+          cluster: rabbitmq
       secret: osp-secret
 '
 ----
