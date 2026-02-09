@@ -172,3 +172,138 @@ spec:
   - enp6s0.26
 EOF
 ----
+
+. Retrieve the nameserver records from the {dns_service} database to preserve DNS delegation:
++
+----
+$ DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+$ oc exec openstack-default-galera-0 -c galera -- mysql -rs -uroot -p"$DB_ROOT_PASSWORD" \
+    -e "select a.hostname, a.priority from designate.pool_ns_records a;" > /tmp/designate_ns_records_raw.txt
+----
+
+. Parse the nameserver records into YAML format for the {dns_service} CR:
++
+----
+$ raw=/tmp/designate_ns_records_raw.txt
+$ out=/tmp/designate_ns_records.yaml
+$ if [ ! -s "$raw" ]; then
+  echo "[]" > "$out"
+else
+  awk '{ gsub(/\.$/, "", $1); if (NF >= 2) printf "- hostname: %s.\n  priority: %s\n", $1, $2 }' "$raw" > "$out"
+fi
+----
+
+. Enable the {dns_service} Redis instance in {rhocp_short}:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  redis:
+    enabled: true
+    templates:
+      designate-redis:
+        replicas: 1
+'
+----
+
+. Wait for the {dns_service} Redis instance to become ready:
++
+----
+$ oc wait --for condition=Ready --timeout=60s redises.redis.openstack.org/designate-redis
+----
+
+. Create the {dns_service} CR patch file:
++
+[NOTE]
+====
+Replace `<storage_class>` with the storage class name for persistent volumes (for example, `local-storage`).
+====
++
+[subs="+quotes"]
+----
+$ cat > /tmp/designate_osp_patch.yaml << 'MAINCR'
+spec:
+  designate:
+    enabled: true
+    template:
+      designateAPI:
+        networkAttachments:
+          - internalapi
+      designateWorker:
+        networkAttachments:
+          - designate
+        replicas: 3
+      designateCentral:
+        replicas: 3
+      designateProducer:
+        replicas: 3
+      designateBackendbind9:
+        networkAttachments:
+          - designate
+        override:
+          services:
+            - metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: designateext
+                  metallb.universe.tf/allow-shared-ip: designateext
+                  metallb.universe.tf/loadBalancerIPs: 172.50.0.80
+            - metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: designateext
+                  metallb.universe.tf/allow-shared-ip: designateext
+                  metallb.universe.tf/loadBalancerIPs: 172.50.0.81
+            - metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: designateext
+                  metallb.universe.tf/allow-shared-ip: designateext
+                  metallb.universe.tf/loadBalancerIPs: 172.50.0.82
+        replicas: 3
+        storageClass: <storage_class>
+        storageRequest: 10G
+      designateMdns:
+        networkAttachments:
+          - designate
+        replicas: 3
+      designateUnbound:
+        networkAttachments:
+          - designate
+        replicas: 2
+        override:
+          services:
+            - metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: designateext
+                  metallb.universe.tf/allow-shared-ip: designateext
+                  metallb.universe.tf/loadBalancerIPs: 172.50.0.85
+            - metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: designateext
+                  metallb.universe.tf/allow-shared-ip: designateext
+                  metallb.universe.tf/loadBalancerIPs: 172.50.0.86
+MAINCR
+----
+
+. Append the nameserver records to the patch file:
++
+----
+$ ns_yaml=/tmp/designate_ns_records.yaml
+$ patch_file=/tmp/designate_osp_patch.yaml
+$ echo '      nsRecords:' >> "$patch_file"
+$ if [ -s "$ns_yaml" ] && [ "$(cat "$ns_yaml")" != "[]" ]; then
+  sed 's/^/        /' "$ns_yaml" >> "$patch_file"
+else
+  echo '        []' >> "$patch_file"
+fi
+----
+
+. Enable the {dns_service} in {rhocp_short}:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file /tmp/designate_osp_patch.yaml
+----
+
+. Wait for the {dns_service} to become ready:
++
+----
+$ oc wait --for condition=Ready --timeout=600s designate.designate.openstack.org/designate
+----

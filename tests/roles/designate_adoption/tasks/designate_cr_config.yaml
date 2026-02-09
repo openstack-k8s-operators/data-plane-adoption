@@ -1,0 +1,149 @@
+- name: Retrieve the known ns_record values from the designate database
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+    oc exec openstack-galera-0 -c galera -- mysql -rs -uroot -p"$DB_ROOT_PASSWORD" \
+        -e "select a.hostname, a.priority from designate.pool_ns_records a;" > /tmp/designate_ns_records_raw.txt
+  register: records_check_results
+  changed_when: false
+
+- name: Parse ns_record values into YAML format for CR
+  ansible.builtin.shell: |
+    set -e
+    raw=/tmp/designate_ns_records_raw.txt
+    out=/tmp/designate_ns_records.yaml
+    if [ ! -s "$raw" ]; then
+      echo "[]" > "$out"
+    else
+      awk '{ gsub(/\.$/, "", $1); if (NF >= 2) printf "- hostname: %s.\n  priority: %s\n", $1, $2 }' "$raw" > "$out"
+    fi
+  args:
+    executable: /bin/bash
+
+- name: Enable the designate redis instance in OpenShift
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      redis:
+        enabled: true
+        templates:
+          designate-redis:
+            replicas: 1
+    '
+  register: designate_redis_config_results
+  changed_when: true
+  failed_when: designate_redis_config_results.rc != 0
+
+- name: Wait for the designate redis instance to become ready
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc wait --for condition=Ready --timeout=60s redises.redis.openstack.org/designate-redis
+  register: designate_redis_ready_result
+  until: designate_redis_ready_result is success
+  retries: 60
+  delay: "{{ designate_retry_delay }}"
+
+- name: Create designate OSP patch file (main CR)
+  ansible.builtin.shell: |
+    patch_file=/tmp/designate_osp_patch.yaml
+    cat << MAINCR > "$patch_file"
+    spec:
+      designate:
+        enabled: true
+        template:
+          designateAPI:
+            networkAttachments:
+              - internalapi
+          designateWorker:
+            networkAttachments:
+              - designate
+            replicas: 3
+          designateCentral:
+            replicas: 3
+          designateProducer:
+            replicas: 3
+          designateBackendbind9:
+            networkAttachments:
+              - designate
+            override:
+              services:
+                - metadata:
+                    annotations:
+                      metallb.universe.tf/address-pool: designateext
+                      metallb.universe.tf/allow-shared-ip: designateext
+                      metallb.universe.tf/loadBalancerIPs: 172.50.0.80
+                - metadata:
+                    annotations:
+                      metallb.universe.tf/address-pool: designateext
+                      metallb.universe.tf/allow-shared-ip: designateext
+                      metallb.universe.tf/loadBalancerIPs: 172.50.0.81
+                - metadata:
+                    annotations:
+                      metallb.universe.tf/address-pool: designateext
+                      metallb.universe.tf/allow-shared-ip: designateext
+                      metallb.universe.tf/loadBalancerIPs: 172.50.0.82
+            replicas: 3
+            storageClass: $STORAGE_CLASS_NAME
+            storageRequest: 10G
+          designateMdns:
+            networkAttachments:
+              - designate
+            replicas: 3
+          designateUnbound:
+            networkAttachments:
+              - designate
+            replicas: 2
+            override:
+              services:
+                - metadata:
+                    annotations:
+                      metallb.universe.tf/address-pool: designateext
+                      metallb.universe.tf/allow-shared-ip: designateext
+                      metallb.universe.tf/loadBalancerIPs: 172.50.0.85
+                - metadata:
+                    annotations:
+                      metallb.universe.tf/address-pool: designateext
+                      metallb.universe.tf/allow-shared-ip: designateext
+                      metallb.universe.tf/loadBalancerIPs: 172.50.0.86
+    MAINCR
+  environment:
+    STORAGE_CLASS_NAME: "{{ storage_class_name }}"
+
+- name: Append nsRecords to designate OSP patch file
+  ansible.builtin.shell: |
+    ns_yaml=/tmp/designate_ns_records.yaml
+    patch_file=/tmp/designate_osp_patch.yaml
+
+    echo '      nsRecords:' >> "$patch_file"
+    if [ -s "$ns_yaml" ] && [ "$(cat "$ns_yaml")" != "[]" ]; then
+      sed 's/^/        /' "$ns_yaml" >> "$patch_file"
+    else
+      echo '        []' >> "$patch_file"
+    fi
+
+- name: Enable designate service in OpenShift
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc patch openstackcontrolplane openstack --type=merge --patch-file /tmp/designate_osp_patch.yaml
+  register: designate_service_config_results
+  changed_when: true
+  failed_when: designate_service_config_results.rc != 0
+
+- name: Wait for the designate service to become ready
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc wait --for condition=Ready --timeout=60s designates.designate.openstack.org/designate
+  register: designate_service_ready_result
+  until: designate_service_ready_result is success
+  retries: 60
+  delay: "{{ designate_retry_delay }}"
