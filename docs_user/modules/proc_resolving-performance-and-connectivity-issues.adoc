@@ -1,0 +1,32 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-performance-and-connectivity-issues_{context}"]
+
+= Resolving performance and connectivity issues
+
+[role="_abstract"]
+If the hardware security module (HSM) operations are slow or fail intermittently, check the HSM connectivity and monitor the HSM server logs.
+
+.Procedure
+
+. Test HSM connectivity from {key_manager_first_ref} pods:
++
+[source,bash]
+----
+$ oc exec barbican-api-xyz -- pkcs11-tool --module /usr/lib64/libnethsm.so --list-slots
+----
+
+. Check HSM server connectivity:
++
+[source,bash]
+----
+$ oc exec barbican-api-xyz -- nc -zv <hsm_server_ip> <hsm_port>
+----
++
+where:
+
+`<hsm_server_ip>`::
+Specifies the IP address of the HSM server.
+`<hsm_port>`::
+Specifies the port of your HSM server.
+
+. Monitor HSM server logs for authentication or capacity issues.
