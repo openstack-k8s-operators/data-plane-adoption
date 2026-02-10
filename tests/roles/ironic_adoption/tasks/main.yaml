@@ -100,3 +100,15 @@
     {{ oc_header }}
     alias openstack="oc exec -t openstackclient -- openstack"
     ${BASH_ALIASES[openstack]} subnet set --dns-nameserver {{ dns_server_provisioning_ip }} provisioning-subnet
+
+- name: Reset node driver_info to use new deploy images
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    for node in $(${BASH_ALIASES[openstack]} baremetal node list -c UUID -f value); do
+      ${BASH_ALIASES[openstack]} baremetal node set $node \
+        --driver-info deploy_ramdisk= \
+        --driver-info deploy_kernel=
+    done
