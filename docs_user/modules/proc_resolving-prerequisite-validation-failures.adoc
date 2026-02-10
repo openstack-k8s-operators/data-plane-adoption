@@ -1,0 +1,38 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-prerequisite-validation-failures_{context}"]
+
+= Resolving prerequisite validation failures
+
+[role="_abstract"]
+If the adoption script fails during the prerequisites check, verify that your configuration includes all the required Proteccio files and that the HSM Ansible role is available.
+
+Example error:
+
+----
+ERROR: Required file proteccio_files/YOUR_CERT_FILE not found
+ERROR: Cannot connect to OpenShift cluster
+ERROR: Proteccio HSM Ansible role not found
+----
+
+.Procedure
+
+. Verify that all required Proteccio files are present:
++
+----
+$ ls -la /path/to/your/proteccio_files/
+----
++
+Ensure that your configured certificate files, private key, HSM certificate file, and configuration file exist as specified in your `proteccio_required_files` configuration.
+
+. Test OpenShift cluster connectivity:
++
+----
+$ oc cluster-info
+$ oc get pods -n openstack
+----
+
+. Verify that the HSM Ansible role is available:
++
+----
+$ ls -la /path/to/your/roles/ansible-role-rhoso-proteccio-hsm/
+----
