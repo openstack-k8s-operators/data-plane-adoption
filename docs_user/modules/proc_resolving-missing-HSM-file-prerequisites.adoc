@@ -1,0 +1,39 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-missing-HSM-file-prerequisites_{context}"]
+
+= Resolving missing HSM file prerequisites
+
+[role="_abstract"]
+If the adoption fails because hardware security module (HSM) certificates or client software cannot be found, update your configuration to point to the files in their specific locations.
+
+Example error:
+
+----
+TASK [Validate Proteccio prerequisites exist] ****
+fatal: [localhost]: FAILED! => {
+    "msg": "Proteccio client ISO not found: /opt/proteccio/Proteccio3.06.05.iso"
+}
+----
+
+.Procedure
+
+. Verify that all required HSM files are accessible from the configured URLs. For example:
++
+[source,bash]
+----
+$ curl -I https://your-server/path/to/Proteccio3.06.05.iso
+$ curl -I https://your-server/path/to/proteccio.rc
+$ curl -I https://your-server/path/to/client.crt
+$ curl -I https://your-server/path/to/client.key
+----
+
+. If the files are in different locations, update the URL variables in your configuration. For example:
++
+----
+cifmw_hsm_proteccio_client_src: "https://correct-server/path/to/Proteccio3.06.05.iso"
+cifmw_hsm_proteccio_conf_src: "https://correct-server/path/to/proteccio.rc"
+cifmw_hsm_proteccio_client_crt_src: "https://correct-server/path/to/client.crt"
+cifmw_hsm_proteccio_client_key_src: "https://correct-server/path/to/client.key"
+----
+
+. Check the network connectivity and authentication to ensure that the URLs are accessible from the CI environment.

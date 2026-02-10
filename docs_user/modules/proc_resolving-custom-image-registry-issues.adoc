@@ -1,0 +1,54 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-custom-image-registry-issues_{context}"]
+
+= Resolving custom image registry issues
+
+[role="_abstract"]
+If custom Barbican images cannot be pushed to or pulled from the configured registry, you can verify the authentication, test image push permissions, and then update the configuration as needed.
+
+Example error:
+
+----
+TASK [Create Proteccio-enabled Barbican images] ****
+fatal: [localhost]: FAILED! => {
+    "msg": "Failed to push image to registry"
+}
+----
+
+.Procedure
+
+. Verify registry authentication:
++
+[source,bash]
+----
+$ podman login <registry_url>
+----
++
+where:
+
+`<registry_url>`::
+Specifies the URL of your configured registry.
+
+. Test image push permissions:
++
+[source,bash]
+----
+$ podman tag hello-world <registry>/<namespace>/test:latest
+$ podman push <registry>/<namespace>/test:latest
+----
++
+where:
+
+`<registry>`::
+Specifies the name of your registry server.
+`<namespace>`::
+Specifies the namespace of your container image.
+
+. Update registry configuration variables if needed:
++
+[source,yaml]
+----
+cifmw_update_containers_registry: "your-registry:5001"
+cifmw_update_containers_org: "your-namespace"
+cifmw_image_registry_verify_tls: false
+----

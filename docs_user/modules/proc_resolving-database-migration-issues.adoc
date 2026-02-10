@@ -1,0 +1,35 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-database-migration-issues_{context}"]
+
+= Resolving database migration issues
+
+[role="_abstract"]
+If hardware security module (HSM) metadata is not preserved during database migration, check the database logs for any errors and verify that the source database includes the HSM secrets.
+
+Example error:
+
+----
+TASK [Verify database migration preserves HSM references] ****
+ok: [localhost] => {
+    "msg": "HSM secrets found in migrated database: 0"
+}
+----
+
+.Procedure
+
+. Verify that the source database contains the HSM secrets:
++
+[source,bash]
+----
+$ ssh tripleo-admin@controller-0.ctlplane \
+  "sudo mysql barbican -e 'SELECT COUNT(*) FROM secret_store_metadata WHERE key=\"plugin_name\" AND value=\"PKCS11\";'"
+----
+
+. Check the database migration logs for errors:
++
+[source,bash]
+----
+$ oc logs deployment/barbican-api | grep -i migration
+----
+
+. If the migration failed, restore the database from backup and retry.

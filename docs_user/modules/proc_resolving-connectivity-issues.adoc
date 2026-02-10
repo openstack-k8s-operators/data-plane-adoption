@@ -1,0 +1,38 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-source-environment-connectivity-issues_{context}"]
+
+= Resolving source environment connectivity issues
+
+[role="_abstract"]
+If the adoption cannot connect to the source {rhos_prev_long} environment to extract the configuration, check your SSH connectivity to the source Controller node and update the configuration if needed.
+
+Example error:
+
+----
+TASK [detect source environment HSM configuration] ****
+fatal: [localhost]: FAILED! => {
+    "msg": "SSH connection to source environment failed"
+}
+----
+
+.Procedure
+
+. Verify SSH connectivity to the source Controller node:
++
+[source,bash]
+----
+$ ssh -o StrictHostKeyChecking=no tripleo-admin@controller-0.ctlplane
+----
+
+. Update the `controller1_ssh` variable if needed:
++
+----
+$ controller1_ssh: "ssh -o StrictHostKeyChecking=no tripleo-admin@<controller_ip>"
+----
++
+where:
+
+`<controller_ip>`::
+Specifies the IP address of your Controller node.
+
+. Ensure that the SSH keys are properly configured for passwordless access.

@@ -1,0 +1,37 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-HSM-back-end-detection-failures_{context}"]
+
+==  Resolving HSM back-end detection failures
+
+[role="_abstract"]
+If the adoption role cannot detect hardware security module (HSM) configuration in the source environment, you must force the HSM adoption.
+
+Example error:
+
+----
+TASK [detect source environment HSM configuration] ****
+ok: [localhost] => {
+    "msg": "No HSM configuration found - using standard adoption"
+}
+----
+
+.Procedure
+
+. Manually verify that the HSM configuration exists in the source environment:
++
+[source,bash]
+----
+$ ssh tripleo-admin@controller-0.ctlplane \
+  "sudo grep -A 10 '\[p11_crypto_plugin\]' \
+  /var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf"
+----
+
+. If HSM is configured but not detected, force HSM adoption by setting the `barbican_hsm_enabled` variable:
++
+[source,yaml]
+----
+# In your Zuul job vars or CI framework configuration
+barbican_hsm_enabled: true
+----
++
+This configuration ensures that the `barbican_adoption` role uses the HSM-enabled patch for {key_manager_first_ref} deployment.

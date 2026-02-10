@@ -1,0 +1,38 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-service-startup-failures_{context}"]
+
+= Resolving service startup failures
+
+[role="_abstract"]
+If the {key_manager_first_ref} services fail to start after the hardware security module (HSM) configuration is applied, check the configuration in the pod.
+
+Example error:
+
+----
+$ oc get pods -l service=barbican
+NAME                           READY   STATUS    RESTARTS   AGE
+barbican-api-xyz               0/1     Error     0          2m
+----
+
+.Procedure
+
+. Check pod logs for HSM connectivity issues:
++
+[source,bash]
+----
+$ oc logs barbican-api-xyz
+----
+
+. Verify HSM library is accessible:
++
+[source,bash]
+----
+$ oc exec barbican-api-xyz -- ls -la /usr/lib64/libnethsm.so
+----
+
+. Check HSM configuration in the pod:
++
+[source,bash]
+----
+$ oc exec barbican-api-xyz -- cat /etc/proteccio/proteccio.rc
+----
