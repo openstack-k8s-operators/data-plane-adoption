@@ -1,0 +1,39 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-database-import-failures_{context}"]
+
+= Resolving database import failures
+
+[role="_abstract"]
+If the source database export or import fails, check the the source Galera container, database connectivity, and the source {key_manager_first_ref} configuration.
+
+Example error:
+
+----
+Error: no container with name or ID "galera-bundle-podman-0" found
+mysqldump: Got error: 1045: "Access denied for user 'barbican'@'localhost'"
+----
+
+.Procedure
+
+. Verify that the source Galera container is running:
++
+----
+$ sudo ssh -t YOUR_UNDERCLOUD_HOST 'sudo -u stack ssh -t tripleo-admin@YOUR_CONTROLLER_HOST.ctlplane "sudo podman ps | grep galera"'
+----
+
+. Test database connectivity with the extracted credentials:
++
+----
+$ sudo ssh -t YOUR_UNDERCLOUD_HOST 'sudo -u stack ssh -t tripleo-admin@YOUR_CONTROLLER_HOST.ctlplane "sudo podman exec galera-bundle-podman-0 mysql -u barbican -p<password> -e \"SELECT 1;\""'
+----
++
+where:
+
+`<password>`::
+Specifies your database password.
+
+. Check the source {key_manager} configuration for the correct database password:
++
+----
+$ sudo ssh -t YOUR_UNDERCLOUD_HOST 'sudo -u stack ssh -t tripleo-admin@YOUR_CONTROLLER_HOST.ctlplane "sudo grep connection /var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf"'
+----

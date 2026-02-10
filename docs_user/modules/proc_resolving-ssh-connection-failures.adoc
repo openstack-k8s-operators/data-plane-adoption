@@ -1,0 +1,31 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-SSH-connection-failures_{context}"]
+
+= Resolving SSH connection failures to the source environment
+
+[role="_abstract"]
+If you cannot connect to the source {OpenStackPreviousInstaller} environment, verify your SSH key access and test the SSH commands that the adoption uses.
+
+Example error:
+
+----
+Warning: Permanently added 'YOUR_UNDERCLOUD_HOST' (ED25519) to the list of known hosts.
+Permission denied (publickey).
+----
+
+.Procedure
+
+. Verify SSH key access to the undercloud:
++
+----
+$ ssh YOUR_UNDERCLOUD_HOST echo "Connection test"
+----
+
+. Test the specific SSH commands used by the adoption:
++
+----
+$ sudo ssh -t YOUR_UNDERCLOUD_HOST 'sudo -u stack bash -lc "echo test"'
+$ sudo ssh -t YOUR_UNDERCLOUD_HOST 'sudo -u stack ssh -t tripleo-admin@YOUR_CONTROLLER_HOST.ctlplane "echo test"'
+----
+
+. If the connection fails, verify the SSH configuration and ensure that the undercloud hostname resolves correctly.

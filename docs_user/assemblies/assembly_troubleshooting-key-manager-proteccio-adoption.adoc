@@ -1,0 +1,23 @@
+:_mod-docs-content-type: ASSEMBLY
+ifdef::context[:parent-context: {context}]
+
+[id="troubleshooting-key-manager-proteccio-adoption_{context}"]
+
+:context: troubleshooting-proteccio
+
+= Troubleshooting {key_manager} Proteccio HSM adoption
+
+[role="_abstract"]
+Use this reference to troubleshoot common issues that might occur during {key_manager_first_ref} adoption with Proteccio HSM integration. If Proteccio HSM issues persist, consult the Eviden Trustway documentation and ensure that HSM server configuration matches the client settings.
+
+include::../modules/proc_resolving-prerequisite-validation-failures.adoc[leveloffset=+1]
+include::../modules/proc_resolving-ssh-connection-failures.adoc[leveloffset=+1]
+include::../modules/proc_resolving-database-import-failures.adoc[leveloffset=+1]
+include::../modules/proc_resolving-custom-image-pull-failures.adoc[leveloffset=+1]
+include::../modules/proc_resolving-hsm-certificate-mounting-issues.adoc[leveloffset=+1]
+include::../modules/proc_resolving-service-startup-failures.adoc[leveloffset=+1]
+include::../modules/proc_resolving-adoption-verification-failures.adoc[leveloffset=+1]
+
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]
