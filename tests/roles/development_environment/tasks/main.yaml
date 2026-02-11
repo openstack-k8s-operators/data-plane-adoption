@@ -28,6 +28,10 @@
       export OPENSTACK_COMMAND="{{ openstack_command }}"
       export ENROLL_BMAAS_IRONIC_NODES={{ enroll_ironic_bmaas_nodes | string | lower }}
       export PRE_LAUNCH_IRONIC_RESTART_CHRONY={{ pre_launch_ironic_restart_chrony | string | lower }}
+      export PRE_LAUNCH_IRONIC_MANAGE_NODES={{ pre_launch_ironic_manage_nodes | string | lower }}
+      export PRE_LAUNCH_IRONIC_INSPECT_NODES={{ pre_launch_ironic_inspect_nodes | string | lower }}
+      export PRE_LAUNCH_IRONIC_PROVIDE_NODES={{ pre_launch_ironic_provide_nodes | string | lower }}
+      export PRE_LAUNCH_IRONIC_CREATE_INSTANCE={{ pre_launch_ironic_create_instance | string | lower }}
       {{ lookup('ansible.builtin.file', 'pre_launch_ironic.bash') }}
 
 - name: Start and setup ping test
