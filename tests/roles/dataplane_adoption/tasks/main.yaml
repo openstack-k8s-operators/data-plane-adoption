@@ -647,6 +647,22 @@
     done
   when: edpm_neutron_dhcp_agent_enabled|bool
 
+- name: enable neutron-dhcp in the OpenStackDataPlaneNodeSet CR Networker
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc patch openstackdataplanenodeset openstack-networker --type='json' --patch='[
+    {
+       "op": "add",
+       "path": "/spec/services/-",
+       "value": "neutron-dhcp"
+    }]'
+  when:
+    - edpm_networker_neutron_dhcp_agent_enabled | default(false) | bool
+    - edpm_nodes_networker is defined
+
 - name: Run the pre-adoption validation
   when: run_pre_adoption_validation|bool
   block:
