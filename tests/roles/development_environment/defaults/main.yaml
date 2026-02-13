@@ -46,10 +46,10 @@ cifmw_federation_keycloak_testuser1_username: kctestuser1
 cifmw_federation_keycloak_testuser1_password: nomoresecrets1
 
 cifmw_keystone_oidc_claim_prefix: "OIDC-"
-cifmw_keystone_oidc_response_type: "code"
+cifmw_keystone_oidc_response_type: "id_token"
 cifmw_keystone_oidc_scope: "openid profile email"
-cifmw_keystone_oidc_claim_delimiter: ","
-cifmw_keystone_oidc_pass_user_info_as: "payload"
+cifmw_keystone_oidc_claim_delimiter: ";"
+cifmw_keystone_oidc_pass_user_info_as: "claims"
 cifmw_keystone_oidc_pass_claims_as: "both"
 cifmw_keystone_oidc_provider_metadata_url: "{{ cifmw_federation_keycloak_url }}/auth/realms/{{ cifmw_federation_keycloak_realm }}/.well-known/openid-configuration"
 cifmw_keystone_oidc_client_id: "{{ cifmw_federation_keycloak_client_id }}"
