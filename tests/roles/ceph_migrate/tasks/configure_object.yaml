@@ -80,6 +80,6 @@
 
         ${BASH_ALIASES[openstack]} role add --user {{ all_uuids.results.0.stdout }} --project {{ all_uuids.results.7.stdout }} {{ all_uuids.results.2.stdout }}
         ${BASH_ALIASES[openstack]} role add --user {{ all_uuids.results.0.stdout }} --project {{ all_uuids.results.7.stdout }} {{ all_uuids.results.3.stdout }}
-        ${BASH_ALIASES[openstack]} endpoint create --region regionOne {{ all_uuids.results.1.stdout }} public http://{{ ceph_rgw_url }}:8080/swift/v1/AUTH_%\(tenant_id\)s
-        ${BASH_ALIASES[openstack]} endpoint create --region regionOne {{ all_uuids.results.1.stdout }} internal http://{{ ceph_rgw_url }}:8080/swift/v1/AUTH_%\(tenant_id\)s
+        ${BASH_ALIASES[openstack]} endpoint create --region regionOne {{ all_uuids.results.1.stdout }} public {{ ceph_rgw_schema | default("http") }}://{{ ceph_rgw_url }}:8080/swift/v1/AUTH_%\(tenant_id\)s
+        ${BASH_ALIASES[openstack]} endpoint create --region regionOne {{ all_uuids.results.1.stdout }} internal {{ ceph_rgw_schema | default("http") }}://{{ ceph_rgw_url }}:8080/swift/v1/AUTH_%\(tenant_id\)s
         ${BASH_ALIASES[openstack]} role add --project {{ all_uuids.results.4.stdout }} --user {{ all_uuids.results.5.stdout }} {{ all_uuids.results.6.stdout }}

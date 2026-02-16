@@ -37,3 +37,6 @@
       ansible.builtin.import_role:
         name: ceph_migrate
         tasks_from: configure_object
+      vars:
+        ceph_rgw_schema: "{{ keystone_protocol }}"
+
