@@ -13,7 +13,8 @@ To adopt a {OpenStackPreviousInstaller}-deployed {block_storage_first_ref}, crea
 * You have prepared the {rhocp_long} nodes where the volume and backup services run. For more information, see xref:openshift-preparation-for-block-storage-adoption_storage-requirements[{OpenShiftShort} preparation for {block_storage} adoption].
 * The {block_storage_first_ref} is stopped.
 * The service databases are imported into the control plane MariaDB.
-* The {identity_service_first_ref} and {key_manager_first_ref} are adopted.
+* The {identity_service_first_ref} is adopted.
+* If your {rhos_prev_long} {rhos_prev_ver} deployment included the {key_manager_first_ref}, the {key_manager} is adopted.
 * The Storage network is correctly configured on the {OpenShiftShort} cluster.
 * The contents of `cinder.conf` file. Download the file so that you can access it locally:
 +
