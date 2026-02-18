@@ -224,6 +224,10 @@ pull_openstack_configuration_ssh_shell_vars: |
 enable_octavia: true
 octavia_adoption: true
 
+# Whether to create Octavia workload before adoption - defined in common_defaults because it is used in two roles:
+# dataplane_adoption and development_environment
+prelaunch_octavia_workload: false
+
 # MariaDB client connection timeout in seconds
 # Related to OSPRH-18618
 mariadb_client_timeout: 0
