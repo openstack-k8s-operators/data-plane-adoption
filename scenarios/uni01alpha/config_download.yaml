@@ -60,7 +60,7 @@ parameter_defaults:
   ControllerCount: 3
   ComputeCount: 2
   NetworkerCount: 3
-  NeutronGlobalPhysnetMtu: 1350
+  NeutronGlobalPhysnetMtu: 1500
   CinderLVMLoopDeviceSize: 20480
   CloudName: overcloud.localdomain
   CloudNameInternal: overcloud.internalapi.localdomain
