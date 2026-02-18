@@ -1,0 +1,33 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-configuration-validation-failures_{context}"]
+
+= Resolving configuration validation failures
+
+[role="_abstract"]
+If the adoption fails with validation errors about placeholder values, replace the placeholder values with your environment's configuration values.
+
+Example error:
+
+----
+TASK [Validate all required variables are set] ****
+fatal: [localhost]: FAILED! => {
+    "msg": "Required variable proteccio_certs_path contains placeholder value."
+}
+----
+
+.Procedure
+
+. Edit your hardware security module configuration in the Zuul job vars or CI framework configuration file.
+
+. Check the following key variables and replace all placeholder values with actual configuration values for your environment:
++
+----
+cifmw_hsm_password: <your_actual_hsm_password>
+cifmw_barbican_proteccio_partition: <VHSM1>
+cifmw_barbican_proteccio_mkek_label: <your_mkek_label>
+cifmw_barbican_proteccio_hmac_label: <your_hmac_label>
+cifmw_hsm_proteccio_client_src: <https://your-server/path/to/Proteccio.iso>
+cifmw_hsm_proteccio_conf_src: <https://your-server/path/to/proteccio.rc>
+----
+
+. Verify that no placeholder values remain in your configuration.
