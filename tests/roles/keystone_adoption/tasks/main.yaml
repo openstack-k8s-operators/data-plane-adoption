@@ -16,11 +16,51 @@
     type: Opaque
     EOF
 
+- name: Set IPA BaseDN var
+  ansible.builtin.set_fact:
+    ipa_basedn: "dc={{ ipa_hostname.split('.')[1:] | join(',dc=') }}"
+  when: enable_ldap is defined and enable_ldap
+
+- name: Create Keystone domain config secret for LDAP
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    cat <<EOF | oc apply -n openstack -f -
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: keystone-domains
+    type: Opaque
+    stringData:
+      keystone.{{ ipa_domain | default('REDHAT') }}.conf: |
+        [identity]
+        driver = ldap
+        [ldap]
+        url = ldaps://osp-free-ipa-0.ooo.test
+        user = uid=svc-ldap,cn=users,cn=accounts,{{ ipa_basedn }}
+        password = {{ ipa_admin_password | default('nomoresecrets') }}
+        suffix = {{ ipa_basedn }}
+        user_tree_dn = cn=users,cn=accounts,{{ ipa_basedn }}
+        user_objectclass = person
+        user_id_attribute = uid
+        user_name_attribute = uid
+        user_mail_attribute = mail
+        group_tree_dn = cn=groups,cn=accounts,{{ ipa_basedn }}
+        group_objectclass = groupOfNames
+        group_id_attribute = cn
+        group_name_attribute = cn
+        group_member_attribute = member
+        group_desc_attribute = description
+    EOF
+  when: enable_ldap is defined and enable_ldap
+
 - name: deploy podified Keystone
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '{{ keystone_patch }}'
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ keystone_patch_to_use }}'
+  vars:
+    keystone_patch_to_use: "{{ keystone_patch_ldap if (enable_ldap is defined and enable_ldap) else keystone_patch }}"
 
 - name: wait for Keystone to start up
   ansible.builtin.shell: |
