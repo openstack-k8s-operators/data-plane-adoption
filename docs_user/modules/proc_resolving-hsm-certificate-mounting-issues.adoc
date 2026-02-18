@@ -1,0 +1,34 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-HSM-certificate-mounting-issues_{context}"]
+
+= Resolving HSM certificate mounting issues
+
+[role="_abstract"]
+If Proteccio client certificates are not properly mounted in pods, check the secret creation and ensure that the {key_manager_first_ref} configuration includes the correct volume mounts.
+
+Example error:
+
+----
+$ oc exec <barbican-pod> -c barbican-api -- ls -la /etc/proteccio/
+ls: cannot access '/etc/proteccio/': No such file or directory
+----
+
+.Procedure
+
+. Verify that the `proteccio-data` secret was created correctly:
++
+----
+$ oc describe secret proteccio-data -n openstack
+----
+
+. Check that the secret contains the expected files:
++
+----
+$ oc get secret proteccio-data -n openstack -o yaml
+----
+
+. Verify that the {key_manager} configuration includes the correct volume mounts:
++
+----
+$ oc get barbican barbican -n openstack -o yaml | grep -A10 pkcs11
+----
