@@ -1,0 +1,46 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-custom-image-pull-failures_{context}"]
+
+= Resolving custom image pull failures
+
+[role="_abstract"]
+If Proteccio custom images fail to pull or start, verify image registry access, image pull secrets, and registry authentication.
+
+Example error:
+
+----
+Failed to pull image "<Your Custom Pod Image and Tag>": rpc error
+Pod has unbound immediate PersistentVolumeClaims
+----
+
+.Procedure
+
+. Verify image registry access:
++
+----
+$ podman pull <custom_pod_image_and_tag>
+----
++
+where:
+
+`<custom_pod_image_and_tag>`::
+Specifies your custom pod image and the image tag.
+
+
+. Check image pull secrets and registry authentication:
++
+----
+$ oc get secrets -n openstack | grep pull
+$ oc describe pod <barbican_pod_name> -n openstack
+----
++
+where:
+
+`<barbican_pod_name>`::
+Specifies your Barbican pod name.
+
+. Verify that the `OpenStackVersion` resource was applied correctly:
++
+----
+$ oc get openstackversion openstack -n openstack -o yaml
+----

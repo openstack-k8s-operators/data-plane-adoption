@@ -1,0 +1,41 @@
+:_mod-docs-content-type: PROCEDURE
+[id="resolving-adoption-verification-failures_{context}"]
+
+= Resolving adoption verification failures
+
+[role="_abstract"]
+If the secrets from the source environment are not accessible after adoption, verify that the database import completed successfully, test API connectivity, and check for schema adoption issues.
+
+Example error:
+
+----
+$ openstack secret list
+# Returns empty list or HTTP 500 errors
+----
+
+.Procedure
+
+. Verify that the database import completed successfully:
++
+----
+$ oc exec openstack-galera-0 -n openstack -- mysql -u root -p<password> barbican -e "SELECT COUNT(*) FROM secrets;"
+----
++
+where:
+
+`<password>`::
+Specifies your database password.
+
+. Check for schema adoption issues:
++
+----
+$ oc logs job.batch/barbican-db-sync -n openstack
+----
+
+. Test API connectivity:
++
+----
+$ oc exec openstackclient -n openstack -- curl -s -k -H "X-Auth-Token: $(openstack token issue -f value -c id)" https://barbican-internal.openstack.svc:9311/v1/secrets
+----
+
+. Verify that projects and users were adopted correctly, as secrets are project-scoped.

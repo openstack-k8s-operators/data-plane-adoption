@@ -1,0 +1,40 @@
+:_mod-docs-content-type: PROCEDURE
+[id="rolling-back-the-HSM-adoption_{context}"]
+
+= Rolling back the HSM adoption
+
+[role="_abstract"]
+If the hardware security module (HSM) adoption fails, you can restore your environment to its original state and attempt the adoption again.
+
+.Procedure
+
+. Restore the {rhos_long} 18.0 database backup:
++
+----
+$ oc exec -i openstack-galera-0 -n openstack -- mysql -u root -p<password> barbican < /path/to/your/backups/rhoso18_barbican_backup.sql
+----
++
+where:
+
+<password>::
+Specifies your database password.
+
+. Reset to standard images:
++
+----
+$ oc delete openstackversion openstack -n openstack
+----
+
+. Restore the base control plane configuration:
++
+----
+$ oc apply -f /path/to/your/base_controlplane.yaml
+----
+
+.Next steps
+
+To avoid additional issues when attempting your adoption again, consider the following suggestions:
+
+* Check the adoption logs that are stored in your configured working directory with timestamped summary reports.
+* For HSM-specific issues, consult the Proteccio documentation and verify HSM connectivity from the target environment.
+* Run the adoption in dry-run mode (`./run_proteccio_adoption.sh` option 3) to validate the environment before making changes.
