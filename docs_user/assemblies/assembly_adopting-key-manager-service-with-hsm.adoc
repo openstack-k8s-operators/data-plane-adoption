@@ -10,22 +10,22 @@ ifdef::context[:parent-context: {context}]
 [role="_abstract"]
 Adopt the {key_manager_first_ref} from {OpenStackPreviousInstaller} to {rhos_long} when your source environment includes hardware security module (HSM) integration to preserve HSM functionality and maintain access to HSM-backed secrets. HSM provides enhanced security for cryptographic operations by storing encryption keys in dedicated hardware devices.
 
+For additional information about the {key_manager} before you start the adoption, see the following resources:
+
+* {key_manager} service configuration documentation
+* Hardware security module vendor-specific documentation
+* OpenStack Barbican PKCS#11 plugin documentation
+
 include::../modules/con_key-manager-service-hsm-adoption-approaches.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-key-manager-service-with-proteccio-hsm.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-key-manager-service-with-hsm-integration.adoc[leveloffset=+1]
 
-include::../modules/ref_troubleshooting-key-manager-hsm-adoption.adoc[leveloffset=+1]
+include::../assemblies/assembly_troubleshooting-key-manager-hsm-adoption.adoc[leveloffset=+1]
 
 include::../modules/ref_troubleshooting-key-manager-proteccio-adoption.adoc[leveloffset=+1]
 
-[role="_additional-resources"]
-== Additional resources
-
-* {key_manager} service configuration documentation
-* Hardware security module vendor-specific documentation
-* OpenStack Barbican PKCS#11 plugin documentation
 
 ifdef::parent-context[:context: {parent-context}]
 ifndef::parent-context[:!context:]
