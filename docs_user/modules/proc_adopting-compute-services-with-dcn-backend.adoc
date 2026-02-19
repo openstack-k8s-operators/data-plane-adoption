@@ -1,0 +1,320 @@
+:_mod-docs-content-type: PROCEDURE
+[id="adopting-compute-services-with-dcn-backend_{context}"]
+
+= Adopting {compute_service} services with multiple {Ceph} back ends (DCN)
+
+[role="_abstract"]
+In a Distributed Compute Node (DCN) deployment where {image_service_first_ref} and {block_storage_first_ref} services run on edge Compute nodes, each site has its own {CephCluster} cluster. The {compute_service_first_ref} nodes at each site must be configured with the {Ceph} connection details and {image_service} endpoint for their local site. Because the {image_service} has a separate API endpoint at each site, each site's `OpenStackDataPlaneNodeSet` custom resource (CR) must use a different `OpenStackDataPlaneService` CR that points to the correct {image_service}.
+
+In a DCN deployment, all node sets belong to a single {compute_service} cell. The central site and each edge site are separate `OpenStackDataPlaneNodeSet` resources within that cell. The per-site `OpenStackDataPlaneService` resources deliver different {Ceph} and {image_service} configurations to each node set while sharing the same cell-level {compute_service} configuration.
+
+.Prerequisites
+
+* You have adopted the {image_service} with multiple {Ceph} back ends. For more information, see xref:adopting-image-service-with-dcn-backend_image-service[Adopting the Image service with multiple Ceph back ends].
+* You have adopted the {block_storage} with multiple {Ceph} back ends. For more information, see xref:adopting-block-storage-service-with-dcn-backend_hsm-integration[Adopting the Block Storage service with multiple Ceph back ends].
+* The `ceph-conf-files` secret contains the configuration and keyrings for all {Ceph} clusters in your DCN deployment.
+* Retrieve the `fsid` for each {Ceph} cluster:
++
+----
+$ oc get secret ceph-conf-files -o json | jq -r '.data | to_entries[] | select(.key | endswith(".conf")) | "\(.key): \(.value | @base64d)"' | grep fsid
+----
+
+.Procedure
+
+. Set the cell name variable. In a DCN deployment, all node sets belong to a single cell:
++
+----
+$ DEFAULT_CELL_NAME="cell1"
+----
+
+. Retrieve the `fsid` for each {Ceph} cluster and store them in shell variables:
++
+[subs="+quotes"]
+----
+$ CEPH_FSID_CENTRAL=$(oc get secret ceph-conf-files -o json | jq -r '.data."<central.conf>"' | base64 -d | grep fsid | sed -e 's/fsid = //')
+$ CEPH_FSID_DCN1=$(oc get secret ceph-conf-files -o json | jq -r '.data."<dcn1.conf>"' | base64 -d | grep fsid | sed -e 's/fsid = //')
+$ CEPH_FSID_DCN2=$(oc get secret ceph-conf-files -o json | jq -r '.data."<dcn2.conf>"' | base64 -d | grep fsid | sed -e 's/fsid = //')
+----
++
+where:
+
+`<central.conf>`::
+Specifies the name of the {Ceph} configuration file for the central site in the `ceph-conf-files` secret.
+
+`<dcn1.conf>`::
+Specifies the name of the {Ceph} configuration file for an edge site in the `ceph-conf-files` secret.
+
+`<dcn2.conf>`::
+Specifies the name of the {Ceph} configuration file for an additional edge site in the `ceph-conf-files` secret.
+
+. Create a `ConfigMap` for each site. Each `ConfigMap` contains the {Ceph} and {image_service} configuration specific to that site.
++
+The following example creates `ConfigMap` resources for a central site and two edge sites.
++
+.. Create the `ConfigMap` for the central site:
++
+----
+$ oc apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nova-ceph-central
+data:
+  99-nova-compute-cells-workarounds.conf: |
+    [workarounds]
+    disable_compute_service_check_for_ffu=true
+  03-ceph-nova.conf: |
+    [libvirt]
+    images_type=rbd
+    images_rbd_pool=vms
+    images_rbd_ceph_conf=/etc/ceph/central.conf
+    images_rbd_glance_store_name=central
+    images_rbd_glance_copy_poll_interval=15
+    images_rbd_glance_copy_timeout=600
+    rbd_user=openstack
+    rbd_secret_uuid=${CEPH_FSID_CENTRAL}
+    [glance]
+    endpoint_override = http://glance-central-internal.openstack.svc:9292
+    valid_interfaces = internal
+    [cinder]
+    cross_az_attach = False
+    catalog_info = volumev3:cinderv3:internalURL
+EOF
+----
++
+Each `ConfigMap` contains three configuration sections:
++
+* `[libvirt]` points to the local {Ceph} cluster configuration and uses the local `fsid` as the `rbd_secret_uuid`.
+* `[glance]` uses `endpoint_override` to direct {image_service} requests to the local {image_service} API endpoint instead of the endpoint that is registered in the {identity_service} catalog. The examples use `http://` for the {image_service} endpoints. If your {rhos_prev_long} deployment uses TLS for internal endpoints, use `https://` instead, and ensure that you have completed the TLS migration. For more information, see xref:migrating-tls-everywhere_configuring-network[Migrating TLS-e to the RHOSO deployment].
+* `[cinder]` sets `cross_az_attach = False` to prevent volumes from being attached to instances in a different availability zone.
+
+.. Create the `ConfigMap` for the first edge site:
++
+----
+$ oc apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nova-ceph-dcn1
+data:
+  99-nova-compute-cells-workarounds.conf: |
+    [workarounds]
+    disable_compute_service_check_for_ffu=true
+  03-ceph-nova.conf: |
+    [libvirt]
+    images_type=rbd
+    images_rbd_pool=vms
+    images_rbd_ceph_conf=/etc/ceph/dcn1.conf
+    images_rbd_glance_store_name=dcn1
+    images_rbd_glance_copy_poll_interval=15
+    images_rbd_glance_copy_timeout=600
+    rbd_user=openstack
+    rbd_secret_uuid=${CEPH_FSID_DCN1}
+    [glance]
+    endpoint_override = http://glance-dcn1-internal.openstack.svc:9292
+    valid_interfaces = internal
+    [cinder]
+    cross_az_attach = False
+    catalog_info = volumev3:cinderv3:internalURL
+EOF
+----
++
+.. Create the `ConfigMap` for the second edge site:
++
+----
+$ oc apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nova-ceph-dcn2
+data:
+  99-nova-compute-cells-workarounds.conf: |
+    [workarounds]
+    disable_compute_service_check_for_ffu=true
+  03-ceph-nova.conf: |
+    [libvirt]
+    images_type=rbd
+    images_rbd_pool=vms
+    images_rbd_ceph_conf=/etc/ceph/dcn2.conf
+    images_rbd_glance_store_name=dcn2
+    images_rbd_glance_copy_poll_interval=15
+    images_rbd_glance_copy_timeout=600
+    rbd_user=openstack
+    rbd_secret_uuid=${CEPH_FSID_DCN2}
+    [glance]
+    endpoint_override = http://glance-dcn2-internal.openstack.svc:9292
+    valid_interfaces = internal
+    [cinder]
+    cross_az_attach = False
+    catalog_info = volumev3:cinderv3:internalURL
+EOF
+----
++
+[IMPORTANT]
+====
+The `endpoint_override` in the `[glance]` section is different for each site. This setting directs the {compute_service} to contact the local {image_service} API instead of the central endpoint registered in the {identity_service} catalog. Without this setting, all Compute nodes contact the central {image_service}, and image data is transferred across the WAN instead of read from the local {Ceph} cluster.
+
+* Central Compute nodes use `glance-central-internal.openstack.svc`
+* DCN1 Compute nodes use `glance-dcn1-internal.openstack.svc`
+* DCN2 Compute nodes use `glance-dcn2-internal.openstack.svc`
+
+These endpoint names correspond to the `GlanceAPI` instances that are created when you adopt the {image_service} with DCN back ends.
+====
+
+. Create a per-site `OpenStackDataPlaneService` CR for each site. Each service references the site-specific `ConfigMap` that you created in the previous step:
++
+----
+$ oc apply -f - <<EOF
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: nova-custom-ceph-central
+spec:
+  dataSources:
+    - configMapRef:
+        name: nova-ceph-central
+    - secretRef:
+        name: nova-${DEFAULT_CELL_NAME}-compute-config
+    - secretRef:
+        name: nova-migration-ssh-key
+  playbook: osp.edpm.nova
+  caCerts: combined-ca-bundle
+  edpmServiceType: nova
+  containerImageFields:
+  - NovaComputeImage
+  - EdpmIscsidImage
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: nova-custom-ceph-dcn1
+spec:
+  dataSources:
+    - configMapRef:
+        name: nova-ceph-dcn1
+    - secretRef:
+        name: nova-${DEFAULT_CELL_NAME}-compute-config
+    - secretRef:
+        name: nova-${DEFAULT_CELL_NAME}-metadata-neutron-config
+    - secretRef:
+        name: nova-migration-ssh-key
+  playbook: osp.edpm.nova
+  caCerts: combined-ca-bundle
+  edpmServiceType: nova
+  containerImageFields:
+  - NovaComputeImage
+  - EdpmIscsidImage
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: nova-custom-ceph-dcn2
+spec:
+  dataSources:
+    - configMapRef:
+        name: nova-ceph-dcn2
+    - secretRef:
+        name: nova-${DEFAULT_CELL_NAME}-compute-config
+    - secretRef:
+        name: nova-${DEFAULT_CELL_NAME}-metadata-neutron-config
+    - secretRef:
+        name: nova-migration-ssh-key
+  playbook: osp.edpm.nova
+  caCerts: combined-ca-bundle
+  edpmServiceType: nova
+  containerImageFields:
+  - NovaComputeImage
+  - EdpmIscsidImage
+EOF
+----
++
+[NOTE]
+====
+All `OpenStackDataPlaneService` CRs reference the same cell secret (`nova-cell1-compute-config`) because all node sets belong to a single cell. The per-site `ConfigMap` is what differentiates the {Ceph} and {image_service} configuration for each site.
+====
+
+. When you create the `OpenStackDataPlaneNodeSet` CR for each site, reference the per-site service in the `services` list instead of `nova-$CELL`. For example:
++
+* The central node set uses `nova-custom-ceph-central` in its `services` list.
+* The DCN1 node set uses `nova-custom-ceph-dcn1` in its `services` list.
+* The DCN2 node set uses `nova-custom-ceph-dcn2` in its `services` list.
+
+.. If you have already created the `OpenStackDataPlaneNodeSet` CRs with the default `nova-$CELL` service, patch each node set to use the per-site service. The following example patches the central node set:
++
+----
+$ oc patch osdpns/openstack-${DEFAULT_CELL_NAME} --type=merge --patch "
+spec:
+  services:
+    - bootstrap
+    - download-cache
+    - configure-network
+    - validate-network
+    - install-os
+    - configure-os
+    - ssh-known-hosts
+    - run-os
+    - reboot-os
+    - install-certs
+    - ceph-client
+    - ovn
+    - neutron-metadata
+    - libvirt
+    - nova-custom-ceph-central
+  nodeTemplate:
+    extraMounts:
+    - extraVolType: Ceph
+      volumes:
+      - name: ceph
+        secret:
+          secretName: ceph-conf-files
+      mounts:
+      - name: ceph
+        mountPath: "/etc/ceph"
+        readOnly: true
+"
+----
+
+.. Patch each DCN edge node set with the same services list, replacing `ovn` with `ovn-dcn` and `nova-custom-ceph-central` with the per-site service name. You must include the `ceph-client` service so that the {Ceph} configuration files from the `ceph-conf-files` secret are deployed into the {compute_service} containers on the edge nodes. Without `ceph-client`, the `/etc/ceph/` directory inside the {compute_service} container is empty and instances fail to launch with a `RADOS object not found (error calling conf_read_file)` error.
++
+For example, for the DCN1 node set named `dcn1`:
++
+----
+$ oc patch osdpns/dcn1 --type=merge --patch "
+spec:
+  services:
+    - bootstrap
+    - download-cache
+    - configure-network
+    - validate-network
+    - install-os
+    - configure-os
+    - ssh-known-hosts
+    - run-os
+    - reboot-os
+    - install-certs
+    - ceph-client
+    - ovn-dcn
+    - neutron-metadata
+    - libvirt
+    - nova-custom-ceph-dcn1
+  nodeTemplate:
+    extraMounts:
+    - extraVolType: Ceph
+      volumes:
+      - name: ceph
+        secret:
+          secretName: ceph-conf-files
+      mounts:
+      - name: ceph
+        mountPath: "/etc/ceph"
+        readOnly: true
+"
+----
++
+Repeat this step for each additional edge site, replacing `dcn1` and `nova-custom-ceph-dcn1` with the appropriate site name, for example, `dcn2` and `nova-custom-ceph-dcn2`.
+
+.Additional resources
+
+* xref:adopting-image-service-with-dcn-backend_image-service[Adopting the Image service with multiple Ceph back ends (DCN)]
+* xref:adopting-block-storage-service-with-dcn-backend_hsm-integration[Adopting the Block Storage service with multiple Ceph back ends (DCN)]
