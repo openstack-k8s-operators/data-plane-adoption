@@ -75,6 +75,30 @@
       {{ openstack_command }} token issue -f value -c id
   register: before_adoption_token
 
+- name: Render OIDC cloudrc
+  when: enable_federation | default(false) | bool
+  ansible.builtin.template:
+    src: "{{ federation_oidc_cloudrc_template | default('tests/roles/development_environment/templates/kctestuser1.j2') }}"
+    dest: "/tmp/{{ federation_oidc_cloudrc_filename }}"
+    mode: "0600"
+
+- name: Upload OIDC cloudrc to source cloud
+  when: enable_federation | default(false) | bool
+  ansible.builtin.shell:
+    cmd: |
+      {{ shell_header }}
+      scp -o StrictHostKeyChecking=no -i {{ edpm_privatekey_path }} /tmp/{{ federation_oidc_cloudrc_filename }} {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }}:{{ federation_oidc_cloudrc_remote_path }}
+
+- name: Issue OIDC token
+  no_log: "{{ use_no_log }}"
+  when:
+    - enable_federation | default(false) | bool
+  ansible.builtin.shell:
+    cmd: |
+      {{ shell_header }}
+      {{ get_oidc_token_command }}
+  register: before_adoption_oidc_token
+
 - name: Create credential for sanity checking its value after adoption
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell:
