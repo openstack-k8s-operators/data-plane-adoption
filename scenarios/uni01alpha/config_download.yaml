@@ -55,6 +55,7 @@ parameter_defaults:
     nova::compute::libvirt::virt_type: qemu
   NeutronDnsDomain: 'openstackgate.local'
   BarbicanSimpleCryptoGlobalDefault: true
+  SwiftEncryptionEnabled: true
   Debug: true
   DockerPuppetDebug: true
   ContainerCli: podman
