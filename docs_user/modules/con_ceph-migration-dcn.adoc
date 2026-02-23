@@ -1,0 +1,52 @@
+:_mod-docs-content-type: CONCEPT
+[id="ceph-migration-dcn_{context}"]
+
+= {Ceph} migration for Distributed Compute Node deployments
+
+[role="_abstract"]
+Distributed Compute Node (DCN) deployments that host {CephCluster} clusters on compute nodes at edge sites have additional {Ceph} migration considerations because multiple {CephCluster} clusters exist across sites. This section applies only to DCN deployments where {Ceph}, {image_service}, and {block_storage} services are deployed on edge compute nodes.
+
+.Supported edge storage topologies
+
+DCN deployments support the following storage topologies at edge sites:
+
+* Hyperconverged Infrastructure (HCI): {Ceph} daemons run on Compute nodes at each edge site.
+* {OpenStackPreviousInstaller}-deployed dedicated storage: {Ceph} runs on separate storage nodes deployed by {OpenStackPreviousInstaller}.
+* External {Ceph} cluster: Edge sites connect to pre-existing {CephCluster} clusters not managed by {OpenStackPreviousInstaller}.
+
+.Central site {Ceph} migration
+
+For the central site, migrate {Ceph} daemons from the {OpenStackShort} Controller nodes by using the same process as a non-DCN deployment. For more information, see xref:ceph-daemon-cardinality_migrating-ceph[{Ceph} daemon cardinality].
+
+.Edge site {Ceph} migration
+
+For edge sites that use HCI or {OpenStackPreviousInstaller}-deployed dedicated storage, the {Ceph} daemons can continue to run on their current nodes without migration. The Compute nodes or dedicated storage nodes at edge sites are not decommissioned during adoption, so the {Ceph} daemons remain operational.
+
+For edge sites that use external {Ceph} clusters, no migration is required because the {CephCluster} cluster is not managed by {OpenStackPreviousInstaller}.
+
+.{Ceph} backend configuration and key distribution
+
+In a DCN deployment, each site has its own {CephCluster} cluster with its own configuration file and {CephX} keyring. These must be stored in Kubernetes secrets and mounted into the appropriate {rhos_long} service pods.
+
+Rather than storing all {CephX} keys in a single secret accessible to every pod, the recommended approach is to create one secret per site containing only the keys that site actually needs. This limits the security impact if a site is compromised: a pod at an edge site can authenticate only to its local {CephCluster} cluster and the central cluster, not to the {CephX} keyrings of other edge sites.
+
+The key distribution rule for N sites is:
+
+* The central site (site 0) receives the {CephX} keys and configuration for all clusters, because central services such as {image_service} use the `split` back end and must be able to copy images to and from any site.
+* Each edge site (site 1 through N) receives only the keys for the central cluster and its own local cluster.
+
+For example, in a three-site deployment with a central site and two edge sites:
+
+----
+ceph-conf-central  ->  central.conf + central.keyring
+                       dcn1.conf    + dcn1.keyring
+                       dcn2.conf    + dcn2.keyring
+
+ceph-conf-dcn1     ->  central.conf + central.keyring
+                       dcn1.conf    + dcn1.keyring
+
+ceph-conf-dcn2     ->  central.conf + central.keyring
+                       dcn2.conf    + dcn2.keyring
+----
+
+The per-site secrets are created and then mounted into the appropriate pods using `extraMounts` propagation labels. The procedure in xref:configuring-a-ceph-backend_migrating-databases[Configuring a {Ceph} back end] covers both creating the secrets and applying the propagation labels so that each pod receives only its site-specific keys.

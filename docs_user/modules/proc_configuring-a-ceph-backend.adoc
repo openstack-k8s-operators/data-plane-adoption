@@ -76,8 +76,60 @@ stringData:
 +
 * `mon_host` specifies the addresses of the cluster's monitors. If you use IPv6, use brackets for the `mon_host`. For example:
 `mon_host = [v2:[fd00:cccc::100]:3300/0,v1:[fd00:cccc::100]:6789/0]`
++
+[NOTE]
+====
+For Distributed Compute Node (DCN) deployments with multiple {Ceph} clusters, create one secret per site rather than a single secret shared by all pods. Each secret contains only the keys that site requires. For more information on the rationale and key distribution pattern, see xref:ceph-migration-dcn_{context}[{Ceph} migration for Distributed Compute Node deployments].
 
-. In your `OpenStackControlPlane` CR, inject `ceph.conf` and `ceph.client.openstack.keyring` to the {OpenStackShort} services that are defined in the propagation list. For example:
+The {Ceph} configuration files for all clusters are available on the {OpenStackShort} controller at `/var/lib/tripleo-config/ceph/` (or `/etc/ceph` if the Heat variable `CephConfigPath` is set to that path). Copy them locally and create the per-site secrets:
+
+----
+$ CEPH_SSH="ssh root@<controller>"
+$ CEPH_DIR="/var/lib/tripleo-config/ceph"
+$ TMPDIR=$(mktemp -d)
+
+$ $CEPH_SSH "cat ${CEPH_DIR}/central.conf" > ${TMPDIR}/central.conf
+$ $CEPH_SSH "sudo cat ${CEPH_DIR}/central.client.openstack.keyring" > ${TMPDIR}/central.client.openstack.keyring
+$ $CEPH_SSH "cat ${CEPH_DIR}/dcn1.conf" > ${TMPDIR}/dcn1.conf
+$ $CEPH_SSH "sudo cat ${CEPH_DIR}/dcn1.client.openstack.keyring" > ${TMPDIR}/dcn1.client.openstack.keyring
+$ $CEPH_SSH "cat ${CEPH_DIR}/dcn2.conf" > ${TMPDIR}/dcn2.conf
+$ $CEPH_SSH "sudo cat ${CEPH_DIR}/dcn2.client.openstack.keyring" > ${TMPDIR}/dcn2.client.openstack.keyring
+
+# Central site secret: contains all clusters
+$ oc create secret generic ceph-conf-central \
+    --from-file=${TMPDIR}/central.conf \
+    --from-file=${TMPDIR}/central.client.openstack.keyring \
+    --from-file=${TMPDIR}/dcn1.conf \
+    --from-file=${TMPDIR}/dcn1.client.openstack.keyring \
+    --from-file=${TMPDIR}/dcn2.conf \
+    --from-file=${TMPDIR}/dcn2.client.openstack.keyring \
+    -n openstack
+
+# DCN1 edge site secret: central + local only
+$ oc create secret generic ceph-conf-dcn1 \
+    --from-file=${TMPDIR}/central.conf \
+    --from-file=${TMPDIR}/central.client.openstack.keyring \
+    --from-file=${TMPDIR}/dcn1.conf \
+    --from-file=${TMPDIR}/dcn1.client.openstack.keyring \
+    -n openstack
+
+# DCN2 edge site secret: central + local only
+$ oc create secret generic ceph-conf-dcn2 \
+    --from-file=${TMPDIR}/central.conf \
+    --from-file=${TMPDIR}/central.client.openstack.keyring \
+    --from-file=${TMPDIR}/dcn2.conf \
+    --from-file=${TMPDIR}/dcn2.client.openstack.keyring \
+    -n openstack
+
+$ rm -rf ${TMPDIR}
+----
+
+Repeat for each additional edge site. Each edge site secret must include the central cluster files and only the files for that edge site's local cluster.
+
+When configuring `extraMounts` on the `OpenStackControlPlane`, use propagation labels matching the service instance names (for example, `central`, `dcn1`, `dcn2`) so that each pod mounts only its site-specific secret.
+====
+
+. In your `OpenStackControlPlane` CR, inject the {Ceph} configuration into the {OpenStackShort} service pods using `extraMounts`. For a single-cluster deployment, propagate one secret to all services:
 +
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
@@ -104,3 +156,58 @@ spec:
             readOnly: true
 '
 ----
++
+For a DCN deployment with per-site secrets, use propagation labels matching each service instance name so that each pod receives only the keys for its site:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  extraMounts:
+  - name: v1
+    region: r1
+    extraVol:
+    - extraVolType: Ceph
+      propagation:
+      - central
+      - CinderBackup
+      - ManilaShare
+      volumes:
+      - name: ceph-central
+        projected:
+          sources:
+          - secret:
+              name: ceph-conf-central
+      mounts:
+      - name: ceph-central
+        mountPath: "/etc/ceph"
+        readOnly: true
+    - extraVolType: Ceph
+      propagation:
+      - dcn1
+      volumes:
+      - name: ceph-dcn1
+        projected:
+          sources:
+          - secret:
+              name: ceph-conf-dcn1
+      mounts:
+      - name: ceph-dcn1
+        mountPath: "/etc/ceph"
+        readOnly: true
+    - extraVolType: Ceph
+      propagation:
+      - dcn2
+      volumes:
+      - name: ceph-dcn2
+        projected:
+          sources:
+          - secret:
+              name: ceph-conf-dcn2
+      mounts:
+      - name: ceph-dcn2
+        mountPath: "/etc/ceph"
+        readOnly: true
+'
+----
++
+The propagation label `central` matches the {image_service} and {block_storage} pod instances named `central`. The `CinderBackup` and `ManilaShare` labels are service-type propagation and apply to all {block_storage} backup and {rhos_component_storage_file} pods, which run only at the central site. Replace `central`, `dcn1`, and `dcn2` with the instance names used in your deployment.
