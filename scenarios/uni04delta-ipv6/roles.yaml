@@ -137,7 +137,6 @@
     - OS::TripleO::Services::NeutronBgpVpnApi
     - OS::TripleO::Services::NeutronSfcApi
     - OS::TripleO::Services::NeutronCorePlugin
-    - OS::TripleO::Services::NeutronDhcpAgent
     - OS::TripleO::Services::NeutronL2gwAgent
     - OS::TripleO::Services::NeutronL2gwApi
     - OS::TripleO::Services::NeutronL3Agent
