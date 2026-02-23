@@ -24,6 +24,8 @@ include::../modules/proc_stopping-infrastructure-management-and-compute-services
 
 include::../modules/proc_adopting-compute-services-to-the-data-plane.adoc[leveloffset=+1]
 
+include::../modules/proc_adopting-compute-services-with-dcn-backend.adoc[leveloffset=+1]
+
 include::../modules/proc_performing-a-fast-forward-upgrade-on-compute-services.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-networker-services-to-the-data-plane.adoc[leveloffset=+1]

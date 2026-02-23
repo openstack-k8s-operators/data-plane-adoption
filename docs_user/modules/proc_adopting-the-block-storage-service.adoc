@@ -362,4 +362,4 @@ You do not boot a {compute_service_first_ref} instance by using the new `volume 
 
 .Additional resources
 
-* For Distributed Compute Node (DCN) deployments where {block_storage} and {Ceph} services run on edge compute nodes, see xref:adopting-block-storage-service-with-dcn-backend_{context}[Adopting the {block_storage} with multiple {Ceph} back ends (DCN)].
+* xref:adopting-block-storage-service-with-dcn-backend_{context}[Adopting the {block_storage} with multiple {Ceph} back ends (DCN)]

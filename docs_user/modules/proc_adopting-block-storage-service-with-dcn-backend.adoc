@@ -1,14 +1,12 @@
 :_mod-docs-content-type: PROCEDURE
 [id="adopting-block-storage-service-with-dcn-backend_{context}"]
 
-= Adopting the {block_storage} with multiple {Ceph} back ends (DCN)
+= Adopt the {block_storage} with multiple {Ceph} back ends (DCN)
 
 [role="_abstract"]
-Adopt the {block_storage_first_ref} in a Distributed Compute Node (DCN) deployment where multiple {CephCluster} clusters provide storage at different sites. This configuration deploys multiple `CinderVolume` instances, one for each availability zone, with each volume service configured to use its local {Ceph} cluster.
+Adopt the {block_storage_first_ref} in a Distributed Compute Node (DCN) deployment where multiple {CephCluster} clusters provide storage at different sites. You can deploy multiple `CinderVolume` instances, one for each availability zone, with each volume service configured to use its local {Ceph} cluster.
 
-.Architecture change during adoption
-
-During adoption, the {block_storage} volume services that ran on edge site compute nodes are migrated to run on {rhocp_long} at the central site. Although the control path for API requests now traverses the WAN to reach the {block_storage} running on {rhocp_long}, the data path remains local. Volume data continues to be stored in the {Ceph} cluster at each edge site. When you create a volume or clone a volume from a snapshot, the operation occurs entirely within the local {Ceph} cluster. This architecture preserves data locality and avoids transferring volume data across the WAN.
+During adoption, the {block_storage} volume services that ran on edge site compute nodes are migrated to run on {rhocp_long} at the central site. Although the control path for API requests now traverses the WAN to reach the {block_storage} running on {rhocp_long}, the data path remains local. Volume data continues to be stored in the {Ceph} cluster at each edge site. When you create a volume or clone a volume from a snapshot, the operation occurs entirely within the local {Ceph} cluster. This preserves data locality.
 
 .Prerequisites
 
@@ -118,8 +116,8 @@ Specifies the `fsid` of the DCN2 edge {Ceph} cluster.
 +
 [NOTE]
 ====
-* Each `CinderVolume` is configured with `backend_availability_zone` matching the {compute_service} availability zone for that site. The {block_storage} availability zone names must match the {compute_service} availability zone names exactly, because `cross_az_attach = False` is set in the {compute_service} configuration. If the names do not match, instances cannot attach volumes. Replace the example availability zone names (`az-central`, `az-dcn1`, `az-dcn2`) with the names used in your {rhos_prev_long} deployment.
-* Each `CinderVolume` points to its local {image_service} API endpoint via `glance_api_servers`. This ensures that volume creation from images uses the local {image_service} and {Ceph} cluster. The examples use `http://` for the {image_service} endpoints. If your {rhos_prev_long} deployment uses TLS for internal endpoints, use `https://` instead, and ensure that you have completed the TLS migration. For more information, see xref:migrating-tls-everywhere_{context}[Migrating TLS-e to the RHOSO deployment].
+* You must configure each `CinderVolume` with the `backend_availability_zone` value that matches your {compute_service} availability zone for that site, because `cross_az_attach = False` is set in the {compute_service} configuration. If the names do not match, instances cannot attach volumes. Replace the examples (`az-central`, `az-dcn1`, `az-dcn2`) with the names used in your {rhos_prev_long} deployment.
+* Each `CinderVolume` points to its local {image_service} API endpoint though `glance_api_servers`. This ensures that volume creation from images uses the local {image_service} and {Ceph} cluster. The examples use `http://` for the {image_service} endpoints. If your {rhos_prev_long} deployment uses TLS for internal endpoints, use `https://` instead, and ensure that you have completed the TLS migration. For more information, see xref:migrating-tls-everywhere_{context}[Migrating TLS-e to the RHOSO deployment].
 * The `rbd_cluster_name` setting identifies which {Ceph} cluster configuration to use from the mounted secrets.
 * Adjust the number of edge sites and their names to match your DCN deployment.
 ====
@@ -130,7 +128,7 @@ Specifies the `fsid` of the DCN2 edge {Ceph} cluster.
 $ oc patch openstackcontrolplane openstack --type=merge --patch-file cinder_dcn_patch.yaml
 ----
 
-. Configure the {block_storage} backup service. In this example DCN deployment the backup service runs at the central site and uses the central {Ceph} cluster. Add the `cinderBackup` section to your patch file and re-apply it:
+. Configure the {block_storage} backup service. In this example, the backup service runs at the central site and uses the central {Ceph} cluster. Add the `cinderBackup` section to your patch file and re-apply it:
 +
 [subs="+quotes"]
 ----
@@ -152,9 +150,9 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file cinder_dcn_
 +
 [NOTE]
 ====
-Unlike a single-site {Ceph} deployment where the backup config references `/etc/ceph/ceph.conf`, in a DCN deployment the {Ceph} configuration files in the `ceph-conf-files` secret are named by cluster. Set `backup_ceph_conf` to the path of the {Ceph} configuration file for whichever cluster hosts your `backups` pool. In this example the file is named `central.conf`, so the path is `/etc/ceph/central.conf`. Using a path that does not match a file in the secret will cause the backup service to fail with a `conf_read_file` error.
+In a DCN deployment the {Ceph} configuration files in the `ceph-conf-files` secret are named by cluster. Set `backup_ceph_conf` to the path of the {Ceph} configuration file for whichever cluster hosts your `backups` pool. In this example the file is named `central.conf`, so the path is `/etc/ceph/central.conf`. Using a path that does not match a file in the secret will cause the backup service to fail with a `conf_read_file` error.
 
-Set `storage_availability_zone` to match the availability zone of the volumes you want to back up. The backup scheduler uses this to route backup requests to a service in the correct zone. If the backup service zone does not match the volume zone, backup creation fails with `Service not found for creating backup`.
+Set `storage_availability_zone` to match the availability zone of the volumes that you want to back up. The backup scheduler uses this to route backup requests to a service in the correct zone. If the backup service zone does not match the volume zone, backup creation fails with `Service not found for creating backup`.
 ====
 
 . Verify that the {block_storage} volume services are running for each availability zone:
@@ -206,7 +204,7 @@ $ openstack volume backup restore backup-test-backup backup-test-restore
 +
 [NOTE]
 ====
-Some versions of the {rhocp_long} client display a `cannot unpack non-iterable VolumeBackupsRestore object` error after the restore command. This is a display bug in the client so it does not necessarily mean that the restore operation failed. Verify by checking the restored volume status directly.
+Some versions of the {rhocp_long} client display a `cannot unpack non-iterable VolumeBackupsRestore object` error after the restore command. This is a known issue in the client, the restore operation may not have failed. Verify by checking the restored volume status directly.
 ====
 +
 ----

@@ -6,11 +6,9 @@
 [role="_abstract"]
 Adopt the {image_service_first_ref} in a Distributed Compute Node (DCN) deployment where multiple {CephCluster} clusters provide storage at different sites. This configuration deploys multiple `GlanceAPI` instances: a central API with access to all {Ceph} clusters, and edge APIs at each DCN site with access to their local cluster and the central cluster.
 
-.Architecture change during adoption
+During adoption, the {image_service} instances that ran on edge site compute nodes are migrated to run on {rhocp_long} at the central site. Although the control path for API requests now traverses the WAN to reach the {image_service} running on {rhocp_long}, the data path remains local. Image data continues to be stored in the {Ceph} cluster at each edge site. When you create a virtual machine or volume from an image, the operation occurs at the local {Ceph} cluster. This architecture uses {Ceph} shallow copies (copy-on-write clones) to enable fast boot times without transferring image data across the WAN.
 
-During adoption, the {image_service} instances that ran on edge site compute nodes are migrated to run on {rhocp_long} at the central site. Although the control path for API requests now traverses the WAN to reach the {image_service} running on {rhocp_long}, the data path remains local. Image data continues to be stored in the {Ceph} cluster at each edge site. When you create a virtual machine or volume from an image, the operation occurs entirely within the local {Ceph} cluster. This architecture uses {Ceph} shallow copies (copy-on-write clones) to enable fast boot times without transferring image data across the WAN.
-
-The virtual IP addresses (VIPs) used by {compute_service} nodes to reach the {image_service} change during adoption. Before adoption, edge site {compute_service} nodes contact a local {image_service} VIP on the `internalapi` subnet. After adoption, they contact a {rhocp_long} service endpoint on a different `internalapi` subnet. The following table shows an example of this change for a deployment with a central site and two edge sites:
+The virtual IP addresses (VIPs) used by {compute_service} nodes to reach the {image_service} change during adoption. Before adoption, edge site nodes contact a local {image_service} VIP on the `internalapi` subnet. After adoption, they contact a {rhocp_long} service endpoint on a different `internalapi` subnet. The following table shows an example of this change:
 
 [cols="1,2,2"]
 |===
@@ -29,9 +27,7 @@ The virtual IP addresses (VIPs) used by {compute_service} nodes to reach the {im
 | `\http://glance-dcn2-internal.openstack.svc:9292`
 |===
 
-In {rhos_prev_long}, the internal {image_service} endpoint at edge sites used TCP port 9293, which is the default port that the `tripleo::haproxy` class assigns for the internal `glance-api` service. After adoption, all {image_service} endpoints use the standard port 9292. The examples in this procedure use `http://` for the {image_service} endpoints. If your {rhos_prev_long} deployment uses TLS for internal endpoints, use `https://` instead, and ensure that you have completed the TLS migration. For more information, see xref:migrating-tls-everywhere_{context}[Migrating TLS-e to the RHOSO deployment].
-
-The new {image_service} endpoints are backed by MetalLB load balancer IPs that you assign in step 1 of this procedure using the `metallb.universe.tf/loadBalancerIPs` annotation on each `GlanceAPI`. When you patch the `OpenStackControlPlane` CR, {rhocp_long} creates internal Kubernetes services (for example, `glance-dcn1-internal.openstack.svc`) that resolve to those MetalLB IPs. The {compute_service} nodes are then configured to use these new endpoints when you adopt the data plane by creating per-site `ConfigMap` resources with an `endpoint_override` for each `OpenStackDataPlaneNodeSet`. For more information, see xref:adopting-compute-services-with-dcn-backend_{context}[Adopting Compute services with multiple Ceph back ends (DCN)].
+In {rhos_prev_long}, the internal {image_service} endpoint at edge sites used TCP port 9293, after adoption, all {image_service} endpoints use port 9292. The examples in this procedure use `http://` for the {image_service} endpoints. If your {rhos_prev_long} deployment uses TLS for internal endpoints, use `https://` and ensure that you have completed the TLS migration. For more information, see xref:migrating-tls-everywhere_{context}[Migrating TLS-e to the RHOSO deployment].
 
 .Prerequisites
 
@@ -42,7 +38,9 @@ The new {image_service} endpoints are backed by MetalLB load balancer IPs that y
 
 .Procedure
 
-. Create a patch file for the {image_service} with multiple {Ceph} back ends. The following example shows a DCN deployment with a central site and two edge sites:
+. Create a patch file for the {image_service} with multiple {Ceph} back ends. Use MetalLB loadbalancer IPs for the {image_service} endpoints:
++
+Example DCN deployment with a central site and two edge sites:
 +
 [subs="+quotes"]
 ----
@@ -177,7 +175,7 @@ Specifies the load balancer IP for the DCN1 edge {image_service} API.
 Specifies the load balancer IP for the DCN2 edge {image_service} API.
 
 +
-The compute nodes at each site must be configured to use their local {image_service} endpoints. For example, compute nodes at central use 172.17.0.80, compute nodes at dcn1 use 172.17.0.81, and compute nodes at dcn2 use 172.17.0.82. This configuration is applied when you adopt the data plane by adding a per-site ConfigMap with the `glance_api_servers` setting to each `OpenStackDataPlaneNodeSet`. For more information, see xref:adopting-compute-services-to-the-data-plane_{context}[Adopting Compute services to the data plane].
+You must configure the compute nodes at each site to use their local {image_service} endpoints. For example, compute nodes at central use 172.17.0.80, compute nodes at dcn1 use 172.17.0.81, and compute nodes at dcn2 use 172.17.0.82. This configuration is applied when you adopt the data plane by adding a per-site ConfigMap with the `glance_api_servers` setting to each `OpenStackDataPlaneNodeSet`. For more information, see xref:adopting-compute-services-to-the-data-plane_{context}[Adopting Compute services to the data plane].
 
 +
 [NOTE]
@@ -221,14 +219,14 @@ $ glance import-info
 +----------------+----------------------------------------------------------------------------------+
 ----
 
-. Upload a test image to the central store and verify it is only present on the central {CephCluster} cluster:
+. Upload a test image to the central store. Note the image ID:
 +
 ----
 $ glance image-create --disk-format raw --container-format bare --name test-image \
     --file <image-file> --store central
 ----
-+
-Note the image ID from the output, then verify the image exists in the central {CephCluster} cluster's `images` pool:
+
+. Verify that the image ID from previous command is shown in the central {CephCluster} cluster's `images` pool:
 +
 ----
 $ sudo cephadm shell --config /etc/ceph/central.conf --keyring /etc/ceph/central.client.openstack.keyring \
@@ -242,15 +240,15 @@ NAME                                       SIZE     PARENT  FMT  PROT  LOCK
 ----
 $ glance image-import <image-id> --stores dcn1 --import-method copy-image
 ----
-+
-After the import completes, verify that the `stores` field on the image now includes both `central` and `dcn1`:
+
+. After the import completes, verify that the `stores` field on the image now includes both `central` and `dcn1`:
 +
 ----
 $ glance image-show <image-id> | grep stores
 | stores                        | central,dcn1                                                                     |
 ----
-+
-Verify the image was copied to the DCN1 {CephCluster} cluster:
+
+. Verify the image was copied to the DCN1 {CephCluster} cluster:
 +
 ----
 $ sudo cephadm shell --config /etc/ceph/dcn1.conf --keyring /etc/ceph/dcn1.client.openstack.keyring \

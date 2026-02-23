@@ -267,7 +267,7 @@ For {Ceph} environments with multi-cell configurations, you must name configurat
 +
 [NOTE]
 ====
-For Distributed Compute Node (DCN) deployments where {Ceph}, {image_service}, and {block_storage} services run on edge compute nodes, do not use the single `nova-cells-global-config` ConfigMap shown above. Instead, create a per-site `ConfigMap` and per-site `OpenStackDataPlaneService` for each site in your DCN deployment. Each site's {compute_service} nodes require a different {Ceph} configuration and a different {image_service} endpoint. For more information, see xref:adopting-compute-services-with-dcn-backend_{context}[Adopting Compute services with multiple Ceph back ends (DCN)].
+For Distributed Compute Node (DCN) deployments, do not use the single `nova-cells-global-config` ConfigMap. Create a per-site `ConfigMap` and per-site `OpenStackDataPlaneService` for each site in your DCN deployment. Each site's {compute_service} nodes require a different {Ceph} configuration and a different {image_service} endpoint. For more information, see xref:adopting-compute-services-with-dcn-backend_{context}[Adopting Compute services with multiple Ceph back ends (DCN)].
 ====
 
 . Create the data plane services for {compute_service} cells to enable pre-upgrade workarounds, and to configure the Compute services for your chosen storage back end:

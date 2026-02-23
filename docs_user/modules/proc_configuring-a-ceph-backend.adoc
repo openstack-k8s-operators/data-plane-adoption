@@ -74,57 +74,15 @@ stringData:
     mon_host = 10.1.1.2,10.1.1.3,10.1.1.4
 ----
 +
-* `mon_host` specifies the addresses of the cluster's monitors. If you use IPv6, use brackets for the `mon_host`. For example:
-`mon_host = [v2:[fd00:cccc::100]:3300/0,v1:[fd00:cccc::100]:6789/0]`
+where:
++
+`mon_host`:: specifies the addresses of the cluster's monitors. If you use IPv6, use brackets for the `mon_host`. For example: `mon_host = [v2:[fd00:cccc::100]:3300/0,v1:[fd00:cccc::100]:6789/0]`
 +
 [NOTE]
 ====
-For Distributed Compute Node (DCN) deployments with multiple {Ceph} clusters, create one secret per site rather than a single secret shared by all pods. Each secret contains only the keys that site requires. For more information on the rationale and key distribution pattern, see xref:ceph-migration-dcn_{context}[{Ceph} migration for Distributed Compute Node deployments].
+For Distributed Compute Node (DCN) deployments with multiple {Ceph} clusters, create one secret per site. Each secret contains only the keys that the respective site requires. For more information on the rationale and key distribution pattern, see xref:ceph-migration-dcn_{context}[{Ceph} migration for Distributed Compute Node deployments].
 
-The {Ceph} configuration files for all clusters are available on the {OpenStackShort} controller at `/var/lib/tripleo-config/ceph/` (or `/etc/ceph` if the Heat variable `CephConfigPath` is set to that path). Copy them locally and create the per-site secrets:
-
-----
-$ CEPH_SSH="ssh root@<controller>"
-$ CEPH_DIR="/var/lib/tripleo-config/ceph"
-$ TMPDIR=$(mktemp -d)
-
-$ $CEPH_SSH "cat ${CEPH_DIR}/central.conf" > ${TMPDIR}/central.conf
-$ $CEPH_SSH "sudo cat ${CEPH_DIR}/central.client.openstack.keyring" > ${TMPDIR}/central.client.openstack.keyring
-$ $CEPH_SSH "cat ${CEPH_DIR}/dcn1.conf" > ${TMPDIR}/dcn1.conf
-$ $CEPH_SSH "sudo cat ${CEPH_DIR}/dcn1.client.openstack.keyring" > ${TMPDIR}/dcn1.client.openstack.keyring
-$ $CEPH_SSH "cat ${CEPH_DIR}/dcn2.conf" > ${TMPDIR}/dcn2.conf
-$ $CEPH_SSH "sudo cat ${CEPH_DIR}/dcn2.client.openstack.keyring" > ${TMPDIR}/dcn2.client.openstack.keyring
-
-# Central site secret: contains all clusters
-$ oc create secret generic ceph-conf-central \
-    --from-file=${TMPDIR}/central.conf \
-    --from-file=${TMPDIR}/central.client.openstack.keyring \
-    --from-file=${TMPDIR}/dcn1.conf \
-    --from-file=${TMPDIR}/dcn1.client.openstack.keyring \
-    --from-file=${TMPDIR}/dcn2.conf \
-    --from-file=${TMPDIR}/dcn2.client.openstack.keyring \
-    -n openstack
-
-# DCN1 edge site secret: central + local only
-$ oc create secret generic ceph-conf-dcn1 \
-    --from-file=${TMPDIR}/central.conf \
-    --from-file=${TMPDIR}/central.client.openstack.keyring \
-    --from-file=${TMPDIR}/dcn1.conf \
-    --from-file=${TMPDIR}/dcn1.client.openstack.keyring \
-    -n openstack
-
-# DCN2 edge site secret: central + local only
-$ oc create secret generic ceph-conf-dcn2 \
-    --from-file=${TMPDIR}/central.conf \
-    --from-file=${TMPDIR}/central.client.openstack.keyring \
-    --from-file=${TMPDIR}/dcn2.conf \
-    --from-file=${TMPDIR}/dcn2.client.openstack.keyring \
-    -n openstack
-
-$ rm -rf ${TMPDIR}
-----
-
-Repeat for each additional edge site. Each edge site secret must include the central cluster files and only the files for that edge site's local cluster.
+The {Ceph} configuration files for all clusters are available on the {OpenStackShort} controller at either `/var/lib/tripleo-config/ceph/`, or `/etc/ceph`. Copy them locally and create the per-site secrets. For more information, see https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_a_distributed_compute_node_dcn_architecture/assembly_deploying-the-dcn-control-plane#proc_ceph-secret-key-site-distribution_deploying-the-dcn-control-plane[Distributing Ceph secret keys across sites].
 
 When configuring `extraMounts` on the `OpenStackControlPlane`, use propagation labels matching the service instance names (for example, `central`, `dcn1`, `dcn2`) so that each pod mounts only its site-specific secret.
 ====

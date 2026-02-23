@@ -32,6 +32,8 @@ include::../modules/proc_adopting-the-compute-service.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-the-block-storage-service.adoc[leveloffset=+1]
 
+include::../modules/proc_adopting-block-storage-service-with-dcn-backend.adoc[leveloffset=+1]
+
 include::../modules/proc_adopting-the-openstack-dashboard.adoc[leveloffset=+1]
 
 include::../assemblies/assembly_adopting-the-shared-file-systems-service.adoc[leveloffset=+1]
