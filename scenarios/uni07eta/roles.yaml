@@ -260,6 +260,8 @@
       subnet: internal_api_subnet
     Tenant:
       subnet: tenant_subnet
+    External:
+      subnet: external_subnet
   tags:
     - external_bridge
   RoleParametersDefault:
