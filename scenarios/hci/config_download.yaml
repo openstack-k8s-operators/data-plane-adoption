@@ -34,6 +34,7 @@ resource_registry:
   OS::TripleO::Services::HeatApiCfn: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-cfn-container-puppet.yaml
   OS::TripleO::Services::HeatApiCloudwatch: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-cloudwatch-disabled-puppet.yaml
   OS::TripleO::Services::HeatEngine: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-engine-container-puppet.yaml
+  OS::TripleO::Services::IpaClient: /usr/share/openstack-tripleo-heat-templates/deployment/ipa/ipaservices-baremetal-ansible.yaml
 parameter_defaults:
   RedisVirtualFixedIPs:
     - ip_address: 192.168.122.110
@@ -55,18 +56,21 @@ parameter_defaults:
   ComputeHCICount: 3
   NeutronGlobalPhysnetMtu: 1350
   CinderLVMLoopDeviceSize: 20480
-  CloudName: overcloud.example.com
-  CloudNameInternal: overcloud.internalapi.example.com
-  CloudNameStorage: overcloud.storage.example.com
-  CloudNameStorageManagement: overcloud.storagemgmt.example.com
-  CloudNameCtlplane: overcloud.ctlplane.example.com
-  CloudDomain: example.com
+  CloudName: overcloud.ooo.test
+  CloudNameInternal: overcloud.internalapi.ooo.test
+  CloudNameStorage: overcloud.storage.ooo.test
+  CloudNameStorageManagement: overcloud.storagemgmt.ooo.test
+  CloudNameCtlplane: overcloud.ctlplane.ooo.test
+  CloudDomain: ooo.test
+  IdMServer: osp-free-ipa-0.ooo.test
+  IdMDomain: ooo.test
+  IdMInstallClientPackages: true
   NetworkConfigWithAnsible: false
   ControllerHostnameFormat: '%stackname%-controller-%index%'
   ComputeHCIHostnameFormat: '%stackname%-computehci-%index%'
   CtlplaneNetworkAttributes:
     network:
-      dns_domain: example.com
+      dns_domain: ooo.test
       mtu: 1500
       name: ctlplane
       tags:
