@@ -1,0 +1,313 @@
+:_mod-docs-content-type: PROCEDURE
+[id="configuring-control-plane-networking-for-spine-leaf_{context}"]
+
+= Configuring control plane networking for spine-leaf topologies
+
+[role="_abstract"]
+If you are adopting a spine-leaf or Distributed Compute Node (DCN) deployment, update the control plane networking for communication across sites. Add subnets for remote sites to your existing `NetConfig` custom resource (CR) and update `NetworkAttachmentDefinition` CRs with routes to enable connectivity between the central control plane and remote sites.
+
+.Prerequisites
+
+* You have deployed the {rhos_long} control plane.
+* You have configured a `NetConfig` CR for the central site. For more information, see xref:configuring-isolated-networks_configuring-network[Configuring isolated networks].
+* You have the network topology information for all remote sites, including:
+** IP address ranges for each service network at each site
+** VLAN IDs for each service network at each site
+** Gateway addresses for inter-site routing
+
+.Procedure
+
+. Update your existing `NetConfig` CR to add subnets for each remote site. Each service network must include a subnet for the central site and each remote site. Use unique VLAN IDs for each site. For example:
++
+* Central site: VLANs 20-23
+* Edge site 1: VLANs 30-33
+* Edge site 2: VLANs 40-43
++
+[source,yaml]
+----
+apiVersion: network.openstack.org/v1beta1
+kind: NetConfig
+metadata:
+  name: netconfig
+spec:
+  networks:
+  - name: ctlplane
+    dnsDomain: ctlplane.example.com
+    subnets:
+    - name: <subnet1>
+      allocationRanges:
+      - end: 192.168.122.120
+        start: 192.168.122.100
+      cidr: 192.168.122.0/24
+      gateway: 192.168.122.1
+    - name: <ctlplanesite1>
+      allocationRanges:
+      - end: 192.168.133.120
+        start: 192.168.133.100
+      cidr: 192.168.133.0/24
+      gateway: 192.168.133.1
+    - name: <ctlplanesite2>
+      allocationRanges:
+      - end: 192.168.144.120
+        start: 192.168.144.100
+      cidr: 192.168.144.0/24
+      gateway: 192.168.144.1
+  - name: internalapi
+    dnsDomain: internalapi.example.com
+    subnets:
+    - name: subnet1
+      allocationRanges:
+      - end: 172.17.0.250
+        start: 172.17.0.100
+      cidr: 172.17.0.0/24
+      vlan: 20
+    - name: internalapisite1
+      allocationRanges:
+      - end: 172.17.10.250
+        start: 172.17.10.100
+      cidr: 172.17.10.0/24
+      vlan: 30
+    - name: internalapisite2
+      allocationRanges:
+      - end: 172.17.20.250
+        start: 172.17.20.100
+      cidr: 172.17.20.0/24
+      vlan: 40
+  - name: storage
+    dnsDomain: storage.example.com
+    subnets:
+    - name: subnet1
+      allocationRanges:
+      - end: 172.18.0.250
+        start: 172.18.0.100
+      cidr: 172.18.0.0/24
+      vlan: 21
+    - name: storagesite1
+      allocationRanges:
+      - end: 172.18.10.250
+        start: 172.18.10.100
+      cidr: 172.18.10.0/24
+      vlan: 31
+    - name: storagesite2
+      allocationRanges:
+      - end: 172.18.20.250
+        start: 172.18.20.100
+      cidr: 172.18.20.0/24
+      vlan: 41
+  - name: tenant
+    dnsDomain: tenant.example.com
+    subnets:
+    - name: subnet1
+      allocationRanges:
+      - end: 172.19.0.250
+        start: 172.19.0.100
+      cidr: 172.19.0.0/24
+      vlan: 22
+    - name: tenantsite1
+      allocationRanges:
+      - end: 172.19.10.250
+        start: 172.19.10.100
+      cidr: 172.19.10.0/24
+      vlan: 32
+    - name: tenantsite2
+      allocationRanges:
+      - end: 172.19.20.250
+        start: 172.19.20.100
+      cidr: 172.19.20.0/24
+      vlan: 42
+----
++
+where:
+
+`<subnet1>`:: Specifies a user-defined subnet name for the central site subnet.
+`<ctlplanesite1>`:: Specifies a user-defined subnet for the first DCN edge site.
+`<ctlplanesite2>`:: Specifies a user-defined subnet for the second DCN edge site.
++
+[NOTE]
+====
+You must have the `storagemgmt` network on OpenShift nodes when using DCN with Swift storage. It is not necessary when using Red Hat Ceph Storage.
+====
+
+. Update the `NetworkAttachmentDefinition` CR for the `internalapi` network to include routes to remote site subnets. These `routes` fields enable control plane pods attached to the `internalapi` network, such as OVN Southbound database, to communicate with Compute nodes at remote sites through the central site gateway, and are required for DCN:
++
+[source,yaml]
+----
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: internalapi
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "internalapi",
+      "type": "macvlan",
+      "master": "internalapi",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.17.0.0/24",
+        "range_start": "172.17.0.30",
+        "range_end": "172.17.0.70",
+        "routes": [
+          { "dst": "172.17.10.0/24", "gw": "172.17.0.1" },
+          { "dst": "172.17.20.0/24", "gw": "172.17.0.1" }
+        ]
+      }
+    }
+----
+
+. Update the `NetworkAttachmentDefinition` CR for the `ctlplane` network to include routes to remote site subnets:
++
+[source,yaml]
+----
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ctlplane
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "ctlplane",
+      "type": "macvlan",
+      "master": "ospbr",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "192.168.122.0/24",
+        "range_start": "192.168.122.30",
+        "range_end": "192.168.122.70",
+        "routes": [
+          { "dst": "192.168.133.0/24", "gw": "192.168.122.1" },
+          { "dst": "192.168.144.0/24", "gw": "192.168.122.1" }
+        ]
+      }
+    }
+----
+
+. Update the `NetworkAttachmentDefinition` CR for the `storage` network to include routes to remote site subnets:
++
+[source,yaml]
+----
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: storage
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "storage",
+      "type": "macvlan",
+      "master": "storage",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.18.0.0/24",
+        "range_start": "172.18.0.30",
+        "range_end": "172.18.0.70",
+        "routes": [
+          { "dst": "172.18.10.0/24", "gw": "172.18.0.1" },
+          { "dst": "172.18.20.0/24", "gw": "172.18.0.1" }
+        ]
+      }
+    }
+----
+
+. Update the `NetworkAttachmentDefinition` CR for the `tenant` network to include routes to remote site subnets:
++
+[source,yaml]
+----
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: tenant
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "tenant",
+      "type": "macvlan",
+      "master": "tenant",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.19.0.0/24",
+        "range_start": "172.19.0.30",
+        "range_end": "172.19.0.70",
+        "routes": [
+          { "dst": "172.19.10.0/24", "gw": "172.19.0.1" },
+          { "dst": "172.19.20.0/24", "gw": "172.19.0.1" }
+        ]
+      }
+    }
+----
++
+[NOTE]
+====
+Adjust the IP ranges, subnets, and gateway addresses in all NAD configurations to match your network topology. The `master` interface name must match the interface on the OpenShift nodes where the VLAN is configured.
+====
+
+. If you have already deployed OVN services, restart the OVN Southbound database pods to pick up the new routes:
++
+----
+$ oc delete pod -l service=ovsdbserver-sb
+----
++
+The pods are automatically recreated with the updated network configuration.
+
+. Configure the {networking_first_ref} to recognize all site physnets. In the `OpenStackControlPlane` CR, ensure the Networking service configuration includes all physnets:
++
+[source,yaml]
+----
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+spec:
+  neutron:
+    template:
+      customServiceConfig: |
+        [ml2_type_vlan]
+        network_vlan_ranges = leaf0:1:1000,leaf1:1:1000,leaf2:1:1000
+        [ovn]
+        ovn_emit_need_to_frag = false
+----
++
+where:
+
+leaf0:: Represents the physnet for the central site.
+leaf1:: Represents the physnet for the first remote site.
+leaf2:: Represents the physnet for the second remote site.
++
+[NOTE]
+====
+Adjust the physnet names to match your {rhos_prev_long} deployment. Common conventions include `leaf0/leaf1/leaf2` or `datacentre/dcn1/dcn2`.
+====
+
+.Verification
+
+. Verify that the `NetConfig` CR is created with all subnets:
++
+----
+$ oc get netconfig netconfig -o yaml | grep -A2 "name: subnet1\|name: .*site"
+----
+
+. Verify that each `NetworkAttachmentDefinition` includes routes to remote site subnets:
++
+----
+for nad in ctlplane internalapi storage tenant; do
+  echo "=== $nad ==="
+  oc get net-attach-def $nad -o jsonpath='{.spec.config}' | jq '.ipam.routes
+done
+----
+
+. After restarting OVN SB pods, verify they have routes to remote site subnets:
++
+----
+$ oc exec $(oc get pod -l service=ovsdbserver-sb -o name | head -1) -- ip route show | grep 172.17
+----
++
+Sample output:
++
+----
+172.17.10.0/24 via 172.17.0.1 dev internalapi
+172.17.20.0/24 via 172.17.0.1 dev internalapi
+----

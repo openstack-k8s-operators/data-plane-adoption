@@ -20,6 +20,8 @@ include::../assemblies/assembly_adopting-key-manager-service-with-hsm.adoc[level
 
 include::../modules/proc_adopting-the-networking-service.adoc[leveloffset=+1]
 
+include::../modules/proc_configuring-control-plane-networking-for-spine-leaf.adoc[leveloffset=+1]
+
 include::../modules/proc_adopting-the-object-storage-service.adoc[leveloffset=+1]
 
 include::../assemblies/assembly_adopting-the-image-service.adoc[leveloffset=+1]

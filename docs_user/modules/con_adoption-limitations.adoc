@@ -29,7 +29,7 @@ Unsupported features::
 +
 The adoption process does not support the following features:
 +
-* Distributed Compute node architecture (DCN)
+* Distributed Compute Node (DCN) architecture with storage services at remote or edge sites
 * DNS-as-a-service (designate)
 * {loadbalancer_first_ref}
 * Adopting Border Gateway Protocol (BGP) environments to the {rhos_acro} data plane

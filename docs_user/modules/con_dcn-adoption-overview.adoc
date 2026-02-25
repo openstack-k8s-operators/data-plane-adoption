@@ -1,0 +1,75 @@
+:_mod-docs-content-type: CONCEPT
+[id="dcn-adoption-overview_{context}"]
+
+= Overview of Distributed Compute Node adoption
+
+[role="_abstract"]
+The process to adopt Distributed Compute Node (DCN) deployment from {rhos_prev_long} ({OpenStackShort}) to {rhos_long} requires additional adoption tasks:
+
+* You must map a multi-stack deployment to multiple node sets.
+* You must map additional networking configurations.
+
+Multi-stack to multi-node set mapping:: In {OpenStackPreviousInstaller} deployments, DCN environments use multiple Heat stacks:
++
+** The Central stack is templating for Controllers and central Compute nodes.
+** An edge stack is templating for Edge Compute nodes in a stack. There is one stack per DCN site.
++
+When you perform an adoption, map {OpenStackPreviousInstaller} stacks to `OpenStackDataPlaneNodeSet` custom resources (CRs):
++
+.Mapping {OpenStackPreviousInstaller} stacks to {rhos_acro} nodesets
+[options="header"]
+|===
+| {OpenStackPreviousInstaller} stack | {rhos_acro} nodeset | Availability zone
+| Central stack (Compute role) | `openstack-edpm` or `openstack-cell1` | az-central
+| DCN1 stack (ComputeDcn1 role) | `openstack-edpm-dcn1` or `openstack-cell1-dcn1` | az-dcn1
+| DCN2 stack (ComputeDcn2 role) | `openstack-edpm-dcn2` or `openstack-cell1-dcn2` | az-dcn2
+|===
++
+[NOTE]
+====
+Keep all node sets in the same Nova cell to maintain unified scheduling through a shared cell. The default cell is `cell1`.
+====
+
+Key differences from standard adoption:: The following table summarizes the differences between standard adoption and DCN adoption:
++
+.Comparison of standard and DCN adoption
+[options="header"]
+|===
+| Aspect | Standard adoption | DCN adoption
+| Director stacks | Single stack | Multiple stacks (central + edge sites)
+| Network topology | Flat L2 networks | Routed L3 networks with multiple subnets
+| Data plane node sets | Single node set | Multiple node sets (one per site minimum)
+| Network routes | Usually not required | Required for inter-site connectivity
+| Physnets | Single physnet (e.g., `datacentre`) | Multiple physnets (e.g., `leaf0`, `leaf1`, `leaf2`)
+| Availability zones | Often single AZ | Multiple AZs (one per site)
+| OVN bridge mappings | Single mapping | Site-specific mappings
+| Provider networks | Single segment | Multi-segment routed provider networks
+|===
+
+Requirements for DCN adoption:: Before adopting a DCN deployment, ensure you have:
++
+** Network topology information for all sites (IP ranges, VLANs, gateways)
+** Inter-site routing configuration (routes between site subnets)
+** Mapping of {OpenStackPreviousInstaller} roles to availability zones
+** OVN bridge mapping configuration for each site
+
+[IMPORTANT]
+====
+The adoption of the control plane must complete before adopting any data plane nodes. However, once the control plane is adopted, the edge site data plane adoptions can proceed in parallel with the central site data plane adoption.
+====
+
+DCN Adoption workflow overview:: The adoption of a Distributed Compute Node (DCN) deployment from {rhos_prev_long} ({OpenStackShort}) to {rhos_long}
++
+. **Control plane adoption**: Adopt all control plane services from the central {OpenStackPreviousInstaller} stack to the {rhos_acro} control plane. This is identical to standard adoption.
+. **Network configuration**: Configure multi-subnet `NetConfig` and `NetworkAttachmentDefinition` CRs to support all site networks.
+. **Data plane node set creation**: Create separate `OpenStackDataPlaneNodeSet` CRs for each site, each with site-specific network configurations:
++
+** Network subnet references
+** OVN bridge mappings (physnets)
+** Inter-site routing configuration
+. **Data plane deployment**: Deploy all node sets. The edge site node sets can be deployed in parallel after the central site control plane is adopted.
+
+
+[role="_additional-resources"]
+.Additional resources
+* xref:adopting-spine-leaf-networks_planning[Configuring spine-leaf networks for the {rhos_long_noacro} deployment]
