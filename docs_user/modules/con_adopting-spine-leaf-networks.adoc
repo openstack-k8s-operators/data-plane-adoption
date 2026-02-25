@@ -120,4 +120,4 @@ When you create routed provider networks in {rhos_acro}, you create network segm
 
 [role="_additional-resources"]
 .Additional resources
-* xref:configuring-control-plane-networking-for-spine-leaf_adopt-control-plane[Configuring control plane networking for spine-leaf topologies]
+* xref:configuring-control-plane-networking-for-spine-leaf_troubleshooting-hsm[Configuring control plane networking for spine-leaf topologies]
