@@ -1,0 +1,18 @@
+:_mod-docs-content-type: CONCEPT
+[id="preventing-config-loss-when-using-oc-patch_{context}"]
+
+= Preventing configuration loss when using the `oc patch` command
+
+[role="_abstract"]
+When you use the `oc patch` command to modify a resource, the changes are applied directly to the live object in your OpenShift cluster. If you later edit the custom resource (CR) file for the resource and apply the updates by using `oc apply -f <filename>`, your previous patched changes are overwritten and lost from the resource.
+
+To prevent loss of configuration, you can use the `--patch-file` option to configure the patch and retain patch files. Alternatively, you can export your `openstackcontrolplane` CR after the patch is applied:
+
+----
+$ oc get <resource_type> <resource_name> -o yaml > <filename>.yaml
+----
+
+For example:
+----
+$ oc get OpenStackControlPlane openstack-control-plane -o yaml > openstack_control_plane.yaml
+----
