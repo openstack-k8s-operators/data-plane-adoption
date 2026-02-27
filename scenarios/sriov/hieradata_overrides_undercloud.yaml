@@ -1,0 +1,6 @@
+---
+parameter_defaults:
+  UndercloudExtraConfig:
+    ironic::disk_utils::image_convert_memory_limit: 2048
+    ironic::conductor::heartbeat_interval: 20
+    ironic::conductor::heartbeat_timeout: 120
