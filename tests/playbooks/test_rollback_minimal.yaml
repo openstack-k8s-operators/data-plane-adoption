@@ -58,6 +58,9 @@
     - role: octavia_adoption
       tags:
         - octavia_adoption
+    - role: designate_adoption
+      tags:
+        - designate_adoption
     - role: horizon_adoption
       tags:
         - horizon_adoption
