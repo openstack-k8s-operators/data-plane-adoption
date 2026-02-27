@@ -1,0 +1,127 @@
+:_mod-docs-content-type: PROCEDURE
+[id="configuring-federation-for-keystone_{context}"]
+
+= Configuring OIDC federation for the Identity service
+
+To allow the {identity_service_first_ref} to trust an external OpenID Connect (OIDC) identity provider, apply the federation configuration and verify that federated users can authenticate.
+
+.Prerequisites
+
+* You have Keycloak reachable from your {rhos_long} cluster.
+* You have access to the Keycloak `keycloak-ca.crt` file that corresponds to its certificate chain.
+
+.Procedure
+
+. Create the `keycloakca` secret so that the {identity_service} pods trust the Keycloak certificate authority (CA):
++
+----
+$ oc create secret generic keycloakca \
+    --from-file=KeyCloakCA=<keycloak-ca.crt> -n openstack
+----
++
+where:
+
+`<keycloak-ca.crt>`:: Replace with the path to the CA file you want to use.
+
+. Create the `keystone-httpd-override` secret that provides the Apache HTTPD overrides that are required for OIDC:
++
+[source,yaml]
+----
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keystone-httpd-override
+  namespace: openstack
+type: Opaque
+stringData:
+  federation.conf: |
+    OIDCClaimPrefix "OIDC-"
+    OIDCResponseType "code"
+    OIDCScope "openid profile email"
+    OIDCClaimDelimiter ","
+    OIDCPassUserInfoAs "payload"
+    OIDCPassClaimsAs "both"
+    OIDCProviderMetadataURL "https://keycloak-openstack.apps-crc.testing/auth/realms/openstack/.well-known/openid-configuration"
+    OIDCClientID "rhoso"
+    OIDCClientSecret "<client_secret>"
+    OIDCCryptoPassphrase "<crypto_passphrase>"
+    OIDCOAuthClientID "rhoso"
+    OIDCOAuthClientSecret "<client_secret>"
+    OIDCOAuthIntrospectionEndpoint "https://keycloak-openstack.apps-crc.testing/auth/realms/openstack/protocol/openid-connect/token/introspect"
+    OIDCRedirectURI "https://keystone-public-openstack.apps-crc.testing/v3/auth/OS-FEDERATION/identity_providers/kcIDP/protocols/openid/websso/"
+    LogLevel debug
+
+    <LocationMatch "/v3/auth/OS-FEDERATION/identity_providers/kcIDP/protocols/openid/websso">
+      AuthType "openid-connect"
+      Require valid-user
+    </LocationMatch>
+
+    <Location "/v3/OS-FEDERATION/identity_providers/kcIDP/protocols/openid/auth">
+      AuthType oauth20
+      Require valid-user
+    </Location>
+
+    <LocationMatch "/v3/auth/OS-FEDERATION/websso/openid">
+      AuthType "openid-connect"
+      Require valid-user
+    </LocationMatch>
+----
++
+where:
+
+`<client_secret>`:: Replace with your client ID to use for the OIDC provider handshake. You must get this from your SSO administrator.
+`<crypto_passphrase>`:: Replace with the client secret to use for the OIDC provider handshake. You must get this from your SSO administrator after providing your redirect URLs.
+`<LocationMatch>` and `<Location>`:: Replace with the chosen string that creates your unique redirect URL.
+
+. Patch the `OpenStackControlPlane` custom resource (CR) to enable OIDC federation for Keystone:
++
+[source,yaml]
+----
+spec:
+  tls:
+    caBundleSecretName: keycloakca
+  keystone:
+    template:
+      customServiceConfig: |
+        [token]
+        expiration = 360000
+        [federation]
+        trusted_dashboard=https://horizon-openstack.apps-crc.testing/dashboard/auth/websso/
+        sso_callback_template=/etc/keystone/sso_callback_template.html
+        [openid]
+        remote_id_attribute=HTTP_OIDC_ISS
+        [auth]
+        methods = password,token,oauth1,mapped,application_credential,openid
+        [trusted_ip]
+        trusted_forwarded_for_header=True
+      httpdCustomization:
+        customConfigSecret: keystone-httpd-override
+----
++
+* Ensure you merge the patch with any existing custom configuration for the {identity_service}.
+
+.Verification
+
+. Request a federated token before adoption:
++
+----
+$ openstack token issue
+----
++
+This command should return an access token that is issued for the federated user.
+
+. Verify the token against the newly adopted {identity_service} instance:
++
+----
+$ oc exec -t openstackclient -- env -u OS_CLOUD - \
+    OS_AUTH_URL=https://keystone-public-openstack.apps-crc.testing/v3 \
+    OS_AUTH_TYPE=v3oidcaccesstoken \
+    OS_ACCESS_TOKEN=$(openstack token issue -f value -c id) \
+    openstack project show <project_id>
+----
++
+where:
+
+`<project_id>`:: Replace with the ID of your OpenStack project.
++
+A successful response confirms that the federated OIDC configuration is active on the podified Keystone deployment.
