@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="generator" content="Asciidoctor 2.0.26"/>
+<title>Data Plane Adoption contributor documentation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700"/>
+<style>
+/*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
+/* Uncomment the following line when using as a custom stylesheet */
+/* @import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700"; */
+html{font-family:sans-serif;-webkit-text-size-adjust:100%}
+a{background:none}
+a:focus{outline:thin dotted}
+a:active,a:hover{outline:0}
+h1{font-size:2em;margin:.67em 0}
+b,strong{font-weight:bold}
+abbr{font-size:.9em}
+abbr[title]{cursor:help;border-bottom:1px dotted #dddddf;text-decoration:none}
+dfn{font-style:italic}
+hr{height:0}
+mark{background:#ff0;color:#000}
+code,kbd,pre,samp{font-family:monospace;font-size:1em}
+pre{white-space:pre-wrap}
+q{quotes:"\201C" "\201D" "\2018" "\2019"}
+small{font-size:80%}
+sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}
+sup{top:-.5em}
+sub{bottom:-.25em}
+img{border:0}
+svg:not(:root){overflow:hidden}
+figure{margin:0}
+audio,video{display:inline-block}
+audio:not([controls]){display:none;height:0}
+fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}
+legend{border:0;padding:0}
+button,input,select,textarea{font-family:inherit;font-size:100%;margin:0}
+button,input{line-height:normal}
+button,select{text-transform:none}
+button,html input[type=button],input[type=reset],input[type=submit]{-webkit-appearance:button;cursor:pointer}
+button[disabled],html input[disabled]{cursor:default}
+input[type=checkbox],input[type=radio]{padding:0}
+button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}
+textarea{overflow:auto;vertical-align:top}
+table{border-collapse:collapse;border-spacing:0}
+*,::before,::after{box-sizing:border-box}
+html,body{font-size:100%}
+body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;line-height:1;position:relative;cursor:auto;-moz-tab-size:4;-o-tab-size:4;tab-size:4;word-wrap:anywhere;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
+a:hover{cursor:pointer}
+img,object,embed{max-width:100%;height:auto}
+object,embed{height:100%}
+img{-ms-interpolation-mode:bicubic}
+.left{float:left!important}
+.right{float:right!important}
+.text-left{text-align:left!important}
+.text-right{text-align:right!important}
+.text-center{text-align:center!important}
+.text-justify{text-align:justify!important}
+.hide{display:none}
+img,object,svg{display:inline-block;vertical-align:middle}
+textarea{height:auto;min-height:50px}
+select{width:100%}
+.subheader,.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{line-height:1.45;color:#7a2518;font-weight:400;margin-top:0;margin-bottom:.25em}
+div,dl,dt,dd,ul,ol,li,h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6,pre,form,p,blockquote,th,td{margin:0;padding:0}
+a{color:#2156a5;text-decoration:underline;line-height:inherit}
+a:hover,a:focus{color:#1d4b8f}
+a img{border:0}
+p{line-height:1.6;margin-bottom:1.25em;text-rendering:optimizeLegibility}
+p aside{font-size:.875em;line-height:1.35;font-style:italic}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{font-family:"Open Sans","DejaVu Sans",sans-serif;font-weight:300;font-style:normal;color:#ba3925;text-rendering:optimizeLegibility;margin-top:1em;margin-bottom:.5em;line-height:1.0125em}
+h1 small,h2 small,h3 small,#toctitle small,.sidebarblock>.content>.title small,h4 small,h5 small,h6 small{font-size:60%;color:#e99b8f;line-height:0}
+h1{font-size:2.125em}
+h2{font-size:1.6875em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.375em}
+h4,h5{font-size:1.125em}
+h6{font-size:1em}
+hr{border:solid #dddddf;border-width:1px 0 0;clear:both;margin:1.25em 0 1.1875em}
+em,i{font-style:italic;line-height:inherit}
+strong,b{font-weight:bold;line-height:inherit}
+small{font-size:60%;line-height:inherit}
+code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
+ul,ol,dl{line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
+ul,ol{margin-left:1.5em}
+ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0}
+ul.circle{list-style-type:circle}
+ul.disc{list-style-type:disc}
+ul.square{list-style-type:square}
+ul.circle ul:not([class]),ul.disc ul:not([class]),ul.square ul:not([class]){list-style:inherit}
+ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
+dl dt{margin-bottom:.3125em;font-weight:bold}
+dl dd{margin-bottom:1.25em}
+blockquote{margin:0 0 1.25em;padding:.5625em 1.25em 0 1.1875em;border-left:1px solid #ddd}
+blockquote,blockquote p{line-height:1.6;color:rgba(0,0,0,.85)}
+@media screen and (min-width:768px){h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2}
+h1{font-size:2.75em}
+h2{font-size:2.3125em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.6875em}
+h4{font-size:1.4375em}}
+table{background:#fff;margin-bottom:1.25em;border:1px solid #dedede;word-wrap:normal}
+table thead,table tfoot{background:#f7f8f7}
+table thead tr th,table thead tr td,table tfoot tr th,table tfoot tr td{padding:.5em .625em .625em;font-size:inherit;color:rgba(0,0,0,.8);text-align:left}
+table tr th,table tr td{padding:.5625em .625em;font-size:inherit;color:rgba(0,0,0,.8)}
+table tr.even,table tr.alt{background:#f8f8f7}
+table thead tr th,table tfoot tr th,table tbody tr td,table tr td,table tfoot tr td{line-height:1.6}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2;word-spacing:-.05em}
+h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title strong,h4 strong,h5 strong,h6 strong{font-weight:400}
+.center{margin-left:auto;margin-right:auto}
+.stretch{width:100%}
+.clearfix::before,.clearfix::after,.float-group::before,.float-group::after{content:" ";display:table}
+.clearfix::after,.float-group::after{clear:both}
+:not(pre).nobreak{word-wrap:normal}
+:not(pre).nowrap{white-space:nowrap}
+:not(pre).pre-wrap{white-space:pre-wrap}
+:not(pre):not([class^=L])>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background:#f7f7f8;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
+pre{color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;line-height:1.45;text-rendering:optimizeSpeed}
+pre code,pre pre{color:inherit;font-size:inherit;line-height:inherit}
+pre.nowrap,pre.nowrap pre{white-space:pre;word-wrap:normal}
+em em{font-style:normal}
+strong strong{font-weight:400}
+.keyseq{color:rgba(51,51,51,.8)}
+kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background:#f7f7f7;border:1px solid #ccc;border-radius:3px;box-shadow:0 1px 0 rgba(0,0,0,.2),inset 0 0 0 .1em #fff;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
+.keyseq kbd:first-child{margin-left:0}
+.keyseq kbd:last-child{margin-right:0}
+.menuseq,.menuref{color:#000}
+.menuseq b:not(.caret),.menuref{font-weight:inherit}
+.menuseq{word-spacing:-.02em}
+.menuseq b.caret{font-size:1.25em;line-height:.8}
+.menuseq i.caret{font-weight:bold;text-align:center;width:.45em}
+b.button::before,b.button::after{position:relative;top:-1px;font-weight:400}
+b.button::before{content:"[";padding:0 3px 0 2px}
+b.button::after{content:"]";padding:0 2px 0 3px}
+p a>code:hover{color:rgba(0,0,0,.9)}
+#header,#content,#footnotes,#footer{width:100%;margin:0 auto;max-width:62.5em;*zoom:1;position:relative;padding-left:.9375em;padding-right:.9375em}
+#header::before,#header::after,#content::before,#content::after,#footnotes::before,#footnotes::after,#footer::before,#footer::after{content:" ";display:table}
+#header::after,#content::after,#footnotes::after,#footer::after{clear:both}
+#content{margin-top:1.25em}
+#content::before{content:none}
+#header>h1:first-child{color:rgba(0,0,0,.85);margin-top:2.25rem;margin-bottom:0}
+#header>h1:first-child+#toc{margin-top:8px;border-top:1px solid #dddddf}
+#header>h1:only-child{border-bottom:1px solid #dddddf;padding-bottom:8px}
+#header .details{border-bottom:1px solid #dddddf;line-height:1.45;padding-top:.25em;padding-bottom:.25em;padding-left:.25em;color:rgba(0,0,0,.6);display:flex;flex-flow:row wrap}
+#header .details span:first-child{margin-left:-.125em}
+#header .details span.email a{color:rgba(0,0,0,.85)}
+#header .details br{display:none}
+#header .details br+span::before{content:"\00a0\2013\00a0"}
+#header .details br+span.author::before{content:"\00a0\22c5\00a0";color:rgba(0,0,0,.85)}
+#header .details br+span#revremark::before{content:"\00a0|\00a0"}
+#header #revnumber{text-transform:capitalize}
+#header #revnumber::after{content:"\00a0"}
+#content>h1:first-child:not([class]){color:rgba(0,0,0,.85);border-bottom:1px solid #dddddf;padding-bottom:8px;margin-top:0;padding-top:1rem;margin-bottom:1.25rem}
+#toc{border-bottom:1px solid #e7e7e9;padding-bottom:.5em}
+#toc>ul{margin-left:.125em}
+#toc ul.sectlevel0>li>a{font-style:italic}
+#toc ul.sectlevel0 ul.sectlevel1{margin:.5em 0}
+#toc ul{font-family:"Open Sans","DejaVu Sans",sans-serif;list-style-type:none}
+#toc li{line-height:1.3334;margin-top:.3334em}
+#toc a{text-decoration:none}
+#toc a:active{text-decoration:underline}
+#toctitle{color:#7a2518;font-size:1.2em}
+@media screen and (min-width:768px){#toctitle{font-size:1.375em}
+body.toc2{padding-left:15em;padding-right:0}
+body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #dddddf;padding-bottom:8px}
+#toc.toc2{margin-top:0!important;background:#f8f8f7;position:fixed;width:15em;left:0;top:0;border-right:1px solid #e7e7e9;border-top-width:0!important;border-bottom-width:0!important;z-index:1000;padding:1.25em 1em;height:100%;overflow:auto}
+#toc.toc2 #toctitle{margin-top:0;margin-bottom:.8rem;font-size:1.2em}
+#toc.toc2>ul{font-size:.9em;margin-bottom:0}
+#toc.toc2 ul ul{margin-left:0;padding-left:1em}
+#toc.toc2 ul.sectlevel0 ul.sectlevel1{padding-left:0;margin-top:.5em;margin-bottom:.5em}
+body.toc2.toc-right{padding-left:0;padding-right:15em}
+body.toc2.toc-right #toc.toc2{border-right-width:0;border-left:1px solid #e7e7e9;left:auto;right:0}}
+@media screen and (min-width:1280px){body.toc2{padding-left:20em;padding-right:0}
+#toc.toc2{width:20em}
+#toc.toc2 #toctitle{font-size:1.375em}
+#toc.toc2>ul{font-size:.95em}
+#toc.toc2 ul ul{padding-left:1.25em}
+body.toc2.toc-right{padding-left:0;padding-right:20em}}
+#content #toc{border:1px solid #e0e0dc;margin-bottom:1.25em;padding:1.25em;background:#f8f8f7;border-radius:4px}
+#content #toc>:first-child{margin-top:0}
+#content #toc>:last-child{margin-bottom:0}
+#footer{max-width:none;background:rgba(0,0,0,.8);padding:1.25em}
+#footer-text{color:hsla(0,0%,100%,.8);line-height:1.44}
+#content{margin-bottom:.625em}
+.sect1{padding-bottom:.625em}
+@media screen and (min-width:768px){#content{margin-bottom:1.25em}
+.sect1{padding-bottom:1.25em}}
+.sect1:last-child{padding-bottom:0}
+.sect1+.sect1{border-top:1px solid #e7e7e9}
+#content h1>a.anchor,h2>a.anchor,h3>a.anchor,#toctitle>a.anchor,.sidebarblock>.content>.title>a.anchor,h4>a.anchor,h5>a.anchor,h6>a.anchor{position:absolute;z-index:1001;width:1.5ex;margin-left:-1.5ex;display:block;text-decoration:none!important;visibility:hidden;text-align:center;font-weight:400}
+#content h1>a.anchor::before,h2>a.anchor::before,h3>a.anchor::before,#toctitle>a.anchor::before,.sidebarblock>.content>.title>a.anchor::before,h4>a.anchor::before,h5>a.anchor::before,h6>a.anchor::before{content:"\00A7";font-size:.85em;display:block;padding-top:.1em}
+#content h1:hover>a.anchor,#content h1>a.anchor:hover,h2:hover>a.anchor,h2>a.anchor:hover,h3:hover>a.anchor,#toctitle:hover>a.anchor,.sidebarblock>.content>.title:hover>a.anchor,h3>a.anchor:hover,#toctitle>a.anchor:hover,.sidebarblock>.content>.title>a.anchor:hover,h4:hover>a.anchor,h4>a.anchor:hover,h5:hover>a.anchor,h5>a.anchor:hover,h6:hover>a.anchor,h6>a.anchor:hover{visibility:visible}
+#content h1>a.link,h2>a.link,h3>a.link,#toctitle>a.link,.sidebarblock>.content>.title>a.link,h4>a.link,h5>a.link,h6>a.link{color:#ba3925;text-decoration:none}
+#content h1>a.link:hover,h2>a.link:hover,h3>a.link:hover,#toctitle>a.link:hover,.sidebarblock>.content>.title>a.link:hover,h4>a.link:hover,h5>a.link:hover,h6>a.link:hover{color:#a53221}
+details,.audioblock,.imageblock,.literalblock,.listingblock,.stemblock,.videoblock{margin-bottom:1.25em}
+details{margin-left:1.25rem}
+details>summary{cursor:pointer;display:block;position:relative;line-height:1.6;margin-bottom:.625rem;outline:none;-webkit-tap-highlight-color:transparent}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"";border:solid transparent;border-left:solid;border-width:.3em 0 .3em .5em;position:absolute;top:.5em;left:-1.25rem;transform:translateX(15%)}
+details[open]>summary::before{border:solid transparent;border-top:solid;border-width:.5em .3em 0;transform:translateY(15%)}
+details>summary::after{content:"";width:1.25rem;height:1em;position:absolute;top:.3em;left:-1.25rem}
+.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{text-rendering:optimizeLegibility;text-align:left;font-family:"Noto Serif","DejaVu Serif",serif;font-size:1rem;font-style:italic}
+table.tableblock.fit-content>caption.title{white-space:nowrap;width:0}
+.paragraph.lead>p,#preamble>.sectionbody>[class=paragraph]:first-of-type p{font-size:1.21875em;line-height:1.6;color:rgba(0,0,0,.85)}
+.admonitionblock>table{border-collapse:separate;border:0;background:none;width:100%}
+.admonitionblock>table td.icon{text-align:center;width:80px}
+.admonitionblock>table td.icon img{max-width:none}
+.admonitionblock>table td.icon .title{font-weight:bold;font-family:"Open Sans","DejaVu Sans",sans-serif;text-transform:uppercase}
+.admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #dddddf;color:rgba(0,0,0,.6);word-wrap:anywhere}
+.admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
+.exampleblock>.content{border:1px solid #e6e6e6;margin-bottom:1.25em;padding:1.25em;background:#fff;border-radius:4px}
+.sidebarblock{border:1px solid #dbdbd6;margin-bottom:1.25em;padding:1.25em;background:#f3f3f2;border-radius:4px}
+.sidebarblock>.content>.title{color:#7a2518;margin-top:0;text-align:center}
+.exampleblock>.content>:first-child,.sidebarblock>.content>:first-child{margin-top:0}
+.exampleblock>.content>:last-child,.exampleblock>.content>:last-child>:last-child,.exampleblock>.content .olist>ol>li:last-child>:last-child,.exampleblock>.content .ulist>ul>li:last-child>:last-child,.exampleblock>.content .qlist>ol>li:last-child>:last-child,.sidebarblock>.content>:last-child,.sidebarblock>.content>:last-child>:last-child,.sidebarblock>.content .olist>ol>li:last-child>:last-child,.sidebarblock>.content .ulist>ul>li:last-child>:last-child,.sidebarblock>.content .qlist>ol>li:last-child>:last-child{margin-bottom:0}
+.literalblock pre,.listingblock>.content>pre{border-radius:4px;overflow-x:auto;padding:1em;font-size:.8125em}
+@media screen and (min-width:768px){.literalblock pre,.listingblock>.content>pre{font-size:.90625em}}
+@media screen and (min-width:1280px){.literalblock pre,.listingblock>.content>pre{font-size:1em}}
+.literalblock pre,.listingblock>.content>pre:not(.highlight),.listingblock>.content>pre[class=highlight],.listingblock>.content>pre[class^="highlight "]{background:#f7f7f8}
+.literalblock.output pre{color:#f7f7f8;background:rgba(0,0,0,.9)}
+.listingblock>.content{position:relative}
+.listingblock pre>code{display:block}
+.listingblock code[data-lang]::before{display:none;content:attr(data-lang);position:absolute;font-size:.75em;top:.425rem;right:.5rem;line-height:1;text-transform:uppercase;color:inherit;opacity:.5}
+.listingblock:hover code[data-lang]::before{display:block}
+.listingblock.terminal pre .command::before{content:attr(data-prompt);padding-right:.5em;color:inherit;opacity:.5}
+.listingblock.terminal pre .command:not([data-prompt])::before{content:"$"}
+.listingblock pre.highlightjs{padding:0}
+.listingblock pre.highlightjs>code{padding:1em;border-radius:4px}
+.listingblock pre.prettyprint{border-width:0}
+.prettyprint{background:#f7f7f8}
+pre.prettyprint .linenums{line-height:1.45;margin-left:2em}
+pre.prettyprint li{background:none;list-style-type:inherit;padding-left:0}
+pre.prettyprint li code[data-lang]::before{opacity:1}
+pre.prettyprint li:not(:first-child) code[data-lang]::before{display:none}
+table.linenotable{border-collapse:separate;border:0;margin-bottom:0;background:none}
+table.linenotable td[class]{color:inherit;vertical-align:top;padding:0;line-height:inherit;white-space:normal}
+table.linenotable td.code{padding-left:.75em}
+table.linenotable td.linenos,pre.pygments .linenos{border-right:1px solid;opacity:.35;padding-right:.5em;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+pre.pygments span.linenos{display:inline-block;margin-right:.75em}
+.quoteblock{margin:0 1em 1.25em 1.5em;display:table}
+.quoteblock:not(.excerpt)>.title{margin-left:-1.5em;margin-bottom:.75em}
+.quoteblock blockquote,.quoteblock p{color:rgba(0,0,0,.85);font-size:1.15rem;line-height:1.75;word-spacing:.1em;letter-spacing:0;font-style:italic;text-align:justify}
+.quoteblock blockquote{margin:0;padding:0;border:0}
+.quoteblock blockquote::before{content:"\201c";float:left;font-size:2.75em;font-weight:bold;line-height:.6em;margin-left:-.6em;color:#7a2518;text-shadow:0 1px 2px rgba(0,0,0,.1)}
+.quoteblock blockquote>.paragraph:last-child p{margin-bottom:0}
+.quoteblock .attribution{margin-top:.75em;margin-right:.5ex;text-align:right}
+.verseblock{margin:0 1em 1.25em}
+.verseblock pre{font-family:"Open Sans","DejaVu Sans",sans-serif;font-size:1.15rem;color:rgba(0,0,0,.85);font-weight:300;text-rendering:optimizeLegibility}
+.verseblock pre strong{font-weight:400}
+.verseblock .attribution{margin-top:1.25rem;margin-left:.5ex}
+.quoteblock .attribution,.verseblock .attribution{font-size:.9375em;line-height:1.45;font-style:italic}
+.quoteblock .attribution br,.verseblock .attribution br{display:none}
+.quoteblock .attribution cite,.verseblock .attribution cite{display:block;letter-spacing:-.025em;color:rgba(0,0,0,.6)}
+.quoteblock.abstract blockquote::before,.quoteblock.excerpt blockquote::before,.quoteblock .quoteblock blockquote::before{display:none}
+.quoteblock.abstract blockquote,.quoteblock.abstract p,.quoteblock.excerpt blockquote,.quoteblock.excerpt p,.quoteblock .quoteblock blockquote,.quoteblock .quoteblock p{line-height:1.6;word-spacing:0}
+.quoteblock.abstract{margin:0 1em 1.25em;display:block}
+.quoteblock.abstract>.title{margin:0 0 .375em;font-size:1.15em;text-align:center}
+.quoteblock.excerpt>blockquote,.quoteblock .quoteblock{padding:0 0 .25em 1em;border-left:.25em solid #dddddf}
+.quoteblock.excerpt,.quoteblock .quoteblock{margin-left:0}
+.quoteblock.excerpt blockquote,.quoteblock.excerpt p,.quoteblock .quoteblock blockquote,.quoteblock .quoteblock p{color:inherit;font-size:1.0625rem}
+.quoteblock.excerpt .attribution,.quoteblock .quoteblock .attribution{color:inherit;font-size:.85rem;text-align:left;margin-right:0}
+p.tableblock:last-child{margin-bottom:0}
+td.tableblock>.content{margin-bottom:1.25em;word-wrap:anywhere}
+td.tableblock>.content>:last-child{margin-bottom:-1.25em}
+table.tableblock,th.tableblock,td.tableblock{border:0 solid #dedede}
+table.grid-all>*>tr>*{border-width:1px}
+table.grid-cols>*>tr>*{border-width:0 1px}
+table.grid-rows>*>tr>*{border-width:1px 0}
+table.frame-all{border-width:1px}
+table.frame-ends{border-width:1px 0}
+table.frame-sides{border-width:0 1px}
+table.frame-none>colgroup+*>:first-child>*,table.frame-sides>colgroup+*>:first-child>*{border-top-width:0}
+table.frame-none>:last-child>:last-child>*,table.frame-sides>:last-child>:last-child>*{border-bottom-width:0}
+table.frame-none>*>tr>:first-child,table.frame-ends>*>tr>:first-child{border-left-width:0}
+table.frame-none>*>tr>:last-child,table.frame-ends>*>tr>:last-child{border-right-width:0}
+table.stripes-all>*>tr,table.stripes-odd>*>tr:nth-of-type(odd),table.stripes-even>*>tr:nth-of-type(even),table.stripes-hover>*>tr:hover{background:#f8f8f7}
+th.halign-left,td.halign-left{text-align:left}
+th.halign-right,td.halign-right{text-align:right}
+th.halign-center,td.halign-center{text-align:center}
+th.valign-top,td.valign-top{vertical-align:top}
+th.valign-bottom,td.valign-bottom{vertical-align:bottom}
+th.valign-middle,td.valign-middle{vertical-align:middle}
+table thead th,table tfoot th{font-weight:bold}
+tbody tr th{background:#f7f8f7}
+tbody tr th,tbody tr th p,tfoot tr th,tfoot tr th p{color:rgba(0,0,0,.8);font-weight:bold}
+p.tableblock>code:only-child{background:none;padding:0}
+p.tableblock{font-size:1em}
+ol{margin-left:1.75em}
+ul li ol{margin-left:1.5em}
+dl dd{margin-left:1.125em}
+dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
+li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
+ul.checklist,ul.none,ol.none,ul.no-bullet,ol.no-bullet,ol.unnumbered,ul.unstyled,ol.unstyled{list-style-type:none}
+ul.no-bullet,ol.no-bullet,ol.unnumbered{margin-left:.625em}
+ul.unstyled,ol.unstyled{margin-left:0}
+li>p:empty:only-child::before{content:"";display:inline-block}
+ul.checklist>li>p:first-child{margin-left:-1em}
+ul.checklist>li>p:first-child>.fa-square-o:first-child,ul.checklist>li>p:first-child>.fa-check-square-o:first-child{width:1.25em;font-size:.8em;position:relative;bottom:.125em}
+ul.checklist>li>p:first-child>input[type=checkbox]:first-child{margin-right:.25em}
+ul.inline{display:flex;flex-flow:row wrap;list-style:none;margin:0 0 .625em -1.25em}
+ul.inline>li{margin-left:1.25em}
+.unstyled dl dt{font-weight:400;font-style:normal}
+ol.arabic{list-style-type:decimal}
+ol.decimal{list-style-type:decimal-leading-zero}
+ol.loweralpha{list-style-type:lower-alpha}
+ol.upperalpha{list-style-type:upper-alpha}
+ol.lowerroman{list-style-type:lower-roman}
+ol.upperroman{list-style-type:upper-roman}
+ol.lowergreek{list-style-type:lower-greek}
+.hdlist>table,.colist>table{border:0;background:none}
+.hdlist>table>tbody>tr,.colist>table>tbody>tr{background:none}
+td.hdlist1,td.hdlist2{vertical-align:top;padding:0 .625em}
+td.hdlist1{font-weight:bold;padding-bottom:1.25em}
+td.hdlist2{word-wrap:anywhere}
+.literalblock+.colist,.listingblock+.colist{margin-top:-.5em}
+.colist td:not([class]):first-child{padding:.4em .75em 0;line-height:1;vertical-align:top}
+.colist td:not([class]):first-child img{max-width:none}
+.colist td:not([class]):last-child{padding:.25em 0}
+.thumb,.th{line-height:0;display:inline-block;border:4px solid #fff;box-shadow:0 0 0 1px #ddd}
+.imageblock.left{margin:.25em .625em 1.25em 0}
+.imageblock.right{margin:.25em 0 1.25em .625em}
+.imageblock>.title{margin-bottom:0}
+.imageblock.thumb,.imageblock.th{border-width:6px}
+.imageblock.thumb>.title,.imageblock.th>.title{padding:0 .125em}
+.image.left,.image.right{margin-top:.25em;margin-bottom:.25em;display:inline-block;line-height:0}
+.image.left{margin-right:.625em}
+.image.right{margin-left:.625em}
+a.image{text-decoration:none;display:inline-block}
+a.image object{pointer-events:none}
+sup.footnote,sup.footnoteref{font-size:.875em;position:static;vertical-align:super}
+sup.footnote a,sup.footnoteref a{text-decoration:none}
+sup.footnote a:active,sup.footnoteref a:active,#footnotes .footnote a:first-of-type:active{text-decoration:underline}
+#footnotes{padding-top:.75em;padding-bottom:.75em;margin-bottom:.625em}
+#footnotes hr{width:20%;min-width:6.25em;margin:-.25em 0 .75em;border-width:1px 0 0}
+#footnotes .footnote{padding:0 .375em 0 .225em;line-height:1.3334;font-size:.875em;margin-left:1.2em;margin-bottom:.2em}
+#footnotes .footnote a:first-of-type{font-weight:bold;text-decoration:none;margin-left:-1.05em}
+#footnotes .footnote:last-of-type{margin-bottom:0}
+#content #footnotes{margin-top:-.625em;margin-bottom:0;padding:.75em 0}
+div.unbreakable{page-break-inside:avoid}
+.big{font-size:larger}
+.small{font-size:smaller}
+.underline{text-decoration:underline}
+.overline{text-decoration:overline}
+.line-through{text-decoration:line-through}
+.aqua{color:#00bfbf}
+.aqua-background{background:#00fafa}
+.black{color:#000}
+.black-background{background:#000}
+.blue{color:#0000bf}
+.blue-background{background:#0000fa}
+.fuchsia{color:#bf00bf}
+.fuchsia-background{background:#fa00fa}
+.gray{color:#606060}
+.gray-background{background:#7d7d7d}
+.green{color:#006000}
+.green-background{background:#007d00}
+.lime{color:#00bf00}
+.lime-background{background:#00fa00}
+.maroon{color:#600000}
+.maroon-background{background:#7d0000}
+.navy{color:#000060}
+.navy-background{background:#00007d}
+.olive{color:#606000}
+.olive-background{background:#7d7d00}
+.purple{color:#600060}
+.purple-background{background:#7d007d}
+.red{color:#bf0000}
+.red-background{background:#fa0000}
+.silver{color:#909090}
+.silver-background{background:#bcbcbc}
+.teal{color:#006060}
+.teal-background{background:#007d7d}
+.white{color:#bfbfbf}
+.white-background{background:#fafafa}
+.yellow{color:#bfbf00}
+.yellow-background{background:#fafa00}
+span.icon>.fa{cursor:default}
+a span.icon>.fa{cursor:inherit}
+.admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
+.admonitionblock td.icon .icon-note::before{content:"\f05a";color:#19407c}
+.admonitionblock td.icon .icon-tip::before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
+.admonitionblock td.icon .icon-warning::before{content:"\f071";color:#bf6900}
+.admonitionblock td.icon .icon-caution::before{content:"\f06d";color:#bf3400}
+.admonitionblock td.icon .icon-important::before{content:"\f06a";color:#bf0000}
+.conum[data-value]{display:inline-block;color:#fff!important;background:rgba(0,0,0,.8);border-radius:50%;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
+.conum[data-value] *{color:#fff!important}
+.conum[data-value]+b{display:none}
+.conum[data-value]::after{content:attr(data-value)}
+pre .conum[data-value]{position:relative;top:-.125em}
+b.conum *{color:inherit!important}
+.conum:not([data-value]):empty{display:none}
+dt,th.tableblock,td.content,div.footnote{text-rendering:optimizeLegibility}
+h1,h2,p,td.content,span.alt,summary{letter-spacing:-.01em}
+p strong,td.content strong,div.footnote strong{letter-spacing:-.005em}
+p,blockquote,dt,td.content,td.hdlist1,span.alt,summary{font-size:1.0625rem}
+p{margin-bottom:1.25rem}
+.sidebarblock p,.sidebarblock dt,.sidebarblock td.content,p.tableblock{font-size:1em}
+.exampleblock>.content{background:#fffef7;border-color:#e0e0dc;box-shadow:0 1px 4px #e0e0dc}
+.print-only{display:none!important}
+@page{margin:1.25cm .75cm}
+@media print{*{box-shadow:none!important;text-shadow:none!important}
+html{font-size:80%}
+a{color:inherit!important;text-decoration:underline!important}
+a.bare,a[href^="#"],a[href^="mailto:"]{text-decoration:none!important}
+a[href^="http:"]:not(.bare)::after,a[href^="https:"]:not(.bare)::after{content:"(" attr(href) ")";display:inline-block;font-size:.875em;padding-left:.25em}
+abbr[title]{border-bottom:1px dotted}
+abbr[title]::after{content:" (" attr(title) ")"}
+pre,blockquote,tr,img,object,svg{page-break-inside:avoid}
+thead{display:table-header-group}
+svg{max-width:100%}
+p,blockquote,dt,td.content{font-size:1em;orphans:3;widows:3}
+h2,h3,#toctitle,.sidebarblock>.content>.title{page-break-after:avoid}
+#header,#content,#footnotes,#footer{max-width:none}
+#toc,.sidebarblock,.exampleblock>.content{background:none!important}
+#toc{border-bottom:1px solid #dddddf!important;padding-bottom:0!important}
+body.book #header{text-align:center}
+body.book #header>h1:first-child{border:0!important;margin:2.5em 0 1em}
+body.book #header .details{border:0!important;display:block;padding:0!important}
+body.book #header .details span:first-child{margin-left:0!important}
+body.book #header .details br{display:block}
+body.book #header .details br+span::before{content:none!important}
+body.book #toc{border:0!important;text-align:left!important;padding:0!important;margin:0!important}
+body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-break-before:always}
+.listingblock code[data-lang]::before{display:block}
+#footer{padding:0 .9375em}
+.hide-on-print{display:none!important}
+.print-only{display:block!important}
+.hide-for-print{display:none!important}
+.show-for-print{display:inherit!important}}
+@media amzn-kf8,print{#header>h1:first-child{margin-top:1.25rem}
+.sect1{padding:0!important}
+.sect1+.sect1{border:0}
+#footer{background:none}
+#footer-text{color:rgba(0,0,0,.6);font-size:.9em}}
+@media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/monokai.min.css"/>
+</head>
+<body class="book toc2 toc-left">
+<div id="header">
+<h1>Data Plane Adoption contributor documentation</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_development_environment">Development environment</a>
+<ul class="sectlevel2">
+<li><a href="#_preparing_the_host">Preparing the host</a></li>
+<li><a href="#_deploying_crc">Deploying CRC</a>
+<ul class="sectlevel3">
+<li><a href="#_crc_environment_for_virtual_workloads">CRC environment for virtual workloads</a></li>
+<li><a href="#_crc_environment_with_openstack_ironic">CRC environment with Openstack Ironic</a></li>
+</ul>
+</li>
+<li><a href="#_deploying_tripleo_standalone">Deploying TripleO Standalone</a>
+<ul class="sectlevel3">
+<li><a href="#_enabling_tls_everywhere_tls_e_on_standalone">Enabling TLS everywhere (TLS-e) on Standalone</a></li>
+<li><a href="#_snapshotrevert">Snapshot/revert</a></li>
+</ul>
+</li>
+<li><a href="#_deploying_tripleo_with_multiple_cells">Deploying TripleO With Multiple Cells</a></li>
+<li><a href="#_network_routing">Network routing</a></li>
+<li><a href="#_creating_a_workload_to_adopt">Creating a workload to adopt</a>
+<ul class="sectlevel3">
+<li><a href="#_virtual_machine_steps">Virtual machine steps</a></li>
+<li><a href="#_ironic_steps">Ironic steps</a></li>
+</ul>
+</li>
+<li><a href="#_installing_the_openstack_operators">Installing the OpenStack operators</a></li>
+<li><a href="#_performing_the_adoption_procedure">Performing the adoption procedure</a></li>
+<li><a href="#_resetting_the_environment_to_pre_adoption_state">Resetting the environment to pre-adoption state</a></li>
+<li><a href="#_experimenting_with_an_additional_compute_node">Experimenting with an additional compute node</a>
+<ul class="sectlevel3">
+<li><a href="#_deploy_ng_control_plane_with_ceph">Deploy NG Control Plane with Ceph</a></li>
+<li><a href="#_warning_about_two_openstacks_and_one_ceph">Warning about two OpenStacks and one Ceph</a></li>
+<li><a href="#_deploy_edpm_compute_1">Deploy edpm-compute-1</a></li>
+<li><a href="#_begin_adoption_testing_or_development">Begin Adoption Testing or Development</a></li>
+</ul>
+</li>
+<li><a href="#_deploying_an_ipv6_environment">Deploying an IPv6 environment</a>
+<ul class="sectlevel3">
+<li><a href="#_ipv6_lab">IPv6 Lab</a></li>
+<li><a href="#_deploying_tripleo_standalone_with_ipv6">Deploying TripleO Standalone with IPv6</a></li>
+<li><a href="#_ipv6_network_routing">IPv6 Network routing</a></li>
+<li><a href="#_further_steps">Further steps</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_contributing_to_documentation">Contributing to documentation</a>
+<ul class="sectlevel2">
+<li><a href="#_rendering_documentation_locally">Rendering documentation locally</a>
+<ul class="sectlevel3">
+<li><a href="#_preview_of_downstream_documentation">Preview of downstream documentation</a></li>
+</ul>
+</li>
+<li><a href="#_patterns_and_tips_for_contributing_to_documentation">Patterns and tips for contributing to documentation</a></li>
+</ul>
+</li>
+<li><a href="#_tests">Tests</a>
+<ul class="sectlevel2">
+<li><a href="#_test_suite_information">Test suite information</a></li>
+<li><a href="#_configuring_the_test_suite">Configuring the test suite</a></li>
+<li><a href="#_running_the_tests">Running the tests</a></li>
+<li><a href="#_making_patches_to_the_test_suite">Making patches to the test suite</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_development_environment">Development environment</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Adoption development environment utilizes
+<a href="https://github.com/openstack-k8s-operators/install_yamls">install_yamls</a>
+for CRC VM creation and for creation of the VM that hosts the source
+OSP 17.1 OpenStack in Standalone configuration.</p>
+</div>
+<div class="sect2">
+<h3 id="_preparing_the_host">Preparing the host</h3>
+<div class="paragraph">
+<p>Install <a href="https://pre-commit.com/">pre-commit hooks</a> before contributing:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">pip install pre-commit
+pre-commit install</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Get dataplane adoption repo:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">git clone https://github.com/openstack-k8s-operators/data-plane-adoption.git ~/data-plane-adoption</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Get install_yamls:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">git clone https://github.com/openstack-k8s-operators/install_yamls.git ~/install_yamls</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Install tools for operator development:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ~/install_yamls/devsetup
+make download_tools</code></pre>
+</div>
+</div>
+<hr/>
+</div>
+<div class="sect2">
+<h3 id="_deploying_crc">Deploying CRC</h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+If you want to deploy using IPv6, our current way of deploying a
+lightweight OCP environment is with Single Node Openshift (SNO) instead of CRC.
+See section at the bottom of the page for IPv6 development environment
+deployment.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_crc_environment_for_virtual_workloads">CRC environment for virtual workloads</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ~/install_yamls/devsetup
+PULL_SECRET=$HOME/pull-secret.txt CPUS=12 MEMORY=40000 DISK=100 make crc
+
+eval $(crc oc-env)
+oc login -u kubeadmin -p 12345678 https://api.crc.testing:6443
+
+make crc_attach_default_interface</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_crc_environment_with_openstack_ironic">CRC environment with Openstack Ironic</h4>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+This section is specific to deploying Nova with Ironic backend. Skip
+it if you want to deploy Nova normally.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Create the BMaaS network (<code>crc-bmaas</code>) and virtual baremetal nodes controlled by
+a RedFish BMC emulator.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ~/install_yamls
+make nmstate
+make namespace
+cd devsetup  # back to install_yamls/devsetup
+make bmaas BMAAS_NODE_COUNT=2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A node definition YAML file to use with the <code>openstack baremetal
+create &lt;file&gt;.yaml</code> command can be generated for the virtual baremetal
+nodes by running the <code>bmaas_generate_nodes_yaml</code> make target. Store it
+in a temp file for later.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">make bmaas_generate_nodes_yaml | tail -n +2 | tee /tmp/ironic_nodes.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Set variables to deploy edpm Standalone with additional network
+(<code>baremetal</code>) and compute driver <code>ironic</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt; EOF &gt; /tmp/addtional_nets.json
+[
+  {
+    "type": "network",
+    "name": "crc-bmaas",
+    "standalone_config": {
+      "type": "ovs_bridge",
+      "name": "baremetal",
+      "mtu": 1500,
+      "vip": true,
+      "ip_subnet": "172.20.1.0/24",
+      "allocation_pools": [
+        {
+          "start": "172.20.1.100",
+          "end": "172.20.1.150"
+        }
+      ],
+      "host_routes": [
+        {
+          "destination": "192.168.130.0/24",
+          "nexthop": "172.20.1.1"
+        }
+      ]
+    }
+  }
+]
+EOF
+export EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(jq -c . /tmp/addtional_nets.json)
+export STANDALONE_COMPUTE_DRIVER=ironic
+export EDPM_COMPUTE_CEPH_ENABLED=false  # Optional
+export EDPM_COMPUTE_CEPH_NOVA=false # Optional
+export EDPM_COMPUTE_SRIOV_ENABLED=false # Without this the standalone deploy fails when compute driver is ironic.
+export NTP_SERVER=&lt;ntp server&gt;  # Default pool.ntp.org do not work in RedHat network, set this var as per the environment</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>===
+If <code>EDPM_COMPUTE_CEPH_ENABLED=false</code> is set, TripleO configures <code>Glance</code> with
+<code>Swift</code> as a backend.
+If <code>EDPM_COMPUTE_CEPH_NOVA=false</code> is set, TripleO configures <code>Nova/Libvirt</code> with
+a local storage backend.
+===</p>
+</div>
+<hr/>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_deploying_tripleo_standalone">Deploying TripleO Standalone</h3>
+<div class="paragraph">
+<p>Use the <a href="https://github.com/openstack-k8s-operators/install_yamls/tree/main/devsetup">install_yamls devsetup</a>
+to create a virtual machine (edpm-compute-0) connected to the isolated networks.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+To use OSP 17.1 content to deploy TripleO Standalone, follow the
+<a href="https://url.corp.redhat.com/devel-rhoso-adoption">guide for setting up downstream content</a>
+for <code>make standalone</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ~/install_yamls/devsetup
+EDPM_CONFIGURE_HUGEPAGES=false make standalone <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>To configure the host for a simplistic hugepages setup, set <code>EDPM_CONFIGURE_HUGEPAGES=true</code>.</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_enabling_tls_everywhere_tls_e_on_standalone">Enabling TLS everywhere (TLS-e) on Standalone</h4>
+<div class="paragraph">
+<p>To deploy the Standalone environment with TLS everywhere enabled, set <code>TLS_ENABLED=true</code> and provide a DNS domain to be used for certificates. Optionally disable the Ceph backend for a faster setup.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ~/install_yamls/devsetup
+TLS_ENABLED=true DNS_DOMAIN=ooo.test EDPM_COMPUTE_CEPH_ENABLED=false make standalone</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Disabling Ceph here mirrors the CI setup and speeds up the deployment.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_snapshotrevert">Snapshot/revert</h4>
+<div class="paragraph">
+<p>When the deployment of the Standalone OpenStack is finished, it&#8217;s a
+good time to snapshot the machine, so that multiple Adoption attempts
+can be done without having to deploy from scratch.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ~/install_yamls/devsetup
+make standalone_snapshot</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And when you wish to revert the Standalone deployment to the
+snapshotted state:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ~/install_yamls/devsetup
+make standalone_revert</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Similar snapshot could be done for the CRC virtual machine, but the
+developer environment reset on CRC side can be done sufficiently via
+the install_yamls <code>*_cleanup</code> targets. This is further detailed in
+the section:
+<a href="https://openstack-k8s-operators.github.io/data-plane-adoption/dev/#_reset_the_environment_to_pre_adoption_state">Reset the environment to pre-adoption state</a></p>
+</div>
+<hr/>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_deploying_tripleo_with_multiple_cells">Deploying TripleO With Multiple Cells</h3>
+<div class="paragraph">
+<p>A TripleO Standalone setup creates only a single Nova v2 cell, with a combined controller and compute services on it.
+In order to deploy multiple compute cells for adoption testing (without Ceph), create a 5 VMs, with the following requirements met:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Named <code>edpm-compute-0</code> .. <code>edpm-compute-4</code>.</p>
+</li>
+<li>
+<p>Running RHEL 9.2, with RHOSP 17.1 repositories configured.</p>
+</li>
+<li>
+<p>Can login via SSH without a password as the root user, from the hypervisor host.</p>
+</li>
+<li>
+<p>User <code>zuul</code> is created, and can sudo without a password, and login via SSH without a password, from the hypervisor host.</p>
+</li>
+<li>
+<p>User <code>zuul</code> can login to <code>edpm-compute-1</code>, <code>edpm-compute-2</code>, <code>edpm-compute-3</code>, <code>edpm-compute-4</code> nodes via SSH without a password, from the <code>edpm-compute-0</code> node,
+by using the generated <code>/home/zuul/.ssh/id_rsa</code> private key.</p>
+</li>
+<li>
+<p>RedHat registry credentials are exported on the hypervisor host.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Adjust the following commands for a repositories configuration tool of your choice:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">export RH_REGISTRY_USER="&lt;insert your registry.redhat.io user&gt;"
+export RH_REGISTRY_PWD="&lt;insert your registry.redhat.io password&gt;"
+
+DEFAULT_CELL_NAME="cell3" <i class="conum" data-value="1"></i><b>(1)</b>
+RENAMED_CELLS="cell1 cell2 $DEFAULT_CELL_NAME"
+
+cd ~/install_yamls/devsetup
+cat &lt;&lt;EOF &gt; /tmp/osp17_repos
+# Use a tool of your choice:
+# 1. Rhos-release example steps are only available from the internal RedHat network
+# ... skipping download and install steps ...
+# sudo rhos-release -x
+# sudo rhos-release 17.1
+
+# 2. Subscription-manager example steps require an active registration
+# subscription-manager release --set=9.2
+# subscription-manager repos --disable=*
+# sudo subscription-manager repos \
+#   --enable=rhel-9-for-x86_64-baseos-eus-rpms \
+#   --enable=rhel-9-for-x86_64-appstream-eus-rpms \
+#   --enable=rhel-9-for-x86_64-highavailability-eus-rpms \
+#   --enable=openstack-17.1-for-rhel-9-x86_64-rpms \
+#   --enable=rhceph-6-tools-for-rhel-9-x86_64-rpms \
+#   --enable=fast-datapath-for-rhel-9-x86_64-rpms
+
+# firstboot commands
+sudo dnf install -y git curl wget podman python3-tripleoclient openvswitch3.1 NetworkManager-initscripts-updown \
+sudo dnf install -y util-linux cephadm driverctl lvm2 jq nftables iptables-nft openstack-heat-agents \
+  os-net-config python3-libselinux python3-pyyaml rsync tmpwatch sysstat iproute-tc
+sudo dnf install -y puppet-tripleo puppet-headless
+sudo dnf install -y openstack-selinux
+EOF
+
+export CENTOS_9_STREAM_URL=&lt;insert url to rhel-guest-image-9.2.x86_64.qcow2&gt;
+export NTP_SERVER=&lt;insert ntp server of your choice&gt;
+
+export MANILA_ENABLED=false
+export EDPM_COMPUTE_CEPH_ENABLED=false
+export EDPM_COMPUTE_CEPH_NOVA=false
+export EDPM_COMPUTE_CELLS=3
+
+export STANDALONE_EXTRA_CMD="bash -c 'echo \"$RH_REGISTRY_PWD\" &gt; ~/authfile; chmod 0600 ~/authfile; sudo dnf install -y podman; sudo /bin/podman login registry.redhat.io -u \"$RH_REGISTRY_USER\" --password-stdin &lt; ~/authfile'"
+export EDPM_FIRSTBOOT_EXTRA=/tmp/osp17_repos
+export EDPM_TOTAL_NODES=1
+export SKIP_TRIPLEO_REPOS=false
+export EDPM_COMPUTE_NETWORK_IP=192.168.122.1
+export HOST_PRIMARY_RESOLV_CONF_ENTRY=192.168.122.1
+export BASE_DISK_FILENAME="rhel-9-base.qcow2"
+
+EDPM_COMPUTE_SUFFIX=0 IP=192.168.122.100 EDPM_COMPUTE_DISK_SIZE=10 EDPM_COMPUTE_RAM=9 EDPM_COMPUTE_VCPUS=2 make edpm_compute
+EDPM_COMPUTE_SUFFIX=1 IP=192.168.122.103 EDPM_COMPUTE_DISK_SIZE=17 EDPM_COMPUTE_RAM=12 EDPM_COMPUTE_VCPUS=4 make edpm_compute
+EDPM_COMPUTE_SUFFIX=2 IP=192.168.122.106 EDPM_COMPUTE_DISK_SIZE=14 EDPM_COMPUTE_RAM=12 EDPM_COMPUTE_VCPUS=4 make edpm_compute
+EDPM_COMPUTE_SUFFIX=3 IP=192.168.122.107 EDPM_COMPUTE_DISK_SIZE=12 EDPM_COMPUTE_RAM=4 EDPM_COMPUTE_VCPUS=2 make edpm_compute
+EDPM_COMPUTE_SUFFIX=4 IP=192.168.122.109 EDPM_COMPUTE_DISK_SIZE=16 EDPM_COMPUTE_RAM=12 EDPM_COMPUTE_VCPUS=4 make edpm_compute
+
+for n in 0 3 6 7 9; do
+    # w/a bad packages installation, if done by firstboot - resulting in rpm -V check failures in tripleo-ansible
+    ssh -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        root@192.168.122.10${n} dnf install -y openstack-selinux ';' \
+        dnf reinstall -y openstack-selinux
+    ssh -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        root@192.168.122.10${n} useradd --create-home --shell /bin/bash --groups root zuul ';' \
+        mkdir -p /home/zuul/.ssh
+    scp -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.10${n}:/home/zuul/.ssh/id_rsa
+    ssh -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        root@192.168.122.10${n} ssh-keygen -yf /home/zuul/.ssh/id_rsa '&gt;' /home/zuul/.ssh/id_rsa.pub
+    ssh -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        root@192.168.122.10${n} cp /root/.ssh/authorized_keys /home/zuul/.ssh/authorized_keys
+    ssh -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        root@192.168.122.10${n} chown zuul: /home/zuul/.ssh/*
+    ssh -o StrictHostKeyChecking=false -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa \
+        root@192.168.122.10${n} echo "zuul ALL=NOPASSWD:ALL" '&gt;' /etc/sudoers.d/zuul
+done
+
+make tripleo_deploy
+
+for n in 0 1 2 3 4; do make standalone_snapshot EDPM_COMPUTE_SUFFIX=$n; done</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The source cloud <em>default</em> cell takes a new <code>$DEFAULT_CELL_NAME</code>. In a multi-cell adoption scenario, it may either retain its original name (<code>DEFAULT_CELL_NAME=default</code>), or become renamed into a free for use cell name. Never chose other existing cells names (except <em>default</em>) for <code>DEFAULT_CELL_NAME</code>.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_network_routing">Network routing</h3>
+<div class="paragraph">
+<p>Route VLAN20 to have access to the MariaDB cluster:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">EDPM_BRIDGE=$(sudo virsh dumpxml edpm-compute-0 | grep -oP "(?&lt;=bridge=').*(?=')")
+sudo ip link add link $EDPM_BRIDGE name vlan20 type vlan id 20
+sudo ip addr add dev vlan20 172.17.0.222/24
+sudo ip link set up dev vlan20</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To adopt the Swift service as well, route VLAN23 to have access to the storage
+backend services:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">EDPM_BRIDGE=$(sudo virsh dumpxml edpm-compute-0 | grep -oP "(?&lt;=bridge=').*(?=')")
+sudo ip link add link $EDPM_BRIDGE name vlan23 type vlan id 23
+sudo ip addr add dev vlan23 172.20.0.222/24
+sudo ip link set up dev vlan23</code></pre>
+</div>
+</div>
+<hr/>
+</div>
+<div class="sect2">
+<h3 id="_creating_a_workload_to_adopt">Creating a workload to adopt</h3>
+<div class="paragraph">
+<p>To run <code>openstack</code> commands from the host without
+installing the package and copying the configuration file from the virtual machine, create an alias:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">OS_CLOUD_NAME=standalone
+alias openstack="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=$OS_CLOUD_NAME openstack"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For a multi-cell environment, set <code>OS_CLOUD_NAME</code> to <code>overcloud</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="_virtual_machine_steps">Virtual machine steps</h4>
+<div class="paragraph">
+<p>Create a test VM instance with a test volume attachement:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ~/data-plane-adoption
+export CINDER_VOLUME_BACKEND_CONFIGURED=true <i class="conum" data-value="1"></i><b>(1)</b>
+export CINDER_BACKUP_BACKEND_CONFIGURED=true
+export EDPM_CONFIGURE_HUGEPAGES=false <i class="conum" data-value="2"></i><b>(2)</b>
+export OPENSTACK_COMMAND="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 OS_CLOUD=standalone openstack"
+OS_CLOUD_IP=192.168.122.100 OS_CLOUD_NAME=standalone \
+    bash tests/roles/development_environment/files/pre_launch.bash</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Use <code>CINDER_*_BACKEND_CONFIGURED=false</code>, if Cinder Volume or Backup services' storage backends have been not configured for the source cloud,
+or won&#8217;t be configured for the target cloud. That might be a valid case for some developement setups, but not for a production scenarios.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>To configure the host for a simplistic hugepages setup <code>EDPM_CONFIGURE_HUGEPAGES=true</code>. To apply kernel args, you will need to reboot the standalone host after deployment completed.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>This also creates a test Cinder volume, a backup from it, and a snapshot of it.</p>
+</div>
+<div class="paragraph">
+<p>Create a Barbican secret:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">openstack secret store --name testSecret --payload 'TestPayload'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If using Ceph backend, confirm the image UUID can be seen in Ceph&#8217;s
+images pool:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 sudo cephadm shell -- rbd -p images ls -l</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_ironic_steps">Ironic steps</h4>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+This section is specific to deploying Nova with Ironic backend. Skip
+it if you deployed Nova normally.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Enroll baremetal nodes
+make bmaas_generate_nodes_yaml | tail -n +2 | tee /tmp/ironic_nodes.yaml
+scp -i $HOME/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa /tmp/ironic_nodes.yaml root@192.168.122.100:
+ssh -i $HOME/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100
+
+export OS_CLOUD=standalone
+openstack baremetal create /root/ironic_nodes.yaml
+export IRONIC_PYTHON_AGENT_RAMDISK_ID=$(openstack image show deploy-ramdisk -c id -f value)
+export IRONIC_PYTHON_AGENT_KERNEL_ID=$(openstack image show deploy-kernel -c id -f value)
+for node in $(openstack baremetal node list -c UUID -f value); do
+  openstack baremetal node set $node \
+    --driver-info deploy_ramdisk=${IRONIC_PYTHON_AGENT_RAMDISK_ID} \
+    --driver-info deploy_kernel=${IRONIC_PYTHON_AGENT_KERNEL_ID} \
+    --resource-class baremetal \
+    --property capabilities='boot_mode:uefi'
+done
+
+# Create a baremetal flavor
+openstack flavor create baremetal --ram 1024 --vcpus 1 --disk 15 \
+  --property resources:VCPU=0 \
+  --property resources:MEMORY_MB=0 \
+  --property resources:DISK_GB=0 \
+  --property resources:CUSTOM_BAREMETAL=1 \
+  --property capabilities:boot_mode="uefi"
+
+# Create image
+IMG=Fedora-Cloud-Base-38-1.6.x86_64.qcow2
+URL=https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/$IMG
+curl -o /tmp/${IMG} -L $URL
+DISK_FORMAT=$(qemu-img info /tmp/${IMG} | grep "file format:" | awk '{print $NF}')
+openstack image create --container-format bare --disk-format ${DISK_FORMAT} Fedora-Cloud-Base-38 &lt; /tmp/${IMG}
+
+export BAREMETAL_NODES=$(openstack baremetal node list -c UUID -f value)
+# Manage nodes
+for node in $BAREMETAL_NODES; do
+  openstack baremetal node manage $node
+done
+
+# Wait for nodes to reach "manageable" state
+watch openstack baremetal node list
+
+# Inspect baremetal nodes
+for node in $BAREMETAL_NODES; do
+  openstack baremetal introspection start $node
+done
+
+# Wait for inspection to complete
+watch openstack baremetal introspection list
+
+# Provide nodes
+for node in $BAREMETAL_NODES; do
+  openstack baremetal node provide $node
+done
+
+# Wait for nodes to reach "available" state
+watch openstack baremetal node list
+
+# Create an instance on baremetal
+openstack server show test-baremetal || {
+    openstack server create test-baremetal --flavor baremetal --image Fedora-Cloud-Base-38 --nic net-id=provisioning --wait
+}
+
+# Check instance status and network connectivity
+openstack server show test-baremetal
+ping -c 4 $(openstack server show test-baremetal -f json -c addresses | jq -r .addresses.provisioning[0])</code></pre>
+</div>
+</div>
+<hr/>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_installing_the_openstack_operators">Installing the OpenStack operators</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ..  # back to install_yamls
+make crc_storage
+make input
+make openstack
+make openstack_init</code></pre>
+</div>
+</div>
+<hr/>
+</div>
+<div class="sect2">
+<h3 id="_performing_the_adoption_procedure">Performing the adoption procedure</h3>
+<div class="paragraph">
+<p>To simplify the adoption procedure with additional cells, copy and rename the deployment passwords that
+you use in copy the deployment passwords that you use in the
+<a href="https://openstack-k8s-operators.github.io/data-plane-adoption/user/#deploying-backend-services_migrating-databases">backend
+services deployment phase of the data plane adoption</a>.</p>
+</div>
+<div class="paragraph">
+<p>For a single-cell standalone TripleO deployment:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100:/root/tripleo-standalone-passwords.yaml ~/overcloud-passwords.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Further on, this password is going to be referenced as <code>TRIPLEO_PASSWORDS[default]</code> for a <code>default</code> cell name, in terms of TripleO.</p>
+</div>
+<div class="paragraph">
+<p>For a source cloud deployment with multiple stacks, change the above command to these:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa zuul@192.168.122.100:overcloud-deploy/overcloud/overcloud-passwords.yaml ~/
+scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa zuul@192.168.122.100:overcloud-deploy/cell1/cell1-passwords.yaml ~/
+scp -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa zuul@192.168.122.100:overcloud-deploy/cell2/cell2-passwords.yaml ~/</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Note that all compute cells of the source cloud always share the same database and messaging passwords.
+On the contrary, a generic split-stack topology allows using different passwords files for its stacks.</p>
+</div>
+<div class="paragraph">
+<p>The development environment is now set up, you can go to the <a href="https://openstack-k8s-operators.github.io/data-plane-adoption/">Adoption
+documentation</a>
+and perform adoption manually, or run the <a href="https://openstack-k8s-operators.github.io/data-plane-adoption/dev/#_test_suite_information">test
+suite</a>
+against your environment.</p>
+</div>
+<hr/>
+</div>
+<div class="sect2">
+<h3 id="_resetting_the_environment_to_pre_adoption_state">Resetting the environment to pre-adoption state</h3>
+<div class="paragraph">
+<p>The development environment must be rolled back in case we want to execute another Adoption run.</p>
+</div>
+<div class="paragraph">
+<p>Delete the data-plane and control-plane resources from the CRC vm</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">for CELL in $(echo $RENAMED_CELLS); do
+  oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack-$CELL
+  oc delete --ignore-not-found=true --wait=false openstackdataplanedeployment/openstack-nova-compute-ffu-$CELL
+done
+oc delete --ignore-not-found=true --wait=false openstackcontrolplane/openstack
+oc patch openstackcontrolplane openstack --type=merge --patch '
+metadata:
+  finalizers: []
+' || true
+
+while oc get pod | grep rabbitmq-server-0; do
+    sleep 2
+done
+while oc get pod | grep openstack-galera-0; do
+    sleep 2
+done
+
+oc delete --wait=false pod ovn-copy-data || true
+oc delete --wait=false pod mariadb-copy-data || true
+oc delete secret osp-secret || true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Revert the standalone vm(s) to the snapshotted state</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ~/install_yamls/devsetup
+make standalone_revert</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For a multi-cell deployment, change the above command to these:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ~/install_yamls/devsetup
+for n in 0 1 2 3 4; do make standalone_revert EDPM_COMPUTE_SUFFIX=$n; done</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Clean up and initialize the storage PVs in CRC vm</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ..
+for i in {1..3}; do make crc_storage_cleanup crc_storage &amp;&amp; break || sleep 5; done
+for CELL in $(echo $RENAMED_CELLS); do
+   oc delete pvc mysql-db-openstack-$CELL-galera-0 --ignore-not-found=true
+   oc delete pvc persistence-rabbitmq-$CELL-server-0 --ignore-not-found=true
+done</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Use indexes like <code>*-0</code>, <code>*-1</code> based on the replica counts configured in <code>oscp/openstack</code> CR.</p>
+</div>
+<hr/>
+</div>
+<div class="sect2">
+<h3 id="_experimenting_with_an_additional_compute_node">Experimenting with an additional compute node</h3>
+<div class="paragraph">
+<p>The following is not on the critical path of preparing the development
+environment for Adoption, but it shows how to make the environment
+work with an additional compute node VM.</p>
+</div>
+<div class="paragraph">
+<p>The remaining steps should be completed on the hypervisor hosting crc
+and edpm-compute-0.</p>
+</div>
+<div class="sect3">
+<h4 id="_deploy_ng_control_plane_with_ceph">Deploy NG Control Plane with Ceph</h4>
+<div class="paragraph">
+<p>Export the Ceph configuration from edpm-compute-0 into a secret.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">SSH=$(ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100)
+KEY=$($SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0")
+CONF=$($SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
+
+cat &lt;&lt;EOF &gt; ceph_secret.yaml
+apiVersion: v1
+data:
+  ceph.client.openstack.keyring: $KEY
+  ceph.conf: $CONF
+kind: Secret
+metadata:
+  name: ceph-conf-files
+type: Opaque
+EOF
+
+oc create -f ceph_secret.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Deploy the NG control plane with Ceph as backend for Glance and
+Cinder. As described in
+<a href="https://github.com/openstack-k8s-operators/install_yamls/tree/main">the install_yamls README</a>,
+use the sample config located at
+<a href="https://github.com/openstack-k8s-operators/openstack-operator/blob/main/config/samples/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml" class="bare">https://github.com/openstack-k8s-operators/openstack-operator/blob/main/config/samples/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml</a>
+but make sure to replace the <code>_FSID_</code> in the sample with the one from
+the secret created in the previous step.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl -o /tmp/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml https://raw.githubusercontent.com/openstack-k8s-operators/openstack-operator/main/config/samples/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml
+FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //') &amp;&amp; echo $FSID
+sed -i "s/_FSID_/${FSID}/" /tmp/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml
+oc apply -f /tmp/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A NG control plane which uses the same Ceph backend should now be
+functional. If you create a test image on the NG system to confirm
+it works from the configuration above, be sure to read the warning
+in the next section.</p>
+</div>
+<div class="paragraph">
+<p>Before beginning adoption testing or development you may wish to
+deploy an EDPM node as described in the following section.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_warning_about_two_openstacks_and_one_ceph">Warning about two OpenStacks and one Ceph</h4>
+<div class="paragraph">
+<p>Though workloads can be created in the NG deployment to test, be
+careful not to confuse them with workloads from the Wallaby cluster
+to be migrated. The following scenario is now possible.</p>
+</div>
+<div class="paragraph">
+<p>A Glance image exists on the Wallaby OpenStack to be adopted.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">[stack@standalone standalone]$ export OS_CLOUD=standalone
+[stack@standalone standalone]$ openstack image list
++--------------------------------------+--------+--------+
+| ID                                   | Name   | Status |
++--------------------------------------+--------+--------+
+| 33a43519-a960-4cd0-a593-eca56ee553aa | cirros | active |
++--------------------------------------+--------+--------+
+[stack@standalone standalone]$</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you now create an image with the NG cluster, then a Glance image
+will exsit on the NG OpenStack which will adopt the workloads of the
+wallaby.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">[fultonj@hamfast ng]$ export OS_CLOUD=default
+[fultonj@hamfast ng]$ export OS_PASSWORD=12345678
+[fultonj@hamfast ng]$ openstack image list
++--------------------------------------+--------+--------+
+| ID                                   | Name   | Status |
++--------------------------------------+--------+--------+
+| 4ebccb29-193b-4d52-9ffd-034d440e073c | cirros | active |
++--------------------------------------+--------+--------+
+[fultonj@hamfast ng]$</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Both Glance images are stored in the same Ceph pool.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100 sudo cephadm shell -- rbd -p images ls -l
+Inferring fsid 7133115f-7751-5c2f-88bd-fbff2f140791
+Using recent ceph image quay.rdoproject.org/tripleowallabycentos9/daemon@sha256:aa259dd2439dfaa60b27c9ebb4fb310cdf1e8e62aa7467df350baf22c5d992d8
+NAME                                       SIZE     PARENT  FMT  PROT  LOCK
+33a43519-a960-4cd0-a593-eca56ee553aa         273 B            2
+33a43519-a960-4cd0-a593-eca56ee553aa@snap    273 B            2  yes
+4ebccb29-193b-4d52-9ffd-034d440e073c       112 MiB            2
+4ebccb29-193b-4d52-9ffd-034d440e073c@snap  112 MiB            2  yes</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>However, as far as each Glance service is concerned each has one
+image. Thus, in order to avoid confusion during adoption the test
+Glance image on the NG OpenStack should be deleted.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">openstack image delete 4ebccb29-193b-4d52-9ffd-034d440e073c</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Connecting the NG OpenStack to the existing Ceph cluster is part of
+the adoption procedure so that the data migration can be minimized
+but understand the implications of the above example.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_deploy_edpm_compute_1">Deploy edpm-compute-1</h4>
+<div class="paragraph">
+<p>edpm-compute-0 is not available as a standard EDPM system to be
+managed by <a href="https://openstack-k8s-operators.github.io/edpm-ansible">edpm-ansible</a>
+or
+<a href="https://openstack-k8s-operators.github.io/openstack-operator/dataplane">openstack-operator</a>
+because it hosts the wallaby deployment which will be adopted
+and after adoption it will only host the Ceph server.</p>
+</div>
+<div class="paragraph">
+<p>Use the <a href="https://github.com/openstack-k8s-operators/install_yamls/tree/main/devsetup">install_yamls devsetup</a>
+to create additional virtual machines and be sure
+that the <code>EDPM_COMPUTE_SUFFIX</code> is set to <code>1</code> or greater.
+Do not set <code>EDPM_COMPUTE_SUFFIX</code> to <code>0</code> or you could delete
+the Wallaby system created in the previous section.</p>
+</div>
+<div class="paragraph">
+<p>When deploying EDPM nodes add an <code>extraMounts</code> like the following in
+the <code>OpenStackDataPlaneNodeSet</code> CR <code>nodeTemplate</code> so that they will be
+configured to use the same Ceph cluster.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">    edpm-compute:
+      nodeTemplate:
+        extraMounts:
+        - extraVolType: Ceph
+          volumes:
+          - name: ceph
+            secret:
+              secretName: ceph-conf-files
+          mounts:
+          - name: ceph
+            mountPath: "/etc/ceph"
+            readOnly: true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A NG data plane which uses the same Ceph backend should now be
+functional. Be careful about not confusing new workloads to test the
+NG OpenStack with the Wallaby OpenStack as described in the previous
+section.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_begin_adoption_testing_or_development">Begin Adoption Testing or Development</h4>
+<div class="paragraph">
+<p>We should now have:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>An NG glance service based on Antelope running on CRC</p>
+</li>
+<li>
+<p>An TripleO-deployed glance serviced running on edpm-compute-0</p>
+</li>
+<li>
+<p>Both services have the same Ceph backend</p>
+</li>
+<li>
+<p>Each service has their own independent database</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>An environment above is assumed to be available in the
+<a href="https://openstack-k8s-operators.github.io/data-plane-adoption/user/#adopting-the-image-service_adopt-control-plane">Glance Adoption documentation</a>. You
+may now follow other Data Plane Adoption procedures described in the
+<a href="https://openstack-k8s-operators.github.io/data-plane-adoption">documentation</a>.
+The same pattern can be applied to other services.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_deploying_an_ipv6_environment">Deploying an IPv6 environment</h3>
+<div class="paragraph">
+<p>In order to perform an adoption with IPv6, we will need an Openshift node (SNO
+instead of CRC in this case), an IPv6 control plane Openstack environment, and
+some extra settings we will see through this section.</p>
+</div>
+<div class="sect3">
+<h4 id="_ipv6_lab">IPv6 Lab</h4>
+<div class="paragraph">
+<p>As a prerequisite, make sure you have <code>systemd-resolved</code> configured for DNS
+resolution.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">dnf install -y systemd-resolved
+systemctl enable --now systemd-resolved
+ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We should also have Virtualization Tools installed (<code>libvirt</code> and <code>qemu</code>), and
+the username you are going to use added to the <code>libvirt</code> and <code>qemu</code> group.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo usermod -a -G libvirt,qemu &lt;username&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Furthermore, you should have an RSA key generated to use as identification to
+access your SNO, and your pull secret stored on your user folder.</p>
+</div>
+<div class="paragraph">
+<p>If you did not have libvirt installed, there is a chance that you don&#8217;t have a
+default pool defined in libvirt. If that is the case, you can define it with
+the following commands</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &gt; /tmp/default-pool.xml &lt;&lt;EOF
+&lt;pool type='dir'&gt;
+  &lt;name&gt;default&lt;/name&gt;
+  &lt;target&gt;
+    &lt;path&gt;/var/lib/libvirt/images&lt;/path&gt;
+    &lt;permissions&gt;
+      &lt;mode&gt;0711&lt;/mode&gt;
+      &lt;owner&gt;0&lt;/owner&gt;
+      &lt;group&gt;0&lt;/group&gt;
+      &lt;label&gt;system_u:object_r:virt_image_t:s0&lt;/label&gt;
+    &lt;/permissions&gt;
+  &lt;/target&gt;
+&lt;/pool&gt;
+EOF
+sudo virsh pool-define  default-pool.xml
+sudo virsh pool-start default</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once all the prerequisites are present, you can go ahead and use the <code>install_yamls</code>
+repository to install the IPv6Lab from the <code>devsetup</code> folder. Steps are taken from the
+<a href="https://github.com/openstack-k8s-operators/install_yamls/tree/main/devsetup">install_yamls devsetup README</a>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd install_yamls/devsetup
+export NETWORK_ISOLATION_NET_NAME=net-iso
+export NETWORK_ISOLATION_IPV4=false
+export NETWORK_ISOLATION_IPV6=true
+export NETWORK_ISOLATION_INSTANCE_NAME=sno
+export NETWORK_ISOLATION_IP_ADDRESS=fd00:aaaa::10
+export NNCP_INTERFACE=enp7s0
+
+make download_tools
+make ipv6_lab # Set up the needed networking setup (NAT64 bridge)
+
+make network_isolation_bridge # Create the network-isolation network
+
+make attach_default_interface # Attach the network-isolation bridge to SNO</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To be able to access the SNO lab you need to source the SNO environment. After that you will be able to use <code>oc</code> commands:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">source /home/&lt;user&gt;/.ipv6lab/sno_env
+oc login -u admin -p 12345678 https://api.sno.lab.example.com:6443</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can also ssh the SNO for debugging purposes:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ssh -i ~/.ssh/id_rsa core@fd00:aaaa::10</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you find any problems on the nat64 router you can connect via SSH with <code>fedora@fd00:abcd:abcd:fc00::2</code> or the SNO installation via <code>core@fd00:abcd:abcd:fc00::11</code>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_deploying_tripleo_standalone_with_ipv6">Deploying TripleO Standalone with IPv6</h4>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+There is still no official setup, but in this <a href="https://github.com/karelyatin/install_yamls/commit/8151634183fe1302383a98e0e9f0779b68232ad6">fork of install_yamls</a>
+there is a commit that can be used in order to deploy it successfully.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The steps to deploy would be (assuming you are using <a href="https://github.com/karelyatin/install_yamls/commit/8151634183fe1302383a98e0e9f0779b68232ad6">this commit</a>):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo chmod 777 /var/lib/libvirt/images #This might be needed to download the images
+cat &gt; /tmp/additional_nets.json &lt;&lt;EOF
+[
+  {
+    "type": "network",
+    "name": "net-iso",
+    "standalone_config": {
+      "type": "linux_bridge",
+      "name": "net-iso",
+      "mtu": 1500,
+      "ip_subnet": "fd00:aaaa::1/64",
+      "allocation_pools": [
+        {
+          "start": "fd00:aaaa::100",
+          "end": "fd00:aaaa::150"
+        }
+      ]
+    }
+  }
+]
+EOF
+
+export EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(cat /tmp/additional_nets.json | jq -c)
+export NETWORK_ISOLATION_NET_NAME=nat64
+CRC_POOL=/var/lib/libvirt/images  NTP_SERVER="clock.redhat.com" make standalone</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once the Standalone is deployed you can access it with</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@fd00:aaaa::100</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Snapshots and reverts can be done just as stated on the general adoption section.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_ipv6_network_routing">IPv6 Network routing</h4>
+<div class="paragraph">
+<p>First, we need to know which bridge we will use for EDPM.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo virsh dumpxml edpm-compute-0 | grep -oP "(?&lt;=bridge=').*(?=')"
+EDPM_BRIDGE=net-iso</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When searching for bridges on the compute you might see more than one. This is
+because one is meant to have all the network isolation <code>net-iso</code> and the other
+one is <code>nat64</code>, for external routing. In ipv4 environment we would only have
+one.</p>
+</div>
+<div class="paragraph">
+<p>Route VLAN20 to have access to the MariaDB cluster:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo ip link add link $EDPM_BRIDGE name vlan20 type vlan id 20
+sudo ip addr add dev vlan20 fd00:bbbb::222/64
+sudo ip link set up dev vlan20</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To adopt the Swift service as well, route VLAN23 to have access to the storage backend services:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo ip link add link $EDPM_BRIDGE name vlan23 type vlan id 23
+sudo ip addr add dev vlan23 fd00:dede::222/64
+sudo ip link set up dev vlan23</code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+If you want to test your adoption using FIPs you will need to add IPv4 routing
+to your IPv6 environment. This is achieved by adding an IPv4 address from the
+192.168.122.0/24 range to br-ctlplane in the standalone and another one to
+net-iso in the host. You also need to configure correctly the routes in both.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In order to be able to use floating IPs, this an example of how configuration
+could look.</p>
+</div>
+<div class="paragraph">
+<p>On the hypervisor host:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ip addr add 192.168.122.3/24 dev net-iso
+ip a show net-iso
+# Output
+9: net-iso: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 52:54:00:f9:af:e4 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.3/24 scope global net-iso
+       valid_lft forever preferred_lft forever
+    inet6 fd00:aaaa::1/64 scope global
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fef9:afe4/64 scope link
+       valid_lft forever preferred_lft forever
+
+sudo ip route del 192.168.122.0/24 dev virbr0
+ip route
+# Output
+&lt;other routes&gt;
+...
+192.168.122.0/24 dev net-iso proto kernel scope link src 192.168.122.3</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>On the standalone:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ip addr add 192.168.122.4/24 dev net-iso
+ip a show br-ctlplane
+# Output
+5: br-ctlplane: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UNKNOWN g
+roup default qlen 1000
+    link/ether 52:54:00:46:72:c6 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.4/24 scope global br-ctlplane
+       valid_lft forever preferred_lft forever
+    inet6 fd00:aaaa::99/128 scope global
+       valid_lft forever preferred_lft forever
+    inet6 fd00:aaaa::100/64 scope global
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fe46:72c6/64 scope link
+       valid_lft forever preferred_lft forever
+
+ip route
+# Output
+192.168.122.0/24 dev br-ctlplane proto kernel scope link src 192.168.122.4</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_further_steps">Further steps</h4>
+<div class="paragraph">
+<p>From here, the steps should be similar to the IPv4 adoption. Note that every
+command that requires access to the standalone VM via SSH (i.e. when creating a workload) should be done using
+a different address:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">OS_CLOUD_IP=fd00:aaaa::100 OS_CLOUD_NAME=standalone \
+    bash tests/roles/development_environment/files/pre_launch.bash</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And, when installing operators, use:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">scp -6 -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@[fd00:aaaa::100]:/root/tripleo-standalone-passwords.yaml ~/</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_contributing_to_documentation">Contributing to documentation</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_rendering_documentation_locally">Rendering documentation locally</h3>
+<div class="paragraph">
+<p>Install docs build requirements:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">make docs-dependencies</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To render the user-facing documentation site locally:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">make docs-user</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To render the contributor documentation site locally:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">make docs-dev</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The built HTML files are in <code>docs_build/adoption-user</code> and
+<code>docs_build/adoption-dev</code> directories respectively.</p>
+</div>
+<div class="paragraph">
+<p>There are some additional make targets for convenience. The following
+targets, in addition to rendering the docs, will also open the
+resulting HTML in your browser so that you don&#8217;t have to look for it:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">make docs-user-open
+# or
+make docs-dev-open</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following targets set up an inotify watch on the documentation
+sources, and when it detects modification, the HTML is re-rendered.
+This is so that you can use "edit source - save source - refresh
+browser page" loop when working on the docs, without having to run
+<code>make docs-*</code> repeatedly.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">make docs-user-watch
+# or
+make docs-dev-watch</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_preview_of_downstream_documentation">Preview of downstream documentation</h4>
+<div class="paragraph">
+<p>To render a preview of what should serve as the base for downstream
+docs (e.g. with downstream container image URLs), prepend
+<code>BUILD=downstream</code> to your make targets. For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">BUILD=downstream make docs-user</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_patterns_and_tips_for_contributing_to_documentation">Patterns and tips for contributing to documentation</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Pages concerning individual components/services should make sense in
+the context of the broader adoption procedure. While adopting a
+service in isolation is an option for developers, let&#8217;s write the
+documentation with the assumption the adoption procedure is being
+done in full, going step by step (one doc after another).</p>
+</li>
+<li>
+<p>The procedure should be written with production use in mind. This
+repository could be used as a starting point for product
+technical documentation. We should not tie the documentation to
+something that wouldn&#8217;t translate well from dev envs to production.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>This includes not assuming that the source environment is
+Standalone, and the destination is CRC. We can provide examples for
+Standalone/CRC, but it should be possible to use the procedure
+with fuller environments in a way that is obvious from the docs.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>If possible, try to make code snippets copy-pastable. Use shell
+variables if the snippets should be parametrized. Use <code>oc</code> rather
+than <code>kubectl</code> in snippets.</p>
+</li>
+<li>
+<p>Focus on the "happy path" in the docs as much as possible,
+troubleshooting info can go into the Troubleshooting page, or
+alternatively a troubleshooting section at the end of the document,
+visibly separated from the main procedure.</p>
+</li>
+<li>
+<p>The full procedure will inevitably happen to be quite long, so let&#8217;s
+try to be concise in writing to keep the docs consumable (but not to
+a point of making things difficult to understand or omitting
+important things).</p>
+</li>
+<li>
+<p>A bash alias can be created for long command however when implementing
+them in the test roles you should transform them to avoid command not
+found errors.
+From:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">alias openstack="oc exec -t openstackclient -- openstack"
+
+openstack endpoint list | grep network</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">alias openstack="oc exec -t openstackclient -- openstack"
+
+${BASH_ALIASES[openstack]} endpoint list | grep network</code></pre>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_tests">Tests</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_test_suite_information">Test suite information</h3>
+<div class="paragraph">
+<p>The adoption docs repository also includes a test suite for Adoption.
+There are targets in the Makefile which can be used to execute the
+test suite:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>test-minimal</code> - a minimal test scenario, the eventual set of
+services in this scenario should be the "core" services needed to
+launch a VM. This scenario assumes local storage backend for
+services like Glance and Cinder.</p>
+</li>
+<li>
+<p><code>test-with-ceph</code> - like <em>minimal</em> but with Ceph storage backend for
+Glance and Cinder.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_configuring_the_test_suite">Configuring the test suite</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Create <code>tests/vars.yaml</code> and <code>tests/secrets.yaml</code> by copying the
+included samples (<code>tests/vars.sample.yaml</code>,
+<code>tests/secrets.sample.yaml</code>).</p>
+</li>
+<li>
+<p>Walk through the <code>tests/vars.yaml</code> and <code>tests/secrets.yaml</code> files
+and see if you need to edit any values. If you are using the
+documented development environment, majority of the defaults should
+work out of the box. The comments in the YAML files will guide you
+regarding the expected values. You may want to double check that
+these variables suit your environment:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>install_yamls_path</code></p>
+</li>
+<li>
+<p><code>controller*_ssh</code>       (for each {OpenStackPreviousInstaller} controller in each Heat stack on the source cloud)</p>
+</li>
+<li>
+<p><code>tripleo_passwords</code>     (for each {OpenStackPreviousInstaller} Heat stack on the source cloud)</p>
+</li>
+<li>
+<p><code>source_galera_members</code> (for each cell controller on the source cloud)</p>
+</li>
+<li>
+<p><code>source_mariadb_ip</code>     (for each cell controller on the source cloud)</p>
+</li>
+<li>
+<p><code>edpm_nodes</code>            (for each cell compute node on the destination)</p>
+</li>
+<li>
+<p><code>edpm_privatekey_path</code></p>
+</li>
+<li>
+<p><code>source_ovndb_ip`</code></p>
+</li>
+<li>
+<p><code>timesync_ntp_servers</code></p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_running_the_tests">Running the tests</h3>
+<div class="paragraph">
+<p>The interface between the execution infrastructure and the test suite
+is an Ansible inventory and variables files. Inventory and variable
+samples are provided. To run the tests, follow this procedure:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Install dependencies and create a venv:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo dnf -y install python-devel
+python3 -m venv venv
+source venv/bin/activate
+pip install openstackclient osc_placement jmespath
+ansible-galaxy collection install community.general</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Run <code>make test-with-ceph</code> (the documented development environment
+does include Ceph).</p>
+<div class="paragraph">
+<p>If you are using Ceph-less environment, you should run <code>make
+test-minimal</code>.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_making_patches_to_the_test_suite">Making patches to the test suite</h3>
+<div class="paragraph">
+<p>Please be aware of the following when changing the test suite:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The test suite should follow the docs as much as possible.</p>
+<div class="paragraph">
+<p>The purpose of the test suite is to verify what the user would run
+if they were following the docs. We don&#8217;t want to loosely rewrite
+the docs into Ansible code following Ansible best practices. We want
+to test the exact same bash commands/snippets that are written in
+the docs. This often means that we should be using the <code>shell</code>
+module and do a verbatim copy/paste from docs, instead of using the
+best Ansible module for the task at hand.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2026-02-27 14:43:57 UTC
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/languages/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/languages/bash.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+  hljs.initHighlighting.called = true
+  ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+</body>
+</html>
