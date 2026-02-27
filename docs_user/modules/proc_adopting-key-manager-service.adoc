@@ -35,8 +35,7 @@ spec:
     template:
       databaseInstance: openstack
       databaseAccount: barbican
-      messagingBus:
-        cluster: rabbitmq
+      rabbitMqClusterName: rabbitmq
       secret: osp-secret
       simpleCryptoBackendSecret: osp-secret
       serviceAccount: barbican

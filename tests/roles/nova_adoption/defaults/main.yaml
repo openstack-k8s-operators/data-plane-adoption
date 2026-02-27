@@ -12,8 +12,7 @@ nova_libvirt_patch: |
             hasAPIAccess: true
             cellDatabaseAccount: nova-$CELL
             cellDatabaseInstance: openstack-$CELL
-            messagingBus:
-              cluster: rabbitmq-$CELL
+            cellMessageBusInstance: rabbitmq-$CELL
             metadataServiceTemplate:
               enabled: false # enable here to run it in a cell instead
               override:
@@ -96,8 +95,7 @@ nova_libvirt_patch: |
             hasAPIAccess: true
             cellDatabaseAccount: nova-cell0
             cellDatabaseInstance: openstack
-            messagingBus:
-              cluster: rabbitmq
+            cellMessageBusInstance: rabbitmq
             conductorServiceTemplate:
               customServiceConfig: |
                 [workarounds]
@@ -173,8 +171,7 @@ nova_ironic_patch: |
             hasAPIAccess: true
             cellDatabaseAccount: nova-cell{{ loop.index }}
             cellDatabaseInstance: openstack-cell{{ loop.index }}
-            messagingBus:
-              cluster: rabbitmq-cell{{ loop.index }}
+            cellMessageBusInstance: rabbitmq-cell{{ loop.index }}
             conductorServiceTemplate:
               customServiceConfig: |
                 [workarounds]

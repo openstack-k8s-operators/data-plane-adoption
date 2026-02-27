@@ -74,8 +74,7 @@ ironic_patch: |
             service: IronicInspectorPassword
         ironicNeutronAgent:
           replicas: 1
-          messagingBus:
-            cluster: rabbitmq
+          rabbitMqClusterName: rabbitmq
         secret: osp-secret
 
 ironic_disable_rbac_patch: |

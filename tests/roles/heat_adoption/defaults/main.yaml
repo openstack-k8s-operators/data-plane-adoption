@@ -16,8 +16,7 @@ heat_patch: |
           authEncryptionKey: HeatAuthEncryptionKey
           service: HeatPassword
           stackDomainAdminPassword: HeatStackDomainAdminPassword
-        messagingBus:
-          cluster: rabbitmq
+        rabbitMqClusterName: rabbitmq
         serviceUser: heat
 
 heat_retry_delay: 5
