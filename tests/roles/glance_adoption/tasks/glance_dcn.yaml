@@ -1,0 +1,16 @@
+- name: template out the glance DCN multi-backend configuration
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/glance_dcn.yaml.j2"
+    dest: "/tmp/glance_dcn.yaml"
+    mode: '644'
+
+- name: display generated glance DCN configuration
+  ansible.builtin.debug:
+    msg: "{{ lookup('file', '/tmp/glance_dcn.yaml') }}"
+  when: ansible_verbosity > 0
+
+- name: deploy podified Glance with DCN multi-backend configuration
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch-file=/tmp/glance_dcn.yaml

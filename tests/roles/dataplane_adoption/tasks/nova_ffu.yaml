@@ -68,6 +68,7 @@
     tasks_from: wait.yaml
 
 - name: remove the pre-fast-forward upgrade workarounds from the Compute data plane services
+  when: nova_dcn_clusters | length == 0
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ nodesets_env_oc }}
@@ -77,10 +78,6 @@
     for CELL in $(echo $RENAMED_CELLS); do
       oc get Openstackdataplanenodeset openstack-${CELL} || continue
       NODESETS="[openstack-${CELL}]"
-      if [ "$CELL" == "cell1" ]; then
-        oc get Openstackdataplanenodeset dcn1 && NODESETS="${NODESETS%]*},dcn1]"
-        oc get Openstackdataplanenodeset dcn2 && NODESETS="${NODESETS%]*},dcn2]"
-      fi
       oc apply -f - <<EOF
     ---
     apiVersion: dataplane.openstack.org/v1beta1
@@ -94,6 +91,54 @@
     backoffLimit: 3
     EOF
     done
+
+- name: remove the pre-fast-forward upgrade workarounds from the Compute data plane services (DCN)
+  when: nova_dcn_clusters | length > 0
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ cells_env }}
+
+    # Patch per-site ConfigMaps to clear the FFU workaround
+    {% for cluster in nova_dcn_clusters %}
+    oc patch cm nova-ceph-{{ cluster.name }} --type=json \
+      -p='[{"op": "replace", "path": "/data/99-nova-compute-cells-workarounds.conf", "value": "[workarounds]\n"}]'
+    {% endfor %}
+
+    # Create FFU deployment for the central nodeset
+    for CELL in $(echo $RENAMED_CELLS); do
+      oc get Openstackdataplanenodeset openstack-${CELL} || continue
+      oc apply -f - <<EOF
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneDeployment
+    metadata:
+      name: openstack-nova-compute-ffu-$CELL
+    spec:
+      nodeSets: [openstack-${CELL}]
+      servicesOverride:
+        - nova-custom-ceph-{{ nova_dcn_clusters[0].name }}
+    backoffLimit: 3
+    EOF
+    done
+
+    # Create FFU deployments for DCN edge nodesets
+    {% for cluster in nova_dcn_clusters[1:] %}
+    if oc get Openstackdataplanenodeset {{ cluster.name }} &>/dev/null; then
+      oc apply -f - <<EOF
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneDeployment
+    metadata:
+      name: openstack-nova-compute-ffu-{{ cluster.name }}
+    spec:
+      nodeSets: [{{ cluster.name }}]
+      servicesOverride:
+        - nova-custom-ceph-{{ cluster.name }}
+    backoffLimit: 3
+    EOF
+    fi
+    {% endfor %}
 
 # TODO(bogdando): a concurrent wait loop for multiple node sets in multiple deployments?
 - name: wait for the Compute data plane services to be ready for all cells

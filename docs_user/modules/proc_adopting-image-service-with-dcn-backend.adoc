@@ -1,0 +1,260 @@
+:_mod-docs-content-type: PROCEDURE
+[id="adopting-image-service-with-dcn-backend_{context}"]
+
+= Adopting the {image_service} with multiple {Ceph} back ends (DCN)
+
+[role="_abstract"]
+Adopt the {image_service_first_ref} in a Distributed Compute Node (DCN) deployment where multiple {CephCluster} clusters provide storage at different sites. This configuration deploys multiple `GlanceAPI` instances: a central API with access to all {Ceph} clusters, and edge APIs at each DCN site with access to their local cluster and the central cluster.
+
+During adoption, the {image_service} instances that ran on edge site compute nodes are migrated to run on {rhocp_long} at the central site. Although the control path for API requests now traverses the WAN to reach the {image_service} running on {rhocp_long}, the data path remains local. Image data continues to be stored in the {Ceph} cluster at each edge site. When you create a virtual machine or volume from an image, the operation occurs at the local {Ceph} cluster. This architecture uses {Ceph} shallow copies (copy-on-write clones) to enable fast boot times without transferring image data across the WAN.
+
+The virtual IP addresses (VIPs) used by {compute_service} nodes to reach the {image_service} change during adoption. Before adoption, edge site nodes contact a local {image_service} VIP on the `internalapi` subnet. After adoption, they contact a {rhocp_long} service endpoint on a different `internalapi` subnet. The following table shows an example of this change:
+
+[cols="1,2,2"]
+|===
+| Site | Before adoption | After adoption
+
+| Central
+| {identity_service} catalog VIP
+| {identity_service} catalog updated to `\http://glance-central-internal.openstack.svc:9292`
+
+| DCN1
+| `\http://172.17.10.111:9293`
+| `\http://glance-dcn1-internal.openstack.svc:9292`
+
+| DCN2
+| `\http://172.17.20.121:9293`
+| `\http://glance-dcn2-internal.openstack.svc:9292`
+|===
+
+In {rhos_prev_long}, the internal {image_service} endpoint at edge sites used TCP port 9293, after adoption, all {image_service} endpoints use port 9292. The new endpoints are backed by MetalLB load balancer IPs that you assign using the `metallb.universe.tf/loadBalancerIPs` annotation on each `GlanceAPI`. When you patch the `OpenStackControlPlane` CR, {rhocp_long} creates internal Kubernetes services (for example, `glance-dcn1-internal.openstack.svc`) that resolve to those MetalLB IPs. The {compute_service} nodes are configured to use these endpoints when you adopt the data plane. For more information, see xref:adopting-compute-services-with-dcn-backend_{context}[Adopting Compute services with multiple Ceph back ends (DCN)]. The examples in this procedure use `http://` for the {image_service} endpoints. If your {rhos_prev_long} deployment uses TLS for internal endpoints, use `https://` and ensure that you have completed the TLS migration. For more information, see xref:migrating-tls-everywhere_{context}[Migrating TLS-e to the RHOSO deployment].
+
+.Prerequisites
+
+* You have completed the previous adoption steps.
+* The per-site {Ceph} secrets (`ceph-conf-central`, `ceph-conf-dcn1`, `ceph-conf-dcn2`) exist and contain the configuration and keyrings for each site's {Ceph} cluster. For more information, see xref:configuring-a-ceph-backend_migrating-databases[Configuring a {Ceph} back end].
+* The `extraMounts` property of the `OpenStackControlPlane` CR is configured to mount the {Ceph} configuration to all Glance instances.
+* You have stopped the {image_service} on all DCN nodes. If your deployment includes `DistributedComputeHCIScaleOut` or `DistributedComputeScaleOut` nodes, you have also stopped HAProxy on those nodes. For more information, see xref:stopping-openstack-services_{context}[Stopping {rhos_prev_long} services].
+
+.Procedure
+
+. Create a patch file for the {image_service} with multiple {Ceph} back ends. Use MetalLB loadbalancer IPs for the {image_service} endpoints:
++
+Example DCN deployment with a central site and two edge sites:
++
+[subs="+quotes"]
+----
+$ cat << EOF > glance_dcn_patch.yaml
+spec:
+  glance:
+    enabled: true
+    template:
+      databaseInstance: openstack
+      databaseAccount: glance
+      keystoneEndpoint: central
+      storage:
+        storageRequest: *<10G>*
+      glanceAPIs:
+        central:
+          type: split
+          replicas: 3
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    *metallb.universe.tf/loadBalancerIPs: <172.17.0.80>*
+                spec:
+                  type: LoadBalancer
+          networkAttachments:
+          - storage
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_import_methods = [web-download,copy-image,glance-direct]
+            enabled_backends = central:rbd,dcn1:rbd,dcn2:rbd
+            [glance_store]
+            default_backend = central
+            [central]
+            rbd_store_ceph_conf = /etc/ceph/central.conf
+            store_description = "Central RBD backend"
+            rbd_store_pool = images
+            rbd_store_user = openstack
+            rbd_thin_provisioning = True
+            [dcn1]
+            rbd_store_ceph_conf = /etc/ceph/dcn1.conf
+            store_description = "DCN1 RBD backend"
+            rbd_store_pool = images
+            rbd_store_user = openstack
+            rbd_thin_provisioning = True
+            [dcn2]
+            rbd_store_ceph_conf = /etc/ceph/dcn2.conf
+            store_description = "DCN2 RBD backend"
+            rbd_store_pool = images
+            rbd_store_user = openstack
+            rbd_thin_provisioning = True
+        dcn1:
+          type: edge
+          replicas: 2
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    *metallb.universe.tf/loadBalancerIPs: <172.17.0.81>*
+                spec:
+                  type: LoadBalancer
+          networkAttachments:
+          - storage
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_import_methods = [web-download,copy-image,glance-direct]
+            enabled_backends = central:rbd,dcn1:rbd
+            [glance_store]
+            default_backend = dcn1
+            [central]
+            rbd_store_ceph_conf = /etc/ceph/central.conf
+            store_description = "Central RBD backend"
+            rbd_store_pool = images
+            rbd_store_user = openstack
+            rbd_thin_provisioning = True
+            [dcn1]
+            rbd_store_ceph_conf = /etc/ceph/dcn1.conf
+            store_description = "DCN1 RBD backend"
+            rbd_store_pool = images
+            rbd_store_user = openstack
+            rbd_thin_provisioning = True
+        dcn2:
+          type: edge
+          replicas: 2
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    *metallb.universe.tf/loadBalancerIPs: <172.17.0.82>*
+                spec:
+                  type: LoadBalancer
+          networkAttachments:
+          - storage
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_import_methods = [web-download,copy-image,glance-direct]
+            enabled_backends = central:rbd,dcn2:rbd
+            [glance_store]
+            default_backend = dcn2
+            [central]
+            rbd_store_ceph_conf = /etc/ceph/central.conf
+            store_description = "Central RBD backend"
+            rbd_store_pool = images
+            rbd_store_user = openstack
+            rbd_thin_provisioning = True
+            [dcn2]
+            rbd_store_ceph_conf = /etc/ceph/dcn2.conf
+            store_description = "DCN2 RBD backend"
+            rbd_store_pool = images
+            rbd_store_user = openstack
+            rbd_thin_provisioning = True
+EOF
+----
++
+where:
+
+<172.17.0.80>::
+Specifies the load balancer IP for the central {image_service} API.
+
+<172.17.0.81>::
+Specifies the load balancer IP for the DCN1 edge {image_service} API.
+
+<172.17.0.82>::
+Specifies the load balancer IP for the DCN2 edge {image_service} API.
+
++
+You must configure the compute nodes at each site to use their local {image_service} endpoints. For example, compute nodes at central use 172.17.0.80, compute nodes at dcn1 use 172.17.0.81, and compute nodes at dcn2 use 172.17.0.82. This configuration is applied when you adopt the data plane by adding a per-site ConfigMap with the `glance_api_servers` setting to each `OpenStackDataPlaneNodeSet`. For more information, see xref:adopting-compute-services-to-the-data-plane_{context}[Adopting Compute services to the data plane].
+
++
+[NOTE]
+====
+* The central `GlanceAPI` uses `type: split` and has access to all {Ceph} clusters. The `keystoneEndpoint: central` setting registers this API as the public endpoint in the {identity_service}.
+* Each edge `GlanceAPI` uses `type: edge` and has access to its local {Ceph} cluster plus the central cluster. This enables image copying between sites.
+* Set the `storageRequest` PVC size based on the storage requirements of each edge site.
+* Adjust the number of edge sites and their names to match your DCN deployment.
+====
+
+. Patch the `OpenStackControlPlane` CR to deploy the {image_service} with multiple {Ceph} back ends:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file glance_dcn_patch.yaml
+----
+
+. Verify that the {image_service} stores are available for each site:
++
+----
+$ glance stores-info
++----------+----------------------------------------------------------------------------------+
+| Property | Value                                                                            |
++----------+----------------------------------------------------------------------------------+
+| stores   | [{"id": "central", "description": "Central RBD backend", "default": "true"},     |
+|          | {"id": "dcn1", "description": "dcn1 RBD backend"}, {"id": "dcn2", "description": |
+|          | "dcn2 RBD backend"}]                                                             |
++----------+----------------------------------------------------------------------------------+
+----
++
+The output should list one store for each {Ceph} back end configured in the central `GlanceAPI`, and the central store should be marked as the default. If any stores are missing, check the `customServiceConfig` in the `glanceAPIs` section of the patch and verify that the {Ceph} configuration files are present in the `ceph-conf-central` secret.
+
+. Verify that image import methods include `copy-image`, which is required for copying images between stores:
++
+----
+$ glance import-info
++----------------+----------------------------------------------------------------------------------+
+| Property       | Value                                                                            |
++----------------+----------------------------------------------------------------------------------+
+| import-methods | {"description": "Import methods available.", "type": "array", "value": ["web-    |
+|                | download", "copy-image", "glance-direct"]}                                       |
++----------------+----------------------------------------------------------------------------------+
+----
+
+. Upload a test image to the central store. Note the image ID:
++
+----
+$ glance image-create --disk-format raw --container-format bare --name test-image \
+    --file <image-file> --store central
+----
+
+. Verify that the image ID from previous command is shown in the central {CephCluster} cluster's `images` pool:
++
+----
+$ sudo cephadm shell --config /etc/ceph/central.conf --keyring /etc/ceph/central.client.openstack.keyring \
+    -- rbd -p images --cluster central ls -l
+NAME                                       SIZE     PARENT  FMT  PROT  LOCK
+<image-id>                                  20 MiB            2
+----
+
+. Copy the image to an edge site using the `copy-image` import method:
++
+----
+$ glance image-import <image-id> --stores dcn1 --import-method copy-image
+----
+
+. After the import completes, verify that the `stores` field on the image now includes both `central` and `dcn1`:
++
+----
+$ glance image-show <image-id> | grep stores
+| stores                        | central,dcn1                                                                     |
+----
+
+. Verify the image was copied to the DCN1 {CephCluster} cluster:
++
+----
+$ sudo cephadm shell --config /etc/ceph/dcn1.conf --keyring /etc/ceph/dcn1.client.openstack.keyring \
+    -- rbd -p images --cluster dcn1 ls -l
+NAME                                       SIZE     PARENT  FMT  PROT  LOCK
+<image-id>                                  20 MiB            2
+----
++
+The image is now present on the DCN1 {CephCluster} cluster, confirming that {image_service} can copy images between sites. Repeat the `glance image-import` command for each additional edge site to distribute the image to all DCN locations.

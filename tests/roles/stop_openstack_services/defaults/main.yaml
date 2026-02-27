@@ -1,0 +1,9 @@
+# DCN storage nodes - list of nodes with ssh connection strings
+# Used to stop Glance/Cinder/etcd services on DCN compute nodes
+dcn_storage_nodes: []
+
+# Services to stop on DCN storage nodes
+dcn_storage_services:
+  - tripleo_glance_api_internal.service
+  - tripleo_cinder_volume.service
+  - tripleo_etcd.service

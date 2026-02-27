@@ -1,0 +1,306 @@
+---
+# DCN Storage Adoption Scenario
+# Deploys 3 Ceph clusters: Central (az0), DCN1 (az1), DCN2 (az2)
+# Each cluster runs on 3 HCI compute nodes
+
+undercloud:
+  config:
+    - section: DEFAULT
+      option: undercloud_hostname
+      value: undercloud.example.com
+    - section: DEFAULT
+      option: undercloud_timezone
+      value: UTC
+    - section: DEFAULT
+      option: undercloud_debug
+      value: true
+    - section: DEFAULT
+      option: container_cli
+      value: podman
+    - section: DEFAULT
+      option: undercloud_enable_selinux
+      value: false
+    - section: DEFAULT
+      option: generate_service_certificate
+      value: false
+
+    - section: DEFAULT
+      option: local_interface
+      value: eth0
+    - section: DEFAULT
+      option: local_ip
+      value: 192.168.122.100/24
+    - section: DEFAULT
+      option: enable_routed_networks
+      value: true
+    - section: DEFAULT
+      option: subnets
+      value: ctlplane-subnet,leaf1,leaf2
+    - section: DEFAULT
+      option: local_subnet
+      value: ctlplane-subnet
+
+    - section: ctlplane-subnet
+      option: masquerade
+      value: false
+
+    - section: leaf1
+      option: cidr
+      value: 192.168.133.0/24
+    - section: leaf1
+      option: gateway
+      value: 192.168.133.1
+    - section: leaf1
+      option: masquerade
+      value: false
+    - section: leaf1
+      option: inspection_iprange
+      value: 192.168.133.200,192.168.133.220
+
+    - section: leaf2
+      option: cidr
+      value: 192.168.144.0/24
+    - section: leaf2
+      option: gateway
+      value: 192.168.144.1
+    - section: leaf2
+      option: masquerade
+      value: false
+    - section: leaf2
+      option: inspection_iprange
+      value: 192.168.144.200,192.168.144.220
+  undercloud_parameters_override: "dcn_storage/hieradata_overrides_undercloud.yaml"
+  undercloud_parameters_defaults: "dcn_storage/undercloud_parameter_defaults.yaml"
+  ctlplane_vip: 192.168.122.98
+cloud_domain: "example.com"
+hostname_groups_map:
+  # map ansible groups in the inventory to role hostname format for
+  # 17.1 deployment
+  osp-computes: "central-computehci"
+  osp-controllers: "central-controller"
+  osp-dcn1-compute-az1s: "dcn1-distributedcomputehci"
+  osp-dcn2-compute-az2s: "dcn2-distributedcomputehci"
+
+
+roles_groups_map:
+  # map ansible groups to tripleo Role names
+  osp-computes: "ComputeHCI"
+  osp-controllers: "Controller"
+  osp-dcn1-compute-az1s: "DistributedComputeHCI"
+  osp-dcn2-compute-az2s: "DistributedComputeHCI"
+
+network_tripleo_network_map:
+  ctlplane: ctlplane
+  ctlplanedcn1: ctlplane
+  ctlplanedcn2: ctlplane
+  internalapi: internalapi
+  internalapidcn1: internalapi
+  internalapidcn2: internalapi
+  storage: storage
+  storagedcn1: storage
+  storagedcn2: storage
+  storagemgmt: storagemgmt
+  storagemgmtdcn1: storagemgmt
+  storagemgmtdcn2: storagemgmt
+  tenant: tenant
+  tenantdcn1: tenant
+  tenantdcn2: tenant
+
+stacks:
+  - stackname: "central"
+    args:
+      - "--override-ansible-cfg /home/zuul/ansible_config.cfg"
+      - "--templates /usr/share/openstack-tripleo-heat-templates"
+      - "--libvirt-type qemu"
+      - "--timeout 90"
+      - "--overcloud-ssh-user zuul"
+      - "--deployed-server"
+      - "--validation-warnings-fatal"
+      - "--disable-validations"
+      - "--heat-type pod"
+      - "--disable-protected-resource-types"
+    vars:
+      - "/home/zuul/deployed_ceph_central.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/docker-ha.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/podman.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsnative-config.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-mds.yaml"
+    network_data_file: "dcn_storage/central/network_data.yaml.j2"
+    vips_data_file: "dcn_storage/central/vips_data.yaml"
+    roles_file: "dcn_storage/central/roles.yaml"
+    ceph_osd_spec_file: "dcn_storage/ceph/osd_spec.yaml"
+    config_download_file: "dcn_storage/central/config_download.yaml"
+    stack_nodes:
+      - osp-computes
+      - osp-controllers
+    ctlplanenet: ctlplane
+    routes:
+      - ip_netmask: 0.0.0.0/0
+        next_hop: 192.168.122.1
+        default: true
+    network_routes:
+      internalapi:
+        - ip_netmask: 172.17.10.0/24
+          next_hop: 172.17.0.1
+        - ip_netmask: 172.17.20.0/24
+          next_hop: 172.17.0.1
+      storage:
+        - ip_netmask: 172.18.10.0/24
+          next_hop: 172.18.0.1
+        - ip_netmask: 172.18.20.0/24
+          next_hop: 172.18.0.1
+      tenant:
+        - ip_netmask: 172.19.10.0/24
+          next_hop: 172.19.0.1
+        - ip_netmask: 172.19.20.0/24
+          next_hop: 172.19.0.1
+    pre_oc_run:
+      - name: Deploy Central Ceph
+        type: playbook
+        source: "adoption_deploy_ceph.yml"
+        extra_vars:
+          stack_index: 0
+    post_oc_run:
+      - name: Export central stack for DCN
+        type: playbook
+        source: "adoption_dcn_export.yml"
+        extra_vars:
+          stack_name: central
+  - stackname: dcn1
+    args:
+      - "--override-ansible-cfg /home/zuul/ansible_config.cfg"
+      - "--templates /usr/share/openstack-tripleo-heat-templates"
+      - "--libvirt-type qemu"
+      - "--timeout 90"
+      - "--overcloud-ssh-user zuul"
+      - "--deployed-server"
+      - "--validation-warnings-fatal"
+      - "--disable-validations"
+      - "--heat-type pod"
+      - "--disable-protected-resource-types"
+    vars:
+      - "/home/zuul/deployed_ceph_dcn1.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/docker-ha.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/podman.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
+      - "/home/zuul/overcloud-deploy/central/central-export.yaml"
+      - "/home/zuul/central_ceph_external.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/dcn-storage.yaml"
+      - "/home/zuul/glance_dcn1.yaml"
+    additional_files:
+      - "dcn_storage/dcn1/glance_dcn1.yaml"
+    network_data_file: "dcn_storage/dcn1/network_data.yaml.j2"
+    vips_data_file: "dcn_storage/dcn1/vips_data.yaml"
+    roles_file: "dcn_storage/dcn1/roles.yaml"
+    ceph_osd_spec_file: "dcn_storage/ceph/osd_spec.yaml"
+    config_download_file: "dcn_storage/dcn1/config_download.yaml"
+    stack_nodes:
+      - osp-dcn1-compute-az1s
+    ctlplanenet: ctlplanedcn1
+    routes:
+      - ip_netmask: 0.0.0.0/0
+        next_hop: 192.168.133.1
+        default: true
+    network_routes:
+      internalapidcn1:
+        - ip_netmask: 172.17.0.0/24
+          next_hop: 172.17.10.1
+        - ip_netmask: 172.17.20.0/24
+          next_hop: 172.17.10.1
+      storagedcn1:
+        - ip_netmask: 172.18.0.0/24
+          next_hop: 172.18.10.1
+        - ip_netmask: 172.18.20.0/24
+          next_hop: 172.18.10.1
+      storagemgmtdcn1:
+        - ip_netmask: 172.20.0.0/24
+          next_hop: 172.20.10.1
+        - ip_netmask: 172.20.20.0/24
+          next_hop: 172.20.10.1
+      tenantdcn1:
+        - ip_netmask: 172.19.0.0/24
+          next_hop: 172.19.10.1
+        - ip_netmask: 172.19.20.0/24
+          next_hop: 172.19.10.1
+    pre_oc_run:
+      - name: Deploy DCN1 Ceph
+        type: playbook
+        source: "adoption_deploy_ceph.yml"
+        extra_vars:
+          stack_index: 1
+  - stackname: dcn2
+    args:
+      - "--override-ansible-cfg /home/zuul/ansible_config.cfg"
+      - "--templates /usr/share/openstack-tripleo-heat-templates"
+      - "--libvirt-type qemu"
+      - "--timeout 90"
+      - "--overcloud-ssh-user zuul"
+      - "--deployed-server"
+      - "--validation-warnings-fatal"
+      - "--disable-validations"
+      - "--heat-type pod"
+      - "--disable-protected-resource-types"
+    vars:
+      - "/home/zuul/deployed_ceph_dcn2.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/docker-ha.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/podman.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
+      - "/home/zuul/overcloud-deploy/central/central-export.yaml"
+      - "/home/zuul/central_ceph_external.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/dcn-storage.yaml"
+      - "/home/zuul/glance_dcn2.yaml"
+    additional_files:
+      - "dcn_storage/dcn2/glance_dcn2.yaml"
+    network_data_file: "dcn_storage/dcn2/network_data.yaml.j2"
+    vips_data_file: "dcn_storage/dcn2/vips_data.yaml"
+    roles_file: "dcn_storage/dcn2/roles.yaml"
+    ceph_osd_spec_file: "dcn_storage/ceph/osd_spec.yaml"
+    config_download_file: "dcn_storage/dcn2/config_download.yaml"
+    stack_nodes:
+      - osp-dcn2-compute-az2s
+    ctlplanenet: ctlplanedcn2
+    routes:
+      - ip_netmask: 0.0.0.0/0
+        next_hop: 192.168.144.1
+        default: true
+    network_routes:
+      internalapidcn2:
+        - ip_netmask: 172.17.0.0/24
+          next_hop: 172.17.20.1
+        - ip_netmask: 172.17.10.0/24
+          next_hop: 172.17.20.1
+      storagedcn2:
+        - ip_netmask: 172.18.0.0/24
+          next_hop: 172.18.20.1
+        - ip_netmask: 172.18.10.0/24
+          next_hop: 172.18.20.1
+      storagemgmtdcn2:
+        - ip_netmask: 172.20.0.0/24
+          next_hop: 172.20.20.1
+        - ip_netmask: 172.20.10.0/24
+          next_hop: 172.20.20.1
+      tenantdcn2:
+        - ip_netmask: 172.19.0.0/24
+          next_hop: 172.19.20.1
+        - ip_netmask: 172.19.10.0/24
+          next_hop: 172.19.20.1
+    pre_oc_run:
+      - name: Deploy DCN2 Ceph
+        type: playbook
+        source: "adoption_deploy_ceph.yml"
+        extra_vars:
+          stack_index: 2
+    post_oc_run:
+      - name: Update central with DCN Ceph stores
+        type: playbook
+        source: "adoption_dcn_update_central.yml"
+        extra_vars:
+          central_stack_name: central
+          dcn_stack_names: "dcn1,dcn2"

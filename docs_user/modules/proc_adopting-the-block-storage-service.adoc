@@ -359,3 +359,7 @@ $ openstack --os-volume-api-version 3.47 volume create --backup <backup_name>
 +
 [NOTE]
 You do not boot a {compute_service_first_ref} instance by using the new `volume from` image or try to detach the previous volume because the {compute_service} and the {block_storage} are still not connected.
+
+.Additional resources
+
+* For Distributed Compute Node (DCN) deployments where {block_storage} and {Ceph} services run on edge compute nodes, see xref:adopting-block-storage-service-with-dcn-backend_{context}[Adopting the {block_storage} with multiple {Ceph} back ends (DCN)].
