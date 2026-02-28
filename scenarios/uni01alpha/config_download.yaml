@@ -40,6 +40,7 @@ resource_registry:
   OS::TripleO::Services::OctaviaHealthManager: /usr/share/openstack-tripleo-heat-templates/deployment/octavia/octavia-health-manager-container-puppet.yaml
   OS::TripleO::Services::OctaviaWorker: /usr/share/openstack-tripleo-heat-templates/deployment/octavia/octavia-worker-container-puppet.yaml
   OS::TripleO::Services::OctaviaDeploymentConfig: /usr/share/openstack-tripleo-heat-templates/deployment/octavia/octavia-deployment-config.yaml
+  OS::TripleO::Services::IpaClient: /usr/share/openstack-tripleo-heat-templates/deployment/ipa/ipaservices-baremetal-ansible.yaml
 parameter_defaults:
   RedisVirtualFixedIPs:
     - ip_address: 192.168.122.130
@@ -64,19 +65,21 @@ parameter_defaults:
   NetworkerCount: 3
   NeutronGlobalPhysnetMtu: 1500
   CinderLVMLoopDeviceSize: 20480
-  CloudName: overcloud.localdomain
-  CloudNameInternal: overcloud.internalapi.localdomain
-  CloudNameStorage: overcloud.storage.localdomain
-  CloudNameStorageManagement: overcloud.storagemgmt.localdomain
-  CloudNameCtlplane: overcloud.ctlplane.localdomain
-  CloudDomain: localdomain
+  CloudName: overcloud.ooo.test
+  CloudNameInternal: overcloud.internalapi.ooo.test
+  CloudNameStorage: overcloud.storage.ooo.test
+  CloudNameStorageManagement: overcloud.storagemgmt.ooo.test
+  CloudNameCtlplane: overcloud.ctlplane.ooo.test
+  CloudNameIronic: overcloud.ironic.ooo.test
+  CloudDomain: ooo.test
   NetworkConfigWithAnsible: false
   ControllerHostnameFormat: '%stackname%-controller-%index%'
   ComputeHostnameFormat: '%stackname%-compute-%index%'
   NetworkerHostnameFormat: '%stackname%-networker-%index%'
+  IdMInstallClientPackages: true
   CtlplaneNetworkAttributes:
     network:
-      dns_domain: localdomain
+      dns_domain: ooo.test
       mtu: 1500
       name: ctlplane
       tags:
