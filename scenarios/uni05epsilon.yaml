@@ -38,7 +38,9 @@ hostname_groups_map:
 roles_groups_map:
   # map ansible groups to tripleo Role names
   osp-controllers: Controller
+  cell1-osp-computes: Compute
   cell1-osp-controllers: CellController
+  cell2-osp-computes: Compute
   cell2-osp-controllers: CellController
 # A new name for 'default' cell of OSP after adopting it into RHOSO
 default_cell_name: cell1
