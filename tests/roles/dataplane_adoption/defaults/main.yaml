@@ -370,7 +370,7 @@ dataplane_cr: |
             {% for login, value in edpm_container_registry_logins.items() -%}
             {{ login }}:
               {{ value | to_nice_yaml | trim }}
-            {%- endfor %}
+            {% endfor %}
           {%- endif %}
 
           gather_facts: false
@@ -551,6 +551,14 @@ networker_cr: |
           edpm_ovn_remote_probe_interval: 60000
           edpm_ovn_ofctrl_wait_before_clear: 8000
           edpm_enable_chassis_gw: true
+
+          {% if edpm_container_registry_logins is defined -%}
+          edpm_container_registry_logins:
+            {% for login, value in edpm_container_registry_logins.items() -%}
+            {{ login }}:
+              {{ value | to_nice_yaml | trim }}
+            {% endfor %}
+          {%- endif %}
 
           {% if edpm_container_registry_insecure_registries is defined -%}
           edpm_container_registry_insecure_registries: {{ edpm_container_registry_insecure_registries }}
