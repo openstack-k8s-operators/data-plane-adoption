@@ -103,8 +103,11 @@ spec:
 +
 where:
 
-<loadBalancer_IP>::
+`<loadBalancer_IP>`::
 Specifies the load balancer IP in your environment. If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
+
+`messagingBus.Cluster`::
+For more information about RHOSO RabbitMQ clusters, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/monitoring_high_availability_services/ref_rhoso-rabbitmq-clusters_ha-monitoring#con_understand-the-rabbitmq-interface-for-openstack-services[RHOSO RabbitMQ clusters] in _Monitoring high availability services_.
 
 . Wait for the {bare_metal} control plane services CRs to become ready:
 +
