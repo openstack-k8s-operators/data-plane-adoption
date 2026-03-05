@@ -76,6 +76,7 @@
 
 - name: when periodic, create OpenStackVersion CR with container overrides
   when:
+    - cifmw_update_containers_openstack|default(true)
     - periodic|default(false)
     - container_registry is defined
     - container_tag is defined
