@@ -369,10 +369,10 @@ $ for CELL in $(echo $RENAMED_CELLS); do
     ip_api="${ref_api}['$compute']"
     cat >> computes-$CELL << EOF
     ${compute}:
-     *hostName: $compute*
+      hostName: $compute
       ansible:
         ansibleHost: $compute
-     *networks:*
+      networks:
       - defaultRoute: true
         fixedIP: ${!ip}
         name: ctlplane
@@ -393,13 +393,13 @@ EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneNodeSet
 metadata:
- *name: openstack-$CELL*
+  name: openstack-$CELL
 spec:
-  *tlsEnabled: false*
+   tlsEnabled: false
   networkAttachments:
       - ctlplane
   preProvisioned: true
-  *services*:
+   services:
 ifeval::["{build}" == "downstream"]
     - redhat
 endif::[]
@@ -494,7 +494,7 @@ endif::[]
         #
         # These vars are for the network config templates themselves and are
         # considered EDPM network defaults.
-        *neutron_physical_bridge_name: br-ctlplane*
+         neutron_physical_bridge_name: br-ctlplane
         neutron_public_interface_name: eth0
 
         # edpm_nodes_validation
@@ -502,7 +502,7 @@ endif::[]
         edpm_nodes_validation_validate_gateway_icmp: false
 
         # edpm ovn-controller configuration
-        *edpm_ovn_bridge_mappings: <bridge_mappings>*
+         edpm_ovn_bridge_mappings: <bridge_mappings>
         edpm_ovn_bridge: br-int
         edpm_ovn_encap_type: geneve
         ovn_monitor_all: true
@@ -551,8 +551,8 @@ endif::[]
         edpm_ovs_packages:
         - openvswitch3.3
         edpm_default_mounts:
-          - *path: /dev/hugepages<size>*
-            *opts: pagesize=<size>*
+          -  path: /dev/hugepages<size>
+             opts: pagesize=<size>
             fstype: hugetlbfs
             group: hugetlbfs
   nodes:
