@@ -45,6 +45,7 @@
     - role: barbican_adoption
       tags:
         - barbican_adoption
+      when: enable_barbican|default(true)|bool
     - role: neutron_adoption
       tags:
         - neutron_adoption
