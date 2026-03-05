@@ -39,3 +39,37 @@
   until: ("FAIL" not in nova_verify_start_result.stdout_lines)
   retries: 60
   delay: "{{ dataplane_retry_delay }}"
+
+- name: Provision new instance on ironic
+  when:
+    - prelaunch_test_instance|bool
+    - "'pre_launch_ironic.bash' in prelaunch_test_instance_scripts"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    alias openstack="oc exec -t openstackclient -- openstack"
+
+    function wait_server_active() {
+      local server_name=$1
+      local retries=100
+      local counter=0
+      set +e
+      until ${BASH_ALIASES[openstack]} server show ${server_name} -f value -c status | grep "ACTIVE"; do
+        if [[ "$counter" -eq "$retries" ]]; then
+          echo "ERROR: Timeout. Server: \"${server_name}\" did not reach state: \"ACTIVE\""
+          ${BASH_ALIASES[openstack]} server show ${server_name}
+          exit 1
+        fi
+        echo "Waiting for image \"${server_name}\" to reach state \"ACTIVE\""
+        sleep 10
+        ((counter++))
+      done
+      set -e
+    }
+
+    ${BASH_ALIASES[openstack]} server create test-baremetal-post-adoption --flavor baremetal --image CentOS-Stream-GenericCloud-x86_64-9 --nic net-id=provisioning
+    wait_server_active test-baremetal-post-adoption
+
+    # Check instance status and network connectivity
+    ${BASH_ALIASES[openstack]} server show test-baremetal-post-adoption
+    ping -c 4 $(${BASH_ALIASES[openstack]} server show test-baremetal-post-adoption -f json -c addresses | jq -r .addresses.provisioning[0])
