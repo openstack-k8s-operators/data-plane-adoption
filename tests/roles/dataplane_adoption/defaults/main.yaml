@@ -74,9 +74,6 @@ netconfig_networks:
             start: "{{ tenant_allocation_start | default('172.19.0.100') }}"
         cidr: "{{ tenant_cidr | default('172.19.0.0/24') }}"
         vlan: 22
-registry_name: "quay.io"
-registry_namespace: "podified-antelope-centos9"
-image_tag: "current-podified"
 ansible_ssh_private_key_secret: dataplane-adoption-secret
 default_timesync_ntp_servers:
   - hostname: pool.ntp.org
@@ -340,27 +337,7 @@ dataplane_cr: |
 
           timesync_ntp_servers: {{ timesync_ntp_servers | default(default_timesync_ntp_servers) }}
 
-          edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
-          edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"
-          edpm_logrotate_crond_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-cron:{{ image_tag }}"
-          edpm_nova_compute_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-compute:{{ image_tag }}"
-          edpm_nova_libvirt_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-libvirt:{{ image_tag }}"
-          edpm_ovn_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
-          {% if telemetry_adoption|bool -%}
-          edpm_telemetry_ceilometer_compute_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ceilometer-compute:{{ image_tag }}"
-          edpm_telemetry_ceilometer_ipmi_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ceilometer-ipmi:{{ image_tag }}"
-          {% endif -%}
-          edpm_neutron_sriov_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-sriov-agent:{{ image_tag }}"
-          edpm_neutron_ovn_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-ovn-agent:{{ image_tag }}"
-          edpm_neutron_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
-          edpm_neutron_dhcp_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-dhcp-agent:{{ image_tag }}"
-          edpm_multipathd_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-multipathd:{{ image_tag }}"
-          {% if edpm_telemetry_node_exporter_image is defined -%}
-          edpm_telemetry_node_exporter_image: "{{ edpm_telemetry_node_exporter_image }}"
-          {% endif -%}
           {% if bgp | bool -%}
-          edpm_frr_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-frr:{{ image_tag }}"
-          edpm_ovn_bgp_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-bgp-agent:{{ image_tag }}"
           edpm_frr_bgp_ipv4_src_network: bgpmainnet
           edpm_frr_bgp_ipv6_src_network: bgpmainnetv6
           edpm_frr_bgp_neighbor_password: f00barZ
@@ -511,17 +488,7 @@ networker_cr: |
           edpm_nodes_validation_validate_controllers_icmp: false
           edpm_nodes_validation_validate_gateway_icmp: false
           timesync_ntp_servers: {{ timesync_ntp_servers | default(default_timesync_ntp_servers) }}
-          edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
-          edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"
-          edpm_logrotate_crond_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-cron:{{ image_tag }}"
-          edpm_ovn_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
-          edpm_neutron_ovn_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-ovn-agent:{{ image_tag }}"
-          edpm_neutron_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
-          edpm_neutron_dhcp_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-dhcp-agent:{{ image_tag }}"
-          edpm_multipathd_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-multipathd:{{ image_tag }}"
           {%+ if bgp | bool +%}
-          edpm_frr_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-frr:{{ image_tag }}"
-          edpm_ovn_bgp_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-bgp-agent:{{ image_tag }}"
           edpm_frr_bgp_ipv4_src_network: bgpmainnet
           edpm_frr_bgp_ipv6_src_network: bgpmainnetv6
           edpm_frr_bgp_neighbor_password: f00barZ
