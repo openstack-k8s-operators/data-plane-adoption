@@ -85,6 +85,7 @@ spec:
 
 FC:::
 ** The {block_storage} volume and {block_storage} backup services must run in an {OpenShiftShort} host that has host bus adapters (HBAs). If some nodes do not have HBAs, then use labels to restrict where these services run. For more information, see link:{defaultOCPURL}/nodes/index#nodes-scheduler-node-selectors-about_nodes-scheduler-node-selectors[About node selectors].
+** If the {image_service} is configured to use {block_storage} as a backend with FC, the {image_service} must also run on an {OpenShiftShort} host that has HBAs and follow the same node selection requirements as the {block_storage}.
 ** If you have virtualized {OpenShiftShort} clusters that use FC you need to expose the host HBAs inside the virtual machine.
 ** For production deployments that use FC volumes, configure multipathing for better I/O.
 
