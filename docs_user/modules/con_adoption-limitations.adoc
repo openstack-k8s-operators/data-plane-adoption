@@ -10,7 +10,7 @@ Technology Preview::
 +
 The following features are Technology Previews and have not been tested within the context of the {rhos_long} adoption:
 +
-* FC-based drivers for {block_storage_first_ref}
+* {key_manager_first_ref} adoption with Proteccio hardware security module (HSM) integration
 +
 The following {compute_service_first_ref} features are Technology Previews:
 +
