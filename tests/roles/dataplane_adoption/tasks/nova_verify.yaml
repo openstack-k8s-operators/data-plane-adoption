@@ -4,6 +4,12 @@
     nova_header: |
       alias openstack="oc exec -t openstackclient -- openstack"
 
+- name: verify if the image save works
+  when: prelaunch_test_instance|bool
+  ansible.builtin.shell: |
+    {{ nova_header }}
+    ${BASH_ALIASES[openstack]} image save cirros --file /tmp/cirrossave.img
+
 # NOTE(bogdando): do not use 'set -o pipefail' for these verifications
 - name: verify if the existing test VM instance is running
   when: prelaunch_test_instance|bool
