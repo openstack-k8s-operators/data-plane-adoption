@@ -1,0 +1,35 @@
+spec:
+  extraMounts:
+  - name: v1
+    region: r1
+    extraVol:
+    - extraVolType: Ceph
+      propagation:
+      - {{ ceph_clusters[0].name }}
+      - CinderBackup
+      - ManilaShare
+      volumes:
+      - name: ceph-{{ ceph_clusters[0].name }}
+        projected:
+          sources:
+          - secret:
+              name: ceph-conf-{{ ceph_clusters[0].name }}
+      mounts:
+      - name: ceph-{{ ceph_clusters[0].name }}
+        mountPath: "/etc/ceph"
+        readOnly: true
+{% for cluster in ceph_clusters[1:] %}
+    - extraVolType: Ceph
+      propagation:
+      - {{ cluster.name }}
+      volumes:
+      - name: ceph-{{ cluster.name }}
+        projected:
+          sources:
+          - secret:
+              name: ceph-conf-{{ cluster.name }}
+      mounts:
+      - name: ceph-{{ cluster.name }}
+        mountPath: "/etc/ceph"
+        readOnly: true
+{% endfor %}

@@ -1,0 +1,39 @@
+spec:
+  cinder:
+    enabled: true
+    template:
+      cinderAPI:
+        customServiceConfig: |
+          [DEFAULT]
+          default_availability_zone = {{ cinder_dcn_default_az | default('central') }}
+      cinderVolumes:
+{% for cluster in cinder_dcn_clusters %}
+        {{ cluster.name }}:
+          networkAttachments:
+          - storage
+          replicas: 1
+          customServiceConfig: |
+            [DEFAULT]
+            enabled_backends = {{ cluster.name }}
+{% if cluster.glance_api is defined %}
+            glance_api_servers = {{ cluster.glance_api }}
+{% else %}
+            glance_api_servers = http://glance-{{ cluster.name }}-internal.openstack.svc:9292
+{% endif %}
+            [{{ cluster.name }}]
+            backend_host = hostgroup
+            volume_backend_name = {{ cluster.name }}
+            volume_driver = cinder.volume.drivers.rbd.RBDDriver
+            rbd_ceph_conf = {{ cluster.ceph_conf | default('/etc/ceph/' + cluster.name + '.conf') }}
+            rbd_user = {{ cluster.rbd_user | default('openstack') }}
+            rbd_pool = {{ cluster.rbd_pool | default('volumes') }}
+            rbd_flatten_volume_from_snapshot = False
+            report_discard_supported = True
+{% if cluster.rbd_secret_uuid is defined %}
+            rbd_secret_uuid = {{ cluster.rbd_secret_uuid }}
+{% elif ceph_cluster_fsids is defined and cluster.name in ceph_cluster_fsids %}
+            rbd_secret_uuid = {{ ceph_cluster_fsids[cluster.name] }}
+{% endif %}
+            rbd_cluster_name = {{ cluster.name }}
+            backend_availability_zone = {{ cluster.availability_zone | default(cluster.name) }}
+{% endfor %}

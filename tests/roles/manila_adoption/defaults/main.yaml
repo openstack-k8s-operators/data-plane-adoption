@@ -26,3 +26,11 @@ supported_backends:
   - cephnfs
   - netapp
 manila_retry_delay: 5
+# Path to the Ceph configuration file for the CephFS backend.
+# Default is /etc/ceph/ceph.conf (single-cluster deployments).
+# Override with the cluster-specific path for DCN deployments,
+# e.g. /etc/ceph/central.conf
+manila_cephfs_conf_path: /etc/ceph/ceph.conf
+# Ceph cluster name for the CephFS backend. Default is 'ceph'.
+# Override for DCN deployments, e.g. 'central'.
+manila_cephfs_cluster_name: ceph

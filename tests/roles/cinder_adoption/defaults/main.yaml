@@ -1,7 +1,24 @@
 # Volume backends: ceph, ontap-nfs, ontap-iscsi, pure-fc
+# For DCN multi-backend Ceph, set cinder_volume_backend: ceph and populate cinder_dcn_clusters
 # Backup backends: ceph, swift, ontap-nfs
 cinder_volume_backend: ""
 cinder_backup_backend: ""
+
+# DCN multi-backend configuration
+# Each cluster entry creates a separate cinderVolume with its own AZ
+cinder_dcn_clusters: []
+# Example:
+#   - name: central
+#     ceph_conf: /etc/ceph/central.conf
+#     rbd_pool: volumes
+#     availability_zone: central
+#     rbd_secret_uuid: <uuid>  # optional, for libvirt
+#   - name: dcn1
+#     ceph_conf: /etc/ceph/dcn1.conf
+#     rbd_pool: volumes
+#     availability_zone: dcn1
+#     rbd_secret_uuid: <uuid>
+cinder_dcn_default_az: central
 
 cinder_api_patch: |
   spec:

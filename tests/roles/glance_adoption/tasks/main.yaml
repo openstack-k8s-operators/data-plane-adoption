@@ -3,7 +3,9 @@
   ansible.builtin.include_tasks: glance_nfs.yaml
 
 - name: Deploy podified Glance with Ceph backend
-  when: glance_backend == 'ceph'
+  when:
+    - glance_backend == 'ceph'
+    - glance_dcn_clusters | length == 0
   ansible.builtin.include_tasks: glance_ceph.yaml
 
 - name: Deploy podified Glance with Swift backend
@@ -13,6 +15,12 @@
 - name: Deploy podified Glance with Cinder backend
   when: glance_backend == 'cinder'
   ansible.builtin.include_tasks: glance_cinder.yaml
+
+- name: Deploy podified Glance with Ceph multi-backend configuration for DCN
+  when:
+    - glance_backend == 'ceph'
+    - glance_dcn_clusters | length > 0
+  ansible.builtin.include_tasks: glance_dcn.yaml
 
 - name: Apply additional Glance settings
   ansible.builtin.include_tasks: extra_glance_settings.yaml

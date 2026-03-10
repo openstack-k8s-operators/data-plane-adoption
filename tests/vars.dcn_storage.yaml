@@ -1,0 +1,304 @@
+# DCN Storage Adoption Variables
+# Based on vars.dcn_nostorage.yaml with storage backends enabled
+#
+# Required --skip-tags for DCN storage adoption:
+#   --skip-tags barbican_adoption,swift_adoption,manila_adoption,octavia_adoption
+#
+# Swift is not deployed in DCN storage scenario (uses Ceph RBD for Glance)
+
+prelaunch_test_instance: false
+ping_test: false
+os_cloud_name: central
+controller_ssh_identity_file: "/home/zuul/.ssh/cifmw_reproducer_key"
+controller1_ssh: "ssh osp-controller-0"
+controller2_ssh: ":"
+controller3_ssh: ":"
+
+# DCN compute nodes run Glance, Cinder, and etcd services that need to be stopped
+# These run on ALL DCN compute nodes (not just one per site)
+dcn_storage_nodes:
+  - ssh: "ssh osp-dcn1-compute-az1-0"
+  - ssh: "ssh osp-dcn1-compute-az1-1"
+  - ssh: "ssh osp-dcn1-compute-az1-2"
+  - ssh: "ssh osp-dcn2-compute-az2-0"
+  - ssh: "ssh osp-dcn2-compute-az2-1"
+  - ssh: "ssh osp-dcn2-compute-az2-2"
+
+# Services to stop on DCN nodes (different from central controller services)
+dcn_storage_services:
+  - tripleo_glance_api_internal.service
+  - tripleo_cinder_volume.service
+  - tripleo_etcd.service
+edpm_tuned_profile: "throughput-performance"
+dataplane_os_net_config_set_route: true
+edpm_ovn_bridge_mappings: ["leaf0:br-ex"]
+edpm_ovn_bridge_mappings_dcn1: ["leaf1:br-ex"]
+edpm_ovn_bridge_mappings_dcn2: ["leaf2:br-ex"]
+edpm_sshd_allowed_ranges:
+  - '192.168.122.0/24'
+  - '192.168.133.0/24'
+  - '192.168.144.0/24'
+
+# Storage backends for DCN with Ceph
+glance_backend: ceph
+cinder_volume_backend: ceph
+cinder_backup_backend: ceph
+manila_cephfs_conf_path: /etc/ceph/central.conf
+manila_cephfs_cluster_name: central
+cinder_backup_ceph_patch: |
+  spec:
+    cinder:
+      enabled: true
+      template:
+        cinderBackups:
+          central:
+            networkAttachments:
+            - storage
+            replicas: 1
+            customServiceConfig: |
+              [DEFAULT]
+              backup_driver=cinder.backup.drivers.ceph.CephBackupDriver
+              backup_ceph_conf=/etc/ceph/central.conf
+              backup_ceph_user=openstack
+              backup_ceph_pool=backups
+              storage_availability_zone=az-central
+nova_libvirt_backend: ceph
+
+# Key name in ceph-conf-files secret (DCN uses central.conf instead of ceph.conf)
+ceph_conf_secret_key: "central.conf"
+
+# Multi-cluster Ceph configuration for DCN
+# All ceph configs are on controller at /var/lib/tripleo-config/ceph/
+# Files: central.conf, central.client.openstack.keyring, dcn1.conf, etc.
+ceph_clusters:
+  - name: central
+  - name: dcn1
+  - name: dcn2
+
+# Glance DCN multi-backend configuration
+# Central has all backends; edge sites have central + local only
+glance_dcn_clusters:
+  - name: central
+    ceph_conf: /etc/ceph/central.conf
+    pool: images
+    default: true
+    type: split
+    backends: all
+    metallb_ip: "172.17.0.80"
+  - name: dcn1
+    ceph_conf: /etc/ceph/dcn1.conf
+    pool: images
+    type: edge
+    backends: [central, dcn1]
+    metallb_ip: "172.17.0.81"
+  - name: dcn2
+    ceph_conf: /etc/ceph/dcn2.conf
+    pool: images
+    type: edge
+    backends: [central, dcn2]
+    metallb_ip: "172.17.0.82"
+
+# Cinder DCN multi-backend configuration
+# Each cluster creates a separate cinderVolume with its own availability zone
+cinder_dcn_clusters:
+  - name: central
+    ceph_conf: /etc/ceph/central.conf
+    rbd_pool: volumes
+    availability_zone: az-central
+  - name: dcn1
+    ceph_conf: /etc/ceph/dcn1.conf
+    rbd_pool: volumes
+    availability_zone: az-dcn1
+  - name: dcn2
+    ceph_conf: /etc/ceph/dcn2.conf
+    rbd_pool: volumes
+    availability_zone: az-dcn2
+cinder_dcn_default_az: az-central
+
+# Nova DCN per-site Ceph configuration
+# Each site's compute nodes get a ConfigMap with local ceph conf, fsid, and glance endpoint
+# The ConfigMap is referenced by a per-site OpenStackDataPlaneService (nova-custom-ceph-$SITE)
+nova_dcn_clusters:
+  - name: central
+    ceph_conf: /etc/ceph/central.conf
+    rbd_pool: vms
+    glance_store_name: central
+  - name: dcn1
+    ceph_conf: /etc/ceph/dcn1.conf
+    rbd_pool: vms
+    glance_store_name: dcn1
+  - name: dcn2
+    ceph_conf: /etc/ceph/dcn2.conf
+    rbd_pool: vms
+    glance_store_name: dcn2
+
+neutron_config_patch: |
+  spec:
+    neutron:
+      enabled: true
+      apiOverride:
+        route: {}
+      template:
+        customServiceConfig: |
+          [DEFAULT]
+          dhcp_agent_notification = True
+          [ml2_type_vlan]
+          network_vlan_ranges = leaf0:1:1000,leaf1:1:1000,leaf2:1:1000
+          [neutron]
+          physnets = leaf0,leaf1,leaf2
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: {{ internalapi_prefix | default('172.17.0') }}.80
+              spec:
+                type: LoadBalancer
+        databaseInstance: openstack
+        databaseAccount: neutron
+        secret: osp-secret
+        networkAttachments:
+        - internalapi
+
+netconfig_networks:
+  - dnsDomain: ctlplane.example.com
+    mtu: 1500
+    name: ctlplane
+    serviceNetwork: ctlplane
+    subnets:
+      - allocationRanges:
+          - end: 192.168.122.120
+            start: 192.168.122.100
+          - end: 192.168.122.200
+            start: 192.168.122.150
+        cidr: 192.168.122.0/24
+        gateway: 192.168.122.1
+        name: subnet1
+      - allocationRanges:
+          - end: 192.168.133.120
+            start: 192.168.133.100
+          - end: 192.168.133.200
+            start: 192.168.133.150
+        cidr: 192.168.133.0/24
+        gateway: 192.168.133.1
+        name: ctlplanedcn1
+      - allocationRanges:
+          - end: 192.168.144.120
+            start: 192.168.144.100
+          - end: 192.168.144.200
+            start: 192.168.144.150
+        cidr: 192.168.144.0/24
+        gateway: 192.168.144.1
+        name: ctlplanedcn2
+  - dnsDomain: internalapi.example.com
+    mtu: 1500
+    name: internalapi
+    serviceNetwork: internalapi
+    subnets:
+      - allocationRanges:
+          - end: 172.17.0.250
+            start: 172.17.0.100
+        cidr: 172.17.0.0/24
+        name: subnet1
+        vlan: 20
+      - allocationRanges:
+          - end: 172.17.10.250
+            start: 172.17.10.100
+        cidr: 172.17.10.0/24
+        name: internalapidcn1
+        vlan: 30
+        routes: "{{ edpm_dcn1_routes.get('internalapidcn1', []) }}"
+      - allocationRanges:
+          - end: 172.17.20.250
+            start: 172.17.20.100
+        cidr: 172.17.20.0/24
+        name: internalapidcn2
+        vlan: 40
+        routes: "{{ edpm_dcn2_routes.get('internalapidcn2', []) }}"
+  - dnsDomain: external.example.com
+    mtu: 1500
+    name: External
+    serviceNetwork: external
+    subnets:
+      - allocationRanges:
+          - end: 10.0.0.250
+            start: 10.0.0.100
+        cidr: 10.0.0.0/24
+        gateway: 10.0.0.1
+        name: subnet1
+        vlan: 44
+  - dnsDomain: storage.example.com
+    mtu: 1500
+    name: storage
+    serviceNetwork: storage
+    subnets:
+      - allocationRanges:
+          - end: 172.18.0.250
+            start: 172.18.0.100
+        cidr: 172.18.0.0/24
+        name: subnet1
+        vlan: 21
+      - allocationRanges:
+          - end: 172.18.10.250
+            start: 172.18.10.100
+        cidr: 172.18.10.0/24
+        name: storagedcn1
+        vlan: 31
+        routes: "{{ edpm_dcn1_routes.get('storagedcn1', []) }}"
+      - allocationRanges:
+          - end: 172.18.20.250
+            start: 172.18.20.100
+        cidr: 172.18.20.0/24
+        name: storagedcn2
+        vlan: 41
+        routes: "{{ edpm_dcn2_routes.get('storagedcn2', []) }}"
+  - dnsDomain: storagemgmt.example.com
+    mtu: 1500
+    name: storagemgmt
+    serviceNetwork: storagemgmt
+    subnets:
+      - allocationRanges:
+          - end: 172.20.0.250
+            start: 172.20.0.100
+        cidr: 172.20.0.0/24
+        name: subnet1
+        vlan: 23
+      - allocationRanges:
+          - end: 172.20.10.250
+            start: 172.20.10.100
+        cidr: 172.20.10.0/24
+        name: storagemgmtdcn1
+        vlan: 33
+      - allocationRanges:
+          - end: 172.20.20.250
+            start: 172.20.20.100
+        cidr: 172.20.20.0/24
+        name: storagemgmtdcn2
+        vlan: 43
+  - dnsDomain: tenant.example.com
+    mtu: 1500
+    name: tenant
+    serviceNetwork: tenant
+    subnets:
+      - allocationRanges:
+          - end: 172.19.0.250
+            start: 172.19.0.100
+        cidr: 172.19.0.0/24
+        name: subnet1
+        vlan: 22
+      - allocationRanges:
+          - end: 172.19.10.250
+            start: 172.19.10.100
+        cidr: 172.19.10.0/24
+        name: tenantdcn1
+        vlan: 32
+        routes: "{{ edpm_dcn1_routes.get('tenantdcn1', []) }}"
+      - allocationRanges:
+          - end: 172.19.20.250
+            start: 172.19.20.100
+        cidr: 172.19.20.0/24
+        name: tenantdcn2
+        vlan: 42
+        routes: "{{ edpm_dcn2_routes.get('tenantdcn2', []) }}"

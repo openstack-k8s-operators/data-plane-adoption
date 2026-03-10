@@ -1,0 +1,13 @@
+---
+- network: ctlplane
+  dns_name: overcloud
+  subnet: leaf1
+- network: internal_api
+  dns_name: overcloud
+  subnet: internal_api_leaf1
+- network: storage
+  dns_name: overcloud
+  subnet: storage_leaf1
+- network: storage_mgmt
+  dns_name: overcloud
+  subnet: storage_mgmt_leaf1

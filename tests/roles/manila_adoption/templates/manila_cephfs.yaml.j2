@@ -46,9 +46,9 @@ spec:
             driver_handles_share_servers=False
             share_backend_name=cephfs
             share_driver=manila.share.drivers.cephfs.driver.CephFSDriver
-            cephfs_conf_path=/etc/ceph/ceph.conf
+            cephfs_conf_path={{ manila_cephfs_conf_path }}
             cephfs_auth_id=openstack
-            cephfs_cluster_name=ceph
+            cephfs_cluster_name={{ manila_cephfs_cluster_name }}
             cephfs_volume_mode=0755
             cephfs_protocol_helper_type= {{ (manila_backend == "cephfs") | ternary('CEPHFS', 'NFS') }}
             {% if manila_backend == "cephnfs" -%}

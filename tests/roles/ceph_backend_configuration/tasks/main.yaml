@@ -1,4 +1,9 @@
-- name: set shell vars for stopping openstack services
+# Ceph backend configuration for OpenStack adoption
+# Supports single cluster (backwards compatible) or multiple clusters (DCN)
+
+# Backwards compatible: single cluster mode when ceph_clusters is empty
+- name: Single cluster - set shell vars for ceph configuration
+  when: ceph_clusters | length == 0
   no_log: "{{ use_no_log }}"
   ansible.builtin.set_fact:
     ceph_backend_configuration_shell_vars: |
@@ -8,7 +13,8 @@
       CEPH_KEY=$($CEPH_SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0")
       CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
 
-- name: update the openstack keyring caps for Manila
+- name: Single cluster - update the openstack keyring caps for Manila
+  when: ceph_clusters | length == 0
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -18,7 +24,8 @@
     OSP_KEYRING="client.openstack"
     CEPH_ADM=$($CEPH_SSH "cephadm shell -- ceph auth caps $OSP_KEYRING $CEPH_CAPS")
 
-- name: create ceph-conf-files secret
+- name: Single cluster - create ceph-conf-files secret
+  when: ceph_clusters | length == 0
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -33,12 +40,113 @@
     kind: Secret
     metadata:
       name: ceph-conf-files
+      namespace: {{ rhoso_namespace }}
     type: Opaque
     EOF
 
-- name: configure control plane extraMounts
+# Multi-cluster mode for DCN
+# All ceph configs are already on the controller at /var/lib/tripleo-config/ceph/
+- name: Multi-cluster - update openstack keyring caps for Manila on central cluster
+  when: ceph_clusters | length > 0
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    CEPH_SSH="{{ controller1_ssh }}"
+    CEPH_CAPS="mgr 'allow *' mon 'allow r, profile rbd' osd 'profile rbd pool=vms, profile rbd pool=volumes, profile rbd pool=images, profile rbd pool=backups, allow rw pool manila_data'"
+    $CEPH_SSH "sudo cephadm shell --config /etc/ceph/central.conf --keyring /etc/ceph/central.client.admin.keyring -- ceph auth caps client.openstack $CEPH_CAPS"
+
+- name: Multi-cluster - copy ceph config files from controller to local temp dir
+  when: ceph_clusters | length > 0
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    CEPH_SSH="{{ controller1_ssh }}"
+    CEPH_DIR="{{ ceph_config_dir }}"
+    TMPDIR=$(mktemp -d)
+    {% for cluster in ceph_clusters %}
+    $CEPH_SSH "cat ${CEPH_DIR}/{{ cluster.name }}.conf" > ${TMPDIR}/{{ cluster.name }}.conf
+    $CEPH_SSH "sudo cat ${CEPH_DIR}/{{ cluster.name }}.client.openstack.keyring" > ${TMPDIR}/{{ cluster.name }}.client.openstack.keyring
+    {% endfor %}
+    echo "tmpdir=${TMPDIR}"
+  register: ceph_tmpdir_result
+
+- name: Multi-cluster - extract fsids from copied conf files
+  when: ceph_clusters | length > 0
+  ansible.builtin.shell: |
+    set -o pipefail
+    TMPDIR=$(echo "{{ ceph_tmpdir_result.stdout_lines | join('\n') }}" | grep '^tmpdir=' | sed 's/tmpdir=//')
+    {% for cluster in ceph_clusters %}
+    FSID_{{ cluster.name }}=$(awk '/fsid/{print $3}' ${TMPDIR}/{{ cluster.name }}.conf)
+    echo "{{ cluster.name }}=${FSID_{{ cluster.name }}}"
+    {% endfor %}
+  register: ceph_fsid_result
+
+- name: Multi-cluster - build fsid map from extracted fsids
+  when: ceph_clusters | length > 0
+  ansible.builtin.set_fact:
+    ceph_cluster_fsids: >-
+      {%- set fsids = {} -%}
+      {%- for line in ceph_fsid_result.stdout_lines -%}
+        {%- set parts = line.split('=', 1) -%}
+        {%- if parts | length == 2 -%}
+          {%- set _ = fsids.update({parts[0]: parts[1]}) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ fsids }}
+
+- name: Multi-cluster - create per-site ceph secrets
+  when: ceph_clusters | length > 0
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    TMPDIR=$(echo "{{ ceph_tmpdir_result.stdout_lines | join('\n') }}" | grep '^tmpdir=' | sed 's/tmpdir=//')
+
+    # Central site (first cluster) gets all keys
+    oc delete secret ceph-conf-{{ ceph_clusters[0].name }} -n {{ rhoso_namespace }} --ignore-not-found
+    oc create secret generic ceph-conf-{{ ceph_clusters[0].name }} \
+    {% for cluster in ceph_clusters %}
+      --from-file=${TMPDIR}/{{ cluster.name }}.conf \
+      --from-file=${TMPDIR}/{{ cluster.name }}.client.openstack.keyring \
+    {% endfor %}
+      -n {{ rhoso_namespace }}
+
+    # Each edge site gets central + local keys only
+    {% for cluster in ceph_clusters[1:] %}
+    oc delete secret ceph-conf-{{ cluster.name }} -n {{ rhoso_namespace }} --ignore-not-found
+    oc create secret generic ceph-conf-{{ cluster.name }} \
+      --from-file=${TMPDIR}/{{ ceph_clusters[0].name }}.conf \
+      --from-file=${TMPDIR}/{{ ceph_clusters[0].name }}.client.openstack.keyring \
+      --from-file=${TMPDIR}/{{ cluster.name }}.conf \
+      --from-file=${TMPDIR}/{{ cluster.name }}.client.openstack.keyring \
+      -n {{ rhoso_namespace }}
+    {% endfor %}
+
+    rm -rf ${TMPDIR}
+
+# Single cluster: configure control plane extraMounts with a single secret
+- name: Configure control plane extraMounts
+  when: ceph_clusters | length == 0
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
 
     oc patch openstackcontrolplane openstack --type=merge --patch '{{ ceph_backend_configuration_patch }}'
+
+# Multi-cluster (DCN): configure control plane extraMounts with per-site secrets and propagation
+- name: Render control plane extraMounts patch for DCN
+  when: ceph_clusters | length > 0
+  ansible.builtin.template:
+    src: ceph_dcn_extramounts.yaml.j2
+    dest: /tmp/ceph-dcn-extramounts.yaml
+    mode: '0644'
+
+- name: Configure control plane extraMounts for DCN
+  when: ceph_clusters | length > 0
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc patch openstackcontrolplane openstack --type=merge --patch-file /tmp/ceph-dcn-extramounts.yaml
+    rm -f /tmp/ceph-dcn-extramounts.yaml

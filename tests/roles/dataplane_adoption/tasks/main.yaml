@@ -4,7 +4,7 @@
     - ('ceph' in [nova_libvirt_backend])
   ansible.builtin.set_fact:
     ceph_backend_configuration_fsid_shell_vars: |
-      CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //')
+      CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."{{ ceph_conf_secret_key }}"' | base64 -d | grep fsid | sed -e 's/fsid = //')
 
 # FIXME: missing docs coverage?
 - name: Patch openstackversion to use image built from source or latest if none is defined
@@ -202,6 +202,7 @@
   when:
     - compute_adoption|bool
     - ('ceph' in [nova_libvirt_backend])
+    - nova_dcn_clusters | length == 0
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -228,9 +229,84 @@
         rbd_secret_uuid=$CEPH_FSID
     EOF
 
+- name: create per-site Nova Ceph ConfigMaps for DCN
+  when:
+    - compute_adoption|bool
+    - ('ceph' in [nova_libvirt_backend])
+    - nova_dcn_clusters | length > 0
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {% for cluster in nova_dcn_clusters %}
+    FSID_{{ cluster.name }}=$(oc get secret ceph-conf-{{ nova_dcn_clusters[0].name }} -o json | jq -r '.data."{{ cluster.name }}.conf"' | base64 -d | awk '/fsid/{print $3}')
+    {% endfor %}
+    {% for cluster in nova_dcn_clusters %}
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nova-ceph-{{ cluster.name }}
+    data:
+      99-nova-compute-cells-workarounds.conf: |
+        [workarounds]
+        disable_compute_service_check_for_ffu=true
+      03-ceph-nova.conf: |
+        [libvirt]
+        images_type=rbd
+        images_rbd_pool={{ cluster.rbd_pool | default('vms') }}
+        images_rbd_ceph_conf={{ cluster.ceph_conf }}
+        images_rbd_glance_store_name={{ cluster.glance_store_name | default(cluster.name) }}
+        images_rbd_glance_copy_poll_interval=15
+        images_rbd_glance_copy_timeout=600
+        rbd_user=openstack
+        rbd_secret_uuid=${FSID_{{ cluster.name }}}
+        [glance]
+        endpoint_override = http://glance-{{ cluster.name }}-internal.openstack.svc:9292
+        valid_interfaces = internal
+        [cinder]
+        cross_az_attach = False
+        catalog_info = volumev3:cinderv3:internalURL
+    EOF
+    {% endfor %}
+
+- name: create per-site Nova DataPlaneServices for DCN
+  when:
+    - compute_adoption|bool
+    - nova_dcn_clusters | length > 0
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ cells_env }}
+    {% for cluster in nova_dcn_clusters %}
+    oc apply -f - <<EOF
+    ---
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: nova-custom-ceph-{{ cluster.name }}
+    spec:
+      dataSources:
+        - configMapRef:
+            name: nova-ceph-{{ cluster.name }}
+        - secretRef:
+            name: nova-$DEFAULT_CELL_NAME-compute-config
+        - secretRef:
+            name: nova-migration-ssh-key
+      playbook: osp.edpm.nova
+      caCerts: combined-ca-bundle
+      edpmServiceType: nova
+      containerImageFields:
+      - NovaComputeImage
+      - EdpmIscsidImage
+    EOF
+    {% endfor %}
+
 - name: create dataplane services for Nova cells to enable pre-upgrade workarounds
   when:
     - compute_adoption|bool
+    - nova_dcn_clusters | length == 0
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -548,6 +624,7 @@
   when:
     - compute_adoption|bool
     - cinder_volume_backend|default('') == "ceph" or cinder_backup_backend|default('') == "ceph" or ('ceph' in [nova_libvirt_backend])
+    - nova_dcn_clusters | length == 0
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -589,6 +666,88 @@
               readOnly: true
       "
     done
+
+- name: prepare DCN central nodeset to use per-site Ceph backend
+  no_log: "{{ use_no_log }}"
+  when:
+    - compute_adoption|bool
+    - nova_dcn_clusters | length > 0
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ cells_env }}
+
+    for CELL in $(echo $RENAMED_CELLS); do
+      test -f nodeset-${CELL}.yaml || continue
+      oc patch osdpns/openstack-$CELL --type=merge --patch "
+      spec:
+        services:
+          - bootstrap
+          - download-cache
+          - configure-network
+          - validate-network
+          - install-os
+          - configure-os
+          - ssh-known-hosts
+          - run-os
+          - reboot-os
+          - install-certs
+          - ceph-client
+          - ovn
+          - neutron-metadata
+          - libvirt
+          - nova-custom-ceph-{{ nova_dcn_clusters[0].name }}
+          {% if telemetry_adoption|bool +%}
+          - telemetry
+          {%+ endif +%}
+        nodeTemplate:
+          extraMounts:
+          - extraVolType: Ceph
+            volumes:
+            - name: ceph
+              secret:
+                secretName: ceph-conf-{{ nova_dcn_clusters[0].name }}
+            mounts:
+            - name: ceph
+              mountPath: "/etc/ceph"
+              readOnly: true
+      "
+    done
+
+- name: prepare DCN edge nodesets to use per-site Ceph backend
+  no_log: "{{ use_no_log }}"
+  when:
+    - compute_adoption|bool
+    - nova_dcn_clusters | length > 0
+    - edpm_nodes_dcn1 is defined or edpm_nodes_dcn2 is defined
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    {% for cluster in nova_dcn_clusters[1:] %}
+    if oc get openstackdataplanenodeset {{ cluster.name }} -n openstack &>/dev/null; then
+      SERVICES=$(oc get openstackdataplanenodeset {{ cluster.name }} -n openstack -o jsonpath='{.spec.services}' | \
+        sed 's/"nova-cell1"/"nova-custom-ceph-{{ cluster.name }}"/g' | \
+        sed 's/"install-certs"/"install-certs","ceph-client"/g')
+
+      oc patch openstackdataplanenodeset {{ cluster.name }} -n openstack --type=merge --patch "
+      spec:
+        services: $SERVICES
+        nodeTemplate:
+          extraMounts:
+          - extraVolType: Ceph
+            volumes:
+            - name: ceph
+              secret:
+                secretName: ceph-conf-{{ cluster.name }}
+            mounts:
+            - name: ceph
+              mountPath: "/etc/ceph"
+              readOnly: true
+      "
+      echo "Patched {{ cluster.name }} nodeset to use nova-custom-ceph-{{ cluster.name }} service"
+    fi
+    {% endfor %}
 
 - name: enable neutron-sriov-nic-agent in the OpenStackDataPlaneNodeSet CR
   no_log: "{{ use_no_log }}"
