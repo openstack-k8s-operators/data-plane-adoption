@@ -39,6 +39,19 @@ ironic_patch: |
           networkAttachments:
           - {{ ironic_network }}
           provisionNetwork: {{ ironic_network }}
+          dhcpRanges:
+          - name: conductor-0
+            {% if ipv6_enabled | default(false) -%}
+            cidr: 2620:cf:cf:ffff::/64
+            start: 2620:cf:cf:ffff::240
+            end: 2620:cf:cf:ffff::249
+            {%- else -%}
+            cidr: 172.20.1.0/24
+            start: 172.20.1.240
+            end: 172.20.1.249
+            gateway: 172.20.1.1
+            {%- endif %}
+
           storageRequest: 10G
           storageClass: {{ storage_class_name }}
           customServiceConfig: |
