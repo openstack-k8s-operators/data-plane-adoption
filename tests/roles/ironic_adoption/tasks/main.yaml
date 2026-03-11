@@ -94,6 +94,35 @@
   retries: 60
   delay: "{{ ironic_retry_delay }}"
 
+- name: Patch conductor dnsmasq for UEFI iPXE boot chain
+  when: ironic_conductor_dnsmasq_uefi_fix | bool
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    CONDUCTOR_POD=$(oc get pods -l component=conductor \
+      -o jsonpath='{.items[0].metadata.name}')
+
+    if oc exec "$CONDUCTOR_POD" -c dnsmasq -- \
+        grep -q 'dhcp-boot=tag:efi' /var/lib/ironic/dnsmasq.conf; then
+      echo "dnsmasq UEFI boot fix already applied"
+      exit 0
+    fi
+
+    CONDUCTOR_IP=$(oc get pod "$CONDUCTOR_POD" \
+      -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | \
+      python3 -c "import sys,json; nets=json.load(sys.stdin);
+        print([n['ips'][0] for n in nets if '{{ ironic_network }}' in n.get('name','') or '{{ ironic_network }}' in n.get('interface','')][0])")
+
+    oc exec "$CONDUCTOR_POD" -c dnsmasq -- sh -c \
+      "printf '\n# UEFI iPXE boot chain\ndhcp-boot=tag:efi,tag:!ipxe,snponly.efi\ndhcp-boot=tag:ipxe,http://%s:8088/boot.ipxe\n' \
+        '${CONDUCTOR_IP}' >> /var/lib/ironic/dnsmasq.conf"
+
+    oc exec "$CONDUCTOR_POD" -c dnsmasq -- kill 1
+    sleep 10
+    oc wait --for condition=Ready --timeout=60s pod/"$CONDUCTOR_POD"
+    oc exec "$CONDUCTOR_POD" -c dnsmasq -- \
+      grep 'dhcp-boot=tag:efi' /etc/dnsmasq.conf
+
 - name: Change the DNS server in the provisioning subnet
   ansible.builtin.shell: |
     {{ shell_header }}
