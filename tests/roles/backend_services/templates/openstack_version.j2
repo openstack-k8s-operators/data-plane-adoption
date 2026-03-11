@@ -4,78 +4,78 @@ metadata:
   name: openstack
 spec:
   customContainerImages:
-    aodhAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-aodh-api:{{ container_tag }}
-    aodhEvaluatorImage: {{ container_registry }}/{{ container_namespace }}/openstack-aodh-evaluator:{{ container_tag }}
-    aodhListenerImage: {{ container_registry }}/{{ container_namespace }}/openstack-aodh-listener:{{ container_tag }}
-    aodhNotifierImage: {{ container_registry }}/{{ container_namespace }}/openstack-aodh-notifier:{{ container_tag }}
-    barbicanAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-barbican-api:{{ container_tag }}
-    barbicanKeystoneListenerImage: {{ container_registry }}/{{ container_namespace }}/openstack-barbican-keystone-listener:{{ container_tag }}
-    barbicanWorkerImage: {{ container_registry }}/{{ container_namespace }}/openstack-barbican-worker:{{ container_tag }}
-    ceilometerCentralImage: {{ container_registry }}/{{ container_namespace }}/openstack-ceilometer-central:{{ container_tag }}
-    ceilometerComputeImage: {{ container_registry }}/{{ container_namespace }}/openstack-ceilometer-compute:{{ container_tag }}
-    ceilometerIpmiImage: {{ container_registry }}/{{ container_namespace }}/openstack-ceilometer-ipmi:{{ container_tag }}
-    ceilometerNotificationImage: {{ container_registry }}/{{ container_namespace }}/openstack-ceilometer-notification:{{ container_tag }}
-    cinderAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-cinder-api:{{ container_tag }}
-    cinderBackupImage: {{ container_registry }}/{{ container_namespace }}/openstack-cinder-backup:{{ container_tag }}
-    cinderSchedulerImage: {{ container_registry }}/{{ container_namespace }}/openstack-cinder-scheduler:{{ container_tag }}
-    cinderVolumeImage: {{ container_registry }}/{{ container_namespace }}/openstack-cinder-volume:{{ container_tag }}
-    edpmFrrImage: {{ container_registry }}/{{ container_namespace }}/openstack-frr:{{ container_tag }}
-    edpmIscsidImage: {{ container_registry }}/{{ container_namespace }}/openstack-iscsid:{{ container_tag }}
-    edpmLogrotateCrondImage: {{ container_registry }}/{{ container_namespace }}/openstack-cron:{{ container_tag }}
-    edpmMultipathdImage: {{ container_registry }}/{{ container_namespace }}/openstack-multipathd:{{ container_tag }}
-    edpmNeutronDhcpAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-neutron-dhcp-agent:{{ container_tag }}
-    edpmNeutronMetadataAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-neutron-metadata-agent-ovn:{{ container_tag }}
-    edpmNeutronOvnAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-neutron-ovn-agent:{{ container_tag }}
-    edpmNeutronSriovAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-neutron-sriov-agent:{{ container_tag }}
-    edpmOvnBgpAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-bgp-agent:{{ container_tag }}
-    glanceAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-glance-api:{{ container_tag }}
-    heatAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-heat-api:{{ container_tag }}
-    heatCfnapiImage: {{ container_registry }}/{{ container_namespace }}/openstack-heat-api-cfn:{{ container_tag }}
-    heatEngineImage: {{ container_registry }}/{{ container_namespace }}/openstack-heat-engine:{{ container_tag }}
-    horizonImage: {{ container_registry }}/{{ container_namespace }}/openstack-horizon:{{ container_tag }}
-    infraDnsmasqImage: {{ container_registry }}/{{ container_namespace }}/openstack-neutron-server:{{ container_tag }}
-    infraMemcachedImage: {{ container_registry }}/{{ container_namespace }}/openstack-memcached:{{ container_tag }}
-    ironicAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-ironic-api:{{ container_tag }}
-    ironicConductorImage: {{ container_registry }}/{{ container_namespace }}/openstack-ironic-conductor:{{ container_tag }}
-    ironicInspectorImage: {{ container_registry }}/{{ container_namespace }}/openstack-ironic-inspector:{{ container_tag }}
-    ironicNeutronAgentImage: {{ container_registry }}/{{ container_namespace }}/openstack-ironic-neutron-agent:{{ container_tag }}
-    ironicPxeImage: {{ container_registry }}/{{ container_namespace }}/openstack-ironic-pxe:{{ container_tag }}
-    ironicPythonAgentImage: {{ container_registry }}/{{ container_namespace }}/ironic-python-agent:{{ container_tag }}
-    keystoneAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-keystone:{{ container_tag }}
-    manilaAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-manila-api:{{ container_tag }}
-    manilaSchedulerImage: {{ container_registry }}/{{ container_namespace }}/openstack-manila-scheduler:{{ container_tag }}
-    manilaShareImage: {{ container_registry }}/{{ container_namespace }}/openstack-manila-share:{{ container_tag }}
-    mariadbImage: {{ container_registry }}/{{ container_namespace }}/openstack-mariadb:{{ container_tag }}
-    neutronAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-neutron-server:{{ container_tag }}
-    novaAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-nova-api:{{ container_tag }}
-    novaComputeImage: {{ container_registry }}/{{ container_namespace }}/openstack-nova-compute:{{ container_tag }}
-    novaConductorImage: {{ container_registry }}/{{ container_namespace }}/openstack-nova-conductor:{{ container_tag }}
-    novaNovncImage: {{ container_registry }}/{{ container_namespace }}/openstack-nova-novncproxy:{{ container_tag }}
-    novaSchedulerImage: {{ container_registry }}/{{ container_namespace }}/openstack-nova-scheduler:{{ container_tag }}
-    octaviaAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-octavia-api:{{ container_tag }}
-    octaviaHealthmanagerImage: {{ container_registry }}/{{ container_namespace }}/openstack-octavia-health-manager:{{ container_tag }}
-    octaviaHousekeepingImage: {{ container_registry }}/{{ container_namespace }}/openstack-octavia-housekeeping:{{ container_tag }}
-    octaviaWorkerImage: {{ container_registry }}/{{ container_namespace }}/openstack-octavia-worker:{{ container_tag }}
-    openstackClientImage: {{ container_registry }}/{{ container_namespace }}/openstack-openstackclient:{{ container_tag }}
-    osContainerImage: {{ container_registry }}/{{ container_namespace }}/edpm-hardened-uefi:{{ container_tag }}
-    ovnControllerImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-controller:{{ container_tag }}
-    ovnControllerOvsImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-base:{{ container_tag }}
-    ovnNbDbclusterImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-nb-db-server:{{ container_tag }}
-    ovnNorthdImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-northd:{{ container_tag }}
-    ovnSbDbclusterImage: {{ container_registry }}/{{ container_namespace }}/openstack-ovn-sb-db-server:{{ container_tag }}
-    placementAPIImage: {{ container_registry }}/{{ container_namespace }}/openstack-placement-api:{{ container_tag }}
-    rabbitmqImage: {{ container_registry }}/{{ container_namespace }}/openstack-rabbitmq:{{ container_tag }}
-    swiftAccountImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-account:{{ container_tag }}
-    swiftContainerImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-container:{{ container_tag }}
-    swiftObjectImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-object:{{ container_tag }}
-    swiftProxyImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-proxy-server:{{ container_tag }}
+    aodhAPIImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-aodh-api{{ container_suffix }}:{{ container_tag }}
+    aodhEvaluatorImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-aodh-evaluator{{ container_suffix }}:{{ container_tag }}
+    aodhListenerImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-aodh-listener{{ container_suffix }}:{{ container_tag }}
+    aodhNotifierImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-aodh-notifier{{ container_suffix }}:{{ container_tag }}
+    barbicanAPIImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-barbican-api{{ container_suffix }}:{{ container_tag }}
+    barbicanKeystoneListenerImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-barbican-keystone-listener{{ container_suffix }}:{{ container_tag }}
+    barbicanWorkerImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-barbican-worker{{ container_suffix }}:{{ container_tag }}
+    ceilometerCentralImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ceilometer-central{{ container_suffix }}:{{ container_tag }}
+    ceilometerComputeImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ceilometer-compute{{ container_suffix }}:{{ container_tag }}
+    ceilometerIpmiImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ceilometer-ipmi{{ container_suffix }}:{{ container_tag }}
+    ceilometerNotificationImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ceilometer-notification{{ container_suffix }}:{{ container_tag }}
+    cinderAPIImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-cinder-api{{ container_suffix }}:{{ container_tag }}
+    cinderBackupImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-cinder-backup{{ container_suffix }}:{{ container_tag }}
+    cinderSchedulerImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-cinder-scheduler{{ container_suffix }}:{{ container_tag }}
+    cinderVolumeImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-cinder-volume{{ container_suffix }}:{{ container_tag }}
+    edpmFrrImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-frr{{ container_suffix }}:{{ container_tag }}
+    edpmIscsidImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-iscsid{{ container_suffix }}:{{ container_tag }}
+    edpmLogrotateCrondImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-cron{{ container_suffix }}:{{ container_tag }}
+    edpmMultipathdImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-multipathd{{ container_suffix }}:{{ container_tag }}
+    edpmNeutronDhcpAgentImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-neutron-dhcp-agent{{ container_suffix }}:{{ container_tag }}
+    edpmNeutronMetadataAgentImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-neutron-metadata-agent-ovn{{ container_suffix }}:{{ container_tag }}
+    edpmNeutronOvnAgentImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-neutron-ovn-agent{{ container_suffix }}:{{ container_tag }}
+    edpmNeutronSriovAgentImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-neutron-sriov-agent{{ container_suffix }}:{{ container_tag }}
+    edpmOvnBgpAgentImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ovn-bgp-agent{{ container_suffix }}:{{ container_tag }}
+    glanceAPIImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-glance-api{{ container_suffix }}:{{ container_tag }}
+    heatAPIImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-heat-api{{ container_suffix }}:{{ container_tag }}
+    heatCfnapiImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-heat-api-cfn{{ container_suffix }}:{{ container_tag }}
+    heatEngineImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-heat-engine{{ container_suffix }}:{{ container_tag }}
+    horizonImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-horizon{{ container_suffix }}:{{ container_tag }}
+    infraDnsmasqImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-neutron-server{{ container_suffix }}:{{ container_tag }}
+    infraMemcachedImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-memcached{{ container_suffix }}:{{ container_tag }}
+    ironicAPIImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ironic-api{{ container_suffix }}:{{ container_tag }}
+    ironicConductorImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ironic-conductor{{ container_suffix }}:{{ container_tag }}
+    ironicInspectorImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ironic-inspector{{ container_suffix }}:{{ container_tag }}
+    ironicNeutronAgentImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ironic-neutron-agent{{ container_suffix }}:{{ container_tag }}
+    ironicPxeImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ironic-pxe{{ container_suffix }}:{{ container_tag }}
+    ironicPythonAgentImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}ironic-python-agent{{ container_suffix }}:{{ container_tag }}
+    keystoneAPIImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-keystone{{ container_suffix }}:{{ container_tag }}
+    manilaAPIImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-manila-api{{ container_suffix }}:{{ container_tag }}
+    manilaSchedulerImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-manila-scheduler{{ container_suffix }}:{{ container_tag }}
+    manilaShareImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-manila-share{{ container_suffix }}:{{ container_tag }}
+    mariadbImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-mariadb{{ container_suffix }}:{{ container_tag }}
+    neutronAPIImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-neutron-server{{ container_suffix }}:{{ container_tag }}
+    novaAPIImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-nova-api{{ container_suffix }}:{{ container_tag }}
+    novaComputeImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-nova-compute{{ container_suffix }}:{{ container_tag }}
+    novaConductorImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-nova-conductor{{ container_suffix }}:{{ container_tag }}
+    novaNovncImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-nova-novncproxy{{ container_suffix }}:{{ container_tag }}
+    novaSchedulerImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-nova-scheduler{{ container_suffix }}:{{ container_tag }}
+    octaviaAPIImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-octavia-api{{ container_suffix }}:{{ container_tag }}
+    octaviaHealthmanagerImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-octavia-health-manager{{ container_suffix }}:{{ container_tag }}
+    octaviaHousekeepingImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-octavia-housekeeping{{ container_suffix }}:{{ container_tag }}
+    octaviaWorkerImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-octavia-worker{{ container_suffix }}:{{ container_tag }}
+    openstackClientImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-openstackclient{{ container_suffix }}:{{ container_tag }}
+    osContainerImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}edpm-hardened-uefi{{ container_suffix }}:{{ container_tag }}
+    ovnControllerImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ovn-controller{{ container_suffix }}:{{ container_tag }}
+    ovnControllerOvsImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ovn-base{{ container_suffix }}:{{ container_tag }}
+    ovnNbDbclusterImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ovn-nb-db-server{{ container_suffix }}:{{ container_tag }}
+    ovnNorthdImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ovn-northd{{ container_suffix }}:{{ container_tag }}
+    ovnSbDbclusterImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-ovn-sb-db-server{{ container_suffix }}:{{ container_tag }}
+    placementAPIImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-placement-api{{ container_suffix }}:{{ container_tag }}
+    rabbitmqImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-rabbitmq{{ container_suffix }}:{{ container_tag }}
+    swiftAccountImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-swift-account{{ container_suffix }}:{{ container_tag }}
+    swiftContainerImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-swift-container{{ container_suffix }}:{{ container_tag }}
+    swiftObjectImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-swift-object{{ container_suffix }}:{{ container_tag }}
+    swiftProxyImage: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-swift-proxy-server{{ container_suffix }}:{{ container_tag }}
 {% if (backend_services_cindervolumes | length > 0  or
        (backend_services_cindervolumes_extraimages is defined and backend_services_cindervolumes_extraimages is mapping)) %}
     cinderVolumeImages:
 {% endif %}
 {% if backend_services_cindervolumes | length > 0 %}
 {% for _vol in backend_services_cindervolumes %}
-      {{ _vol }}: {{ container_registry }}/{{ container_namespace }}/openstack-cinder-volume:{{ container_tag }}
+      {{ _vol }}: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-cinder-volume{{ container_suffix }}:{{ container_tag }}
 {% endfor %}
 {% endif %}
 {% if (backend_services_cindervolumes_extraimages is defined and backend_services_cindervolumes_extraimages is mapping) %}
@@ -89,7 +89,7 @@ spec:
 {% endif %}
 {% if backend_services_manilashares | length > 0 %}
 {% for _vol in backend_services_manilashares %}
-      {{ _vol }}: {{ container_registry }}/{{ container_namespace }}/openstack-manila-share:{{ container_tag }}
+      {{ _vol }}: {{ container_registry }}/{{ container_namespace }}/{{ container_prefix }}openstack-manila-share{{ container_suffix }}:{{ container_tag }}
 {% endfor %}
 {% endif %}
 {% if (backend_services_manilashares_extraimages is defined and backend_services_manilashares_extraimages is mapping) %}
