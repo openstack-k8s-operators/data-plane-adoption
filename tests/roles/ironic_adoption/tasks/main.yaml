@@ -121,7 +121,7 @@
     sleep 10
     oc wait --for condition=Ready --timeout=60s pod/"$CONDUCTOR_POD"
     oc exec "$CONDUCTOR_POD" -c dnsmasq -- \
-      grep 'dhcp-boot=tag:efi' /etc/dnsmasq.conf
+      grep 'dhcp-boot=tag:efi' /var/lib/ironic/dnsmasq.conf
 
 - name: Change the DNS server in the provisioning subnet
   ansible.builtin.shell: |
