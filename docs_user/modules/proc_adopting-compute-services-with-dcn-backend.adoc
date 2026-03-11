@@ -1,7 +1,7 @@
 :_mod-docs-content-type: PROCEDURE
 [id="adopting-compute-services-with-dcn-backend_{context}"]
 
-= Adopting {compute_service} services with multiple {Ceph} back ends (DCN)
+= Adopting Compute services with multiple {Ceph} back ends (DCN)
 
 [role="_abstract"]
 In a Distributed Compute Node (DCN) deployment where {image_service_first_ref} and {block_storage_first_ref} services run on edge Compute nodes, each site has its own {CephCluster} cluster. The {compute_service_first_ref} nodes at each site must be configured with the {Ceph} connection details and {image_service} endpoint for their local site. Because the {image_service} has a separate API endpoint at each site, each site's `OpenStackDataPlaneNodeSet` custom resource (CR) must use a different `OpenStackDataPlaneService` CR that points to the correct {image_service}.
