@@ -22,6 +22,20 @@ endif::[]
 .. xref:migrating-ceph-rgw_migrating-ceph-monitoring[Migrate {Ceph} RGW to external RHEL nodes].
 .. xref:migrating-ceph-rbd_migrating-ceph-monitoring[Migrate {Ceph} RBD to external RHEL nodes].
 
+Distributed Compute Node (DCN) architecture process::
++
+. xref:dcn-adoption-overview_planning[Overview of Distributed Compute Node adoption]
+. xref:adopting-spine-leaf-networks_configuring-network[Configuring spine-leaf networks for the {rhos_long_noacro} deployment]
+. xref:configuring-control-plane-networking-for-spine-leaf_hsm-integration[Configuring control plane networking for spine-leaf topologies]
+. xref:configuring-dcn-data-plane-nodesets_data-plane[Configuring data plane node sets for DCN sites]
++
+If you use a DCN architecture with storage, the following additional steps apply, depending on the services that are included in your deployment:
++
+.. xref:adopting-image-service-with-dcn-backend_image-service[Adopting the {image_service} with multiple {Ceph} back ends (DCN)]
+.. xref:adopting-block-storage-service-with-dcn-backend_hsm-integration[Adopt the {block_storage} service with multiple {Ceph} back ends (DCN)]
+.. xref:adopting-compute-services-with-dcn-backend_data-plane[Adopting Compute services with multiple Red Hat Ceph Storage back ends (DCN)]
+.. xref:ceph-migration-dcn_migrating-ceph[{Ceph} migration for Distributed Compute Node deployments]
+
 Post-adoption tasks::
 +
 * Optional: Run tempest to verify that the entire adoption process is working correctly. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/validating_and_troubleshooting_the_deployed_cloud/index[Validating and troubleshooting the deployed cloud].
