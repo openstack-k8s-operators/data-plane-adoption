@@ -1,0 +1,9 @@
+- name: Configure Designate network attachments and MetalLB
+  when: designate_adoption | bool
+  ansible.builtin.include_tasks:
+    file: designate_network_config.yaml
+
+- name: Configure and enable Designate service
+  when: designate_adoption | bool
+  ansible.builtin.include_tasks:
+    file: designate_cr_config.yaml

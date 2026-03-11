@@ -1,0 +1,309 @@
+:_mod-docs-content-type: PROCEDURE
+[id="adopting-the-dns-service_{context}"]
+
+= Adopting the {dns_service}
+
+[role="_abstract"]
+To adopt the {dns_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {dns_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
+
+.Procedure
+
+. Create an alias for the `openstack` command:
++
+----
+$ alias openstack="oc exec -t openstackclient -- openstack"
+----
+
+. To isolate the {dns_service} networks, add the network interfaces for the VLAN base interfaces:
++
+[subs="+quotes"]
+----
+$ oc get --no-headers nncp --output=custom-columns='NAME:.metadata.name' | while read; do
+
+interfaces=$(oc get nncp $REPLY -o jsonpath="{.spec.desiredState.interfaces[*].name}")
+
+(echo $interfaces | grep -w -q "enp6s0.25\|enp6s0.26") || \
+        oc patch nncp $REPLY --type json --patch '
+[{
+    "op": "add",
+    "path": "/spec/desiredState/interfaces/-",
+    "value": {
+      "description": "Designate vlan interface",
+      "name": "enp6s0.25",
+      "state": "up",
+      "type": "vlan",
+      "vlan": {
+        "base-iface": "<enp6s0>",
+        "id": 25,
+        "reorder-headers": true
+      },
+      "ipv4": {
+        "address": [{"ip": "172.28.0.5", "prefix-length": 24}],
+        "enabled": true,
+        "dhcp": false
+      },
+      "ipv6": {
+        "enabled": false
+      }
+    }
+},
+{
+    "op": "add",
+    "path": "/spec/desiredState/interfaces/-",
+    "value": {
+      "description": "Designate external vlan interface",
+      "name": "enp6s0.26",
+      "state": "up",
+      "type": "vlan",
+      "vlan": {
+        "base-iface": "<enp6s0>",
+        "id": 26,
+        "reorder-headers": true
+      },
+      "ipv4": {
+        "address": [{"ip": "172.50.0.5", "prefix-length": 24}],
+        "enabled": true,
+        "dhcp": false
+      },
+      "ipv6": {
+        "enabled": false
+      }
+    }
+}]'
+
+done
+----
++
+where:
+
+`<enp6s0>`::
+Specifies the name of the network interface in your {rhocp_long} setup.
+
+. Configure the {dns_service} internal network attachment definition:
++
+----
+$ cat >> designate-nad.yaml << EOF_CAT
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  labels:
+    osp/net: designate
+  name: designate
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "designate",
+      "type": "macvlan",
+      "master": "enp6s0.25",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.28.0.0/24",
+        "range_start": "172.28.0.30",
+        "range_end": "172.28.0.70"
+      }
+    }
+EOF_CAT
+$ oc apply -f designate-nad.yaml
+----
+
+. Configure the {dns_service} external network attachment definition:
++
+----
+$ cat >> designateext-nad.yaml << EOF_CAT
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  labels:
+    osp/net: designateext
+  name: designateext
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "designateext",
+      "type": "macvlan",
+      "master": "enp6s0.26",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.50.0.0/24",
+        "range_start": "172.50.0.30",
+        "range_end": "172.50.0.70"
+      }
+    }
+EOF_CAT
+----
+
+. Apply the configuration:
++
+----
+$ oc apply -f designateext-nad.yaml
+----
+
+. Create a MetalLB IPAddressPool for the {dns_service} external network:
++
+----
+$ oc apply -f - <<EOF
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: designateext
+  namespace: metallb-system
+spec:
+  autoAssign: false
+  addresses:
+  - 172.50.0.80-172.50.0.90
+EOF
+----
+
+. Create an L2Advertisement for the {dns_service} external network:
++
+----
+$ oc apply -f - <<EOF
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: designateext
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - designateext
+  interfaces:
+  - enp6s0.26
+EOF
+----
+
+. Retrieve the nameserver records from the {dns_service} database to preserve DNS delegation:
++
+----
+$ DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
+$ oc exec openstack-default-galera-0 -c galera -- mysql -rs -uroot -p"$DB_ROOT_PASSWORD" \
+    -e "select a.hostname, a.priority from designate.pool_ns_records a;" > /tmp/designate_ns_records_raw.txt
+----
+
+. Parse the nameserver records into YAML format for the {dns_service} CR:
++
+----
+$ raw=/tmp/designate_ns_records_raw.txt
+$ out=/tmp/designate_ns_records.yaml
+$ if [ ! -s "$raw" ]; then
+  echo "[]" > "$out"
+else
+  awk '{ gsub(/\.$/, "", $1); if (NF >= 2) printf "- hostname: %s.\n  priority: %s\n", $1, $2 }' "$raw" > "$out"
+fi
+----
+
+. Enable the {dns_service} Redis instance in {rhocp_short}:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  redis:
+    enabled: true
+    templates:
+      designate-redis:
+        replicas: 1
+'
+----
+
+. Wait for the {dns_service} Redis instance to become ready:
++
+----
+$ oc wait --for condition=Ready --timeout=60s redises.redis.openstack.org/designate-redis
+----
+
+. Create the {dns_service} CR patch file:
++
+[NOTE]
+====
+Replace `<storage_class>` with the storage class name for persistent volumes (for example, `local-storage`).
+====
++
+[subs="+quotes"]
+----
+$ cat > /tmp/designate_osp_patch.yaml << 'MAINCR'
+spec:
+  designate:
+    enabled: true
+    template:
+      designateAPI:
+        networkAttachments:
+          - internalapi
+      designateWorker:
+        networkAttachments:
+          - designate
+        replicas: 3
+      designateCentral:
+        replicas: 3
+      designateProducer:
+        replicas: 3
+      designateBackendbind9:
+        networkAttachments:
+          - designate
+        override:
+          services:
+            - metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: designateext
+                  metallb.universe.tf/allow-shared-ip: designateext
+                  metallb.universe.tf/loadBalancerIPs: 172.50.0.80
+            - metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: designateext
+                  metallb.universe.tf/allow-shared-ip: designateext
+                  metallb.universe.tf/loadBalancerIPs: 172.50.0.81
+            - metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: designateext
+                  metallb.universe.tf/allow-shared-ip: designateext
+                  metallb.universe.tf/loadBalancerIPs: 172.50.0.82
+        replicas: 3
+        storageClass: <storage_class>
+        storageRequest: 10G
+      designateMdns:
+        networkAttachments:
+          - designate
+        replicas: 3
+      designateUnbound:
+        networkAttachments:
+          - designate
+        replicas: 2
+        override:
+          services:
+            - metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: designateext
+                  metallb.universe.tf/allow-shared-ip: designateext
+                  metallb.universe.tf/loadBalancerIPs: 172.50.0.85
+            - metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: designateext
+                  metallb.universe.tf/allow-shared-ip: designateext
+                  metallb.universe.tf/loadBalancerIPs: 172.50.0.86
+MAINCR
+----
+
+. Append the nameserver records to the patch file:
++
+----
+$ ns_yaml=/tmp/designate_ns_records.yaml
+$ patch_file=/tmp/designate_osp_patch.yaml
+$ echo '      nsRecords:' >> "$patch_file"
+$ if [ -s "$ns_yaml" ] && [ "$(cat "$ns_yaml")" != "[]" ]; then
+  sed 's/^/        /' "$ns_yaml" >> "$patch_file"
+else
+  echo '        []' >> "$patch_file"
+fi
+----
+
+. Enable the {dns_service} in {rhocp_short}:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch-file /tmp/designate_osp_patch.yaml
+----
+
+. Wait for the {dns_service} to become ready:
++
+----
+$ oc wait --for condition=Ready --timeout=600s designate.designate.openstack.org/designate
+----
