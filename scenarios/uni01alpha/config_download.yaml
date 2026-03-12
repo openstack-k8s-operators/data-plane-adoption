@@ -99,6 +99,7 @@ parameter_defaults:
   NetworkerParameters:
     NeutronBridgeMappings:
       - datacentre:br-ex
+      - ironic:br-baremetal
   ComputeParameters:
     NeutronBridgeMappings:
       - datacentre:br-ex
