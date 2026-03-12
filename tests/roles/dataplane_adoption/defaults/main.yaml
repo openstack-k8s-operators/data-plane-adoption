@@ -396,7 +396,7 @@ dataplane_cr: |
 
           # ovn-controller settings
           edpm_ovn_bridge_mappings: {{
-            edpm_ovn_bridge_mappings_nodeset|default(edpm_ovn_bridge_mappings)|default(
+            edpm_ovn_bridge_mappings_computes|default(edpm_ovn_bridge_mappings_nodeset)|default(edpm_ovn_bridge_mappings)|default(
                 ["datacentre:" + neutron_physical_bridge_name]
             )
             + (["provider2:br-vlan"] if bgp|bool else [])
@@ -535,7 +535,7 @@ networker_cr: |
           - openvswitch3.3
           # ovn-controller settings
           edpm_ovn_bridge_mappings: {{
-            edpm_ovn_bridge_mappings_nodeset|default(edpm_ovn_bridge_mappings)|default(
+            edpm_ovn_bridge_mappings_networker|default(edpm_ovn_bridge_mappings_nodeset)|default(edpm_ovn_bridge_mappings)|default(
                 ["datacentre:" + neutron_physical_bridge_name]
             )
             + (["provider2:br-vlan"] if bgp|bool else [])

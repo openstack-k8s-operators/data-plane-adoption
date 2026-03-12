@@ -19,6 +19,7 @@ swift_patch: |
           storageClass: {{ storage_class_name }}
           storageRequest: 10Gi
         swiftProxy:
+          encryptionEnabled: {{ swift_encryption_enabled | default(false) }}
           secret: osp-secret
           replicas: 1
           passwordSelectors:
