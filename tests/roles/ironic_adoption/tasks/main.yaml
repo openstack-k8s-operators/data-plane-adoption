@@ -110,8 +110,7 @@
 
     CONDUCTOR_IP=$(oc get pod "$CONDUCTOR_POD" \
       -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | \
-      python3 -c "import sys,json; nets=json.load(sys.stdin);
-        print([n['ips'][0] for n in nets if '{{ ironic_network }}' in n.get('name','') or '{{ ironic_network }}' in n.get('interface','')][0])")
+      python3 -c "import sys,json; nets=json.load(sys.stdin); print([n['ips'][0] for n in nets if '{{ ironic_network }}' in n.get('name','') or '{{ ironic_network }}' in n.get('interface','')][0])")
 
     oc exec "$CONDUCTOR_POD" -c dnsmasq -- sh -c \
       "printf '\n# UEFI iPXE boot chain\ndhcp-boot=tag:efi,tag:!ipxe,snponly.efi\ndhcp-boot=tag:ipxe,http://%s:8088/boot.ipxe\n' \
