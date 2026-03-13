@@ -61,7 +61,7 @@
 
 - name: creates Barbican secret
   no_log: "{{ use_no_log }}"
-  when: prelaunch_test_instance|bool and prelaunch_barbican_secret|default(false)
+  when: prelaunch_barbican_secret|default(false)
   ansible.builtin.shell:
     cmd: |
       {{ shell_header }}
