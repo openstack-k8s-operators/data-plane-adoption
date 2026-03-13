@@ -189,7 +189,9 @@ $ oc rsh mariadb-client mysql -rsh "${SOURCE_MARIADB_IP[default]}" -uroot -p"${S
 ====
 For BGP-enabled environments, this command might take a few moments to succeed while BGP routes are advertised and propagated through the network. The `mariadb-client` pod needs to receive the route to the source MariaDB IP address through BGP before it can establish a connection. If the command fails, wait a few seconds and retry. The connection should succeed once the BGP route advertisement is complete.
 
-For standard (non-BGP) deployments, this command should succeed immediately.
+For IPv6 environments, this command might take a few moments to succeed while the network IPv6 stack completes its setup. If the command fails, wait a few seconds and retry.
+
+For standard deployments, such as non-BGP deployments or IPv4 deployments, this command should succeed immediately.
 ====
 
 . Export the shell variables for the following outputs and test the connection to the {OpenStackShort} database:
