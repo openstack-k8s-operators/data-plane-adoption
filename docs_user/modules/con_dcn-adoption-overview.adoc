@@ -72,4 +72,4 @@ DCN Adoption workflow overview:: The adoption of a Distributed Compute Node (DCN
 
 [role="_additional-resources"]
 .Additional resources
-* xref:adopting-spine-leaf-networks_planning[Configuring spine-leaf networks for the {rhos_long_noacro} deployment]
+* xref:adopting-spine-leaf-networks_configuring-network[Configuring spine-leaf networks for the {rhos_long_noacro} deployment]

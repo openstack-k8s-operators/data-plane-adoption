@@ -27,14 +27,14 @@ The virtual IP addresses (VIPs) used by {compute_service} nodes to reach the {im
 | `\http://glance-dcn2-internal.openstack.svc:9292`
 |===
 
-In {rhos_prev_long}, the internal {image_service} endpoint at edge sites used TCP port 9293, after adoption, all {image_service} endpoints use port 9292. The new endpoints are backed by MetalLB load balancer IPs that you assign using the `metallb.universe.tf/loadBalancerIPs` annotation on each `GlanceAPI`. When you patch the `OpenStackControlPlane` custom resource (CR), {rhocp_long} creates internal Kubernetes services (for example, `glance-dcn1-internal.openstack.svc`) that resolve to those MetalLB IPs. The {compute_service} nodes are configured to use these endpoints when you adopt the data plane. For more information, see xref:adopting-compute-services-with-dcn-backend_{context}[Adopting Compute services with multiple Ceph back ends (DCN)]. The examples in this procedure use `http://` for the {image_service} endpoints. If your {rhos_prev_long} deployment uses TLS for internal endpoints, use `https://` and ensure that you have completed the TLS migration. For more information, see xref:migrating-tls-everywhere_{context}[Migrating TLS-e to the RHOSO deployment].
+In {rhos_prev_long}, the internal {image_service} endpoint at edge sites used TCP port 9293, after adoption, all {image_service} endpoints use port 9292. The new endpoints are backed by MetalLB load balancer IPs that you assign using the `metallb.universe.tf/loadBalancerIPs` annotation on each `GlanceAPI`. When you patch the `OpenStackControlPlane` custom resource (CR), {rhocp_long} creates internal Kubernetes services (for example, `glance-dcn1-internal.openstack.svc`) that resolve to those MetalLB IPs. The {compute_service} nodes are configured to use these endpoints when you adopt the data plane. For more information, see xref:adopting-compute-services-with-dcn-backend_data-plane[Adopting Compute services with multiple Ceph back ends (DCN)]. The examples in this procedure use `http://` for the {image_service} endpoints. If your {rhos_prev_long} deployment uses TLS for internal endpoints, use `https://` and ensure that you have completed the TLS migration. For more information, see xref:migrating-tls-everywhere_configuring-network[Migrating TLS-e to the RHOSO deployment].
 
 .Prerequisites
 
 * You have completed the previous adoption steps.
 * The per-site {Ceph} secrets (`ceph-conf-central`, `ceph-conf-dcn1`, `ceph-conf-dcn2`) exist and contain the configuration and keyrings for each site's {Ceph} cluster. For more information, see xref:configuring-a-ceph-backend_migrating-databases[Configuring a {Ceph} back end].
 * The `extraMounts` property of the `OpenStackControlPlane` CR is configured to mount the {Ceph} configuration to all Glance instances.
-* You have stopped the {image_service} on all DCN nodes. If your deployment includes `DistributedComputeHCIScaleOut` or `DistributedComputeScaleOut` nodes, you have also stopped HAProxy on those nodes. For more information, see xref:stopping-openstack-services_{context}[Stopping {rhos_prev_long} services].
+* You have stopped the {image_service} on all DCN nodes. If your deployment includes `DistributedComputeHCIScaleOut` or `DistributedComputeScaleOut` nodes, you have also stopped HAProxy on those nodes. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services].
 
 .Procedure
 
@@ -175,7 +175,7 @@ Specifies the load balancer IP for the DCN1 edge {image_service} API.
 Specifies the load balancer IP for the DCN2 edge {image_service} API.
 
 +
-You must configure the Compute nodes at each site to use their local {image_service} endpoints. For example, Compute nodes at central use 172.17.0.80, Compute nodes at dcn1 use 172.17.0.81, and Compute nodes at dcn2 use 172.17.0.82. This configuration is applied when you adopt the data plane by adding a per-site ConfigMap with the `glance_api_servers` setting to each `OpenStackDataPlaneNodeSet`. For more information, see xref:adopting-compute-services-to-the-data-plane_{context}[Adopting Compute services to the data plane].
+You must configure the Compute nodes at each site to use their local {image_service} endpoints. For example, Compute nodes at central use 172.17.0.80, Compute nodes at dcn1 use 172.17.0.81, and Compute nodes at dcn2 use 172.17.0.82. This configuration is applied when you adopt the data plane by adding a per-site ConfigMap with the `glance_api_servers` setting to each `OpenStackDataPlaneNodeSet`. For more information, see xref:adopting-compute-services-to-the-data-plane_data-plane[Adopting Compute services to the data plane].
 
 +
 [NOTE]
