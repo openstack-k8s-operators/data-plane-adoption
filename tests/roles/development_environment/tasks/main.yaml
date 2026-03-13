@@ -1,3 +1,14 @@
+- name: Wait for source cloud Keystone to be available
+  when: prelaunch_test_instance | bool
+  ansible.builtin.shell:
+    cmd: |
+      {{ shell_header }}
+      {{ openstack_command }} token issue -f value -c id
+  register: _keystone_check
+  until: _keystone_check is success
+  retries: 30
+  delay: 10
+
 - name: pre-launch test VM instance
   no_log: "{{ use_no_log }}"
   when:
