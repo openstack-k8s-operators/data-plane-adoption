@@ -135,10 +135,16 @@
     {{ oc_header }}
     alias openstack="oc exec -t openstackclient -- openstack"
 
+    CONDUCTOR_POD=$(oc get pods -l component=conductor \
+      -o jsonpath='{.items[0].metadata.name}')
+    CONDUCTOR_IP=$(oc get pod "$CONDUCTOR_POD" \
+      -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | \
+      python3 -c "import sys,json; nets=json.load(sys.stdin); print([n['ips'][0] for n in nets if '{{ ironic_network }}' in n.get('name','') or '{{ ironic_network }}' in n.get('interface','')][0])")
+
     for node in $(${BASH_ALIASES[openstack]} baremetal node list -c UUID -f value); do
       ${BASH_ALIASES[openstack]} baremetal node set $node \
-        --driver-info deploy_ramdisk= \
-        --driver-info deploy_kernel=
+        --driver-info deploy_ramdisk=http://${CONDUCTOR_IP}:8088/ironic-python-agent.initramfs \
+        --driver-info deploy_kernel=http://${CONDUCTOR_IP}:8088/ironic-python-agent.kernel
     done
 
 - name: Post-adoption baremetal node management
