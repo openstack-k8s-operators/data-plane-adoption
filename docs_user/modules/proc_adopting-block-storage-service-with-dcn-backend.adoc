@@ -13,7 +13,7 @@ During adoption, the {block_storage} volume services that ran on edge site Compu
 * You have completed the previous adoption steps.
 * The per-site {Ceph} secrets (`ceph-conf-central`, `ceph-conf-dcn1`, `ceph-conf-dcn2`) exist and contain the configuration and keyrings for each site's {Ceph} cluster. For more information, see xref:configuring-a-ceph-backend_migrating-databases[Configuring a {Ceph} back end].
 * The `extraMounts` property of the `OpenStackControlPlane` custom resource (CR) is configured to mount the {Ceph} configuration to all {block_storage} instances.
-* You have stopped the {block_storage} on all DCN nodes. For more information, see xref:stopping-openstack-services_{context}[Stopping {rhos_prev_long} services]. On edge sites, the {block_storage} volume service runs on Compute nodes with the service name `tripleo_cinder_volume.service`.
+* You have stopped the {block_storage} on all DCN nodes. For more information, see xref:stopping-openstack-services_migrating-databases[Stopping {rhos_prev_long} services]. On edge sites, the {block_storage} volume service runs on Compute nodes with the service name `tripleo_cinder_volume.service`.
 
 .Procedure
 
@@ -117,7 +117,7 @@ Specifies the `fsid` of the DCN2 edge {Ceph} cluster.
 [NOTE]
 ====
 * You must configure each `CinderVolume` with the `backend_availability_zone` value that matches your {compute_service} availability zone for that site, because `cross_az_attach = False` is set in the {compute_service} configuration. If the names do not match, instances cannot attach volumes. Replace the examples (`az-central`, `az-dcn1`, `az-dcn2`) with the names used in your {rhos_prev_long} deployment.
-* Each `CinderVolume` points to its local {image_service} API endpoint through `glance_api_servers`. This ensures that volume creation from images uses the local {image_service} and {Ceph} cluster. The examples use `http://` for the {image_service} endpoints. If your {rhos_prev_long} deployment uses TLS for internal endpoints, use `https://` instead, and ensure that you have completed the TLS migration. For more information, see xref:migrating-tls-everywhere_{context}[Migrating TLS-e to the RHOSO deployment].
+* Each `CinderVolume` points to its local {image_service} API endpoint through `glance_api_servers`. This ensures that volume creation from images uses the local {image_service} and {Ceph} cluster. The examples use `http://` for the {image_service} endpoints. If your {rhos_prev_long} deployment uses TLS for internal endpoints, use `https://` instead, and ensure that you have completed the TLS migration. For more information, see xref:migrating-tls-everywhere_configuring-network[Migrating TLS-e to the RHOSO deployment].
 * The `rbd_cluster_name` setting identifies which {Ceph} cluster configuration to use from the mounted secrets.
 * Adjust the number of edge sites and their names to match your DCN deployment.
 ====
