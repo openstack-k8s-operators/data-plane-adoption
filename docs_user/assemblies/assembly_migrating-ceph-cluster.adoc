@@ -31,6 +31,7 @@ already part of the {CephCluster} cluster.
 
 Before you begin the migration, complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_configuring-network[{Ceph} prerequisites].
 
+include::../modules/con_ceph-migration-dcn.adoc[leveloffset=+1]
 
 include::../modules/con_ceph-daemon-cardinality.adoc[leveloffset=+1]
 
