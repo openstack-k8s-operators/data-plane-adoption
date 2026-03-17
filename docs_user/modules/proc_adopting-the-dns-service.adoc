@@ -104,7 +104,6 @@ spec:
       }
     }
 EOF_CAT
-$ oc apply -f designate-nad.yaml
 ----
 . Apply the configuration:
 +
