@@ -11,7 +11,17 @@ To adopt the {loadbalancer_first_ref}, you patch an existing `OpenStackControlPl
 . Migrate the server certificate authority (CA) passphrase from the previous deployment:
 +
 ----
-include::../../tests/roles/octavia_adoption/tasks/octavia_certs.yaml[lines="6..16",indent=0]
+SERVER_CA_PASSPHRASE=$($CONTROLLER1_SSH grep ^ca_private_key_passphrase /var/lib/config-data/puppet-generated/octavia/etc/octavia/octavia.conf)
+
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: octavia-ca-passphrase
+type: Opaque
+data:
+  server-ca-passphrase: $(echo -n $SERVER_CA_PASSPHRASE | base64 -w0)
+EOF
 ----
 
 . To isolate the management network, add the network interface for the VLAN base interface:
