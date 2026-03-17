@@ -106,7 +106,11 @@ spec:
 EOF_CAT
 $ oc apply -f designate-nad.yaml
 ----
-
+. Apply the configuration:
++
+----
+$ oc apply -f designate-nad.yaml
+----
 . Configure the {dns_service} external network attachment definition:
 +
 ----
