@@ -1,3 +1,17 @@
+- name: Delete stale down nova-compute services from prior deployment
+  ansible.builtin.shell: |
+    {{ mariadb_copy_shell_vars_dst }}
+    for CELL in $(echo $RENAMED_CELLS); do
+      STALE=$(oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
+        nova_${CELL} -e "SELECT COUNT(*) FROM services WHERE \`binary\`='nova-compute' AND deleted=0 AND version < (SELECT MAX(version) FROM services WHERE \`binary\`='nova-compute' AND deleted=0)")
+      if [ "$STALE" -gt 0 ]; then
+        echo "Cleaning $STALE stale nova-compute services from $CELL"
+        oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
+          nova_${CELL} -e "UPDATE services SET deleted=id, deleted_at=NOW() WHERE \`binary\`='nova-compute' AND deleted=0 AND version < (SELECT mv FROM (SELECT MAX(version) AS mv FROM services WHERE \`binary\`='nova-compute' AND deleted=0) t)"
+      fi
+    done
+  changed_when: false
+
 - name: wait for Compute data plane services version updated for all cells
   ansible.builtin.shell: |
     {{ mariadb_copy_shell_vars_dst }}

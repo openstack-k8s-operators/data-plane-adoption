@@ -6,8 +6,10 @@ function wait_node_state() {
   local node_state=$1
   local retries=120
   local counter=0
+  local total_nodes
+  total_nodes=$(${BASH_ALIASES[openstack]} baremetal node list -c UUID -f value | wc -l)
   set +e
-  until ! ${BASH_ALIASES[openstack]} baremetal node list -f value -c "Provisioning\ State" | grep -P "^(?!${node_state}).*$"; do
+  until [ "$(${BASH_ALIASES[openstack]} baremetal node list --provision-state "${node_state}" -c UUID -f value | wc -l)" -eq "$total_nodes" ]; do
     if [[ "$counter" -eq "$retries" ]]; then
       echo "ERROR: Timeout. Nodes did not reach provisioning state: ${node_state}"
       exit 1
@@ -24,7 +26,7 @@ function wait_image_active() {
   local retries=100
   local counter=0
   set +e
-  until ! ${BASH_ALIASES[openstack]} image show  Fedora-Cloud-Base-38 -f value -c status | grep -P "^(?!active).*$"; do
+  until ${BASH_ALIASES[openstack]} image show "${image_name}" -f value -c status | grep -q "^active$"; do
     if [[ "$counter" -eq "$retries" ]]; then
       echo "ERROR: Timeout. Image: ${image_name} did not reach state: active"
       exit 1
@@ -91,7 +93,7 @@ wait_image_active CentOS-Stream-GenericCloud-x86_64-9
 export BAREMETAL_NODES=$(${BASH_ALIASES[openstack]} baremetal node list -c UUID -f value)
 
 # Check if any nodes are active (in use by instances)
-ACTIVE_NODES=$(${BASH_ALIASES[openstack]} baremetal node list -c "Provisioning State" -f value | grep -c "active" || true)
+ACTIVE_NODES=$(${BASH_ALIASES[openstack]} baremetal node list --provision-state active -c UUID -f value | wc -l)
 
 if [ "$ACTIVE_NODES" -eq 0 ]; then
   echo "No active nodes found, proceeding with node management operations"
