@@ -31,3 +31,5 @@ include::assemblies/assembly_adopting-the-data-plane.adoc[leveloffset=+1]
 include::assemblies/assembly_migrating-the-object-storage-service.adoc[leveloffset=+1]
 
 include::assemblies/assembly_migrating-ceph-cluster.adoc[leveloffset=+1]
+
+include::modules/con_post-adoption-tasks.adoc[leveloffset=+1]
