@@ -11,7 +11,9 @@ Technology Preview::
 The following features are Technology Previews and have not been tested within the context of the {rhos_long} adoption:
 +
 * {key_manager_first_ref} adoption with Proteccio hardware security module (HSM) integration
-* DNS-as-a-service (designate)
+* {dns_first_ref}
+
+{compute_service} Technology Previews::
 +
 The following {compute_service_first_ref} features are Technology Previews:
 +
