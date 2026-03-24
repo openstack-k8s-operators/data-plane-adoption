@@ -285,6 +285,11 @@ spec:
                   metallb.universe.tf/loadBalancerIPs: 172.50.0.86
 MAINCR
 ----
++
+where:
+
+`<storage_class>`::
+Specifies the storage class name for persistent volumes (for example, `local-storage`).
 
 . Append the nameserver records to the patch file:
 +
