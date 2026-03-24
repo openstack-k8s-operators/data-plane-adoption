@@ -217,11 +217,6 @@ $ oc wait --for condition=Ready --timeout=60s redises.redis.openstack.org/design
 
 . Create the {dns_service} CR patch file:
 +
-[NOTE]
-====
-Replace `<storage_class>` with the storage class name for persistent volumes (for example, `local-storage`).
-====
-+
 [subs="+quotes"]
 ----
 $ cat > /tmp/designate_osp_patch.yaml << 'MAINCR'
