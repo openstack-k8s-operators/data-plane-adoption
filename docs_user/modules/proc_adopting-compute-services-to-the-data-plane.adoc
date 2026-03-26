@@ -177,6 +177,8 @@ EOF
 +
 ifeval::["{build}" == "downstream"]
 * Replace `<path_to_SSH_key>` with the path to your SSH key.
++
+For more information about creating data plane secrets, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_creating-the-data-plane#proc_creating-the-data-plane-secrets_dataplane[Creating the data plane secrets] in _Deploying Red Hat OpenStack Services on OpenShift_.
 endif::[]
 
 . Generate an ssh key-pair `nova-migration-ssh-key` secret:
