@@ -33,7 +33,11 @@
 - name: wait until ring configmap includes new pv devices
   ansible.builtin.shell: |
     {{ oc_header }}
-    timeout 900s bash -c 'until oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-ring-builder object.builder search --device pv" ; do sleep 60; done'
+    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-ring-builder object.builder search --device pv"
+  register: result
+  failed_when: result.rc != 0 or 'No matching devices found' in result.stdout
+  retries: 15
+  delay: 60
 
 - name: set standalone node weight to 0 in swift rings
   ansible.builtin.shell: |
@@ -58,7 +62,11 @@
 - name: wait until all replicas are 100% available after first rebalance
   ansible.builtin.shell: |
     {{ oc_header }}
-    timeout 900s bash -c 'until oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report" | grep -q "100.00% of object copies found" ; do sleep 60; done'
+    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report"
+  register: result
+  failed_when: result.rc != 0 or '100.00% of object copies found' not in result.stdout
+  retries: 15
+  delay: 60
 
 - name: rebalance rings second time
   ansible.builtin.shell: |
@@ -80,7 +88,11 @@
 - name: wait until all replicas are 100% available after second rebalance
   ansible.builtin.shell: |
     {{ oc_header }}
-    timeout 900s bash -c 'until oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report" | grep -q "100.00% of object copies found" ; do sleep 60; done'
+    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report"
+  register: result
+  failed_when: result.rc != 0 or '100.00% of object copies found' not in result.stdout
+  retries: 15
+  delay: 60
 
 - name: rebalance rings third time
   ansible.builtin.shell: |
@@ -102,7 +114,11 @@
 - name: wait until all replicas are 100% available after third rebalance
   ansible.builtin.shell: |
     {{ oc_header }}
-    timeout 900s bash -c 'until oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report" | grep -q "100.00% of object copies found" ; do sleep 60; done'
+    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report"
+  register: result
+  failed_when: result.rc != 0 or '100.00% of object copies found' not in result.stdout
+  retries: 15
+  delay: 60
 
 - name: wait until /srv/node on standalone is drained
   ansible.builtin.shell: |
