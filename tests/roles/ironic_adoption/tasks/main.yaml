@@ -94,46 +94,6 @@
   retries: 60
   delay: "{{ ironic_retry_delay }}"
 
-- name: Patch conductor dnsmasq for UEFI iPXE boot chain
-  when: ironic_conductor_dnsmasq_uefi_fix | bool
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    CONDUCTOR_POD=$(oc get pods -n openstack -l component=conductor \
-      -o jsonpath='{.items[0].metadata.name}')
-
-    # Skip if already patched (idempotent)
-    if oc exec -n openstack "$CONDUCTOR_POD" -c dnsmasq -- \
-        grep -q 'dhcp-boot=tag:efi,tag:!ipxe' /var/lib/ironic/dnsmasq.conf; then
-      echo "dnsmasq UEFI boot directives already present"
-      exit 0
-    fi
-
-    CONDUCTOR_IP=$(oc get pod -n openstack "$CONDUCTOR_POD" \
-      -o jsonpath='{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}' | \
-      python3 -c "import sys,json; nets=json.load(sys.stdin); print([n['ips'][0] for n in nets if n.get('name','').endswith('/{{ ironic_network }}') or n.get('interface','') == '{{ ironic_network }}'][0])")
-
-    if [ -z "$CONDUCTOR_IP" ]; then
-      echo "ERROR: Could not determine conductor IP on {{ ironic_network }} network"
-      exit 1
-    fi
-    echo "Conductor IP: $CONDUCTOR_IP"
-
-    # Wrap IPv6 addresses in brackets for URL construction (RFC 3986)
-    CONDUCTOR_URL_IP="${CONDUCTOR_IP}"
-    [[ "$CONDUCTOR_IP" == *:* ]] && CONDUCTOR_URL_IP="[${CONDUCTOR_IP}]"
-
-    oc exec -n openstack "$CONDUCTOR_POD" -c dnsmasq -- sh -c \
-      "printf '\n# UEFI iPXE boot chain (ironic-operator bug workaround)\ndhcp-boot=tag:efi,tag:!ipxe,snponly.efi\ndhcp-boot=tag:ipxe,http://%s:8088/boot.ipxe\n' \
-        '${CONDUCTOR_URL_IP}' >> /var/lib/ironic/dnsmasq.conf"
-
-    oc exec -n openstack "$CONDUCTOR_POD" -c dnsmasq -- kill 1
-    sleep 15
-    oc wait -n openstack --for condition=Ready --timeout=120s pod/"$CONDUCTOR_POD"
-
-    oc exec -n openstack "$CONDUCTOR_POD" -c dnsmasq -- \
-      grep 'dhcp-boot=tag:efi,tag:!ipxe' /var/lib/ironic/dnsmasq.conf
-
 - name: Change the DNS server in the provisioning subnet
   ansible.builtin.shell: |
     {{ shell_header }}
