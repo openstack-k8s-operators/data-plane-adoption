@@ -20,22 +20,23 @@ Perform the following tasks to incorporate the existing network configuration:
 
 When configuring nodes and services, the general approach is as follows:
 
-* For IPAM, you can either reuse subnet ranges from the existing deployment or, if there is a shortage of free IP addresses in existing subnets, define new ranges for the new control plane services. If you define new ranges, you configure IP routing between the old and new ranges. For more information, see xref:planning-your-ipam-configuration_configuring-network[Planning your IPAM configuration].
-ifeval::["{build_variant}" == "ospdo"]
-For more information about creating networks for a director Operator environment, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#proc_creating-an-overcloud-network-with-the-openstacknetconfig-CRD_OSPdO-networks[Creating networks with director Operator] in _Deploying an overcloud in a Red Hat OpenShift Container Platform cluster with director Operator_.
-endif::[]
+* For IPAM, you can either reuse subnet ranges from the existing deployment or, if there is a shortage of free IP addresses in existing subnets, define new ranges for the new control plane services. If you define new ranges, you configure IP routing between the old and new ranges.
 * For VLAN tags, always reuse the configuration from the existing deployment.
-
-[NOTE]
-For more information about the network architecture and configuration, see
-link:{deploying-rhoso}/assembly_preparing-rhoso-networks[Preparing networks for Red Hat OpenStack Services on OpenShift] in _{deploying-rhoso-t}_ and link:{defaultOCPURL}/networking/about-networking[About networking] in _Networking_.
-
 
 include::../modules/proc_retrieving-network-information-from-your-existing-deployment.adoc[leveloffset=+1]
 
 include::../assemblies/assembly_planning-your-ipam-configuration.adoc[leveloffset=+1]
 
 include::../assemblies/assembly_configuring-isolated-networks.adoc[leveloffset=+1]
+
+[role="_additional-resources"]
+== Additional resources
+ifeval::["{build_variant}" == "ospdo"]
+* link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html-single/deploying_an_overcloud_in_a_red_hat_openshift_container_platform_cluster_with_director_operator/index#proc_creating-an-overcloud-network-with-the-openstacknetconfig-CRD_OSPdO-networks[Creating networks with director Operator]
+endif::[]
+* xref:planning-your-ipam-configuration_configuring-network[Planning your IPAM configuration]
+* link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhoso-networks_preparing[Preparing networks for Red Hat OpenStack Services on OpenShift]
+
 
 ifdef::parent-context[:context: {parent-context}]
 ifndef::parent-context[:!context:]

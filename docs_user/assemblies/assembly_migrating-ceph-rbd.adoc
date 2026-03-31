@@ -14,11 +14,16 @@ included in the {rhos_prev_long} control plane into the existing external Red
 Hat Enterprise Linux (RHEL) nodes. The external RHEL nodes typically include
 the Compute nodes for an HCI environment or dedicated storage nodes.
 
-Before you begin the migration, complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see xref:red-hat-ceph-storage-prerequisites_configuring-network[{Ceph} prerequisites].
+== Prerequisites
+Before you begin the migration, complete the tasks in your {rhos_prev_long} {rhos_prev_ver} environment. For more information, see the "{Ceph} prerequisites" in the "Adoption overview" chapter.
 
 include::../modules/proc_migrating-mgr-from-controller-nodes.adoc[leveloffset=+1]
 
 include::assembly_migrating-mon-from-controller-nodes.adoc[leveloffset=+1]
+
+[role="_additional-resources"]
+== Additional resources
+* xref:red-hat-ceph-storage-prerequisites_configuring-network[{Ceph} prerequisites]
 
 ifdef::parent-context[:context: {parent-context}]
 ifndef::parent-context[:!context:]
