@@ -30,3 +30,11 @@ neutron_config_patch: |
         networkAttachments:
         - internalapi
 neutron_retry_delay: 5
+
+ironic_ml2_baremetal_patch:
+  spec:
+    neutron:
+      template:
+        ml2MechanismDrivers:
+          - ovn
+          - baremetal
