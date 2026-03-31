@@ -46,9 +46,10 @@ ironic_patch: |
             cleaning_network=provisioning
             provisioning_network=provisioning
             rescuing_network=provisioning
-            # inspection_network=<introspection network uuid>
             [conductor]
             automated_clean=true
+            [service_catalog]
+            endpoint_override=http://{{ dns_server_provisioning_ip | ansible.utils.ipwrap }}:6385
         ironicInspector:
           replicas: 1
           inspectionNetwork: {{ ironic_network }}

@@ -50,32 +50,73 @@
   when:
     - prelaunch_test_instance|bool
     - "'pre_launch_ironic.bash' in prelaunch_test_instance_scripts"
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    alias openstack="oc exec -t openstackclient -- openstack"
+  ansible.builtin.shell:
+    cmd: |
+      {{ shell_header }}
+      {{ oc_header }}
+      alias openstack="oc exec -t openstackclient -- openstack"
 
-    function wait_server_active() {
-      local server_name=$1
-      local retries=100
-      local counter=0
-      set +e
-      until ${BASH_ALIASES[openstack]} server show ${server_name} -f value -c status | grep "ACTIVE"; do
-        if [[ "$counter" -eq "$retries" ]]; then
-          echo "ERROR: Timeout. Server: \"${server_name}\" did not reach state: \"ACTIVE\""
-          ${BASH_ALIASES[openstack]} server show ${server_name}
-          exit 1
-        fi
-        echo "Waiting for image \"${server_name}\" to reach state \"ACTIVE\""
+      function wait_server_active() {
+        local server_name=$1
+        local retries=100
+        local counter=0
+        local status
+        set +e
+        while true; do
+          status=$(${BASH_ALIASES[openstack]} server show ${server_name} -f value -c status)
+          if [ "$status" = "ACTIVE" ]; then
+            echo "$status"
+            break
+          fi
+          if [ "$status" = "ERROR" ]; then
+            echo "ERROR: Server ${server_name} entered ERROR state"
+            ${BASH_ALIASES[openstack]} server show ${server_name}
+            exit 1
+          fi
+          if [[ "$counter" -eq "$retries" ]]; then
+            echo "ERROR: Timeout. Server: ${server_name} did not reach state: ACTIVE (current: ${status})"
+            ${BASH_ALIASES[openstack]} server show ${server_name}
+            exit 1
+          fi
+          echo "Waiting for ${server_name} to reach state ACTIVE (current: ${status})"
+          sleep 10
+          ((counter++))
+        done
+        set -e
+      }
+
+      ${BASH_ALIASES[openstack]} server create test-baremetal-post-adoption --flavor baremetal --image CentOS-Stream-GenericCloud-x86_64-9 --nic net-id=provisioning
+      wait_server_active test-baremetal-post-adoption
+
+      # Workaround: conductor dnsmasq DHCP race on flat/provisioning network.
+      # The conductor dnsmasq is the only DHCP server for baremetal ports (OVN
+      # doesn't serve vif_type=other). Without a dhcp-host entry, conductor
+      # assigns IPs from its pool range instead of the neutron-assigned IP.
+      # Add a dhcp-host entry mapping the port MAC to the correct IP, restart
+      # dnsmasq, and reboot the instance to pick up the correct address.
+      PORT_MAC=$(${BASH_ALIASES[openstack]} port list --server test-baremetal-post-adoption -f json | jq -r '.[0]["MAC Address"]')
+      PORT_IP=$(${BASH_ALIASES[openstack]} server show test-baremetal-post-adoption -f json -c addresses | jq -r '.addresses.provisioning[0]')
+      echo "Port MAC: $PORT_MAC  Neutron IP: $PORT_IP"
+
+      CONDUCTOR_POD=$(oc get pods -n openstack -l component=conductor \
+        -o jsonpath='{.items[0].metadata.name}')
+
+      if ! oc exec -n openstack "$CONDUCTOR_POD" -c dnsmasq -- \
+          grep -q "dhcp-host=${PORT_MAC}" /var/lib/ironic/dnsmasq.conf 2>/dev/null; then
+        oc exec -n openstack "$CONDUCTOR_POD" -c dnsmasq -- sh -c \
+          "printf '\n# DHCP host entry for deployed baremetal instance (ironic-operator workaround)\ndhcp-host=%s,%s\n' \
+            '${PORT_MAC}' '${PORT_IP}' >> /var/lib/ironic/dnsmasq.conf"
+        oc exec -n openstack "$CONDUCTOR_POD" -c dnsmasq -- kill 1
+        sleep 15
+        oc wait -n openstack --for condition=Ready --timeout=120s pod/"$CONDUCTOR_POD"
+        oc exec -n openstack "$CONDUCTOR_POD" -c dnsmasq -- \
+          grep "dhcp-host=${PORT_MAC}" /var/lib/ironic/dnsmasq.conf
+        echo "Rebooting instance to pick up correct DHCP address..."
+        ${BASH_ALIASES[openstack]} server reboot test-baremetal-post-adoption
         sleep 10
-        ((counter++))
-      done
-      set -e
-    }
+        wait_server_active test-baremetal-post-adoption
+      fi
 
-    ${BASH_ALIASES[openstack]} server create test-baremetal-post-adoption --flavor baremetal --image CentOS-Stream-GenericCloud-x86_64-9 --nic net-id=provisioning
-    wait_server_active test-baremetal-post-adoption
-
-    # Check instance status and network connectivity
-    ${BASH_ALIASES[openstack]} server show test-baremetal-post-adoption
-    ping -c 4 $(${BASH_ALIASES[openstack]} server show test-baremetal-post-adoption -f json -c addresses | jq -r .addresses.provisioning[0])
+      # Check instance status and network connectivity
+      ${BASH_ALIASES[openstack]} server show test-baremetal-post-adoption
+      ping -c 4 $(${BASH_ALIASES[openstack]} server show test-baremetal-post-adoption -f json -c addresses | jq -r '.addresses.provisioning[0]')
