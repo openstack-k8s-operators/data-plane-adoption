@@ -15,4 +15,6 @@ Red Hat does not support customized roles or policies. Syntax errors or misappli
 
 After you adopt a {OpenStackPreviousInstaller}-based OpenStack deployment to a {rhos_long_noacro} deployment, the {identity_service} performs user authentication and authorization by using Secure RBAC (SRBAC). If SRBAC is already enabled, then there is no change to how you perform operations. If SRBAC is disabled, then adopting a {OpenStackPreviousInstaller}-based OpenStack deployment might change how you perform operations due to changes in API access policies.
 
-For more information on SRBAC, see link:{defaultURL}/performing_security_operations/assembly_srbac-in-rhoso_performing-security-services#assembly_srbac-in-rhoso_performing-security-services[Secure role based access control in Red Hat OpenStack Services on OpenShift] in _Performing security operations_.
+[role="_additional-resources"]
+.Additional resources
+* link:{defaultURL}/performing_security_operations/assembly_srbac-in-rhoso_performing-security-services#assembly_srbac-in-rhoso_performing-security-services[Secure role based access control in Red Hat OpenStack Services on OpenShift]

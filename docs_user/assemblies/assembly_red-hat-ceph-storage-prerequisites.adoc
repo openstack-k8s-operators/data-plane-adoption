@@ -27,7 +27,7 @@ include::../modules/proc_completing-prerequisites-for-migrating-ceph-monitoring-
 
 include::../modules/proc_completing-prerequisites-for-migrating-ceph-rgw.adoc[leveloffset=+1]
 
-include::../modules/proc_completing-prerequisites-for-migrating-ceph-rbd.adoc[leveloffset=+1]
+include::../modules/con_completing-prerequisites-for-migrating-ceph-rbd.adoc[leveloffset=+1]
 
 include::../modules/proc_creating-a-ceph-nfs-cluster.adoc[leveloffset=+1]
 

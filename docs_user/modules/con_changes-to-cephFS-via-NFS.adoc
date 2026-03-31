@@ -22,4 +22,7 @@ Before you begin the adoption, review the following information to understand th
 
 * While the old `ceph-nfs` service only supported NFS version 4.1 and later, the new clustered NFS service supports NFS protocols 3 and 4.1 and later. Mixing protocol versions with an export results in unintended consequences. You should mount a given share across all clients by using a consistent NFS protocol version.
 
-For more information on setting up a clustered NFS service, see xref:creating-a-ceph-nfs-cluster_ceph-prerequisites[Creating an NFS Ganesha cluster].
+
+[role="_additional-resources"]
+.Additional resources
+* xref:creating-a-ceph-nfs-cluster_ceph-prerequisites[Creating an NFS Ganesha cluster]

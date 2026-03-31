@@ -18,11 +18,11 @@ include::../modules/con_adoption-limitations.adoc[leveloffset=+1]
 
 //include::../modules/con_known-issues-adoption.adoc[leveloffset=+1]
 
-include::../modules/con_adoption-prerequisites.adoc[leveloffset=+1]
+include::../modules/ref_adoption-prerequisites.adoc[leveloffset=+1]
 
 include::../modules/con_adoption-guidelines.adoc[leveloffset=+1]
 
-include::../modules/con_adoption-process-overview.adoc[leveloffset=+1]
+include::../modules/ref_adoption-process-overview.adoc[leveloffset=+1]
 
 include::../modules/con_dcn-adoption-overview.adoc[leveloffset=+1]
 
