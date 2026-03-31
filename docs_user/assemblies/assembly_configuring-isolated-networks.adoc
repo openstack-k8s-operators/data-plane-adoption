@@ -10,11 +10,11 @@ ifdef::context[:parent-context: {context}]
 [role="_abstract"]
 Before you begin replicating your existing VLAN and IPAM configuration in the {rhos_long} environment, you must have the following IP address allocations for the new control plane services:
 
-* 1 IP address for each isolated network on each {rhocp_long} worker node. You configure these IP addresses in the `NodeNetworkConfigurationPolicy` custom resources (CRs) for the {OpenShiftShort} worker nodes. For more information, see xref:configuring-openshift-worker-nodes_isolated-networks[Configuring {OpenShiftShort} worker nodes].
-* 1 IP range for each isolated network for the data plane nodes. You configure these ranges in the `NetConfig` CRs for the data plane nodes. For more information, see xref:configuring-data-plane-nodes_isolated-networks[Configuring data plane nodes].
+* 1 IP address for each isolated network on each {rhocp_long} worker node. You configure these IP addresses in the `NodeNetworkConfigurationPolicy` custom resources (CRs) for the {OpenShiftShort} worker nodes.
+* 1 IP range for each isolated network for the data plane nodes. You configure these ranges in the `NetConfig` CRs for the data plane nodes.
 * 1 IP range for each isolated network for control plane services. These ranges
-enable pod connectivity for isolated networks in the `NetworkAttachmentDefinition` CRs. For more information, see xref:configuring-networking-for-control-plane-services_isolated-networks[Configuring the networking for control plane services].
-* 1 IP range for each isolated network for load balancer IP addresses. These IP ranges define load balancer IP addresses for MetalLB in the `IPAddressPool` CRs. For more information, see xref:configuring-networking-for-control-plane-services_isolated-networks[Configuring the networking for control plane services].
+enable pod connectivity for isolated networks in the `NetworkAttachmentDefinition` CRs.
+* 1 IP range for each isolated network for load balancer IP addresses. These IP ranges define load balancer IP addresses for MetalLB in the `IPAddressPool` CRs.
 
 [NOTE]
 The exact list and configuration of isolated networks in the following procedures should reflect the actual {rhos_prev_long} environment. The number of isolated networks might differ from the examples used in the procedures. The IPAM scheme might also differ. Only the parts of the configuration that are relevant to configuring networks are shown. The values that are used in the following procedures are examples. Use values that are specific to your configuration.
@@ -24,6 +24,12 @@ include::../modules/proc_configuring-openshift-worker-nodes.adoc[leveloffset=+1]
 include::../modules/proc_configuring-networking-for-control-plane-services.adoc[leveloffset=+1]
 
 include::../modules/proc_configuring-data-plane-nodes.adoc[leveloffset=+1]
+
+[role="_additional-resources"]
+== Additional resources
+* xref:configuring-openshift-worker-nodes_isolated-networks[Configuring {OpenShiftShort} worker nodes]
+* xref:configuring-data-plane-nodes_isolated-networks[Configuring data plane nodes]
+* xref:configuring-networking-for-control-plane-services_isolated-networks[Configuring the networking for control plane services]
 
 ifdef::parent-context[:context: {parent-context}]
 ifndef::parent-context[:!context:]
