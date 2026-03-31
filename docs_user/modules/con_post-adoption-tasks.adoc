@@ -15,9 +15,9 @@ Perform the following post-adoption tasks to ensure that your {rhos_long} enviro
 * Verify that you migrated all services from the Controller nodes, and then power off the nodes. If any services are still running in the Controller nodes, such as Open Virtual Networking (ML2/OVN), {object_storage_first_ref}, or {Ceph}, do not power off the nodes.
 * Optional: Run tempest to verify that the entire adoption process is working correctly.
 
+[role="_additional-resources"]
 .Additional resources
-
 * link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/updating_your_environment_to_the_latest_maintenance_release/index[Updating your environment to the latest maintenance release]
 * xref:enabling-high-availability-for-instances_data-plane[Enabling the high availability for Compute instances service]
-* link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html-single/configuring_security_services/index#assembly_enabling-TLS-on-a-deployed-RHOSO-environment[Enabling TLS on a deployed RHOSO environment] in _Configuring security services_
+* link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html-single/configuring_security_services/index#assembly_enabling-TLS-on-a-deployed-RHOSO-environment[Enabling TLS on a deployed RHOSO environment]
 * link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/validating_and_troubleshooting_the_deployed_cloud/index[Validating and troubleshooting the deployed cloud]

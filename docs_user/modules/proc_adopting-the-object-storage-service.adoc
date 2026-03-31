@@ -86,7 +86,7 @@ spec:
 * `spec.swift.swiftStorage.storageClass` must match the {rhos_acro} deployment storage class.
 * `metallb.universe.tf/loadBalancerIPs: <172.17.0.80>` specifies the load balancer IP in your environment. If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
 * `spec.swift.swiftProxy.networkAttachments` must match the network attachment for the previous {object_storage} configuration from the {OpenStackShort} deployment.
-
++
 [NOTE]
 If `SwiftEncryptionEnabled: true` was set in {rhos_prev_long}, ensure that `spec.swift.swiftProxy.encryptionEnabled` is set to `true` and that the {key_manager_first_ref} adoption is complete before proceeding.
 

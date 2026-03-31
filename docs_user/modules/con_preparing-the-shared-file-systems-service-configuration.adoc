@@ -17,8 +17,7 @@ Review the following guidelines for preparing your {rhos_component_storage_file}
 * Ignore the `osapi_share_listen` configuration. In {rhos_long} {rhos_curr_ver}, you rely on {rhocp_long} routes and ingress.
 * Check for policy overrides. In {rhos_acro} {rhos_curr_ver}, the {rhos_component_storage_file} ships with a secure default Role-based access control (RBAC), and overrides might not be necessary.
 ifeval::["{build}" != "downstream"]
-Please review RBAC defaults by using the https://docs.openstack.org/oslo.policy/latest/cli/oslopolicy-policy-generator.html[Oslo policy generator]
-tool.
+Review RBAC defaults by using the Oslo policy generator tool.
 endif::[]
 * If a custom policy is necessary, you must provide it as a `ConfigMap`. The following example spec illustrates how you can set up a `ConfigMap` called `manila-policy` with the contents of a file called `policy.yaml`:
 +
@@ -58,7 +57,7 @@ endif::[]
 section in `manila: template: manilaScheduler`.
 * If you have multiple storage back-end drivers configured with {OpenStackShort} {rhos_prev_ver}, you need to split them up when deploying {rhos_acro} {rhos_curr_ver}. Each storage back-end driver needs to use its own instance of the `manila-share` service.
 * If a storage back-end driver needs a custom container image, find it in the
-link:https://catalog.redhat.com/software/containers/search?gs&q=manila[Red Hat Ecosystem Catalog], and create or modify an `OpenStackVersion` custom resource (CR) to specify the custom image using the same `custom name`.
+Red Hat Ecosystem Catalog, and create or modify an `OpenStackVersion` custom resource (CR) to specify the custom image using the same `custom name`.
 +
 The following example shows a manila spec from the `OpenStackControlPlane` CR that includes multiple storage back-end drivers, where only one is using a custom container image:
 +
@@ -167,3 +166,10 @@ $ oc create secret generic osp-secret-manila-netapp --from-file=~/<secret>
            replicas: 1
     < . . . >
 ----
+
+[role="_additional-resources"]
+.Additional resources
+ifeval::["{build}" != "downstream"]
+* https://docs.openstack.org/oslo.policy/latest/cli/oslopolicy-policy-generator.html[Oslo policy generator]
+endif::[]
+* link:https://catalog.redhat.com/software/containers/search?gs&q=manila[Red Hat Ecosystem Catalog]
