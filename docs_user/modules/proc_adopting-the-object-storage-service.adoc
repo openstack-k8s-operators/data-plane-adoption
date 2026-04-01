@@ -132,5 +132,10 @@ $ openstack object save test obj --file -
 Hello World!
 ----
 
-[NOTE]
-The Object Storage data is still stored on the existing {OpenStackShort} nodes. For more information about migrating the actual data from the {OpenStackShort} deployment to the {rhos_acro} deployment, see xref:migrating-object-storage-data-to-rhoso-nodes_migrate-object-storage-service[Migrating the {object_storage_first_ref} data from {OpenStackShort} to {rhos_long} nodes].
+.Next steps
+
+After the initial adoption, the {object_storage} data is still stored on the existing {OpenStackShort} nodes. You have two options for handling these storage nodes:
+
+* *Migrate data to new {rhos_acro} nodes*: Provision new storage nodes on {rhocp_long} and gradually move data by using the `swift-ring-tool`. For more information, see xref:migrating-object-storage-data-to-rhoso-nodes_migrate-object-storage-service[Migrating the {object_storage_first_ref} data from {OpenStackShort} to {rhos_long} nodes].
+
+* *Convert existing nodes to dataplane nodes*: Keep the data on the same nodes and convert them to data plane nodes that are managed by the `openstack-operators`. For more information, see xref:converting-object-storage-nodes[Converting {object_storage} storage nodes].

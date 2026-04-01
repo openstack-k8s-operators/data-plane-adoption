@@ -1,0 +1,212 @@
+:_mod-docs-content-type: PROCEDURE
+[id="converting-object-storage-nodes"]
+
+= Converting {object_storage} storage nodes
+
+[role="_abstract"]
+If you used external {object_storage} storage nodes, you can convert these
+nodes after the initial {object_storage_first_ref} adoption is complete. This
+step reconfigures the nodes in-place while keeping the {object_storage}
+available throughout the process.
+
+Before you begin, review the following key concepts:
+Pre-provisioned nodes:: Setting `preProvisioned: true` in the
+  `OpenStackDataPlaneNodeSet` custom resource (CR) skips provisioning the node from scratch and does not reinstall the operating system.
+{object_storage} disk and mount preservation:: `edpm_swift_disks: []` must be
+  set in both the `nodeTemplate` and in the individual node definition under
+  `nodes` to ensure that no disks are formatted or mounted differently.
+  Existing disk mounts are untouched. The `SwiftRawDisks` parameter from
+  {OpenStackPreviousInstaller} is not migrated or converted. Disks on
+  converted nodes must be managed manually.
+Rolling conversion with multiple node sets:: In production, do not convert
+  all {object_storage} nodes at once. Instead, create separate
+  `OpenStackDataPlaneNodeSet` custom resources and deploy them sequentially.  Align
+  groups with ring zones or regions so that no more than one replica of any
+  partition is affected during the conversion.
+
+.Prerequisites
+
+* The initial {object_storage} adoption is complete. For more information, see
+  xref:adopting-the-object-storage-service_hsm-integration[Adopting the
+  {object_storage}].
+
+.Procedure
+
+. Create a `OpenStackDataPlaneService` custom resource (CR) to remove remaining
+  {OpenStackPreviousInstaller} artifacts, such as containers, `systemd` units, and
+  configuration, from the node:
++
+----
+$ oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: tripleo-cleanup
+  namespace: openstack
+spec:
+  playbook: osp.edpm.tripleo_cleanup
+EOF
+----
+
+ifeval::["{build}" == "upstream"]
+. Create a `OpenStackDataPlaneService` CR to configure RPM repositories on the node:
++
+----
+$ oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: repo-setup
+  namespace: openstack
+spec:
+  addCertMounts: false
+  caCerts: combined-ca-bundle
+  edpmServiceType: repo-setup
+  playbookContents: |
+    - hosts: all
+      strategy: linear
+      tasks:
+        - name: Enable podified-repos
+          become: true
+          ansible.builtin.shell: |
+            # This needs rhos-release.rpm to be downloaded before or an
+            # alternative way to use upstream repos
+            dnf install -y /tmp/rhos-release.rpm
+            rhos-release -x
+            rhos-release 18.0
+EOF
+----
+endif::[]
+
+. Create the `OpenStackDataPlaneNodeSet` CR that defines which nodes to convert and how to configure them:
++
+[subs="+quotes"]
+----
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneNodeSet
+metadata:
+  name: openstack-edpm-ipam
+  namespace: openstack
+spec:
+  networkAttachments:
+  - ctlplane
+  - storage
+  nodeTemplate:
+    ansible:
+      ansibleUser: cloud-admin
+      ansibleVars:
+        edpm_nodes_validation_validate_controllers_icmp: false
+        edpm_nodes_validation_validate_gateway_icmp: false
+        edpm_service_removal_skip_list:
+        - tripleo-container-shutdown.service
+        edpm_sshd_allowed_ranges:
+        - 192.168.122.0/24
+        edpm_swift_disks: []
+        enable_debug: false
+        gather_facts: false
+        timesync_ntp_servers:
+        - hostname: pool.ntp.org
+    ansibleSSHPrivateKeySecret: dataplane-adoption-secret
+    managementNetwork: ctlplane
+  nodes:
+    edpm-swift-0:
+      ansible:
+        ansibleHost: 192.168.122.100
+ifeval::["{build}" == "downstream"]
+        ansibleVarsFrom:
+        - secretRef:
+            name: subscription-manager
+        - secretRef:
+            name: redhat-registry
+endif::[]
+        ansibleVars:
+          edpm_swift_disks: []
+ifeval::["{build}" == "downstream"]
+          rhc_release: 9.2
+          rhc_repositories:
+              - {name: "*", state: disabled}
+              - {name: "rhel-9-for-x86_64-baseos-eus-rpms", state: enabled}
+              - {name: "rhel-9-for-x86_64-appstream-eus-rpms", state: enabled}
+              - {name: "rhel-9-for-x86_64-highavailability-eus-rpms", state: enabled}
+              - {name: "rhoso-18.0-for-rhel-9-x86_64-rpms", state: enabled}
+endif::[]
+      hostName: edpm-swift-0
+      networks:
+      - defaultRoute: true
+        fixedIP: 192.168.122.100
+        name: ctlplane
+        subnetName: subnet1
+      - name: internalapi
+        subnetName: subnet2
+      - name: storage
+        subnetName: subnet3
+      - name: tenant
+        subnetName: subnet4
+  preProvisioned: true
+  services:
+ifeval::["{build}" == "upstream"]
+  - repo-setup
+endif::[]
+  - bootstrap
+  - download-cache
+  - install-os
+  - configure-os
+  - ssh-known-hosts
+  - run-os
+  - reboot-os
+  - install-certs
+  - tripleo-cleanup
+  - swift
+  tlsEnabled: true
+----
+
+. Apply the `OpenStackDataPlaneNodeSet` CR:
++
+----
+$ oc apply -f nodeset.yaml
+----
+
+. Create an `OpenStackDataPlaneDeployment` CR to trigger the Ansible pipeline on the node:
++
+----
+$ oc apply -f - <<EOF
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneDeployment
+metadata:
+  name: openstack-edpm-ipam
+  namespace: openstack
+spec:
+  nodeSets:
+  - openstack-edpm-ipam
+EOF
+----
+
+. Wait for the deployment to complete:
++
+----
+$ oc wait --for condition=Ready openstackdataplanedeployment/openstack-edpm-ipam --timeout=30m
+----
+
+.. Monitor the progress:
++
+----
+$ watch oc get pod -l app=openstackansibleee
+----
++
+----
+$ oc logs -l app=openstackansibleee -f --max-log-requests 20
+----
+
+.Verification
+
+* Verify that the node set is ready:
++
+----
+$ oc get openstackdataplanenodeset openstack-edpm-ipam
+----
+
+* Verify that the Object Storage services are running on the converted node:
++
+----
+$ ssh cloud-admin@192.168.122.100 "sudo systemctl status edpm_swift_*"
+----
