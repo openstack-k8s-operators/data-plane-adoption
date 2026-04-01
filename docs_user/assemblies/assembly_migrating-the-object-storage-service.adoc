@@ -8,9 +8,14 @@ ifdef::context[:parent-context: {context}]
 = Migrating the {object_storage} to {rhos_long_noacro} nodes
 
 [role="_abstract"]
-If you are using the {rhos_prev_long} {object_storage_first_ref} as an Object Storage service, you must migrate your Object Storage service to {rhos_long_noacro} nodes.
+If you are using the {rhos_prev_long} {object_storage_first_ref} as an Object Storage service, you must migrate your Object Storage service to {rhos_long} nodes.
 
 If you are using the Object Storage API of the Ceph Object Gateway (RGW), you can skip this chapter and migrate your Red Hat Ceph Storage cluster. For more information, see "Migrating the {Ceph} cluster". If you are not planning to migrate Ceph daemons from Controller nodes, you must perform the steps that are described in "Deploying a Ceph ingress daemon" and "Create or update the Object Storage service endpoints".
+
+You have two options for handling the existing {object_storage} storage nodes:
+
+* *Migrate data to new {rhos_acro} nodes* : Provision new storage nodes on {rhocp_long} and gradually move data by using the `swift-ring-tool`.
+* *Convert existing nodes to data plane nodes*: Keep the data on the same nodes and convert them to data plane nodes that are managed by the data plane operator.
 
 The data migration happens replica by replica. For example, if you have 3 replicas, move them one at a time to ensure that the other 2 replicas are still operational, which enables you to continue to use the {object_storage} during the migration.
 
@@ -21,6 +26,8 @@ Data migration to the new deployment is a long-running process that executes mos
 include::../modules/proc_migrating-object-storage-data-to-rhoso-nodes.adoc[leveloffset=+1]
 
 include::../modules/con_troubleshooting-object-storage-migration.adoc[leveloffset=+1]
+
+include::../modules/proc_converting-object-storage-nodes.adoc[leveloffset=+1]
 
 [role="_additional-resources"]
 == Additional resources
