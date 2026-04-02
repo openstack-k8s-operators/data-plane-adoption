@@ -10,7 +10,7 @@ ifdef::context[:parent-context: {context}]
 [role="_abstract"]
 If you are using the {rhos_prev_long} {object_storage_first_ref} as an Object Storage service, you must migrate your Object Storage service to {rhos_long_noacro} nodes.
 
-If you are using the Object Storage API of the Ceph Object Gateway (RGW), you can skip this chapter and migrate your Red Hat Ceph Storage cluster. For more information, see xref:ceph-migration_adopt-control-plane[Migrate the {Ceph} cluster]. If you are not planning to migrate Ceph daemons from Controller nodes, you must perform the steps that are described in xref:deploying-a-ceph-ingress-daemon_migrating-ceph-rgw[Deploying a Ceph ingress daemon] and xref:updating-the-object-storage-endpoints_migrating-ceph-rgw[Create or update the Object Storage service endpoints].
+If you are using the Object Storage API of the Ceph Object Gateway (RGW), you can skip this chapter and migrate your Red Hat Ceph Storage cluster. For more information, see "Migrating the {Ceph} cluster". If you are not planning to migrate Ceph daemons from Controller nodes, you must perform the steps that are described in "Deploying a Ceph ingress daemon" and "Create or update the Object Storage service endpoints".
 
 The data migration happens replica by replica. For example, if you have 3 replicas, move them one at a time to ensure that the other 2 replicas are still operational, which enables you to continue to use the {object_storage} during the migration.
 
@@ -21,6 +21,12 @@ Data migration to the new deployment is a long-running process that executes mos
 include::../modules/proc_migrating-object-storage-data-to-rhoso-nodes.adoc[leveloffset=+1]
 
 include::../modules/con_troubleshooting-object-storage-migration.adoc[leveloffset=+1]
+
+[role="_additional-resources"]
+== Additional resources
+* xref:ceph-migration_adopt-control-plane[Migrating the {Ceph} cluster]
+* xref:deploying-a-ceph-ingress-daemon_migrating-ceph-rgw[Deploying a Ceph ingress daemon]
+* xref:updating-the-object-storage-endpoints_migrating-ceph-rgw[Create or update the Object Storage service endpoints]
 
 ifdef::parent-context[:context: {parent-context}]
 ifndef::parent-context[:!context:]
