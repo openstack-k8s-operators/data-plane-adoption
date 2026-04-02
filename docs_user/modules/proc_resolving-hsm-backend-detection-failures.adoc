@@ -1,7 +1,7 @@
 :_mod-docs-content-type: PROCEDURE
 [id="resolving-HSM-back-end-detection-failures_{context}"]
 
-==  Resolving HSM back-end detection failures
+=  Resolving HSM back-end detection failures
 
 [role="_abstract"]
 If the adoption role cannot detect hardware security module (HSM) configuration in the source environment, you must force the HSM adoption.
