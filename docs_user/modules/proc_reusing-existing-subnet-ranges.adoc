@@ -18,5 +18,7 @@ new control plane services.
 
 [role="_additional-resources"]
 .Additional resources
+ifeval::["{build_variant}" != "ospdo"]
 * xref:using-new-subnet-ranges_{context}[Using new subnet ranges]
+endif::[]
 * xref:configuring-isolated-networks_configuring-network[Configuring isolated networks]
