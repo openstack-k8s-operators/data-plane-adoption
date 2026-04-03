@@ -1,0 +1,42 @@
+:_mod-docs-content-type: REFERENCE
+[id="adoption-duration-and-impact_{context}"]
+
+= Adoption duration and impact
+
+[role="_abstract"]
+The durations in the following table were recorded in a test environment that consisted of 228 Compute nodes and 3 Networker nodes. To accurately estimate the adoption duration for each task, perform these procedures in a test environment with hardware that is similar to your production environment. Ensure that you set up the {rhocp_long} ({OpenShiftShort}) environment and install the Operators before testing.
+
+[IMPORTANT]
+Durations can vary significantly based on the content of your environment, for example, the size of your service databases or the number of services. The durations represent raw execution time. They do not include human operator activity.
+
+.Duration and impact of adoption stages
+[options="header",cols="h,a,a"]
+|===
+| Adoption stage | Duration | Notes
+
+| xref:migrating-tls-everywhere_configuring-network[TLS-e migration] | * 3 seconds | * No impact on running workloads.
+| xref:migrating-databases-to-the-control-plane_configuring-network[Database migration and back-end services deployment] | * 12 minutes
+| * No data loss or workload disruption.
+* APIs are offline.
+| xref:adopting-openstack-control-plane-services_configuring-network[Control plane adoption] | * 21 minutes | * No data loss or workload disruption.
+* APIs are being started.
+* No Compute hosts are available to schedule workloads until the data plane adoption stage.
+* No network changes should be done until the data plane adoption is complete.
+| xref:adopting-data-plane_hsm-integration[Data plane adoption] | * 25 minutes pilot node set, plus 60 minutes remaining node sets | * APIs are online.
+* As Compute hosts are adopted, they become available for workload scheduling.
+* No data loss or workload disruption.
+| xref:performing-a-fast-forward-upgrade-on-compute-services_data-plane[Fast-forward upgrade of Compute services] | * 8 minutes | * No data loss or workload disruption.
+| xref:adopting-networker-services-to-the-data-plane_data-plane[Networker node adoption] | * 9 minutes | * See the following "Data plane connectivity impact" table for more details about Networker scenarios.
+|===
+
+
+.Data plane connectivity impact
+[options="header",cols="h,a"]
+|===
+| Scenario | Notes
+
+| Migrate a 17.1 OVN gateway on the control plane to a {OpenShiftShort}-hosted OVN gateway | Possible L3 downtime due to the migration of the N-S traffic path to new hosts
+| Convert a 17.1 OVN gateway on the control plane to an 18.0 data plane Networker node | No L2/L3 data plane connectivity loss because N-S traffic path remains unchanged
+| Convert a 17.1 OVN gateway on a Networker node to a 18.0 data plane Networker node | No L2/L3 data plane connectivity loss because traffic path remains unchanged
+| L3 handled through provider networks | No L2/L3 data plane connectivity loss because traffic path remains unchanged
+|===
