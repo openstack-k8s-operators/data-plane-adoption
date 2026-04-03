@@ -164,7 +164,7 @@ endif::[]
 
 // Common URLs. Do not override. Do not delete.
 :base_url: https://access.redhat.com/documentation
-:defaultURL: https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/{rhos_curr_ver}/html
+:defaultURL: https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html
 :defaultOCPURL: https://access.redhat.com/documentation/en-us/openshift_container_platform/{ocp_curr_ver}/html
 :defaultCephURL:  https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/{CephVernum}/html
 

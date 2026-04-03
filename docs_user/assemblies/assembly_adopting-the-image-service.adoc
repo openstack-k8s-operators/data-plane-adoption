@@ -37,7 +37,7 @@ include::../modules/proc_verifying-the-image-service-adoption.adoc[leveloffset=+
 
 [role="_additional-resources"]
 == Additional resources
-* link:{defaultURL}/customizing_persistent_storage/assembly_glance-customizing-the-image-service_customizing-cinder#assembly_glance-configuring-quotas_configuring-glance[Configuring image quotas]
+* link:{defaultURL}/customizing_persistent_storage/assembly_glance-configuring-quotas_osp[Customizing Image service (glance) quota limits]
 
 ifdef::parent-context[:context: {parent-context}]
 ifndef::parent-context[:!context:]
