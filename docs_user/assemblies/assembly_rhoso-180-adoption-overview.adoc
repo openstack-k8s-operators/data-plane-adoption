@@ -24,6 +24,8 @@ include::../modules/con_adoption-guidelines.adoc[leveloffset=+1]
 
 include::../modules/ref_adoption-process-overview.adoc[leveloffset=+1]
 
+include::../modules/ref_adoption-duration-and-impact.adoc[leveloffset=+1]
+
 include::../modules/con_dcn-adoption-overview.adoc[leveloffset=+1]
 
 include::../modules/proc_installing-the-systemd-container-package-on-compute-hosts.adoc[leveloffset=+1]
