@@ -321,13 +321,14 @@ the safest option is to create a custom service and a dedicated configuration ma
 +
 ----
   tlsCerts:
-    contents:
-      - dnsnames
-      - ips
-    networks:
-      - ctlplane
-    issuer: osp-rootca-issuer-internal
-    edpmRoleServiceName: nova
+    nova:
+      contents:
+        - dnsnames
+        - ips
+      networks:
+        - ctlplane
+      issuer: osp-rootca-issuer-internal
+      edpmRoleServiceName: nova
   caCerts: combined-ca-bundle
   edpmServiceType: nova
 ----
