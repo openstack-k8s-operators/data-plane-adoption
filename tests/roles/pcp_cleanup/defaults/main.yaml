@@ -8,3 +8,6 @@ reset_crc_storage: false
 # Whether 'make standalone_revert' should be run before
 # running the test suite.
 standalone_revert_enabled: false
+
+# The number of peristent volumes to create if crc is being reset.
+crc_pv_num: 12
