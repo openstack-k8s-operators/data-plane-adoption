@@ -20,6 +20,7 @@ $ oc get openstackcontrolplanes.core.openstack.org <name> -o jsonpath='{.spec.ir
 +
 ** Replace `<name>` with the name of your existing `OpenStackControlPlane` CR, for example, `openstack-control-plane`.
 * The {identity_service_first_ref}, {networking_first_ref}, and {image_service_first_ref} are operational.
+* The {networking_service} is configured with the ML2 baremetal mechanism driver. For more information, see xref:adopting-the-networking-service_adopt-control-plane[Adopting the {networking_service}].
 +
 [NOTE]
 If you use the {bare_metal} in a Bare Metal as a Service configuration, do not adopt the {compute_service_first_ref} before you adopt the {bare_metal}.
