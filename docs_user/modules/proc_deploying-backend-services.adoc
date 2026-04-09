@@ -246,8 +246,6 @@ spec:
     template:
       ovnController:
         networkAttachment: tenant
-        nodeSelector:
-          node: non-existing-node-name
       ovnNorthd:
         replicas: 0
       ovnDBCluster:
@@ -488,8 +486,6 @@ spec:
     template:
       ovnController:
         networkAttachment: tenant
-        nodeSelector:
-          node: non-existing-node-name
       ovnNorthd:
         replicas: 0
       ovnDBCluster:
