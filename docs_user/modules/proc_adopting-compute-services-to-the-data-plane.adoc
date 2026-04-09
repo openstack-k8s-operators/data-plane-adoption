@@ -403,11 +403,11 @@ kind: OpenStackDataPlaneNodeSet
 metadata:
   name: openstack-$CELL
 spec:
-   tlsEnabled: false
+  tlsEnabled: false
   networkAttachments:
       - ctlplane
   preProvisioned: true
-   services:
+  services:
 ifeval::["{build}" == "downstream"]
     - redhat
 endif::[]
@@ -432,7 +432,7 @@ endif::[]
     - name: ANSIBLE_FORCE_COLOR
       value: "True"
     - name: ANSIBLE_VERBOSITY
-      value: '3'
+      value: "3"
   nodeTemplate:
     ansibleSSHPrivateKeySecret: dataplane-adoption-secret
     ansible:
@@ -502,7 +502,7 @@ endif::[]
         #
         # These vars are for the network config templates themselves and are
         # considered EDPM network defaults.
-         neutron_physical_bridge_name: br-ctlplane
+        neutron_physical_bridge_name: br-ctlplane
         neutron_public_interface_name: eth0
 
         # edpm_nodes_validation
@@ -510,7 +510,7 @@ endif::[]
         edpm_nodes_validation_validate_gateway_icmp: false
 
         # edpm ovn-controller configuration
-         edpm_ovn_bridge_mappings: <bridge_mappings>
+        edpm_ovn_bridge_mappings: <bridge_mappings>
         edpm_ovn_bridge: br-int
         edpm_ovn_encap_type: geneve
         ovn_monitor_all: true

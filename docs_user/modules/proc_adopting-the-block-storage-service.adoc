@@ -19,7 +19,7 @@ To adopt a {OpenStackPreviousInstaller}-deployed {block_storage_first_ref}, crea
 * The contents of `cinder.conf` file. Download the file so that you can access it locally:
 +
 ----
-$CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/cinder/etc/cinder/cinder.conf > cinder.conf
+$CONTROLLER1_SSH sudo cat /var/lib/config-data/puppet-generated/cinder/etc/cinder/cinder.conf > cinder.conf
 ----
 
 .Procedure
