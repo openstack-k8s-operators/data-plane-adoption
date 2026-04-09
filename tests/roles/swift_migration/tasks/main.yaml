@@ -33,7 +33,11 @@
 - name: wait until ring configmap includes new pv devices
   ansible.builtin.shell: |
     {{ oc_header }}
-    timeout 900s bash -c 'until oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-ring-builder object.builder search --device pv" ; do sleep 60; done'
+    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-ring-builder object.builder search --device pv"
+  register: result
+  until: result.rc == 0 and 'No matching devices found' not in result.stdout
+  retries: 15
+  delay: 60
 
 - name: set standalone node weight to 0 in swift rings
   ansible.builtin.shell: |
@@ -43,66 +47,11 @@
     while read -r node; do
       swift-ring-tool drain ${node}
     done <<< "{{ swift_node_list_result.stdout }}"
-    swift-ring-tool forced_rebalance
     swift-ring-tool push'
 
-- name: push rings to standalone and restart swift services
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    CONTROLLER1_SSH="{{ controller1_ssh }}"
-    oc extract --confirm cm/swift-ring-files
-    $CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
-    $CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
-
-- name: wait until all replicas are 100% available after first rebalance
-  ansible.builtin.shell: |
-    {{ oc_header }}
-    timeout 900s bash -c 'until oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report" | grep -q "100.00% of object copies found" ; do sleep 60; done'
-
-- name: rebalance rings second time
-  ansible.builtin.shell: |
-    {{ oc_header }}
-    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
-    swift-ring-tool get
-    swift-ring-tool forced_rebalance
-    swift-ring-tool push'
-
-- name: push rings to standalone and restart swift services
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    CONTROLLER1_SSH="{{ controller1_ssh }}"
-    oc extract --confirm cm/swift-ring-files
-    $CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
-    $CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
-
-- name: wait until all replicas are 100% available after second rebalance
-  ansible.builtin.shell: |
-    {{ oc_header }}
-    timeout 900s bash -c 'until oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report" | grep -q "100.00% of object copies found" ; do sleep 60; done'
-
-- name: rebalance rings third time
-  ansible.builtin.shell: |
-    {{ oc_header }}
-    oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c '
-    swift-ring-tool get
-    swift-ring-tool forced_rebalance
-    swift-ring-tool push'
-
-- name: push rings to standalone and restart swift services
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ oc_header }}
-    CONTROLLER1_SSH="{{ controller1_ssh }}"
-    oc extract --confirm cm/swift-ring-files
-    $CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
-    $CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
-
-- name: wait until all replicas are 100% available after third rebalance
-  ansible.builtin.shell: |
-    {{ oc_header }}
-    timeout 900s bash -c 'until oc debug --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "swift-ring-tool get && swift-dispersion-report" | grep -q "100.00% of object copies found" ; do sleep 60; done'
+- name: "rebalance rings and wait until replication finished - iteration {{ item }}"
+  ansible.builtin.include_tasks: rebalance_and_wait.yaml
+  loop: [1, 2, 3]
 
 - name: wait until /srv/node on standalone is drained
   ansible.builtin.shell: |
