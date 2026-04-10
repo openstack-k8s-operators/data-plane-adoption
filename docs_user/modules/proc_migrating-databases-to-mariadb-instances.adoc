@@ -223,6 +223,22 @@ for CELL in $(echo $CELLS); do
 done
 ----
 
+. Wait for the `mariadb-copy-data` pod to be able to reach the podified MariaDB:
++
+----
+$ oc rsh mariadb-copy-data mysql -rsh "${PODIFIED_MARIADB_IP['super']}" \
+  -uroot -p"${PODIFIED_DB_ROOT_PASSWORD['super']}" -e 'select 1;'
+----
++
+[NOTE]
+====
+For BGP-enabled environments, this command might take a few moments to succeed while BGP routes are advertised and propagated through the network. The `mariadb-copy-data` pod needs to receive the route to the podified MariaDB IP address through BGP before it can establish a connection. If the command fails, wait a few seconds and retry. The connection should succeed once the BGP route advertisement is complete.
+
+For IPv6 environments, this command might take a few moments to succeed while the network IPv6 stack completes its setup. If the command fails, wait a few seconds and retry.
+
+For standard deployments, such as non-BGP deployments or IPv4 deployments, this command should succeed immediately.
+====
+
 . Test the connection to the control plane upcall and cells databases:
 +
 ----
