@@ -57,7 +57,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     CONTROLLER1_SSH="{{ controller1_ssh }}"
-    $CONTROLLER1_SSH "timeout 900s bash -c 'while \$(find /srv/node/ -type f -name \"*.db\" -o -name \"*.data\" | grep -q \".\"); do sleep 5; done'"
+    $CONTROLLER1_SSH "timeout 900s bash -c 'while \$(find /srv/node/ -ignore_readdir_race -type f -name \"*.db\" -o -name \"*.data\" | grep -q \".\"); do sleep 5; done'"
 
 - name: remove standalone node from rings
   ansible.builtin.shell: |
