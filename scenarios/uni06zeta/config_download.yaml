@@ -51,6 +51,7 @@ parameter_defaults:
   ControllerCount: 3
   ComputeCount: 2
   NeutronGlobalPhysnetMtu: 1350
+  NeutronEnableIgmpSnooping: true
   CinderLVMLoopDeviceSize: 20480
   CloudName: overcloud.example.com
   CloudNameInternal: overcloud.internalapi.example.com
