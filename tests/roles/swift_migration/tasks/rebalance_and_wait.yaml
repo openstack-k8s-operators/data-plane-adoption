@@ -6,14 +6,23 @@
     swift-ring-tool forced_rebalance
     swift-ring-tool push'
 
-- name: push rings to standalone and restart swift services
+- name: push rings to controller nodes and restart swift services
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
     CONTROLLER1_SSH="{{ controller1_ssh }}"
+    CONTROLLER2_SSH="{{ controller2_ssh }}"
+    CONTROLLER3_SSH="{{ controller3_ssh }}"
+
     oc extract --confirm cm/swift-ring-files
-    $CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
-    $CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
+
+    for i in {1..3}; do
+        SSH_CMD="CONTROLLER${i}_SSH"
+        if [ ! -z "${!SSH_CMD}" ]; then
+            ${!SSH_CMD} "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
+            ${!SSH_CMD} "systemctl restart tripleo_swift_*"
+        fi
+    done
 
 - name: wait until all replicas are 100% available after rebalance
   ansible.builtin.shell: |
