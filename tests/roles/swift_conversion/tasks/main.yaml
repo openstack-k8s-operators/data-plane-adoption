@@ -1,0 +1,70 @@
+- name: Patch the OpenStackControlPlane CR to change the Swift default storage ports
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ cells_env }}
+
+    cat > swift-config-patch.yaml << EOF
+    spec:
+      swift:
+        template:
+          swiftStorage:
+            defaultConfigOverwrite:
+              01-account-server.conf: |
+                [DEFAULT]
+                bind_port = 6002
+              01-container-server.conf: |
+                [DEFAULT]
+                bind_port = 6001
+              01-object-server.conf: |
+                [DEFAULT]
+                bind_port = 6000
+    EOF
+
+- name: Apply the patch file
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc patch openstackcontrolplane openstack --type=merge --patch-file=swift-config-patch.yaml
+
+- name: Create OpenStackDataPlaneNodeSet for Swift node conversion
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc apply -f - <<EOF
+    {{ swift_conversion_nodeset }}
+    EOF
+
+- name: Create OpenStackDataPlaneDeployment to trigger conversion
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc apply -f - <<EOF
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneDeployment
+    metadata:
+      name: {{ swift_conversion_deployment_name }}
+      namespace: openstack
+    spec:
+      nodeSets:
+      - {{ swift_conversion_nodeset_name }}
+    EOF
+
+- name: Wait for the Swift node conversion deployment to finish
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait --for condition=Ready openstackdataplanedeployment/{{ swift_conversion_deployment_name }} --timeout=30m
+
+- name: Verify Swift services are running on converted node
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    ssh -o StrictHostKeyChecking=accept-new -i {{ edpm_privatekey_path }} {{ edpm_user }}@{{ standalone_ip | default(edpm_node_ip) }} "sudo systemctl status edpm_swift_*"
+
+- name: Verify Swift is still functional after conversion
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc rsh openstackclient /bin/sh -c "touch obj && openstack container create cont && openstack object create cont obj"

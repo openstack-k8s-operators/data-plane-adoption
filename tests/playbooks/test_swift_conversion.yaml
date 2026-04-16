@@ -1,0 +1,11 @@
+- name: Swift conversion
+  hosts: local
+  gather_facts: false
+  force_handlers: true
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
+  roles:
+    - role: swift_conversion
+      tags:
+        - swift_conversion
