@@ -27,6 +27,42 @@
     {{ oc_header }}
     oc patch openstackcontrolplane openstack --type=merge --patch-file=swift-config-patch.yaml
 
+- name: Create OpenStackDataPlaneService for Swift conversion
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc apply -f - <<EOF
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneService
+    metadata:
+      name: swift-conversion
+    spec:
+      addCertMounts: false
+      caCerts: combined-ca-bundle
+      edpmServiceType: swift
+      dataSources:
+      - secretRef:
+          name: swift-conf
+      - configMapRef:
+          name: swift-storage-config-data
+      - configMapRef:
+          name: swift-ring-files
+      playbookContents: |
+        - name: Cleanup and deploy Swift
+          hosts: "{{ edpm_override_hosts | default('all', true) }}"
+          serial: 1
+          strategy: linear
+          gather_facts: "{{ gather_facts | default(false) }}"
+          any_errors_fatal: "{{ edpm_any_errors_fatal | default(true) }}"
+          max_fail_percentage: "{{ edpm_max_fail_percentage | default(0) }}"
+          environment: "{{ edpm_playbook_environment | default({}) }}"
+          tasks:
+            - ansible.builtin.import_role:
+                name: osp.edpm.edpm_tripleo_cleanup
+            - ansible.builtin.import_role:
+                name: osp.edpm.edpm_swift
+    EOF
+
 - name: Create OpenStackDataPlaneNodeSet for Swift node conversion
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
