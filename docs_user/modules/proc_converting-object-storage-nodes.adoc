@@ -19,11 +19,9 @@ Pre-provisioned nodes:: Setting `preProvisioned: true` in the
   Existing disk mounts are untouched. The `SwiftRawDisks` parameter from
   {OpenStackPreviousInstaller} is not migrated or converted. Disks on
   converted nodes must be managed manually.
-Rolling conversion with multiple node sets:: In production, do not convert
-  all {object_storage} nodes at once. Instead, create separate
-  `OpenStackDataPlaneNodeSet` custom resources and deploy them sequentially.  Align
-  groups with ring zones or regions so that no more than one replica of any
-  partition is affected during the conversion.
+Rolling conversion:: The `swift-conversion` service uses `serial: 1` by
+  default, which converts one node at a time to keep the {object_storage}
+  available.
 
 .Prerequisites
 
@@ -97,10 +95,32 @@ $ oc apply -f - <<EOF
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneService
 metadata:
-  name: tripleo-cleanup
-  namespace: openstack
+  name: swift-conversion
 spec:
-  playbook: osp.edpm.tripleo_cleanup
+  addCertMounts: false
+  caCerts: combined-ca-bundle
+  edpmServiceType: swift
+  dataSources:
+  - secretRef:
+      name: swift-conf
+  - configMapRef:
+      name: swift-storage-config-data
+  - configMapRef:
+      name: swift-ring-files
+  playbookContents: |
+    - name: Cleanup and deploy Swift
+      hosts: "{{ edpm_override_hosts | default('all', true) }}"
+      serial: 1
+      strategy: linear
+      gather_facts: "{{ gather_facts | default(false) }}"
+      any_errors_fatal: "{{ edpm_any_errors_fatal | default(true) }}"
+      max_fail_percentage: "{{ edpm_max_fail_percentage | default(0) }}"
+      environment: "{{ edpm_playbook_environment | default({}) }}"
+      tasks:
+        - ansible.builtin.import_role:
+            name: osp.edpm.edpm_tripleo_cleanup
+        - ansible.builtin.import_role:
+            name: osp.edpm.edpm_swift
 EOF
 ----
 
@@ -225,8 +245,7 @@ endif::[]
   - run-os
   - reboot-os
   - install-certs
-  - tripleo-cleanup
-  - swift
+  - swift-conversion
   tlsEnabled: true
 ----
 

@@ -80,6 +80,5 @@ swift_conversion_nodeset: |
     - run-os
     - reboot-os
     - install-certs
-    - tripleo-cleanup
-    - swift
+    - swift-conversion
     tlsEnabled: {{ enable_tlse }}
