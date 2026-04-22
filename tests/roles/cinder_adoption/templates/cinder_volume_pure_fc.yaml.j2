@@ -7,7 +7,8 @@ spec:
             - storage
           customServiceConfig: |
             [{{ cinder_pure_backend }}]
-            volume_backend_name=pure-fc
+            backend_host=hostgroup
+            volume_backend_name={{ cinder_pure_backend }}
             volume_driver=cinder.volume.drivers.pure.PureFCDriver
             consistencygroup_support=True
           customServiceConfigSecrets:

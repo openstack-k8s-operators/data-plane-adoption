@@ -7,7 +7,8 @@ spec:
             - storage
           customServiceConfig: |
             [{{ cinder_netapp_backend }}]
-            volume_backend_name=ontap-nfs
+            backend_host=hostgroup
+            volume_backend_name={{ cinder_netapp_backend }}
             volume_driver=cinder.volume.drivers.netapp.common.NetAppDriver
             netapp_storage_protocol=nfs
             netapp_storage_family=ontap_cluster
