@@ -228,9 +228,6 @@ octavia_adoption: true
 # dataplane_adoption and development_environment
 prelaunch_octavia_workload: false
 
-# MariaDB client connection timeout in seconds
-# Related to OSPRH-18618
-mariadb_client_timeout: 0
 mariadbcheck: true
 
 # Whether bgp is configured
