@@ -511,7 +511,7 @@ endif::[]
         edpm_nodes_validation_validate_gateway_icmp: false
 
         # edpm ovn-controller configuration
-        edpm_ovn_bridge_mappings: <bridge_mappings>
+        edpm_ovn_bridge_mappings: [<"bridge_mappings">]
         edpm_ovn_bridge: br-int
         edpm_ovn_encap_type: geneve
         ovn_monitor_all: true
@@ -576,7 +576,7 @@ done
 * `spec.tlsEnabled` specifies whether TLS Everywhere is enabled. If it is enabled, change `tlsEnabled` to `true`.
 * `spec.services` specifies the services to be adopted. If you are not adopting telemetry services, omit it from the services list.
 * `neutron_physical_bridge_name: br-ctlplane` specifies the bridge name. The bridge name and other OVN and {networking_service}-specific values must match the source cloud configuration to avoid data plane connectivity downtime.
-*`edpm_ovn_bridge_mappings: <bridge_mappings>` specifies the value of the bridge mappings in your configuration, for example, `"datacentre:br-ctlplane"`.
+* `edpm_ovn_bridge_mappings`: Replace `[<"bridge_mappings">]` with the value of the bridge mappings in your configuration, for example, `["datacentre:br-ctlplane"]`.
 * `path: /dev/hugepages<size>` and `opts: pagesize=<size>` configures huge pages. Replace `<size>` with the size of the page. To configure multi-sized huge pages, create more items in the list. Note that the mount points must match the source cloud configuration.
 +
 [NOTE]

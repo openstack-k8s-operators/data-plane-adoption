@@ -213,7 +213,7 @@ endif::[]
         edpm_nodes_validation_validate_gateway_icmp: false
 
         # edpm ovn-controller configuration
-        edpm_ovn_bridge_mappings: <bridge_mappings>
+        edpm_ovn_bridge_mappings: [<"bridge_mappings">]
         edpm_ovn_bridge: br-int
         edpm_ovn_encap_type: geneve
         ovn_monitor_all: true
@@ -263,7 +263,7 @@ EOF
 ----
 +
 * `spec.tlsEnabled` specifies whether TLS Everywhere is enabled. If TLS is enabled, change `spec:tlsEnabled` to `true`.
-* `edpm_ovn_bridge_mappings: <bridge_mappings>` specifies the bridge mapping values that you used in your {rhos_prev_long} {rhos_prev_ver} deployment.
+* `edpm_ovn_bridge_mappings`: Replace `[<"bridge_mappings">]` with the bridge mapping values that you used in your {rhos_prev_long} {rhos_prev_ver} deployment, for example, `["datacentre:br-ctlplane"]`.
 * `edpm_enable_chassis_gw` specifies whether to run `ovn-controller` in gateway mode.
 ifeval::["{build}" != "downstream"]
 +
