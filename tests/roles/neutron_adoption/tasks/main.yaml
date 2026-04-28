@@ -4,12 +4,12 @@
     {{ oc_header }}
     oc patch openstackcontrolplane openstack --type=merge --patch '{{ neutron_config_patch }}'
 
-- name: Patch neutron ml2MechanismDrivers to inlcude ml2 baremetal
+- name: Patch neutron ml2MechanismDrivers to include ml2 baremetal
   when: ironic_adoption|bool
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '{{ ironic_ml2_baremetal_patch }}'
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ ironic_ml2_baremetal_patch | to_json }}'
 
 - name: wait for Neutron to start up
   ansible.builtin.shell: |
