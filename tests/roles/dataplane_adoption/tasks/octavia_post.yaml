@@ -43,7 +43,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ octavia_header }}
-    ${BASH_ALIASES[openstack]} loadbalancer list -f value -c id --not-tag new | \
+    ${BASH_ALIASES[openstack]} loadbalancer list -f value -c id --not-tag new --provider amphora | \
       xargs -r -n1 -P4 ${BASH_ALIASES[openstack]} loadbalancer failover --wait
 
 - name: check for existing load balancer
