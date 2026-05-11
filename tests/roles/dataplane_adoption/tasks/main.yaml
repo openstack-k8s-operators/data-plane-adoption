@@ -1001,6 +1001,126 @@
     EOF
   loop: "{{ edpm_nodes | combine(edpm_nodes_networker | default({})) | dict2items }}"
 
+- name: When the clean-up is finished, deploy the OpenStackDataPlaneDeployment CR pre ovn
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ nodesets_env_oc }}
+
+    {%+ if edpm_nodes_networker is defined or edpm_networker_deploy +%}
+    NODESETS="${NODESETS%]*},openstack-networker]"
+    {%+ endif +%}
+    {%+ if edpm_nodes_dcn1 is defined +%}
+    NODESETS="${NODESETS%]*},dcn1]"
+    {%+ endif +%}
+    {%+ if edpm_nodes_dcn2 is defined +%}
+    NODESETS="${NODESETS%]*},dcn2]"
+    {%+ endif +%}
+
+    oc apply -f - <<EOF
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneDeployment
+    metadata:
+      name: openstack-ovn-pre
+    spec:
+      nodeSets: $NODESETS
+      servicesOverride:
+      - bootstrap
+      - download-cache
+      - configure-network
+      - validate-network
+      backoffLimit: 3
+    EOF
+
+- name: wait for dataplane node set to be ready for ovn computes
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    DEPLOYMENT_NAME=openstack-ovn-pre
+    TRIES=720
+    DELAY=30
+    ALLOWED_JOB_RETRIES=3
+
+    for i in $(seq $TRIES)
+    do
+        ready=$(oc get osdpd/$DEPLOYMENT_NAME -o jsonpath='{.status.conditions[0].status}')
+        if [ "$ready" == "True" ]; then
+            echo "Deployment is Ready"
+            exit 0
+        else
+            failed=$(oc get jobs -l openstackdataplanedeployment=$DEPLOYMENT_NAME -o jsonpath="{.items[?(@.status.failed > $ALLOWED_JOB_RETRIES)].metadata.name}")
+            if [ ! -z "${failed}" ]; then
+                echo "There are failed AnsibleEE jobs: $failed"
+                exit 1
+            fi
+        fi
+
+    sleep $DELAY
+    done
+
+    echo "Run out of retries"
+    exit 2
+
+- name: When the clean-up is finished, deploy the OpenStackDataPlaneDeployment CR with ovn
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ nodesets_env_oc }}
+
+    {%+ if edpm_nodes_networker is defined or edpm_networker_deploy +%}
+    NODESETS="${NODESETS%]*},openstack-networker]"
+    {%+ endif +%}
+    {%+ if edpm_nodes_dcn1 is defined +%}
+    NODESETS="${NODESETS%]*},dcn1]"
+    {%+ endif +%}
+    {%+ if edpm_nodes_dcn2 is defined +%}
+    NODESETS="${NODESETS%]*},dcn2]"
+    {%+ endif +%}
+
+    oc apply -f - <<EOF
+    apiVersion: dataplane.openstack.org/v1beta1
+    kind: OpenStackDataPlaneDeployment
+    metadata:
+      name: openstack-ovn
+    spec:
+      nodeSets: $NODESETS
+      servicesOverride:
+      - install-certs
+      - ovn
+      backoffLimit: 3
+    EOF
+
+- name: wait for dataplane node set to be ready for ovn computes
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    DEPLOYMENT_NAME=openstack-ovn
+    TRIES=720
+    DELAY=30
+    ALLOWED_JOB_RETRIES=3
+
+    for i in $(seq $TRIES)
+    do
+        ready=$(oc get osdpd/$DEPLOYMENT_NAME -o jsonpath='{.status.conditions[0].status}')
+        if [ "$ready" == "True" ]; then
+            echo "Deployment is Ready"
+            exit 0
+        else
+            failed=$(oc get jobs -l openstackdataplanedeployment=$DEPLOYMENT_NAME -o jsonpath="{.items[?(@.status.failed > $ALLOWED_JOB_RETRIES)].metadata.name}")
+            if [ ! -z "${failed}" ]; then
+                echo "There are failed AnsibleEE jobs: $failed"
+                exit 1
+            fi
+        fi
+
+    sleep $DELAY
+    done
+
+    echo "Run out of retries"
+    exit 2
+
 - name: When the clean-up is finished, deploy the OpenStackDataPlaneDeployment CR
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
