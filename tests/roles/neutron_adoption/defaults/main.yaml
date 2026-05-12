@@ -31,7 +31,7 @@ neutron_config_patch: |
         - internalapi
 neutron_retry_delay: 5
 
-ironic_ml2_baremetal_patch:
+ironic_ml2_baremetal_patch: |
   spec:
     neutron:
       template:
