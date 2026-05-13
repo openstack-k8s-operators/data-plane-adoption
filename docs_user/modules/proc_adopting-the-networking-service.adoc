@@ -74,6 +74,23 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch '
         dhcp_agent_notification = True
 '
 ----
++
+====
+[NOTE]
+====
+If you are adopting the {bare_metal_first_ref}, you must configure the ML2 mechanism drivers to include both `ovn` and `baremetal`:
+
+[source,shell]
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  neutron:
+    template:
+      ml2MechanismDrivers:
+        - ovn
+        - baremetal
+'
+----
 ====
 
 .Verification
