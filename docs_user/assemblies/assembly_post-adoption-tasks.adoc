@@ -1,7 +1,9 @@
-:_mod-docs-content-type: CONCEPT
+:_mod-docs-content-type: ASSEMBLY
 [id="post-adoption-tasks_{context}"]
 
 = Post-adoption tasks
+
+:context: post-adoption
 
 [role="_abstract"]
 Perform the following post-adoption tasks to ensure that your {rhos_long} environment is functioning optimally.
@@ -21,3 +23,5 @@ Perform the following post-adoption tasks to ensure that your {rhos_long} enviro
 * xref:enabling-high-availability-for-instances_data-plane[Enabling the high availability for Compute instances service]
 * link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html-single/configuring_security_services/index#assembly_enabling-TLS-on-a-deployed-RHOSO-environment[Enabling TLS on a deployed RHOSO environment]
 * link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/validating_and_troubleshooting_the_deployed_cloud/index[Validating and troubleshooting the deployed cloud]
+
+include::../modules/proc_updating-shiftstack-credentials.adoc[leveloffset=+1]
