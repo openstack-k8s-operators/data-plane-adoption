@@ -13,11 +13,6 @@ When your source {OpenStackPreviousInstaller} environment includes hardware secu
 * The target {rhos_long} environment with HSM infrastructure is accessible.
 * HSM-enabled {key_manager_first_ref} container images are built and available in your registry.
 
-[NOTE]
-====
-If you use the automated adoption process by setting `barbican_hsm_enabled: true`, the required HSM secrets (`hsm-login` and `proteccio-data`) are created automatically. You only need to manually create the secret when you perform the manual adoption steps.
-====
-
 .Procedure
 
 . Confirm that your source environment configuration includes HSM integration:
@@ -45,7 +40,7 @@ $ SIMPLE_CRYPTO_KEK=$(ssh tripleo-admin@controller-0.ctlplane \
 $ oc set data secret/osp-secret "BarbicanSimpleCryptoKEK=${SIMPLE_CRYPTO_KEK}"
 ----
 
-. If you are not using the automated adoption, create HSM-specific secrets in the target environment:
+. Create HSM-specific secrets in the target environment:
 +
 [source,bash]
 ----
@@ -76,11 +71,6 @@ Specifies the path to the client key.
 Specifies the path to the server certificate.
 <path_to_hsm_config>::
 Specifies the path to your HSM configuration in your {rhos_acro} environment.
-+
-[NOTE]
-====
-When you use the automated adoption by setting `barbican_hsm_enabled: true`, the `barbican_adoption` role creates these secrets automatically. The secret names default to `hsm-login` and `proteccio-data`.
-====
 
 . Patch the `OpenStackControlPlane` custom resource to deploy {key_manager} with HSM support:
 +
