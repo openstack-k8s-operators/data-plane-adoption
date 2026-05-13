@@ -43,12 +43,7 @@ parameter_defaults:
     - ip_address: 192.168.122.111
       use_neutron: false
   ControllerExtraConfig:
-    nova::compute::libvirt::services::libvirt_virt_type: qemu
-    nova::compute::libvirt::virt_type: qemu
     nova::availability_zone::default_schedule_zone: az-central
-  ComputeDcn1ExtraConfig:
-    nova::compute::libvirt::services::libvirt_virt_type: qemu
-    nova::compute::libvirt::virt_type: qemu
   BarbicanSimpleCryptoGlobalDefault: true
   Debug: true
   DockerPuppetDebug: true
