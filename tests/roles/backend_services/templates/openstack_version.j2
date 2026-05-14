@@ -69,6 +69,9 @@ spec:
     swiftContainerImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-container:{{ container_tag }}
     swiftObjectImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-object:{{ container_tag }}
     swiftProxyImage: {{ container_registry }}/{{ container_namespace }}/openstack-swift-proxy-server:{{ container_tag }}
+{% if edpm_telemetry_node_exporter_image is defined %}
+    edpmNodeExporterImage: {{ edpm_telemetry_node_exporter_image }}
+{% endif %}
 {% if (backend_services_cindervolumes | length > 0  or
        (backend_services_cindervolumes_extraimages is defined and backend_services_cindervolumes_extraimages is mapping)) %}
     cinderVolumeImages:
