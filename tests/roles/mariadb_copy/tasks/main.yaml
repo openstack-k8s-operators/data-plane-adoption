@@ -73,16 +73,18 @@
   retries: 25
   delay: "{{ mariadb_retry_delay }}"
 
-# MariaDB client connection timeout in seconds
-# Related to OSPRH-18618
-- name: Add sleep time
-  ansible.builtin.pause:
-    seconds: "{{ mariadb_client_timeout }}"
-
-- name: wait bgp
-  when: bgp
-  ansible.builtin.pause:
-    seconds: 60
+- name: wait until podified MariaDB is reachable
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    {{ mariadb_copy_shell_vars_dst }}
+    oc rsh mariadb-copy-data mysql -rsh "${PODIFIED_MARIADB_IP['super']}" \
+      -uroot -p"${PODIFIED_DB_ROOT_PASSWORD['super']}" -e 'select 1;'
+  register: _podified_db_check
+  retries: 60
+  delay: 3
+  until: _podified_db_check.rc == 0
+  changed_when: false
 
 - name: check that the Galera database cluster(s) members are online and synced, for all cells
   no_log: "{{ use_no_log }}"
