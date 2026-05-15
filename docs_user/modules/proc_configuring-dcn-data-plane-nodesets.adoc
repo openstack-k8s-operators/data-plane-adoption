@@ -29,80 +29,6 @@ If you are adopting a Distributed Compute Node (DCN) deployment, you must create
 | DCN2 | `leaf2:br-ex`
 |===
 
-. Configure OVN for DCN sites. The default OVN controller configuration uses the Kubernetes ClusterIP (`ovsdbserver-sb.openstack.svc`), which is not routable from remote DCN sites. You must create a DCN-specific configuration that uses direct `internalapi` IP addresses.
-
-.. Get the OVN Southbound database `internalapi` IP addresses:
-+
-----
-$ oc get pod -l service=ovsdbserver-sb -o jsonpath='{range .items[*]}{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}{"\n"}{end}' | jq -r '.[] | select(.name=="openstack/internalapi") | .ips[0]'
-----
-+
-Example output:
-+
-----
-172.17.0.34
-172.17.0.35
-172.17.0.36
-----
-
-.. Create a ConfigMap with the OVN SB direct IPs for DCN sites:
-+
-[subs="+quotes"]
-----
-$ oc apply -f - <<EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ovncontroller-config-dcn
-  namespace: openstack
-data:
-  ovsdb-config: |
-    *ovn-remote: tcp:172.17.0.34:6642,tcp:172.17.0.35:6642,tcp:172.17.0.36:6642*
-EOF
-----
-+
-* Replace the IP addresses with the actual `internalapi` IPs from the previous step.
-
-.. Create an `OpenStackDataPlaneService` CR for DCN OVN configuration:
-+
-----
-$ oc apply -f - <<EOF
-apiVersion: dataplane.openstack.org/v1beta1
-kind: OpenStackDataPlaneService
-metadata:
-  name: ovn-dcn
-  namespace: openstack
-spec:
-  addCertMounts: false
-  caCerts: combined-ca-bundle
-  containerImageFields:
-  - OvnControllerImage
-  dataSources:
-  - configMapRef:
-      name: ovncontroller-config-dcn
-  edpmServiceType: ovn
-  playbook: osp.edpm.ovn
-  tlsCerts:
-    default:
-      contents:
-      - dnsnames
-      - ips
-      issuer: osp-rootca-issuer-ovn
-      keyUsages:
-      - digital signature
-      - key encipherment
-      - server auth
-      - client auth
-      networks:
-      - ctlplane
-EOF
-----
-+
-[NOTE]
-====
-The `ovn-dcn` service uses the `ovncontroller-config-dcn` ConfigMap (through `dataSources`), which contains the direct `internalapi` IPs instead of the `ClusterIP`. DCN node sets must use this service instead of the default `ovn` service.
-====
-
 . Create an `OpenStackDataPlaneNodeSet` CR for the central site Compute nodes:
 +
 [source,yaml,subs="+quotes"]
@@ -186,7 +112,7 @@ endif::[]
 * The OVN bridge mapping uses the central site physnet `leaf0`.
 * Central site nodes reference `subnet1` for all networks.
 
-. Create an `OpenStackDataPlaneNodeSet` CR for DCN1 edge site compute nodes. You must add inter-site routes to the network configuration template and use the `ovn-dcn` service:
+. Create an `OpenStackDataPlaneNodeSet` CR for DCN1 edge site Compute nodes. You must add inter-site routes to the network configuration template:
 +
 [source,yaml,subs="+quotes"]
 ----
@@ -211,7 +137,7 @@ spec:
     - run-os
     - reboot-os
     - install-certs
-    - ovn-dcn
+    - ovn
     - neutron-metadata
     - libvirt
     - nova-cell1
@@ -288,8 +214,7 @@ spec:
       - name: tenant
         *subnetName: tenantdcn1*
 ----
-* Replace `ovn` with `ovn-dcn` under spec:services. This ensures OVN controller connects to the OVN Southbound database using direct internalapi IPs instead of the unreachable ClusterIP.
-* DCN1 uses the `leaf1` physnet,  for its OVN bridge mapping under `spec:nodeTemplate:ansible:ansibleVars:edpm_ovn_bridge_mappings`.
+* DCN1 uses the `leaf1` physnet for its OVN bridge mapping under `spec:nodeTemplate:ansible:ansibleVars:edpm_ovn_bridge_mappings`.
 * Inter-site routes must be added to the network configuration template. These routes enable DCN1 compute nodes to reach the central site (192.168.122.0/24) and other DCN sites (192.168.144.0/24 for DCN2). Similar routes are added for each service network (internalapi, storage, tenant).
 * DCN1 nodes reference site-specific subnet names like `ctlplanedcn1` and `internalapidcn1`. These subnet names must match those defined in the `NetConfig` CR.
 
