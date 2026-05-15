@@ -21,4 +21,4 @@ The {key_manager} supports HSM integration through the PKCS#11 plugin. This enab
 * Compliance with security requirements for production environments
 * Preservation of existing HSM-protected secrets during adoption
 
-HSM integration is configured through a simple boolean flag (`barbican_hsm_enabled`) during the adoption process. For environments that require HSM integration during adoption, see xref:adopting-key-manager-service-with-proteccio-hsm_{context}[Adopting the {key_manager} with Proteccio HSM integration].
+For environments that require HSM integration during adoption, see xref:adopting-the-key-manager-service-with-proteccio-hsm_{context}[Adopting the {key_manager} with Proteccio HSM integration].

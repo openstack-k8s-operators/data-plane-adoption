@@ -16,13 +16,12 @@ Standard adoption approach::
 * Is suitable for development, testing, and standard production environments
 
 HSM-enabled adoption approach::
-* Uses the enhanced `barbican_adoption` role with HSM awareness
-* Configures HSM integration through a simple boolean flag (`barbican_hsm_enabled: true`)
-* Automatically creates required Kubernetes secrets (`hsm-login` and `proteccio-data`)
+* Patches the `OpenStackControlPlane` CR with HSM-enabled configuration
+* Creates required Kubernetes secrets (`hsm-login` and `proteccio-data`) for HSM credentials and certificates
 * Preserves HSM metadata during database migration
 * Supports both simple crypto and HSM back ends in the target environment
-* Requires HSM-specific configuration variables and custom container images with HSM client libraries (built using the `rhoso_proteccio_hsm` Ansible role)
-* Uses HSM client certificates and configuration files accessible via URLs
+* Requires custom container images with HSM client libraries (built using the `rhoso_proteccio_hsm` Ansible role)
+* Requires HSM client certificates and configuration files
 * Requires proper HSM partition and key configuration that matches your source environment
 * The HSM-enabled adoption approach currently supports:
 ** Proteccio (Eviden Trustway): Fully supported with PKCS#11 integration
@@ -34,7 +33,7 @@ HSM-enabled adoption approach::
 HSM adoption requires additional configuration steps, including:
 
 * Custom Barbican container images with HSM client libraries that are built using the `rhoso_proteccio_hsm` Ansible role
-* HSM client certificates and configuration files that are accessible by using URLs
+* HSM client certificates and configuration files that are accessible from the host where you run the adoption commands
 * Proper HSM partition and key configuration that matches your source environment
 
 These approaches are mutually exclusive. Choose an approach based on your source environment configuration.
