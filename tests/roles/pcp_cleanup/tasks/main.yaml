@@ -18,7 +18,6 @@
     # Delete Adoption helper pods
     oc delete --ignore-not-found=true --wait=false pod mariadb-copy-data
     oc delete --ignore-not-found=true --wait=false pvc mariadb-data
-    oc delete --ignore-not-found=true --wait=false pod ovn-copy-data
 
     # Delete secrets
     for secret in $(oc get secrets -o name); do
