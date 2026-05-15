@@ -1,0 +1,75 @@
+---
+# Cluster-to-standalone conversion for OVN database adoption
+
+- name: convert OVN databases to standalone and fetch to ansible controller
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ ovn_copy_shell_vars }}
+
+    # Create working directory on controller
+    $CONTROLLER1_SSH sudo mkdir -p /tmp/ovn_standalone_conversion
+
+    # Convert cluster databases to standalone on the controller
+    $CONTROLLER1_SSH sudo ovsdb-tool cluster-to-standalone /tmp/ovn_standalone_conversion/ovnnb_db.db /var/lib/openvswitch/ovn/ovnnb_db.db
+    $CONTROLLER1_SSH sudo ovsdb-tool cluster-to-standalone /tmp/ovn_standalone_conversion/ovnsb_db.db /var/lib/openvswitch/ovn/ovnsb_db.db
+
+    # Set permissions for copying
+    $CONTROLLER1_SSH sudo chmod 644 /tmp/ovn_standalone_conversion/ovn*.db
+
+    # Create local temp directory
+    mkdir -p /tmp/ovn_adoption_dbs
+
+    # Use scp like other parts of the codebase
+    CONTROLLER1_SCP=$(echo "$CONTROLLER1_SSH" | sed 's/^ssh/scp/')
+
+    echo "Copying NB database to ansible controller..."
+    ${CONTROLLER1_SCP}:/tmp/ovn_standalone_conversion/ovnnb_db.db /tmp/ovn_adoption_dbs/
+
+    echo "Copying SB database to ansible controller..."
+    ${CONTROLLER1_SCP}:/tmp/ovn_standalone_conversion/ovnsb_db.db /tmp/ovn_adoption_dbs/
+
+    # Cleanup on controller
+    $CONTROLLER1_SSH sudo rm -rf /tmp/ovn_standalone_conversion
+
+    echo "Successfully converted and copied databases to ansible controller"
+
+- name: copy standalone databases to OVN database pods
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    echo "Copying standalone databases directly to OVN database pods..."
+
+    # Copy NB database to the NB pod
+    oc cp /tmp/ovn_adoption_dbs/ovnnb_db.db ovsdbserver-nb-0:/etc/ovn/ovnnb_db.db
+
+    # Copy SB database to the SB pod
+    oc cp /tmp/ovn_adoption_dbs/ovnsb_db.db ovsdbserver-sb-0:/etc/ovn/ovnsb_db.db
+
+    echo "Database files copied successfully to pods"
+
+- name: restart OVN database pods to load standalone databases
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    echo "Restarting OVN database pods to load standalone databases..."
+
+    # Restart NB database pod
+    oc delete pod -l service=ovsdbserver-nb
+    oc wait --for=condition=Ready pod -l service=ovsdbserver-nb --timeout=180s
+
+    # Restart SB database pod
+    oc delete pod -l service=ovsdbserver-sb
+    oc wait --for=condition=Ready pod -l service=ovsdbserver-sb --timeout=180s
+
+    echo "OVN database pods restarted successfully"
+
+- name: cleanup temporary files
+  ansible.builtin.shell: |
+    # Remove temporary files from ansible controller
+    rm -f /tmp/ovn_adoption_dbs/ovn*.db
+    rmdir /tmp/ovn_adoption_dbs 2>/dev/null || true
+
+    echo "Temporary files cleaned up"

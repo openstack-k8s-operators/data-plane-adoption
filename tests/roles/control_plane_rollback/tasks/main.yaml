@@ -157,7 +157,6 @@
 
     oc delete --ignore-not-found=true --wait=false pod mariadb-copy-data
     oc delete --ignore-not-found=true --wait=false pvc mariadb-data
-    oc delete --ignore-not-found=true --wait=false pod ovn-copy-data
     oc delete --ignore-not-found=true secret osp-secret
 
 - name: verify that the source control plane is responding
