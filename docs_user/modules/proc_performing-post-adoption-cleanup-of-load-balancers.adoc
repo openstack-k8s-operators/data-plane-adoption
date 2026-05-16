@@ -21,12 +21,15 @@ $ alias openstack="oc exec -t openstackclient -- openstack"
 $ openstack loadbalancer create --vip-subnet-id public-subnet --name lb-post-adoption --wait
 ----
 
-. Trigger a failover for all existing load balancers to upgrade the amphorae virtual machines to use the new image and to establish connectivity with the new control plane:
+. Trigger a failover for all existing amphora load balancers to upgrade the amphorae virtual machines to use the new image and to establish connectivity with the new control plane:
 +
 ----
-$ openstack loadbalancer list -f value -c id | \
+$ openstack loadbalancer list -f value -c id --provider amphora | \
       xargs -r -n1 -P4 ${BASH_ALIASES[openstack]} loadbalancer failover --wait
 ----
++
+[NOTE]
+OVN load balancers don't support failover as they don't need to be updated during upgrades.
 
 . Delete old flavors that were migrated to the new control plane:
 +
