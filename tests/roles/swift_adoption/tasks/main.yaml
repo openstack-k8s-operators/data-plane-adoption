@@ -18,7 +18,7 @@
     {{ shell_header }}
     {{ oc_header }}
     CONTROLLER1_SSH="{{ controller1_ssh }}"
-    oc apply -f - <<EOF
+    oc apply --server-side -f - <<EOF
     apiVersion: v1
     kind: ConfigMap
     metadata:
