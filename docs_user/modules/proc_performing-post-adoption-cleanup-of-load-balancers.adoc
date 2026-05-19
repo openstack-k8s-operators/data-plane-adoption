@@ -29,7 +29,7 @@ $ openstack loadbalancer list -f value -c id --provider amphora | \
 ----
 +
 [NOTE]
-OVN load balancers don't support failover as they don't need to be updated during upgrades.
+Failover is not applicable to OVN load balancers. As native components of the OVN infrastructure, they do not require actions during upgrades and updates.
 
 . Delete old flavors that were migrated to the new control plane:
 +
