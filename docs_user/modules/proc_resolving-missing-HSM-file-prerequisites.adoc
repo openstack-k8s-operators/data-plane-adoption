@@ -4,7 +4,7 @@
 = Resolving missing HSM file prerequisites
 
 [role="_abstract"]
-If the adoption fails because hardware security module (HSM) certificates or client software cannot be found, update your configuration to point to the files in their specific locations.
+If the adoption fails because hardware security module (HSM) certificates or client software cannot be found, verify that the files exist and are accessible, and then re-create the Kubernetes secrets with the correct file paths.
 
 Example error:
 
@@ -17,23 +17,43 @@ fatal: [localhost]: FAILED! => {
 
 .Procedure
 
-. Verify that all required HSM files are accessible from the configured URLs. For example:
+. Verify that all required HSM files exist on the host where you are running the adoption commands:
 +
 [source,bash]
 ----
-$ curl -I https://your-server/path/to/Proteccio3.06.05.iso
-$ curl -I https://your-server/path/to/proteccio.rc
-$ curl -I https://your-server/path/to/client.crt
-$ curl -I https://your-server/path/to/client.key
+$ ls -la <path_to_client_cert>
+$ ls -la <path_to_client_key>
+$ ls -la <path_to_server_cert>
+$ ls -la <path_to_hsm_config>
 ----
-
-. If the files are in different locations, update the URL variables in your configuration. For example:
 +
+where:
+
+`<path_to_client_cert>`::
+Specifies the path to the HSM client certificate file.
+`<path_to_client_key>`::
+Specifies the path to the HSM client key file.
+`<path_to_server_cert>`::
+Specifies the path to the HSM server certificate file.
+`<path_to_hsm_config>`::
+Specifies the path to the `proteccio.rc` configuration file.
+
+. If the files are in different locations than expected, delete and re-create the `proteccio-data` secret with the correct paths:
++
+[source,bash]
 ----
-cifmw_hsm_proteccio_client_src: "https://correct-server/path/to/Proteccio3.06.05.iso"
-cifmw_hsm_proteccio_conf_src: "https://correct-server/path/to/proteccio.rc"
-cifmw_hsm_proteccio_client_crt_src: "https://correct-server/path/to/client.crt"
-cifmw_hsm_proteccio_client_key_src: "https://correct-server/path/to/client.key"
+$ oc delete secret proteccio-data -n openstack
+$ oc create secret generic proteccio-data \
+  --from-file=client.crt=<path_to_client_cert> \
+  --from-file=client.key=<path_to_client_key> \
+  --from-file=<hsm_server_cert_filename>=<path_to_server_cert> \
+  --from-file=proteccio.rc=<path_to_hsm_config> \
+  -n openstack
 ----
 
-. Check the network connectivity and authentication to ensure that the URLs are accessible from the CI environment.
+. Verify that the secret was created with the expected keys:
++
+[source,bash]
+----
+$ oc get secret proteccio-data -n openstack -o jsonpath='{.data}' | python3 -c "import sys,json; print(list(json.load(sys.stdin).keys()))"
+----

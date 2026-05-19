@@ -4,20 +4,11 @@
 =  Resolving HSM back-end detection failures
 
 [role="_abstract"]
-If the adoption role cannot detect hardware security module (HSM) configuration in the source environment, you must force the HSM adoption.
-
-Example error:
-
-----
-TASK [detect source environment HSM configuration] ****
-ok: [localhost] => {
-    "msg": "No HSM configuration found - using standard adoption"
-}
-----
+If the {key_manager_first_ref} does not detect the hardware security module (HSM) configuration after adoption, verify that the HSM configuration exists in the source environment and that the `OpenStackControlPlane` custom resource (CR) includes the correct HSM settings.
 
 .Procedure
 
-. Manually verify that the HSM configuration exists in the source environment:
+. Verify that the HSM configuration exists in the source environment:
 +
 [source,bash]
 ----
@@ -26,12 +17,17 @@ $ ssh tripleo-admin@controller-0.ctlplane \
   /var/lib/config-data/puppet-generated/barbican/etc/barbican/barbican.conf"
 ----
 
-. If HSM is configured but not detected, force HSM adoption by setting the `barbican_hsm_enabled` variable:
+. Verify that the `customServiceConfig` section in your `OpenStackControlPlane` CR patch includes the `[p11_crypto_plugin]` configuration block with the correct values from your source environment.
+
+. Verify that `enabledSecretStores` includes `pkcs11` and that the `pkcs11` section references the correct Kubernetes secrets:
 +
 [source,yaml]
 ----
-# In your Zuul job vars or CI framework configuration
-barbican_hsm_enabled: true
+enabledSecretStores: ["simple_crypto", "pkcs11"]
+pkcs11:
+  loginSecret: hsm-login
+  clientDataSecret: proteccio-data
+  clientDataPath: /etc/proteccio
 ----
-+
-This configuration ensures that the `barbican_adoption` role uses the HSM-enabled patch for {key_manager_first_ref} deployment.
+
+. Re-apply the `OpenStackControlPlane` CR patch if you corrected any values.
