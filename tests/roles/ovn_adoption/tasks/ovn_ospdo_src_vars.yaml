@@ -17,31 +17,7 @@
 - name: set OVN copy shell vars
   no_log: "{{ use_no_log }}"
   ansible.builtin.set_fact:
-    ovn_copy_shell_vars: |
-      STORAGE_CLASS={{ ospdo_storage_class.stdout }}
-      {% if ipv6_enabled | bool %}
-      PODIFIED_OVSDB_NB_IP=[{{ podified_ovn_nb_ip_result.stdout }}]
-      PODIFIED_OVSDB_SB_IP=[{{ podified_ovn_sb_ip_result.stdout }}]
-      SOURCE_OVSDB_IP=[{{ source_ovndb_ip_str.stdout }}]
-      {% else %}
-      PODIFIED_OVSDB_NB_IP={{ podified_ovn_nb_ip_result.stdout }}
-      PODIFIED_OVSDB_SB_IP={{ podified_ovn_sb_ip_result.stdout }}
-      SOURCE_OVSDB_IP={{ source_ovndb_ip_str.stdout }}
-      {% endif %}
-      OVSDB_IMAGE={{ ovn_image }}
-
+    ovn_shell_vars: |
       CONTROLLER1_SSH="{{ controller1_ssh }}"
       CONTROLLER2_SSH="echo ospdo src env, skipping on controller-1 "
       CONTROLLER3_SSH="echo ospdo src env ,skipping on controller-2 "
-
-- name: create ovn-data-cert secret
-  ansible.builtin.shell: |
-    oc apply -f - <<EOF
-    ---
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: ovn-data-cert
-      namespace: {{ director_namespace }}
-    type: Opaque
-    EOF

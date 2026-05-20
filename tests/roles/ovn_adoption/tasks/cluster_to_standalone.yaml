@@ -1,0 +1,171 @@
+---
+# Cluster-to-standalone conversion for OVN database adoption
+# This approach creates PVCs with converted data before deploying pods
+
+- name: convert OVN databases to standalone and fetch to ansible controller
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    CONTROLLER1_SSH="{{ controller1_ssh }}"
+
+    echo "Using CONTROLLER1 for database conversion"
+
+    # Create working directory on controller
+    $CONTROLLER1_SSH sudo mkdir -p /tmp/ovn_standalone_conversion
+
+    # Convert cluster databases to standalone on the controller
+    $CONTROLLER1_SSH sudo ovsdb-tool cluster-to-standalone /tmp/ovn_standalone_conversion/ovnnb_db.db /var/lib/openvswitch/ovn/ovnnb_db.db
+    $CONTROLLER1_SSH sudo ovsdb-tool cluster-to-standalone /tmp/ovn_standalone_conversion/ovnsb_db.db /var/lib/openvswitch/ovn/ovnsb_db.db
+
+    # Set permissions for copying
+    $CONTROLLER1_SSH sudo chmod 644 /tmp/ovn_standalone_conversion/ovn*.db
+
+    # Create local temp directory
+    mkdir -p /tmp/ovn_adoption_dbs
+
+    # Use scp like other parts of the codebase
+    CONTROLLER1_SCP=$(echo "$CONTROLLER1_SSH" | sed 's/^ssh/scp/')
+
+    echo "Copying NB database to ansible controller..."
+    ${CONTROLLER1_SCP}:/tmp/ovn_standalone_conversion/ovnnb_db.db /tmp/ovn_adoption_dbs/
+
+    echo "Copying SB database to ansible controller..."
+    ${CONTROLLER1_SCP}:/tmp/ovn_standalone_conversion/ovnsb_db.db /tmp/ovn_adoption_dbs/
+
+    # Cleanup on controller
+    $CONTROLLER1_SSH sudo rm -rf /tmp/ovn_standalone_conversion
+
+    echo "Successfully converted and copied databases to ansible controller"
+
+- name: create PVCs for OVN databases
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    # Create PVCs that will be used by OVN database pods
+    {% if ospdo_src | bool %}
+    oc apply -n {{ director_namespace }} -f - <<EOF
+    {% else %}
+    oc apply -f - <<EOF
+    {% endif %}
+    ---
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: ovndbcluster-nb-etc-ovn-ovsdbserver-nb-0
+      labels:
+        service: ovsdbserver-nb
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: {{ storage_class_name }}
+      resources:
+        requests:
+          storage: 10G
+    ---
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: ovndbcluster-sb-etc-ovn-ovsdbserver-sb-0
+      labels:
+        service: ovsdbserver-sb
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: {{ storage_class_name }}
+      resources:
+        requests:
+          storage: 10G
+    EOF
+
+    echo "PVCs created for OVN databases"
+
+- name: create helper pod to populate PVCs with converted databases
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    # Create helper pod with access to both PVCs and file transfer capability
+    {% if ospdo_src | bool %}
+    oc apply -n {{ director_namespace }} -f - <<EOF
+    {% else %}
+    oc apply -f - <<EOF
+    {% endif %}
+    ---
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: ovn-copy-data
+      annotations:
+        openshift.io/scc: anyuid
+      labels:
+        app: adoption
+    spec:
+      containers:
+      - image: {{ ovn_image }}
+        command: [ "sh", "-c", "sleep infinity"]
+        name: adoption
+        volumeMounts:
+        - mountPath: /nb-data
+          name: nb-data
+        - mountPath: /sb-data
+          name: sb-data
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ALL
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+      - name: nb-data
+        persistentVolumeClaim:
+          claimName: ovndbcluster-nb-etc-ovn-ovsdbserver-nb-0
+      - name: sb-data
+        persistentVolumeClaim:
+          claimName: ovndbcluster-sb-etc-ovn-ovsdbserver-sb-0
+    EOF
+
+    # Wait for helper pod to be ready
+    {% if ospdo_src | bool %}
+    oc wait --for=condition=Ready pod/ovn-copy-data -n {{ director_namespace }} --timeout=30s
+    {% else %}
+    oc wait --for=condition=Ready pod/ovn-copy-data --timeout=30s
+    {% endif %}
+
+    echo "Helper pod created and ready"
+
+- name: copy converted databases directly to PVCs via helper pod
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    echo "Copying converted databases to PVCs..."
+
+    {% if ospdo_src | bool %}
+    oc cp /tmp/ovn_adoption_dbs/ovnnb_db.db ovn-copy-data:/nb-data/ovnnb_db.db -n {{ director_namespace }}
+    oc cp /tmp/ovn_adoption_dbs/ovnsb_db.db ovn-copy-data:/sb-data/ovnsb_db.db -n {{ director_namespace }}
+    {% else %}
+    oc cp /tmp/ovn_adoption_dbs/ovnnb_db.db ovn-copy-data:/nb-data/ovnnb_db.db
+    oc cp /tmp/ovn_adoption_dbs/ovnsb_db.db ovn-copy-data:/sb-data/ovnsb_db.db
+    {% endif %}
+
+    echo "Converted databases successfully copied to PVCs"
+
+- name: cleanup helper pod and temporary files
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    # Remove helper pod
+    {% if ospdo_src | bool %}
+    oc delete pod ovn-copy-data -n {{ director_namespace }}
+    {% else %}
+    oc delete pod ovn-copy-data
+    {% endif %}
+
+    # Remove temporary files from ansible controller
+    rm -f /tmp/ovn_adoption_dbs/ovn*.db
+    rmdir /tmp/ovn_adoption_dbs 2>/dev/null || true
+
+    echo "Cleanup completed - PVCs ready for OVN database pods"
