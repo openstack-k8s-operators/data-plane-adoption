@@ -78,16 +78,22 @@
                       metallb.universe.tf/address-pool: designateext
                       metallb.universe.tf/allow-shared-ip: designateext
                       metallb.universe.tf/loadBalancerIPs: 172.50.0.80
+                  spec:
+                    type: LoadBalancer
                 - metadata:
                     annotations:
                       metallb.universe.tf/address-pool: designateext
                       metallb.universe.tf/allow-shared-ip: designateext
                       metallb.universe.tf/loadBalancerIPs: 172.50.0.81
+                  spec:
+                    type: LoadBalancer
                 - metadata:
                     annotations:
                       metallb.universe.tf/address-pool: designateext
                       metallb.universe.tf/allow-shared-ip: designateext
                       metallb.universe.tf/loadBalancerIPs: 172.50.0.82
+                  spec:
+                    type: LoadBalancer
             replicas: 3
             storageClass: $STORAGE_CLASS_NAME
             storageRequest: 10G
@@ -106,11 +112,15 @@
                       metallb.universe.tf/address-pool: designateext
                       metallb.universe.tf/allow-shared-ip: designateext
                       metallb.universe.tf/loadBalancerIPs: 172.50.0.85
+                  spec:
+                    type: LoadBalancer
                 - metadata:
                     annotations:
                       metallb.universe.tf/address-pool: designateext
                       metallb.universe.tf/allow-shared-ip: designateext
                       metallb.universe.tf/loadBalancerIPs: 172.50.0.86
+                  spec:
+                    type: LoadBalancer
     MAINCR
   environment:
     STORAGE_CLASS_NAME: "{{ storage_class_name }}"
