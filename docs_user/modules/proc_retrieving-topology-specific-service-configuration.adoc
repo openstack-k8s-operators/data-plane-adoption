@@ -115,7 +115,7 @@ ifeval::["{build}" != "downstream"]
 $ CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 endif::[]
 ifeval::["{build}" == "downstream"]
-$ CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
+$ CONTROLLER1_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<node IP>*"
 endif::[]
 endif::[]
 ifeval::["{build_variant}" == "ospdo"]

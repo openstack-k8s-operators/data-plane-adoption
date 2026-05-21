@@ -20,11 +20,11 @@ The following procedure applies to a standalone {OpenStackPreviousInstaller} dep
 [subs=+quotes]
 ----
 ifeval::["{build}" != "downstream"]
-CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@<controller-1 IP>"
+CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa tripleo-admin@<controller-1 IP>"
 # ...
 endif::[]
 ifeval::["{build}" == "downstream"]
-CONTROLLER1_SSH="ssh -i <path_to_SSH_key> root@<controller-1 IP>"
+CONTROLLER1_SSH="ssh -i <path_to_SSH_key> tripleo-admin@<controller-1 IP>"
 # ...
 endif::[]
 # ...
