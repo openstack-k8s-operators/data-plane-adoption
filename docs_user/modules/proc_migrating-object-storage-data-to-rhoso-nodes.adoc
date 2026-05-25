@@ -98,6 +98,10 @@ ssh commands for your existing nodes that store the {object_storage} data:
 $ oc extract --confirm cm/swift-ring-files
 $ $CONTROLLER1_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
 $ $CONTROLLER1_SSH "systemctl restart tripleo_swift_*"
+$ $CONTROLLER2_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
+$ $CONTROLLER2_SSH "systemctl restart tripleo_swift_*"
+$ $CONTROLLER3_SSH "tar -C /var/lib/config-data/puppet-generated/swift/etc/swift/ -xzf -" < swiftrings.tar.gz
+$ $CONTROLLER3_SSH "systemctl restart tripleo_swift_*"
 ----
 
 . Track the replication progress by using the `swift-dispersion-report` tool:
