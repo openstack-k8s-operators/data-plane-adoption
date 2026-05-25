@@ -5,14 +5,18 @@
       alias openstack="oc exec -t openstackclient -- openstack"
 
 - name: verify if the image save works
-  when: prelaunch_test_instance|bool
+  when:
+    - prelaunch_test_instance|bool
+    - "'pre_launch.bash' in prelaunch_test_instance_scripts"
   ansible.builtin.shell: |
     {{ nova_header }}
     ${BASH_ALIASES[openstack]} image save cirros --file /tmp/cirrossave.img
 
 # NOTE(bogdando): do not use 'set -o pipefail' for these verifications
 - name: verify if the existing test VM instance is running
-  when: prelaunch_test_instance|bool
+  when:
+    - prelaunch_test_instance|bool
+    - "'pre_launch.bash' in prelaunch_test_instance_scripts"
   ansible.builtin.shell: |
     {{ nova_header }}
     ${BASH_ALIASES[openstack]} server --os-compute-api-version 2.48 show --diagnostics test 2>&1 || echo FAIL
@@ -21,7 +25,9 @@
     - ("FAIL" in nova_verify_running_result.stdout_lines)
 
 - name: verify if the Compute services can stop the existing test VM instance
-  when: prelaunch_test_instance|bool
+  when:
+    - prelaunch_test_instance|bool
+    - "'pre_launch.bash' in prelaunch_test_instance_scripts"
   ansible.builtin.shell: |
     {{ nova_header }}
     ${BASH_ALIASES[openstack]} server list -c Name -c Status -f value | grep -qF "test ACTIVE" && ${BASH_ALIASES[openstack]} server stop test || echo PASS
@@ -35,7 +41,9 @@
   delay: "{{ dataplane_retry_delay }}"
 
 - name: verify if the Compute services can start the existing test VM instance
-  when: prelaunch_test_instance|bool
+  when:
+    - prelaunch_test_instance|bool
+    - "'pre_launch.bash' in prelaunch_test_instance_scripts"
   ansible.builtin.shell: |
     {{ nova_header }}
     ${BASH_ALIASES[openstack]} server list -c Name -c Status -f value | grep -qF "test SHUTOFF" && ${BASH_ALIASES[openstack]} server start test || echo PASS
