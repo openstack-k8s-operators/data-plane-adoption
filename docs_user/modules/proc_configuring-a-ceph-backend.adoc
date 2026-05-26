@@ -30,7 +30,7 @@ ifeval::["{build}" != "downstream"]
 CEPH_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 endif::[]
 ifeval::["{build}" == "downstream"]
-CEPH_SSH="ssh -i *<path to SSH key>* root@*<node IP>*"
+CEPH_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<node IP>*"
 endif::[]
 CEPH_KEY=$($CEPH_SSH "cat /etc/ceph/ceph.client.openstack.keyring | base64 -w 0")
 CEPH_CONF=$($CEPH_SSH "cat /etc/ceph/ceph.conf | base64 -w 0")
@@ -85,7 +85,7 @@ For Distributed Compute Node (DCN) deployments with multiple {Ceph} clusters, cr
 The {Ceph} configuration files for all clusters are available on the {OpenStackShort} controller at either `/var/lib/tripleo-config/ceph/`, or `/etc/ceph`. Copy them locally and create the per-site secrets:
 
 ----
-$ CEPH_SSH="ssh root@<controller>"
+$ CEPH_SSH="ssh tripleo-admin@<controller>"
 $ CEPH_DIR="/var/lib/tripleo-config/ceph"
 $ TMPDIR=$(mktemp -d)
 

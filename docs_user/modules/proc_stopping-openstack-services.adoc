@@ -36,9 +36,9 @@ ifeval::["{build}" != "downstream"]
 CONTROLLER1_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.100"
 endif::[]
 ifeval::["{build}" == "downstream"]
-CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<controller-1 IP>*"
-CONTROLLER2_SSH="ssh -i *<path to SSH key>* root@*<controller-2 IP>*"
-CONTROLLER3_SSH="ssh -i *<path to SSH key>* root@*<controller-3 IP>*"
+CONTROLLER1_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<controller-1 IP>*"
+CONTROLLER2_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<controller-2 IP>*"
+CONTROLLER3_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<controller-3 IP>*"
 endif::[]
 ----
 * Specify the IP addresses of all Controller nodes, for example:
@@ -51,9 +51,9 @@ CONTROLLER2_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@1
 CONTROLLER3_SSH="ssh -i ~/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa root@192.168.122.109"
 endif::[]
 ifeval::["{build}" == "downstream"]
-CONTROLLER1_SSH="ssh -i *<path to SSH key>* root@*<controller-1 IP>*"
-CONTROLLER2_SSH="ssh -i *<path to SSH key>* root@*<controller-2 IP>*"
-CONTROLLER3_SSH="ssh -i *<path to SSH key>* root@*<controller-3 IP>*"
+CONTROLLER1_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<controller-1 IP>*"
+CONTROLLER2_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<controller-2 IP>*"
+CONTROLLER3_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<controller-3 IP>*"
 # ...
 endif::[]
 ----
@@ -248,14 +248,14 @@ The `DistributedComputeHCI` role runs `GlanceApiEdge`, `CinderVolumeEdge`, and `
 [subs=+quotes]
 ----
 # DCN1 edge site DistributedComputeHCI nodes
-DCN1_HCI0_SSH="ssh -i *<path to SSH key>* root@*<dcn1-hci-0 IP>*"
-DCN1_HCI1_SSH="ssh -i *<path to SSH key>* root@*<dcn1-hci-1 IP>*"
-DCN1_HCI2_SSH="ssh -i *<path to SSH key>* root@*<dcn1-hci-2 IP>*"
+DCN1_HCI0_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<dcn1-hci-0 IP>*"
+DCN1_HCI1_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<dcn1-hci-1 IP>*"
+DCN1_HCI2_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<dcn1-hci-2 IP>*"
 
 # DCN2 edge site DistributedComputeHCI nodes
-DCN2_HCI0_SSH="ssh -i *<path to SSH key>* root@*<dcn2-hci-0 IP>*"
-DCN2_HCI1_SSH="ssh -i *<path to SSH key>* root@*<dcn2-hci-1 IP>*"
-DCN2_HCI2_SSH="ssh -i *<path to SSH key>* root@*<dcn2-hci-2 IP>*"
+DCN2_HCI0_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<dcn2-hci-0 IP>*"
+DCN2_HCI1_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<dcn2-hci-1 IP>*"
+DCN2_HCI2_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<dcn2-hci-2 IP>*"
 ----
 +
 where:
@@ -329,12 +329,12 @@ The `DistributedComputeHCIScaleOut` role is used to scale compute and storage ca
 [subs=+quotes]
 ----
 # DCN1 edge site DistributedComputeHCIScaleOut nodes
-DCN1_SCALEOUT0_SSH="ssh -i *<path to SSH key>* root@*<dcn1-scaleout-0 IP>*"
-DCN1_SCALEOUT1_SSH="ssh -i *<path to SSH key>* root@*<dcn1-scaleout-1 IP>*"
+DCN1_SCALEOUT0_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<dcn1-scaleout-0 IP>*"
+DCN1_SCALEOUT1_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<dcn1-scaleout-1 IP>*"
 
 # DCN2 edge site DistributedComputeHCIScaleOut nodes
-DCN2_SCALEOUT0_SSH="ssh -i *<path to SSH key>* root@*<dcn2-scaleout-0 IP>*"
-DCN2_SCALEOUT1_SSH="ssh -i *<path to SSH key>* root@*<dcn2-scaleout-1 IP>*"
+DCN2_SCALEOUT0_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<dcn2-scaleout-0 IP>*"
+DCN2_SCALEOUT1_SSH="ssh -i *<path to SSH key>* tripleo-admin@*<dcn2-scaleout-1 IP>*"
 ----
 +
 where:
