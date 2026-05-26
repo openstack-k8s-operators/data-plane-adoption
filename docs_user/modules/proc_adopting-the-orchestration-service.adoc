@@ -42,14 +42,14 @@ auth_encryption_key=Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2
 . Encode the password to Base64 format:
 +
 ----
-$ echo Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2 | base64
-UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzIK
+$ echo -n Q60Hj8PqbrDNu2dDCbyIQE2dibpQUPg2 | base64
+UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzI=
 ----
 
 . Patch the `osp-secret` to update the `HeatAuthEncryptionKey` and `HeatPassword` parameters. These values must match the values in the {OpenStackPreviousInstaller} {orchestration} configuration:
 +
 ----
-$ oc patch secret osp-secret --type='json' -p='[{"op" : "replace" ,"path" : "/data/HeatAuthEncryptionKey" ,"value" : "UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzIK"}]'
+$ oc patch secret osp-secret --type='json' -p='[{"op" : "replace" ,"path" : "/data/HeatAuthEncryptionKey" ,"value" : "UTYwSGo4UHFickROdTJkRENieUlRRTJkaWJwUVVQZzI="}]'
 secret/osp-secret patched
 ----
 
