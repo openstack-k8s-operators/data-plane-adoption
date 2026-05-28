@@ -22,7 +22,7 @@ Durations can vary significantly based on the content of your environment, for e
 * APIs are being started.
 * No Compute hosts are available to schedule workloads until the data plane adoption stage.
 * No network changes should be done until the data plane adoption is complete.
-| xref:adopting-data-plane_hsm-integration[Data plane adoption] | * 25 minutes pilot node set, plus 60 minutes remaining node sets | * APIs are online.
+| xref:adopting-data-plane_hsm-integration[Data plane adoption] | * 60 minutes | * APIs are online.
 * As Compute hosts are adopted, they become available for workload scheduling.
 * No data loss or workload disruption.
 | xref:performing-a-fast-forward-upgrade-on-compute-services_data-plane[Fast-forward upgrade of Compute services] | * 8 minutes | * No data loss or workload disruption.
