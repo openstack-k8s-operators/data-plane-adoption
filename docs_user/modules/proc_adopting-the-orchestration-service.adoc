@@ -74,6 +74,15 @@ spec:
 '
 ----
 
+. Remove old `heat-engine` services from the `heat-api` pods or the `heat-engine` pods. For example:
++
+----
+$ oc exec -it -n openstack "$(oc get pods -n openstack -l service=heat -o jsonpath='{.items[0].metadata.name}')" -c heat-api -- heat-manage service clean
+----
++
+[NOTE]
+You cannot run this command from the `openstackclient` pod. The `openstackclient` pod does not include the {orchestration} configuration or the `heat-manage` binary.
+
 .Verification
 
 . Ensure that the statuses of all the CRs are `Setup complete`:
