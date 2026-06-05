@@ -132,6 +132,10 @@ else
   echo "Found $ACTIVE_NODES active node(s), skipping node management operations"
 fi
 
+# Ensure quota has headroom for pre-adoption and post-adoption test instances
+CURRENT_QUOTA=$(${BASH_ALIASES[openstack]} quota show -c instances -f value)
+${BASH_ALIASES[openstack]} quota set --instances $((CURRENT_QUOTA + 2)) default
+
 # Create test instance on baremetal
 if [[ "${PRE_LAUNCH_IRONIC_CREATE_INSTANCE,,}" != "false" ]]; then
   # Wait for nova to be aware of the node

@@ -58,6 +58,7 @@
   when:
     - prelaunch_test_instance|bool
     - "'pre_launch_ironic.bash' in prelaunch_test_instance_scripts"
+    - ironic_post_adoption_create_instance|bool
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
