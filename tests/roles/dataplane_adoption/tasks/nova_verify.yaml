@@ -58,6 +58,7 @@
   when:
     - prelaunch_test_instance|bool
     - "'pre_launch_ironic.bash' in prelaunch_test_instance_scripts"
+    - ironic_post_adoption_create_instance|bool
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
@@ -80,6 +81,10 @@
       done
       set -e
     }
+
+    # Ensure there is quota headroom for the test instance
+    CURRENT_QUOTA=$(${BASH_ALIASES[openstack]} quota show -f json | jq -r '.[] | select(.Resource == "instances") | .Limit')
+    ${BASH_ALIASES[openstack]} quota set --instances $((CURRENT_QUOTA + 1)) default
 
     ${BASH_ALIASES[openstack]} server create test-baremetal-post-adoption --flavor baremetal --image CentOS-Stream-GenericCloud-x86_64-9 --nic net-id=provisioning
     wait_server_active test-baremetal-post-adoption
