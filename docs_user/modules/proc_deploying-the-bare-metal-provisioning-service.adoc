@@ -7,7 +7,7 @@
 To deploy the {bare_metal_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) that has the {bare_metal} disabled. The `ironic-operator` applies the configuration and starts the Bare Metal Provisioning services. After the services are running, the {bare_metal} automatically begins polling the power state of the bare-metal nodes that it manages.
 
 [NOTE]
-By default, {rhos_acro} versions {rhos_curr_ver} and later of the {bare_metal} include a new multi-tenant aware role-based access control (RBAC) model. As a result, bare-metal nodes might be missing when you run the `openstack baremetal node list` command after you adopt the {bare_metal}. Your nodes are not deleted. Due to the increased access restrictions in the RBAC model, you must identify which project owns the missing bare-metal nodes and set the `owner` field on each missing bare-metal node.
+By default, {rhos_acro} versions {rhos_curr_ver} and later of the {bare_metal} include a new multitenant aware role-based access control (RBAC) model. As a result, bare-metal nodes might be missing when you run the `openstack baremetal node list` command after you adopt the {bare_metal}. Your nodes are not deleted. Due to the increased access restrictions in the RBAC model, you must identify which project owns the missing bare-metal nodes and set the `owner` field on each missing bare-metal node.
 
 .Prerequisites
 
@@ -32,7 +32,7 @@ $CONTROLLER1_SSH cat /var/lib/config-data/puppet-generated/ironic/etc/ironic/iro
 ----
 +
 [NOTE]
-This configuration file must come from one of the Controller nodes and not a {OpenStackPreviousInstaller} undercloud node. The {OpenStackPreviousInstaller} undercloud node operates with different configuration that does not apply when you adopt the Overcloud Ironic deployment.
+This configuration file must come from one of the Controller nodes and not a {OpenStackPreviousInstaller} undercloud node. The {OpenStackPreviousInstaller} undercloud node operates with different configuration that does not apply when you adopt the overcloud Ironic deployment.
 * If you are adopting the Ironic Inspector service, you need the value of the `IronicInspectorSubnets` {OpenStackPreviousInstaller} parameter. Use the same values to populate the `dhcpRanges` parameter in the {rhos_acro} environment.
 * You have defined the following shell variables. Replace the following example values with values that apply to your environment:
 +
@@ -107,6 +107,9 @@ where:
 `<loadBalancer_IP>`::
 Specifies the load balancer IP in your environment. If you use IPv6, change the load balancer IP to the load balancer IP in your environment, for example, `metallb.universe.tf/loadBalancerIPs: fd00:bbbb::80`.
 
+`ironicConductors.provisionNetwork`::
+Ensure that the provisioning network and ctlplane network are separate networks. If the networks are shared, there is a risk of configuration conflicts between {rhocp_long} and RHOSO.
+
 `messagingBus.Cluster`::
 For more information about RHOSO RabbitMQ clusters, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/monitoring_high_availability_services/ref_rhoso-rabbitmq-clusters_ha-monitoring#con_understand-the-rabbitmq-interface-for-openstack-services[RHOSO RabbitMQ clusters] in _Monitoring high availability services_.
 
@@ -125,10 +128,10 @@ $ oc wait --for condition=Ready --timeout=300s ironicinspectors.ironic.openstack
 $ oc wait --for condition=Ready --timeout=300s ironicneutronagents.ironic.openstack.org ironic-ironic-neutron-agent
 ----
 
-. Update the DNS Nameservers on the provisioning, cleaning, and rescue networks:
+. Update the DNS name servers on the provisioning, cleaning, and rescue networks:
 +
 [NOTE]
-For name resolution to work for {bare_metal} operations, you must set the DNS nameserver to use the internal DNS servers in the {rhos_acro} control plane:
+For name resolution to work for {bare_metal} operations, you must set the DNS name server to use the internal DNS servers in the {rhos_acro} control plane:
 +
 ----
 $ openstack subnet set --dns-nameserver 192.168.122.80 provisioning-subnet
@@ -211,7 +214,7 @@ $ openstack baremetal node list
 . Reset the deploy images on all bare-metal nodes to use the new centrally configured images:
 +
 [NOTE]
-After adoption, bare-metal nodes might still reference the old deployment's kernel and ramdisk
+After adoption, bare-metal nodes might still reference the old deployment's kernel and RAM disk
 images in their `driver_info` fields. Resetting these values causes the {bare_metal} to use the
 new centrally configured  `deploy_kernel` and `deploy_ramdisk` values from the `ironic.conf` file.
 +
