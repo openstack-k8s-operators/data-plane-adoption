@@ -1,0 +1,71 @@
+- name: Extract RNDC credentials from legacy controllers
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    echo "Extracting BIND9 data from legacy controllers"
+    binddata_file=/tmp/binddata.yaml
+    rm -f $binddata_file
+    for i in {1..3}; do
+      SSH_CMD=CONTROLLER${i}_SSH
+      if [ ! -z "${!SSH_CMD}" ]; then
+        echo "Extracting RNDC credentials from controller $i"
+        RNDC_SECRET=$(${!SSH_CMD} sudo grep secret /var/lib/config-data/ansible-generated/designate/etc/named/rndc.conf | awk '{gsub(/"/, "", $2); gsub(/;/, "", $2); print $2}')
+        RNDC_KEYNAME=$(${!SSH_CMD} sudo grep '^key' /var/lib/config-data/ansible-generated/designate/etc/named/rndc.conf | awk '{gsub(/"/, "", $2); print $2}' | cut -f 1)
+        RNDC_ALGORITHM=$(${!SSH_CMD} sudo grep algorithm /var/lib/config-data/ansible-generated/designate/etc/named/rndc.conf | awk '{gsub(/;/, "", $2); print $2}')
+        CONTROLLER_IP=$(${!SSH_CMD} sudo grep 'internal_api\"' /etc/puppet/hieradata/net_ip_map.json | awk '{gsub(/"/, "", $2); gsub(/,/, "", $2); print $2}')
+        echo "address: $CONTROLLER_IP"
+        echo "rndcsecret: $RNDC_SECRET"
+        echo "rndckeyname: $RNDC_KEYNAME"
+        echo "rndcalgorithm: $RNDC_ALGORITHM"
+
+        cat << BINDATACR >> "$binddata_file"
+        - name: controller-$i
+          address: $CONTROLLER_IP
+          rndcsecret: $RNDC_SECRET
+          rndckeyname: $RNDC_KEYNAME
+          rndcalgorithm: $RNDC_ALGORITHM
+    BINDATACR
+      fi
+    done
+
+    if [ -s "$binddata_file" ]; then
+      external_binds_secret_file=/tmp/external_binds_secret.yaml
+      cat << EOSECRETC > "$external_binds_secret_file"
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: designate-external-binds
+      namespace: openstack
+    type: Opaque
+    stringData:
+      default: |
+    $(cat "$binddata_file")
+    EOSECRETC
+
+      oc apply -f "$external_binds_secret_file"
+    fi
+
+- name: Reconfigure Legacy BIND9 instances to talk with Designate on Internal API network.
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    echo "Configuring BIND9 to integrate via internalapi"
+    INTERNALAPI_CIDR="{{ internalapi_cidr }}"
+    for i in {1..3}; do
+      SSH_CMD=CONTROLLER${i}_SSH
+      if [ ! -z "${!SSH_CMD}" ]; then
+        echo "Reconfiguring bind on controller $i"
+        CONTROLLER_IP=$(${!SSH_CMD} sudo grep 'internal_api\"' /etc/puppet/hieradata/net_ip_map.json | awk '{gsub(/"/, "", $2); gsub(/,/, "", $2); print $2}')
+        ${!SSH_CMD} cp -n /var/lib/config-data/ansible-generated/designate/etc/named/rndc.conf /var/lib/config-data/ansible-generated/designate/etc/named/rndc.conf.pre-adoption-backup
+        ${!SSH_CMD} "sed -i 's:inet [0-9.]* allow { [0-9./]*; }:inet ${CONTROLLER_IP} allow { ${INTERNALAPI_CIDR}; }:' /var/lib/config-data/ansible-generated/designate/etc/named/rndc.conf"
+        ${!SSH_CMD} cp -n /var/lib/config-data/ansible-generated/designate/etc/named/options.conf /var/lib/config-data/ansible-generated/designate/etc/named/options.conf.pre-adoption-backup
+        ${!SSH_CMD} "sed -i 's:allow.notify.*};:allow-notify { $INTERNALAPI_CIDR; };:' /var/lib/config-data/ansible-generated/designate/etc/named/options.conf"
+        ${!SSH_CMD} "sed -i '/allow.transfer:/d' /var/lib/config-data/ansible-generated/designate/etc/named/options.conf"
+        ${!SSH_CMD} "sed '/^options {/,/^};/{
+      /^};/ i\\\tallow-transfer { '"$INTERNALAPI_CIDR"'; };
+    }' /var/lib/config-data/ansible-generated/designate/etc/named/options.conf"
+        echo "Restarting bind on controller $i"
+        ${!SSH_CMD} systemctl restart designate-designatebackendbind9
+      fi
+    done

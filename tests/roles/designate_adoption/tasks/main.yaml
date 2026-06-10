@@ -7,3 +7,24 @@
   when: designate_adoption | bool
   ansible.builtin.include_tasks:
     file: designate_cr_config.yaml
+
+- name: Create external binds secret for legacy BIND9 servers
+  when:
+    - designate_adoption | bool
+    - designate_external | bool
+  ansible.builtin.include_tasks:
+    file: designate_external_binds.yaml
+
+- name: Configure mDNS LoadBalancer service for legacy BIND9 zone transfers
+  when:
+    - designate_adoption | bool
+    - designate_external | bool
+  ansible.builtin.include_tasks:
+    file: designate_intapi_mdns.yaml
+
+- name: Patch Designate CR with external binds and verify connectivity
+  when:
+    - designate_adoption | bool
+    - designate_external | bool
+  ansible.builtin.include_tasks:
+    file: designate_external_migrate.yaml
