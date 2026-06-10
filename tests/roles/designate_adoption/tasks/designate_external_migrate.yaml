@@ -1,0 +1,35 @@
+- name: Patch Designate CR to reference external binds secret
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc patch openstackcontrolplane openstack --type=merge --patch '
+    spec:
+      designate:
+        template:
+          externalBindsSecret: designate-external-binds
+    '
+  register: designate_external_patch_results
+  changed_when: true
+  failed_when: designate_external_patch_results.rc != 0
+
+- name: Wait for the designate service to reconcile after external binds patch
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc wait --for condition=Ready --timeout=300s designates.designate.openstack.org/designate
+  register: designate_external_ready_result
+  until: designate_external_ready_result is success
+  retries: 60
+  delay: "{{ designate_retry_delay }}"
+
+- name: Verify external BIND9 targets are in pool configuration
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc get configmap designate-pools-yaml-config-map -o jsonpath='{.data.pools\.yaml}' | grep -A5 'external-bind9'
+  register: external_bind9_pool_check
+  changed_when: false
+  failed_when: external_bind9_pool_check.rc != 0

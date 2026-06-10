@@ -6,6 +6,13 @@
 [role="_abstract"]
 To adopt the {dns_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {dns_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
 
+[NOTE]
+====
+If your {rhos_prev_long} deployment uses BIND9 servers that you want to keep serving DNS during and after adoption, you can include them as external backends alongside the new operator-managed BIND9 instances. In this staged migration model, both the legacy BIND9 servers and the new cluster-hosted BIND9 StatefulSet serve the same pool concurrently. This avoids a disruptive DNS switchover and allows external DNS registries and delegations to be updated to reference the new nameservers at a later date.
+
+After completing the standard adoption procedure, see xref:maintaining-a-migration-window-with-legacy-bind9-servers_{context}[Maintaining a migration window with legacy BIND9 servers] for the additional steps required to enable this transition window.
+====
+
 .Procedure
 
 . Create an alias for the `openstack` command:
@@ -319,4 +326,242 @@ $ oc patch openstackcontrolplane openstack --type=merge --patch-file /tmp/design
 +
 ----
 $ oc wait --for condition=Ready --timeout=600s designate.designate.openstack.org/designate
+----
+
+[id="maintaining-a-migration-window-with-legacy-bind9-servers_{context}"]
+== Maintaining a migration window with legacy BIND9 servers
+
+If your {rhos_prev_long} deployment uses BIND9 servers that should continue serving DNS during adoption, follow this procedure after completing the standard {dns_service} adoption. The designate worker sends RNDC commands and DNS NOTIFY messages to the legacy servers, which pull zone data from the mDNS service through AXFR on port 5354.
+
+When external DNS registries and delegations have been updated to reference the new nameservers, follow the steps in xref:completing-the-bind9-migration_{context}[Completing the BIND9 migration] to remove the legacy servers from the pool.
+
+.Procedure
+
+. Extract RNDC credentials from each legacy {rhos_prev_long} controller that runs BIND9 and create the `designate-external-binds` secret. Run this script from the adoption host:
++
+----
+$ binddata_file=/tmp/binddata.yaml
+$ rm $binddata_file
+$ for i in {1..3}; do
+    SSH_CMD=CONTROLLER${i}_SSH
+    if [ ! -z "${!SSH_CMD}" ]; then
+      echo "Extracting RNDC credentials from controller $i"
+      RNDC_SECRET=$(${!SSH_CMD} sudo grep secret /var/lib/config-data/ansible-generated/designate/etc/named/rndc.conf | awk '{gsub(/"/, "", $2); gsub(/;/, "", $2); print $2}')
+      RNDC_KEYNAME=$(${!SSH_CMD} sudo grep '^key' /var/lib/config-data/ansible-generated/designate/etc/named/rndc.conf | awk '{gsub(/"/, "", $2); print $2}' | cut -f 1)
+      RNDC_ALGORITHM=$(${!SSH_CMD} sudo grep algorithm /var/lib/config-data/ansible-generated/designate/etc/named/rndc.conf | awk '{gsub(/;/, "", $2); print $2}')
+      CONTROLLER_IP=$(${!SSH_CMD} sudo grep 'internal_api\"' /etc/puppet/hieradata/net_ip_map.json | awk '{gsub(/"/, "", $2); gsub(/,/, "", $2); print $2}')
+      cat << BINDATACR >> "$binddata_file"
+    - name: controller-$i
+      address: $CONTROLLER_IP
+      rndcsecret: $RNDC_SECRET
+      rndckeyname: $RNDC_KEYNAME
+      rndcalgorithm: $RNDC_ALGORITHM
+BINDATACR
+    fi
+  done
+$ if [ -s "$binddata_file" ]; then
+    external_binds_secret_file=/tmp/external_binds_secret.yaml
+    cat << EOSECRETC > "$external_binds_secret_file"
+apiVersion: v1
+kind: Secret
+metadata:
+  name: designate-external-binds
+  namespace: openstack
+type: Opaque
+stringData:
+  default: |
+$(cat "$binddata_file")
+EOSECRETC
+    oc apply -f "$external_binds_secret_file"
+  fi
+----
++
+where `CONTROLLER1_SSH`, `CONTROLLER2_SSH`, and `CONTROLLER3_SSH` are the SSH connection variables for each legacy controller that runs BIND9. The script extracts credentials from each available controller and automatically creates and applies the `designate-external-binds` secret in the `openstack` namespace.
+
+. Reconfigure the legacy BIND9 instances to accept RNDC connections and zone transfers from the new {rhos_long} deployment. On each legacy controller, modify the BIND9 configuration. Because the `options` and `controls` blocks cannot be reopened, use the following commands to add the required configuration in-place:
++
+
+[subs="+quotes"]
+----
+$ INTERNALAPI_CIDR=<internalapi_subnet>
+$ for i in {1..3}; do
+    SSH_CMD=CONTROLLER${i}_SSH
+    if [ ! -z "${!SSH_CMD}" ]; then
+      echo "Reconfiguring bind on controller $i"
+      CONTROLLER_IP=$(${!SSH_CMD} sudo grep 'internal_api\"' /etc/puppet/hieradata/net_ip_map.json | awk '{gsub(/"/, "", $2); gsub(/,/, "", $2); print $2}')
+      ${!SSH_CMD} cp -n /var/lib/config-data/ansible-generated/designate/etc/named/rndc.conf /var/lib/config-data/ansible-generated/designate/etc/named/rndc.conf.pre-adoption-backup
+      ${!SSH_CMD} "sed -i 's:inet [0-9.]* allow { [0-9./]*; }:inet ${CONTROLLER_IP} allow { ${INTERNALAPI_CIDR}; }:' /var/lib/config-data/ansible-generated/designate/etc/named/rndc.conf"
+      ${!SSH_CMD} cp -n /var/lib/config-data/ansible-generated/designate/etc/named/options.conf /var/lib/config-data/ansible-generated/designate/etc/named/options.conf.pre-adoption-backup
+      ${!SSH_CMD} "sed -i 's:allow.notify.*};:allow-notify { $INTERNALAPI_CIDR; };:' /var/lib/config-data/ansible-generated/designate/etc/named/options.conf"
+      ${!SSH_CMD} "sed -i '/allow.transfer:/d' /var/lib/config-data/ansible-generated/designate/etc/named/options.conf"
+      ${!SSH_CMD} "sed -i '/^options {/,/^};/{
+    /^};/ i\\\tallow-transfer { '"$INTERNALAPI_CIDR"'; };
+  }' /var/lib/config-data/ansible-generated/designate/etc/named/options.conf"
+  done
+----
++
+where:
+
+`CONTROLLER_IP`::
+Specifies the internalapi IP address of the legacy controller. This can be retrieved from `/etc/puppet/hieradata/net_ip_map.json` on each controller.
+
+`internalapi_subnet`::
+Specifies the internalapi subnet in CIDR notation, for example `172.17.0.0/24`.
+This is a CIDR range representing the network from which RHOSO designate worker
+pods send requests, not individual IP addresses.
+
++
+[NOTE]
+====
+
+The `sed` commands in the shell script example are directed at default based deployments. If customizations have been made to the 
+deployment, please either modify these commands or perform the modifications directly.
+
+====
+
++
+Reload the BIND9 configuration:
++
+----
+$ systemctl restart desginate-designatebackendbind9
+----
++
+[NOTE]
+====
+
+Direct edits to the BIND9 configuration are appropriate because the legacy
+control plane ({OpenStackPreviousInstaller}) is being decommissioned and will
+no longer manage these files.
+
+====
+
+. Open the firewall on each legacy controller to allow RNDC and DNS traffic from the {rhos_long} pods:
++
+[subs="+quotes"]
+----
+$ firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="<internalapi_subnet>" port port="953" protocol="tcp" accept'
+$ firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="<internalapi_subnet>" port port="53" protocol="tcp" accept'
+$ firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="<internalapi_subnet>" port port="53" protocol="udp" accept'
+$ firewall-cmd --reload
+----
++
+where:
+
+`<internalapi_subnet>`::
+Specifies the internalapi subnet in CIDR notation, for example `172.17.0.0/24`.
+
+. Create a LoadBalancer service to expose the mDNS service on the internalapi
+  network so that the legacy BIND9 servers can perform AXFR zone transfers: +
+----
+$ cat << EOF_CAT > /tmp/designate-external-mdns-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: openstack
+  name: designate-external-master
+  labels:
+    service: designate-mdns
+    designate.openstack.org/external_master: "true"
+  annotations:
+    core.openstack.org/ingress_create: "false"
+    metallb.io/ip-allocated-from-pool: internalapi
+    metallb.universe.tf/address-pool: internalapi
+    metallb.universe.tf/allow-shared-ip: internalapi
+    metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+    designate.openstack.org/external_pool: default
+spec:
+  selector:
+    service: designate-mdns
+  ports:
+    - name: dns-tcp
+      port: 5354
+      protocol: TCP
+      targetPort: 5354
+    - name: dns
+      port: 5354
+      protocol: UDP
+      targetPort: 5354
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  type: LoadBalancer
+EOF_CAT
+$ oc apply -f /tmp/designate-external-mdns-svc.yaml
+----
+
+. Patch the {dns_service} CR to reference the external binds secret:
++
+----
+$ oc patch openstackcontrolplane openstack --type=merge --patch '
+spec:
+  designate:
+    template:
+      externalBindsSecret: designate-external-binds
+'
+----
+
+. Wait for the {dns_service} to reconcile:
++
+----
+$ oc wait --for condition=Ready --timeout=300s designate.designate.openstack.org/designate
+----
+
+. Verify that the external BIND9 targets are included in the pool configuration:
++
+----
+$ oc get configmap designate-pools-yaml-config-map -o jsonpath='{.data.pools\.yaml}' | grep -A5 'external-bind9'
+----
++
+The output should list the external BIND9 servers you configured in the external binds secret.
+
+. Verify RNDC connectivity from the designate worker pods to the legacy BIND9 servers:
++
+[subs="+quotes"]
+----
+$ oc exec -it $(oc get pods -l service=designate-worker -o name | head -1) -- \
+    rndc -s <controller_internalapi_ip> -k /etc/designate/rndc-keys/default-rndc-0 status
+----
++
+where:
+
+`<controller_internalapi_ip>`::
+Specifies the internalapi IP address of a legacy BIND9 server.
++
+A successful response indicates that the designate worker can manage the external BIND9 server.
+
+[id="completing-the-bind9-migration_{context}"]
+== Completing the BIND9 migration
+
+After external DNS registries and delegations have been updated to reference
+the new {rhos_long} nameservers, remove the legacy BIND9 servers from the
+{dns_service} pool.
+
+.Procedure
+
+. Remove the external binds secret reference from the {dns_service} CR:
++
+----
+$ oc patch openstackcontrolplane openstack --type=json --patch '
+[{"op": "remove", "path": "/spec/designate/template/externalBindsSecret"}]
+'
+----
+
+. Wait for the {dns_service} to reconcile:
++
+----
+$ oc wait --for condition=Ready --timeout=300s designate.designate.openstack.org/designate
+----
+
+. Delete the external binds secret:
++
+----
+$ oc delete secret designate-external-binds -n openstack
+----
+
+. Delete the mDNS LoadBalancer service:
++
+----
+$ oc delete service designate-external-master -n openstack
 ----
