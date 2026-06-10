@@ -378,7 +378,7 @@ EOSECRETC
 +
 where:
  `CONTROLLER1_SSH`, `CONTROLLER2_SSH`, and `CONTROLLER3_SSH`::
-Specifies the SSH connection variables for each legacy Controller that runs BIND9. The script extracts credentials from each available Controller and automatically creates and applies the `designate-external-binds` secret in the `openstack` namespace.
+Environment variables that you export before running the script, each set to the SSH connection command for a legacy Controller that runs BIND9, for example `CONTROLLER1_SSH="ssh root@192.0.2.10"`. The script does not reference these names directly; it builds each name from the loop index (`CONTROLLER${i}_SSH`) and reads its value through bash indirection (`${!SSH_CMD}`), skipping any Controller whose variable is not set. The script extracts credentials from each available Controller and automatically creates and applies the `designate-external-binds` secret in the `openstack` namespace.
 
 . Reconfigure the legacy BIND9 instances to accept RNDC connections and zone transfers from the new {rhos_long} deployment. On each legacy Controller, modify the BIND9 configuration. Because the `options` and `controls` blocks cannot be reopened, use the following commands to add the required configuration in-place:
 +
@@ -482,7 +482,7 @@ EOF_CAT
 $ oc apply -f /tmp/designate-external-mdns-svc.yaml
 ----
 
-. Patch the {dns_service} custom resource to reference the external binds secret and connect the worker to the internalapi network so it can connect to the external BIND9 servers.
+. Patch the {dns_service} custom resource to reference the external binds secret and attach the designate worker to the internalapi network so that it can reach the external BIND9 servers:
 +
 ----
 $ oc patch openstackcontrolplane openstack --type=merge --patch '
