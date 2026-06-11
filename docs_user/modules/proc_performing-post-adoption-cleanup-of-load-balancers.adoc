@@ -29,7 +29,7 @@ $ openstack loadbalancer list -f value -c id --provider amphora | \
 ----
 +
 [NOTE]
-Failover is not applicable to OVN load balancers. As native components of the OVN infrastructure, they do not require actions during upgrades and updates.
+Failover does not apply to OVN load balancers. As native components of the OVN infrastructure, they do not require actions during upgrades and updates.
 
 . Delete old flavors that were migrated to the new control plane:
 +
