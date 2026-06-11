@@ -560,8 +560,8 @@ endif::[]
         edpm_ovs_packages:
         - openvswitch3.3
         edpm_default_mounts:
-          -  path: /dev/hugepages<size>
-             opts: pagesize=<size>
+          - path: /dev/hugepages<size>
+            opts: pagesize=<size>
             fstype: hugetlbfs
             group: hugetlbfs
   nodes:
@@ -572,6 +572,7 @@ done
 +
 * `${compute}.hostName` specifies the FQDN for the node if your deployment has a custom DNS Domain.
 * `${compute}.networks` specifies the network composition. The network composition must match the source cloud configuration to avoid data plane connectivity downtime. The `ctlplane` network must come first. The commands only retain IP addresses for the hosts on the `ctlplane` and `internalapi` networks. Repeat this step for other isolated networks, or update the resulting files manually.
+* `${compute}.ansible.ansibleHost` specifies the Ansible host for the Compute node. If you are not using DNS, use the value `${!ip}`.
 * `metadata.name:` specifies the node set names for each cell, for example, `openstack-cell1`, `openstack-cell2`. Only create node sets for cells that contain Compute nodes.
 * `spec.tlsEnabled` specifies whether TLS Everywhere is enabled. If it is enabled, change `tlsEnabled` to `true`.
 * `spec.services` specifies the services to be adopted. If you are not adopting telemetry services, omit it from the services list.
