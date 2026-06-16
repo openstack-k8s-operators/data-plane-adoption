@@ -63,11 +63,11 @@
           designateWorker:
             networkAttachments:
               - designate
-            replicas: 3
+            replicas: 1
           designateCentral:
-            replicas: 3
+            replicas: 1
           designateProducer:
-            replicas: 3
+            replicas: 1
           designateBackendbind9:
             networkAttachments:
               - designate
@@ -94,17 +94,17 @@
                       metallb.universe.tf/loadBalancerIPs: 172.50.0.82
                   spec:
                     type: LoadBalancer
-            replicas: 3
+            replicas: 2
             storageClass: $STORAGE_CLASS_NAME
             storageRequest: 10G
           designateMdns:
             networkAttachments:
               - designate
-            replicas: 3
+            replicas: 1
           designateUnbound:
             networkAttachments:
               - designate
-            replicas: 2
+            replicas: 1
             override:
               services:
                 - metadata:
