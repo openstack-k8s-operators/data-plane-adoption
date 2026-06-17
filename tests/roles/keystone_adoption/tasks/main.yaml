@@ -154,24 +154,42 @@
     fi
   register: adoption_token_result
 
-- name: Verify that pre-adoption OIDC token still works
+- name: Verify that OIDC federation still works
   when:
     - enable_federation | default(false) | bool
-    - before_adoption_oidc_token is defined
-    - before_adoption_oidc_token.stdout is defined
-  ansible.builtin.shell:
-    cmd: |
-      {{ shell_header }}
-      {{ oc_header }}
+  block:
+    - name: Generate OIDC token after adoption
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
 
-      alias openstack="oc exec -t openstackclient -- env -u OS_CLOUD - OS_AUTH_URL={{ auth_url }} OS_AUTH_TYPE=v3oidcaccesstoken OS_ACCESS_TOKEN={{ before_adoption_oidc_token.stdout }} openstack"
+        oc exec openstackclient -- bash -c "cat > /tmp/oidc_cloudrc" <<'EOF'
+        unset OS_CLOUD
+        export OS_CACERT=/home/cloud-admin/full-ca-list.crt
+        export OS_PROJECT_NAME="{{ cifmw_federation_project_name }}"
+        export OS_PROJECT_DOMAIN_NAME="{{ cifmw_federation_domain }}"
+        export OS_AUTH_URL="{{ cifmw_federation_keystone_url }}/v3"
+        export OS_IDENTITY_API_VERSION=3
+        export OS_AUTH_PLUGIN=openid
+        export OS_AUTH_TYPE=v3oidcpassword
+        export OS_USERNAME="{{ cifmw_federation_keycloak_testuser1_username }}"
+        export OS_PASSWORD="{{ cifmw_federation_keycloak_testuser1_password }}"
+        export OS_IDENTITY_PROVIDER="{{ cifmw_federation_idp_name }}"
+        export OS_CLIENT_ID="{{ cifmw_federation_keycloak_client_id }}"
+        export OS_CLIENT_SECRET="{{ cifmw_federation_keycloak_client_secret }}"
+        export OS_OPENID_SCOPE="openid profile email"
+        export OS_PROTOCOL=openid
+        export OS_ACCESS_TOKEN_TYPE=access_token
+        export OS_DISCOVERY_ENDPOINT="{{ cifmw_federation_keycloak_url }}/auth/realms/{{ cifmw_federation_keycloak_realm }}/.well-known/openid-configuration"
+        EOF
 
-      ${BASH_ALIASES[openstack]} token issue -f json
-  register: adoption_oidc_token_result
+        oc exec openstackclient -- bash -c "source /tmp/oidc_cloudrc && openstack token issue -f value -c id"
+      register: oidc_token
+      failed_when: oidc_token.rc != 0 or oidc_token.stdout == ""
 
 - name: Print credentials test token
   ansible.builtin.debug:
-    var: before_adoption_token
+    var: oidc_token
 
 - name: Verify that pre-adoption credential stills the same
   ansible.builtin.shell: |
