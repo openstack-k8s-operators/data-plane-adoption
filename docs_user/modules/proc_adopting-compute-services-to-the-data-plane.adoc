@@ -450,12 +450,12 @@ ifeval::["{build}" == "downstream"]
         rhc_release: 9.2
         rhc_repositories:
             - {name: "*", state: disabled}
-            - {name: "rhel-9-for-x86_64-baseos-eus-rpms", state: enabled}
-            - {name: "rhel-9-for-x86_64-appstream-eus-rpms", state: enabled}
-            - {name: "rhel-9-for-x86_64-highavailability-eus-rpms", state: enabled}
-            - {name: "rhoso-18.0-for-rhel-9-x86_64-rpms", state: enabled}
-            - {name: "fast-datapath-for-rhel-9-x86_64-rpms", state: enabled}
-            - {name: "rhceph-7-tools-for-rhel-9-x86_64-rpms", state: enabled}
+            - {name: "<repository_name1>", state: enabled}
+            - {name: "<repository_name2>", state: enabled}
+            - {name: "<repository_name3>", state: enabled}
+            - {name: "<repository_name4>", state: enabled}
+            - {name: "<repository_name5>", state: enabled}
+            - {name: "<repository_name6>", state: enabled}
 endif::[]
         edpm_bootstrap_release_version_package: []
         # edpm_network_config
@@ -578,6 +578,7 @@ done
 * `neutron_physical_bridge_name: br-ctlplane` specifies the bridge name. The bridge name and other OVN and {networking_service}-specific values must match the source cloud configuration to avoid data plane connectivity downtime.
 * `edpm_ovn_bridge_mappings`: Replace `[<"bridge_mappings">]` with the value of the bridge mappings in your configuration, for example, `["datacentre:br-ctlplane"]`.
 * `path: /dev/hugepages<size>` and `opts: pagesize=<size>` configures huge pages. Replace `<size>` with the size of the page. To configure multi-sized huge pages, create more items in the list. Note that the mount points must match the source cloud configuration.
+* `<repository_name1>`, `<repository_name2>`, `<repository_name3>`, `<repository_name4>`, `<repository_name5>`, `<repository_name6>` specifies the name of the repository to enable. For more information about which repositories are required, see link:https://access.redhat.com/articles/7139612[Required repositories for Red Hat OpenStack Services on OpenShift 18.0].
 +
 [NOTE]
 ====
