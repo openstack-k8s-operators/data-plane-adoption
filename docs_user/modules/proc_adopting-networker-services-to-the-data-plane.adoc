@@ -157,12 +157,12 @@ ifeval::["{build}" == "downstream"]
         rhc_release: 9.2
         rhc_repositories:
             - {name: "*", state: disabled}
-            - {name: "rhel-9-for-x86_64-baseos-eus-rpms", state: enabled}
-            - {name: "rhel-9-for-x86_64-appstream-eus-rpms", state: enabled}
-            - {name: "rhel-9-for-x86_64-highavailability-eus-rpms", state: enabled}
-            - {name: "rhoso-18.0-for-rhel-9-x86_64-rpms", state: enabled}
-            - {name: "fast-datapath-for-rhel-9-x86_64-rpms", state: enabled}
-            - {name: "rhceph-7-tools-for-rhel-9-x86_64-rpms", state: enabled}
+            - {name: "<repository_name1>", state: enabled}
+            - {name: "<repository_name2>", state: enabled}
+            - {name: "<repository_name3>", state: enabled}
+            - {name: "<repository_name4>", state: enabled}
+            - {name: "<repository_name5>", state: enabled}
+            - {name: "<repository_name6>", state: enabled}
 endif::[]
         edpm_bootstrap_release_version_package: []
         # edpm_network_config
@@ -265,6 +265,7 @@ EOF
 * `spec.tlsEnabled` specifies whether TLS Everywhere is enabled. If TLS is enabled, change `spec:tlsEnabled` to `true`.
 * `edpm_ovn_bridge_mappings`: Replace `[<"bridge_mappings">]` with the bridge mapping values that you used in your {rhos_prev_long} {rhos_prev_ver} deployment, for example, `["datacentre:br-ctlplane"]`.
 * `edpm_enable_chassis_gw` specifies whether to run `ovn-controller` in gateway mode.
+* `<repository_name1>`, `<repository_name2>`, `<repository_name3>`, `<repository_name4>`, `<repository_name5>`, `<repository_name6>` specifies the name of the repository to enable. For more information about which repositories are required, see link:https://access.redhat.com/articles/7139612[Required repositories for Red Hat OpenStack Services on OpenShift 18.0].
 ifeval::["{build}" != "downstream"]
 +
 [IMPORTANT]
