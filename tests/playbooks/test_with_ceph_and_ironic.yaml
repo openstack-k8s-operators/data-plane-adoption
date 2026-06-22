@@ -69,6 +69,7 @@
     - role: barbican_adoption
       tags:
         - barbican_adoption
+      when: prelaunch_barbican_secret | default(false) | bool
     - role: neutron_adoption
       tags:
         - neutron_adoption
