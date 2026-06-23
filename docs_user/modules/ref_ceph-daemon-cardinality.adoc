@@ -4,12 +4,15 @@
 = {Ceph} daemon cardinality
 
 [role="_abstract"]
-{Ceph} {CephVernum} and later applies strict constraints in the way daemons can be colocated within the same node.
+{Ceph} {CephVernum} and later applies strict constraints in the way daemons can be colocated within the same node. Your topology depends on the available hardware and the amount of Red Hat Ceph Storage services in the Controller nodes that you retire.
+
+The amount of services that you can migrate depends on the amount of available nodes in the cluster.
+
+The following diagrams show the distribution of Red Hat Ceph Storage daemons on Red Hat Ceph Storage nodes where at least 3 nodes are required.
+
 ifeval::["{build}" != "upstream"]
 For more information, see the Red Hat Knowledgebase article link:https://access.redhat.com/articles/1548993[Red Hat Ceph Storage: Supported configurations].
 endif::[]
-Your topology depends on the available hardware and the amount of {Ceph} services in the Controller nodes that you retire.
-The amount of services that you can migrate depends on the amount of available nodes in the cluster. The following diagrams show the distribution of {Ceph} daemons on {Ceph} nodes where at least 3 nodes are required.
 
 * The following scenario includes only RGW and RBD, without the {Ceph} dashboard:
 +

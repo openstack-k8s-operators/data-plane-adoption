@@ -4,7 +4,7 @@
 = Storage driver certification
 
 [role="_abstract"]
-Before you adopt your {rhos_prev_long} {rhos_prev_ver} deployment to a {rhos_long} {rhos_curr_ver} deployment, confirm that your deployed storage drivers are certified for use with {rhos_acro} {rhos_curr_ver}. For information on software certified for use with {rhos_acro} {rhos_curr_ver}, see the Red Hat Ecosystem Catalog.
+Confirm that your deployed storage drivers are certified for {rhos_acro} {rhos_curr_ver} before adoption. See the Red Hat Ecosystem Catalog for certified software.
 
 [role="_additional-resources"]
 .Additional resources

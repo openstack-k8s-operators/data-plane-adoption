@@ -4,7 +4,9 @@
 = Adoption duration and impact
 
 [role="_abstract"]
-The durations in the following table were recorded in a test environment that consisted of 228 Compute nodes and 3 Networker nodes. To accurately estimate the adoption duration for each task, perform these procedures in a test environment with hardware that is similar to your production environment. Ensure that you set up the {rhocp_long}  environment and install the Operators before testing.
+The durations in the following table were recorded in a test environment that consisted of 228 Compute nodes and 3 Networker nodes. To accurately estimate the duration for each task, perform these procedures in a test environment with similar hardware to your production environment.
+
+Set up the {rhocp_long} environment and install the Operators before testing.
 
 [IMPORTANT]
 Durations can vary significantly based on the content of your environment, for example, the size of your service databases or the number of services. The durations represent raw execution time. They do not include human operator activity.
