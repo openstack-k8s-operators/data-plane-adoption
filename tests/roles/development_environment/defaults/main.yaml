@@ -1,3 +1,14 @@
+# IPA-related variables
+ipa_hostname: "osp-free-ipa-0.ooo.test"
+# Short hostname for SSH to the FreeIPA server
+ipa_ssh_host: "{{ ipa_hostname.split('.')[0] }}"
+# ci-framework test-operator default is ~/.ssh/id_cifw (e.g. /home/zuul/.ssh/id_cifw in Zuul)
+controller_ssh_identity_file: "{{ cifmw_test_operator_controller_priv_key_file_path | default(edpm_privatekey_path) }}"
+# OpenShift cluster DNS forwarding for the IPA/LDAP domain (TLS-E)
+openshift_dns_forward_zone: "{{ ipa_hostname.split('.')[1:] | join('.') }}"
+openshift_dns_forward_upstream: "192.168.111.30"
+ipa_admin_password: "nomoresecrets"
+ipa_user_password: "nomoresecrets"
 prelaunch_test_instance: true
 prelaunch_test_instance_scripts:
   - pre_launch.bash
