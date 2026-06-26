@@ -50,7 +50,7 @@ parameter_defaults:
     nova::compute::libvirt::virt_type: qemu
   ExtraConfig:
     neutron::notification_driver: 'noop'
-    neutron::plugins::ml2::path_mtu: 1400
+    neutron::plugins::ml2::path_mtu: 9000
     neutron::plugins::ml2::ovn::ovn_router_indirect_snat: true
   BarbicanSimpleCryptoGlobalDefault: true
   Debug: true
@@ -59,7 +59,7 @@ parameter_defaults:
   ControllerCount: 3
   ComputeCount: 2
   NetworkerCount: 3
-  NeutronGlobalPhysnetMtu: 1400
+  NeutronGlobalPhysnetMtu: 9000
   CinderLVMLoopDeviceSize: 20480
   CloudName: overcloud.example.com
   CloudNameInternal: overcloud.internalapi.example.com
@@ -82,7 +82,7 @@ parameter_defaults:
   CtlplaneNetworkAttributes:
     network:
       dns_domain: example.com
-      mtu: 1500
+      mtu: 9000
       name: ctlplane
       tags:
         - 192.168.122.0/24

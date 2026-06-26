@@ -1,6 +1,6 @@
 ---
 - name: Storage
-  mtu: 1500
+  mtu: 9000
   vip: true
   name_lower: storage
   dns_domain: storage.{{ cloud_domain }}.
@@ -12,7 +12,7 @@
       allocation_pools: [{'start': '172.18.0.120', 'end': '172.18.0.250'}]
 
 - name: InternalApi
-  mtu: 1500
+  mtu: 9000
   vip: true
   name_lower: internal_api
   dns_domain: internal-api.{{ cloud_domain }}.
@@ -24,7 +24,7 @@
       allocation_pools: [{'start': '172.17.0.120', 'end': '172.17.0.250'}]
 
 - name: Tenant
-  mtu: 1500
+  mtu: 9000
   vip: false  # Tenant network does not use VIPs
   name_lower: tenant
   dns_domain: tenant.{{ cloud_domain }}.
@@ -36,7 +36,7 @@
       allocation_pools: [{'start': '172.19.0.120', 'end': '172.19.0.250'}]
 
 - name: Octavia
-  mtu: 1500
+  mtu: 9000
   vip: false
   name_lower: octavia
   dns_domain: octavia.{{ cloud_domain }}.
@@ -48,13 +48,13 @@
           end: 172.23.0.250
 
 - name: External
-  mtu: 1500
+  mtu: 9000
   vip: true
   name_lower: external
   dns_domain: external.{{ cloud_domain }}.
   service_net_map_replace: external
   subnets:
     external_subnet:
-      vlan: 218
-      ip_subnet: '172.38.0.0/24'
-      allocation_pools: [{'start': '172.38.0.50', 'end': '172.38.0.80'}]
+      vlan: 99
+      ip_subnet: '192.168.32.0/20'
+      allocation_pools: [{'start': '192.168.32.50', 'end': '192.168.32.80'}]
