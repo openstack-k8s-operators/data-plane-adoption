@@ -21,7 +21,6 @@ undercloud:
       value: false
   undercloud_parameters_override: "uni05epsilon/hieradata_overrides_undercloud.yaml"
   undercloud_parameters_defaults: "uni05epsilon/undercloud_parameter_defaults.yaml"
-  ctlplane_vip: 192.168.122.101
   routes: &sroutes
     - ip_netmask: 0.0.0.0/0
       next_hop: 192.168.122.1
