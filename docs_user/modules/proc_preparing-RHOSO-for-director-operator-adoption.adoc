@@ -180,7 +180,7 @@ spec:
       "cniVersion": "0.3.1",
       "name": "ctlplane",
       "type": "bridge",
-      "master": "br-ctlplane",
+      "bridge": "br-ctlplane",
       "ipam": {
         "type": "whereabouts",
         "range": "172.22.0.0/24",
@@ -288,7 +288,7 @@ EOF
 +
 * Replace `<RHOSO18_NAMESPACE>` with your OpenStack 18 namespace.
 
-. Ensure that the `OVNKubernetes IPForwarding` field is set to to `enabled`:
+. Ensure that the `OVNKubernetes IPForwarding` field is set to `enabled`:
 +
 ----
 $ oc patch network.operator cluster -p '{"spec":{"defaultNetwork":{"ovnKubernetesConfig":{"gatewayConfig":{"ipForwarding": "Global"}}}}}' --type=merge
