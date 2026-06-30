@@ -99,6 +99,11 @@ ifeval::["{build}" == "downstream"]
 :CephCluster: Red Hat Ceph Storage
 :CephVernum: 7
 
+
+// Ceph 9 IBM PDF paths - update these when Ceph 9 minor version changes
+:ceph9_pdf_path: SSEG27_9.9.1/out/91
+:ceph9_version: 9.9.1
+
 //Components and services
 
 //Identity service (keystone)

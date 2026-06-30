@@ -135,7 +135,7 @@ For more information about deploying the clustered Ceph NFS service, see 'Manage
 
 * link:https://docs.redhat.com/documentation/en-us/red_hat_ceph_storage/7/html/operations_guide/index#management-of-nfs-ganesha-gateway-using-the-ceph-orchestrator[Red Hat Ceph Storage 7 _Operations Guide_]
 * link:https://docs.redhat.com/documentation/en-us/red_hat_ceph_storage/8/html/operations_guide/index#management-of-nfs-ganesha-gateway-using-the-ceph-orchestrator[Red Hat Ceph Storage 8 _Operations Guide_]
-* link:https://docs.redhat.com/documentation/en-us/red_hat_ceph_storage/9/html/operations_guide/index#management-of-nfs-ganesha-gateway-using-the-ceph-orchestrator[Red Hat Ceph Storage 9 _Operations Guide_]
+* link:https://www.ibm.com/docs/en/{ceph9_pdf_path}/Red_Hat_Ceph_Storage_NFS_cluster_and_share_management_(OpenStack_Manila_users_only).pdf[Red Hat Ceph Storage 9 NFS cluster and share management (OpenStack Manila users only)] > Creating an NFS cluster
 ====
 endif::[]
 
