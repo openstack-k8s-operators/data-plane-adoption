@@ -23,14 +23,18 @@
     # Create local temp directory
     mkdir -p /tmp/ovn_adoption_dbs
 
-    # Use scp like other parts of the codebase
-    CONTROLLER1_SCP=$(echo "$CONTROLLER1_SSH" | sed 's/^ssh/scp/')
+    # Build scp command from ssh command, wrapping the address in brackets
+    # so that IPv6 colons are not confused with the scp host:path separator.
+    # The last token is user@host; insert brackets around the host part only.
+    CONTROLLER1_SCP=$(echo "$CONTROLLER1_SSH" | sed -e 's/^ssh/scp/' -e 's/ [^ ]*$//')
+    CONTROLLER1_USERHOST=$(echo "$CONTROLLER1_SSH" | awk '{print $NF}')
+    CONTROLLER1_SCP_DEST=$(echo "$CONTROLLER1_USERHOST" | sed 's/@\(.*\)/@[\1]/')
 
     echo "Copying NB database to ansible controller..."
-    ${CONTROLLER1_SCP}:/tmp/ovn_standalone_conversion/ovnnb_db.db /tmp/ovn_adoption_dbs/
+    ${CONTROLLER1_SCP} ${CONTROLLER1_SCP_DEST}:/tmp/ovn_standalone_conversion/ovnnb_db.db /tmp/ovn_adoption_dbs/
 
     echo "Copying SB database to ansible controller..."
-    ${CONTROLLER1_SCP}:/tmp/ovn_standalone_conversion/ovnsb_db.db /tmp/ovn_adoption_dbs/
+    ${CONTROLLER1_SCP} ${CONTROLLER1_SCP_DEST}:/tmp/ovn_standalone_conversion/ovnsb_db.db /tmp/ovn_adoption_dbs/
 
     # Cleanup on controller
     $CONTROLLER1_SSH sudo rm -rf /tmp/ovn_standalone_conversion

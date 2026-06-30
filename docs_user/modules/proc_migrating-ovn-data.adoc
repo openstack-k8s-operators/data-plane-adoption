@@ -57,10 +57,14 @@ $CONTROLLER1_SSH sudo ovsdb-tool cluster-to-standalone /tmp/ovn_standalone_conve
 $CONTROLLER1_SSH sudo chmod 644 /tmp/ovn_standalone_conversion/ovn*.db
 
 # Create local directory and copy converted databases
+# Note: brackets around the address are required so that IPv6 colons
+# are not confused with the scp host:path separator.
 mkdir -p /tmp/ovn_adoption_dbs
-CONTROLLER1_SCP=$(echo "$CONTROLLER1_SSH" | sed 's/^ssh/scp/')
-${CONTROLLER1_SCP}:/tmp/ovn_standalone_conversion/ovnnb_db.db /tmp/ovn_adoption_dbs/
-${CONTROLLER1_SCP}:/tmp/ovn_standalone_conversion/ovnsb_db.db /tmp/ovn_adoption_dbs/
+CONTROLLER1_SCP=$(echo "$CONTROLLER1_SSH" | sed -e 's/^ssh/scp/' -e 's/ [^ ]*$//')
+CONTROLLER1_USERHOST=$(echo "$CONTROLLER1_SSH" | awk '{print $NF}')
+CONTROLLER1_SCP_DEST=$(echo "$CONTROLLER1_USERHOST" | sed 's/@\(.*\)/@[\1]/')
+${CONTROLLER1_SCP} ${CONTROLLER1_SCP_DEST}:/tmp/ovn_standalone_conversion/ovnnb_db.db /tmp/ovn_adoption_dbs/
+${CONTROLLER1_SCP} ${CONTROLLER1_SCP_DEST}:/tmp/ovn_standalone_conversion/ovnsb_db.db /tmp/ovn_adoption_dbs/
 
 # Cleanup on controller
 $CONTROLLER1_SSH sudo rm -rf /tmp/ovn_standalone_conversion
