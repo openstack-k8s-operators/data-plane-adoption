@@ -24,6 +24,7 @@ undercloud:
   ctlplane_vip: 192.168.122.98
 cloud_domain: "ooo.test"
 tlse: true
+enable_keystone_ldap: true
 hostname_groups_map:
   # map ansible groups in the inventory to role hostname format for
   # 17.1 deployment
