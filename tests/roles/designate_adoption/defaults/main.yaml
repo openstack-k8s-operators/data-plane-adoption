@@ -1,2 +1,5 @@
 designate_adoption: false
+designate_external: false
 designate_retry_delay: 5
+designate_external_bind_controllers: []
+designate_external_binds: []
