@@ -4,7 +4,9 @@
 = Adopting the {key_manager}
 
 [role="_abstract"]
-To adopt the {key_manager_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where {key_manager} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment. You configure the {key_manager} to use the `simple_crypto` back end.
+Adopt the {key_manager_first_ref} by patching the existing `OpenStackControlPlane` custom resource (CR) where {key_manager} is disabled. Configure the {key_manager} to use the `simple_crypto` back end.
+
+The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
 
 The {key_manager} adoption is complete if you see the following results:
 

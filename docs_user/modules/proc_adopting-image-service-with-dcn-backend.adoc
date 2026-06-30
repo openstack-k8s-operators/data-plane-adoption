@@ -4,7 +4,9 @@
 = Adopting the {image_service} with multiple {Ceph} back ends (DCN)
 
 [role="_abstract"]
-Adopt the {image_service_first_ref} in a Distributed Compute Node (DCN) deployment where multiple {CephCluster} clusters provide storage at different sites. This configuration deploys multiple `GlanceAPI` instances: a central API with access to all {Ceph} clusters, and edge APIs at each DCN site with access to their local cluster and the central cluster.
+Adopt the {image_service_first_ref} in a Distributed Compute Node (DCN) deployment with multiple {CephCluster} clusters that provide storage at different sites.
+
+This configuration deploys multiple `GlanceAPI` instances: a central API with access to all {Ceph} clusters, and edge APIs at each DCN site with access to their local cluster and the central cluster.
 
 During adoption, the {image_service} instances that ran on edge site Compute nodes are migrated to run on {rhocp_long} at the central site. Although the control path for API requests now traverses the WAN to reach the {image_service} running on {rhocp_long}, the data path remains local. Image data continues to be stored in the {Ceph} cluster at each edge site. When you create a virtual machine or volume from an image, the operation occurs at the local {Ceph} cluster. This architecture uses {Ceph} shallow copies (copy-on-write clones) to enable fast boot times without transferring image data across the WAN.
 

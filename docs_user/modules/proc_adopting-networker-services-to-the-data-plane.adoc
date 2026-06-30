@@ -4,7 +4,7 @@
 = Adopting Networker services to the {rhos_acro} data plane
 
 [role="_abstract"]
-Adopt the Networker services in your existing {rhos_prev_long} deployment to the {rhos_long} data plane. The Networker services could be running on Controller nodes or dedicated Networker nodes. You decide which services you want to run on the Networker nodes, and create a separate `OpenStackDataPlaneNodeSet` custom resource (CR) for the Networker nodes.
+Adopt Networker services to the {rhos_long} data plane by creating a `OpenStackDataPlaneNodeSet` custom resource (CR) that includes the services to run on the Networker nodes. The Networker services could be running on Controller nodes or dedicated Networker nodes.
 
 [TIP]
 ====
