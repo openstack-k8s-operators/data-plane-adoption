@@ -1,3 +1,4 @@
 ---
 data_devices:
   all: true
+encrypted: true
