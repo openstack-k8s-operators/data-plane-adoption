@@ -8,7 +8,7 @@ ifdef::context[:parent-context: {context}]
 = Adopting the {key_manager} with HSM integration
 
 [role="_abstract"]
-Adopt the {key_manager_first_ref} from {OpenStackPreviousInstaller} to {rhos_long} when your source environment includes hardware security module (HSM) integration to preserve HSM functionality and maintain access to HSM-backed secrets. HSM provides enhanced security for cryptographic operations by storing encryption keys in dedicated hardware devices.
+Adopt the {key_manager_first_ref} with HSM integration to {rhos_long} to preserve HSM functionality and maintain access to HSM-backed secrets.
 
 For additional information about the {key_manager} before you start the adoption, see the following resources:
 

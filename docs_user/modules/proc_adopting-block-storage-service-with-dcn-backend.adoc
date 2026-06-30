@@ -4,7 +4,7 @@
 = Adopt the {block_storage} with multiple {Ceph} back ends (DCN)
 
 [role="_abstract"]
-Adopt the {block_storage_first_ref} in a Distributed Compute Node (DCN) deployment where multiple {CephCluster} clusters provide storage at different sites. You can deploy multiple `CinderVolume` instances, one for each availability zone, with each volume service configured to use its local {Ceph} cluster.
+Adopt the {block_storage_first_ref} in a Distributed Compute Node (DCN) deployment with multiple {CephCluster} clusters at different sites. Deploy multiple `CinderVolume` instances, one for each availability zone, with each volume service configured to use its local {Ceph} cluster.
 
 During adoption, the {block_storage} volume services that ran on edge site Compute nodes are migrated to run on {rhocp_long} at the central site. Although the control path for API requests now traverses the WAN to reach the {block_storage} running on {rhocp_long}, the data path remains local. Volume data continues to be stored in the {Ceph} cluster at each edge site. When you create a volume or clone a volume from a snapshot, the operation occurs entirely within the local {Ceph} cluster. This preserves data locality.
 

@@ -4,7 +4,9 @@
 = Adopting the {key_manager} with Proteccio HSM integration
 
 [role="_abstract"]
-To adopt the {key_manager_first_ref} with Proteccio hardware security module (HSM) integration, you patch an existing `OpenStackControlPlane` custom resource (CR) where {key_manager} is disabled. The patch starts the service with the configuration parameters from the {rhos_prev_long} ({OpenStackShort}) environment and preserves access to existing HSM-backed secrets. You configure the {key_manager} to use both the `simple_crypto` and `pkcs11` back ends.
+Adopt the {key_manager_first_ref} with Proteccio HSM by patching the `OpenStackControlPlane` custom resource (CR) where {key_manager} is disabled. Configure the {key_manager} to use both the `simple_crypto` and `pkcs11` back ends.
+
+The patch starts the service with the configuration parameters from the {rhos_prev_long} ({OpenStackShort}) environment and preserves access to existing HSM-backed secrets.
 
 The {key_manager} Proteccio HSM adoption is complete if you see the following results:
 
