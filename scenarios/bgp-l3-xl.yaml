@@ -114,7 +114,6 @@ undercloud:
       value: false
   undercloud_parameters_override: "bgp-l3-xl/hieradata_overrides_undercloud.yaml"
   undercloud_parameters_defaults: "bgp-l3-xl/undercloud_parameter_defaults.yaml"
-  ctlplane_vip: 192.168.122.98
 cloud_domain: "example.com"
 hostname_groups_map:
   # map ansible groups in the inventory to role hostname format for
