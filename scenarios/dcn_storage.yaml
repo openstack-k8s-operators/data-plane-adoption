@@ -71,7 +71,6 @@ undercloud:
       value: 192.168.144.200,192.168.144.220
   undercloud_parameters_override: "dcn_storage/hieradata_overrides_undercloud.yaml"
   undercloud_parameters_defaults: "dcn_storage/undercloud_parameter_defaults.yaml"
-  ctlplane_vip: 192.168.122.98
 cloud_domain: "example.com"
 hostname_groups_map:
   # map ansible groups in the inventory to role hostname format for

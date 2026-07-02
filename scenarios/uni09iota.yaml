@@ -21,7 +21,6 @@ undercloud:
       value: false
   undercloud_parameters_override: "uni09iota/hieradata_overrides_undercloud.yaml"
   undercloud_parameters_defaults: "uni09iota/undercloud_parameter_defaults.yaml"
-  ctlplane_vip: 192.168.122.101
 cloud_domain: "example.com"
 hostname_groups_map:
   # map ansible groups in the inventory to role hostname format for
