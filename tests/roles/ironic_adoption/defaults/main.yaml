@@ -109,3 +109,4 @@ ironic_retry_delay: 5
 ironic_post_adoption_manage_nodes: false
 ironic_post_adoption_inspect_nodes: false
 ironic_post_adoption_provide_nodes: false
+ironic_post_adoption_create_instance: true
