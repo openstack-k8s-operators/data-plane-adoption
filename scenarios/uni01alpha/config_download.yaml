@@ -47,6 +47,7 @@ parameter_defaults:
   OVNDBsVirtualFixedIPs:
     - ip_address: 192.168.122.131
       use_neutron: false
+  DhcpAgentNotification: false
   NeutronDnsDomain: 'example.com'
   BarbicanSimpleCryptoGlobalDefault: true
   SwiftEncryptionEnabled: true
