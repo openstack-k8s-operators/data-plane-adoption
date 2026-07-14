@@ -144,7 +144,7 @@ endif::[]
   nodeTemplate:
     ansibleSSHPrivateKeySecret: dataplane-adoption-secret
     ansible:
-      ansibleUser: root
+      ansibleUser: tripleo-admin
 ifeval::["{build}" == "downstream"]
       ansibleVarsFrom:
       - secretRef:

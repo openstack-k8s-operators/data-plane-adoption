@@ -64,7 +64,7 @@ endif::[]
   nodeTemplate:
     ansibleSSHPrivateKeySecret: dataplane-adoption-secret
     ansible:
-      ansibleUser: root
+      ansibleUser: tripleo-admin
       ansibleVars:
         *edpm_ovn_bridge_mappings: ["leaf0:br-ex"]*
         edpm_ovn_bridge: br-int
@@ -145,7 +145,7 @@ spec:
   nodeTemplate:
     ansibleSSHPrivateKeySecret: dataplane-adoption-secret
     ansible:
-      ansibleUser: root
+      ansibleUser: tripleo-admin
       ansibleVars:
         *edpm_ovn_bridge_mappings: ["leaf1:br-ex"]*
         edpm_ovn_bridge: br-int
