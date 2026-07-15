@@ -43,6 +43,12 @@ resource_registry:
 
 parameter_defaults:
   SshFirewallAllowAll: true
+  ExtraFirewallRules:
+    '110 ceph_mon':
+      dport:
+        - 3300
+        - 6789
+      proto: tcp
 
   # Specify that this is an additional cell
   NovaAdditionalCell: true

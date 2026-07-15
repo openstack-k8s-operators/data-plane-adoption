@@ -46,6 +46,8 @@
     - OS::TripleO::Services::AuditD
     - OS::TripleO::Services::BootParams
     - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
     - OS::TripleO::Services::CinderApi
     - OS::TripleO::Services::CinderBackendDellSc
     - OS::TripleO::Services::CinderBackendDellEMCPowerFlex
@@ -165,6 +167,8 @@
     - OS::TripleO::Services::AuditD
     - OS::TripleO::Services::BootParams
     - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
     - OS::TripleO::Services::Clustercheck
     - OS::TripleO::Services::Collectd
     - OS::TripleO::Services::ContainerImagePrepare
@@ -217,6 +221,8 @@
       subnet: tenant_subnet
     Storage:
       subnet: storage_subnet
+    StorageMgmt:
+      subnet: storage_mgmt_subnet
   default_route_networks: ['ControlPlane']
   HostnameFormatDefault: '%stackname%-novacompute-%index%'
   RoleParametersDefault:
@@ -240,6 +246,8 @@
     - OS::TripleO::Services::AuditD
     - OS::TripleO::Services::BootParams
     - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
     - OS::TripleO::Services::ComputeNeutronCorePlugin
     - OS::TripleO::Services::ComputeNeutronL3Agent
     - OS::TripleO::Services::ComputeNeutronMetadataAgent

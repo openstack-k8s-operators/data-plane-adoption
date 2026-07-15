@@ -61,6 +61,8 @@ stacks:
       - "/usr/share/openstack-tripleo-heat-templates/environments/podman.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/external-ceph.yaml"
+      - "/home/zuul/external_ceph_params.yaml"
     network_data_file: "uni05epsilon/network_data.yaml.j2"
     routes: *sroutes
     vips_data_file: "uni05epsilon/vips_data_overcloud.yaml"
@@ -68,6 +70,24 @@ stacks:
     config_download_file: "uni05epsilon/config_download_overcloud.yaml"
     stack_nodes:
       - osp-controllers
+    pre_oc_run:
+      - name: 01 Prepare Ceph nodes
+        type: playbook
+        source: "setup_cephnodes.yaml"
+        inventory: "{{ ansible_user_dir }}/{{ zuul.projects['github.com/openstack-k8s-operators/data-plane-adoption'].
+                    src_dir }}/scenarios/uni05epsilon/ceph_inventory.yaml"
+      - name: 02 Deploy external ceph
+        type: playbook
+        source: "ceph.yml"
+        gathering: implicit
+        inventory: "{{ ansible_user_dir }}/{{ zuul.projects['github.com/openstack-k8s-operators/data-plane-adoption'].
+                    src_dir }}/scenarios/uni05epsilon/ceph_inventory.yaml"
+      - name: 03 Create external Ceph parameters file
+        type: playbook
+        source: "create_external_ceph_params.yml"
+        extra_vars:
+          ceph_node: "cell1-osp-compute-uni05epsilon-0"
+          ceph_mon_host: "172.18.0.94,172.18.0.95"
     post_oc_run:
       - name: Multi-cell post overcloud deploy
         type: playbook
@@ -93,6 +113,8 @@ stacks:
       - "/usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/enable-legacy-telemetry.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/external-ceph.yaml"
+      - "/home/zuul/external_ceph_params.yaml"
       - "/home/zuul/cell1-input.yaml"
     network_data_file: "uni05epsilon/network_data.yaml.j2"
     routes: *sroutes
@@ -132,6 +154,8 @@ stacks:
       - "/usr/share/openstack-tripleo-heat-templates/environments/podman.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/external-ceph.yaml"
+      - "/home/zuul/external_ceph_params.yaml"
       - "/home/zuul/cell2-input.yaml"
     network_data_file: "uni05epsilon/network_data.yaml.j2"
     routes: *sroutes
