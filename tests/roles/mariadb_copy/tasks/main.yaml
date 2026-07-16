@@ -86,6 +86,26 @@
   until: _podified_db_check.rc == 0
   changed_when: false
 
+- name: wait until TripleO Galera DBs are reachable from the mariadb-copy-data pod
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ oc_header }}
+    {{ mariadb_members_env }}
+    {{ mariadb_copy_shell_vars_src }}
+    for CELL in $(echo $CELLS); do
+      MEMBERS=SOURCE_GALERA_MEMBERS_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')[@]
+      for i in "${!MEMBERS}"; do
+        echo "Checking connectivity to the database node $i"
+        oc rsh mariadb-copy-data mysql \
+          -h "$i" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e 'select 1;'
+      done
+    done
+  register: _galera_db_check
+  retries: 60
+  delay: 3
+  until: _galera_db_check.rc == 0
+  changed_when: false
+
 - name: check that the Galera database cluster(s) members are online and synced, for all cells
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |

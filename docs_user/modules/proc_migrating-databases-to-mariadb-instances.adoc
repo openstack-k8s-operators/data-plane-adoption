@@ -186,6 +186,26 @@ $ oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
 
 .Procedure
 
+. Wait for the `mariadb-copy-data` pod to reach the source TripleO Galera databases:
++
+----
+for CELL in $(echo $CELLS); do
+  MEMBERS=SOURCE_GALERA_MEMBERS_$(echo ${CELL}|tr '[:lower:]' '[:upper:]')[@]
+  for i in "${!MEMBERS}"; do
+    echo "Checking connectivity to the database node $i"
+    oc rsh mariadb-copy-data mysql \
+      -h "$i" -uroot -p"${SOURCE_DB_ROOT_PASSWORD[$CELL]}" -e 'select 1;'
+  done
+done
+----
++
+[NOTE]
+====
+For BGP-enabled environments, this command might take a few moments to succeed while the route to the `mariadb-copy-data` pod is advertised and propagated through the network via BGP. If the command fails, wait a few seconds and retry. The connection should succeed once the BGP route advertisement is complete.
+
+For standard deployments, this command should succeed immediately.
+====
+
 . Check that the source Galera database clusters in each cell have its members online and synced:
 +
 ----
@@ -232,7 +252,7 @@ $ oc rsh mariadb-copy-data mysql -rsh "${PODIFIED_MARIADB_IP['super']}" \
 +
 [NOTE]
 ====
-For BGP-enabled environments, this command might take a few moments to succeed while BGP routes are advertised and propagated through the network. The `mariadb-copy-data` pod needs to receive the route to the podified MariaDB IP address through BGP before it can establish a connection. If the command fails, wait a few seconds and retry. The connection should succeed once the BGP route advertisement is complete.
+For BGP-enabled environments, this command might take a few moments to succeed while the route to the `mariadb-copy-data` pod is advertised and propagated through the network via BGP. If the command fails, wait a few seconds and retry. The connection should succeed once the BGP route advertisement is complete.
 
 For IPv6 environments, this command might take a few moments to succeed while the network IPv6 stack completes its setup. If the command fails, wait a few seconds and retry.
 
