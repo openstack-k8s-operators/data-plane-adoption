@@ -10,7 +10,6 @@ on:  # yamllint disable-line rule:truthy
     paths:
       - .github/workflows/docs*
       - docs_dev/**
-      - docs_user/**
       - Gemfile
       - Makefile
 permissions:
@@ -33,30 +32,14 @@ jobs:
       - name: Install Asciidoc
         run: make docs-dependencies
 
-      - name: Build upstream user docs
-        run: make docs-user
-      - name: Build downstream preview of user docs
-        run: BUILD=downstream make docs-user
       - name: Build dev docs
         run: make docs-dev
-
-      - name: Test user docs
-        run: |
-          INSTALL_YAMLS_REF=$(grep -o install_yamls docs_build/adoption-user/index-downstream.html | wc -l)
-          if [[ $INSTALL_YAMLS_REF -gt 0 ]]; then
-              echo user facing docs should NOT mention install_yamls
-              grep install_yamls docs_build/adoption-user/index-downstream.html
-              exit 1
-          fi
 
       - name: Prepare site
         run: |
           mkdir -p _site
-          mv -T docs_build/adoption-user _site/user
           mv -T docs_build/adoption-dev _site/dev
 
-          mv _site/user/index-upstream.html _site/user/index.html
-          mv _site/user/index-downstream.html _site/user/downstream.html
           mv _site/dev/index-upstream.html _site/dev/index.html
 
           cat > _site/index.html <<EOF
@@ -105,12 +88,11 @@ jobs:
           <body>
 
               <div class="topnav">
-                  <a class="active" href="user/" target="content">User</a>
                   <a href="dev/" target="content">Contributor</a>
               </div>
 
               <div class="asciidoc">
-                  <iframe name="content" width="100%" height="100%" src="user/index.html"></iframe>
+                  <iframe name="content" width="100%" height="100%" src="dev/index.html"></iframe>
               </div>
 
           </body>
