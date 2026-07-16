@@ -1,3 +1,11 @@
+- name: set shell vars for nfs mount
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.set_fact:
+    manila_services_shell_vars: |
+      CONTROLLER1_SSH="{{ controller1_ssh }}"
+      CONTROLLER2_SSH="{{ controller2_ssh }}"
+      CONTROLLER3_SSH="{{ controller3_ssh }}"
+
 - name: Deploy Podified Manila - Ceph
   when: manila_backend == "cephfs" or manila_backend == "cephnfs"
   ansible.builtin.include_tasks: ceph.yaml
@@ -45,3 +53,17 @@
         share_type_name: default
         driver_handles_share_servers: false
       when: manila_create_share_type | default(true)
+
+    - name: Clean up pre-adoption Manila mount on source nodes
+      ansible.builtin.shell: |
+        {{ shell_header }}
+        {{ oc_header }}
+        {{ manila_services_shell_vars }}
+
+        for i in {1..3}; do
+            SSH_CMD="CONTROLLER${i}_SSH"
+            if [ ! -z "${!SSH_CMD}" ]; then
+                ${!SSH_CMD} sudo umount -l -f /mnt/tobiko_manila_test 2>/dev/null || true
+            fi
+        done
+      failed_when: false
