@@ -37,3 +37,15 @@
   register: external_bind9_pool_check
   changed_when: false
   failed_when: external_bind9_pool_check.rc != 0
+
+- name: Verify RNDC connectivity from designate worker to legacy BIND9 servers
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    oc exec -it $(oc get pods -l service=designate-worker -o name | head -1) -- \
+        rndc -s {{ item }} -k /etc/designate/rndc-keys/default-rndc-0 status
+  register: rndc_connectivity_check
+  changed_when: false
+  failed_when: rndc_connectivity_check.rc != 0
+  loop: "{{ designate_external_bind_controllers }}"

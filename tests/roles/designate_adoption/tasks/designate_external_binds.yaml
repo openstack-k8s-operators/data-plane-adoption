@@ -62,7 +62,7 @@
         ${!SSH_CMD} cp -n /var/lib/config-data/ansible-generated/designate/etc/named/options.conf /var/lib/config-data/ansible-generated/designate/etc/named/options.conf.pre-adoption-backup
         ${!SSH_CMD} "sed -i 's:allow.notify.*};:allow-notify { $INTERNALAPI_CIDR; };:' /var/lib/config-data/ansible-generated/designate/etc/named/options.conf"
         ${!SSH_CMD} "sed -i '/allow.transfer:/d' /var/lib/config-data/ansible-generated/designate/etc/named/options.conf"
-        ${!SSH_CMD} "sed '/^options {/,/^};/{
+        ${!SSH_CMD} "sed -i '/^options {/,/^};/{
       /^};/ i\\\tallow-transfer { '"$INTERNALAPI_CIDR"'; };
     }' /var/lib/config-data/ansible-generated/designate/etc/named/options.conf"
         echo "Restarting bind on controller $i"
