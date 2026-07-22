@@ -1,0 +1,20 @@
+computes:
+  hosts:
+    cell1-osp-compute-uni05epsilon-0:
+      ansible_user: zuul
+      ansible_ssh_private_key_file: /home/zuul/.ssh/cifmw_reproducer_key
+      bridge_ip: 192.168.122.94/24
+      external_ip: 172.21.0.94/24
+      internalapi_ip: 172.17.0.94/24
+      storage_ip: 172.18.0.94/24
+      storagemgmt_ip: 172.20.0.94/24
+      tenant_ip: 172.19.0.94/24
+    cell2-osp-compute-uni05epsilon-0:
+      ansible_user: zuul
+      ansible_ssh_private_key_file: /home/zuul/.ssh/cifmw_reproducer_key
+      bridge_ip: 192.168.122.95/24
+      external_ip: 172.21.0.95/24
+      internalapi_ip: 172.17.0.95/24
+      storage_ip: 172.18.0.95/24
+      storagemgmt_ip: 172.20.0.95/24
+      tenant_ip: 172.19.0.95/24
