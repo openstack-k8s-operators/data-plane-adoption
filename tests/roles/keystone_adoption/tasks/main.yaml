@@ -199,8 +199,10 @@
     - enable_federation | default(false) | bool
   block:
     - name: Generate OIDC token after adoption
+      no_log: "{{ use_no_log }}"
       ansible.builtin.shell: |
         {{ shell_header }}
+        {{ shell_header_no_xtrace }}
         {{ oc_header }}
 
         oc exec openstackclient -- bash -c "cat > /tmp/oidc_cloudrc" <<'EOF'
@@ -243,8 +245,10 @@
   failed_when: after_adoption_credential.stdout != 'test'
 
 - name: get ldap user token
+  no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
+    {{ shell_header_no_xtrace }}
     {{ oc_header }}
 
     alias openstack="oc exec -t openstackclient -- openstack"

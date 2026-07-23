@@ -1,6 +1,8 @@
 - name: create osp-secret
+  no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
+    {{ shell_header_no_xtrace }}
     {{ oc_header }}
     cd {{ install_yamls_path }}
     make input
@@ -15,6 +17,7 @@
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
+    {{ shell_header_no_xtrace }}
     {{ oc_header }}
     {% if aodh_password %}
         oc set data secret/osp-secret "AodhPassword={{ aodh_password }}"
