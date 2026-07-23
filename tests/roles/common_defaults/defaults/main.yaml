@@ -1,6 +1,6 @@
 # Whether to use no_log on tasks which may output potentially
 # sensitive data.
-use_no_log: false
+use_no_log: true
 
 # Network configuration for IPv4/IPv6 support
 ipv6_enabled: false
@@ -28,6 +28,10 @@ renamed_cells: "{{ [default_cell_name] + cells | difference(['default']) }}"
 # expected.
 shell_header: |
   set -euxo pipefail
+
+# Header to disable command tracing in tasks that handle sensitive data.
+shell_header_no_xtrace: |
+  set +x
 
 # Snippet to get the desired 'oc' command onto $PATH.
 oc_header: |
@@ -133,6 +137,7 @@ mariadb_client_network_annotation: >-
   }}
 mariadb_copy_shell_vars_src: |-
   {{ shell_header }}
+  {{ shell_header_no_xtrace }}
 
   PASSWORD_FILE="{{ tripleo_passwords['default'] | replace("~", "$HOME") }}"
 
@@ -170,6 +175,7 @@ mariadb_copy_shell_vars_src: |-
 # for any tables that are created in the future as part of db sync
 mariadb_copy_shell_vars_dst: |
   {{ shell_header }}
+  {{ shell_header_no_xtrace }}
   {{ oc_header }}
   {{ mariadb_image_env }}
   {{ cells_env }}

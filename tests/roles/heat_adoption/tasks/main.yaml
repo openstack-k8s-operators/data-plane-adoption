@@ -1,12 +1,16 @@
 - name: Encode the heat_auth_encryption_key to base64 format
+  no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
+    {{ shell_header_no_xtrace }}
     echo {{ heat_auth_encryption_key }} | base64
   register: heat_encoded_auth_key
 
 - name: Patch osp-secret for HeatAuthEncryptionKey
+  no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
+    {{ shell_header_no_xtrace }}
     {{ oc_header }}
     oc patch secret osp-secret --type='json' -p='[{"op" : "replace" ,"path" : "/data/HeatAuthEncryptionKey" ,"value" : "{{ heat_encoded_auth_key.stdout }}"}]'
 

@@ -1,5 +1,7 @@
 - name: get service passwords
+  no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
+     {{ shell_header_no_xtrace }}
      oc get secret tripleo-passwords -o jsonpath='{.data.*}' | base64 -d>~/tripleo-standalone-passwords.yaml
      cp ~/tripleo-standalone-passwords.yaml {{ tripleo_passwords['default'] | replace("~", "$HOME") }}
   when: get_svc_pass| default(false) | bool

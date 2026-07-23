@@ -1,6 +1,8 @@
 - name: Retrieve the known ns_record values from the designate database
+  no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
+    {{ shell_header_no_xtrace }}
     {{ oc_header }}
     DB_ROOT_PASSWORD=$(oc get -o json secret/osp-secret | jq -r .data.DbRootPassword | base64 -d)
     oc exec openstack-galera-0 -c galera -- mysql -rs -uroot -p"$DB_ROOT_PASSWORD" \
