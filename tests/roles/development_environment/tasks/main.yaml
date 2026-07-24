@@ -75,6 +75,13 @@
       {{ openstack_command }} token issue -f value -c id
   register: before_adoption_token
 
+- name: Upload TLS CA certificate bundle to standalone
+  when: enable_federation | default(false) | bool
+  ansible.builtin.shell:
+    cmd: |
+      {{ shell_header }}
+      scp -o StrictHostKeyChecking=no -i {{ edpm_privatekey_path }} {{ federation_ingress_ca_path }} {{ source_osp_ssh_user }}@{{ standalone_ip | default(edpm_node_ip) }}:{{ federation_oidc_ca_remote_path }}
+
 - name: Render OIDC cloudrc
   when: enable_federation | default(false) | bool
   ansible.builtin.template:
