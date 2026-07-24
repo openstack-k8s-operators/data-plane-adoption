@@ -76,6 +76,7 @@
 - name: wait until podified MariaDB is reachable
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
+    {{ shell_header_no_xtrace }}
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_dst }}
     oc rsh mariadb-copy-data mysql -rsh "${PODIFIED_MARIADB_IP['super']}" \
@@ -109,6 +110,7 @@
 - name: check that the Galera database cluster(s) members are online and synced, for all cells
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
+    {{ shell_header_no_xtrace }}
     {{ oc_header }}
     {{ mariadb_members_env }}
     {{ mariadb_copy_shell_vars_src }}

@@ -1,5 +1,7 @@
 - name: wait for Compute data plane services version updated for all cells
+  no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
+    {{ shell_header_no_xtrace }}
     {{ mariadb_copy_shell_vars_dst }}
     for CELL in $(echo $RENAMED_CELLS); do
       oc exec openstack-$CELL-galera-0 -c galera -- mysql -rs -uroot -p"${PODIFIED_DB_ROOT_PASSWORD[$CELL]}" \
