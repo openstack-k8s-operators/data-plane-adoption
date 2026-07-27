@@ -197,11 +197,6 @@ ifeval::["{build}" != "downstream"]
           curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
           python3 -m venv ./venv
           PBR_VERSION=0.0.0 ./venv/bin/pip install ./repo-setup-main
-          # This is required for FIPS enabled until trunk.rdoproject.org
-          # is not being served from a centos7 host, tracked by
-          # https://issues.redhat.com/browse/RHOSZUUL-1517
-          sudo dnf -y install crypto-policies
-          sudo update-crypto-policies --set FIPS:NO-ENFORCE-EMS
           sudo ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
           sudo dnf -y upgrade openstack-selinux
           sudo rm -f /run/virtlogd.pid
