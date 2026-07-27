@@ -13,14 +13,16 @@ on:  # yamllint disable-line rule:truthy
       - docs_user/**
       - Gemfile
       - Makefile
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-        with:
-          # this fetches all branches. Needed because we need gh-pages branch for deploy to work
-          fetch-depth: 0
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.9'
@@ -47,17 +49,17 @@ jobs:
               exit 1
           fi
 
-      - name: Prepare gh-pages branch
+      - name: Prepare site
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          mkdir -p _site
+          mv -T docs_build/adoption-user _site/user
+          mv -T docs_build/adoption-dev _site/dev
 
-          git branch -D gh-pages &>/dev/null || true
-          git checkout -b gh-pages aabb4803f89a3b006094d8ae7a933650f644d036
+          mv _site/user/index-upstream.html _site/user/index.html
+          mv _site/user/index-downstream.html _site/user/downstream.html
+          mv _site/dev/index-upstream.html _site/dev/index.html
 
-      - name: Create index.html
-        run: |
-          cat > index.html <<EOF
+          cat > _site/index.html <<EOF
           <!DOCTYPE html>
           <html>
           <head>
@@ -115,21 +117,22 @@ jobs:
           </html>
           EOF
 
-      - name: Commit asciidoc docs
-        run: |
-          mv -T docs_build/adoption-user user
-          mv -T docs_build/adoption-dev dev
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: _site
 
-          mv user/index-upstream.html user/index.html
-          mv user/index-downstream.html user/downstream.html
-          mv dev/index-upstream.html dev/index.html
-
-          git add user
-          git add dev
-          git add index.html
-          git commit -m "Rendered docs"
-
-      - name: Push rendered docs to gh-pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          git push --force origin gh-pages
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
