@@ -21,6 +21,7 @@
 - name: create mariadb-client container
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
+    {{ shell_header_no_xtrace }}
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
     # delete existing mariadb-client pods
@@ -31,6 +32,7 @@
 - name: wait until SOURCE_MARIADB_IP is reachable
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
+    {{ shell_header_no_xtrace }}
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
     oc rsh mariadb-client mysql -rsh ${SOURCE_MARIADB_IP[default]} -uroot -p${SOURCE_DB_ROOT_PASSWORD[default]} -e 'select 1;'
@@ -45,6 +47,7 @@
 - name: test connection to the original DB
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
+    {{ shell_header_no_xtrace }}
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
     unset PULL_OPENSTACK_CONFIGURATION_DATABASES
@@ -57,6 +60,7 @@
 - name: run mysqlcheck on the original DB to look for things that are not OK
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
+    {{ shell_header_no_xtrace }}
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
     unset PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK
@@ -86,6 +90,7 @@
   block:
     - name: get Nova cells mappings from database
       ansible.builtin.shell: |
+        {{ shell_header_no_xtrace }}
         {{ oc_header }}
         {{ mariadb_copy_shell_vars_src }}
         export PULL_OPENSTACK_CONFIGURATION_NOVADB_MAPPED_CELLS=$(oc rsh mariadb-client \
@@ -94,6 +99,7 @@
 
     - name: get the host names of the registered Nova compute services
       ansible.builtin.shell: |
+        {{ shell_header_no_xtrace }}
         {{ oc_header }}
         {{ mariadb_copy_shell_vars_src }}
         unset PULL_OPENSTACK_CONFIGURATION_NOVA_COMPUTE_HOSTNAMES
@@ -113,6 +119,7 @@
 - name: store exported variables for future use
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
+    {{ shell_header_no_xtrace }}
     {{ oc_header }}
     {{ mariadb_copy_shell_vars_src }}
     for CELL in $(echo $CELLS); do
