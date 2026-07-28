@@ -6,7 +6,7 @@ on: # yamllint disable-line rule:truthy
 
 jobs:
   trigger-sync:
-    uses: openstack-k8s-operators/ci-framework/.github/workflows/sync_branches_reusable_workflow.yml@main
+    uses: openstack-k8s-operators/ci-framework/.github/workflows/sync_branches_reusable_workflow.yml@8b22a75f4fa1b75a18b718c79a7395eca5c530ee # main
     with:
       source-branch: ${{ github.event.client_payload.source-branch }}
       target-branch: ${{ github.event.client_payload.target-branch }}
