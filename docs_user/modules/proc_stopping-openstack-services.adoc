@@ -77,6 +77,18 @@ sudo pcs constraint remove colocation-openstack-manila-share-ceph-nfs-INFINITY
 sudo pcs constraint remove order-ceph-nfs-openstack-manila-share-Optional
 ----
 
+. If your deployment enables CephFS through NFS as a back end for {rhos_component_storage_file_first_ref}, remove the Pacemaker co-location and ordering constraints between the `ceph-nfs` Virtual IP address and `haproxy-bundle`. This ensures that the NFS-Ganesha Virtual IP remains available when HAProxy is stopped later in the adoption process, preventing NFS mount disruptions for any active NFS clients:
++
+[source,yaml]
+----
+# determine the Ganesha VIP from the NFS-Ganesha configuration
+GANESHA_VIP=$(awk -F '[=;]' '/Bind_Addr/ {gsub(/ /, "", $2); print $2}' /etc/ganesha/ganesha.conf)
+
+# remove the co-location and ordering constraints between the VIP and haproxy-bundle
+sudo pcs constraint remove colocation-ip-${GANESHA_VIP}-haproxy-bundle-INFINITY
+sudo pcs constraint remove order-ip-${GANESHA_VIP}-haproxy-bundle-Optional
+----
+
 . Disable {OpenStackShort} control plane services:
 +
 [source,yaml]

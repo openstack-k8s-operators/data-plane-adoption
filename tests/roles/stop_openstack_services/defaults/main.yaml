@@ -1,3 +1,5 @@
+ganesha_default_path: "/etc/ganesha/ganesha.conf"
+
 # DCN storage nodes - list of nodes with ssh connection strings
 # Used to stop Glance/Cinder/etcd services on DCN compute nodes
 dcn_storage_nodes: []
