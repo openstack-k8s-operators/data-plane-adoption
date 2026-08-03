@@ -13,11 +13,12 @@ edpm_user: root
 edpm_bootstrap_command: |
   # This is a hack to deploy RDO Delorean repos to RHEL as if it were Centos 9 Stream
   set -euxo pipefail
-  curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
+  mkdir -p repo-setup-dir
+  curl -sL "{{ repo_setup_url }}" | tar -xz -C repo-setup-dir --strip-components=1
   python3 -m venv ./venv
-  PBR_VERSION=0.0.0 ./venv/bin/pip install ./repo-setup-main
+  PBR_VERSION=0.0.0 ./venv/bin/pip install ./repo-setup-dir
   ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
-  rm -rf repo-setup-main
+  rm -rf repo-setup-dir
 
 swift_conversion_nodeset: |
   apiVersion: dataplane.openstack.org/v1beta1
