@@ -531,13 +531,15 @@ ifeval::["{build}" != "downstream"]
         edpm_bootstrap_command: |
           # This is a hack to deploy RDO Delorean repos to RHEL as if it were Centos 9 Stream
           set -euxo pipefail
-          curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
+          REPO_SETUP_URL="https://github.com/openstack-k8s-operators/repo-setup/archive/4552fa02b6bc28c542d6aa8bc0ec9d15291b5ff3.tar.gz"
+          mkdir -p repo-setup-dir
+          curl -sL "$REPO_SETUP_URL" | tar -xz -C repo-setup-dir --strip-components=1
           python3 -m venv ./venv
-          PBR_VERSION=0.0.0 ./venv/bin/pip install ./repo-setup-main
+          PBR_VERSION=0.0.0 ./venv/bin/pip install ./repo-setup-dir
           sudo ./venv/bin/repo-setup current-podified -b antelope -d centos9 --stream
           sudo dnf -y upgrade openstack-selinux
           sudo rm -f /run/virtlogd.pid
-          sudo rm -rf repo-setup-main
+          sudo rm -rf repo-setup-dir
 endif::[]
 ifeval::["{build}" == "downstream"]
         edpm_bootstrap_command: |
