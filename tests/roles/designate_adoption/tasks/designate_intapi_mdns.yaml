@@ -1,0 +1,41 @@
+- name: Add a Service object for exposing mDNS to the legacy BIND9s
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+
+    cat << EOF_CAT > /tmp/designate-external-mdns-svc.yaml
+    apiVersion: v1
+    kind: Service
+    metadata:
+      namespace: openstack
+      name: designate-external-master
+      labels:
+        service: designate-mdns
+        designate.openstack.org/external_master: "true"
+      annotations:
+        core.openstack.org/ingress_create: "false"
+        metallb.io/ip-allocated-from-pool: internalapi
+        metallb.universe.tf/address-pool: internalapi
+        metallb.universe.tf/allow-shared-ip: internalapi
+        metallb.universe.tf/loadBalancerIPs: 172.17.0.80
+        designate.openstack.org/external_pool: default
+    spec:
+      selector:
+        service: designate-mdns
+      ports:
+        - name: dns-tcp
+          port: 5354
+          protocol: TCP
+          targetPort: 5354
+        - name: dns
+          port: 5354
+          protocol: UDP
+          targetPort: 5354
+      ipFamilies:
+        - IPv4
+      ipFamilyPolicy: SingleStack
+      externalTrafficPolicy: Cluster
+      internalTrafficPolicy: Cluster
+      type: LoadBalancer
+    EOF_CAT
+    oc apply -f /tmp/designate-external-mdns-svc.yaml

@@ -1,0 +1,37 @@
+:_mod-docs-content-type: PROCEDURE
+[id="completing-the-bind9-migration_{context}"]
+
+= Completing the BIND9 migration
+
+[role="_abstract"]
+After external DNS registries and delegations have been updated to reference
+the new {rhos_long} nameservers, remove the legacy BIND9 servers from the
+{dns_service} pool to complete the BIND9 migration.
+
+.Procedure
+
+. Remove the external binds secret reference from the {dns_service} custom resource:
++
+----
+$ oc patch openstackcontrolplane openstack --type=json --patch '
+[{"op": "remove", "path": "/spec/designate/template/externalBindsSecret"}]
+'
+----
+
+. Wait for the {dns_service} to reconcile:
++
+----
+$ oc wait --for condition=Ready --timeout=300s designates.designate.openstack.org/designate
+----
+
+. Delete the external binds secret:
++
+----
+$ oc delete secret designate-external-binds -n openstack
+----
+
+. Delete the mDNS LoadBalancer service:
++
+----
+$ oc delete service designate-external-master -n openstack
+----

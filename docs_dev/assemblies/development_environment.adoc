@@ -514,6 +514,8 @@ done
 
 oc delete --wait=false pod ovn-copy-data || true
 oc delete --wait=false pod mariadb-copy-data || true
+oc delete secret designate-external-binds || true
+oc delete service designate-external-master || true
 oc delete secret osp-secret || true
 ----
 

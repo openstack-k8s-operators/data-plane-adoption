@@ -6,6 +6,12 @@
 [role="_abstract"]
 To adopt the {dns_first_ref}, you patch an existing `OpenStackControlPlane` custom resource (CR) where the {dns_service} is disabled. The patch starts the service with the configuration parameters that are provided by the {rhos_prev_long} ({OpenStackShort}) environment.
 
+[NOTE]
+====
+If your {rhos_prev_long} deployment uses BIND9 servers that you want to serve DNS during and after adoption, you can include them as external back ends with the new operator-managed BIND9 instances. In this staged migration model, both the legacy BIND9 servers and the new cluster-hosted BIND9 StatefulSet serve the same pool concurrently. This avoids a disruptive DNS switchover and allows external DNS registries and delegations to be updated to reference the new nameservers later.
+After completing the standard adoption procedure, see xref:maintaining-a-migration-window-with-legacy-bind9-servers_{context}[Maintaining a migration window with legacy BIND9 servers] for the additional steps required to enable this transition window.
+====
+
 .Procedure
 
 . Create an alias for the `openstack` command:
