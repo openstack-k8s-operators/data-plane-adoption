@@ -63,6 +63,8 @@ stacks:
       - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/external-ceph.yaml"
       - "/home/zuul/external_ceph_params.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/cinder-netapp-config.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/multipathd.yaml"
     network_data_file: "uni05epsilon/network_data.yaml.j2"
     routes: *sroutes
     vips_data_file: "uni05epsilon/vips_data_overcloud.yaml"
@@ -115,6 +117,7 @@ stacks:
       - "/usr/share/openstack-tripleo-heat-templates/environments/enable-legacy-telemetry.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/external-ceph.yaml"
       - "/home/zuul/external_ceph_params.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/multipathd.yaml"
       - "/home/zuul/cell1-input.yaml"
     network_data_file: "uni05epsilon/network_data.yaml.j2"
     routes: *sroutes
@@ -156,6 +159,7 @@ stacks:
       - "/usr/share/openstack-tripleo-heat-templates/environments/debug.yaml"
       - "/usr/share/openstack-tripleo-heat-templates/environments/external-ceph.yaml"
       - "/home/zuul/external_ceph_params.yaml"
+      - "/usr/share/openstack-tripleo-heat-templates/environments/multipathd.yaml"
       - "/home/zuul/cell2-input.yaml"
     network_data_file: "uni05epsilon/network_data.yaml.j2"
     routes: *sroutes
