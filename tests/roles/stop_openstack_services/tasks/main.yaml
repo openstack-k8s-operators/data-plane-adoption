@@ -24,6 +24,38 @@
         fi
     done
 
+- name: Remove colocation constraints between ceph-nfs VIP and haproxy-bundle
+  when: manila_backend | default("")  == "cephnfs"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    {{ stop_openstack_services_shell_vars }}
+
+    GANESHA_VIP=""
+    for i in {1..3}; do
+        SSH_CMD="CONTROLLER${i}_SSH"
+        if [ ! -z "${!SSH_CMD}" ]; then
+            GANESHA_VIP=$(${!SSH_CMD} "awk -F '[=;]' '/Bind_Addr/ {gsub(/ /, \"\", \$2); print \$2}' {{ ganesha_default_path }}")
+            break
+        fi
+    done
+
+    if [ -z "${GANESHA_VIP}" ]; then
+        echo "ERROR: Could not determine Ganesha VIP from {{ ganesha_default_path }}"
+        exit 1
+    fi
+
+    echo "Removing Pacemaker constraints between ceph-nfs VIP (ip-${GANESHA_VIP}) and haproxy-bundle"
+    for i in {1..3}; do
+        SSH_CMD="CONTROLLER${i}_SSH"
+        if [ ! -z "${!SSH_CMD}" ]; then
+            echo "Using controller $i to run pacemaker commands"
+            ${!SSH_CMD} sudo pcs constraint remove colocation-ip-${GANESHA_VIP}-haproxy-bundle-INFINITY
+            ${!SSH_CMD} sudo pcs constraint remove order-ip-${GANESHA_VIP}-haproxy-bundle-Optional
+            break
+        fi
+    done
+
 - name: stop control plane services
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
