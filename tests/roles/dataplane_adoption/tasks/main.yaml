@@ -511,6 +511,7 @@
           - configure-network
           - validate-network
           - install-os
+          - ceph-hci-pre
           - configure-os
           - ssh-known-hosts
           - run-os
@@ -558,6 +559,7 @@
           - configure-network
           - validate-network
           - install-os
+          - ceph-hci-pre
           - configure-os
           - ssh-known-hosts
           - run-os
@@ -599,6 +601,7 @@
     if oc get openstackdataplanenodeset {{ cluster.name }} -n openstack &>/dev/null; then
       SERVICES=$(oc get openstackdataplanenodeset {{ cluster.name }} -n openstack -o jsonpath='{.spec.services}' | \
         sed 's/"nova-cell1"/"nova-custom-ceph-{{ cluster.name }}"/g' | \
+        sed 's/"install-os"/"install-os","ceph-hci-pre"/g' | \
         sed 's/"install-certs"/"install-certs","ceph-client"/g')
 
       oc patch openstackdataplanenodeset {{ cluster.name }} -n openstack --type=merge --patch "
