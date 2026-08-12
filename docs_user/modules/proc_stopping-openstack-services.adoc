@@ -84,9 +84,14 @@ sudo pcs constraint remove order-ceph-nfs-openstack-manila-share-Optional
 # determine the Ganesha VIP from the NFS-Ganesha configuration
 GANESHA_VIP=$(awk -F '[=;]' '/Bind_Addr/ {gsub(/ /, "", $2); print $2}' /etc/ganesha/ganesha.conf)
 
-# remove the co-location and ordering constraints between the VIP and haproxy-bundle
-sudo pcs constraint remove colocation-ip-${GANESHA_VIP}-haproxy-bundle-INFINITY
-sudo pcs constraint remove order-ip-${GANESHA_VIP}-haproxy-bundle-Optional
+# Pacemaker replaces colons with dots in IPv6 resource names
+GANESHA_VIP_PCS=$(echo "${GANESHA_VIP}" | tr ':' '.')
+
+# query and remove constraints between the VIP and haproxy-bundle
+for constraint_id in $(sudo pcs constraint --full | grep -F "ip-${GANESHA_VIP_PCS}" | grep "haproxy-bundle" | grep -o '(id:[^)]*)' | sed 's/(id://;s/)//'); do
+    echo "Removing constraint: ${constraint_id}"
+    sudo pcs constraint remove "${constraint_id}"
+done
 ----
 
 . Disable {OpenStackShort} control plane services:
