@@ -45,13 +45,22 @@
         exit 1
     fi
 
-    echo "Removing Pacemaker constraints between ceph-nfs VIP (ip-${GANESHA_VIP}) and haproxy-bundle"
+    GANESHA_VIP_PCS=$(echo "${GANESHA_VIP}" | tr ':' '.')
+
+    echo "Removing Pacemaker constraints between ceph-nfs VIP (ip-${GANESHA_VIP_PCS}) and haproxy-bundle"
     for i in {1..3}; do
         SSH_CMD="CONTROLLER${i}_SSH"
         if [ ! -z "${!SSH_CMD}" ]; then
             echo "Using controller $i to run pacemaker commands"
-            ${!SSH_CMD} sudo pcs constraint remove colocation-ip-${GANESHA_VIP}-haproxy-bundle-INFINITY
-            ${!SSH_CMD} sudo pcs constraint remove order-ip-${GANESHA_VIP}-haproxy-bundle-Optional
+            CONSTRAINT_IDS=$(${!SSH_CMD} sudo pcs constraint --full | grep -F "ip-${GANESHA_VIP_PCS}" | grep "haproxy-bundle" | grep -o '(id:[^)]*)' | sed 's/(id://;s/)//')
+            if [ -z "${CONSTRAINT_IDS}" ]; then
+                echo "WARNING: No constraints found between ip-${GANESHA_VIP_PCS} and haproxy-bundle"
+            else
+                for constraint_id in ${CONSTRAINT_IDS}; do
+                    echo "Removing constraint: ${constraint_id}"
+                    ${!SSH_CMD} sudo pcs constraint remove "${constraint_id}"
+                done
+            fi
             break
         fi
     done
