@@ -49,6 +49,9 @@
     - role: neutron_adoption
       tags:
         - neutron_adoption
+    - role: cinder_adoption
+      tags:
+        - cinder_adoption
     - role: glance_adoption
       tags:
         - glance_adoption
@@ -58,9 +61,6 @@
     - role: nova_adoption
       tags:
         - nova_adoption
-    - role: cinder_adoption
-      tags:
-        - cinder_adoption
     - role: octavia_adoption
       tags:
         - octavia_adoption
