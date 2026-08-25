@@ -847,7 +847,7 @@
   when: bgp
   ansible.builtin.shell: |
     {{ shell_header }}
-    ssh -o StrictHostKeyChecking=accept-new -i {{ edpm_privatekey_path }} root@{{ item.key }} 'bash -s' << 'EOF'
+    ssh -o StrictHostKeyChecking=accept-new -i {{ edpm_privatekey_path }} root@{{ item.key }}.utility 'bash -s' << 'EOF'
     cp /etc/os-net-config/tripleo_config.yaml /etc/os-net-config/tripleo_config.yaml.bak
     awk 'BEGIN { first_done=0; skip=0 }
     /^network_config:/ { print; next }

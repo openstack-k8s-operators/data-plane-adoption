@@ -168,6 +168,10 @@ stacks:
       - osp-r0-controllers
       - osp-r1-controllers
       - osp-r2-controllers
+    pre_oc_run:
+      - name: "01 Add default route to OC nodes before OC deploy"
+        type: playbook
+        source: "adoption_bgp_pre_overcloud.yaml"
 pre_uc_run:
   - name: "01 Deploy BGP fabric"
     type: playbook
