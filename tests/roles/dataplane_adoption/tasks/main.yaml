@@ -452,20 +452,6 @@
     {{ networker_cr }}
     EOF
 
-# FIXME: this is different in docs, need to align with tests
-# FIXME(bogdando): get ovs_external_ids.json data for multiple node sets
-- name: check ovs external-ids with os-diff before deployment
-  failed_when: false
-  tags: pull_openstack_configuration
-  no_log: "{{ use_no_log }}"
-  ansible.builtin.shell: |
-    {{ shell_header }}
-    {{ cells_env }}
-    for CELL in $(echo $RENAMED_CELLS); do
-      test -f nodeset-${CELL}.yaml || continue
-      {{ os_diff_dir }}/os-diff diff {{ os_diff_data_dir }}/tripleo/ovs_external_ids/standalone/ovs_external_ids.json nodeset-${CELL}.yaml --crd --service ovs_external_ids -f ${PWD}/{{ os_diff_dir }}/config.yaml
-    done
-
 - name: deploy the OpenStackDataPlaneNodeSet CRs for each Nova compute cell
   ansible.builtin.shell: |
     {{ shell_header }}
