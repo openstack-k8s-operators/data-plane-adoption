@@ -58,19 +58,7 @@ Specifies the load balancer IP. If you use IPv6, change the load balancer IP to 
 
 [NOTE]
 ====
-If you backed up your {rhos_prev_long} ({OpenStackShort}) services configuration file from the original environment, you can compare it with the confgiuration file that you adopted and ensure that the configuration is correct.
-For more information, see xref:pulling-configuration-from-tripleo-deployment_adopt-control-plane[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
-
-ifeval::["{build_variant}" == "ospdo"]
-[NOTE]
-Os-diff does not currently support director Operator.
-endif::[]
-
-----
-os-diff diff /tmp/collect_tripleo_configs/glance/etc/glance/glance-api.conf glance_patch.yaml --crd
-----
-
-This command produces the difference between both ini configuration files.
+If you backed up your {rhos_prev_long} ({OpenStackShort}) services configuration file from the original environment, compare it with the `customServiceConfig` that you apply in `glance_patch.yaml` and ensure that the configuration is correct.
 ====
 
 .Procedure

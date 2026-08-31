@@ -8,15 +8,7 @@ Verify that you adopted the {image_service_first_ref} to the {rhos_long} {rhos_c
 
 .Procedure
 
-. Test the {image_service} from the {rhos_prev_long} CLI. You can compare and ensure that the configuration is applied to the {image_service} pods:
-+
-----
-$ os-diff diff /etc/glance/glance.conf.d/02-config.conf glance_patch.yaml --frompod -p glance-api
-----
-+
-If no line appears, then the configuration is correct.
-
-. Inspect the resulting {image_service} pods:
+. Inspect the resulting {image_service} pods and confirm that the configuration from `glance_patch.yaml` is applied:
 +
 ----
 GLANCE_POD=`oc get pod |grep glance-default | cut -f 1 -d' ' | head -n 1`

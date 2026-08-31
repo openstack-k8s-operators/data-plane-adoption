@@ -87,9 +87,6 @@
     - role: stop_remaining_services
       tags:
         - stop_remaining_services
-    - role: pull_openstack_configuration
-      tags:
-        - pull_openstack_configuration
     - role: dataplane_adoption
       tags:
         - dataplane_adoption
