@@ -28,7 +28,7 @@ Back-up information::
 ** The Relax-and-Recover tool. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/backing_up_and_restoring_the_undercloud_and_control_plane_nodes/assembly_backing-up-the-undercloud-and-the-control-plane-nodes-using-the-relax-and-recover-tool_br-undercloud-ctlplane[Backing up the undercloud and the control plane nodes by using the Relax-and-Recover tool] in _Backing up and restoring the undercloud and control plane nodes_.
 ** The Snapshot and Revert tool. For more information, see link:https://docs.redhat.com/en/documentation/red_hat_openstack_platform/17.1/html/backing_up_and_restoring_the_undercloud_and_control_plane_nodes/assembly_snapshot-and-revert-appendix_snapshot-and-revert-appendix[Backing up your Red Hat OpenStack Platform cluster by using the Snapshot and Revert tool] in _Backing up and restoring the undercloud and control plane nodes_.
 ** A third-party backup and recovery tool. For more information about certified backup and recovery tools, see the link:https://catalog.redhat.com/[Red Hat Ecosystem Catalog].
-* Back up the configuration files from the {OpenStackShort} services and {OpenStackPreviousInstaller} on your file system. For more information, see xref:pulling-configuration-from-tripleo-deployment_adopt-control-plane[Pulling the configuration from a {OpenStackPreviousInstaller} deployment].
+* Back up the configuration files from the {OpenStackShort} services and {OpenStackPreviousInstaller} on your file system. You can use the backups later to compare against the adopted {rhos_long} service configuration.
 
 Compute::
 +

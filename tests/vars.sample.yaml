@@ -110,9 +110,6 @@ cells:
 # Defaults provided for a single-cell case. For a mult-cell, use the latest 'cells' element index + 1
 default_cell_name: cell1
 
-# Source OS diff config ip for Tripleo
-source_os_diff_config_ip: 192.168.122.100
-
 # Source OVN DB IP for DB exports on internal_api network.
 source_ovndb_ip: 172.17.0.100 #CUSTOMIZE_THIS
 
