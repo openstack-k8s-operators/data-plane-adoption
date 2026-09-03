@@ -16,7 +16,7 @@
   ansible.builtin.git:
     repo: https://github.com/openstack-k8s-operators/os-diff
     dest: "{{ os_diff_dir }}"
-    version: main
+    version: 18.0-fr6
 
 - name: Build os-diff
   ansible.builtin.shell: |
