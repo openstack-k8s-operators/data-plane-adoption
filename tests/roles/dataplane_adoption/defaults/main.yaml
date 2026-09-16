@@ -118,6 +118,22 @@ edpm_bootstrap_command: |
   rm -f /run/virtlogd.pid
   {%+ endif +%}
   rm -rf repo-setup-main
+  # triple os-net-config retunr code
+  if [ ! -e /var/lib/edpm-config/os-net-config.returncode ] && [ -e /var/lib/tripleo-config/os-net-config.returncode ]; then
+      # Ensure /var/lib/edpm-config directory exists with owner, mode, and SELinux context
+      sudo mkdir -p /var/lib/edpm-config
+      sudo chown $(whoami):$(whoami) /var/lib/edpm-config
+      sudo chmod 0755 /var/lib/edpm-config
+      sudo chcon -t container_file_t -l s0 /var/lib/edpm-config
+
+      # Ensure /var/lib/edpm-config/os-net-config.returncode exists (copy from tripleo-config)
+      sudo cp /var/lib/tripleo-config/os-net-config.returncode /var/lib/edpm-config/os-net-config.returncode
+      sudo chmod 0644 /var/lib/edpm-config/os-net-config.returncode
+      sudo chcon -t container_file_t /var/lib/edpm-config/os-net-config.returncode
+
+      # Delete tripleo os-net-config return code
+      sudo rm -f /var/lib/tripleo-config/os-net-config.returncode
+  fi
 
 edpm_network_config_template: |
   {%- raw %}
@@ -321,7 +337,7 @@ dataplane_cr: |
           edpm_network_config_template: |
             {{ (bgp | bool) | ternary(edpm_network_config_template_bgp, edpm_network_config_template) | indent(10) }}
           edpm_network_config_nmstate: false
-          edpm_bootstrap_network_resolvconf_update: false
+          edpm_network_config_update: true
           edpm_network_config_hide_sensitive_logs: false
           #
           # These vars are for the network config templates themselves and are
