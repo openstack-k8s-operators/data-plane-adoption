@@ -321,7 +321,7 @@ dataplane_cr: |
           edpm_network_config_template: |
             {{ (bgp | bool) | ternary(edpm_network_config_template_bgp, edpm_network_config_template) | indent(10) }}
           edpm_network_config_nmstate: false
-          edpm_bootstrap_network_resolvconf_update: false
+          edpm_network_config_update: true
           edpm_network_config_hide_sensitive_logs: false
           #
           # These vars are for the network config templates themselves and are
