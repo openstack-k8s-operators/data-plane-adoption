@@ -4,6 +4,22 @@ TEST_CEPH_OVERRIDES ?= tests/ceph_overrides.yaml
 TEST_SECRETS ?= tests/secrets.yaml
 TEST_CONFIG ?= tests/ansible.cfg
 TEST_ARGS ?=
+PING_DROP_PARSER ?= tests/scripts/parse_ping_drops.py
+PING_RESULT_LOG ?= tests/logs/ping_results.txt
+PING_RESULT_HR_LOG ?= tests/logs/ping_results-hr.txt
+# Derived from each target's TEST_OUTFILE (e.g. test_minimal_out_<timestamp>_ping_drop_windows.log).
+PING_DROP_REPORT = $(TEST_OUTFILE:.log=_ping_drop_windows.log)
+
+# Correlate ping icmp_seq gaps with TASK/PLAY banners in TEST_OUTFILE.
+define parse_ping_drops
+	@ping_log=""; \
+	if [ -f "$(PING_RESULT_LOG)" ]; then ping_log="$(PING_RESULT_LOG)"; \
+	elif [ -f "$(PING_RESULT_HR_LOG)" ]; then ping_log="$(PING_RESULT_HR_LOG)"; fi; \
+	if [ -n "$$ping_log" ]; then \
+	  python3 $(PING_DROP_PARSER) "$$ping_log" --ansible-log "$(TEST_OUTFILE)" \
+	    > "$(PING_DROP_REPORT)" || true; \
+	fi
+endef
 
 ##@ General
 
@@ -28,6 +44,7 @@ test-minimal: TEST_OUTFILE ?= tests/logs/test_minimal_out_$(shell date +%FT%T%Z)
 test-minimal:  ## Launch minimal test suite
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 test_ospdo_controlplane: TEST_OUTFILE ?= tests/logs/test_minimal_out_$(shell date +%FT%T%Z).log
 test_ospdo_controlplane:
@@ -43,67 +60,80 @@ test-with-ceph: TEST_OUTFILE ?= tests/logs/test_with_ceph_out_$(shell date +%FT%
 test-with-ceph:  ## Launch test suite with ceph
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 test-with-ceph-and-ironic: TEST_OUTFILE ?= tests/logs/test_with_ceph_and_ironic_out_$(shell date +%FT%T%Z).log
 test-with-ceph-and-ironic:  ## Launch test suite with ceph and ironic
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_with_ceph_and_ironic.yaml 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 test-tripleo-requirements: TEST_OUTFILE ?= tests/logs/test_tripleo_requirements_out_$(shell date +%FT%T%Z).log
 test-tripleo-requirements:  ## Launch test suite related to the ceph migration
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_CEPH_OVERRIDES) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_tripleo_adoption_requirements.yaml 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 test-ceph-migration: TEST_OUTFILE ?= tests/logs/test_ceph_migration_out_$(shell date +%FT%T%Z).log
 test-ceph-migration:  ## Launch test suite related to the ceph migration
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_CEPH_OVERRIDES) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_externalize_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 test-swift-migration: TEST_OUTFILE ?= tests/logs/test_swift_migration_out_$(shell date +%FT%T%Z).log
 test-swift-migration:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_swift_migration.yaml 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 test-swift-conversion: TEST_OUTFILE ?= tests/logs/test_swift_conversion_out_$(shell date +%FT%T%Z).log
 test-swift-conversion:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_swift_conversion.yaml 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 test-ocp-as-gw: TEST_OUTFILE ?= tests/logs/test_ocp_as_gw_out_$(shell date +%FT%T%Z).log
 test-ocp-as-gw:  ## Launch test suite related to the ocp gateways
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_ocp_as_gw.yaml 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 test-rollback-minimal: TEST_OUTFILE ?= tests/logs/test_rollback_minimal_out_$(shell date +%FT%T%Z).log
 test-rollback-minimal:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_rollback_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 test-rollback-with-ceph: TEST_OUTFILE ?= tests/logs/test_rollback_with_ceph_out_$(shell date +%FT%T%Z).log
 test-rollback-with-ceph:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS)  $(TEST_ARGS) tests/playbooks/test_rollback_with_ceph.yaml 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 #To run playbook that only runs control_plane_rollback role.
 test-rollback-only-minimal: TEST_OUTFILE ?= tests/logs/test_rollback_only_minimal_out_$(shell date +%FT%T%Z).log
 test-rollback-only-minimal:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS) $(TEST_ARGS) tests/playbooks/test_rollback_minimal.yaml --tag=control_plane_rollback 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 test-rollback-only-with-ceph: TEST_OUTFILE ?= tests/logs/test_rollback_only_with_ceph_out_$(shell date +%FT%T%Z).log
 test-rollback-only-with-ceph:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS) $(TEST_ARGS) tests/playbooks/test_rollback_with_ceph.yaml --tag=control_plane_rollback 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 test-with-ironic: TEST_OUTFILE ?= tests/logs/test_with_ironic_out_$(shell date +%FT%T%Z).log
 test-with-ironic: ## Launch test suite with Ironic
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS) $(TEST_ARGS) tests/playbooks/test_with_ironic.yaml 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 test-configure-object: TEST_OUTFILE ?= tests/logs/test_configure_object_out_$(shell date +%FT%T%Z).log
 test-configure-object: ## Configure Swift object store to use Ceph RGW
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_SECRETS) -e @$(TEST_VARS) $(TEST_ARGS) tests/playbooks/configure_swift_rgw.yaml 2>&1 | tee $(TEST_OUTFILE)
+	$(parse_ping_drops)
 
 ##@ DOCS
 
