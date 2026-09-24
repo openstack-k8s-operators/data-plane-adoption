@@ -127,8 +127,8 @@ spec:
         hmac_mechanism = CKM_SHA256_HMAC
         key_wrap_mechanism = *<key_wrap_mechanism>*
         key_wrap_generate_iv = true
-        always_set_cka_sensitive = true
-        os_locking_ok = false
+        always_set_cka_sensitive = false
+        os_locking_ok = true
       globalDefaultSecretStore: pkcs11
       enabledSecretStores: ["simple_crypto", "pkcs11"]
       pkcs11:
