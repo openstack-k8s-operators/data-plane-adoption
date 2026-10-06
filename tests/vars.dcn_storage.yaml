@@ -159,8 +159,6 @@ neutron_config_patch: |
         databaseInstance: openstack
         databaseAccount: neutron
         secret: osp-secret
-        networkAttachments:
-        - internalapi
 
 netconfig_networks:
   - dnsDomain: ctlplane.example.com
