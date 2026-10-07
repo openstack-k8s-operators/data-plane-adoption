@@ -23,3 +23,6 @@
 
 # CLAUDE
 CLAUDE.md
+
+__pycache__/
+*.py[cod]
