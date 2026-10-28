@@ -1,5 +1,18 @@
 ---
+ctlplane_name: openstack
+swift_conversion_ctlplane_subnet: subnet1
+swift_conversion_internalapi_subnet: subnet1
+swift_conversion_storage_subnet: subnet1
+swift_conversion_tenant_subnet: subnet1
 ansible_ssh_private_key_secret: dataplane-adoption-secret
+
+swift_conversion_sshd_allowed_ranges:
+  - 192.168.122.0/24
+  - 10.217.0.0/22
+
+# Set to false on environments where edpm_tripleo_cleanup is a no-op (e.g. dedicated
+# storage nodes without tripleo systemd units). In CI this must remain true.
+swift_conversion_require_cleanup: true
 
 default_timesync_ntp_servers:
   - hostname: pool.ntp.org
@@ -35,6 +48,19 @@ swift_conversion_nodeset: |
         ansibleUser: {{ edpm_user }}
         ansibleVars:
           edpm_swift_disks: []
+          edpm_nftables_user_rules:
+          - rule:
+              dport: 6000
+              proto: tcp
+            rule_name: "100 swift legacy object server"
+          - rule:
+              dport: 6001
+              proto: tcp
+            rule_name: "100 swift legacy container server"
+          - rule:
+              dport: 6002
+              proto: tcp
+            rule_name: "100 swift legacy account server"
           edpm_bootstrap_release_version_package: []
           edpm_bootstrap_command: |
             {{ edpm_bootstrap_command| indent(10) }}
@@ -42,8 +68,7 @@ swift_conversion_nodeset: |
           edpm_nodes_validation_validate_gateway_icmp: false
           edpm_service_removal_skip_list:
           - tripleo-container-shutdown.service
-          edpm_sshd_allowed_ranges:
-          - 192.168.122.0/24
+          edpm_sshd_allowed_ranges: {{ swift_conversion_sshd_allowed_ranges }}
           enable_debug: false
           gather_facts: false
           timesync_ntp_servers: {{ timesync_ntp_servers | default(default_timesync_ntp_servers) }}
@@ -55,18 +80,31 @@ swift_conversion_nodeset: |
           ansibleHost: "{{ standalone_ip | default(edpm_node_ip) }}"
           ansibleVars:
             edpm_swift_disks: []
+            edpm_nftables_user_rules:
+            - rule:
+                dport: 6000
+                proto: tcp
+              rule_name: "100 swift legacy object server"
+            - rule:
+                dport: 6001
+                proto: tcp
+              rule_name: "100 swift legacy container server"
+            - rule:
+                dport: 6002
+                proto: tcp
+              rule_name: "100 swift legacy account server"
         hostName: "{{ edpm_node_hostname }}"
         networks:
         - defaultRoute: true
           fixedIP: "{{ standalone_ip | default(edpm_node_ip) }}"
           name: ctlplane
-          subnetName: subnet1
+          subnetName: {{ swift_conversion_ctlplane_subnet }}
         - name: internalapi
-          subnetName: subnet2
+          subnetName: {{ swift_conversion_internalapi_subnet }}
         - name: storage
-          subnetName: subnet3
+          subnetName: {{ swift_conversion_storage_subnet }}
         - name: tenant
-          subnetName: subnet4
+          subnetName: {{ swift_conversion_tenant_subnet }}
     services:
     - bootstrap
     - download-cache
@@ -74,7 +112,6 @@ swift_conversion_nodeset: |
     - configure-os
     - ssh-known-hosts
     - run-os
-    - reboot-os
     - install-certs
     - swift-conversion
     tlsEnabled: {{ enable_tlse }}

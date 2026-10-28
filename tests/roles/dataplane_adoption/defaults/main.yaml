@@ -33,7 +33,7 @@ netconfig_networks:
             start: "{{ internalapi_allocation_start | default('172.17.0.100') }}"
         cidr: "{{ internalapi_cidr | default('172.17.0.0/24') }}"
         vlan: 20
-  - name: External
+  - name: external
     dnsDomain: external.example.com
     mtu: "{{ external_mtu | default(network_mtu) | default(1500) }}"
     subnets:
