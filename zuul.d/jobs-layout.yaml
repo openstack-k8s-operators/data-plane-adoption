@@ -6,4 +6,9 @@
         - noop
         - adoption-standalone-to-crc-ceph
         - adoption-standalone-to-crc-no-ceph
+        - adoption-standalone-to-crc-swift-conversion:
+            files:
+              - ^tests/roles/swift_conversion/.*
+              - ^tests/roles/swift_adoption/.*
+              - ^tests/playbooks/test_with_ceph\.yaml$
         - adoption-docs-preview
