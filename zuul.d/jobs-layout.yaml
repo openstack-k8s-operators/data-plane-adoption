@@ -6,4 +6,5 @@
         - noop
         - adoption-standalone-to-crc-ceph
         - adoption-standalone-to-crc-no-ceph
+        - adoption-standalone-to-crc-swift-conversion
         - adoption-docs-preview
