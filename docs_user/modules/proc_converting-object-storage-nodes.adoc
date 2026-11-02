@@ -73,12 +73,31 @@ spec:
 EOF
 ----
 +
+[IMPORTANT]
+====
+If your {object_storage} devices are directories rather than individually
+mounted filesystems, you must also add `mount_check = false` to the `[DEFAULT]`
+section of each server configuration in the patch file. Otherwise the storage
+services reject every request with `507 Insufficient Storage`.
+
+To determine which applies, check a device on an existing storage node:
+
+----
+$ findmnt /srv/node/<device>
+----
+
+If this command returns a mount, your devices are individually mounted
+filesystems: leave `mount_check` at its default. `mount_check` prevents
+{object_storage} from writing to the root filesystem when a device fails to
+remount, and this procedure reboots every node.
+====
++
 [NOTE]
 If you customized any {object_storage} service settings  in the
 {OpenStackPreviousInstaller} deployment, include those settings as well. For
-example, if you changed  the workers count or added additional configuration options
-for the account, container, or object services, add them to the
-corresponding section in the patch file.
+example, if you changed  the workers count, the `mount_check` setting, or added
+additional configuration options for the account, container, or object
+services, add them to the corresponding section in the patch file.
 
 . Apply the patch to the `OpenStackControlPlane` CR:
 +
@@ -179,6 +198,19 @@ ifeval::["{build}" == "downstream"]
             name: redhat-registry
 endif::[]
       ansibleVars:
+        edpm_nftables_user_rules:
+        - rule_name: 100 swift legacy object server
+          rule:
+            proto: tcp
+            dport: 6000
+        - rule_name: 100 swift legacy container server
+          rule:
+            proto: tcp
+            dport: 6001
+        - rule_name: 100 swift legacy account server
+          rule:
+            proto: tcp
+            dport: 6002
         edpm_nodes_validation_validate_controllers_icmp: false
         edpm_nodes_validation_validate_gateway_icmp: false
         edpm_service_removal_skip_list:
@@ -246,6 +278,19 @@ endif::[]
   - swift-conversion
   tlsEnabled: true
 ----
++
+[IMPORTANT]
+====
+The `edpm_swift` role configures the firewall for ports 6200, 6201 and 6202,
+which are the {rhos_acro} defaults. Converted nodes listen on the ports
+recorded in the rings, which for a {OpenStackPreviousInstaller} deployment are
+6000, 6001 and 6002. Without the `edpm_nftables_user_rules` entries, the
+{object_storage} proxy cannot reach any storage node and all requests fail
+with `503 Service Unavailable`.
+
+The ports in these rules must match the `bind_port` values that you set
+earlier in this procedure.
+====
 
 . Apply the `OpenStackDataPlaneNodeSet` CR:
 +
