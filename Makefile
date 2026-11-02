@@ -117,21 +117,7 @@ docs-dependencies: .bundle
 
 	bundle config set --local path 'local/bundle'; bundle install
 
-docs: docs-dependencies docs-user-all-variants docs-dev ## Build documentation
-
-docs-user-all-variants:
-	cd docs_user; BUILD=upstream $(MAKE) html
-	cd docs_user; BUILD=downstream $(MAKE) html
-	cd docs_user; BUILD=downstream BUILD_VARIANT=ospdo $(MAKE) html
-
-docs-user:
-	cd docs_user; $(MAKE) html
-
-docs-user-open:
-	cd docs_user; $(MAKE) open-html
-
-docs-user-watch:
-	cd docs_user; $(MAKE) watch-html
+docs: docs-dependencies docs-dev ## Build documentation
 
 docs-dev:
 	cd docs_dev; $(MAKE) html
