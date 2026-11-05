@@ -74,10 +74,21 @@ ${BASH_ALIASES[openstack]} flavor create baremetal --ram 1024 --vcpus 1 --disk 1
   --property capabilities:boot_mode="uefi"
 
 # Create image
-IMG=CentOS-Stream-GenericCloud-x86_64-9-latest.x86_64.qcow2
+# Prefer a concrete CentOS Stream 9 build: the "-latest" filename is not
+# published on cloud.centos.org and CloudFront returns a 502 HTML error page,
+# which Glance then stores as a ~507 byte "image" and Ironic deploy hangs.
+IMG=CentOS-Stream-GenericCloud-x86_64-9-20260728.1.x86_64.qcow2
 URL=https://cloud.centos.org/centos/9-stream/x86_64/images/$IMG
-curl --silent --show-error -o /tmp/${IMG} -L $URL
+curl --fail --silent --show-error -o /tmp/${IMG} -L $URL
 DISK_FORMAT=$(qemu-img info /tmp/${IMG} | grep "file format:" | awk '{print $NF}')
+# Guard against CDN/HTML error pages being uploaded as disk images.
+IMG_SIZE=$(stat -c%s /tmp/${IMG})
+if [[ "${IMG_SIZE}" -lt 1048576 ]]; then
+  echo "ERROR: Downloaded image is only ${IMG_SIZE} bytes (expected a real qcow2). URL=${URL}"
+  file /tmp/${IMG} || true
+  head -c 500 /tmp/${IMG} || true
+  exit 1
+fi
 ${BASH_ALIASES[openstack]} image delete CentOS-Stream-GenericCloud-x86_64-9 || true
 ${BASH_ALIASES[openstack]} image create \
   --container-format bare \
