@@ -90,6 +90,14 @@
     - role: dataplane_adoption
       tags:
         - dataplane_adoption
+    - role: swift_adoption
+      tags:
+        - swift_adoption
+      when: swift_conversion | default(false) | bool
+    - role: swift_conversion
+      tags:
+        - swift_conversion
+      when: swift_conversion | default(false) | bool
 
 - name: Stop the ping test
   import_playbook: _stop_ping_test.yaml

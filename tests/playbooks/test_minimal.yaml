@@ -43,6 +43,10 @@
     - role: swift_adoption
       tags:
         - swift_adoption
+    - role: swift_conversion
+      tags:
+        - swift_conversion
+      when: swift_conversion | default(false) | bool
     - role: cinder_adoption
       tags:
         - cinder_adoption

@@ -1,3 +1,23 @@
+- name: Read SSH private key for dataplane NodeSet
+  ansible.builtin.slurp:
+    path: "{{ edpm_privatekey_path }}"
+  register: edpm_privatekey
+  when: edpm_encoded_privatekey is undefined
+
+- name: Create dataplane SSH key secret for Swift node conversion
+  no_log: "{{ use_no_log }}"
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc apply -f - <<EOF
+    apiVersion: v1
+    kind: Secret
+    metadata:
+        name: dataplane-adoption-secret
+    data:
+        ssh-privatekey: "{{ edpm_encoded_privatekey | default(edpm_privatekey.content) }}"
+    EOF
+
 - name: Patch the OpenStackControlPlane CR to change the Swift default storage ports
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -13,19 +33,31 @@
               01-account-server.conf: |
                 [DEFAULT]
                 bind_port = 6002
+                mount_check = False
+                fallocate_reserve = 0
               01-container-server.conf: |
                 [DEFAULT]
                 bind_port = 6001
+                mount_check = False
+                fallocate_reserve = 0
               01-object-server.conf: |
                 [DEFAULT]
                 bind_port = 6000
+                mount_check = False
+                fallocate_reserve = 0
     EOF
 
 - name: Apply the patch file
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch-file=swift-config-patch.yaml
+    oc patch openstackcontrolplane {{ ctlplane_name }} --type=merge --patch-file=swift-config-patch.yaml
+
+- name: Wait for OpenStackControlPlane to reconcile after Swift port patch
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc wait --for condition=Ready --timeout=5m openstackcontrolplane/{{ ctlplane_name }}
 
 - name: Create OpenStackDataPlaneService for Swift conversion
   ansible.builtin.shell: |
@@ -59,6 +91,9 @@
           tasks:
             - ansible.builtin.import_role:
                 name: osp.edpm.edpm_tripleo_cleanup
+            - name: Prune unused container images to free disk space
+              become: true
+              ansible.builtin.command: podman system prune -a -f
             - ansible.builtin.import_role:
                 name: osp.edpm.edpm_swift
     EOF
@@ -94,13 +129,75 @@
     {{ oc_header }}
     oc wait --for condition=Ready openstackdataplanedeployment/{{ swift_conversion_deployment_name }} --timeout=30m
 
+- name: Verify 13 edpm_swift services running on converted node
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    count=$(ssh -o StrictHostKeyChecking=accept-new -i {{ edpm_privatekey_path }} {{ edpm_user }}@{{ standalone_ip | default(edpm_node_ip) }} \
+      "sudo systemctl list-units 'edpm_swift_*' --state=active --no-legend | wc -l")
+    [ "$count" -eq 13 ] || (echo "Expected 13 edpm_swift services, found $count"; exit 1)
+
+- name: Verify old 17.1 Swift containers are removed
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    ssh -o StrictHostKeyChecking=accept-new -i {{ edpm_privatekey_path }} {{ edpm_user }}@{{ standalone_ip | default(edpm_node_ip) }} \
+      "sudo podman ps --format '{{ '{{' }}.Names{{ '}}' }}' | grep -E '^swift_(account|container|object|rsync)$' || true"
+  register: old_containers_check
+  changed_when: false
+  failed_when: old_containers_check.stdout | length > 0 and swift_conversion_require_cleanup | bool
+
+- name: Verify Swift servers listening on legacy ports 6000/6001/6002
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    ssh -o StrictHostKeyChecking=accept-new -i {{ edpm_privatekey_path }} {{ edpm_user }}@{{ standalone_ip | default(edpm_node_ip) }} \
+      "sudo ss -tlnp | grep -qE ':6000' && sudo ss -tlnp | grep -qE ':6001' && sudo ss -tlnp | grep -qE ':6002'"
+
+- name: Verify nftables allows legacy Swift ports 6000/6001/6002
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    ssh -o StrictHostKeyChecking=accept-new -i {{ edpm_privatekey_path }} {{ edpm_user }}@{{ standalone_ip | default(edpm_node_ip) }} \
+      "sudo nft list table inet filter | grep -qE 'dport 6000' && \
+       sudo nft list table inet filter | grep -qE 'dport 6001' && \
+       sudo nft list table inet filter | grep -qE 'dport 6002'"
+
+- name: Verify ring uses legacy port 6000
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc get configmap swift-storage-config-data -o yaml | grep -q "bind_port = 6000"
+
+- name: Verify Swift replicators are active on converted node
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    ssh -o StrictHostKeyChecking=accept-new -i {{ edpm_privatekey_path }} {{ edpm_user }}@{{ standalone_ip | default(edpm_node_ip) }} "
+      for svc in edpm_swift_object_replicator edpm_swift_container_replicator edpm_swift_account_replicator; do
+        sudo systemctl is-active \$svc || (echo \$svc not active; exit 1)
+      done
+    "
+
 - name: Verify Swift services are running on converted node
   ansible.builtin.shell: |
     {{ shell_header }}
     ssh -o StrictHostKeyChecking=accept-new -i {{ edpm_privatekey_path }} {{ edpm_user }}@{{ standalone_ip | default(edpm_node_ip) }} "sudo systemctl status edpm_swift_*"
 
-- name: Verify Swift is still functional after conversion
+- name: Show disk usage on converted node before functional test
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    ssh -o StrictHostKeyChecking=accept-new -i {{ edpm_privatekey_path }} {{ edpm_user }}@{{ standalone_ip | default(edpm_node_ip) }} "df -h /"
+  changed_when: false
+
+- name: Verify Swift is functional after conversion
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc rsh openstackclient /bin/sh -c "touch obj && openstack container create cont && openstack object create cont obj"
+    oc rsh openstackclient /bin/sh -c '
+      set -e
+      echo swift-conversion-probe > /tmp/swiftobj
+      openstack container create test-conversion
+      openstack object create test-conversion /tmp/swiftobj --name probe
+      openstack object save test-conversion probe --file /tmp/swiftobj-readback
+      orig=$(sha256sum /tmp/swiftobj | cut -d" " -f1)
+      readback=$(sha256sum /tmp/swiftobj-readback | cut -d" " -f1)
+      [ "$orig" = "$readback" ] || (echo Content mismatch on read-back; exit 1)
+      openstack object delete test-conversion probe
+      openstack container delete test-conversion
+    '
