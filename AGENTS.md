@@ -34,7 +34,6 @@ There are other adjacent procedures described or linked in the repo that are opt
 
 - There should be parity between the docs and the tests. There may be some legitimate minor differences to account for CI specifics, but in general the intent of the tests is to verify the procedure and the commands from the docs.
 - Tests use the `shell` Ansible module liberally, we do not strive for "beautiful Ansible that just uses Python modules". Using `shell` tends to allow verbatim correspondence of tests to the commands/snippets in the docs, which is more important than having beautiful Ansible code.
-- Docs must support multiple variants (upstream/downstream/OSPDO). Do not hardcode product names like "Red Hat OpenStack Services on OpenShift". Use the AsciiDoctor attributes defined in `docs_user/adoption-attributes.adoc` (e.g. `{rhos_long}`, `{OpenStackShort}`).
 
 ## Important
 
@@ -43,17 +42,10 @@ There are other adjacent procedures described or linked in the repo that are opt
 
 ## Repository map
 
-- `docs_build` - Generated content. Do not read or edit files in this directory as a source of truth. Always use `docs_user` or `docs_dev`.
+- `docs_build` - Generated content. Do not read or edit files in this directory as a source of truth. Always use `docs_dev`.
   - `docs_build/adoption-dev/index-upstream.html` - Rendered developer documentation.
-  - `docs_build/adoption-user/index-{upstream,downstream,downstream-ospdo}.html` - Rendered user documentation (the adoption procedure).
 - `docs_dev` - Sources for developer documentation.
-- `docs_user` - Sources for user documentation (the adoption procedure).
-  - `main.adoc` is the root.
-  - `*-attributes.adoc` files distinguish upstream and downstream variants.
-  - `assemblies` are higher-level building blocks.
-  - `modules` are lower-level building blocks.
-- `docs_user` - Sources for user documentation (the adoption procedure).
-- `Makefile` - The main Makefile for docs building and running tests. For docs it calls nested `make` using `docs_dev/Makefile` and `docs_user/Makefile`.
+- `Makefile` - The main Makefile for docs building and running tests. For docs it calls nested `make` using `docs_dev/Makefile`.
 - `scenarios` - Configuration of  CI jobs doing end-to-end testing.
 - `tests` - Ansible test suite utilized in the end-to-end tests.
   - `vars.sample.yaml,secrets.sample.yaml` - Example files with variables and secrets that are typically customized before running end-to-end tests.
@@ -62,7 +54,7 @@ There are other adjacent procedures described or linked in the repo that are opt
 
 ## Building docs
 
-`make docs` is the easiest way to build both user docs in all variants and developer docs.
+`make docs` is the easiest way to build developer docs.
 
 More detailed info is in `docs_dev/assemblies/documentation.adoc`.
 

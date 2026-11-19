@@ -9,13 +9,6 @@ Install docs build requirements:
 make docs-dependencies
 ----
 
-To render the user-facing documentation site locally:
-
-[,bash]
-----
-make docs-user
-----
-
 To render the contributor documentation site locally:
 
 [,bash]
@@ -23,8 +16,7 @@ To render the contributor documentation site locally:
 make docs-dev
 ----
 
-The built HTML files are in `docs_build/adoption-user` and
-`docs_build/adoption-dev` directories respectively.
+The built HTML files are in `docs_build/adoption-dev` directory.
 
 
 There are some additional make targets for convenience. The following
@@ -33,8 +25,6 @@ resulting HTML in your browser so that you don't have to look for it:
 
 [,bash]
 ----
-make docs-user-open
-# or
 make docs-dev-open
 ----
 
@@ -46,20 +36,7 @@ browser page" loop when working on the docs, without having to run
 
 [,bash]
 ----
-make docs-user-watch
-# or
 make docs-dev-watch
-----
-
-=== Preview of downstream documentation
-
-To render a preview of what should serve as the base for downstream
-docs (e.g. with downstream container image URLs), prepend
-`BUILD=downstream` to your make targets. For example:
-
-[,bash]
-----
-BUILD=downstream make docs-user
 ----
 
 == Patterns and tips for contributing to documentation
