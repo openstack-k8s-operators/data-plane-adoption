@@ -4,6 +4,13 @@
     github-check:
       jobs:
         - noop
-        - adoption-standalone-to-crc-ceph
-        - adoption-standalone-to-crc-no-ceph
+        # rdo-jobs pins install_yamls and data-plane-adoption to 18-stable,
+        # override to test this release branch.
+        - adoption-standalone-to-crc-ceph: &fr_branch_overrides
+            required-projects:
+              - name: openstack-k8s-operators/install_yamls
+                override-checkout: 18.0-fr7
+              - name: openstack-k8s-operators/data-plane-adoption
+                override-checkout: 18.0-fr7
+        - adoption-standalone-to-crc-no-ceph: *fr_branch_overrides
         - adoption-docs-preview
