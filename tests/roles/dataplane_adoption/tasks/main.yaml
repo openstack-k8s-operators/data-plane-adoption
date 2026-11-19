@@ -7,8 +7,10 @@
       CEPH_FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."{{ ceph_conf_secret_key }}"' | base64 -d | grep fsid | sed -e 's/fsid = //')
 
 # FIXME: missing docs coverage?
-- name: Patch openstackversion to use image built from source or latest if none is defined
-  when: not skip_patching_ansibleee_csv | bool
+- name: Patch openstackversion to use ansibleee runner image built from source
+  when:
+    - not skip_patching_ansibleee_csv | bool
+    - ansibleee_runner_img is defined
   no_log: "{{ use_no_log }}"
   ansible.builtin.shell: |
     {{ shell_header }}
@@ -16,7 +18,7 @@
     oc patch openstackversion openstack \
       --type='json' -p='[{
       "op":"replace", "path":"/spec/customContainerImages/ansibleeeImage",
-      "value": "{{ ansibleee_runner_img | default('quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest')}}"}]'
+      "value": "{{ ansibleee_runner_img }}"}]'
 
 - name: Include RHEV vars
   ansible.builtin.include_vars:
