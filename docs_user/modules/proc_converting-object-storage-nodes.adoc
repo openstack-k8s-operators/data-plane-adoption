@@ -241,7 +241,6 @@ endif::[]
   - configure-os
   - ssh-known-hosts
   - run-os
-  - reboot-os
   - install-certs
   - swift-conversion
   tlsEnabled: true
